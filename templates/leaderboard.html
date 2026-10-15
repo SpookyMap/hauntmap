@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}Top {{ cat_labels[cat]|lower }} decorations &middot; {{ site_name }}{% endblock %}
+{% block content %}
+<div class="cat-tabs">
+  <a href="/leaderboard?cat=halloween" class="{% if cat == 'halloween' %}active{% endif %}">&#x1F383; Haunt Map</a>
+  <a href="/leaderboard?cat=christmas" class="{% if cat == 'christmas' %}active{% endif %}">&#x1F384; Jolly Map</a>
+</div>
+<h1>&#x1F3C6; Top {{ cat_labels[cat]|lower }} decorations</h1>
+
+{% if top %}
+<h2>Overall leaders</h2>
+<ol class="leader-list">
+  {% for e in top %}
+  <li>
+    <a href="/d/{{ e.id }}">
+      {% if e.media_type == 'video' %}
+      <video src="{{ e.media_url }}" preload="metadata" muted playsinline></video>
+      {% else %}
+      <img src="{{ e.thumb_url }}" alt="{{ e.title }}" loading="lazy">
+      {% endif %}
+      <span class="leader-info">
+        <strong>#{{ loop.index }} {{ e.title }}</strong>
+        <span class="meta">{{ e.town }}</span>
+        <span class="votes">&#x1F383; {{ e.votes }}</span>
+        {% if e.is_sample %}<span class="sample-badge">Sample</span>{% endif %}
+      </span>
+    </a>
+  </li>
+  {% endfor %}
+</ol>
+{% endif %}
+
+{% for group in per_town %}
+<h2>{{ group.town }}</h2>
+<ol class="leader-list">
+  {% for e in group.entries %}
+  <li>
+    <a href="/d/{{ e.id }}">
+      {% if e.media_type == 'video' %}
+      <video src="{{ e.media_url }}" preload="metadata" muted playsinline></video>
+      {% else %}
+      <img src="{{ e.thumb_url }}" alt="{{ e.title }}" loading="lazy">
+      {% endif %}
+      <span class="leader-info">
+        <strong>#{{ loop.index }} {{ e.title }}</strong>
+        <span class="votes">&#x1F383; {{ e.votes }}</span>
+        {% if e.is_sample %}<span class="sample-badge">Sample</span>{% endif %}
+      </span>
+    </a>
+  </li>
+  {% endfor %}
+</ol>
+{% endfor %}
+
+{% if not top %}
+<div class="empty">
+  <p class="empty-emoji">&#x1F47B;</p>
+  <p>No haunts yet. <a href="/upload">Add the first one</a>.</p>
+</div>
+{% endif %}
+{% endblock %}

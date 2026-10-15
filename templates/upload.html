@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}Share your decorations &middot; {{ site_name }}{% endblock %}
+{% block head %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+{% endblock %}
+{% block content %}
+<h1>Share your decorations</h1>
+<p class="lede">Show off your Halloween or Christmas decorations. Photo or short video, pick your town, drop a pin if you want visitors to find it.</p>
+
+{% if error %}
+<div class="alert">{{ error }}</div>
+{% endif %}
+
+<form method="post" action="/upload" enctype="multipart/form-data" class="form">
+  <label>Category <span class="req">*</span>
+    <select name="category" required>
+      <option value="halloween">&#x1F383; Haunt Map (Halloween)</option>
+      <option value="christmas">&#x1F384; Jolly Map (Christmas)</option>
+    </select>
+  </label>
+  <label>Title <span class="req">*</span>
+    <input type="text" name="title" maxlength="120" required placeholder="e.g. The Skeleton Orchestra House">
+  </label>
+  <label>Town / neighborhood <span class="req">*</span>
+    <input type="text" name="town" maxlength="80" required placeholder="e.g. Salem">
+  </label>
+  <label>Your display name <span class="opt">(optional)</span>
+    <input type="text" name="display_name" maxlength="40" placeholder="e.g. The Miller Family">
+  </label>
+  <label>Photo or video <span class="req">*</span>
+    <input type="file" name="media" accept=".jpg,.jpeg,.png,.webp,.mp4" required>
+    <small>Photo: JPG/PNG/WebP up to 10 MB. Video: MP4 up to 50 MB.</small>
+  </label>
+  <label>Map pin <span class="opt">(optional &mdash; tap the map)</span></label>
+  <div id="map"></div>
+  <input type="hidden" name="lat" id="lat">
+  <input type="hidden" name="lng" id="lng">
+  <button type="submit" class="btn btn-big">&#x1F383;&#x1F384; Share my decorations</button>
+</form>
+
+<script>
+(function () {
+  var map = L.map('map').setView([40.7, -74.0], 10);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19, attribution: '&copy; OpenStreetMap contributors'
+  }).addTo(map);
+  var marker = null;
+  map.on('click', function (e) {
+    if (marker) { map.removeLayer(marker); }
+    marker = L.marker(e.latlng).addTo(map);
+    document.getElementById('lat').value = e.latlng.lat.toFixed(6);
+    document.getElementById('lng').value = e.latlng.lng.toFixed(6);
+  });
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(function (pos) {
+      map.setView([pos.coords.latitude, pos.coords.longitude], 13);
+    }, function () {});
+  }
+})();
+</script>
+{% endblock %}

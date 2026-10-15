@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}{{ site_name }}{% endblock %}</title>
+<link rel="stylesheet" href="/static/css/style.css">
+{% block head %}{% endblock %}
+</head>
+<body>
+<header class="site-header">
+  <a class="brand" href="/">&#x1F383; {{ site_name }}</a>
+  <nav>
+    <a href="/leaderboard">&#x1F3C6; Top Haunts</a>
+    <a class="btn-upload" href="/upload">+ Add yours</a>
+  </nav>
+</header>
+<main class="wrap">
+  {% block content %}{% endblock %}
+</main>
+<footer class="site-footer">
+  <p>{{ site_name }} &middot; show off your Halloween decorations &middot; be kind, keep it spooky</p>
+</footer>
+</body>
+</html>

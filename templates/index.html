@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="cat-tabs">
+  <a href="/?cat=halloween{% if sort != 'top' %}&sort={{ sort }}{% endif %}{% if town %}&town={{ town }}{% endif %}" class="{% if cat == 'halloween' %}active{% endif %}">&#x1F383; Haunt Map</a>
+  <a href="/?cat=christmas{% if sort != 'top' %}&sort={{ sort }}{% endif %}{% if town %}&town={{ town }}{% endif %}" class="{% if cat == 'christmas' %}active{% endif %}">&#x1F384; Jolly Map</a>
+</div>
+<div class="feed-controls">
+  <div class="sort-toggle">
+    <a href="/?cat={{ cat }}&sort=top{% if town %}&town={{ town }}{% endif %}" class="{% if sort == 'top' %}active{% endif %}">Top</a>
+    <a href="/?cat={{ cat }}&sort=new{% if town %}&town={{ town }}{% endif %}" class="{% if sort == 'new' %}active{% endif %}">Newest</a>
+  </div>
+  <form method="get" action="/" class="town-filter">
+    <input type="hidden" name="sort" value="{{ sort }}">
+    <input type="hidden" name="cat" value="{{ cat }}">
+    <select name="town" onchange="this.form.submit()">
+      <option value="">All towns</option>
+      {% for t in towns %}
+      <option value="{{ t }}" {% if t == town %}selected{% endif %}>{{ t }}</option>
+      {% endfor %}
+    </select>
+  </form>
+</div>
+
+{% if entries %}
+<div class="grid">
+  {% for e in entries %}
+  <a class="card" href="/d/{{ e.id }}">
+    <div class="card-media">
+      {% if e.media_type == 'video' %}
+      <video src="{{ e.media_url }}" preload="metadata" muted playsinline></video>
+      <span class="play-badge">&#x25B6;</span>
+      {% else %}
+      <img src="{{ e.thumb_url }}" alt="{{ e.title }}" loading="lazy">
+      {% endif %}
+      {% if e.is_sample %}<span class="sample-badge">Sample</span>{% endif %}
+    </div>
+    <div class="card-body">
+      <h3>{{ e.title }}</h3>
+      <p class="meta">{{ e.town }}{% if e.display_name %} &middot; {{ e.display_name }}{% endif %}</p>
+      <p class="votes">{% if e.category == 'christmas' %}&#x1F384;{% else %}&#x1F383;{% endif %} {{ e.votes }} vote{{ 's' if e.votes != 1 }}</p>
+    </div>
+  </a>
+  {% endfor %}
+</div>
+{% else %}
+<div class="empty">
+  <p class="empty-emoji">{% if cat == 'christmas' %}&#x1F384;{% else %}&#x1F47B;{% endif %}</p>
+  <p>No {{ cat_labels[cat]|lower }} decorations here yet{% if town %} in {{ town }}{% endif %}.</p>
+  <p><a class="btn" href="/upload">Be the first to add one</a></p>
+</div>
+{% endif %}
+{% endblock %}

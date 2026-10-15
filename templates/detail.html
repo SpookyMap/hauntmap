@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}{{ entry.title }} &middot; {{ site_name }}{% endblock %}
+{% block head %}
+{% if entry.lat is not none and entry.lng is not none %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+{% endif %}
+{% endblock %}
+{% block content %}
+<article class="detail">
+  <div class="detail-media">
+    {% if entry.media_type == 'video' %}
+    <video src="{{ entry.media_url }}" controls playsinline preload="metadata"></video>
+    {% else %}
+    <img src="{{ entry.media_url }}" alt="{{ entry.title }}">
+    {% endif %}
+    {% if entry.is_sample %}<span class="sample-badge">Sample</span>{% endif %}
+  </div>
+  <h1>{{ entry.title }}</h1>
+  <p class="meta">{{ entry.town }}{% if entry.display_name %} &middot; {{ entry.display_name }}{% endif %}</p>
+  <p class="votes-big">&#x1F383; {{ entry.votes }} vote{{ 's' if entry.votes != 1 }}</p>
+
+  {% if entry.tiktok_url %}
+  <p><a href="{{ entry.tiktok_url }}" target="_blank" rel="noopener">&#x1F3B5; Watch on TikTok</a></p>
+  {% endif %}
+
+  <div class="detail-actions">
+    {% if voted %}
+    <span class="btn btn-voted">&#x2713; Voted</span>
+    {% else %}
+    <form method="post" action="/d/{{ entry.id }}/vote">
+      <button type="submit" class="btn btn-big">&#x1F383; Vote for this haunt</button>
+    </form>
+    {% endif %}
+  </div>
+
+  {% if entry.lat is not none and entry.lng is not none %}
+  <div id="map" class="detail-map"></div>
+  <script>
+    (function () {
+      var map = L.map('map').setView([{{ entry.lat }}, {{ entry.lng }}], 15);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19, attribution: '&copy; OpenStreetMap contributors'
+      }).addTo(map);
+      L.marker([{{ entry.lat }}, {{ entry.lng }}]).addTo(map);
+    })();
+  </script>
+  {% endif %}
+
+  <div class="detail-foot">
+    <button class="linklike" onclick="navigator.clipboard.writeText(window.location.href); this.textContent='Link copied!';">&#x1F517; Copy share link</button>
+    {% if reported %}
+    <span class="muted">Thanks &mdash; reported for review.</span>
+    {% else %}
+    <form method="post" action="/d/{{ entry.id }}/report" class="inline-form"
+          onsubmit="return confirm('Report this entry for review?');">
+      <button type="submit" class="linklike danger">&#x1F6A9; Report</button>
+    </form>
+    {% endif %}
+  </div>
+</article>
+<p><a href="/">&larr; Back to all haunts</a></p>
+{% endblock %}

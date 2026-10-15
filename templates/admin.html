@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}Admin &middot; {{ site_name }}{% endblock %}
+{% block content %}
+<h1>Admin</h1>
+
+{% if not logged_in %}
+{% if error %}<div class="alert">{{ error }}</div>{% endif %}
+<form method="post" action="/admin/login" class="form">
+  <label>Admin password
+    <input type="password" name="password" required autocomplete="current-password">
+  </label>
+  <button type="submit" class="btn btn-big">Log in</button>
+</form>
+{% else %}
+<form method="post" action="/admin/logout" class="inline-form">
+  <button type="submit" class="linklike">Log out</button>
+</form>
+
+<h2>&#x1F6A9; Flagged for review ({{ flagged|length }})</h2>
+{% if flagged %}
+<div class="admin-list">
+  {% for e in flagged %}
+  <div class="admin-row">
+    <a href="/d/{{ e.id }}"><strong>{{ e.title }}</strong></a>
+    <span class="meta">{{ e.town }} &middot; {{ e.votes }} votes{% if e.is_sample %} &middot; Sample{% endif %}{% if e.hidden %} &middot; hidden{% endif %}</span>
+    <span class="admin-actions">
+      {% if e.hidden %}
+      <form method="post" action="/admin/unhide/{{ e.id }}" class="inline-form"><button class="btn btn-small">Unhide</button></form>
+      {% else %}
+      <form method="post" action="/admin/hide/{{ e.id }}" class="inline-form"><button class="btn btn-small">Hide</button></form>
+      {% endif %}
+      <form method="post" action="/admin/delete/{{ e.id }}" class="inline-form"
+            onsubmit="return confirm('Permanently delete this entry and its media?');"><button class="btn btn-small btn-danger">Delete</button></form>
+    </span>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<p class="muted">Nothing flagged. Spooky season is peaceful.</p>
+{% endif %}
+
+<h2>All entries ({{ all_entries|length }})</h2>
+<div class="admin-list">
+  {% for e in all_entries %}
+  <div class="admin-row">
+    <a href="/d/{{ e.id }}"><strong>{{ e.title }}</strong></a>
+    <span class="meta">{{ e.town }} &middot; {{ e.votes }} votes{% if e.is_sample %} &middot; Sample{% endif %}{% if e.hidden %} &middot; hidden{% endif %}{% if e.flagged %} &middot; flagged{% endif %}</span>
+    <span class="admin-actions">
+      {% if e.hidden %}
+      <form method="post" action="/admin/unhide/{{ e.id }}" class="inline-form"><button class="btn btn-small">Unhide</button></form>
+      {% else %}
+      <form method="post" action="/admin/hide/{{ e.id }}" class="inline-form"><button class="btn btn-small">Hide</button></form>
+      {% endif %}
+      <form method="post" action="/admin/delete/{{ e.id }}" class="inline-form"
+            onsubmit="return confirm('Permanently delete this entry and its media?');"><button class="btn btn-small btn-danger">Delete</button></form>
+    </span>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+{% endblock %}
