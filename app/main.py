@@ -122,6 +122,19 @@ def extract_city(town: str) -> str:
     return parts[0] if parts else town
 
 
+def extract_city_state(town: str) -> str:
+    """Extract 'City, ST' from a town field like '22 Collins St, Cranford, NJ'."""
+    parts = [p.strip() for p in town.split(",") if p.strip()]
+    if len(parts) >= 2:
+        state = parts[-1]
+        city = extract_city(town)
+        # only append state if it looks like a state (short) and differs from city
+        if len(state) <= 3 and state.upper() != city.upper():
+            return f"{city}, {state.upper()}"
+        return city
+    return town
+
+
 def towns(category: str = "halloween") -> list[str]:
     with get_conn(DB_PATH) as conn:
         rows = conn.execute(
@@ -131,9 +144,9 @@ def towns(category: str = "halloween") -> list[str]:
         ).fetchall()
     seen: dict[str, None] = {}
     for r in rows:
-        city = extract_city(r["town"])
-        if city and city not in seen:
-            seen[city] = None
+        city_state = extract_city_state(r["town"])
+        if city_state and city_state not in seen:
+            seen[city_state] = None
     return sorted(seen)
 
 
