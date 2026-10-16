@@ -17,6 +17,8 @@
 .pin-popup img, .pin-popup video { width: 150px; height: 110px; object-fit: cover; border-radius: 8px; }
 .pin-popup strong { display: block; margin: 0.3rem 0; font-size: 0.9rem; }
 .pin-popup a { color: var(--accent); font-weight: 700; text-decoration: none; }
+.thumb-marker { border: 2px solid #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 6px rgba(0,0,0,0.4); background: #0d0916; }
+.thumb-marker img { width: 64px; height: 48px; object-fit: cover; display: block; }
 </style>
 {% endblock %}
 {% block content %}
@@ -33,12 +35,23 @@ const pins = {{ pins | tojson }};
 const map = L.map('full-map').setView([40.75, -74.0], 10);
 L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom: 19}).addTo(map);
 const cluster = L.markerClusterGroup();
+// thumbnail markers when zoomed in, plain pins when zoomed out
+function thumbIcon(p) {
+  const thumb = p.thumb_path ? p.thumb_url : p.media_url;
+  return L.divIcon({
+    className: '',
+    html: `<div class="thumb-marker"><img src="${thumb}" alt="" loading="lazy"></div>`,
+    iconSize: [68, 52],
+    iconAnchor: [34, 52],
+    popupAnchor: [0, -52],
+  });
+}
 pins.forEach(p => {
   const thumb = p.thumb_path ? p.thumb_url : p.media_url;
   const media = p.media_type === 'video'
     ? `<video src="${p.media_url}" poster="${thumb}" muted playsinline style="pointer-events:none"></video>`
     : `<img src="${thumb}" alt="">`;
-  const m = L.marker([p.lat, p.lng]);
+  const m = L.marker([p.lat, p.lng], {icon: thumbIcon(p)});
   m.bindPopup(`<div class="pin-popup">${media}<strong>${p.title}</strong><div>&#x1F383; ${p.votes} votes</div><a href="/d/${p.id}">View haunt</a></div>`);
   cluster.addLayer(m);
 });
