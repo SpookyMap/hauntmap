@@ -178,7 +178,8 @@ def make_video_poster(src: Path, dest_name: str) -> str | None:
 # ---------------------------------------------------------------- public pages
 
 @app.get("/", response_class=HTMLResponse)
-def home(request: Request, sort: str = "top", town: str = "", cat: str = "halloween"):
+def home(request: Request, sort: str = "top", town: str = "", cat: str = "halloween",
+         scare: str = "", tag: str = ""):
     cat = cat if cat in CATEGORIES else "halloween"
     sort = sort if sort in ("top", "new") else "top"
     order = "votes DESC, created_at DESC" if sort == "top" else "created_at DESC"
@@ -187,6 +188,12 @@ def home(request: Request, sort: str = "top", town: str = "", cat: str = "hallow
     if town:
         query += " AND town = ?"
         params.append(town)
+    if scare in ("family", "spooky", "terrifying"):
+        query += " AND scare_level = ?"
+        params.append(scare)
+    if tag in ("animatronics", "inflatables", "handmade", "walkthrough", "projector", "lights", "music"):
+        query += " AND (',' || COALESCE(tags,'') || ',') LIKE ?"
+        params.append(f"%,{tag},%")
     query += f" ORDER BY {order} LIMIT 100"
     with get_conn(DB_PATH) as conn:
         entries = [row_to_dict(r) for r in conn.execute(query, params).fetchall()]
@@ -194,7 +201,8 @@ def home(request: Request, sort: str = "top", town: str = "", cat: str = "hallow
     return templates.TemplateResponse(request, "index.html",
         {"request": request, "entries": entries, "sort": sort,
          "town": town, "towns": towns(cat), "voted": voted,
-         "cat": cat, "cat_labels": CAT_LABELS, "cat_emoji": CAT_EMOJI},
+         "cat": cat, "cat_labels": CAT_LABELS, "cat_emoji": CAT_EMOJI,
+         "scare": scare, "tag": tag},
     )
 
 
@@ -288,12 +296,13 @@ def tour_page(request: Request, s: str = "", cat: str = "halloween"):
 
 
 @app.post("/upload", response_class=HTMLResponse)
-def upload_submit(
+async def upload_submit(
     request: Request,
     title: str = Form(""),
     town: str = Form(""),
     display_name: str = Form(""),
     category: str = Form("halloween"),
+    scare_level: str = Form(""),
     lat: str = Form(""),
     lng: str = Form(""),
     media: UploadFile = File(...),
@@ -301,6 +310,12 @@ def upload_submit(
     error: str | None = None
     title, town, display_name = title.strip()[:120], town.strip()[:80], display_name.strip()[:40]
     category = category if category in CATEGORIES else "halloween"
+    scare_level = scare_level if scare_level in ("family", "spooky", "terrifying") else None
+    # tags come as repeated form fields from checkboxes
+    form = await request.form()
+    tags = ",".join(sorted({t for t in form.getlist("tags")
+                            if t in ("animatronics", "inflatables", "handmade", "walkthrough",
+                                     "projector", "lights", "music")})) or None
 
     lat_f = lng_f = None
     if lat.strip() or lng.strip():
@@ -361,10 +376,11 @@ def upload_submit(
             cur = conn.execute(
                 """INSERT INTO entries
                    (title, town, display_name, media_path, thumb_path, media_type,
-                    lat, lng, votes, flagged, hidden, is_sample, category, created_at)
-                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, 0, 0, 0, ?, ?)""",
+                    lat, lng, votes, flagged, hidden, is_sample, category, created_at,
+                    scare_level, tags)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, 0, 0, 0, ?, ?, ?, ?)""",
                 (title, town, display_name or None, media_rel, thumb_rel,
-                 media_type, lat_f, lng_f, category, now),
+                 media_type, lat_f, lng_f, category, now, scare_level, tags),
             )
             entry_id = cur.lastrowid
             conn.commit()

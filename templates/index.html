@@ -18,6 +18,22 @@
       <option value="{{ t }}" {% if t == town %}selected{% endif %}>{{ t }}</option>
       {% endfor %}
     </select>
+    <select name="scare" onchange="this.form.submit()">
+      <option value="">Any scare level</option>
+      <option value="family" {% if scare == 'family' %}selected{% endif %}>&#x1F60A; Family</option>
+      <option value="spooky" {% if scare == 'spooky' %}selected{% endif %}>&#x1F47B; Spooky</option>
+      <option value="terrifying" {% if scare == 'terrifying' %}selected{% endif %}>&#x1F631; Terrifying</option>
+    </select>
+    <select name="tag" onchange="this.form.submit()">
+      <option value="">All features</option>
+      <option value="animatronics" {% if tag == 'animatronics' %}selected{% endif %}>Animatronics</option>
+      <option value="inflatables" {% if tag == 'inflatables' %}selected{% endif %}>Inflatables</option>
+      <option value="handmade" {% if tag == 'handmade' %}selected{% endif %}>Handmade/DIY</option>
+      <option value="walkthrough" {% if tag == 'walkthrough' %}selected{% endif %}>Walkthrough</option>
+      <option value="projector" {% if tag == 'projector' %}selected{% endif %}>Projector show</option>
+      <option value="lights" {% if tag == 'lights' %}selected{% endif %}>Light show</option>
+      <option value="music" {% if tag == 'music' %}selected{% endif %}>Music/sound</option>
+    </select>
   </form>
 </div>
 

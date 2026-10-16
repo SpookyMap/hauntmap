@@ -32,6 +32,25 @@
     <input type="file" name="media" accept=".jpg,.jpeg,.png,.webp,.mp4" required>
     <small>Photo: JPG/PNG/WebP up to 10 MB. Video: MP4 up to 100 MB.</small>
   </label>
+  <label>Scare level <span class="opt">(optional)</span>
+    <select name="scare_level">
+      <option value="">Not specified</option>
+      <option value="family">&#x1F60A; Family-friendly</option>
+      <option value="spooky">&#x1F47B; Spooky</option>
+      <option value="terrifying">&#x1F631; Terrifying</option>
+    </select>
+  </label>
+  <label>Features <span class="opt">(optional — check all that apply)</span>
+    <div class="tag-checks">
+      <label><input type="checkbox" name="tags" value="animatronics"> Animatronics</label>
+      <label><input type="checkbox" name="tags" value="inflatables"> Inflatables</label>
+      <label><input type="checkbox" name="tags" value="handmade"> Handmade/DIY</label>
+      <label><input type="checkbox" name="tags" value="walkthrough"> Walkthrough</label>
+      <label><input type="checkbox" name="tags" value="projector"> Projector show</label>
+      <label><input type="checkbox" name="tags" value="lights"> Light show</label>
+      <label><input type="checkbox" name="tags" value="music"> Music/sound</label>
+    </div>
+  </label>
   <label>Map pin <span class="opt">(optional &mdash; tap the map)</span></label>
   <div id="map"></div>
   <input type="hidden" name="lat" id="lat">

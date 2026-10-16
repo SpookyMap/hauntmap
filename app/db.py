@@ -26,7 +26,9 @@ CREATE TABLE IF NOT EXISTS entries (
     category TEXT NOT NULL DEFAULT 'halloween', -- 'halloween' | 'food'
     food_subcategory TEXT,                -- e.g. 'coffee', 'pizza', 'croissant'
     tiktok_url TEXT,                      -- optional TikTok video link
-    created_at TEXT NOT NULL              -- UTC ISO timestamp
+    created_at TEXT NOT NULL,             -- UTC ISO timestamp
+    scare_level TEXT,                     -- 'family' | 'spooky' | 'terrifying'
+    tags TEXT                             -- comma-separated: animatronics,inflatables,handmade,walkthrough,projector,lights,music
 );
 CREATE INDEX IF NOT EXISTS idx_entries_town ON entries(town);
 CREATE INDEX IF NOT EXISTS idx_entries_votes ON entries(votes DESC);
@@ -53,4 +55,8 @@ def init_db(db_path: Path) -> None:
             conn.execute("ALTER TABLE entries ADD COLUMN food_subcategory TEXT")
         if "tiktok_url" not in cols:
             conn.execute("ALTER TABLE entries ADD COLUMN tiktok_url TEXT")
+        if "scare_level" not in cols:
+            conn.execute("ALTER TABLE entries ADD COLUMN scare_level TEXT")
+        if "tags" not in cols:
+            conn.execute("ALTER TABLE entries ADD COLUMN tags TEXT")
         conn.commit()
