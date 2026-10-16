@@ -111,6 +111,17 @@ def get_entry(entry_id: int) -> dict | None:
     return row_to_dict(row) if row else None
 
 
+def extract_city(town: str) -> str:
+    """Extract clean city name from a town field like '22 Collins St, Cranford, NJ'."""
+    parts = [p.strip() for p in town.split(",") if p.strip()]
+    if len(parts) >= 3:
+        return parts[-2]  # 'Cranford' from '22 Collins St, Cranford, NJ'
+    if len(parts) == 2:
+        # 'Hoboken, NJ' -> 'Hoboken'; 'E 69th St, New York' -> 'New York'
+        return parts[0] if len(parts[1]) <= 3 else parts[1]
+    return parts[0] if parts else town
+
+
 def towns(category: str = "halloween") -> list[str]:
     with get_conn(DB_PATH) as conn:
         rows = conn.execute(
@@ -118,7 +129,12 @@ def towns(category: str = "halloween") -> list[str]:
             "WHERE hidden = 0 AND category = ? ORDER BY town",
             (category,),
         ).fetchall()
-    return [r["town"] for r in rows]
+    seen: dict[str, None] = {}
+    for r in rows:
+        city = extract_city(r["town"])
+        if city and city not in seen:
+            seen[city] = None
+    return sorted(seen)
 
 
 def is_admin(request: Request) -> bool:
@@ -178,10 +194,12 @@ def make_video_poster(src: Path, dest_name: str) -> str | None:
 # ---------------------------------------------------------------- public pages
 
 @app.get("/", response_class=HTMLResponse)
-def home(request: Request, sort: str = "top", town: str = "", cat: str = "halloween",
-         scare: str = "", tag: str = ""):
+def home(request: Request, sort: str = "top", town: str = "", town_search: str = "",
+         cat: str = "halloween", scare: str = "", tag: str = ""):
     cat = cat if cat in CATEGORIES else "halloween"
     sort = sort if sort in ("top", "new") else "top"
+    # text search takes priority over dropdown
+    town = town_search.strip() or town
     order = "votes DESC, created_at DESC" if sort == "top" else "created_at DESC"
     query = "SELECT * FROM entries WHERE hidden = 0 AND category = ?"
     params: list = [cat]
