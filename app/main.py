@@ -15,7 +15,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from fastapi import FastAPI, Form, HTTPException, Request, UploadFile, File
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from PIL import Image, UnidentifiedImageError
@@ -362,6 +362,14 @@ def admin_logout(request: Request):
     resp = RedirectResponse("/admin", status_code=303)
     resp.delete_cookie(ADMIN_COOKIE)
     return resp
+
+
+@app.get("/admin/backup")
+def admin_backup(request: Request):
+    """Download the SQLite database (for automated backups). Admin only."""
+    if not is_admin(request):
+        raise HTTPException(401, "Not authorized.")
+    return FileResponse(DB_PATH, filename="hauntmap-backup.db")
 
 
 def _require_admin(request: Request) -> None:
