@@ -556,3 +556,21 @@ def admin_delete(entry_id: int, request: Request):
             conn.execute("DELETE FROM entries WHERE id = ?", (entry_id,))
             conn.commit()
     return RedirectResponse("/admin", status_code=303)
+
+
+@app.post("/admin/tag/{entry_id}")
+async def admin_tag(entry_id: int, request: Request):
+    """Update scare_level and tags for an entry (admin)."""
+    _require_admin(request)
+    form = await request.form()
+    scare = form.get("scare_level", "")
+    scare = scare if scare in ("family", "spooky", "terrifying") else None
+    tags = ",".join(sorted({t for t in form.getlist("tags")
+                            if t in ("animatronics", "inflatables", "handmade", "walkthrough",
+                                     "projector", "lights", "music", "street-wide",
+                                     "multi-house")})) or None
+    with get_conn(DB_PATH) as conn:
+        conn.execute("UPDATE entries SET scare_level = ?, tags = ? WHERE id = ?",
+                     (scare, tags, entry_id))
+        conn.commit()
+    return RedirectResponse("/admin", status_code=303)
