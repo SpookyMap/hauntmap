@@ -205,7 +205,7 @@ def upload_form(request: Request):
 
 @app.get("/nearby", response_class=HTMLResponse)
 def nearby(request: Request, q: str = "", miles: float = 10, cat: str = "halloween",
-           sort: str = "top"):
+           sort: str = "top", lat: str = "", lng: str = ""):
     cat = cat if cat in CATEGORIES else "halloween"
     sort = sort if sort in ("top", "new") else "top"
     try:
@@ -215,25 +215,32 @@ def nearby(request: Request, q: str = "", miles: float = 10, cat: str = "hallowe
     entries: list = []
     err: str | None = None
     center: tuple[float, float] | None = None
-    if q.strip():
+    # direct coordinates (from "Near me" geolocation) take priority over text query
+    if lat.strip() and lng.strip():
+        try:
+            center = (float(lat), float(lng))
+            q = "your location"
+        except ValueError:
+            err = "Invalid location coordinates."
+    if center is None and q.strip() and q != "your location":
         center = geocode_nominatim(q.strip())
         if center is None:
             err = f"Couldn't find '{q.strip()}'. Try a town or city name."
-        else:
-            with get_conn(DB_PATH) as conn:
-                rows = conn.execute(
-                    "SELECT * FROM entries WHERE hidden = 0 AND category = ? "
-                    "AND lat IS NOT NULL AND lng IS NOT NULL", [cat]).fetchall()
-            clat, clng = center
-            for r in rows:
-                d = row_to_dict(r)
-                d["distance"] = haversine_miles(clat, clng, r["lat"], r["lng"])
-                if d["distance"] <= miles:
-                    entries.append(d)
-            order = "votes DESC, created_at DESC" if sort == "top" else "created_at DESC"
-            # sort by distance first, then the chosen order
-            entries.sort(key=lambda e: (e["distance"],
-                                        -e["votes"] if sort == "top" else e["created_at"]))
+    if center is not None:
+        with get_conn(DB_PATH) as conn:
+            rows = conn.execute(
+                "SELECT * FROM entries WHERE hidden = 0 AND category = ? "
+                "AND lat IS NOT NULL AND lng IS NOT NULL", [cat]).fetchall()
+        clat, clng = center
+        for r in rows:
+            d = row_to_dict(r)
+            d["distance"] = haversine_miles(clat, clng, r["lat"], r["lng"])
+            if d["distance"] <= miles:
+                entries.append(d)
+        order = "votes DESC, created_at DESC" if sort == "top" else "created_at DESC"
+        # sort by distance first, then the chosen order
+        entries.sort(key=lambda e: (e["distance"],
+                                    -e["votes"] if sort == "top" else e["created_at"]))
     voted = {k[6:] for k in request.cookies if k.startswith("voted_")}
     return templates.TemplateResponse(request, "nearby.html",
         {"request": request, "entries": entries, "q": q, "miles": miles,

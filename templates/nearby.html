@@ -3,7 +3,7 @@
 {% block content %}
 <h2>&#x1F50D; Find haunts near you</h2>
 <form method="get" action="/nearby" class="nearby-form">
-  <input type="text" name="q" value="{{ q }}" placeholder="Town, city, or address..." required>
+  <input type="text" name="q" value="{{ q if q != 'your location' else '' }}" placeholder="Town, city, or address..." >
   <select name="miles">
     {% for m in [2, 5, 10, 25, 50] %}
     <option value="{{ m }}" {% if miles == m %}selected{% endif %}>within {{ m }} mi</option>
@@ -11,7 +11,19 @@
   </select>
   <input type="hidden" name="cat" value="{{ cat }}">
   <button type="submit" class="btn">Search</button>
+  <button type="button" class="btn" id="btn-near-me">&#x1F4CD; Near me</button>
 </form>
+<script>
+document.getElementById('btn-near-me').onclick = function() {
+  if (!navigator.geolocation) { alert('Geolocation not supported'); return; }
+  this.textContent = 'Locating...';
+  const miles = document.querySelector('select[name="miles"]').value;
+  const cat = document.querySelector('input[name="cat"]').value;
+  navigator.geolocation.getCurrentPosition(pos => {
+    location.href = `/nearby?lat=${pos.coords.latitude}&lng=${pos.coords.longitude}&miles=${miles}&cat=${cat}`;
+  }, () => { alert('Could not get your location'); this.textContent = '\u{1F4CD} Near me'; });
+};
+</script>
 
 {% if err %}
 <div class="empty"><p>{{ err }}</p></div>
