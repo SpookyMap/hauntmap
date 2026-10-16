@@ -33,7 +33,7 @@ ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "haunt-admin")
 PHOTO_EXTS = {".jpg", ".jpeg", ".png", ".webp"}
 VIDEO_EXTS = {".mp4"}
 MAX_PHOTO_BYTES = 10 * 1024 * 1024
-MAX_VIDEO_BYTES = 50 * 1024 * 1024
+MAX_VIDEO_BYTES = 100 * 1024 * 1024
 THUMB_MAX_WIDTH = 640
 
 CATEGORIES = ("halloween", "christmas")
@@ -216,7 +216,7 @@ def upload_submit(
                 thumb_rel = None
                 media_type = "video"
             else:
-                raise ValueError("Photos must be JPG/PNG/WebP (10 MB max); video must be MP4 (50 MB max).")
+                raise ValueError("Photos must be JPG/PNG/WebP (10 MB max); video must be MP4 (100 MB max).")
         except ValueError as e:
             error = str(e)
 
