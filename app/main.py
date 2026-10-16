@@ -9,6 +9,7 @@ import os
 import secrets
 import shutil
 import sqlite3
+import subprocess
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
@@ -124,6 +125,22 @@ def make_thumb(src: Path, dest_name: str) -> str:
     return rel
 
 
+def make_video_poster(src: Path, dest_name: str) -> str | None:
+    """Extract a poster frame from a video for feed thumbnails.
+    Returns the relative thumb path, or None if ffmpeg is unavailable/fails."""
+    rel = f"thumbs/{dest_name}_poster.jpg"
+    dest = THUMB_DIR / f"{dest_name}_poster.jpg"
+    try:
+        subprocess.run(
+            ["ffmpeg", "-y", "-i", str(src), "-ss", "1", "-vframes", "1",
+             "-vf", f"scale={THUMB_MAX_WIDTH}:-1", str(dest)],
+            capture_output=True, timeout=30, check=True,
+        )
+        return rel
+    except (subprocess.SubprocessError, OSError):
+        return None
+
+
 # ---------------------------------------------------------------- public pages
 
 @app.get("/", response_class=HTMLResponse)
@@ -213,7 +230,7 @@ def upload_submit(
                 name = uuid.uuid4().hex
                 media_rel = f"{name}{ext}"
                 shutil.move(tmp, UPLOAD_DIR / media_rel)
-                thumb_rel = None
+                thumb_rel = make_video_poster(UPLOAD_DIR / media_rel, name)
                 media_type = "video"
             else:
                 raise ValueError("Photos must be JPG/PNG/WebP (10 MB max); video must be MP4 (100 MB max).")

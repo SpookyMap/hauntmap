@@ -27,7 +27,7 @@
   <a class="card" href="/d/{{ e.id }}">
     <div class="card-media">
       {% if e.media_type == 'video' %}
-      <video src="{{ e.media_url }}" preload="metadata" muted playsinline></video>
+      <video src="{{ e.media_url }}" {% if e.thumb_path %}poster="{{ e.thumb_url }}"{% endif %} preload="metadata" muted playsinline></video>
       <span class="play-badge">&#x25B6;</span>
       {% else %}
       <img src="{{ e.thumb_url }}" alt="{{ e.title }}" loading="lazy">

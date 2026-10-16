@@ -10,7 +10,7 @@
 <article class="detail">
   <div class="detail-media">
     {% if entry.media_type == 'video' %}
-    <video src="{{ entry.media_url }}" controls playsinline preload="metadata"></video>
+    <video src="{{ entry.media_url }}" {% if entry.thumb_path %}poster="{{ entry.thumb_url }}"{% endif %} controls playsinline preload="metadata"></video>
     {% else %}
     <img src="{{ entry.media_url }}" alt="{{ entry.title }}">
     {% endif %}
