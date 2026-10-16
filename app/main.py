@@ -10,11 +10,13 @@ import secrets
 import shutil
 import sqlite3
 import subprocess
+import tempfile
 import uuid
+import zipfile
 from datetime import datetime, timezone
 from pathlib import Path
 
-from fastapi import FastAPI, Form, HTTPException, Request, UploadFile, File
+from fastapi import BackgroundTasks, FastAPI, Form, HTTPException, Request, UploadFile, File
 from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -365,11 +367,25 @@ def admin_logout(request: Request):
 
 
 @app.get("/admin/backup")
-def admin_backup(request: Request):
-    """Download the SQLite database (for automated backups). Admin only."""
+def admin_backup(request: Request, background: BackgroundTasks):
+    """Download a zip of the database + all uploads (for automated backups). Admin only."""
     if not is_admin(request):
         raise HTTPException(401, "Not authorized.")
-    return FileResponse(DB_PATH, filename="hauntmap-backup.db")
+    tmp = Path(tempfile.mkstemp(prefix="hauntmap-backup-", suffix=".zip")[1])
+    try:
+        with zipfile.ZipFile(tmp, "w", zipfile.ZIP_DEFLATED) as z:
+            if DB_PATH.exists():
+                z.write(DB_PATH, "hauntmap.db")
+            if UPLOAD_DIR.exists():
+                for f in sorted(UPLOAD_DIR.rglob("*")):
+                    if f.is_file():
+                        z.write(f, f"uploads/{f.relative_to(UPLOAD_DIR)}")
+    except Exception:
+        tmp.unlink(missing_ok=True)
+        raise
+    background.add_task(tmp.unlink, True)
+    stamp = datetime.now(timezone.utc).strftime("%Y%m%d")
+    return FileResponse(tmp, filename=f"hauntmap-backup-{stamp}.zip")
 
 
 def _require_admin(request: Request) -> None:
