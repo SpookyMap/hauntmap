@@ -52,11 +52,15 @@ admin_sessions: set[str] = set()
 ADMIN_COOKIE = "haunt_admin"
 
 
+# Create dirs at import time: StaticFiles requires them to exist when mounted,
+# which happens before the startup event runs.
+DATA_DIR.mkdir(parents=True, exist_ok=True)
+UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+THUMB_DIR.mkdir(parents=True, exist_ok=True)
+
+
 @app.on_event("startup")
 def _startup() -> None:
-    DATA_DIR.mkdir(parents=True, exist_ok=True)
-    UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
-    THUMB_DIR.mkdir(parents=True, exist_ok=True)
     init_db(DB_PATH)
 
 
