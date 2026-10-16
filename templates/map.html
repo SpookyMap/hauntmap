@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block title %}Map - {{ site_name }}{% endblock %}
+{% block head %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+<style>
+.map-wrap { position: relative; margin: 0 -1rem; }
+#full-map { height: calc(100vh - 220px); min-height: 400px; width: 100%; }
+.map-search { position: absolute; top: 10px; left: 10px; right: 60px; z-index: 1000; display: flex; gap: 6px; }
+.map-search input { flex: 1; padding: 0.6rem; border-radius: 10px; border: 1px solid #33254f; background: var(--bg2); color: var(--ink); font-size: 0.95rem; }
+.map-search button { padding: 0.6rem 1rem; border-radius: 10px; border: none; background: var(--accent); color: #1a0f00; font-weight: 700; cursor: pointer; }
+.btn-locate-map { position: absolute; bottom: 20px; right: 10px; z-index: 1000; width: 44px; height: 44px; border-radius: 50%; border: 1px solid #33254f; background: var(--bg2); color: var(--ink); font-size: 1.3rem; cursor: pointer; }
+.pin-popup { text-align: center; min-width: 150px; }
+.pin-popup img, .pin-popup video { width: 150px; height: 110px; object-fit: cover; border-radius: 8px; }
+.pin-popup strong { display: block; margin: 0.3rem 0; font-size: 0.9rem; }
+.pin-popup a { color: var(--accent); font-weight: 700; text-decoration: none; }
+</style>
+{% endblock %}
+{% block content %}
+<div class="map-wrap">
+  <div id="full-map"></div>
+  <div class="map-search">
+    <input type="text" id="map-q" placeholder="Search town or address...">
+    <button id="map-go">Go</button>
+  </div>
+  <button class="btn-locate-map" id="btn-locate" title="My location">&#x1F4CD;</button>
+</div>
+<script>
+const pins = {{ pins | tojson }};
+const map = L.map('full-map').setView([40.75, -74.0], 10);
+L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom: 19}).addTo(map);
+const cluster = L.markerClusterGroup();
+pins.forEach(p => {
+  const thumb = p.thumb_path ? p.thumb_url : p.media_url;
+  const media = p.media_type === 'video'
+    ? `<video src="${p.media_url}" poster="${thumb}" muted playsinline style="pointer-events:none"></video>`
+    : `<img src="${thumb}" alt="">`;
+  const m = L.marker([p.lat, p.lng]);
+  m.bindPopup(`<div class="pin-popup">${media}<strong>${p.title}</strong><div>&#x1F383; ${p.votes} votes</div><a href="/d/${p.id}">View haunt</a></div>`);
+  cluster.addLayer(m);
+});
+map.addLayer(cluster);
+if (pins.length) {
+  const b = L.latLngBounds(pins.map(p => [p.lat, p.lng]));
+  map.fitBounds(b, {padding: [40, 40]});
+}
+document.getElementById('map-go').onclick = async () => {
+  const q = document.getElementById('map-q').value.trim();
+  if (!q) return;
+  try {
+    const r = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(q)}`,
+      {headers: {'Accept': 'application/json'}});
+    const j = await r.json();
+    if (j[0]) map.setView([+j[0].lat, +j[0].lon], 13);
+    else alert('Place not found');
+  } catch(e) { alert('Search failed'); }
+};
+document.getElementById('map-q').addEventListener('keydown', e => {
+  if (e.key === 'Enter') document.getElementById('map-go').click();
+});
+document.getElementById('btn-locate').onclick = () => {
+  if (!navigator.geolocation) return alert('Geolocation not supported');
+  navigator.geolocation.getCurrentPosition(pos => {
+    const ll = [pos.coords.latitude, pos.coords.longitude];
+    L.marker(ll).addTo(map).bindPopup('You are here').openPopup();
+    map.setView(ll, 13);
+  }, () => alert('Could not get your location'));
+};
+</script>
+{% endblock %}

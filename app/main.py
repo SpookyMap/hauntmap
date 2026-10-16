@@ -206,7 +206,6 @@ def upload_form(request: Request):
 @app.get("/nearby", response_class=HTMLResponse)
 def nearby(request: Request, q: str = "", miles: float = 10, cat: str = "halloween",
            sort: str = "top"):
-    """Search entries within a radius of a town, address, or city."""
     cat = cat if cat in CATEGORIES else "halloween"
     sort = sort if sort in ("top", "new") else "top"
     try:
@@ -240,6 +239,44 @@ def nearby(request: Request, q: str = "", miles: float = 10, cat: str = "hallowe
         {"request": request, "entries": entries, "q": q, "miles": miles,
          "err": err, "voted": voted, "cat": cat, "cat_labels": CAT_LABELS,
          "cat_emoji": CAT_EMOJI, "sort": sort},
+    )
+
+
+@app.get("/map", response_class=HTMLResponse)
+def map_view(request: Request, cat: str = "halloween"):
+    """Full-screen map with all haunt pins, Google Maps-style browsing."""
+    cat = cat if cat in CATEGORIES else "halloween"
+    with get_conn(DB_PATH) as conn:
+        rows = conn.execute(
+            "SELECT * FROM entries WHERE hidden = 0 AND category = ? "
+            "AND lat IS NOT NULL AND lng IS NOT NULL", [cat]).fetchall()
+    pins = [row_to_dict(r) for r in rows]
+    return templates.TemplateResponse(request, "map.html",
+        {"request": request, "pins": pins, "cat": cat,
+         "cat_labels": CAT_LABELS, "cat_emoji": CAT_EMOJI},
+    )
+
+
+@app.get("/tour", response_class=HTMLResponse)
+def tour_page(request: Request, s: str = "", cat: str = "halloween"):
+    cat = cat if cat in CATEGORIES else "halloween"
+    shared: list = []
+    if s.strip():
+        try:
+            ids = [int(x) for x in s.split(",") if x.strip().isdigit()][:50]
+        except ValueError:
+            ids = []
+        if ids:
+            with get_conn(DB_PATH) as conn:
+                rows = conn.execute(
+                    f"SELECT * FROM entries WHERE hidden = 0 AND category = ? "
+                    f"AND id IN ({','.join('?' * len(ids))})",
+                    [cat] + ids).fetchall()
+            by_id = {r["id"]: row_to_dict(r) for r in rows}
+            shared = [by_id[i] for i in ids if i in by_id]
+    return templates.TemplateResponse(request, "tour.html",
+        {"request": request, "shared": shared, "shared_ids": s,
+         "cat": cat, "cat_labels": CAT_LABELS, "cat_emoji": CAT_EMOJI},
     )
 
 
