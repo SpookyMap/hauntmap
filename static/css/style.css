@@ -63,6 +63,10 @@ a { color: var(--accent); }
 .tag-checks { display: flex; flex-wrap: wrap; gap: 0.4rem 0.8rem; margin-top: 0.3rem; }
 .tag-checks label { display: flex; align-items: center; gap: 0.3rem; font-weight: normal; font-size: 0.9rem; }
 .town-filter { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+.town-search {
+  background: var(--bg2); color: var(--ink); border: 1px solid #33254f;
+  border-radius: 10px; padding: 0.5rem 0.7rem; font-size: 0.95rem; width: 130px;
+}
 .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.9rem; }
 @media (max-width: 480px) { .grid { grid-template-columns: 1fr; } }
 .card {

@@ -12,12 +12,9 @@
   <form method="get" action="/" class="town-filter">
     <input type="hidden" name="sort" value="{{ sort }}">
     <input type="hidden" name="cat" value="{{ cat }}">
-    <select name="town" onchange="this.form.submit()">
-      <option value="">All towns</option>
-      {% for t in towns %}
-      <option value="{{ t }}" {% if t == town %}selected{% endif %}>{{ t }}</option>
-      {% endfor %}
-    </select>
+    {% if scare %}<input type="hidden" name="scare" value="{{ scare }}">{% endif %}
+    {% if tag %}<input type="hidden" name="tag" value="{{ tag }}">{% endif %}
+    <input type="text" name="town" value="{{ town }}" placeholder="Search town..." class="town-search">
     <select name="scare" onchange="this.form.submit()">
       <option value="">Any scare level</option>
       <option value="family" {% if scare == 'family' %}selected{% endif %}>&#x1F60A; Family</option>

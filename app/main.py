@@ -186,8 +186,8 @@ def home(request: Request, sort: str = "top", town: str = "", cat: str = "hallow
     query = "SELECT * FROM entries WHERE hidden = 0 AND category = ?"
     params: list = [cat]
     if town:
-        query += " AND town = ?"
-        params.append(town)
+        query += " AND LOWER(town) LIKE ?"
+        params.append(f"%{town.lower()}%")
     if scare in ("family", "spooky", "terrifying"):
         query += " AND scare_level = ?"
         params.append(scare)
