@@ -14,6 +14,14 @@
     <input type="hidden" name="cat" value="{{ cat }}">
     {% if scare %}<input type="hidden" name="scare" value="{{ scare }}">{% endif %}
     {% if tag %}<input type="hidden" name="tag" value="{{ tag }}">{% endif %}
+    {% if states|length > 1 %}
+    <select name="state" onchange="this.form.submit()">
+      <option value="">All states</option>
+      {% for s in states %}
+      <option value="{{ s }}" {% if s == state %}selected{% endif %}>{{ s }}</option>
+      {% endfor %}
+    </select>
+    {% endif %}
     <select name="town" onchange="this.form.submit()">
       <option value="">All towns</option>
       {% for t in towns %}

@@ -135,6 +135,46 @@ def extract_city_state(town: str) -> str:
     return town
 
 
+def extract_state(town: str) -> str:
+    """Extract state code from a town field like '22 Collins St, Cranford, NJ'."""
+    parts = [p.strip() for p in town.split(",") if p.strip()]
+    if len(parts) >= 2 and len(parts[-1]) <= 3:
+        return parts[-1].upper()
+    return ""
+
+
+def states(category: str = "halloween") -> list[str]:
+    with get_conn(DB_PATH) as conn:
+        rows = conn.execute(
+            "SELECT DISTINCT town FROM entries "
+            "WHERE hidden = 0 AND category = ?",
+            (category,),
+        ).fetchall()
+    seen: dict[str, None] = {}
+    for r in rows:
+        st = extract_state(r["town"])
+        if st and st not in seen:
+            seen[st] = None
+    return sorted(seen)
+
+
+def towns(category: str = "halloween", state: str = "") -> list[str]:
+    with get_conn(DB_PATH) as conn:
+        rows = conn.execute(
+            "SELECT DISTINCT town FROM entries "
+            "WHERE hidden = 0 AND category = ? ORDER BY town",
+            (category,),
+        ).fetchall()
+    seen: dict[str, None] = {}
+    for r in rows:
+        if state and extract_state(r["town"]) != state.upper():
+            continue
+        city_state = extract_city_state(r["town"])
+        if city_state and city_state not in seen:
+            seen[city_state] = None
+    return sorted(seen)
+
+
 def towns(category: str = "halloween") -> list[str]:
     with get_conn(DB_PATH) as conn:
         rows = conn.execute(
@@ -208,17 +248,23 @@ def make_video_poster(src: Path, dest_name: str) -> str | None:
 
 @app.get("/", response_class=HTMLResponse)
 def home(request: Request, sort: str = "top", town: str = "", town_search: str = "",
-         cat: str = "halloween", scare: str = "", tag: str = ""):
+         state: str = "", cat: str = "halloween", scare: str = "", tag: str = ""):
     cat = cat if cat in CATEGORIES else "halloween"
     sort = sort if sort in ("top", "new") else "top"
     # text search takes priority over dropdown
     town = town_search.strip() or town
+    state = state.strip().upper()
     order = "votes DESC, created_at DESC" if sort == "top" else "created_at DESC"
     query = "SELECT * FROM entries WHERE hidden = 0 AND category = ?"
     params: list = [cat]
     if town:
         query += " AND LOWER(town) LIKE ?"
         params.append(f"%{town.lower()}%")
+    elif state:
+        # match state as the trailing part: '%, NJ' or '%,NJ'
+        query += " AND (LOWER(town) LIKE ? OR LOWER(town) LIKE ?)"
+        params.append(f"%, {state.lower()}")
+        params.append(f"%,{state.lower()}")
     if scare in ("family", "spooky", "terrifying"):
         query += " AND scare_level = ?"
         params.append(scare)
@@ -231,7 +277,8 @@ def home(request: Request, sort: str = "top", town: str = "", town_search: str =
     voted = {k[6:] for k in request.cookies if k.startswith("voted_")}
     return templates.TemplateResponse(request, "index.html",
         {"request": request, "entries": entries, "sort": sort,
-         "town": town, "towns": towns(cat), "voted": voted,
+         "town": town, "towns": towns(cat, state), "states": states(cat),
+         "state": state, "voted": voted,
          "cat": cat, "cat_labels": CAT_LABELS, "cat_emoji": CAT_EMOJI,
          "scare": scare, "tag": tag},
     )
