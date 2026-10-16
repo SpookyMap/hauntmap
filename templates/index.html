@@ -14,6 +14,8 @@
     <input type="hidden" name="cat" value="{{ cat }}">
     {% if scare %}<input type="hidden" name="scare" value="{{ scare }}">{% endif %}
     {% if tag %}<input type="hidden" name="tag" value="{{ tag }}">{% endif %}
+    <input type="text" name="town_search" value="" placeholder="&#x1F50D; Search towns..." class="town-search town-search-full">
+    <div class="filter-row">
     {% if states|length > 1 %}
     <select name="state" onchange="this.form.submit()">
       <option value="">All states</option>
@@ -28,7 +30,6 @@
       <option value="{{ t }}" {% if t == town %}selected{% endif %}>{{ t }}</option>
       {% endfor %}
     </select>
-    <input type="text" name="town_search" value="" placeholder="Or type a town..." class="town-search">
     <select name="scare" onchange="this.form.submit()">
       <option value="">Any scare level</option>
       <option value="family" {% if scare == 'family' %}selected{% endif %}>&#x1F60A; Family</option>
@@ -47,6 +48,7 @@
       <option value="street-wide" {% if tag == 'street-wide' %}selected{% endif %}>Street-wide</option>
       <option value="multi-house" {% if tag == 'multi-house' %}selected{% endif %}>Multi-house</option>
     </select>
+    </div>
   </form>
 </div>
 

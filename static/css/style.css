@@ -62,10 +62,16 @@ a { color: var(--accent); }
 .nearby-count { color: var(--muted); margin: 0.5rem 0 1rem; }
 .tag-checks { display: flex; flex-wrap: wrap; gap: 0.4rem 0.8rem; margin-top: 0.3rem; }
 .tag-checks label { display: flex; align-items: center; gap: 0.3rem; font-weight: normal; font-size: 0.9rem; }
-.town-filter { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+.town-filter { display: flex; flex-direction: column; gap: 0.5rem; }
 .town-search {
   background: var(--bg2); color: var(--ink); border: 1px solid #33254f;
   border-radius: 10px; padding: 0.5rem 0.7rem; font-size: 0.95rem; width: 130px;
+}
+.town-search-full { width: 100%; box-sizing: border-box; }
+.filter-row { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+.filter-row select {
+  background: var(--bg2); color: var(--ink); border: 1px solid #33254f;
+  border-radius: 10px; padding: 0.5rem; font-size: 0.95rem;
 }
 .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.9rem; }
 @media (max-width: 480px) { .grid { grid-template-columns: 1fr; } }
