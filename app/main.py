@@ -191,7 +191,7 @@ def home(request: Request, sort: str = "top", town: str = "", cat: str = "hallow
     if scare in ("family", "spooky", "terrifying"):
         query += " AND scare_level = ?"
         params.append(scare)
-    if tag in ("animatronics", "inflatables", "handmade", "walkthrough", "projector", "lights", "music"):
+    if tag in ("animatronics", "inflatables", "handmade", "walkthrough", "projector", "lights", "music", "street-wide", "multi-house"):
         query += " AND (',' || COALESCE(tags,'') || ',') LIKE ?"
         params.append(f"%,{tag},%")
     query += f" ORDER BY {order} LIMIT 100"
@@ -315,7 +315,8 @@ async def upload_submit(
     form = await request.form()
     tags = ",".join(sorted({t for t in form.getlist("tags")
                             if t in ("animatronics", "inflatables", "handmade", "walkthrough",
-                                     "projector", "lights", "music")})) or None
+                                     "projector", "lights", "music", "street-wide",
+                                     "multi-house")})) or None
 
     lat_f = lng_f = None
     if lat.strip() or lng.strip():

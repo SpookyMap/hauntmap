@@ -28,7 +28,7 @@ CREATE TABLE IF NOT EXISTS entries (
     tiktok_url TEXT,                      -- optional TikTok video link
     created_at TEXT NOT NULL,             -- UTC ISO timestamp
     scare_level TEXT,                     -- 'family' | 'spooky' | 'terrifying'
-    tags TEXT                             -- comma-separated: animatronics,inflatables,handmade,walkthrough,projector,lights,music
+    tags TEXT                             -- comma-separated: animatronics,inflatables,handmade,walkthrough,projector,lights,music,street-wide,multi-house
 );
 CREATE INDEX IF NOT EXISTS idx_entries_town ON entries(town);
 CREATE INDEX IF NOT EXISTS idx_entries_votes ON entries(votes DESC);
