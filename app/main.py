@@ -13,6 +13,10 @@ import subprocess
 import tempfile
 import uuid
 import zipfile
+import math
+import json
+import urllib.request
+import urllib.parse
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -75,6 +79,30 @@ def row_to_dict(row: sqlite3.Row) -> dict:
     d["media_url"] = f"/media/{d['media_path']}"
     d["thumb_url"] = f"/media/{d['thumb_path']}" if d["thumb_path"] else d["media_url"]
     return d
+
+
+def haversine_miles(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
+    r = 3958.8  # earth radius in miles
+    p1, p2 = math.radians(lat1), math.radians(lat2)
+    dp = math.radians(lat2 - lat1)
+    dl = math.radians(lon2 - lon1)
+    a = math.sin(dp / 2) ** 2 + math.cos(p1) * math.cos(p2) * math.sin(dl / 2) ** 2
+    return 2 * r * math.asin(math.sqrt(a))
+
+
+def geocode_nominatim(q: str) -> tuple[float, float] | None:
+    """Geocode a place query via OpenStreetMap Nominatim. Returns (lat, lng) or None."""
+    url = "https://nominatim.openstreetmap.org/search?" + urllib.parse.urlencode(
+        {"q": q, "format": "json", "limit": 1})
+    req = urllib.request.Request(url, headers={"User-Agent": "HauntMap/1.0"})
+    try:
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            data = json.loads(resp.read().decode())
+        if data:
+            return float(data[0]["lat"]), float(data[0]["lon"])
+    except Exception:
+        pass
+    return None
 
 
 def get_entry(entry_id: int) -> dict | None:
@@ -173,6 +201,46 @@ def home(request: Request, sort: str = "top", town: str = "", cat: str = "hallow
 @app.get("/upload", response_class=HTMLResponse)
 def upload_form(request: Request):
     return templates.TemplateResponse(request, "upload.html", {"request": request, "error": None})
+
+
+@app.get("/nearby", response_class=HTMLResponse)
+def nearby(request: Request, q: str = "", miles: float = 10, cat: str = "halloween",
+           sort: str = "top"):
+    """Search entries within a radius of a town, address, or city."""
+    cat = cat if cat in CATEGORIES else "halloween"
+    sort = sort if sort in ("top", "new") else "top"
+    try:
+        miles = max(1, min(float(miles), 500))
+    except (TypeError, ValueError):
+        miles = 10
+    entries: list = []
+    err: str | None = None
+    center: tuple[float, float] | None = None
+    if q.strip():
+        center = geocode_nominatim(q.strip())
+        if center is None:
+            err = f"Couldn't find '{q.strip()}'. Try a town or city name."
+        else:
+            with get_conn(DB_PATH) as conn:
+                rows = conn.execute(
+                    "SELECT * FROM entries WHERE hidden = 0 AND category = ? "
+                    "AND lat IS NOT NULL AND lng IS NOT NULL", [cat]).fetchall()
+            clat, clng = center
+            for r in rows:
+                d = row_to_dict(r)
+                d["distance"] = haversine_miles(clat, clng, r["lat"], r["lng"])
+                if d["distance"] <= miles:
+                    entries.append(d)
+            order = "votes DESC, created_at DESC" if sort == "top" else "created_at DESC"
+            # sort by distance first, then the chosen order
+            entries.sort(key=lambda e: (e["distance"],
+                                        -e["votes"] if sort == "top" else e["created_at"]))
+    voted = {k[6:] for k in request.cookies if k.startswith("voted_")}
+    return templates.TemplateResponse(request, "nearby.html",
+        {"request": request, "entries": entries, "q": q, "miles": miles,
+         "err": err, "voted": voted, "cat": cat, "cat_labels": CAT_LABELS,
+         "cat_emoji": CAT_EMOJI, "sort": sort},
+    )
 
 
 @app.post("/upload", response_class=HTMLResponse)

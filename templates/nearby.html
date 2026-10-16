@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Nearby haunts - {{ site_name }}{% endblock %}
+{% block content %}
+<h2>&#x1F50D; Find haunts near you</h2>
+<form method="get" action="/nearby" class="nearby-form">
+  <input type="text" name="q" value="{{ q }}" placeholder="Town, city, or address..." required>
+  <select name="miles">
+    {% for m in [2, 5, 10, 25, 50] %}
+    <option value="{{ m }}" {% if miles == m %}selected{% endif %}>within {{ m }} mi</option>
+    {% endfor %}
+  </select>
+  <input type="hidden" name="cat" value="{{ cat }}">
+  <button type="submit" class="btn">Search</button>
+</form>
+
+{% if err %}
+<div class="empty"><p>{{ err }}</p></div>
+{% elif q %}
+  <p class="nearby-count">{{ entries|length }} haunt{{ 's' if entries|length != 1 }} within {{ miles }} mi of "{{ q }}"</p>
+  {% if entries %}
+  <div class="grid">
+    {% for e in entries %}
+    <a class="card" href="/d/{{ e.id }}">
+      <div class="card-media">
+        {% if e.media_type == 'video' %}
+        <video src="{{ e.media_url }}" {% if e.thumb_path %}poster="{{ e.thumb_url }}"{% endif %} preload="metadata" muted playsinline></video>
+        <span class="play-badge">&#x25B6;</span>
+        {% else %}
+        <img src="{{ e.thumb_url }}" alt="{{ e.title }}" loading="lazy">
+        {% endif %}
+      </div>
+      <div class="card-body">
+        <h3>{{ e.title }}</h3>
+        <p class="meta">{{ e.town }}{% if e.display_name %} &middot; {{ e.display_name }}{% endif %}</p>
+        <p class="meta">{{ "%.1f"|format(e.distance) }} mi away &middot; &#x1F383; {{ e.votes }} vote{{ 's' if e.votes != 1 }}</p>
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty">
+    <p class="empty-emoji">&#x1F47B;</p>
+    <p>No haunts within {{ miles }} miles of "{{ q }}" yet.</p>
+    <p><a class="btn" href="/upload">Be the first to add one</a></p>
+  </div>
+  {% endif %}
+{% endif %}
+{% endblock %}

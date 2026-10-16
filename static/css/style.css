@@ -50,6 +50,16 @@ a { color: var(--accent); }
   background: var(--bg2); color: var(--ink); border: 1px solid #33254f;
   border-radius: 10px; padding: 0.5rem; font-size: 0.95rem; max-width: 45vw;
 }
+.nearby-form { display: flex; gap: 0.5rem; margin-bottom: 1rem; flex-wrap: wrap; }
+.nearby-form input[type="text"] {
+  flex: 1; min-width: 140px; background: var(--bg2); color: var(--ink);
+  border: 1px solid #33254f; border-radius: 10px; padding: 0.55rem 0.7rem; font-size: 0.95rem;
+}
+.nearby-form select {
+  background: var(--bg2); color: var(--ink); border: 1px solid #33254f;
+  border-radius: 10px; padding: 0.5rem; font-size: 0.95rem;
+}
+.nearby-count { color: var(--muted); margin: 0.5rem 0 1rem; }
 .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.9rem; }
 @media (max-width: 480px) { .grid { grid-template-columns: 1fr; } }
 .card {
