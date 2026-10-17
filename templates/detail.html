@@ -18,6 +18,21 @@
   </div>
   <h1>{{ entry.title }}</h1>
   <p class="meta">{{ entry.town }}{% if entry.display_name %} &middot; {{ entry.display_name }}{% endif %}</p>
+  {% if entry.scare_level %}
+  <p class="scare-badge">
+    {% if entry.scare_level == 'family' %}&#x1F60A; Family-friendly
+    {% elif entry.scare_level == 'spooky' %}&#x1F47B; Spooky
+    {% elif entry.scare_level == 'terrifying' %}&#x1F631; Terrifying
+    {% endif %}
+  </p>
+  {% endif %}
+  {% if entry.tags %}
+  <p class="tag-list">
+    {% for tag in entry.tags.split(',') %}
+    <span class="tag">{{ tag }}</span>
+    {% endfor %}
+  </p>
+  {% endif %}
   <p class="votes-big">&#x1F383; {{ entry.votes }} vote{{ 's' if entry.votes != 1 }}</p>
 
   {% if entry.tiktok_url %}
