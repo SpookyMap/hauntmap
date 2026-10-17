@@ -175,21 +175,6 @@ def towns(category: str = "halloween", state: str = "") -> list[str]:
     return sorted(seen)
 
 
-def towns(category: str = "halloween") -> list[str]:
-    with get_conn(DB_PATH) as conn:
-        rows = conn.execute(
-            "SELECT DISTINCT town FROM entries "
-            "WHERE hidden = 0 AND category = ? ORDER BY town",
-            (category,),
-        ).fetchall()
-    seen: dict[str, None] = {}
-    for r in rows:
-        city_state = extract_city_state(r["town"])
-        if city_state and city_state not in seen:
-            seen[city_state] = None
-    return sorted(seen)
-
-
 def is_admin(request: Request) -> bool:
     return request.cookies.get(ADMIN_COOKIE) in admin_sessions
 
