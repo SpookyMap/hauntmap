@@ -14,9 +14,13 @@
 
 <form method="post" action="/upload" enctype="multipart/form-data" class="form">
   <label>Category <span class="req">*</span>
-    <select name="category" required>
+    <select name="category" id="category-select" required>
       <option value="halloween">&#x1F383; Haunt Map (Halloween)</option>
       <option value="christmas">&#x1F384; Jolly Map (Christmas)</option>
+      <option value="restaurants">&#x1F37D;&#xFE0F; Restaurants</option>
+      <option value="coffee">&#x2615; Coffee & Cafes</option>
+      <option value="shops">&#x1F6CD;&#xFE0F; Shops</option>
+      <option value="parks">&#x1F333; Parks</option>
     </select>
   </label>
   <label>Title <span class="req">*</span>
@@ -32,6 +36,7 @@
     <input type="file" name="media" accept=".jpg,.jpeg,.png,.webp,.mp4" required>
     <small>Photo: JPG/PNG/WebP up to 10 MB. Video: MP4 up to 100 MB.</small>
   </label>
+  <div id="halloween-fields">
   <label>Scare level <span class="opt">(optional)</span>
     <select name="scare_level">
       <option value="">Not specified</option>
@@ -53,6 +58,13 @@
       <label><input type="checkbox" name="tags" value="multi-house"> Multi-house</label>
     </div>
   </label>
+  </div>
+  <script>
+  document.getElementById('category-select').addEventListener('change', function() {
+    const show = (this.value === 'halloween' || this.value === 'christmas');
+    document.getElementById('halloween-fields').style.display = show ? '' : 'none';
+  });
+  </script>
   <label>Map pin <span class="opt">(optional &mdash; tap the map)</span></label>
   <div id="map"></div>
   <input type="hidden" name="lat" id="lat">

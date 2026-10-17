@@ -73,5 +73,27 @@
     {% endif %}
   </div>
 </article>
+
+<div class="tips-section" id="tips">
+  <h3>&#x1F4AC; Tips & experiences ({{ tips|length }})</h3>
+  {% if tips %}
+  <div class="tips-list">
+    {% for t in tips %}
+    <div class="tip">
+      <div class="tip-meta"><strong>{{ t.display_name or 'Anonymous' }}</strong></div>
+      <p>{{ t.text }}</p>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <p class="muted">No tips yet — been here? Share yours below.</p>
+  {% endif %}
+  <form method="post" action="/d/{{ entry.id }}/tip" class="tip-form">
+    <input type="text" name="display_name" placeholder="Your name (optional)" maxlength="40">
+    <textarea name="text" placeholder="Share a tip, memory, or what you loved..." maxlength="500" required rows="3"></textarea>
+    <button type="submit" class="btn">Share</button>
+  </form>
+</div>
+
 <p><a href="/">&larr; Back to all haunts</a></p>
 {% endblock %}

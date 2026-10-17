@@ -86,6 +86,18 @@ a { color: var(--accent); }
 }
 .newsletter-success { color: #7ee787; font-weight: 700; }
 .newsletter-error { color: #ff7b72; font-size: 0.85rem; }
+.tips-section { margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid #33254f; }
+.tips-section h3 { margin: 0 0 1rem; }
+.tips-list { display: flex; flex-direction: column; gap: 0.8rem; margin-bottom: 1.2rem; }
+.tip { background: var(--bg2); border-radius: 10px; padding: 0.8rem 1rem; }
+.tip-meta { font-size: 0.85rem; color: var(--muted); margin-bottom: 0.3rem; }
+.tip p { margin: 0; }
+.tip-form { display: flex; flex-direction: column; gap: 0.5rem; }
+.tip-form input, .tip-form textarea {
+  background: var(--bg2); color: var(--ink); border: 1px solid #33254f;
+  border-radius: 10px; padding: 0.6rem 0.8rem; font-size: 0.95rem; font-family: inherit;
+}
+.tip-form button { align-self: flex-start; }
 .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.9rem; }
 @media (max-width: 480px) { .grid { grid-template-columns: 1fr; } }
 .card {

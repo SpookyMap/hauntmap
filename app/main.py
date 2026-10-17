@@ -43,9 +43,12 @@ MAX_PHOTO_BYTES = 10 * 1024 * 1024
 MAX_VIDEO_BYTES = 100 * 1024 * 1024
 THUMB_MAX_WIDTH = 640
 
-CATEGORIES = ("halloween", "christmas")
-CAT_LABELS = {"halloween": "Halloween", "christmas": "Christmas"}
-CAT_EMOJI = {"halloween": "🎃", "christmas": "🎄"}
+CATEGORIES = ("halloween", "christmas", "restaurants", "coffee", "shops", "parks")
+CAT_LABELS = {"halloween": "Halloween", "christmas": "Christmas",
+              "restaurants": "Restaurants", "coffee": "Coffee & Cafes",
+              "shops": "Shops", "parks": "Parks"}
+CAT_EMOJI = {"halloween": "🎃", "christmas": "🎄", "restaurants": "🍽️",
+             "coffee": "☕", "shops": "🛍️", "parks": "🌳"}
 
 app = FastAPI(title=SITE_NAME, docs_url=None, redoc_url=None)
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
@@ -462,9 +465,34 @@ def detail(request: Request, entry_id: int):
         raise HTTPException(404, "Entry not found.")
     voted = f"voted_{entry_id}" in request.cookies
     reported = f"reported_{entry_id}" in request.cookies
+    with get_conn(DB_PATH) as conn:
+        tips = [dict(r) for r in conn.execute(
+            "SELECT display_name, text, created_at FROM comments "
+            "WHERE entry_id = ? AND hidden = 0 ORDER BY created_at DESC LIMIT 50",
+            (entry_id,)).fetchall()]
     return templates.TemplateResponse(request, "detail.html",
-        {"request": request, "entry": entry, "voted": voted, "reported": reported},
+        {"request": request, "entry": entry, "voted": voted, "reported": reported,
+         "tips": tips},
     )
+
+
+@app.post("/d/{entry_id}/tip")
+async def add_tip(entry_id: int, request: Request):
+    entry = get_entry(entry_id)
+    if not entry or entry["hidden"]:
+        raise HTTPException(404, "Entry not found.")
+    form = await request.form()
+    text = form.get("text", "").strip()[:500]
+    name = form.get("display_name", "").strip()[:40] or None
+    if text:
+        with get_conn(DB_PATH) as conn:
+            conn.execute(
+                "INSERT INTO comments (entry_id, display_name, text, created_at) "
+                "VALUES (?, ?, ?, ?)",
+                (entry_id, name, text, datetime.now(timezone.utc).isoformat()),
+            )
+            conn.commit()
+    return RedirectResponse(f"/d/{entry_id}#tips", status_code=303)
 
 
 @app.post("/d/{entry_id}/vote")
