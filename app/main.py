@@ -258,18 +258,40 @@ def make_video_poster(src: Path, dest_name: str) -> str | None:
 
 @app.get("/", response_class=HTMLResponse)
 def home(request: Request, sort: str = "top", town: str = "", town_search: str = "",
-         state: str = "", cat: str = "halloween", scare: str = "", tag: str = ""):
+         state: str = "", region: str = "", cat: str = "halloween", scare: str = "", tag: str = ""):
     cat = cat if cat in CATEGORIES else "halloween"
     sort = sort if sort in ("top", "new") else "top"
     # text search takes priority over dropdown
     town = town_search.strip() or town
     state = state.strip().upper()
+    region = region.strip().lower()
     order = "votes DESC, created_at DESC" if sort == "top" else "created_at DESC"
     query = "SELECT * FROM entries WHERE hidden = 0 AND category = ?"
     params: list = [cat]
     if town:
         query += " AND LOWER(town) LIKE ?"
         params.append(f"%{town.lower()}%")
+    elif region == "long-island":
+        li_towns = ["wantagh", "bellmore", "merrick", "levittown", "east meadow", "malverne",
+                    "massapequa", "seaford", "farmingdale", "bethpage", "hicksville", "plainview",
+                    "syosset", "huntington", "babylon", "lindenhurst", "deer park", "brentwood",
+                    "smithtown", "commack", "melville", "wyandanch", "west babylon", "north babylon",
+                    "copiague", "amityville", "freeport", "baldwin", "oceanside", "rockville centre",
+                    "hempstead", "uniondale", "roosevelt", "garden city", "mineola", "new hyde park",
+                    "great neck", "port washington", "roslyn", "albertson", "williston park",
+                    "floral park", "franklin square", "west hempstead", "elamont", "valley stream",
+                    "lynbrook", "east rockaway", "hewlett", "woodmere", "cedarhurst", "inwood",
+                    "lawrence", "far rockaway", "long beach", "island park", "oceanside",
+                    "bay shore", "brightwaters", "islandia", "hauppauge", "central islip",
+                    "east islip", "west islip", "islip", "oakdale", "sayville", "patchogue",
+                    "bellport", "mastic", "shirley", "moriches", "center moriches", "east moriches",
+                    "manorville", "calverton", "riverhead", "jamesport", "mattituck", "cuthogue",
+                    "southold", "greenport", "orient", "shelter island", "sag harbor", "easthampton",
+                    "southampton", "bridgehampton", "watermill", "montauk", "amgansett", "wainscott",
+                    "north haven", "north sea", "nantucket", "nantucket"]
+        placeholders = " OR ".join(["LOWER(town) LIKE ?"] * len(li_towns))
+        query += f" AND ({placeholders})"
+        params.extend([f"%{t}%" for t in li_towns])
     elif state:
         # match state as the trailing part: '%, NJ' or '%,NJ'
         query += " AND (LOWER(town) LIKE ? OR LOWER(town) LIKE ?)"
@@ -288,7 +310,7 @@ def home(request: Request, sort: str = "top", town: str = "", town_search: str =
     return templates.TemplateResponse(request, "index.html",
         {"request": request, "entries": entries, "sort": sort,
          "town": town, "towns": towns(cat, state), "states": states(cat),
-         "state": state, "voted": voted,
+         "state": state, "region": region, "voted": voted,
          "cat": cat, "cat_labels": CAT_LABELS, "cat_emoji": CAT_EMOJI,
          "scare": scare, "tag": tag},
     )

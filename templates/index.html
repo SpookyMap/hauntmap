@@ -96,9 +96,10 @@
 {% endif %}
 
 <div class="state-tabs-bottom">
-  <a href="/?cat={{ cat }}{% if sort != 'top' %}&sort={{ sort }}{% endif %}{% if town %}&town={{ town }}{% endif %}{% if scare %}&scare={{ scare }}{% endif %}{% if tag %}&tag={{ tag }}{% endif %}" class="state-btn {% if not state %}active{% endif %}">All</a>
+  <a href="/?cat={{ cat }}{% if sort != 'top' %}&sort={{ sort }}{% endif %}{% if town %}&town={{ town }}{% endif %}{% if scare %}&scare={{ scare }}{% endif %}{% if tag %}&tag={{ tag }}{% endif %}" class="state-btn {% if not state and not region %}active{% endif %}">All</a>
   <a href="/?cat={{ cat }}&state=NJ{% if sort != 'top' %}&sort={{ sort }}{% endif %}{% if town %}&town={{ town }}{% endif %}{% if scare %}&scare={{ scare }}{% endif %}{% if tag %}&tag={{ tag }}{% endif %}" class="state-btn {% if state == 'NJ' %}active{% endif %}">New Jersey</a>
-  <a href="/?cat={{ cat }}&state=NY{% if sort != 'top' %}&sort={{ sort }}{% endif %}{% if town %}&town={{ town }}{% endif %}{% if scare %}&scare={{ scare }}{% endif %}{% if tag %}&tag={{ tag }}{% endif %}" class="state-btn {% if state == 'NY' %}active{% endif %}">New York</a>
+  <a href="/?cat={{ cat }}&state=NY{% if sort != 'top' %}&sort={{ sort }}{% endif %}{% if town %}&town={{ town }}{% endif %}{% if scare %}&scare={{ scare }}{% endif %}{% if tag %}&tag={{ tag }}{% endif %}" class="state-btn {% if state == 'NY' and not region %}active{% endif %}">New York</a>
+  <a href="/?cat={{ cat }}&region=long-island{% if sort != 'top' %}&sort={{ sort }}{% endif %}{% if town %}&town={{ town }}{% endif %}{% if scare %}&scare={{ scare }}{% endif %}{% if tag %}&tag={{ tag }}{% endif %}" class="state-btn {% if region == 'long-island' %}active{% endif %}">Long Island</a>
 </div>
 
 <div class="newsletter-box">
