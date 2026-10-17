@@ -30,28 +30,6 @@
 </ol>
 {% endif %}
 
-{% for group in per_town %}
-<h2>{{ group.town }}</h2>
-<ol class="leader-list">
-  {% for e in group.entries %}
-  <li>
-    <a href="/d/{{ e.id }}">
-      {% if e.media_type == 'video' %}
-      <video src="{{ e.media_url }}" preload="metadata" muted playsinline></video>
-      {% else %}
-      <img src="{{ e.thumb_url }}" alt="{{ e.title }}" loading="lazy">
-      {% endif %}
-      <span class="leader-info">
-        <strong>#{{ loop.index }} {{ e.title }}</strong>
-        <span class="votes">&#x1F383; {{ e.votes }}</span>
-        {% if e.is_sample %}<span class="sample-badge">Sample</span>{% endif %}
-      </span>
-    </a>
-  </li>
-  {% endfor %}
-</ol>
-{% endfor %}
-
 {% if not top %}
 <div class="empty">
   <p class="empty-emoji">&#x1F47B;</p>
