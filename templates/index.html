@@ -6,7 +6,7 @@
 </div>
 <div class="cat-tabs-sub">
   <span class="cat-sub-label">Tour fuel:</span>
-  {% for c in ['restaurants', 'coffee', 'shops', 'parks'] %}
+  {% for c in ['halloween_stores', 'restaurants', 'coffee', 'shops', 'parks'] %}
   <a href="/?cat={{ c }}{% if sort != 'top' %}&sort={{ sort }}{% endif %}{% if town %}&town={{ town }}{% endif %}" class="cat-btn-sub {% if cat == c %}active{% endif %}">{{ cat_emoji[c] }} {{ cat_labels[c] }}</a>
   {% endfor %}
 </div>
