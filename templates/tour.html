@@ -42,6 +42,7 @@
     <button id="mode-drive">&#x1F697; Drive</button>
   </div>
   <button class="btn" id="btn-locate">&#x1F4CD; Show my location</button>
+  <button class="btn" id="btn-optimize">&#x26A1; Optimize route</button>
   <button class="btn" id="btn-clear">Clear tour</button>
 </div>
 <p class="tour-stats" id="tour-stats"></p>
@@ -182,6 +183,21 @@ function setMode() {
   render();
 }
 document.getElementById('btn-clear').onclick = () => { tour = []; render(); };
+document.getElementById('btn-optimize').onclick = () => {
+  if (tour.length < 3) { alert('Add at least 3 stops to optimize.'); return; }
+  // nearest-neighbor: start from first stop, always go to closest unvisited
+  const dist = (a, b) => Math.hypot(a.lat - b.lat, a.lng - b.lng);
+  const remaining = tour.slice(1);
+  const ordered = [tour[0]];
+  while (remaining.length) {
+    const last = ordered[ordered.length - 1];
+    let best = 0, bestD = Infinity;
+    remaining.forEach((e, i) => { const d = dist(last, e); if (d < bestD) { bestD = d; best = i; } });
+    ordered.push(remaining.splice(best, 1)[0]);
+  }
+  tour = ordered;
+  render();
+};
 document.getElementById('btn-share').onclick = () => {
   const ids = tour.map(e => e.id).join(',');
   const link = `${location.origin}/tour?s=${ids}`;
