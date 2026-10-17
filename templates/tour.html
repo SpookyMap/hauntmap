@@ -15,7 +15,7 @@
 .tour-num { background: var(--accent); color: #1a0f00; font-weight: 700; width: 1.8rem; height: 1.8rem; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 .tour-info { flex: 1; min-width: 0; }
 .tour-info strong { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.tour-info small { color: var(--muted); }
+.tour-info small { color: var(--ink); font-size: 0.85rem; display: block; margin-top: 2px; }
 .tour-actions { display: flex; gap: 0.25rem; }
 .tour-actions button { background: var(--bg2); border: 1px solid #33254f; color: var(--ink); border-radius: 8px; padding: 0.3rem 0.5rem; cursor: pointer; font-size: 0.85rem; }
 .tour-stats { color: var(--muted); margin-bottom: 1rem; }
@@ -138,7 +138,7 @@ function openAMaps() {
 document.getElementById('btn-gmaps').onclick = openGMaps;
 document.getElementById('btn-amaps').onclick = openAMaps;
 document.getElementById('btn-copy-addr').onclick = async () => {
-  const text = tour.map((e, i) => `${i+1}. ${e.title} — ${e.town}`).join('\n');
+  const text = `My HauntMap Tour 🎃\n\n` + tour.map((e, i) => `${i+1}. ${e.title}\n   📍 ${e.town}`).join('\n\n');
   try { await navigator.clipboard.writeText(text); alert('Addresses copied!'); }
   catch(e) { prompt('Copy these addresses:', text); }
 };
