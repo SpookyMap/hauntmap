@@ -55,6 +55,14 @@
   <input type="text" id="share-link" readonly>
   <button class="btn" id="btn-copy">Copy</button>
 </div>
+<div class="tour-controls" id="social-row" style="display:none">
+  <button class="btn" id="btn-fb">&#x1F4D8; Facebook</button>
+  <button class="btn" id="btn-x">&#x1D54F; X</button>
+  <button class="btn" id="btn-wa">&#x1F4AC; WhatsApp</button>
+  <button class="btn" id="btn-tg">&#x2708;&#xFE0F; Telegram</button>
+  <button class="btn" id="btn-ig">&#x1F4F7; Instagram</button>
+  <button class="btn" id="btn-tt">&#x1F3B5; TikTok</button>
+</div>
 <button class="btn" id="btn-share" style="display:none">Share this tour</button>
 <div class="empty" id="tour-empty" style="display:none">
   <p class="empty-emoji">&#x1F5FA;&#xFE0F;</p>
@@ -179,6 +187,21 @@ document.getElementById('btn-share').onclick = () => {
   const link = `${location.origin}/tour?s=${ids}`;
   document.getElementById('share-link').value = link;
   document.getElementById('share-row').style.display = 'flex';
+  document.getElementById('social-row').style.display = 'flex';
+};
+function shareUrl() { return document.getElementById('share-link').value; }
+function shareText() { return `Check out my Halloween haunt tour on HauntMap! 🎃 ${tour.length} stops`; }
+document.getElementById('btn-fb').onclick = () => window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl())}`, '_blank');
+document.getElementById('btn-x').onclick = () => window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText())}&url=${encodeURIComponent(shareUrl())}`, '_blank');
+document.getElementById('btn-wa').onclick = () => window.open(`https://wa.me/?text=${encodeURIComponent(shareText() + ' ' + shareUrl())}`, '_blank');
+document.getElementById('btn-tg').onclick = () => window.open(`https://t.me/share/url?url=${encodeURIComponent(shareUrl())}&text=${encodeURIComponent(shareText())}`, '_blank');
+document.getElementById('btn-ig').onclick = async () => {
+  try { await navigator.clipboard.writeText(shareUrl()); alert('Tour link copied! Paste it in your Instagram story or bio.'); }
+  catch(e) { prompt('Copy your tour link:', shareUrl()); }
+};
+document.getElementById('btn-tt').onclick = async () => {
+  try { await navigator.clipboard.writeText(shareUrl()); alert('Tour link copied! Paste it in your TikTok video description.'); }
+  catch(e) { prompt('Copy your tour link:', shareUrl()); }
 };
 document.getElementById('btn-copy').onclick = async () => {
   const inp = document.getElementById('share-link');
