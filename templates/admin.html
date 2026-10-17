@@ -57,5 +57,19 @@
   </div>
   {% endfor %}
 </div>
+
+<h2>Newsletter subscribers ({{ sub_count }})</h2>
+{% if subs %}
+<div class="admin-list">
+  {% for s in subs %}
+  <div class="admin-row">
+    <strong>{{ s.email }}</strong>
+    <span class="meta">{{ s.location }} &middot; {{ s.created_at[:10] }}</span>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<p class="muted">No subscribers yet.</p>
+{% endif %}
 {% endif %}
 {% endblock %}

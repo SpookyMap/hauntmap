@@ -73,6 +73,19 @@ a { color: var(--accent); }
   background: var(--bg2); color: var(--ink); border: 1px solid #33254f;
   border-radius: 10px; padding: 0.5rem; font-size: 0.95rem;
 }
+.newsletter-box {
+  background: var(--bg2); border: 1px solid #33254f; border-radius: 12px;
+  padding: 1.2rem; margin-top: 2rem; text-align: center;
+}
+.newsletter-box h3 { margin: 0 0 0.3rem; }
+.newsletter-box p { color: var(--muted); margin: 0 0 0.8rem; font-size: 0.9rem; }
+.newsletter-form { display: flex; gap: 0.4rem; justify-content: center; flex-wrap: wrap; }
+.newsletter-form input {
+  background: var(--bg); color: var(--ink); border: 1px solid #33254f;
+  border-radius: 10px; padding: 0.5rem 0.7rem; font-size: 0.95rem;
+}
+.newsletter-success { color: #7ee787; font-weight: 700; }
+.newsletter-error { color: #ff7b72; font-size: 0.85rem; }
 .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.9rem; }
 @media (max-width: 480px) { .grid { grid-template-columns: 1fr; } }
 .card {

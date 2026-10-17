@@ -7,6 +7,12 @@ import sqlite3
 from pathlib import Path
 
 SCHEMA = """
+CREATE TABLE IF NOT EXISTS subscribers (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    email TEXT NOT NULL UNIQUE,
+    location TEXT,                        -- town, county, or 'everywhere'
+    created_at TEXT NOT NULL
+);
 CREATE TABLE IF NOT EXISTS entries (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     title TEXT NOT NULL,

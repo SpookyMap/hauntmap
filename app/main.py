@@ -498,6 +498,34 @@ def report(entry_id: int, request: Request):
     return resp
 
 
+@app.post("/subscribe", response_class=HTMLResponse)
+async def subscribe(request: Request):
+    form = await request.form()
+    email = form.get("email", "").strip().lower()[:120]
+    location = form.get("location", "").strip()[:80] or "everywhere"
+    error = None
+    success = False
+    if not email or "@" not in email or "." not in email.split("@")[-1]:
+        error = "Please enter a valid email address."
+    else:
+        try:
+            with get_conn(DB_PATH) as conn:
+                conn.execute(
+                    "INSERT INTO subscribers (email, location, created_at) VALUES (?, ?, ?)",
+                    (email, location, datetime.now(timezone.utc).isoformat()),
+                )
+                conn.commit()
+            success = True
+        except sqlite3.IntegrityError:
+            # already subscribed — treat as success
+            success = True
+    # redirect back with a flag
+    ref = request.headers.get("referer", "/")
+    sep = "&" if "?" in ref else "?"
+    return RedirectResponse(f"{ref}{sep}subscribed=1" if success else f"{ref}{sep}sub_error=1",
+                            status_code=303)
+
+
 @app.get("/leaderboard", response_class=HTMLResponse)
 def leaderboard(request: Request, cat: str = "halloween"):
     cat = cat if cat in CATEGORIES else "halloween"
@@ -533,9 +561,12 @@ def admin(request: Request):
             "SELECT * FROM entries WHERE flagged = 1 ORDER BY created_at DESC").fetchall()]
         all_entries = [row_to_dict(r) for r in conn.execute(
             "SELECT * FROM entries ORDER BY created_at DESC LIMIT 200").fetchall()]
+        subs = conn.execute(
+            "SELECT email, location, created_at FROM subscribers ORDER BY created_at DESC").fetchall()
+        sub_count = len(subs)
     return templates.TemplateResponse(request, "admin.html",
         {"request": request, "logged_in": True, "flagged": flagged,
-         "all_entries": all_entries, "error": None},
+         "all_entries": all_entries, "subs": subs, "sub_count": sub_count, "error": None},
     )
 
 

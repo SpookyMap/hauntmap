@@ -80,4 +80,21 @@
   <p><a class="btn" href="/upload">Be the first to add one</a></p>
 </div>
 {% endif %}
+
+<div class="newsletter-box">
+  {% if request.query_params.get('subscribed') %}
+  <p class="newsletter-success">&#x1F389; You're in! Watch your inbox for the week's best haunts.</p>
+  {% else %}
+  <h3>&#x1F47B; Never miss a haunt</h3>
+  <p>Get the week's best new decorations in your inbox, every Friday through Halloween.</p>
+  <form method="post" action="/subscribe" class="newsletter-form">
+    <input type="email" name="email" placeholder="you@email.com" required>
+    <input type="text" name="location" placeholder="Your town (optional)">
+    <button type="submit" class="btn">Subscribe</button>
+  </form>
+  {% if request.query_params.get('sub_error') %}
+  <p class="newsletter-error">Please enter a valid email address.</p>
+  {% endif %}
+  {% endif %}
+</div>
 {% endblock %}
