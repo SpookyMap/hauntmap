@@ -1,8 +1,13 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="cat-tabs">
-  {% for c in cat_labels %}
-  <a href="/?cat={{ c }}{% if sort != 'top' %}&sort={{ sort }}{% endif %}{% if town %}&town={{ town }}{% endif %}" class="{% if cat == c %}active{% endif %}">{{ cat_emoji[c] }} {{ cat_labels[c] }}</a>
+<div class="cat-tabs-main">
+  <a href="/?cat=halloween{% if sort != 'top' %}&sort={{ sort }}{% endif %}{% if town %}&town={{ town }}{% endif %}" class="cat-btn-main {% if cat == 'halloween' %}active{% endif %}">&#x1F383; Haunt Map</a>
+  <a href="/?cat=christmas{% if sort != 'top' %}&sort={{ sort }}{% endif %}{% if town %}&town={{ town }}{% endif %}" class="cat-btn-main {% if cat == 'christmas' %}active{% endif %}">&#x1F384; Jolly Map</a>
+</div>
+<div class="cat-tabs-sub">
+  <span class="cat-sub-label">Tour fuel:</span>
+  {% for c in ['restaurants', 'coffee', 'shops', 'parks'] %}
+  <a href="/?cat={{ c }}{% if sort != 'top' %}&sort={{ sort }}{% endif %}{% if town %}&town={{ town }}{% endif %}" class="cat-btn-sub {% if cat == c %}active{% endif %}">{{ cat_emoji[c] }} {{ cat_labels[c] }}</a>
   {% endfor %}
 </div>
 <div class="feed-controls">

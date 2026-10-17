@@ -98,6 +98,21 @@ a { color: var(--accent); }
   border-radius: 10px; padding: 0.6rem 0.8rem; font-size: 0.95rem; font-family: inherit;
 }
 .tip-form button { align-self: flex-start; }
+.cat-tabs-main { display: flex; gap: 0.6rem; margin-bottom: 0.5rem; }
+.cat-btn-main {
+  flex: 1; text-align: center; padding: 0.7rem; border-radius: 12px;
+  background: var(--bg2); color: var(--ink); text-decoration: none;
+  font-weight: 700; font-size: 1.05rem; border: 2px solid transparent;
+}
+.cat-btn-main.active { border-color: var(--accent); background: #1a1030; }
+.cat-tabs-sub { display: flex; gap: 0.4rem; align-items: center; flex-wrap: wrap; margin-bottom: 1rem; }
+.cat-sub-label { font-size: 0.8rem; color: var(--muted); }
+.cat-btn-sub {
+  padding: 0.3rem 0.7rem; border-radius: 20px; font-size: 0.8rem;
+  background: var(--bg2); color: var(--muted); text-decoration: none;
+  border: 1px solid #33254f;
+}
+.cat-btn-sub.active { color: var(--ink); border-color: var(--accent); }
 .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.9rem; }
 @media (max-width: 480px) { .grid { grid-template-columns: 1fr; } }
 .card {
