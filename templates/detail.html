@@ -41,7 +41,9 @@
 
   <div class="detail-actions">
     {% if voted %}
-    <span class="btn btn-voted">&#x2713; Voted</span>
+    <form method="post" action="/d/{{ entry.id }}/unvote">
+      <button type="submit" class="btn btn-voted">&#x2713; Voted — tap to undo</button>
+    </form>
     {% else %}
     <form method="post" action="/d/{{ entry.id }}/vote">
       <button type="submit" class="btn btn-big">&#x1F383; Vote for this haunt</button>

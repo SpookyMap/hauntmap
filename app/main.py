@@ -532,6 +532,21 @@ def vote(entry_id: int, request: Request):
     return resp
 
 
+@app.post("/d/{entry_id}/unvote")
+def unvote(entry_id: int, request: Request):
+    entry = get_entry(entry_id)
+    if not entry or entry["hidden"]:
+        raise HTTPException(404, "Entry not found.")
+    resp = RedirectResponse(f"/d/{entry_id}", status_code=303)
+    cookie = f"voted_{entry_id}"
+    if cookie in request.cookies:
+        with get_conn(DB_PATH) as conn:
+            conn.execute("UPDATE entries SET votes = MAX(0, votes - 1) WHERE id = ?", (entry_id,))
+            conn.commit()
+        resp.delete_cookie(cookie)
+    return resp
+
+
 @app.post("/d/{entry_id}/report")
 def report(entry_id: int, request: Request):
     entry = get_entry(entry_id)
