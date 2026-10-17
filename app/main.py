@@ -78,12 +78,13 @@ app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="stat
 
 @app.middleware("http")
 async def _track_page_view(request: Request, call_next):
-    """Log page views for the admin traffic dashboard. Skips static/media/admin."""
+    """Log page views for the admin traffic dashboard. Skips static/media/admin and logged-in admin visits."""
     response = await call_next(request)
     try:
         if request.method == "GET" and response.status_code == 200:
             path = request.url.path
             if not path.startswith(("/media", "/static", "/admin", "/favicon")):
+                if request.cookies.get(ADMIN_COOKIE) not in admin_sessions:
                 with get_conn(DB_PATH) as conn:
                     conn.execute(
                         "INSERT INTO page_views (path, viewed_at) VALUES (?, ?)",
