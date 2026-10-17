@@ -9,7 +9,12 @@
 {% block content %}
 <article class="detail">
   <div class="detail-media">
-    {% if entry.media_type == 'video' %}
+    {% if entry.media_type == 'video' and entry.tiktok_url %}
+    <blockquote class="tiktok-embed" cite="{{ entry.tiktok_url }}" data-video-id="{{ entry.tiktok_url.split('/video/')[1].split('?')[0] }}" style="max-width: 605px;min-width: 325px;">
+      <section><a href="{{ entry.tiktok_url }}" target="_blank">Watch on TikTok</a></section>
+    </blockquote>
+    <script async src="https://www.tiktok.com/embed.js"></script>
+    {% elif entry.media_type == 'video' %}
     <video src="{{ entry.media_url }}" {% if entry.thumb_path %}poster="{{ entry.thumb_url }}"{% endif %} controls playsinline preload="metadata"></video>
     {% else %}
     <img src="{{ entry.media_url }}" alt="{{ entry.title }}">
