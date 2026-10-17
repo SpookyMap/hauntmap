@@ -11,16 +11,24 @@
   {% endfor %}
 </div>
 <div class="feed-controls">
-  <div class="sort-toggle">
-    <a href="/?cat={{ cat }}&sort=top{% if town %}&town={{ town }}{% endif %}" class="{% if sort == 'top' %}active{% endif %}">Top</a>
-    <a href="/?cat={{ cat }}&sort=new{% if town %}&town={{ town }}{% endif %}" class="{% if sort == 'new' %}active{% endif %}">Newest</a>
+  <div class="feed-top-row">
+    <form method="get" action="/" class="search-inline">
+      <input type="hidden" name="sort" value="{{ sort }}">
+      <input type="hidden" name="cat" value="{{ cat }}">
+      {% if scare %}<input type="hidden" name="scare" value="{{ scare }}">{% endif %}
+      {% if tag %}<input type="hidden" name="tag" value="{{ tag }}">{% endif %}
+      {% if town %}<input type="hidden" name="town" value="{{ town }}">{% endif %}
+      {% if state %}<input type="hidden" name="state" value="{{ state }}">{% endif %}
+      <input type="text" name="town_search" value="" placeholder="&#x1F50D; Search towns..." class="town-search-inline">
+    </form>
+    <div class="sort-toggle">
+      <a href="/?cat={{ cat }}&sort=top{% if town %}&town={{ town }}{% endif %}" class="{% if sort == 'top' %}active{% endif %}">Top</a>
+      <a href="/?cat={{ cat }}&sort=new{% if town %}&town={{ town }}{% endif %}" class="{% if sort == 'new' %}active{% endif %}">Newest</a>
+    </div>
   </div>
   <form method="get" action="/" class="town-filter">
     <input type="hidden" name="sort" value="{{ sort }}">
     <input type="hidden" name="cat" value="{{ cat }}">
-    {% if scare %}<input type="hidden" name="scare" value="{{ scare }}">{% endif %}
-    {% if tag %}<input type="hidden" name="tag" value="{{ tag }}">{% endif %}
-    <input type="text" name="town_search" value="" placeholder="&#x1F50D; Search towns..." class="town-search town-search-full">
     <div class="filter-row">
     {% if states|length > 1 %}
     <select name="state" onchange="this.form.submit()">
