@@ -38,6 +38,7 @@
 <div class="tour-controls" id="gps-row" style="display:none">
   <button class="btn" id="btn-gmaps">&#x1F5FA;&#xFE0F; Open in Google Maps</button>
   <button class="btn" id="btn-amaps">&#x1F34E; Open in Apple Maps</button>
+  <button class="btn" id="btn-copy-addr">&#x1F4CB; Copy addresses</button>
 </div>
 <ul class="tour-list" id="tour-list"></ul>
 <div class="share-row" id="share-row" style="display:none">
@@ -111,6 +112,11 @@ function openAMaps() {
 }
 document.getElementById('btn-gmaps').onclick = openGMaps;
 document.getElementById('btn-amaps').onclick = openAMaps;
+document.getElementById('btn-copy-addr').onclick = async () => {
+  const text = tour.map((e, i) => `${i+1}. ${e.title} — ${e.town}`).join('\n');
+  try { await navigator.clipboard.writeText(text); alert('Addresses copied!'); }
+  catch(e) { prompt('Copy these addresses:', text); }
+};
 function render() {
   const list = document.getElementById('tour-list');
   list.innerHTML = '';
