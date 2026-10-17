@@ -46,6 +46,12 @@ CREATE TABLE IF NOT EXISTS entries (
 );
 CREATE INDEX IF NOT EXISTS idx_entries_town ON entries(town);
 CREATE INDEX IF NOT EXISTS idx_entries_votes ON entries(votes DESC);
+CREATE TABLE IF NOT EXISTS page_views (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    path TEXT NOT NULL,                   -- URL path visited, e.g. "/" or "/d/5"
+    viewed_at TEXT NOT NULL               -- UTC ISO timestamp
+);
+CREATE INDEX IF NOT EXISTS idx_page_views_date ON page_views(viewed_at);
 """
 
 

@@ -76,6 +76,25 @@ app.mount("/media", StaticFiles(directory=str(UPLOAD_DIR)), name="media")
 app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")
 
 
+@app.middleware("http")
+async def _track_page_view(request: Request, call_next):
+    """Log page views for the admin traffic dashboard. Skips static/media/admin."""
+    response = await call_next(request)
+    try:
+        if request.method == "GET" and response.status_code == 200:
+            path = request.url.path
+            if not path.startswith(("/media", "/static", "/admin", "/favicon")):
+                with get_conn(DB_PATH) as conn:
+                    conn.execute(
+                        "INSERT INTO page_views (path, viewed_at) VALUES (?, ?)",
+                        (path, datetime.now(timezone.utc).isoformat()),
+                    )
+                    conn.commit()
+    except Exception:
+        pass  # never break a page load for analytics
+    return response
+
+
 # ---------------------------------------------------------------- helpers
 
 def row_to_dict(row: sqlite3.Row) -> dict:
@@ -597,6 +616,28 @@ def admin(request: Request):
         {"request": request, "logged_in": True, "flagged": flagged,
          "all_entries": all_entries, "subs": subs, "sub_count": sub_count, "error": None},
     )
+
+
+@app.get("/admin/stats", response_class=HTMLResponse)
+def admin_stats(request: Request):
+    """Traffic dashboard: page views by day and top pages."""
+    if not is_admin(request):
+        return RedirectResponse("/admin", status_code=303)
+    with get_conn(DB_PATH) as conn:
+        total = conn.execute("SELECT COUNT(*) FROM page_views").fetchone()[0]
+        today = conn.execute(
+            "SELECT COUNT(*) FROM page_views WHERE date(viewed_at) = date('now')").fetchone()[0]
+        week = conn.execute(
+            "SELECT COUNT(*) FROM page_views WHERE viewed_at >= datetime('now', '-7 days')").fetchone()[0]
+        by_day = conn.execute(
+            "SELECT date(viewed_at) AS day, COUNT(*) AS views "
+            "FROM page_views GROUP BY day ORDER BY day DESC LIMIT 14").fetchall()
+        top_pages = conn.execute(
+            "SELECT path, COUNT(*) AS views FROM page_views "
+            "GROUP BY path ORDER BY views DESC LIMIT 20").fetchall()
+    return templates.TemplateResponse(request, "stats.html",
+        {"request": request, "total": total, "today": today, "week": week,
+         "by_day": by_day, "top_pages": top_pages})
 
 
 @app.post("/admin/login", response_class=HTMLResponse)

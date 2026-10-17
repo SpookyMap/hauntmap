@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>📊 Traffic Stats</h2>
+<p><a href="/admin">← Back to admin</a></p>
+
+<div style="display:flex;gap:16px;margin:20px 0;">
+  <div style="background:#1a1a2e;padding:16px;border-radius:12px;flex:1;text-align:center;">
+    <div style="font-size:2em;font-weight:bold;">{{ total }}</div>
+    <div>Total views</div>
+  </div>
+  <div style="background:#1a1a2e;padding:16px;border-radius:12px;flex:1;text-align:center;">
+    <div style="font-size:2em;font-weight:bold;">{{ today }}</div>
+    <div>Today</div>
+  </div>
+  <div style="background:#1a1a2e;padding:16px;border-radius:12px;flex:1;text-align:center;">
+    <div style="font-size:2em;font-weight:bold;">{{ week }}</div>
+    <div>Last 7 days</div>
+  </div>
+</div>
+
+<h3>Views by day</h3>
+<table style="width:100%;border-collapse:collapse;margin-bottom:24px;">
+  <tr><th style="text-align:left;padding:8px;">Date</th><th style="text-align:right;padding:8px;">Views</th></tr>
+  {% for row in by_day %}
+  <tr><td style="padding:8px;">{{ row["day"] }}</td><td style="text-align:right;padding:8px;">{{ row["views"] }}</td></tr>
+  {% endfor %}
+</table>
+
+<h3>Top pages</h3>
+<table style="width:100%;border-collapse:collapse;">
+  <tr><th style="text-align:left;padding:8px;">Page</th><th style="text-align:right;padding:8px;">Views</th></tr>
+  {% for row in top_pages %}
+  <tr><td style="padding:8px;"><a href="{{ row["path"] }}">{{ row["path"] }}</a></td><td style="text-align:right;padding:8px;">{{ row["views"] }}</td></tr>
+  {% endfor %}
+</table>
+{% endblock %}
