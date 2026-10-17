@@ -11,6 +11,7 @@
 .mode-toggle button.active { background: var(--accent); color: #1a0f00; font-weight: 700; }
 .tour-list { list-style: none; padding: 0; margin: 0 0 1rem; }
 .tour-list li { display: flex; gap: 0.6rem; align-items: center; background: var(--card); border: 1px solid #33254f; border-radius: 10px; padding: 0.6rem; margin-bottom: 0.5rem; }
+.tour-thumb { width: 3.5rem; height: 3.5rem; border-radius: 8px; object-fit: cover; flex-shrink: 0; }
 .tour-num { background: var(--accent); color: #1a0f00; font-weight: 700; width: 1.8rem; height: 1.8rem; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 .tour-info { flex: 1; min-width: 0; }
 .tour-info strong { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -34,6 +35,10 @@
   <button class="btn" id="btn-clear">Clear tour</button>
 </div>
 <p class="tour-stats" id="tour-stats"></p>
+<div class="tour-controls" id="gps-row" style="display:none">
+  <button class="btn" id="btn-gmaps">&#x1F5FA;&#xFE0F; Open in Google Maps</button>
+  <button class="btn" id="btn-amaps">&#x1F34E; Open in Apple Maps</button>
+</div>
 <ul class="tour-list" id="tour-list"></ul>
 <div class="share-row" id="share-row" style="display:none">
   <input type="text" id="share-link" readonly>
@@ -54,7 +59,7 @@ let map, routeLayer, userMarker;
 
 function loadTour() {
   if (sharedEntries.length) {
-    tour = sharedEntries.map(e => ({id: e.id, title: e.title, town: e.town, lat: e.lat, lng: e.lng}));
+    tour = sharedEntries.map(e => ({id: e.id, title: e.title, town: e.town, lat: e.lat, lng: e.lng, thumb: e.thumb_url}));
   } else {
     try { tour = JSON.parse(localStorage.getItem('haunt_tour') || '[]'); } catch(e) { tour = []; }
   }
@@ -86,7 +91,26 @@ async function drawRoute() {
 function updateStats(miles) {
   document.getElementById('tour-stats').textContent =
     tour.length ? `${tour.length} stop${tour.length != 1 ? 's' : ''}` + (miles ? ` · ~${miles.toFixed(1)} mi ${mode === 'walk' ? 'walking' : 'driving'}` : '') : '';
+  document.getElementById('gps-row').style.display = tour.length > 1 ? 'flex' : 'none';
 }
+function openGMaps() {
+  if (tour.length < 2) return;
+  const travelmode = mode === 'walk' ? 'walking' : 'driving';
+  const origin = `${tour[0].lat},${tour[0].lng}`;
+  const dest = `${tour[tour.length-1].lat},${tour[tour.length-1].lng}`;
+  const waypoints = tour.slice(1, -1).map(e => `${e.lat},${e.lng}`).join('|');
+  let url = `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${dest}&travelmode=${travelmode}`;
+  if (waypoints) url += `&waypoints=${waypoints}`;
+  window.open(url, '_blank');
+}
+function openAMaps() {
+  if (tour.length < 2) return;
+  const dirflg = mode === 'walk' ? 'w' : 'd';
+  const dest = `${tour[tour.length-1].lat},${tour[tour.length-1].lng}`;
+  window.open(`https://maps.apple.com/?daddr=${dest}&dirflg=${dirflg}`, '_blank');
+}
+document.getElementById('btn-gmaps').onclick = openGMaps;
+document.getElementById('btn-amaps').onclick = openAMaps;
 function render() {
   const list = document.getElementById('tour-list');
   list.innerHTML = '';
@@ -99,11 +123,12 @@ function render() {
       .bindPopup(`<b>${i+1}. ${e.title}</b><br>${e.town}`);
     const li = document.createElement('li');
     li.innerHTML = `<span class="tour-num">${i+1}</span>
+      ${e.thumb ? `<img class="tour-thumb" src="${e.thumb}" alt="">` : ''}
       <span class="tour-info"><strong>${e.title}</strong><small>${e.town}</small></span>
       <span class="tour-actions">
-        ${i > 0 ? `<button data-act="up" data-i="${i}">&#x25B2;</button>` : ''}
-        ${i < tour.length-1 ? `<button data-act="down" data-i="${i}">&#x25BC;</button>` : ''}
-        <button data-act="rm" data-i="${i}">&#x2715;</button>
+        ${i > 0 ? `<button data-act="up" data-i="${i}" title="Move up">&#x25B2;</button>` : ''}
+        ${i < tour.length-1 ? `<button data-act="down" data-i="${i}" title="Move down">&#x25BC;</button>` : ''}
+        <button data-act="rm" data-i="${i}" title="Remove">&#x2715;</button>
       </span>`;
     list.appendChild(li);
   });

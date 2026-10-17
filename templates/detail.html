@@ -37,7 +37,8 @@
   <script>
   document.getElementById('btn-add-tour').onclick = function() {
     const entry = {id: {{ entry.id }}, title: {{ entry.title|tojson }}, town: {{ entry.town|tojson }},
-                   lat: {{ entry.lat if entry.lat is not none else 'null' }}, lng: {{ entry.lng if entry.lng is not none else 'null' }}};
+                   lat: {{ entry.lat if entry.lat is not none else 'null' }}, lng: {{ entry.lng if entry.lng is not none else 'null' }},
+                   thumb: {{ entry.thumb_url|tojson }}};
     if (!entry.lat || !entry.lng) { alert('This haunt has no map location.'); return; }
     let tour = [];
     try { tour = JSON.parse(localStorage.getItem('haunt_tour') || '[]'); } catch(e) {}
