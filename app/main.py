@@ -86,36 +86,36 @@ async def _track_page_view(request: Request, call_next):
             if not path.startswith(("/media", "/static", "/admin", "/favicon")):
                 if request.cookies.get(ADMIN_COOKIE) not in admin_sessions and \
                    "HauntMap-Verify" not in request.headers.get("user-agent", ""):
-                with get_conn(DB_PATH) as conn:
-                    conn.execute(
-                        "CREATE TABLE IF NOT EXISTS page_views (id INTEGER PRIMARY KEY, path TEXT, viewed_at TEXT, referrer TEXT)"
-                    )
-                    for col in ("referrer", "device"):
-                        try:
-                            conn.execute(f"ALTER TABLE page_views ADD COLUMN {col} TEXT")
-                        except Exception:
-                            pass  # column already exists
-                    referrer = request.headers.get("referer", "")[:500]
-                    ua = request.headers.get("user-agent", "")[:500]
-                    # Simple device detection from user agent
-                    ua_lower = ua.lower()
-                    if "iphone" in ua_lower or "ipad" in ua_lower:
-                        device = "iOS"
-                    elif "android" in ua_lower:
-                        device = "Android"
-                    elif "windows" in ua_lower:
-                        device = "Windows"
-                    elif "macintosh" in ua_lower or "mac os" in ua_lower:
-                        device = "Mac"
-                    elif "linux" in ua_lower:
-                        device = "Linux"
-                    else:
-                        device = "Other"
-                    conn.execute(
-                        "INSERT INTO page_views (path, viewed_at, referrer, device) VALUES (?, ?, ?, ?)",
-                        (path, datetime.now(timezone.utc).isoformat(), referrer, device),
-                    )
-                    conn.commit()
+                    with get_conn(DB_PATH) as conn:
+                        conn.execute(
+                            "CREATE TABLE IF NOT EXISTS page_views (id INTEGER PRIMARY KEY, path TEXT, viewed_at TEXT, referrer TEXT)"
+                        )
+                        for col in ("referrer", "device"):
+                            try:
+                                conn.execute(f"ALTER TABLE page_views ADD COLUMN {col} TEXT")
+                            except Exception:
+                                pass  # column already exists
+                        referrer = request.headers.get("referer", "")[:500]
+                        ua = request.headers.get("user-agent", "")[:500]
+                        # Simple device detection from user agent
+                        ua_lower = ua.lower()
+                        if "iphone" in ua_lower or "ipad" in ua_lower:
+                            device = "iOS"
+                        elif "android" in ua_lower:
+                            device = "Android"
+                        elif "windows" in ua_lower:
+                            device = "Windows"
+                        elif "macintosh" in ua_lower or "mac os" in ua_lower:
+                            device = "Mac"
+                        elif "linux" in ua_lower:
+                            device = "Linux"
+                        else:
+                            device = "Other"
+                        conn.execute(
+                            "INSERT INTO page_views (path, viewed_at, referrer, device) VALUES (?, ?, ?, ?)",
+                            (path, datetime.now(timezone.utc).isoformat(), referrer, device),
+                        )
+                        conn.commit()
     except Exception:
         pass  # never break a page load for analytics
     return response
