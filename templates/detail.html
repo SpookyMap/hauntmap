@@ -27,7 +27,9 @@
   <p class="scare-badge">
     {% if entry.scare_level == 'family' %}&#x1F60A; Family-friendly
     {% elif entry.scare_level == 'spooky' %}&#x1F47B; Spooky
+    {% elif entry.scare_level == 'creepy' %}&#x1F9DB; Creepy
     {% elif entry.scare_level == 'terrifying' %}&#x1F631; Terrifying
+    {% elif entry.scare_level == 'extreme' %}&#x1F480; Extreme
     {% endif %}
   </p>
   {% endif %}

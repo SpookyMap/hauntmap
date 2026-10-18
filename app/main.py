@@ -321,7 +321,7 @@ def home(request: Request, sort: str = "top", town: str = "", town_search: str =
         query += " AND (LOWER(town) LIKE ? OR LOWER(town) LIKE ?)"
         params.append(f"%, {state.lower()}")
         params.append(f"%,{state.lower()}")
-    if scare in ("family", "spooky", "terrifying"):
+    if scare in ("family", "spooky", "creepy", "terrifying", "extreme"):
         query += " AND scare_level = ?"
         params.append(scare)
     if tag in ("animatronics", "inflatables", "handmade", "walkthrough", "projector", "lights", "music", "street-wide", "multi-house", "ticketed"):
@@ -444,7 +444,7 @@ async def upload_submit(
     error: str | None = None
     title, town, display_name = title.strip()[:120], town.strip()[:80], display_name.strip()[:40]
     category = category if category in CATEGORIES else "halloween"
-    scare_level = scare_level if scare_level in ("family", "spooky", "terrifying") else None
+    scare_level = scare_level if scare_level in ("family", "spooky", "creepy", "terrifying", "extreme") else None
     # tags come as repeated form fields from checkboxes
     form = await request.form()
     tags = ",".join(sorted({t for t in form.getlist("tags")
@@ -800,7 +800,7 @@ async def admin_tag(entry_id: int, request: Request):
     _require_admin(request)
     form = await request.form()
     scare = form.get("scare_level", "")
-    scare = scare if scare in ("family", "spooky", "terrifying") else None
+    scare = scare if scare in ("family", "spooky", "creepy", "terrifying", "extreme") else None
     tags = ",".join(sorted({t for t in form.getlist("tags")
                             if t in ("animatronics", "inflatables", "handmade", "walkthrough",
                                      "projector", "lights", "music", "street-wide",

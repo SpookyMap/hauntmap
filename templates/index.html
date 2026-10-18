@@ -52,7 +52,9 @@
       <option value="">Any scare level</option>
       <option value="family" {% if scare == 'family' %}selected{% endif %}>&#x1F60A; Family</option>
       <option value="spooky" {% if scare == 'spooky' %}selected{% endif %}>&#x1F47B; Spooky</option>
+      <option value="creepy" {% if scare == 'creepy' %}selected{% endif %}>&#x1F9DB; Creepy</option>
       <option value="terrifying" {% if scare == 'terrifying' %}selected{% endif %}>&#x1F631; Terrifying</option>
+      <option value="extreme" {% if scare == 'extreme' %}selected{% endif %}>&#x1F480; Extreme</option>
     </select>
     <select name="tag" onchange="this.form.submit()">
       <option value="">All features</option>
