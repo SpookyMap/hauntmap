@@ -339,7 +339,7 @@ h1 { font-size: 1.6rem; } h2 { font-size: 1.2rem; color: var(--accent2); margin-
   font-weight: 600;
   font-style: italic;
   color: var(--accent);
-  margin: 0 0 0.4rem;
+  margin: 0 0 0.8rem;
   text-align: right;
   line-height: 1.2;
 }
