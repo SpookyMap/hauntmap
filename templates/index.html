@@ -38,6 +38,10 @@
       {% endfor %}
     </select>
     {% endif %}
+    <select name="region" onchange="this.form.submit()">
+      <option value="">All regions</option>
+      <option value="long-island" {% if region == 'long-island' %}selected{% endif %}>Long Island</option>
+    </select>
     <select name="town" onchange="this.form.submit()">
       <option value="">All towns</option>
       {% for t in towns %}
