@@ -43,13 +43,15 @@ MAX_PHOTO_BYTES = 10 * 1024 * 1024
 MAX_VIDEO_BYTES = 100 * 1024 * 1024
 THUMB_MAX_WIDTH = 640
 
-CATEGORIES = ("halloween", "christmas", "halloween_stores", "restaurants", "coffee", "shops", "parks")
+CATEGORIES = ("halloween", "christmas", "halloween_stores", "restaurants", "coffee", "shops", "parks", "haunted_houses")
 CAT_LABELS = {"halloween": "Halloween", "christmas": "Christmas",
               "halloween_stores": "Halloween Stores",
               "restaurants": "Restaurants", "coffee": "Coffee & Cafes",
-              "shops": "Shops", "parks": "Parks"}
+              "shops": "Shops", "parks": "Parks",
+              "haunted_houses": "Haunted Houses"}
 CAT_EMOJI = {"halloween": "🎃", "christmas": "🎄", "halloween_stores": "👻",
-             "restaurants": "🍽️", "coffee": "☕", "shops": "🛍️", "parks": "🌳"}
+             "restaurants": "🍽️", "coffee": "☕", "shops": "🛍️", "parks": "🌳",
+             "haunted_houses": "🏚️"}
 
 app = FastAPI(title=SITE_NAME, docs_url=None, redoc_url=None)
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
