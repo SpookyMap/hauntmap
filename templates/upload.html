@@ -33,8 +33,8 @@
   <label>Your display name <span class="opt">(optional)</span>
     <input type="text" name="display_name" maxlength="40" placeholder="e.g. The Miller Family">
   </label>
-  <label>Photo or video <span class="req">*</span>
-    <input type="file" name="media" accept=".jpg,.jpeg,.png,.webp,.mp4" required>
+  <label>Photo or video <span class="req" id="media-req">*</span> <span class="opt" id="media-opt" style="display:none">(optional for events &amp; stores)</span>
+    <input type="file" name="media" id="media-input" accept=".jpg,.jpeg,.png,.webp,.mp4" required>
     <small>Photo: JPG/PNG/WebP up to 10 MB. Video: MP4 up to 100 MB.</small>
   </label>
   <div id="halloween-fields">
@@ -64,10 +64,17 @@
   </label>
   </div>
   <script>
-  document.getElementById('category-select').addEventListener('change', function() {
-    const show = (this.value === 'halloween' || this.value === 'christmas');
+  function syncMediaRequired() {
+    const v = document.getElementById('category-select').value;
+    const show = (v === 'halloween' || v === 'christmas');
     document.getElementById('halloween-fields').style.display = show ? '' : 'none';
-  });
+    const mediaOptional = (v === 'events' || v === 'halloween_stores');
+    document.getElementById('media-input').required = !mediaOptional;
+    document.getElementById('media-req').style.display = mediaOptional ? 'none' : '';
+    document.getElementById('media-opt').style.display = mediaOptional ? '' : 'none';
+  }
+  document.getElementById('category-select').addEventListener('change', syncMediaRequired);
+  syncMediaRequired();
   </script>
   <label>Map pin <span class="opt">(optional &mdash; tap the map)</span></label>
   <div id="map"></div>

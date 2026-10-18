@@ -128,8 +128,13 @@ async def _track_page_view(request: Request, call_next):
 
 def row_to_dict(row: sqlite3.Row) -> dict:
     d = dict(row)
-    d["media_url"] = f"/media/{d['media_path']}"
-    d["thumb_url"] = f"/media/{d['thumb_path']}" if d["thumb_path"] else d["media_url"]
+    if d["media_path"]:
+        d["media_url"] = f"/media/{d['media_path']}"
+        d["thumb_url"] = f"/media/{d['thumb_path']}" if d["thumb_path"] else d["media_url"]
+    else:
+        # media-less listings (events / halloween_stores)
+        d["media_url"] = ""
+        d["thumb_url"] = ""
     return d
 
 
@@ -522,8 +527,8 @@ async def upload_submit(
                     lat, lng, votes, flagged, hidden, is_sample, category, created_at,
                     scare_level, tags)
                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, 0, 0, 0, ?, ?, ?, ?)""",
-                (title, town, display_name or None, media_rel, thumb_rel,
-                 media_type, lat_f, lng_f, category, now, scare_level, tags),
+                (title, town, display_name or None, media_rel or "", thumb_rel,
+                 media_type or "none", lat_f, lng_f, category, now, scare_level, tags),
             )
             entry_id = cur.lastrowid
             conn.commit()

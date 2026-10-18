@@ -8,6 +8,7 @@
 {% endblock %}
 {% block content %}
 <article class="detail">
+  {% if entry.media_path %}
   <div class="detail-media">
     {% if entry.media_type == 'video' and entry.tiktok_url %}
     <blockquote class="tiktok-embed" cite="{{ entry.tiktok_url }}" data-video-id="{{ entry.tiktok_url.split('/video/')[1].split('?')[0] }}" style="max-width: 605px;min-width: 325px;">
@@ -21,6 +22,7 @@
     {% endif %}
     {% if entry.is_sample %}<span class="sample-badge">Sample</span>{% endif %}
   </div>
+  {% endif %}
   <h1>{{ entry.title }}</h1>
   <p class="meta">{{ entry.town }}{% if entry.display_name %} &middot; {{ entry.display_name }}{% endif %}</p>
   {% if entry.scare_level %}

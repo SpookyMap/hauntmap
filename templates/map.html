@@ -37,20 +37,22 @@ L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom: 19}).add
 const cluster = L.markerClusterGroup();
 // thumbnail markers when zoomed in, plain pins when zoomed out
 function thumbIcon(p) {
-  const thumb = p.thumb_path ? p.thumb_url : p.media_url;
+  const inner = p.media_path
+    ? `<img src="${p.thumb_path ? p.thumb_url : p.media_url}" alt="" loading="lazy">`
+    : '<span style="font-size:28px">&#x1F4CD;</span>';
   return L.divIcon({
     className: '',
-    html: `<div class="thumb-marker"><img src="${thumb}" alt="" loading="lazy"></div>`,
+    html: `<div class="thumb-marker">${inner}</div>`,
     iconSize: [68, 52],
     iconAnchor: [34, 52],
     popupAnchor: [0, -52],
   });
 }
 pins.forEach(p => {
-  const thumb = p.thumb_path ? p.thumb_url : p.media_url;
-  const media = p.media_type === 'video'
+  const thumb = p.media_path ? (p.thumb_path ? p.thumb_url : p.media_url) : '';
+  const media = p.media_path ? (p.media_type === 'video'
     ? `<video src="${p.media_url}" poster="${thumb}" muted playsinline style="pointer-events:none"></video>`
-    : `<img src="${thumb}" alt="">`;
+    : `<img src="${thumb}" alt="">`) : '';
   const m = L.marker([p.lat, p.lng], {icon: thumbIcon(p)});
   m.bindPopup(`<div class="pin-popup">${media}<strong>${p.title}</strong><div>&#x1F383; ${p.votes} votes</div><a href="/d/${p.id}">View haunt</a></div>`);
   cluster.addLayer(m);

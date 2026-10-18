@@ -177,6 +177,7 @@ a { color: var(--accent); }
   display: block;
 }
 .card-media { position: relative; aspect-ratio: 4/3; background: #0d0916; }
+.card-media-empty { height: 100%; display: flex; align-items: center; justify-content: center; font-size: 3rem; }
 .card-media img, .card-media video { width: 100%; height: 100%; object-fit: cover; display: block; }
 .play-badge {
   position: absolute; inset: 0; margin: auto; width: 44px; height: 44px;
