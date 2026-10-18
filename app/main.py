@@ -829,3 +829,33 @@ async def admin_tag(entry_id: int, request: Request):
                          (scare, tags, entry_id))
         conn.commit()
     return RedirectResponse("/admin", status_code=303)
+
+
+@app.post("/admin/media/{entry_id}")
+async def admin_media(entry_id: int, request: Request, media: UploadFile = File(None)):
+    """Attach/replace media for an entry (admin)."""
+    _require_admin(request)
+    if not media or not media.filename:
+        return JSONResponse({"error": "No file"}, status_code=400)
+    ext = safe_ext(media.filename)
+    if ext not in PHOTO_EXTS:
+        return JSONResponse({"error": "Photos only (JPG/PNG/WebP)"}, status_code=400)
+    tmp = save_upload(media, MAX_PHOTO_BYTES)
+    try:
+        with Image.open(tmp) as im:
+            im.verify()
+    except (UnidentifiedImageError, OSError):
+        tmp.unlink(missing_ok=True)
+        return JSONResponse({"error": "Not a readable image"}, status_code=400)
+    name = uuid.uuid4().hex
+    media_rel = f"{name}{ext}"
+    shutil.move(tmp, UPLOAD_DIR / media_rel)
+    try:
+        thumb_rel = make_thumb(UPLOAD_DIR / media_rel, name)
+    except (OSError, UnidentifiedImageError):
+        thumb_rel = media_rel
+    with get_conn(DB_PATH) as conn:
+        conn.execute("UPDATE entries SET media_path = ?, thumb_path = ?, media_type = 'photo' WHERE id = ?",
+                     (media_rel, thumb_rel, entry_id))
+        conn.commit()
+    return JSONResponse({"ok": True, "id": entry_id})
