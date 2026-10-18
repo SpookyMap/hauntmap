@@ -808,8 +808,14 @@ async def admin_tag(entry_id: int, request: Request):
                             if t in ("animatronics", "inflatables", "handmade", "walkthrough",
                                      "projector", "lights", "music", "street-wide",
                                      "multi-house", "ticketed")})) or None
+    category = form.get("category", "")
+    category = category if category in CATEGORIES else None
     with get_conn(DB_PATH) as conn:
-        conn.execute("UPDATE entries SET scare_level = ?, tags = ? WHERE id = ?",
-                     (scare, tags, entry_id))
+        if category:
+            conn.execute("UPDATE entries SET scare_level = ?, tags = ?, category = ? WHERE id = ?",
+                         (scare, tags, category, entry_id))
+        else:
+            conn.execute("UPDATE entries SET scare_level = ?, tags = ? WHERE id = ?",
+                         (scare, tags, entry_id))
         conn.commit()
     return RedirectResponse("/admin", status_code=303)
