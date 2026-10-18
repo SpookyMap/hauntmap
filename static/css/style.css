@@ -42,10 +42,10 @@ a { color: var(--accent); }
   position: sticky; top: 0; z-index: 10;
 }
 .brand { font-size: 1.25rem; font-weight: 800; color: var(--ink); text-decoration: none; }
-.brand-logo { height: 48px; width: 48px; max-height: 48px; max-width: 48px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+.brand-logo { height: 72px; width: 72px; max-height: 72px; max-width: 72px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
 /* Phone */
 @media (max-width: 600px) {
-  .brand-logo { height: 52px; width: 52px; max-height: 52px; max-width: 52px; }
+  .brand-logo { height: 64px; width: 64px; max-height: 64px; max-width: 64px; }
   .site-header { flex-wrap: wrap; gap: 0.5rem; }
   .site-header nav { flex-wrap: wrap; gap: 0.5rem; font-size: 0.85rem; }
 }
