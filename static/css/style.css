@@ -42,7 +42,21 @@ a { color: var(--accent); }
   position: sticky; top: 0; z-index: 10;
 }
 .brand { font-size: 1.25rem; font-weight: 800; color: var(--ink); text-decoration: none; }
-.brand-logo { height: 112px !important; width: 112px !important; max-height: 112px !important; max-width: 112px !important; border-radius: 50%; object-fit: cover; }
+.brand-logo { height: 48px; width: 48px; max-height: 48px; max-width: 48px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+/* Phone */
+@media (max-width: 600px) {
+  .brand-logo { height: 40px; width: 40px; max-height: 40px; max-width: 40px; }
+  .site-header { flex-wrap: wrap; gap: 0.5rem; }
+  .site-header nav { flex-wrap: wrap; gap: 0.5rem; font-size: 0.85rem; }
+}
+/* Tablet */
+@media (min-width: 601px) and (max-width: 1024px) {
+  .brand-logo { height: 56px; width: 56px; max-height: 56px; max-width: 56px; }
+}
+/* Desktop */
+@media (min-width: 1025px) {
+  .brand-logo { height: 64px; width: 64px; max-height: 64px; max-width: 64px; }
+}
 .site-header nav { display: flex; gap: 0.75rem; align-items: center; }
 .site-header nav a { color: var(--muted); text-decoration: none; font-size: 0.95rem; }
 .btn-upload {
