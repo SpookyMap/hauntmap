@@ -27,7 +27,7 @@ body::before {
   width: 120vmin;
   height: 120vmin;
   background: url('/static/img/hauntmap_logo.jpg') center/contain no-repeat;
-  opacity: 0.15;
+  opacity: 0.18;
   pointer-events: none;
   z-index: -1;
 }
