@@ -226,3 +226,20 @@ a { color: var(--accent); }
 .admin-row a { color: var(--ink); }
 .admin-actions { display: flex; gap: 0.5rem; }
 h1 { font-size: 1.6rem; } h2 { font-size: 1.2rem; color: var(--accent2); margin-top: 1.75rem; }
+
+.hero-intro {
+  text-align: center;
+  padding: 1.5rem 1rem 0.5rem;
+  max-width: 600px;
+  margin: 0 auto;
+}
+.hero-intro h1 {
+  font-size: 1.4rem;
+  margin: 0 0 0.4rem;
+  font-weight: 800;
+}
+.hero-intro p {
+  color: var(--muted);
+  font-size: 0.95rem;
+  margin: 0;
+}
