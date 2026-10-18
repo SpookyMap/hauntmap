@@ -42,6 +42,12 @@
   {% endif %}
   <p class="votes-big">&#x1F383; {{ entry.votes }} vote{{ 's' if entry.votes != 1 }}</p>
 
+  <div class="directions-row">
+    <a class="btn-dir" href="https://www.google.com/maps/dir/?api=1&destination={{ entry.lat }},{{ entry.lng }}" target="_blank" rel="noopener">📍 Google Maps</a>
+    <a class="btn-dir" href="https://maps.apple.com/?daddr={{ entry.lat }},{{ entry.lng }}" target="_blank" rel="noopener">🍎 Apple Maps</a>
+    <button class="btn-dir" onclick="navigator.clipboard.writeText('{{ entry.town }}');this.textContent='✓ Copied!';setTimeout(()=>this.textContent='📋 Copy address',2000)">📋 Copy address</button>
+  </div>
+
   {% if entry.tiktok_url %}
   <p><a href="{{ entry.tiktok_url }}" target="_blank" rel="noopener">&#x1F3B5; Watch on TikTok</a></p>
   {% endif %}
