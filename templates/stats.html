@@ -27,10 +27,26 @@
 </table>
 
 <h3>Top pages</h3>
-<table style="width:100%;border-collapse:collapse;">
+<table style="width:100%;border-collapse:collapse;margin-bottom:24px;">
   <tr><th style="text-align:left;padding:8px;">Page</th><th style="text-align:right;padding:8px;">Views</th></tr>
   {% for row in top_pages %}
   <tr><td style="padding:8px;"><a href="{{ row["path"] }}">{{ row["path"] }}</a></td><td style="text-align:right;padding:8px;">{{ row["views"] }}</td></tr>
+  {% endfor %}
+</table>
+
+<h3>Top referrers</h3>
+<table style="width:100%;border-collapse:collapse;margin-bottom:24px;">
+  <tr><th style="text-align:left;padding:8px;">Referrer</th><th style="text-align:right;padding:8px;">Views</th></tr>
+  {% for row in top_referrers %}
+  <tr><td style="padding:8px;word-break:break-all;">{{ row["ref"] }}</td><td style="text-align:right;padding:8px;">{{ row["views"] }}</td></tr>
+  {% endfor %}
+</table>
+
+<h3>By device</h3>
+<table style="width:100%;border-collapse:collapse;">
+  <tr><th style="text-align:left;padding:8px;">Device</th><th style="text-align:right;padding:8px;">Views</th></tr>
+  {% for row in by_device %}
+  <tr><td style="padding:8px;">{{ row["dev"] }}</td><td style="text-align:right;padding:8px;">{{ row["views"] }}</td></tr>
   {% endfor %}
 </table>
 {% endblock %}

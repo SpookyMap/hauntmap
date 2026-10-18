@@ -88,8 +88,32 @@ async def _track_page_view(request: Request, call_next):
                    "HauntMap-Verify" not in request.headers.get("user-agent", ""):
                 with get_conn(DB_PATH) as conn:
                     conn.execute(
-                        "INSERT INTO page_views (path, viewed_at) VALUES (?, ?)",
-                        (path, datetime.now(timezone.utc).isoformat()),
+                        "CREATE TABLE IF NOT EXISTS page_views (id INTEGER PRIMARY KEY, path TEXT, viewed_at TEXT, referrer TEXT)"
+                    )
+                    for col in ("referrer", "device"):
+                        try:
+                            conn.execute(f"ALTER TABLE page_views ADD COLUMN {col} TEXT")
+                        except Exception:
+                            pass  # column already exists
+                    referrer = request.headers.get("referer", "")[:500]
+                    ua = request.headers.get("user-agent", "")[:500]
+                    # Simple device detection from user agent
+                    ua_lower = ua.lower()
+                    if "iphone" in ua_lower or "ipad" in ua_lower:
+                        device = "iOS"
+                    elif "android" in ua_lower:
+                        device = "Android"
+                    elif "windows" in ua_lower:
+                        device = "Windows"
+                    elif "macintosh" in ua_lower or "mac os" in ua_lower:
+                        device = "Mac"
+                    elif "linux" in ua_lower:
+                        device = "Linux"
+                    else:
+                        device = "Other"
+                    conn.execute(
+                        "INSERT INTO page_views (path, viewed_at, referrer, device) VALUES (?, ?, ?, ?)",
+                        (path, datetime.now(timezone.utc).isoformat(), referrer, device),
                     )
                     conn.commit()
     except Exception:
@@ -674,9 +698,18 @@ def admin_stats(request: Request):
         top_pages = conn.execute(
             "SELECT path, COUNT(*) AS views FROM page_views "
             "GROUP BY path ORDER BY views DESC LIMIT 20").fetchall()
+        top_referrers = conn.execute(
+            "SELECT CASE WHEN referrer = '' OR referrer IS NULL THEN '(direct)' "
+            "ELSE referrer END AS ref, COUNT(*) AS views FROM page_views "
+            "GROUP BY ref ORDER BY views DESC LIMIT 15").fetchall()
+        by_device = conn.execute(
+            "SELECT CASE WHEN device = '' OR device IS NULL THEN 'Unknown' "
+            "ELSE device END AS dev, COUNT(*) AS views FROM page_views "
+            "GROUP BY dev ORDER BY views DESC").fetchall()
     return templates.TemplateResponse(request, "stats.html",
         {"request": request, "total": total, "today": today, "week": week,
-         "by_day": by_day, "top_pages": top_pages})
+         "by_day": by_day, "top_pages": top_pages,
+         "top_referrers": top_referrers, "by_device": by_device})
 
 
 @app.post("/admin/login", response_class=HTMLResponse)
