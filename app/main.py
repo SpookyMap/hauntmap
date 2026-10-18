@@ -447,7 +447,7 @@ async def upload_submit(
     scare_level: str = Form(""),
     lat: str = Form(""),
     lng: str = Form(""),
-    media: UploadFile = File(...),
+    media: UploadFile = File(None),
 ):
     error: str | None = None
     title, town, display_name = title.strip()[:120], town.strip()[:80], display_name.strip()[:40]
