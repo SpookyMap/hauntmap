@@ -55,7 +55,7 @@ a { color: var(--accent); }
 }
 /* Desktop */
 @media (min-width: 1025px) {
-  .brand-logo { height: 112px; width: 112px; max-height: 112px; max-width: 112px; }
+  .brand-logo { height: 140px; width: 140px; max-height: 140px; max-width: 140px; }
 }
 .site-header nav { display: flex; gap: 0.75rem; align-items: center; }
 .site-header nav a { color: var(--muted); text-decoration: none; font-size: 0.95rem; }
