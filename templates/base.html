@@ -16,13 +16,16 @@
 </div>
 <header class="site-header">
   <a class="brand" href="/"><img src="/static/img/hauntmap_logo.jpg" alt="HauntMap" class="brand-logo"></a>
-  <nav>
-    <a href="/map">&#x1F5FA;&#xFE0F; Map</a>
-    <a href="/nearby">&#x1F50D; Nearby</a>
-    <a href="/tour">&#x1F383; Tours</a>
-    <a href="/leaderboard">&#x1F3C6; Top Haunts</a>
-    <a class="btn-upload" href="/upload">+ Add yours</a>
-  </nav>
+  <div class="header-center">
+    <p class="header-hook">Turn your Halloween up a notch — your custom neighborhood tour is just a click away.</p>
+    <nav>
+      <a href="/map">&#x1F5FA;&#xFE0F; Map</a>
+      <a href="/nearby">&#x1F50D; Nearby</a>
+      <a href="/tour">&#x1F383; Tours</a>
+      <a href="/leaderboard">&#x1F3C6; Top Haunts</a>
+      <a class="btn-upload" href="/upload">+ Add yours</a>
+    </nav>
+  </div>
 </header>
 <main class="wrap">
   {% block content %}{% endblock %}
