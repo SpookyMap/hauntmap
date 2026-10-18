@@ -468,7 +468,7 @@ async def upload_submit(
         error = "Please give your haunt a title."
     if not error and not town:
         error = "Please add a town or neighborhood."
-    if not error and (not media or not media.filename) and cat not in ("events", "halloween_stores"):
+    if not error and (not media or not media.filename) and category not in ("events", "halloween_stores"):
         error = "Please attach a photo or video."
 
     entry_id = None
