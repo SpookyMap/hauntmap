@@ -468,45 +468,50 @@ async def upload_submit(
         error = "Please give your haunt a title."
     if not error and not town:
         error = "Please add a town or neighborhood."
-    if not error and (not media or not media.filename):
+    if not error and (not media or not media.filename) and cat not in ("events", "halloween_stores"):
         error = "Please attach a photo or video."
 
     entry_id = None
+    has_media = media and media.filename
     if not error:
-        ext = safe_ext(media.filename)
-        try:
-            if ext in PHOTO_EXTS:
-                tmp = save_upload(media, MAX_PHOTO_BYTES)
-                try:
-                    with Image.open(tmp) as im:
-                        im.verify()
-                except (UnidentifiedImageError, OSError):
-                    tmp.unlink(missing_ok=True)
-                    raise ValueError("That file isn't a readable image.")
-                name = uuid.uuid4().hex
-                media_rel = f"{name}{ext}"
-                shutil.move(tmp, UPLOAD_DIR / media_rel)
-                try:
-                    thumb_rel = make_thumb(UPLOAD_DIR / media_rel, name)
-                except (OSError, UnidentifiedImageError):
-                    (UPLOAD_DIR / media_rel).unlink(missing_ok=True)
-                    raise ValueError("Couldn't process that image.")
-                media_type = "photo"
-            elif ext in VIDEO_EXTS:
-                tmp = save_upload(media, MAX_VIDEO_BYTES)
-                head = tmp.read_bytes()[:32]
-                if b"ftyp" not in head:
-                    tmp.unlink(missing_ok=True)
-                    raise ValueError("That file doesn't look like an MP4 video.")
-                name = uuid.uuid4().hex
-                media_rel = f"{name}{ext}"
-                shutil.move(tmp, UPLOAD_DIR / media_rel)
-                thumb_rel = make_video_poster(UPLOAD_DIR / media_rel, name)
-                media_type = "video"
-            else:
-                raise ValueError("Photos must be JPG/PNG/WebP (10 MB max); video must be MP4 (100 MB max).")
-        except ValueError as e:
-            error = str(e)
+        media_rel = None
+        thumb_rel = None
+        media_type = None
+        if has_media:
+            ext = safe_ext(media.filename)
+            try:
+                if ext in PHOTO_EXTS:
+                    tmp = save_upload(media, MAX_PHOTO_BYTES)
+                    try:
+                        with Image.open(tmp) as im:
+                            im.verify()
+                    except (UnidentifiedImageError, OSError):
+                        tmp.unlink(missing_ok=True)
+                        raise ValueError("That file isn't a readable image.")
+                    name = uuid.uuid4().hex
+                    media_rel = f"{name}{ext}"
+                    shutil.move(tmp, UPLOAD_DIR / media_rel)
+                    try:
+                        thumb_rel = make_thumb(UPLOAD_DIR / media_rel, name)
+                    except (OSError, UnidentifiedImageError):
+                        (UPLOAD_DIR / media_rel).unlink(missing_ok=True)
+                        raise ValueError("Couldn't process that image.")
+                    media_type = "photo"
+                elif ext in VIDEO_EXTS:
+                    tmp = save_upload(media, MAX_VIDEO_BYTES)
+                    head = tmp.read_bytes()[:32]
+                    if b"ftyp" not in head:
+                        tmp.unlink(missing_ok=True)
+                        raise ValueError("That file doesn't look like an MP4 video.")
+                    name = uuid.uuid4().hex
+                    media_rel = f"{name}{ext}"
+                    shutil.move(tmp, UPLOAD_DIR / media_rel)
+                    thumb_rel = make_video_poster(UPLOAD_DIR / media_rel, name)
+                    media_type = "video"
+                else:
+                    raise ValueError("Photos must be JPG/PNG/WebP (10 MB max); video must be MP4 (100 MB max).")
+            except ValueError as e:
+                error = str(e)
 
     if not error:
         now = datetime.now(timezone.utc).isoformat()
