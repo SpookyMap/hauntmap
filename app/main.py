@@ -324,7 +324,7 @@ def home(request: Request, sort: str = "top", town: str = "", town_search: str =
     if scare in ("family", "spooky", "terrifying"):
         query += " AND scare_level = ?"
         params.append(scare)
-    if tag in ("animatronics", "inflatables", "handmade", "walkthrough", "projector", "lights", "music", "street-wide", "multi-house"):
+    if tag in ("animatronics", "inflatables", "handmade", "walkthrough", "projector", "lights", "music", "street-wide", "multi-house", "ticketed"):
         query += " AND (',' || COALESCE(tags,'') || ',') LIKE ?"
         params.append(f"%,{tag},%")
     query += f" ORDER BY {order} LIMIT 100"
@@ -450,7 +450,7 @@ async def upload_submit(
     tags = ",".join(sorted({t for t in form.getlist("tags")
                             if t in ("animatronics", "inflatables", "handmade", "walkthrough",
                                      "projector", "lights", "music", "street-wide",
-                                     "multi-house")})) or None
+                                     "multi-house", "ticketed")})) or None
 
     lat_f = lng_f = None
     if lat.strip() or lng.strip():
@@ -804,7 +804,7 @@ async def admin_tag(entry_id: int, request: Request):
     tags = ",".join(sorted({t for t in form.getlist("tags")
                             if t in ("animatronics", "inflatables", "handmade", "walkthrough",
                                      "projector", "lights", "music", "street-wide",
-                                     "multi-house")})) or None
+                                     "multi-house", "ticketed")})) or None
     with get_conn(DB_PATH) as conn:
         conn.execute("UPDATE entries SET scare_level = ?, tags = ? WHERE id = ?",
                      (scare, tags, entry_id))
