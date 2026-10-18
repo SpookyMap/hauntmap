@@ -36,14 +36,20 @@ a { color: var(--accent); }
 
 .site-header {
   display: flex; justify-content: space-between; align-items: flex-end;
-  padding: 0.4rem 1rem;
+  padding: 0.15rem 1rem;
   background: rgba(20, 16, 29, 0.9);
   border-bottom: 1px solid #33254f;
   position: sticky; top: 0; z-index: 10;
+  min-height: unset;
+  line-height: 1.2;
 }
 .site-header nav {
-  display: flex; gap: 0.75rem; align-items: center;
-  padding-bottom: 0.3rem;
+  display: flex; gap: 0.5rem; align-items: center;
+  padding-bottom: 0.4rem;
+  margin-left: auto;
+}
+.site-header nav a {
+  padding: 0.2rem 0;
 }
 .brand { font-size: 1.25rem; font-weight: 800; color: var(--ink); text-decoration: none; }
 .brand-logo { height: 88px; width: 88px; max-height: 88px; max-width: 88px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
