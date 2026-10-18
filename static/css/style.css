@@ -332,7 +332,8 @@ h1 { font-size: 1.6rem; } h2 { font-size: 1.2rem; color: var(--accent2); margin-
   align-items: flex-end;
   justify-content: flex-start;
   margin-left: auto;
-  padding-top: 0.1rem;
+  padding-top: 0;
+  margin-top: -0.3rem;
 }
 .header-hook {
   font-size: 1.1rem;
