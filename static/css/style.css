@@ -287,9 +287,10 @@ h1 { font-size: 1.6rem; } h2 { font-size: 1.2rem; color: var(--accent2); margin-
 .hero-intro p {
   color: #FFFFFF;
   font-size: 0.95rem;
-  margin: 0 0 1rem;
+  margin: 0 0 1.5rem;
+  padding: 0.3rem 0;
   text-shadow: 0 1px 4px rgba(0,0,0,0.8);
-  line-height: 1.5;
+  line-height: 1.6;
 }
 .hero-intro p:last-child {
   margin-bottom: 0;
