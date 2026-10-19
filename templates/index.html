@@ -2,7 +2,7 @@
 {% block content %}
 <div class="hero-intro">
   <h1>🎃 Find the Best Halloween Displays Near You</h1>
-  <p>Browse spooky homes, haunted houses & find the best local events across NJ, NYC, NY, Long Island & PA.</p>
+  <p>Browse spooky homes, haunted houses & find the best local events across NJ, NYC, NY, Long Island & Philadelphia.</p>
   <p>Tap any pin for one-click directions, build a custom tour, and hit the road. Happy Hunting!! 👻</p>
   <p>Leave a like on your favorite haunts and drop a comment about the ones you love!</p>
 </div>
@@ -147,7 +147,7 @@
   <a href="/?cat={{ cat }}{% if sort != 'top' %}&sort={{ sort }}{% endif %}{% if town %}&town={{ town }}{% endif %}{% if scare %}&scare={{ scare }}{% endif %}{% if tag %}&tag={{ tag }}{% endif %}" class="state-btn {% if not state and not region %}active{% endif %}">All</a>
   <a href="/?cat={{ cat }}&state=NJ{% if sort != 'top' %}&sort={{ sort }}{% endif %}{% if town %}&town={{ town }}{% endif %}{% if scare %}&scare={{ scare }}{% endif %}{% if tag %}&tag={{ tag }}{% endif %}" class="state-btn {% if state == 'NJ' %}active{% endif %}">New Jersey</a>
   <a href="/?cat={{ cat }}&state=NY{% if sort != 'top' %}&sort={{ sort }}{% endif %}{% if town %}&town={{ town }}{% endif %}{% if scare %}&scare={{ scare }}{% endif %}{% if tag %}&tag={{ tag }}{% endif %}" class="state-btn {% if state == 'NY' and not region %}active{% endif %}">New York</a>
-  <a href="/?cat={{ cat }}&state=PA{% if sort != 'top' %}&sort={{ sort }}{% endif %}{% if town %}&town={{ town }}{% endif %}{% if scare %}&scare={{ scare }}{% endif %}{% if tag %}&tag={{ tag }}{% endif %}" class="state-btn {% if state == 'PA' %}active{% endif %}">Pennsylvania</a>
+  <a href="/?cat={{ cat }}&state=PA{% if sort != 'top' %}&sort={{ sort }}{% endif %}{% if town %}&town={{ town }}{% endif %}{% if scare %}&scare={{ scare }}{% endif %}{% if tag %}&tag={{ tag }}{% endif %}" class="state-btn {% if state == 'PA' %}active{% endif %}">Philadelphia</a>
   <a href="/?cat={{ cat }}&region=long-island{% if sort != 'top' %}&sort={{ sort }}{% endif %}{% if town %}&town={{ town }}{% endif %}{% if scare %}&scare={{ scare }}{% endif %}{% if tag %}&tag={{ tag }}{% endif %}" class="state-btn {% if region == 'long-island' %}active{% endif %}">Long Island</a>
   <a href="/?cat={{ cat }}&region=manhattan{% if sort != 'top' %}&sort={{ sort }}{% endif %}{% if town %}&town={{ town }}{% endif %}{% if scare %}&scare={{ scare }}{% endif %}{% if tag %}&tag={{ tag }}{% endif %}" class="state-btn {% if region == 'manhattan' %}active{% endif %}">Manhattan</a>
   <a href="/?cat={{ cat }}&region=brooklyn{% if sort != 'top' %}&sort={{ sort }}{% endif %}{% if town %}&town={{ town }}{% endif %}{% if scare %}&scare={{ scare }}{% endif %}{% if tag %}&tag={{ tag }}{% endif %}" class="state-btn {% if region == 'brooklyn' %}active{% endif %}">Brooklyn</a>
