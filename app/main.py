@@ -447,6 +447,7 @@ async def upload_submit(
     scare_level: str = Form(""),
     lat: str = Form(""),
     lng: str = Form(""),
+    tiktok_url: str = Form(""),
     media: UploadFile = File(None),
 ):
     error: str | None = None
@@ -525,10 +526,11 @@ async def upload_submit(
                 """INSERT INTO entries
                    (title, town, display_name, media_path, thumb_path, media_type,
                     lat, lng, votes, flagged, hidden, is_sample, category, created_at,
-                    scare_level, tags)
-                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, 0, 0, 0, ?, ?, ?, ?)""",
+                    scare_level, tags, tiktok_url)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, 0, 0, 0, ?, ?, ?, ?, ?)""",
                 (title, town, display_name or None, media_rel or "", thumb_rel,
-                 media_type or "none", lat_f, lng_f, category, now, scare_level, tags),
+                 media_type or "none", lat_f, lng_f, category, now, scare_level, tags,
+                 tiktok_url or None),
             )
             entry_id = cur.lastrowid
             conn.commit()
