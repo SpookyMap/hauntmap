@@ -7,15 +7,13 @@
   <p class="happy-hunting">Happy Hunting!! 👻 Leave a like on your favorite haunts and drop a comment about the ones you love!</p>
 </div>
 <div class="book-banner">
-  <div class="book-cover">
-    <img src="/static/img/something_wicked_cover.jpg" alt="Something Wicked Vol. 1 by Eric Tyler and Glenn Nelson" class="book-cover-img">
-  </div>
-  <div class="book-info">
-    <h3>📚 Halloween Reads</h3>
-    <p class="book-title"><strong>Something Wicked, Vol. 1</strong> — Eric Tyler &amp; Glenn Nelson</p>
-    <p class="book-desc">Three chilling tales — a midnight drive gone wrong, a lone hunter against the undead, and midnight secrets in a rain-lashed diner.</p>
-    <a href="https://www.amazon.com/Something-Wicked/dp/B0F2F1CHG1" target="_blank" rel="noopener" class="btn book-btn">Buy on Amazon</a>
-  </div>
+  <a href="https://www.amazon.com/Something-Wicked/dp/B0F2F1CHG1" target="_blank" rel="noopener" class="book-link">
+    <img src="/static/img/something_wicked_cover.jpg" alt="Something Wicked" class="book-cover-img">
+    <div class="book-info">
+      <span class="book-label">📚 Halloween Reads</span>
+      <span class="book-title"><strong>Something Wicked, Vol. 1</strong></span>
+    </div>
+  </a>
 </div>
 <div class="cat-tabs-main">
   <a href="/?cat=halloween{% if sort != 'top' %}&sort={{ sort }}{% endif %}{% if town %}&town={{ town }}{% endif %}" class="cat-btn-main {% if cat == 'halloween' %}active{% endif %}">&#x1F383; Haunt Map</a>
