@@ -156,12 +156,12 @@ a { color: var(--accent); }
 .newsletter-error { color: #ff7b72; font-size: 0.85rem; }
 
 /* ---- Sponsor banners (homepage) ---- */
-.sponsor-section { margin: 2.5rem 0 0; text-align: center; }
-.sponsor-section h2 { font-size: 1.3rem; margin: 0 0 0.3rem; }
-.sponsor-sub { color: var(--muted); font-size: 0.9rem; margin: 0 0 1.2rem; }
+.sponsor-section { margin: 1rem 0 0; text-align: center; }
+.sponsor-section h2 { font-size: 1rem; margin: 0 0 0.2rem; }
+.sponsor-sub { color: var(--muted); font-size: 0.8rem; margin: 0 0 0.8rem; }
 .sponsor-grid {
-  display: grid; gap: 1rem;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  display: flex; flex-wrap: wrap; gap: 0.6rem; justify-content: center;
+  max-width: 800px; margin: 0 auto;
 }
 .sponsor-card {
   display: flex; align-items: center; gap: 1rem;
