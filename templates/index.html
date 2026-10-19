@@ -6,6 +6,17 @@
   <p>Tap any pin for one-click directions, build a custom tour, and hit the road.</p>
   <p class="happy-hunting">Happy Hunting!! 👻 Leave a like on your favorite haunts and drop a comment about the ones you love!</p>
 </div>
+<div class="book-banner">
+  <div class="book-cover">
+    <img src="/static/img/something_wicked_cover.jpg" alt="Something Wicked Vol. 1 by Eric Tyler and Glenn Nelson" class="book-cover-img">
+  </div>
+  <div class="book-info">
+    <h3>📚 Halloween Reads</h3>
+    <p class="book-title"><strong>Something Wicked, Vol. 1</strong> — Eric Tyler &amp; Glenn Nelson</p>
+    <p class="book-desc">Three chilling tales — a midnight drive gone wrong, a lone hunter against the undead, and midnight secrets in a rain-lashed diner.</p>
+    <a href="https://www.amazon.com/Something-Wicked/dp/B0F2F1CHG1" target="_blank" rel="noopener" class="btn book-btn">Buy on Amazon</a>
+  </div>
+</div>
 <div class="cat-tabs-main">
   <a href="/?cat=halloween{% if sort != 'top' %}&sort={{ sort }}{% endif %}{% if town %}&town={{ town }}{% endif %}" class="cat-btn-main {% if cat == 'halloween' %}active{% endif %}">&#x1F383; Haunt Map</a>
   <a href="/?cat=christmas{% if sort != 'top' %}&sort={{ sort }}{% endif %}{% if town %}&town={{ town }}{% endif %}" class="cat-btn-main {% if cat == 'christmas' %}active{% endif %}">&#x1F384; Jolly Map</a>
@@ -130,18 +141,6 @@
   <a href="/?cat={{ cat }}&region=queens{% if sort != 'top' %}&sort={{ sort }}{% endif %}{% if town %}&town={{ town }}{% endif %}{% if scare %}&scare={{ scare }}{% endif %}{% if tag %}&tag={{ tag }}{% endif %}" class="state-btn {% if region == 'queens' %}active{% endif %}">Queens</a>
   <a href="/?cat={{ cat }}&region=bronx{% if sort != 'top' %}&sort={{ sort }}{% endif %}{% if town %}&town={{ town }}{% endif %}{% if scare %}&scare={{ scare }}{% endif %}{% if tag %}&tag={{ tag }}{% endif %}" class="state-btn {% if region == 'bronx' %}active{% endif %}">Bronx</a>
   <a href="/?cat={{ cat }}&region=staten-island{% if sort != 'top' %}&sort={{ sort }}{% endif %}{% if town %}&town={{ town }}{% endif %}{% if scare %}&scare={{ scare }}{% endif %}{% if tag %}&tag={{ tag }}{% endif %}" class="state-btn {% if region == 'staten-island' %}active{% endif %}">Staten Island</a>
-</div>
-
-<div class="book-banner">
-  <div class="book-cover">
-    <img src="/static/img/something_wicked_cover.jpg" alt="Something Wicked Vol. 1 by Eric Tyler and Glenn Nelson" class="book-cover-img">
-  </div>
-  <div class="book-info">
-    <h3>📚 Halloween Reads</h3>
-    <p class="book-title"><strong>Something Wicked, Vol. 1</strong> — Eric Tyler &amp; Glenn Nelson</p>
-    <p class="book-desc">Three chilling tales — a midnight drive gone wrong, a lone hunter against the undead, and midnight secrets in a rain-lashed diner.</p>
-    <a href="https://www.amazon.com/Something-Wicked/dp/B0F2F1CHG1" target="_blank" rel="noopener" class="btn book-btn">Buy on Amazon</a>
-  </div>
 </div>
 
 <div class="newsletter-box">
