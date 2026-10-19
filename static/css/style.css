@@ -131,7 +131,7 @@ a { color: var(--accent); }
 }
 .book-link:hover { border-color: #5a3d8a; }
 .book-cover-img {
-  width: 36px; height: auto; border-radius: 4px; flex-shrink: 0;
+  width: 28px; height: auto; border-radius: 3px; flex-shrink: 0;
 }
 .book-info { display: flex; flex-direction: column; gap: 0.1rem; }
 .book-label { font-size: 0.7rem; color: var(--muted); }
