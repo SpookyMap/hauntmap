@@ -48,6 +48,11 @@
     <select name="region" onchange="this.form.submit()">
       <option value="">All regions</option>
       <option value="long-island" {% if region == 'long-island' %}selected{% endif %}>Long Island</option>
+      <option value="manhattan" {% if region == 'manhattan' %}selected{% endif %}>Manhattan</option>
+      <option value="brooklyn" {% if region == 'brooklyn' %}selected{% endif %}>Brooklyn</option>
+      <option value="queens" {% if region == 'queens' %}selected{% endif %}>Queens</option>
+      <option value="bronx" {% if region == 'bronx' %}selected{% endif %}>Bronx</option>
+      <option value="staten-island" {% if region == 'staten-island' %}selected{% endif %}>Staten Island</option>
     </select>
     <select name="town" onchange="this.form.submit()">
       <option value="">All towns</option>
@@ -118,6 +123,11 @@
   <a href="/?cat={{ cat }}&state=NJ{% if sort != 'top' %}&sort={{ sort }}{% endif %}{% if town %}&town={{ town }}{% endif %}{% if scare %}&scare={{ scare }}{% endif %}{% if tag %}&tag={{ tag }}{% endif %}" class="state-btn {% if state == 'NJ' %}active{% endif %}">New Jersey</a>
   <a href="/?cat={{ cat }}&state=NY{% if sort != 'top' %}&sort={{ sort }}{% endif %}{% if town %}&town={{ town }}{% endif %}{% if scare %}&scare={{ scare }}{% endif %}{% if tag %}&tag={{ tag }}{% endif %}" class="state-btn {% if state == 'NY' and not region %}active{% endif %}">New York</a>
   <a href="/?cat={{ cat }}&region=long-island{% if sort != 'top' %}&sort={{ sort }}{% endif %}{% if town %}&town={{ town }}{% endif %}{% if scare %}&scare={{ scare }}{% endif %}{% if tag %}&tag={{ tag }}{% endif %}" class="state-btn {% if region == 'long-island' %}active{% endif %}">Long Island</a>
+  <a href="/?cat={{ cat }}&region=manhattan{% if sort != 'top' %}&sort={{ sort }}{% endif %}{% if town %}&town={{ town }}{% endif %}{% if scare %}&scare={{ scare }}{% endif %}{% if tag %}&tag={{ tag }}{% endif %}" class="state-btn {% if region == 'manhattan' %}active{% endif %}">Manhattan</a>
+  <a href="/?cat={{ cat }}&region=brooklyn{% if sort != 'top' %}&sort={{ sort }}{% endif %}{% if town %}&town={{ town }}{% endif %}{% if scare %}&scare={{ scare }}{% endif %}{% if tag %}&tag={{ tag }}{% endif %}" class="state-btn {% if region == 'brooklyn' %}active{% endif %}">Brooklyn</a>
+  <a href="/?cat={{ cat }}&region=queens{% if sort != 'top' %}&sort={{ sort }}{% endif %}{% if town %}&town={{ town }}{% endif %}{% if scare %}&scare={{ scare }}{% endif %}{% if tag %}&tag={{ tag }}{% endif %}" class="state-btn {% if region == 'queens' %}active{% endif %}">Queens</a>
+  <a href="/?cat={{ cat }}&region=bronx{% if sort != 'top' %}&sort={{ sort }}{% endif %}{% if town %}&town={{ town }}{% endif %}{% if scare %}&scare={{ scare }}{% endif %}{% if tag %}&tag={{ tag }}{% endif %}" class="state-btn {% if region == 'bronx' %}active{% endif %}">Bronx</a>
+  <a href="/?cat={{ cat }}&region=staten-island{% if sort != 'top' %}&sort={{ sort }}{% endif %}{% if town %}&town={{ town }}{% endif %}{% if scare %}&scare={{ scare }}{% endif %}{% if tag %}&tag={{ tag }}{% endif %}" class="state-btn {% if region == 'staten-island' %}active{% endif %}">Staten Island</a>
 </div>
 
 <div class="newsletter-box">

@@ -305,6 +305,18 @@ def home(request: Request, sort: str = "top", town: str = "", town_search: str =
     if town:
         query += " AND LOWER(town) LIKE ?"
         params.append(f"%{town.lower()}%")
+    elif region in ("staten-island", "brooklyn", "manhattan", "queens", "bronx"):
+        borough_map = {
+            "staten-island": ["staten island"],
+            "brooklyn": ["brooklyn"],
+            "manhattan": ["manhattan", "new york, ny"],
+            "queens": ["queens"],
+            "bronx": ["bronx"],
+        }
+        borough_terms = borough_map[region]
+        placeholders = " OR ".join(["LOWER(town) LIKE ?"] * len(borough_terms))
+        query += f" AND ({placeholders})"
+        params.extend([f"%{t}%" for t in borough_terms])
     elif region == "long-island":
         li_towns = ["wantagh", "bellmore", "merrick", "levittown", "east meadow", "malverne",
                     "massapequa", "seaford", "farmingdale", "bethpage", "hicksville", "plainview",
