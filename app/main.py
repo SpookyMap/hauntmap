@@ -352,13 +352,17 @@ def home(request: Request, sort: str = "top", town: str = "", town_search: str =
     query += f" ORDER BY {order} LIMIT 100"
     with get_conn(DB_PATH) as conn:
         entries = [row_to_dict(r) for r in conn.execute(query, params).fetchall()]
+        sponsors = [dict(r) for r in conn.execute(
+            "SELECT * FROM sponsors WHERE is_active = 1 ORDER BY "
+            "CASE tier WHEN 'title' THEN 0 WHEN 'premium' THEN 1 ELSE 2 END, created_at").fetchall()]
     voted = {k[6:] for k in request.cookies if k.startswith("voted_")}
     return templates.TemplateResponse(request, "index.html",
         {"request": request, "entries": entries, "sort": sort,
          "town": town, "towns": towns(cat, state), "states": states(cat),
          "state": state, "region": region, "voted": voted,
          "cat": cat, "cat_labels": CAT_LABELS, "cat_emoji": CAT_EMOJI,
-         "scare": scare, "tag": tag},
+         "scare": scare, "tag": tag, "sponsors": sponsors,
+         "tier_labels": {"featured": "Featured Sponsor", "premium": "Premium Sponsor", "title": "Title Sponsor"}},
     )
 
 
@@ -891,3 +895,101 @@ async def admin_media(entry_id: int, request: Request, media: UploadFile = File(
                      (media_rel, thumb_rel, entry_id))
         conn.commit()
     return JSONResponse({"ok": True, "id": entry_id})
+
+
+# ---------------------------------------------------------------- sponsors
+
+@app.get("/sponsor/click/{sponsor_id}")
+def sponsor_click(sponsor_id: int):
+    """Track a sponsor banner click, then redirect to the sponsor's website."""
+    with get_conn(DB_PATH) as conn:
+        row = conn.execute(
+            "SELECT id, website_url, is_active FROM sponsors WHERE id = ?",
+            (sponsor_id,)).fetchone()
+        if not row:
+            raise HTTPException(404, "Sponsor not found")
+        if row["is_active"]:
+            conn.execute("UPDATE sponsors SET clicks = clicks + 1 WHERE id = ?", (sponsor_id,))
+            conn.commit()
+        url = (row["website_url"] or "").strip()
+    if not url:
+        raise HTTPException(404, "Sponsor has no website")
+    if not url.startswith(("http://", "https://")):
+        url = "https://" + url
+    return RedirectResponse(url, status_code=302)
+
+
+@app.get("/admin/sponsors", response_class=HTMLResponse)
+def admin_sponsors(request: Request):
+    if not is_admin(request):
+        return RedirectResponse("/admin", status_code=303)
+    with get_conn(DB_PATH) as conn:
+        sponsors = [dict(r) for r in conn.execute(
+            "SELECT * FROM sponsors ORDER BY is_active DESC, created_at DESC").fetchall()]
+    return templates.TemplateResponse(request, "admin_sponsors.html",
+        {"request": request, "sponsors": sponsors,
+         "tier_labels": {"featured": "$250 Featured", "premium": "$500 Premium", "title": "$1,000 Title Sponsor"}})
+
+
+@app.post("/admin/sponsors/add")
+async def admin_sponsor_add(request: Request,
+                            business_name: str = Form(""),
+                            website_url: str = Form(""),
+                            tier: str = Form("featured"),
+                            banner_text: str = Form(""),
+                            logo: UploadFile = File(None)):
+    """Add a new sponsor (admin)."""
+    _require_admin(request)
+    business_name = business_name.strip()
+    website_url = website_url.strip()
+    if not business_name or not website_url:
+        raise HTTPException(400, "Business name and website URL are required")
+    if tier not in ("featured", "premium", "title"):
+        tier = "featured"
+    logo_path = None
+    if logo and logo.filename:
+        ext = safe_ext(logo.filename)
+        if ext not in PHOTO_EXTS:
+            raise HTTPException(400, "Logo must be JPG, PNG, or WebP")
+        tmp = save_upload(logo, MAX_PHOTO_BYTES)
+        try:
+            with Image.open(tmp) as im:
+                im.verify()
+        except (UnidentifiedImageError, OSError):
+            tmp.unlink(missing_ok=True)
+            raise HTTPException(400, "Not a readable image")
+        sponsor_dir = UPLOAD_DIR / "sponsors"
+        sponsor_dir.mkdir(exist_ok=True)
+        logo_path = f"sponsors/{uuid.uuid4().hex}{ext}"
+        shutil.move(tmp, UPLOAD_DIR / logo_path)
+    now = datetime.now(timezone.utc).isoformat()
+    with get_conn(DB_PATH) as conn:
+        conn.execute(
+            "INSERT INTO sponsors (business_name, logo_path, website_url, tier, banner_text, is_active, clicks, created_at)"
+            " VALUES (?, ?, ?, ?, ?, 1, 0, ?)",
+            (business_name, logo_path, website_url, tier, banner_text.strip() or None, now))
+        conn.commit()
+    return RedirectResponse("/admin/sponsors", status_code=303)
+
+
+@app.post("/admin/sponsors/{sponsor_id}/toggle")
+def admin_sponsor_toggle(sponsor_id: int, request: Request):
+    """Toggle a sponsor active/inactive (admin)."""
+    _require_admin(request)
+    with get_conn(DB_PATH) as conn:
+        conn.execute("UPDATE sponsors SET is_active = 1 - is_active WHERE id = ?", (sponsor_id,))
+        conn.commit()
+    return RedirectResponse("/admin/sponsors", status_code=303)
+
+
+@app.post("/admin/sponsors/{sponsor_id}/delete")
+def admin_sponsor_delete(sponsor_id: int, request: Request):
+    """Delete a sponsor and its logo (admin)."""
+    _require_admin(request)
+    with get_conn(DB_PATH) as conn:
+        row = conn.execute("SELECT logo_path FROM sponsors WHERE id = ?", (sponsor_id,)).fetchone()
+        conn.execute("DELETE FROM sponsors WHERE id = ?", (sponsor_id,))
+        conn.commit()
+    if row and row["logo_path"]:
+        (UPLOAD_DIR / row["logo_path"]).unlink(missing_ok=True)
+    return RedirectResponse("/admin/sponsors", status_code=303)

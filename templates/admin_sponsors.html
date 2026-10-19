@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}Sponsors &middot; Admin{% endblock %}
+{% block content %}
+<h1>&#x1F91D; Sponsors</h1>
+<p><a href="/admin">&larr; Back to admin</a></p>
+
+<h2>Add sponsor</h2>
+<form method="post" action="/admin/sponsors/add" enctype="multipart/form-data" class="form">
+  <label>Business name
+    <input type="text" name="business_name" required maxlength="120">
+  </label>
+  <label>Website URL
+    <input type="url" name="website_url" placeholder="https://example.com" required maxlength="300">
+  </label>
+  <label>Tier
+    <select name="tier">
+      <option value="featured">$250 Featured</option>
+      <option value="premium">$500 Premium</option>
+      <option value="title">$1,000 Title Sponsor</option>
+    </select>
+  </label>
+  <label>Banner text (optional)
+    <input type="text" name="banner_text" placeholder="Short tagline shown under the business name" maxlength="160">
+  </label>
+  <label>Logo (JPG/PNG/WebP, optional)
+    <input type="file" name="logo" accept="image/*">
+  </label>
+  <button type="submit" class="btn btn-big">Add sponsor</button>
+</form>
+
+<h2>All sponsors ({{ sponsors|length }})</h2>
+{% if sponsors %}
+<div class="admin-list">
+  {% for s in sponsors %}
+  <div class="admin-row sponsor-admin-row">
+    {% if s.logo_path %}
+    <img src="/media/{{ s.logo_path }}" alt="" class="sponsor-admin-logo">
+    {% endif %}
+    <div class="sponsor-admin-info">
+      <a href="{{ s.website_url }}" target="_blank" rel="noopener"><strong>{{ s.business_name }}</strong></a>
+      <span class="meta">{{ tier_labels.get(s.tier, s.tier) }} &middot; {{ s.clicks }} clicks{% if not s.is_active %} &middot; <em>inactive</em>{% endif %}{% if s.banner_text %} &middot; &ldquo;{{ s.banner_text }}&rdquo;{% endif %}</span>
+    </div>
+    <span class="admin-actions">
+      <form method="post" action="/admin/sponsors/{{ s.id }}/toggle" class="inline-form">
+        <button class="btn btn-small">{% if s.is_active %}Deactivate{% else %}Activate{% endif %}</button>
+      </form>
+      <form method="post" action="/admin/sponsors/{{ s.id }}/delete" class="inline-form"
+            onsubmit="return confirm('Permanently delete this sponsor and its logo?');">
+        <button class="btn btn-small btn-danger">Delete</button>
+      </form>
+    </span>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<p class="muted">No sponsors yet. Add the first one above.</p>
+{% endif %}
+{% endblock %}

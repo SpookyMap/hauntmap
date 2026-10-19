@@ -132,6 +132,28 @@
   <a href="/?cat={{ cat }}&region=staten-island{% if sort != 'top' %}&sort={{ sort }}{% endif %}{% if town %}&town={{ town }}{% endif %}{% if scare %}&scare={{ scare }}{% endif %}{% if tag %}&tag={{ tag }}{% endif %}" class="state-btn {% if region == 'staten-island' %}active{% endif %}">Staten Island</a>
 </div>
 
+{% if sponsors %}
+<div class="sponsor-section">
+  <h2>&#x2B50; Featured Sponsors</h2>
+  <p class="sponsor-sub">Support the local businesses that keep HauntMap free.</p>
+  <div class="sponsor-grid">
+    {% for s in sponsors %}
+    <a href="/sponsor/click/{{ s.id }}" target="_blank" rel="noopener sponsored" class="sponsor-card tier-{{ s.tier }}">
+      {% if s.logo_path %}
+      <img src="/media/{{ s.logo_path }}" alt="{{ s.business_name }} logo" class="sponsor-logo" loading="lazy">
+      {% endif %}
+      <span class="sponsor-meta">
+        <strong class="sponsor-name">{{ s.business_name }}</strong>
+        {% if s.banner_text %}<span class="sponsor-text">{{ s.banner_text }}</span>{% endif %}
+        <span class="sponsor-tier">{{ tier_labels.get(s.tier, s.tier) }}</span>
+      </span>
+    </a>
+    {% endfor %}
+  </div>
+  <p class="sponsor-cta">Want your business here? <a href="mailto:gethauntmap@gmail.com?subject=Sponsoring%20HauntMap">Become a sponsor &rarr;</a></p>
+</div>
+{% endif %}
+
 <div class="newsletter-box">
   {% if request.query_params.get('subscribed') %}
   <p class="newsletter-success">&#x1F389; You're in! Watch your inbox for the week's best haunts.</p>

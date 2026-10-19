@@ -154,6 +154,50 @@ a { color: var(--accent); }
 }
 .newsletter-success { color: #7ee787; font-weight: 700; }
 .newsletter-error { color: #ff7b72; font-size: 0.85rem; }
+
+/* ---- Sponsor banners (homepage) ---- */
+.sponsor-section { margin: 2.5rem 0 0; text-align: center; }
+.sponsor-section h2 { font-size: 1.3rem; margin: 0 0 0.3rem; }
+.sponsor-sub { color: var(--muted); font-size: 0.9rem; margin: 0 0 1.2rem; }
+.sponsor-grid {
+  display: grid; gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+.sponsor-card {
+  display: flex; align-items: center; gap: 1rem;
+  background: linear-gradient(135deg, #241640 0%, #311d55 100%);
+  border: 1px solid #4a2d7a; border-radius: 14px;
+  padding: 1rem 1.2rem; text-decoration: none; color: var(--ink);
+  text-align: left; box-shadow: 0 2px 14px rgba(0,0,0,.35);
+  transition: transform .15s ease, border-color .15s ease, box-shadow .15s ease;
+}
+.sponsor-card:hover { transform: translateY(-2px); border-color: #7b4fc4; box-shadow: 0 6px 20px rgba(0,0,0,.45); }
+.sponsor-logo {
+  width: 64px; height: 64px; object-fit: contain; flex-shrink: 0;
+  border-radius: 10px; background: #fff; padding: 4px;
+}
+.sponsor-meta { display: flex; flex-direction: column; gap: 0.15rem; min-width: 0; }
+.sponsor-name { font-size: 1.05rem; }
+.sponsor-text { color: var(--muted); font-size: 0.85rem; }
+.sponsor-tier {
+  font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em;
+  color: #c9a86a; font-weight: 700;
+}
+.sponsor-card.tier-title { grid-column: 1 / -1; padding: 1.4rem 1.6rem; border-color: #c9a86a; }
+.sponsor-card.tier-title .sponsor-logo { width: 88px; height: 88px; }
+.sponsor-card.tier-title .sponsor-name { font-size: 1.3rem; }
+.sponsor-card.tier-premium { border-color: #7b4fc4; }
+.sponsor-cta { margin: 1rem 0 0; font-size: 0.9rem; color: var(--muted); }
+.sponsor-cta a { color: var(--accent); }
+
+/* ---- Sponsor admin rows ---- */
+.sponsor-admin-row { align-items: center; }
+.sponsor-admin-logo {
+  width: 48px; height: 48px; object-fit: contain; flex-shrink: 0;
+  border-radius: 8px; background: #fff; padding: 3px;
+}
+.sponsor-admin-info { display: flex; flex-direction: column; gap: 0.1rem; min-width: 0; flex: 1; }
+
 .tips-section { margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid #33254f; }
 .tips-section h3 { margin: 0 0 1rem; }
 .tips-list { display: flex; flex-direction: column; gap: 0.8rem; margin-bottom: 1.2rem; }
@@ -220,7 +264,8 @@ a { color: var(--accent); }
 
 /* forms & buttons */
 .form label { display: block; margin-bottom: 1rem; font-weight: 600; }
-.form input[type="text"], .form input[type="password"], .form input[type="file"] {
+.form input[type="text"], .form input[type="password"], .form input[type="file"],
+.form input[type="url"], .form select {
   display: block; width: 100%; margin-top: 0.35rem;
   background: var(--bg2); border: 1px solid #33254f; color: var(--ink);
   border-radius: 10px; padding: 0.65rem; font-size: 1rem;

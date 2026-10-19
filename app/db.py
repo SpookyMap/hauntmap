@@ -52,6 +52,18 @@ CREATE TABLE IF NOT EXISTS page_views (
     viewed_at TEXT NOT NULL               -- UTC ISO timestamp
 );
 CREATE INDEX IF NOT EXISTS idx_page_views_date ON page_views(viewed_at);
+CREATE TABLE IF NOT EXISTS sponsors (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    business_name TEXT NOT NULL,
+    logo_path TEXT,                  -- path relative to uploads dir, e.g. "sponsors/abc123.jpg"
+    website_url TEXT NOT NULL,
+    tier TEXT NOT NULL DEFAULT 'featured', -- 'featured' | 'premium' | 'title'
+    banner_text TEXT,
+    is_active INTEGER NOT NULL DEFAULT 1,
+    clicks INTEGER NOT NULL DEFAULT 0,
+    created_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_sponsors_active ON sponsors(is_active);
 """
 
 
