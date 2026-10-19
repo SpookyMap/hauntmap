@@ -173,7 +173,9 @@ a { color: var(--accent); }
 }
 .sponsor-card:hover { transform: translateY(-2px); border-color: #7b4fc4; box-shadow: 0 6px 20px rgba(0,0,0,.45); }
 .sponsor-logo {
-  width: 64px; height: 64px; object-fit: contain; flex-shrink: 0;
+  width: 64px !important; height: 64px !important;
+  max-width: 64px !important; max-height: 64px !important;
+  object-fit: contain; flex-shrink: 0;
   border-radius: 10px; background: #fff; padding: 4px;
 }
 .sponsor-meta { display: flex; flex-direction: column; gap: 0.15rem; min-width: 0; }
