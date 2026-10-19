@@ -43,16 +43,16 @@ MAX_PHOTO_BYTES = 10 * 1024 * 1024
 MAX_VIDEO_BYTES = 100 * 1024 * 1024
 THUMB_MAX_WIDTH = 640
 
-CATEGORIES = ("halloween", "christmas", "halloween_stores", "restaurants", "coffee", "shops", "parks", "haunted_houses", "events")
+CATEGORIES = ("halloween", "christmas", "halloween_stores", "restaurants", "coffee", "shops", "parks", "haunted_houses", "events", "live")
 CAT_LABELS = {"halloween": "Halloween", "christmas": "Christmas",
               "halloween_stores": "Halloween Stores",
               "restaurants": "Restaurants", "coffee": "Coffee & Cafes",
               "shops": "Shops", "parks": "Parks",
               "haunted_houses": "Haunted Houses",
-              "events": "Events"}
+              "events": "Events", "live": "Live Streams"}
 CAT_EMOJI = {"halloween": "🎃", "christmas": "🎄", "halloween_stores": "👻",
              "restaurants": "🍽️", "coffee": "☕", "shops": "🛍️", "parks": "🌳",
-             "haunted_houses": "🏚️", "events": "🎪"}
+             "haunted_houses": "🏚️", "events": "🎪", "live": "🔴"}
 
 app = FastAPI(title=SITE_NAME, docs_url=None, redoc_url=None)
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
@@ -473,7 +473,7 @@ async def upload_submit(
         error = "Please give your haunt a title."
     if not error and not town:
         error = "Please add a town or neighborhood."
-    if not error and (not media or not media.filename) and category not in ("events", "halloween_stores"):
+    if not error and (not media or not media.filename) and category not in ("events", "halloween_stores", "live"):
         error = "Please attach a photo or video."
 
     entry_id = None

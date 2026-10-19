@@ -51,7 +51,11 @@
   </div>
 
   {% if entry.tiktok_url %}
+  {% if entry.category == 'live' %}
+  <p><a href="{{ entry.tiktok_url }}" target="_blank" rel="noopener" class="btn-live">&#x1F534; Watch Live on TikTok</a></p>
+  {% else %}
   <p><a href="{{ entry.tiktok_url }}" target="_blank" rel="noopener">&#x1F3B5; Watch on TikTok</a></p>
+  {% endif %}
   {% endif %}
 
   <div class="detail-actions">

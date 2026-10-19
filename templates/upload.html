@@ -22,6 +22,9 @@
       <option value="coffee">&#x2615; Coffee & Cafes</option>
       <option value="shops">&#x1F6CD;&#xFE0F; Shops</option>
       <option value="parks">&#x1F333; Parks</option>
+      <option value="haunted_houses">&#x1F3DA;&#xFE0F; Haunted Houses</option>
+      <option value="events">&#x1F3AA; Events</option>
+      <option value="live">&#x1F534; Live Streams</option>
     </select>
   </label>
   <label>Title <span class="req">*</span>
@@ -33,7 +36,7 @@
   <label>Your display name <span class="opt">(optional)</span>
     <input type="text" name="display_name" maxlength="40" placeholder="e.g. The Miller Family">
   </label>
-  <label>Photo or video <span class="req" id="media-req">*</span> <span class="opt" id="media-opt" style="display:none">(optional for events &amp; stores)</span>
+  <label>Photo or video <span class="req" id="media-req">*</span> <span class="opt" id="media-opt" style="display:none">(optional for events, stores &amp; live)</span>
     <input type="file" name="media" id="media-input" accept=".jpg,.jpeg,.png,.webp,.mp4" required>
     <small>Photo: JPG/PNG/WebP up to 10 MB. Video: MP4 up to 100 MB.</small>
   </label>
@@ -68,7 +71,7 @@
     const v = document.getElementById('category-select').value;
     const show = (v === 'halloween' || v === 'christmas');
     document.getElementById('halloween-fields').style.display = show ? '' : 'none';
-    const mediaOptional = (v === 'events' || v === 'halloween_stores');
+    const mediaOptional = (v === 'events' || v === 'halloween_stores' || v === 'live');
     document.getElementById('media-input').required = !mediaOptional;
     document.getElementById('media-req').style.display = mediaOptional ? 'none' : '';
     document.getElementById('media-opt').style.display = mediaOptional ? '' : 'none';
