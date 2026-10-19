@@ -125,12 +125,12 @@ a { color: var(--accent); }
   padding: 1.2rem; margin-top: 2rem; display: flex; gap: 1rem; align-items: center;
 }
 .book-cover {
-  flex-shrink: 0; width: 70px;
+  flex-shrink: 0; width: 35px;
   display: flex; align-items: center; justify-content: center;
 }
 .book-cover-img {
-  width: 70px; height: auto; border-radius: 6px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+  width: 35px; height: auto; border-radius: 4px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.4);
 }
 .book-info h3 { margin: 0 0 0.3rem; font-size: 1rem; }
 .book-title { margin: 0 0 0.2rem; font-size: 1.1rem; }
