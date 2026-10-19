@@ -132,6 +132,18 @@
   <a href="/?cat={{ cat }}&region=staten-island{% if sort != 'top' %}&sort={{ sort }}{% endif %}{% if town %}&town={{ town }}{% endif %}{% if scare %}&scare={{ scare }}{% endif %}{% if tag %}&tag={{ tag }}{% endif %}" class="state-btn {% if region == 'staten-island' %}active{% endif %}">Staten Island</a>
 </div>
 
+<div class="book-banner">
+  <div class="book-cover">
+    <span class="book-emoji">📖</span>
+  </div>
+  <div class="book-info">
+    <h3>📚 Halloween Reads</h3>
+    <p class="book-title"><strong>Something Wicked</strong></p>
+    <p class="book-desc">A spooky read to get you in the Halloween spirit.</p>
+    <a href="https://www.amazon.com/Something-Wicked/dp/B0F2F1CHG1" target="_blank" rel="noopener" class="btn book-btn">Buy on Amazon</a>
+  </div>
+</div>
+
 <div class="newsletter-box">
   {% if request.query_params.get('subscribed') %}
   <p class="newsletter-success">&#x1F389; You're in! Watch your inbox for the week's best haunts.</p>
