@@ -5,7 +5,9 @@ Voting is limited to one vote per browser per entry via cookie — this is a
 SOFT limit only (cookies are trivially cleared); it stops casual double
 voting, not determined abuse. See the vote route below.
 """
+import hashlib
 import os
+import requests
 import secrets
 import shutil
 import sqlite3
@@ -642,6 +644,22 @@ async def subscribe(request: Request):
                 )
                 conn.commit()
             success = True
+            # Also add to Mailchimp
+            mc_key = os.environ.get("MAILCHIMP_API_KEY")
+            mc_list = os.environ.get("MAILCHIMP_AUDIENCE_ID")
+            if mc_key and mc_list:
+                try:
+                    dc = mc_key.split("-")[-1]
+                    import hashlib
+                    sub_hash = hashlib.md5(email.encode()).hexdigest()
+                    url = f"https://{dc}.api.mailchimp.com/3.0/lists/{mc_list}/members/{sub_hash}"
+                    resp = requests.put(url,
+                        auth=("anystring", mc_key),
+                        json={"email_address": email, "status": "subscribed",
+                              "merge_fields": {"LOCATION": location}},
+                        timeout=10)
+                except Exception:
+                    pass  # local DB is source of truth; Mailchimp is best-effort
         except sqlite3.IntegrityError:
             # already subscribed — treat as success
             success = True
