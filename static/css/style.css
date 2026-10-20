@@ -156,27 +156,26 @@ a { color: var(--accent); }
 .newsletter-error { color: #ff7b72; font-size: 0.85rem; }
 
 /* ---- Sponsor banners (homepage) ---- */
-.sponsor-section { margin: 1rem 0 0; text-align: center; }
-.sponsor-section h2 { font-size: 1rem; margin: 0 0 0.2rem; }
-.sponsor-sub { color: var(--muted); font-size: 0.8rem; margin: 0 0 0.8rem; }
+.sponsor-section { margin: 0.8rem 0; text-align: center; }
+.sponsor-section h2 { font-size: 0.85rem; margin: 0 0 0.15rem; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+.sponsor-sub { display: none; }
 .sponsor-grid {
-  display: flex; flex-wrap: wrap; gap: 0.6rem; justify-content: center;
-  max-width: 800px; margin: 0 auto;
+  display: flex; flex-wrap: wrap; gap: 0.5rem; justify-content: center;
+  max-width: 700px; margin: 0 auto;
 }
 .sponsor-card {
-  display: flex; align-items: center; gap: 1rem;
-  background: linear-gradient(135deg, #241640 0%, #311d55 100%);
-  border: 1px solid #4a2d7a; border-radius: 14px;
-  padding: 1rem 1.2rem; text-decoration: none; color: var(--ink);
-  text-align: left; box-shadow: 0 2px 14px rgba(0,0,0,.35);
-  transition: transform .15s ease, border-color .15s ease, box-shadow .15s ease;
+  display: inline-flex; align-items: center; gap: 0.6rem;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.1); border-radius: 8px;
+  padding: 0.4rem 0.7rem; text-decoration: none; color: var(--ink);
+  font-size: 0.85rem; transition: border-color .15s ease;
+  max-width: 100%;
 }
-.sponsor-card:hover { transform: translateY(-2px); border-color: #7b4fc4; box-shadow: 0 6px 20px rgba(0,0,0,.45); }
+.sponsor-card:hover { border-color: #7b4fc4; }
 .sponsor-logo {
-  width: 64px !important; height: 64px !important;
-  max-width: 64px !important; max-height: 64px !important;
-  object-fit: contain; flex-shrink: 0;
-  border-radius: 10px; background: #fff; padding: 4px;
+  width: 32px !important; height: 48px !important;
+  max-width: 32px !important; max-height: 48px !important;
+  object-fit: contain; flex-shrink: 0; border-radius: 4px;
 }
 .sponsor-meta { display: flex; flex-direction: column; gap: 0.15rem; min-width: 0; }
 .sponsor-name { font-size: 1.05rem; }
