@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Creepster&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/static/css/style.css?v=20261020o">
+<link rel="stylesheet" href="/static/css/style.css?v=20261020p">
 {% block head %}{% endblock %}
 </head>
 <body>
@@ -21,21 +21,21 @@
   <a class="brand" href="/"><img src="/static/img/hauntmap_logo.jpg" alt="HauntMap" class="brand-logo"></a>
   <div class="header-center">
     <p class="header-hook">The #1 resource for everything Halloween<br>Create custom tours with just a click.</p>
-    <nav>
-      <a href="/map">&#x1F5FA;&#xFE0F; Map</a>
-      <a href="/nearby">&#x1F50D; Nearby</a>
-      <a href="/tour">&#x1F383; Tours</a>
-      <a href="/diy">&#x1F6E0;&#xFE0F; DIY</a>
-      <a href="/games">&#x1F3AE; Games</a>
-      <a href="/leaderboard">&#x1F3C6; Top Haunts</a>
-      <a class="btn-upload" href="/upload">+ Add yours</a>
-    </nav>
   </div>
 </header>
 <main class="wrap">
   {% block content %}{% endblock %}
 </main>
 <footer class="site-footer">
+  <nav class="bottom-nav">
+    <a href="/map">&#x1F5FA;&#xFE0F; Map</a>
+    <a href="/nearby">&#x1F50D; Nearby</a>
+    <a href="/tour">&#x1F383; Tours</a>
+    <a href="/diy">&#x1F6E0;&#xFE0F; DIY</a>
+    <a href="/games">&#x1F3AE; Games</a>
+    <a href="/leaderboard">&#x1F3C6; Top Haunts</a>
+    <a class="btn-upload" href="/upload">+ Add yours</a>
+  </nav>
   <p>{{ site_name }} &middot; show off your Halloween decorations &middot; be kind, keep it spooky<br><a href="mailto:gethauntmap@gmail.com">gethauntmap@gmail.com</a></p>
   <p class="footer-social"><a href="https://www.tiktok.com/@gethauntmap" target="_blank" rel="noopener" class="social-btn tiktok-btn">&#x1F3B5; Follow us on TikTok @GetHauntmap</a></p>
 </footer>

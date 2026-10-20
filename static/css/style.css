@@ -573,3 +573,8 @@ a.game-card:hover { border-color: #ff7518; transform: translateY(-2px); }
 .trivia-verdict { font-size: 1.15rem; color: #ffb066; margin: 0 0 1.1rem; }
 .trivia-again { color: #9a97a3; }
 .trivia-streak { color: #ff7518; font-weight: 800; font-size: 1.1rem; }
+
+/* Bottom nav (moved from header) */
+.bottom-nav { display: flex; flex-wrap: wrap; gap: 0.7rem 1.5rem; justify-content: center; align-items: center; padding: 1.1rem 0.5rem 0.5rem; }
+.bottom-nav a { color: #e8e6e3; text-decoration: none; font-weight: 700; font-size: 1.08rem; }
+.bottom-nav a:hover { color: #ff7518; }
