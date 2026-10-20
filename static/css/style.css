@@ -158,10 +158,11 @@ a { color: var(--accent); }
 .signup-strip {
   background: linear-gradient(135deg, #241640 0%, #311d55 100%);
   border: 1px solid #4a2d7a; border-radius: 12px;
-  padding: 1rem 1.2rem; margin: 0.9rem 0; text-align: center;
+  padding: 0.6rem 0.9rem; margin: 0.6rem auto; text-align: center;
+  max-width: 600px;
 }
-.signup-strip h3 { margin: 0 0 0.3rem; font-size: 1.05rem; color: #FFF8E7; }
-.signup-strip p { color: #c9bce8; margin: 0 0 0.7rem; font-size: 0.9rem; line-height: 1.45; }
+.signup-strip h3 { margin: 0 0 0.2rem; font-size: 0.95rem; color: #FFF8E7; }
+.signup-strip p { color: #c9bce8; margin: 0 0 0.45rem; font-size: 0.82rem; line-height: 1.4; }
 .signup-strip .newsletter-form input { background: rgba(0,0,0,0.25); }
 .signup-strip-slim { padding: 0.8rem 1rem; margin: 1rem 0; }
 
@@ -542,3 +543,14 @@ h1 { font-size: 1.6rem; } h2 { font-size: 1.2rem; color: var(--accent2); margin-
 .scare-n { min-width: 2ch; text-align: right; color: #9a97a3; font-size: 0.9rem; }
 .scare-total { color: #9a97a3; font-size: 0.9rem; margin: 0.6rem 0 0; }
 @media (max-width: 640px) { .scare-btn { min-width: 128px; font-size: 0.85rem; } }
+
+/* Games hub */
+.games-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem; margin: 1.25rem 0 2rem; }
+.game-card { background: #161c24; border: 1px solid #2a3442; border-radius: 12px; padding: 1.1rem 1.2rem; color: #e8e6e3; text-decoration: none; display: block; transition: border-color .15s, transform .15s; }
+a.game-card:hover { border-color: #ff7518; transform: translateY(-2px); }
+.game-card h3 { margin: 0.4rem 0; font-size: 1.2rem; }
+.game-card p { color: #c9c4d4; line-height: 1.45; margin: 0 0 0.7rem; }
+.game-emoji { font-size: 2rem; }
+.game-play { color: #ff7518; font-weight: 800; }
+.game-soon { opacity: 0.75; }
+.game-soon .game-play { color: #9a97a3; }

@@ -559,6 +559,11 @@ def haunt_or_not_page(request: Request):
     )
 
 
+@app.get("/games", response_class=HTMLResponse)
+def games_page(request: Request):
+    return templates.TemplateResponse(request, "games.html", {})
+
+
 @app.get("/api/duel")
 def api_duel():
     with get_conn(DB_PATH) as conn:
