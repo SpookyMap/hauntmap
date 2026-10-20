@@ -182,7 +182,9 @@ a { color: var(--accent); }
 .diy-card h3 { margin: 0 0 0.2rem; color: #FFF8E7; }
 .diy-creator { color: #ff7518; font-weight: 600; margin: 0 0 0.4rem; font-size: 0.9rem; }
 .diy-blurb { color: #c9bce8; font-size: 0.92rem; line-height: 1.45; margin: 0 0 0.6rem; }
-.diy-card .tiktok-embed { margin: 0 auto; }
+.diy-embed { display: flex; justify-content: center; }
+.diy-embed iframe { width: 100%; max-width: 340px; height: 600px; border: 0; border-radius: 10px; background: #000; }
+.diy-watch { text-align: center; margin: 0.5rem 0 0; font-size: 0.9rem; }
 
 /* ---- Sponsor banners (homepage) ---- */
 .sponsor-section { margin: 0.8rem 0; text-align: center; }
