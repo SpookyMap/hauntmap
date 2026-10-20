@@ -172,6 +172,9 @@ a { color: var(--accent); }
   color: var(--ink); text-decoration: none; font-size: 0.88rem; font-weight: 600;
 }
 .social-btn:hover { border-color: #7b4fc4; }
+.tiktok-strip { text-align: center; margin: 0.9rem 0 0.2rem; }
+.tiktok-hero { font-size: 1rem; padding: 0.6rem 1.3rem; background: rgba(255,117,24,0.12); border-color: #ff7518; }
+.tiktok-hero:hover { border-color: #ffa25e; background: rgba(255,117,24,0.2); }
 
 /* ---- Sponsor banners (homepage) ---- */
 .sponsor-section { margin: 0.8rem 0; text-align: center; }
