@@ -172,9 +172,9 @@ a { color: var(--accent); }
   color: var(--ink); text-decoration: none; font-size: 0.88rem; font-weight: 600;
 }
 .social-btn:hover { border-color: #7b4fc4; }
-.tiktok-strip { text-align: center; margin: 1.75rem 0; }
+.tiktok-strip { text-align: center; margin: 1.75rem 0; display: flex; justify-content: center; }
 .tiktok-follow { display: inline-flex; align-items: center; gap: 0.6rem; color: #fff; font-weight: 800; font-size: 1.3rem; text-decoration: none; }
-.tiktok-follow img { width: 32px; height: 32px; }
+.tiktok-follow img { width: 10px; height: 10px; }
 .tiktok-follow .tt-handle { color: #ff7518; }
 .tiktok-follow:hover { opacity: 0.85; }
 
