@@ -218,10 +218,10 @@ a { color: var(--accent); }
   font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em;
   color: #c9a86a; font-weight: 700;
 }
-.sponsor-card.tier-title { flex: 0 1 480px; margin: 0 auto; flex-direction: column; text-align: center; gap: 1rem; padding: 2.2rem 1.6rem; border-color: #c9a86a; border-width: 2px; box-sizing: border-box; justify-content: center; }
-.sponsor-card.tier-title .sponsor-logo { width: 250px !important; height: 250px !important; max-width: 250px !important; max-height: 250px !important; }
-.sponsor-card.tier-title .sponsor-name { font-size: 2.3rem; }
-.sponsor-card.tier-title .sponsor-text { font-size: 1.25rem; }
+.sponsor-card.tier-title { flex: 0 1 660px; margin: 0 auto; flex-direction: column; text-align: center; gap: 1.1rem; padding: 2.6rem 2rem; border-color: #c9a86a; border-width: 2px; box-sizing: border-box; justify-content: center; }
+.sponsor-card.tier-title .sponsor-logo { width: 300px !important; height: 300px !important; max-width: 300px !important; max-height: 300px !important; }
+.sponsor-card.tier-title .sponsor-name { font-size: 2.6rem; }
+.sponsor-card.tier-title .sponsor-text { font-size: 1.35rem; }
 .sponsor-card.tier-premium { border-color: #7b4fc4; }
 .sponsor-cta { margin: 1rem 0 0; font-size: 0.9rem; color: var(--muted); }
 .sponsor-cta a { color: var(--accent); }
@@ -574,9 +574,13 @@ a.game-card:hover { border-color: #ff7518; transform: translateY(-2px); }
 .trivia-again { color: #9a97a3; }
 .trivia-streak { color: #ff7518; font-weight: 800; font-size: 1.1rem; }
 
-/* Header nav — sits at the bottom of the purple banner */
-.header-center { align-self: stretch; }
-.header-center .header-hook { margin-top: auto; }
-.header-nav { display: flex; flex-wrap: wrap; gap: 0.6rem 1.2rem; justify-content: space-between; align-items: center; width: 100%; margin-top: 0.9rem; padding-bottom: 0.35rem; }
+/* Header nav — a clean strip on the bottom line of the purple banner */
+.site-header { flex-wrap: wrap; }
+.header-center { align-self: center; }
+.header-nav { flex: 1 1 100%; display: flex; flex-wrap: wrap; gap: 0.5rem 1.2rem; justify-content: space-between; align-items: center; margin-top: 0.55rem; padding: 0.5rem 0.2rem 0.15rem; border-top: 1px solid rgba(255, 255, 255, 0.08); }
 .header-nav a { color: #e8e6e3; text-decoration: none; font-weight: 700; font-size: 1.02rem; }
 .header-nav a:hover { color: #ff7518; }
+
+/* Fun spooky picture at the right end of the purple header */
+.header-spooky { height: 118px; width: 168px; object-fit: cover; border-radius: 12px; border: 2px solid #c9a86a; align-self: center; flex: 0 0 auto; }
+@media (max-width: 700px) { .header-spooky { display: none; } }

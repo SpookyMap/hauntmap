@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% block title %}Costume Contest — {{ site_name }}{% endblock %}
+{% block content %}
+<section class="contest-wrap">
+  <h1 class="contest-title">🎭 HauntMap Costume Contest</h1>
+  <p class="contest-sub">Show off your best Halloween look! Upload your costume photo, rally your friends to vote, and the top costume gets <strong>featured on the HauntMap homepage on Halloween night</strong>. 👑 Voting closes Oct 30 at 11:59 PM ET.</p>
+
+  {% if leader %}
+  <div class="contest-leader">
+    <span class="leader-crown">👑 Currently leading</span>
+    <img src="{{ leader.thumb_url }}" alt="{{ leader.title }}">
+    <div>
+      <strong>{{ leader.title }}</strong>
+      {% if leader.display_name %}<span>by {{ leader.display_name }}</span>{% endif %}
+      <span class="leader-votes">❤️ {{ leader.votes }} votes</span>
+    </div>
+  </div>
+  {% endif %}
+
+  {% if error %}<p class="contest-error">{{ error }}</p>{% endif %}
+  <form class="contest-form" method="post" action="/costume-contest/upload" enctype="multipart/form-data">
+    <h2>Enter your costume</h2>
+    <label>Costume photo (required)
+      <input type="file" name="media" accept="image/*" required>
+    </label>
+    <label>Costume title
+      <input type="text" name="title" maxlength="120" placeholder="e.g. Headless Horseman" required>
+    </label>
+    <label>Your name (optional)
+      <input type="text" name="display_name" maxlength="60" placeholder="e.g. Dan from Hackensack">
+    </label>
+    <button type="submit" class="btn-primary">🎃 Enter the contest</button>
+  </form>
+
+  <h2 class="contest-gallery-title">Entries — vote for your favorites ❤️</h2>
+  {% if costumes %}
+  <div class="contest-grid">
+    {% for c in costumes %}
+    <article class="contest-card">
+      <img src="{{ c.thumb_url }}" alt="{{ c.title }}" loading="lazy">
+      <div class="contest-card-body">
+        <strong>{{ c.title }}</strong>
+        {% if c.display_name %}<span class="contest-by">by {{ c.display_name }}</span>{% endif %}
+        <button type="button" class="contest-vote{% if c.voted %} voted{% endif %}" data-id="{{ c.id }}">
+          ❤️ <span class="cv-count">{{ c.votes }}</span> · <span class="cv-label">{% if c.voted %}Voted — tap to undo{% else %}Vote{% endif %}</span>
+        </button>
+      </div>
+    </article>
+    {% endfor %}
+  </div>
+  {% else %}
+  <p class="contest-empty">No entries yet — be the first costume on the board! 🎃</p>
+  {% endif %}
+</section>
+<style>
+.contest-wrap { max-width: 900px; margin: 0 auto; padding: 0.5rem; }
+.contest-title { text-align: center; margin: 0.6rem 0 0.4rem; }
+.contest-sub { text-align: center; color: #c9bce8; max-width: 640px; margin: 0 auto 1.2rem; line-height: 1.5; }
+.contest-leader { display: flex; gap: 1rem; align-items: center; background: linear-gradient(160deg, #3a2a10, #241a44); border: 2px solid #c9a86a; border-radius: 14px; padding: 0.9rem 1.1rem; margin: 0 auto 1.2rem; max-width: 560px; flex-wrap: wrap; }
+.contest-leader img { width: 92px; height: 92px; object-fit: cover; border-radius: 10px; }
+.contest-leader .leader-crown { width: 100%; color: #ffd98a; font-weight: 800; }
+.contest-leader strong { display: block; font-size: 1.15rem; color: #FFF8E7; }
+.contest-leader span { color: #c9bce8; display: block; }
+.contest-leader .leader-votes { color: #ff9d5c; font-weight: 700; }
+.contest-error { background: #4a1520; color: #ffb3c1; padding: 0.6rem 0.9rem; border-radius: 8px; text-align: center; }
+.contest-form { background: #17122b; border: 1px solid #372b5e; border-radius: 12px; padding: 1rem 1.2rem; max-width: 480px; margin: 0 auto 1.6rem; display: grid; gap: 0.7rem; }
+.contest-form h2 { margin: 0; font-size: 1.1rem; }
+.contest-form label { display: grid; gap: 0.3rem; font-size: 0.9rem; color: #c9bce8; }
+.contest-form input { padding: 0.5rem 0.6rem; border-radius: 8px; border: 1px solid #372b5e; background: #0d0a1a; color: #e8e6e3; }
+.contest-gallery-title { text-align: center; }
+.contest-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 0.9rem; }
+.contest-card { background: #17122b; border: 1px solid #372b5e; border-radius: 12px; overflow: hidden; }
+.contest-card img { width: 100%; height: 220px; object-fit: cover; display: block; }
+.contest-card-body { padding: 0.6rem 0.7rem 0.8rem; display: grid; gap: 0.3rem; }
+.contest-by { color: #9a8fb8; font-size: 0.85rem; }
+.contest-vote { background: #241a44; color: #e8e6e3; border: 1px solid #4a3a85; border-radius: 999px; padding: 0.4rem 0.7rem; cursor: pointer; font-weight: 700; }
+.contest-vote.voted { background: #7a1f3d; border-color: #ff5c8a; }
+.contest-empty { text-align: center; color: #9a8fb8; }
+</style>
+<script>
+document.querySelectorAll('.contest-vote').forEach(function (btn) {
+  btn.addEventListener('click', function () {
+    fetch('/costume-contest/' + btn.dataset.id + '/vote', {method: 'POST'})
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        if (d.error) return;
+        btn.querySelector('.cv-count').textContent = d.votes;
+        btn.querySelector('.cv-label').textContent = d.voted ? 'Voted — tap to undo' : 'Vote';
+        btn.classList.toggle('voted', !!d.voted);
+      });
+  });
+});
+</script>
+{% endblock %}

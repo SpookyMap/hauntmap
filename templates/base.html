@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Creepster&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/static/css/style.css?v=20261020r">
+<link rel="stylesheet" href="/static/css/style.css?v=20261020s">
 {% block head %}{% endblock %}
 </head>
 <body>
@@ -20,17 +20,18 @@
 <header class="site-header">
   <a class="brand" href="/"><img src="/static/img/hauntmap_logo.jpg" alt="HauntMap" class="brand-logo"></a>
   <div class="header-center">
-    <p class="header-hook">The #1 resource for everything Halloween<br>Create custom tours with just a click.</p>
-    <nav class="header-nav">
-      <a href="/map">&#x1F5FA;&#xFE0F; Map</a>
-      <a href="/nearby">&#x1F50D; Nearby</a>
-      <a href="/tour">&#x1F383; Tours</a>
-      <a href="/diy">&#x1F6E0;&#xFE0F; DIY</a>
-      <a href="/games">&#x1F3AE; Games</a>
-      <a href="/leaderboard">&#x1F3C6; Top Haunts</a>
-      <a class="btn-upload" href="/upload">+ Add yours</a>
-    </nav>
+    <p class="header-hook">The #1 resource for everything Halloween<br>Create custom tours with just a click</p>
   </div>
+  <img class="header-spooky" src="/static/img/header_ghosts.jpg" alt="Fun spooky ghosts">
+  <nav class="header-nav">
+    <a href="/map">&#x1F5FA;&#xFE0F; Map</a>
+    <a href="/nearby">&#x1F50D; Nearby</a>
+    <a href="/tour">&#x1F383; Tours</a>
+    <a href="/diy">&#x1F6E0;&#xFE0F; DIY</a>
+    <a href="/games">&#x1F3AE; Games</a>
+    <a href="/leaderboard">&#x1F3C6; Top Haunts</a>
+    <a class="btn-upload" href="/upload">+ Add yours</a>
+  </nav>
 </header>
 <main class="wrap">
   {% block content %}{% endblock %}

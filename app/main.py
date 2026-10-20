@@ -991,6 +991,110 @@ def leaderboard(request: Request, cat: str = "halloween"):
     )
 
 
+# ---------------------------------------------------------------- costume contest
+
+COSTUME_SQL = """CREATE TABLE IF NOT EXISTS costume_entries (
+    id INTEGER PRIMARY KEY,
+    display_name TEXT,
+    title TEXT NOT NULL,
+    media_path TEXT NOT NULL,
+    thumb_path TEXT,
+    votes INTEGER DEFAULT 0,
+    hidden INTEGER DEFAULT 0,
+    created_at TEXT
+)"""
+
+
+@app.get("/costume-contest", response_class=HTMLResponse)
+def costume_contest(request: Request):
+    voted = set()
+    for part in request.cookies.get("costume_votes", "").split(","):
+        if part.strip().isdigit():
+            voted.add(int(part.strip()))
+    with get_conn(DB_PATH) as conn:
+        conn.execute(COSTUME_SQL)
+        rows = conn.execute(
+            "SELECT * FROM costume_entries WHERE hidden = 0 ORDER BY votes DESC, id DESC"
+        ).fetchall()
+    costumes = []
+    for r in rows:
+        c = dict(r)
+        c["media_url"] = f"/media/{c['media_path']}"
+        c["thumb_url"] = f"/media/{c['thumb_path']}" if c.get("thumb_path") else c["media_url"]
+        c["voted"] = c["id"] in voted
+        costumes.append(c)
+    leader = costumes[0] if costumes and costumes[0]["votes"] > 0 else None
+    return templates.TemplateResponse(
+        request, "costume_contest.html",
+        {"costumes": costumes, "leader": leader, "site_name": SITE_NAME,
+         "error": request.query_params.get("error")},
+    )
+
+
+@app.post("/costume-contest/upload")
+async def costume_upload(
+    title: str = Form(...),
+    display_name: str = Form(""),
+    media: UploadFile = File(...),
+):
+    ext = safe_ext(media.filename or "")
+    if ext not in PHOTO_EXTS:
+        return RedirectResponse("/costume-contest?error=Please+choose+a+photo+(JPG,+PNG+or+WebP).", status_code=303)
+    try:
+        tmp = save_upload(media, MAX_PHOTO_BYTES)
+        try:
+            with Image.open(tmp) as im:
+                im.verify()
+        except (UnidentifiedImageError, OSError):
+            tmp.unlink(missing_ok=True)
+            return RedirectResponse("/costume-contest?error=That+file+isn%27t+a+readable+image.", status_code=303)
+        name = uuid.uuid4().hex
+        media_rel = f"{name}{ext}"
+        shutil.move(tmp, UPLOAD_DIR / media_rel)
+        try:
+            thumb_rel = make_thumb(UPLOAD_DIR / media_rel, name)
+        except (OSError, UnidentifiedImageError):
+            (UPLOAD_DIR / media_rel).unlink(missing_ok=True)
+            return RedirectResponse("/costume-contest?error=Couldn%27t+process+that+image.", status_code=303)
+    except ValueError:
+        return RedirectResponse("/costume-contest?error=That+photo+is+too+large+(10+MB+max).", status_code=303)
+    with get_conn(DB_PATH) as conn:
+        conn.execute(COSTUME_SQL)
+        conn.execute(
+            "INSERT INTO costume_entries (display_name, title, media_path, thumb_path, votes, hidden, created_at) VALUES (?, ?, ?, ?, 0, 0, ?)",
+            ((display_name or "").strip()[:60] or None, title.strip()[:120], media_rel, thumb_rel,
+             datetime.now(timezone.utc).isoformat()),
+        )
+    return RedirectResponse("/costume-contest", status_code=303)
+
+
+@app.post("/costume-contest/{cid}/vote")
+def costume_vote(cid: int, request: Request):
+    voted = set()
+    for part in request.cookies.get("costume_votes", "").split(","):
+        if part.strip().isdigit():
+            voted.add(int(part.strip()))
+    with get_conn(DB_PATH) as conn:
+        conn.execute(COSTUME_SQL)
+        row = conn.execute("SELECT votes FROM costume_entries WHERE id = ? AND hidden = 0", (cid,)).fetchone()
+        if row is None:
+            return JSONResponse({"error": "not found"}, status_code=404)
+        votes = row["votes"]
+        if cid in voted:
+            votes = max(0, votes - 1)
+            voted.discard(cid)
+            now_voted = False
+        else:
+            votes += 1
+            voted.add(cid)
+            now_voted = True
+        conn.execute("UPDATE costume_entries SET votes = ? WHERE id = ?", (votes, cid))
+    resp = JSONResponse({"votes": votes, "voted": now_voted})
+    resp.set_cookie("costume_votes", ",".join(str(v) for v in sorted(voted)),
+                    max_age=60 * 60 * 24 * 120, path="/", samesite="lax")
+    return resp
+
+
 # ---------------------------------------------------------------- admin
 
 @app.get("/admin", response_class=HTMLResponse)
