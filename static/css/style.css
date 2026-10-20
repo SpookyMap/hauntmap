@@ -158,11 +158,11 @@ a { color: var(--accent); }
 .signup-strip {
   background: linear-gradient(135deg, #241640 0%, #311d55 100%);
   border: 1px solid #4a2d7a; border-radius: 12px;
-  padding: 0.6rem 0.9rem; margin: 0.6rem auto; text-align: center;
-  max-width: 600px;
+  padding: 0.5rem 0.75rem; margin: 0.6rem auto; text-align: center;
+  max-width: 480px;
 }
-.signup-strip h3 { margin: 0 0 0.2rem; font-size: 0.95rem; color: #FFF8E7; }
-.signup-strip p { color: #c9bce8; margin: 0 0 0.45rem; font-size: 0.82rem; line-height: 1.4; }
+.signup-strip h3 { margin: 0 0 0.2rem; font-size: 0.9rem; color: #FFF8E7; }
+.signup-strip p { color: #c9bce8; margin: 0 0 0.4rem; font-size: 0.78rem; line-height: 1.35; }
 .signup-strip .newsletter-form input { background: rgba(0,0,0,0.25); }
 .signup-strip-slim { padding: 0.8rem 1rem; margin: 1rem 0; }
 
@@ -218,10 +218,10 @@ a { color: var(--accent); }
   font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em;
   color: #c9a86a; font-weight: 700;
 }
-.sponsor-card.tier-title { grid-column: 1 / -1; padding: 2.3rem 2.6rem; border-color: #c9a86a; border-width: 2px; width: 100%; box-sizing: border-box; justify-content: center; }
-.sponsor-card.tier-title .sponsor-logo { width: 195px !important; height: 195px !important; max-width: 195px !important; max-height: 195px !important; }
-.sponsor-card.tier-title .sponsor-name { font-size: 1.9rem; }
-.sponsor-card.tier-title .sponsor-text { font-size: 1.1rem; }
+.sponsor-card.tier-title { flex: 0 1 480px; margin: 0 auto; flex-direction: column; text-align: center; gap: 1rem; padding: 2.2rem 1.6rem; border-color: #c9a86a; border-width: 2px; box-sizing: border-box; justify-content: center; }
+.sponsor-card.tier-title .sponsor-logo { width: 250px !important; height: 250px !important; max-width: 250px !important; max-height: 250px !important; }
+.sponsor-card.tier-title .sponsor-name { font-size: 2.3rem; }
+.sponsor-card.tier-title .sponsor-text { font-size: 1.25rem; }
 .sponsor-card.tier-premium { border-color: #7b4fc4; }
 .sponsor-cta { margin: 1rem 0 0; font-size: 0.9rem; color: var(--muted); }
 .sponsor-cta a { color: var(--accent); }
@@ -454,8 +454,8 @@ h1 { font-size: 1.6rem; } h2 { font-size: 1.2rem; color: var(--accent2); margin-
   min-width: 0;
   margin-left: 0;
   padding-top: 0;
-  margin-top: 0.3rem;
-  align-self: flex-start;
+  margin-top: 0;
+  align-self: center;
 }
 .header-center nav {
   margin-left: 0;
