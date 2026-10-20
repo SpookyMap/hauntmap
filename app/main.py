@@ -137,6 +137,7 @@ async def _track_page_view(request: Request, call_next):
 
 def row_to_dict(row: sqlite3.Row) -> dict:
     d = dict(row)
+    d["town_label"] = extract_city_state(d.get("town") or "") or d.get("town") or ""
     if d["media_path"]:
         d["media_url"] = f"/media/{d['media_path']}"
         d["thumb_url"] = f"/media/{d['thumb_path']}" if d["thumb_path"] else d["media_url"]
@@ -177,36 +178,53 @@ def get_entry(entry_id: int) -> dict | None:
     return row_to_dict(row) if row else None
 
 
-def extract_city(town: str) -> str:
-    """Extract clean city name from a town field like '22 Collins St, Cranford, NJ'."""
-    parts = [p.strip() for p in town.split(",") if p.strip()]
-    if len(parts) >= 3:
-        return parts[-2]  # 'Cranford' from '22 Collins St, Cranford, NJ'
-    if len(parts) == 2:
-        # 'Hoboken, NJ' -> 'Hoboken'; 'E 69th St, New York' -> 'New York'
-        return parts[0] if len(parts[1]) <= 3 else parts[1]
-    return parts[0] if parts else town
-
-
-def extract_city_state(town: str) -> str:
-    """Extract 'City, ST' from a town field like '22 Collins St, Cranford, NJ'."""
-    parts = [p.strip() for p in town.split(",") if p.strip()]
-    if len(parts) >= 2:
-        state = parts[-1]
-        city = extract_city(town)
-        # only append state if it looks like a state (short) and differs from city
-        if len(state) <= 3 and state.upper() != city.upper():
-            return f"{city}, {state.upper()}"
-        return city
-    return town
+_STATE_ZIP_RE = re.compile(r",\s*([A-Za-z]{2})(?:\s+\d{5}(?:-\d{4})?)?\s*$")
+_STATE_ANY_RE = re.compile(
+    r",\s*(NJ|NY|PA|MD|VA|MA|NH|CT|RI|DE|DC|VT|ME|NC|SC|GA|FL|TX|OH|IL|CA|WA|OR|"
+    r"CO|AZ|NV|UT|MI|WI|MN|IA|MO|KS|NE|OK|AR|LA|MS|AL|TN|KY|IN|WV)\b")
+US_STATE_CODES = {"NJ", "NY", "PA", "MD", "VA", "MA", "NH", "CT", "RI", "DE", "DC",
+                  "VT", "ME", "NC", "SC", "GA", "FL", "TX", "OH", "IL", "CA", "WA",
+                  "OR", "CO", "AZ", "NV", "UT", "MI", "WI", "MN", "IA", "MO", "KS",
+                  "NE", "OK", "AR", "LA", "MS", "AL", "TN", "KY", "IN", "WV"}
 
 
 def extract_state(town: str) -> str:
-    """Extract state code from a town field like '22 Collins St, Cranford, NJ'."""
-    parts = [p.strip() for p in town.split(",") if p.strip()]
+    """State code from a town field: 'Cranford, NJ', '22 Collins St, Cranford,
+    NJ 07716', or the '…, NJ (notes)' form. '' when unparseable."""
+    t = town or ""
+    m = _STATE_ZIP_RE.search(t)
+    if m:
+        return m.group(1).upper()
+    m = _STATE_ANY_RE.search(t)
+    if m:
+        return m.group(1).upper()
+    parts = [p.strip() for p in t.split(",") if p.strip()]
     if len(parts) >= 2 and len(parts[-1]) <= 3:
         return parts[-1].upper()
     return ""
+
+
+def extract_city(town: str) -> str:
+    """Clean city name from a town field in any stored format."""
+    t = town or ""
+    m = _STATE_ZIP_RE.search(t) or _STATE_ANY_RE.search(t)
+    if m:
+        t = t[:m.start()]
+    parts = [p.strip() for p in t.split(",") if p.strip()]
+    city = parts[-1] if parts else t
+    st = extract_state(town)
+    if st and city.upper().endswith(" " + st):
+        city = city[: -(len(st) + 1)].strip()
+    return city
+
+
+def extract_city_state(town: str) -> str:
+    """'City, ST' label for any stored town format; '' for junk values."""
+    city = extract_city(town)
+    st = extract_state(town)
+    if not city or city.upper() in US_STATE_CODES:
+        return ""
+    return f"{city}, {st}" if st else city
 
 
 def states(category: str = "halloween") -> list[str]:
@@ -310,8 +328,37 @@ def home(request: Request, sort: str = "top", town: str = "", town_search: str =
     query = "SELECT * FROM entries WHERE hidden = 0 AND category = ?"
     params: list = [cat]
     if town:
+        # town may arrive as a dropdown label ('Atlantic Highlands, NJ'), a
+        # bare city, or free text — match on the city, and on the state too
+        # whenever one is known so NJ towns never leak into an MD view.
+        city_part = extract_city(town)
+        st_part = state or extract_state(town)
         query += " AND LOWER(town) LIKE ?"
-        params.append(f"%{town.lower()}%")
+        params.append(f"%{city_part.lower()}%")
+        if st_part:
+            query += (" AND (LOWER(town) LIKE ? OR LOWER(town) LIKE ?"
+                      " OR LOWER(town) LIKE ? OR LOWER(town) LIKE ?)")
+            s = st_part.lower()
+            params += [f"%, {s} %", f"%, {s}", f"%,{s} %", f"%,{s}"]
+    elif region in ("boston", "dc-area"):
+        metro_map = {
+            "boston": ["boston", "somerville", "cambridge", "medford", "malden",
+                       "quincy", "brookline", "weymouth", "braintree", "saugus",
+                       "lynn", "revere", "winthrop", "arlington, ma", "newton, ma",
+                       "belmont, ma", "watertown, ma", "melrose, ma", "stoneham, ma",
+                       "woburn, ma", "chelsea, ma", "everett, ma", "milton, ma",
+                       "dedham, ma", "burlington, ma"],
+            "dc-area": ["washington, dc", "district of columbia", "alexandria",
+                        "arlington, va", "silver spring", "bethesda", "potomac",
+                        "chevy chase", "falls church", "mclean", "vienna",
+                        "rockville", "kensington", "takoma park", "springfield, va",
+                        "annandale", "fairfax", "reston", "herndon", "sterling",
+                        "ashburn", "chantilly", "centreville", "hyattsville"],
+        }
+        terms = metro_map[region]
+        placeholders = " OR ".join(["LOWER(town) LIKE ?"] * len(terms))
+        query += f" AND ({placeholders})"
+        params.extend([f"%{t}%" for t in terms])
     elif region in ("staten-island", "brooklyn", "manhattan", "queens", "bronx"):
         borough_map = {
             "staten-island": ["staten island"],

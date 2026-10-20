@@ -96,6 +96,8 @@
       <option value="queens" {% if region == 'queens' %}selected{% endif %}>Queens</option>
       <option value="bronx" {% if region == 'bronx' %}selected{% endif %}>Bronx</option>
       <option value="staten-island" {% if region == 'staten-island' %}selected{% endif %}>Staten Island</option>
+      <option value="boston" {% if region == 'boston' %}selected{% endif %}>Boston</option>
+      <option value="dc-area" {% if region == 'dc-area' %}selected{% endif %}>DC Area</option>
     </select>
     <select name="town" onchange="this.form.submit()">
       <option value="">All towns</option>
@@ -147,7 +149,7 @@
     </div>
     <div class="card-body">
       <h3>{{ e.title }}</h3>
-      <p class="meta">{{ e.town }}{% if e.display_name %} &middot; {{ e.display_name }}{% endif %}</p>
+      <p class="meta">{{ e.town_label }}{% if e.display_name %} &middot; {{ e.display_name }}{% endif %}</p>
       <p class="votes">{% if e.category == 'christmas' %}&#x1F384;{% else %}&#x1F383;{% endif %} {{ e.votes }} vote{{ 's' if e.votes != 1 }}</p>
     </div>
   </a>
@@ -162,16 +164,20 @@
 {% endif %}
 
 <div class="state-tabs-bottom">
-  <a href="/?cat={{ cat }}{% if sort != 'top' %}&sort={{ sort }}{% endif %}{% if town %}&town={{ town }}{% endif %}{% if scare %}&scare={{ scare }}{% endif %}{% if tag %}&tag={{ tag }}{% endif %}" class="state-btn {% if not state and not region %}active{% endif %}">All</a>
-  <a href="/?cat={{ cat }}&state=NJ{% if sort != 'top' %}&sort={{ sort }}{% endif %}{% if town %}&town={{ town }}{% endif %}{% if scare %}&scare={{ scare }}{% endif %}{% if tag %}&tag={{ tag }}{% endif %}" class="state-btn {% if state == 'NJ' %}active{% endif %}">New Jersey</a>
-  <a href="/?cat={{ cat }}&state=NY{% if sort != 'top' %}&sort={{ sort }}{% endif %}{% if town %}&town={{ town }}{% endif %}{% if scare %}&scare={{ scare }}{% endif %}{% if tag %}&tag={{ tag }}{% endif %}" class="state-btn {% if state == 'NY' and not region %}active{% endif %}">New York</a>
-  <a href="/?cat={{ cat }}&state=PA{% if sort != 'top' %}&sort={{ sort }}{% endif %}{% if town %}&town={{ town }}{% endif %}{% if scare %}&scare={{ scare }}{% endif %}{% if tag %}&tag={{ tag }}{% endif %}" class="state-btn {% if state == 'PA' %}active{% endif %}">Philadelphia</a>
-  <a href="/?cat={{ cat }}&region=long-island{% if sort != 'top' %}&sort={{ sort }}{% endif %}{% if town %}&town={{ town }}{% endif %}{% if scare %}&scare={{ scare }}{% endif %}{% if tag %}&tag={{ tag }}{% endif %}" class="state-btn {% if region == 'long-island' %}active{% endif %}">Long Island</a>
-  <a href="/?cat={{ cat }}&region=manhattan{% if sort != 'top' %}&sort={{ sort }}{% endif %}{% if town %}&town={{ town }}{% endif %}{% if scare %}&scare={{ scare }}{% endif %}{% if tag %}&tag={{ tag }}{% endif %}" class="state-btn {% if region == 'manhattan' %}active{% endif %}">Manhattan</a>
-  <a href="/?cat={{ cat }}&region=brooklyn{% if sort != 'top' %}&sort={{ sort }}{% endif %}{% if town %}&town={{ town }}{% endif %}{% if scare %}&scare={{ scare }}{% endif %}{% if tag %}&tag={{ tag }}{% endif %}" class="state-btn {% if region == 'brooklyn' %}active{% endif %}">Brooklyn</a>
-  <a href="/?cat={{ cat }}&region=queens{% if sort != 'top' %}&sort={{ sort }}{% endif %}{% if town %}&town={{ town }}{% endif %}{% if scare %}&scare={{ scare }}{% endif %}{% if tag %}&tag={{ tag }}{% endif %}" class="state-btn {% if region == 'queens' %}active{% endif %}">Queens</a>
-  <a href="/?cat={{ cat }}&region=bronx{% if sort != 'top' %}&sort={{ sort }}{% endif %}{% if town %}&town={{ town }}{% endif %}{% if scare %}&scare={{ scare }}{% endif %}{% if tag %}&tag={{ tag }}{% endif %}" class="state-btn {% if region == 'bronx' %}active{% endif %}">Bronx</a>
-  <a href="/?cat={{ cat }}&region=staten-island{% if sort != 'top' %}&sort={{ sort }}{% endif %}{% if town %}&town={{ town }}{% endif %}{% if scare %}&scare={{ scare }}{% endif %}{% if tag %}&tag={{ tag }}{% endif %}" class="state-btn {% if region == 'staten-island' %}active{% endif %}">Staten Island</a>
+  <a href="/?cat={{ cat }}{% if sort != 'top' %}&sort={{ sort }}{% endif %}{% if scare %}&scare={{ scare }}{% endif %}{% if tag %}&tag={{ tag }}{% endif %}" class="state-btn {% if not state and not region %}active{% endif %}">All</a>
+  <a href="/?cat={{ cat }}&state=NJ{% if sort != 'top' %}&sort={{ sort }}{% endif %}{% if scare %}&scare={{ scare }}{% endif %}{% if tag %}&tag={{ tag }}{% endif %}" class="state-btn {% if state == 'NJ' %}active{% endif %}">New Jersey</a>
+  <a href="/?cat={{ cat }}&state=NY{% if sort != 'top' %}&sort={{ sort }}{% endif %}{% if scare %}&scare={{ scare }}{% endif %}{% if tag %}&tag={{ tag }}{% endif %}" class="state-btn {% if state == 'NY' and not region %}active{% endif %}">New York</a>
+  <a href="/?cat={{ cat }}&state=PA{% if sort != 'top' %}&sort={{ sort }}{% endif %}{% if scare %}&scare={{ scare }}{% endif %}{% if tag %}&tag={{ tag }}{% endif %}" class="state-btn {% if state == 'PA' %}active{% endif %}">Philadelphia</a>
+  <a href="/?cat={{ cat }}&region=long-island{% if sort != 'top' %}&sort={{ sort }}{% endif %}{% if scare %}&scare={{ scare }}{% endif %}{% if tag %}&tag={{ tag }}{% endif %}" class="state-btn {% if region == 'long-island' %}active{% endif %}">Long Island</a>
+  <a href="/?cat={{ cat }}&region=manhattan{% if sort != 'top' %}&sort={{ sort }}{% endif %}{% if scare %}&scare={{ scare }}{% endif %}{% if tag %}&tag={{ tag }}{% endif %}" class="state-btn {% if region == 'manhattan' %}active{% endif %}">Manhattan</a>
+  <a href="/?cat={{ cat }}&region=brooklyn{% if sort != 'top' %}&sort={{ sort }}{% endif %}{% if scare %}&scare={{ scare }}{% endif %}{% if tag %}&tag={{ tag }}{% endif %}" class="state-btn {% if region == 'brooklyn' %}active{% endif %}">Brooklyn</a>
+  <a href="/?cat={{ cat }}&region=queens{% if sort != 'top' %}&sort={{ sort }}{% endif %}{% if scare %}&scare={{ scare }}{% endif %}{% if tag %}&tag={{ tag }}{% endif %}" class="state-btn {% if region == 'queens' %}active{% endif %}">Queens</a>
+  <a href="/?cat={{ cat }}&region=bronx{% if sort != 'top' %}&sort={{ sort }}{% endif %}{% if scare %}&scare={{ scare }}{% endif %}{% if tag %}&tag={{ tag }}{% endif %}" class="state-btn {% if region == 'bronx' %}active{% endif %}">Bronx</a>
+  <a href="/?cat={{ cat }}&region=staten-island{% if sort != 'top' %}&sort={{ sort }}{% endif %}{% if scare %}&scare={{ scare }}{% endif %}{% if tag %}&tag={{ tag }}{% endif %}" class="state-btn {% if region == 'staten-island' %}active{% endif %}">Staten Island</a>
+  <a href="/?cat={{ cat }}&region=boston{% if sort != 'top' %}&sort={{ sort }}{% endif %}{% if scare %}&scare={{ scare }}{% endif %}{% if tag %}&tag={{ tag }}{% endif %}" class="state-btn {% if region == 'boston' %}active{% endif %}">Boston</a>
+  <a href="/?cat={{ cat }}&state=MD{% if sort != 'top' %}&sort={{ sort }}{% endif %}{% if scare %}&scare={{ scare }}{% endif %}{% if tag %}&tag={{ tag }}{% endif %}" class="state-btn {% if state == 'MD' %}active{% endif %}">Maryland</a>
+  <a href="/?cat={{ cat }}&state=VA{% if sort != 'top' %}&sort={{ sort }}{% endif %}{% if scare %}&scare={{ scare }}{% endif %}{% if tag %}&tag={{ tag }}{% endif %}" class="state-btn {% if state == 'VA' %}active{% endif %}">Virginia</a>
+  <a href="/?cat={{ cat }}&region=dc-area{% if sort != 'top' %}&sort={{ sort }}{% endif %}{% if scare %}&scare={{ scare }}{% endif %}{% if tag %}&tag={{ tag }}{% endif %}" class="state-btn {% if region == 'dc-area' %}active{% endif %}">DC Area</a>
 </div>
 
 {% endblock %}
