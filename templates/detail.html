@@ -70,6 +70,20 @@
     {% endif %}
     <button class="btn" id="btn-add-tour" style="margin-top:0.5rem">+ Add to my tour</button>
   </div>
+
+  <div class="signup-strip signup-strip-slim">
+    {% if request.query_params.get('subscribed') %}
+    <p class="newsletter-success">&#x1F389; You're in! First word on new haunts near you — and first in line for the Jolly Map &#x1F384;</p>
+    {% else %}
+    <h3>&#x1F514; More haunts like this?</h3>
+    <p>Be first to know when a new display lands near {{ entry.town }} — plus first access to the &#x1F384; Jolly Map this Christmas.</p>
+    <form method="post" action="/subscribe" class="newsletter-form">
+      <input type="email" name="email" placeholder="you@email.com" required>
+      <input type="text" name="location" placeholder="Your town (optional)" value="{{ entry.town }}">
+      <button type="submit" class="btn">Notify me</button>
+    </form>
+    {% endif %}
+  </div>
   <script>
   document.getElementById('btn-add-tour').onclick = function() {
     const entry = {id: {{ entry.id }}, title: {{ entry.title|tojson }}, town: {{ entry.town|tojson }},

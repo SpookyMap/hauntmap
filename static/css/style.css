@@ -155,6 +155,16 @@ a { color: var(--accent); }
 .newsletter-success { color: #7ee787; font-weight: 700; }
 .newsletter-error { color: #ff7b72; font-size: 0.85rem; }
 
+.signup-strip {
+  background: linear-gradient(135deg, #241640 0%, #311d55 100%);
+  border: 1px solid #4a2d7a; border-radius: 12px;
+  padding: 1rem 1.2rem; margin: 0.9rem 0; text-align: center;
+}
+.signup-strip h3 { margin: 0 0 0.3rem; font-size: 1.05rem; color: #FFF8E7; }
+.signup-strip p { color: #c9bce8; margin: 0 0 0.7rem; font-size: 0.9rem; line-height: 1.45; }
+.signup-strip .newsletter-form input { background: rgba(0,0,0,0.25); }
+.signup-strip-slim { padding: 0.8rem 1rem; margin: 1rem 0; }
+
 /* ---- Sponsor banners (homepage) ---- */
 .sponsor-section { margin: 0.8rem 0; text-align: center; }
 .sponsor-section h2 { font-size: 0.85rem; margin: 0 0 0.15rem; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }

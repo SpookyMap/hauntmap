@@ -8,6 +8,23 @@
   <p>Leave a like on your favorite haunts and drop a comment about the ones you love!</p>
 </div>
 
+<div class="signup-strip">
+  {% if request.query_params.get('subscribed') %}
+  <p class="newsletter-success">&#x1F389; You're in! You'll be first to know when new haunts drop near you — and first in line for the Jolly Map &#x1F384;</p>
+  {% else %}
+  <h3>&#x1F514; Be the first to know</h3>
+  <p>New haunts are added every day. Subscribers get first word when a new display lands near them — plus first access to the &#x1F384; Jolly Map this Christmas.</p>
+  <form method="post" action="/subscribe" class="newsletter-form">
+    <input type="email" name="email" placeholder="you@email.com" required>
+    <input type="text" name="location" placeholder="Your town (optional)">
+    <button type="submit" class="btn">Notify me</button>
+  </form>
+  {% if request.query_params.get('sub_error') %}
+  <p class="newsletter-error">Please enter a valid email address.</p>
+  {% endif %}
+  {% endif %}
+</div>
+
 {% if sponsors %}
 <div class="sponsor-section">
   <h2>&#x2B50; Featured Sponsors</h2>
@@ -157,20 +174,4 @@
   <a href="/?cat={{ cat }}&region=staten-island{% if sort != 'top' %}&sort={{ sort }}{% endif %}{% if town %}&town={{ town }}{% endif %}{% if scare %}&scare={{ scare }}{% endif %}{% if tag %}&tag={{ tag }}{% endif %}" class="state-btn {% if region == 'staten-island' %}active{% endif %}">Staten Island</a>
 </div>
 
-<div class="newsletter-box">
-  {% if request.query_params.get('subscribed') %}
-  <p class="newsletter-success">&#x1F389; You're in! Watch your inbox for the week's best haunts.</p>
-  {% else %}
-  <h3>&#x1F47B; Never miss a haunt</h3>
-  <p>Get the week's best new decorations in your inbox, every Friday through Halloween.</p>
-  <form method="post" action="/subscribe" class="newsletter-form">
-    <input type="email" name="email" placeholder="you@email.com" required>
-    <input type="text" name="location" placeholder="Your town (optional)">
-    <button type="submit" class="btn">Subscribe</button>
-  </form>
-  {% if request.query_params.get('sub_error') %}
-  <p class="newsletter-error">Please enter a valid email address.</p>
-  {% endif %}
-  {% endif %}
-</div>
 {% endblock %}
