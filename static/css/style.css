@@ -491,3 +491,23 @@ h1 { font-size: 1.6rem; } h2 { font-size: 1.2rem; color: var(--accent2); margin-
   0%, 100% { opacity: 1; }
   50% { opacity: 0.7; }
 }
+
+/* Haunt or Not */
+.duel-score { font-weight: 700; }
+.duel-wrap { display: grid; grid-template-columns: 1fr auto 1fr; gap: 0.75rem; align-items: stretch; margin: 1.25rem 0 0.5rem; }
+.duel-card { background: #161c24; border: 2px solid #2a3442; border-radius: 12px; padding: 0; cursor: pointer; color: #e8e6e3; display: flex; flex-direction: column; overflow: hidden; text-align: left; transition: border-color .15s, transform .15s; }
+.duel-card:hover { border-color: #ff7518; transform: translateY(-2px); }
+.duel-card img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; display: block; background: #000; }
+.duel-card.duel-win { border-color: #7ee081; box-shadow: 0 0 18px rgba(126,224,129,.35); }
+.duel-title { font-weight: 800; font-size: 1.05rem; padding: 0.6rem 0.8rem 0.1rem; }
+.duel-town { color: #9a97a3; padding: 0 0.8rem 0.7rem; font-size: 0.9rem; }
+.duel-vs { align-self: center; font-weight: 900; font-size: 1.4rem; color: #ff7518; background: #161c24; border: 2px solid #ff7518; border-radius: 50%; width: 52px; height: 52px; display: flex; align-items: center; justify-content: center; }
+.duel-hint { text-align: center; color: #9a97a3; font-size: 0.9rem; }
+.duel-leaders li { margin: 0.4rem 0; }
+.duel-leader-town { color: #9a97a3; }
+.duel-leader-stat { color: #7ee081; font-weight: 700; margin-left: 0.4rem; }
+.duel-empty { color: #9a97a3; }
+@media (max-width: 640px) {
+  .duel-vs { width: 40px; height: 40px; font-size: 1.05rem; }
+  .duel-title { font-size: 0.92rem; }
+}

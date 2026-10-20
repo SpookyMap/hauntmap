@@ -17,6 +17,7 @@ import tempfile
 import uuid
 import zipfile
 import math
+import random
 import json
 import urllib.request
 import urllib.parse
@@ -516,6 +517,88 @@ def diy_page(request: Request):
     return templates.TemplateResponse(
         request, "diy.html", {"videos": DIY_VIDEOS},
     )
+
+
+# ------------------------------------------------------------- haunt or not
+
+DUEL_TABLE_SQL = (
+    "CREATE TABLE IF NOT EXISTS duel_stats "
+    "(entry_id INTEGER PRIMARY KEY, wins INTEGER DEFAULT 0, battles INTEGER DEFAULT 0)"
+)
+
+
+def _duel_slim(e: dict) -> dict:
+    return {
+        "id": e["id"],
+        "title": e["title"],
+        "town": e["town_label"],
+        "scare": e.get("scare_level") or "",
+        "img": e["thumb_url"] or e["media_url"],
+    }
+
+
+@app.get("/haunt-or-not", response_class=HTMLResponse)
+def haunt_or_not_page(request: Request):
+    with get_conn(DB_PATH) as conn:
+        conn.execute(DUEL_TABLE_SQL)
+        rows = conn.execute(
+            """SELECT e.id, e.title, e.town, s.wins, s.battles
+               FROM duel_stats s JOIN entries e ON e.id = s.entry_id
+               WHERE s.battles >= 3
+               ORDER BY (CAST(s.wins AS FLOAT) / s.battles) DESC, s.battles DESC
+               LIMIT 10"""
+        ).fetchall()
+    leaders = []
+    for r in rows:
+        d = dict(r)
+        d["town_label"] = extract_city_state(d["town"] or "") or d["town"] or ""
+        d["winpct"] = round(100 * d["wins"] / d["battles"]) if d["battles"] else 0
+        leaders.append(d)
+    return templates.TemplateResponse(
+        request, "haunt_or_not.html", {"leaders": leaders},
+    )
+
+
+@app.get("/api/duel")
+def api_duel():
+    with get_conn(DB_PATH) as conn:
+        conn.execute(DUEL_TABLE_SQL)
+        rows = conn.execute(
+            """SELECT e.*, COALESCE(s.wins, 0) AS dwins, COALESCE(s.battles, 0) AS dbattles
+               FROM entries e LEFT JOIN duel_stats s ON s.entry_id = e.id
+               WHERE e.category = 'halloween'
+                 AND e.media_path IS NOT NULL AND e.media_path != ''
+               ORDER BY dbattles ASC, RANDOM() LIMIT 80"""
+        ).fetchall()
+    pool = [row_to_dict(r) for r in rows]
+    if len(pool) < 2:
+        return JSONResponse({"error": "not enough haunts"}, status_code=503)
+    a, b = random.sample(pool, 2)
+    return {"a": _duel_slim(a), "b": _duel_slim(b)}
+
+
+@app.post("/api/duel/vote")
+async def api_duel_vote(request: Request):
+    try:
+        data = await request.json()
+        winner, loser = int(data["winner"]), int(data["loser"])
+    except Exception:
+        return JSONResponse({"ok": False}, status_code=400)
+    if winner == loser:
+        return JSONResponse({"ok": False}, status_code=400)
+    with get_conn(DB_PATH) as conn:
+        conn.execute(DUEL_TABLE_SQL)
+        conn.execute(
+            """INSERT INTO duel_stats (entry_id, wins, battles) VALUES (?, 1, 1)
+               ON CONFLICT(entry_id) DO UPDATE SET wins = wins + 1, battles = battles + 1""",
+            (winner,),
+        )
+        conn.execute(
+            """INSERT INTO duel_stats (entry_id, wins, battles) VALUES (?, 0, 1)
+               ON CONFLICT(entry_id) DO UPDATE SET battles = battles + 1""",
+            (loser,),
+        )
+    return {"ok": True}
 
 
 @app.get("/tour", response_class=HTMLResponse)

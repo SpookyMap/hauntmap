@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="hero-intro">
+  <h1>&#x1F3AE; Haunt or Not?</h1>
+  <p>Two haunts enter — tap the one you'd drive to see. Every vote crowns the people's champion below.</p>
+  <p class="duel-score">&#x1F525; Your streak: <span id="streak">0</span> &middot; Votes cast: <span id="votes">0</span></p>
+</div>
+
+<div class="duel-wrap" id="duel-wrap">
+  <button class="duel-card" id="card-a" type="button">
+    <img id="img-a" alt="">
+    <span class="duel-title" id="title-a">Loading…</span>
+    <span class="duel-town" id="town-a"></span>
+  </button>
+  <div class="duel-vs">VS</div>
+  <button class="duel-card" id="card-b" type="button">
+    <img id="img-b" alt="">
+    <span class="duel-title" id="title-b">Loading…</span>
+    <span class="duel-town" id="town-b"></span>
+  </button>
+</div>
+<p class="duel-hint">Tap a haunt — or use the &#x2190; &#x2192; arrow keys on a keyboard.</p>
+
+<h2 class="section-title">&#x1F3C6; People's Champions</h2>
+{% if leaders %}
+<ol class="duel-leaders">
+  {% for l in leaders %}
+  <li><a href="/d/{{ l.id }}">{{ l.title }}</a> <span class="duel-leader-town">{{ l.town_label }}</span>
+      <span class="duel-leader-stat">{{ l.winpct }}% wins ({{ l.wins }}/{{ l.battles }})</span></li>
+  {% endfor %}
+</ol>
+{% else %}
+<p class="duel-empty">No champions yet — the first votes decide who wears the crown. &#x1F451;</p>
+{% endif %}
+
+<script>
+const SCARE = {family: "\u{1F60A}", spooky: "\u{1F47B}", creepy: "\u{1F9DF}", terrifying: "\u{1F631}", extreme: "\u{1F480}"};
+let pair = null, streak = 0, votes = 0, busy = false;
+
+function fill(side, h) {
+  document.getElementById("img-" + side).src = h.img;
+  document.getElementById("title-" + side).textContent = (SCARE[h.scare] || "") + " " + h.title;
+  document.getElementById("town-" + side).textContent = h.town;
+}
+async function nextPair() {
+  const r = await fetch("/api/duel");
+  pair = await r.json();
+  fill("a", pair.a); fill("b", pair.b);
+  document.getElementById("card-a").classList.remove("duel-win");
+  document.getElementById("card-b").classList.remove("duel-win");
+  busy = false;
+}
+async function vote(side) {
+  if (busy || !pair) return;
+  busy = true;
+  const winner = side === "a" ? pair.a : pair.b;
+  const loser = side === "a" ? pair.b : pair.a;
+  document.getElementById("card-" + side).classList.add("duel-win");
+  streak++; votes++;
+  document.getElementById("streak").textContent = streak;
+  document.getElementById("votes").textContent = votes;
+  try {
+    await fetch("/api/duel/vote", {method: "POST", headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({winner: winner.id, loser: loser.id})});
+  } catch (e) { /* keep playing */ }
+  setTimeout(nextPair, 350);
+}
+document.getElementById("card-a").addEventListener("click", () => vote("a"));
+document.getElementById("card-b").addEventListener("click", () => vote("b"));
+document.addEventListener("keydown", (e) => {
+  if (e.key === "ArrowLeft") vote("a");
+  if (e.key === "ArrowRight") vote("b");
+});
+nextPair();
+</script>
+{% endblock %}
