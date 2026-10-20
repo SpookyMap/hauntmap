@@ -19,7 +19,7 @@ import math
 import json
 import urllib.request
 import urllib.parse
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from fastapi import BackgroundTasks, FastAPI, Form, HTTPException, Request, UploadFile, File
@@ -95,7 +95,7 @@ async def _track_page_view(request: Request, call_next):
                         conn.execute(
                             "CREATE TABLE IF NOT EXISTS page_views (id INTEGER PRIMARY KEY, path TEXT, viewed_at TEXT, referrer TEXT)"
                         )
-                        for col in ("referrer", "device"):
+                        for col in ("referrer", "device", "sid"):
                             try:
                                 conn.execute(f"ALTER TABLE page_views ADD COLUMN {col} TEXT")
                             except Exception:
@@ -116,11 +116,18 @@ async def _track_page_view(request: Request, call_next):
                             device = "Linux"
                         else:
                             device = "Other"
+                        sid = request.cookies.get("hm_sid")
+                        new_sid = not sid
+                        if new_sid:
+                            sid = secrets.token_hex(16)
                         conn.execute(
-                            "INSERT INTO page_views (path, viewed_at, referrer, device) VALUES (?, ?, ?, ?)",
-                            (path, datetime.now(timezone.utc).isoformat(), referrer, device),
+                            "INSERT INTO page_views (path, viewed_at, referrer, device, sid) VALUES (?, ?, ?, ?, ?)",
+                            (path, datetime.now(timezone.utc).isoformat(), referrer, device, sid),
                         )
                         conn.commit()
+                        if new_sid:
+                            response.set_cookie("hm_sid", sid, max_age=30 * 24 * 3600,
+                                                httponly=True, samesite="lax")
     except Exception:
         pass  # never break a page load for analytics
     return response
@@ -755,10 +762,54 @@ def admin_stats(request: Request):
             "SELECT CASE WHEN device = '' OR device IS NULL THEN 'Unknown' "
             "ELSE device END AS dev, COUNT(*) AS views FROM page_views "
             "GROUP BY dev ORDER BY views DESC").fetchall()
+        # --- visit duration: sessionize page views per visitor (30-min window) ---
+        srows = conn.execute(
+            "SELECT sid, viewed_at FROM page_views WHERE sid IS NOT NULL "
+            "AND viewed_at >= datetime('now', '-30 days') ORDER BY sid, viewed_at").fetchall()
+    visits_list = []
+    cur_sid, cur_times = None, []
+
+    def _flush_visit():
+        if cur_times:
+            visits_list.append(((cur_times[-1] - cur_times[0]).total_seconds(), len(cur_times)))
+
+    for r in srows:
+        t = datetime.fromisoformat(r["viewed_at"])
+        if r["sid"] != cur_sid or (cur_times and (t - cur_times[-1]).total_seconds() > 1800):
+            _flush_visit()
+            cur_sid, cur_times = r["sid"], []
+        cur_times.append(t)
+    _flush_visit()
+
+    def _fmt_dur(sec):
+        sec = int(round(sec))
+        return f"{sec}s" if sec < 60 else f"{sec // 60}m {sec % 60:02d}s"
+
+    n_visits = len(visits_list)
+    if n_visits:
+        durs = sorted(d for d, _ in visits_list)
+        multi = [d for d, p in visits_list if p > 1]
+        mid = n_visits // 2
+        median_dur = durs[mid] if n_visits % 2 else (durs[mid - 1] + durs[mid]) / 2
+        bucket_defs = [("<10 sec", 0, 10), ("10–60 sec", 10, 60), ("1–3 min", 60, 180),
+                       ("3–5 min", 180, 300), ("5–10 min", 300, 600), ("10+ min", 600, float("inf"))]
+        duration = {
+            "visits": n_visits,
+            "avg": _fmt_dur(sum(durs) / n_visits),
+            "median": _fmt_dur(median_dur),
+            "engaged_avg": _fmt_dur(sum(multi) / len(multi)) if multi else "0s",
+            "bounce": round(sum(1 for _, p in visits_list if p == 1) / n_visits * 100, 1),
+            "avg_pages": round(sum(p for _, p in visits_list) / n_visits, 1),
+            "buckets": [(label, sum(1 for d in durs if lo <= d < hi)) for label, lo, hi in bucket_defs],
+        }
+    else:
+        duration = {"visits": 0, "avg": "—", "median": "—", "engaged_avg": "—",
+                    "bounce": 0, "avg_pages": 0, "buckets": []}
     return templates.TemplateResponse(request, "stats.html",
         {"request": request, "total": total, "today": today, "week": week,
          "by_day": by_day, "top_pages": top_pages,
-         "top_referrers": top_referrers, "by_device": by_device})
+         "top_referrers": top_referrers, "by_device": by_device,
+         "duration": duration})
 
 
 @app.post("/admin/login", response_class=HTMLResponse)

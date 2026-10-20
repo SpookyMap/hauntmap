@@ -18,6 +18,45 @@
   </div>
 </div>
 
+<h3>⏱️ Visit duration <span style="font-size:0.75em;color:#888;">(last 30 days)</span></h3>
+{% if duration.visits %}
+<div style="display:flex;gap:16px;margin:12px 0;flex-wrap:wrap;">
+  <div style="background:#1a1a2e;padding:16px;border-radius:12px;flex:1;text-align:center;min-width:110px;">
+    <div style="font-size:1.6em;font-weight:bold;">{{ duration.visits }}</div>
+    <div>Visits</div>
+  </div>
+  <div style="background:#1a1a2e;padding:16px;border-radius:12px;flex:1;text-align:center;min-width:110px;">
+    <div style="font-size:1.6em;font-weight:bold;">{{ duration.avg }}</div>
+    <div>Avg visit</div>
+  </div>
+  <div style="background:#1a1a2e;padding:16px;border-radius:12px;flex:1;text-align:center;min-width:110px;">
+    <div style="font-size:1.6em;font-weight:bold;">{{ duration.median }}</div>
+    <div>Median visit</div>
+  </div>
+  <div style="background:#1a1a2e;padding:16px;border-radius:12px;flex:1;text-align:center;min-width:110px;">
+    <div style="font-size:1.6em;font-weight:bold;">{{ duration.engaged_avg }}</div>
+    <div>Avg visit (2+ pages)</div>
+  </div>
+  <div style="background:#1a1a2e;padding:16px;border-radius:12px;flex:1;text-align:center;min-width:110px;">
+    <div style="font-size:1.6em;font-weight:bold;">{{ duration.bounce }}%</div>
+    <div>Single-page visits</div>
+  </div>
+  <div style="background:#1a1a2e;padding:16px;border-radius:12px;flex:1;text-align:center;min-width:110px;">
+    <div style="font-size:1.6em;font-weight:bold;">{{ duration.avg_pages }}</div>
+    <div>Pages / visit</div>
+  </div>
+</div>
+<table style="width:100%;border-collapse:collapse;margin-bottom:8px;">
+  <tr><th style="text-align:left;padding:8px;">Time on site</th><th style="text-align:right;padding:8px;">Visits</th><th style="text-align:right;padding:8px;">Share</th></tr>
+  {% for label, count in duration.buckets %}
+  <tr><td style="padding:8px;">{{ label }}</td><td style="text-align:right;padding:8px;">{{ count }}</td><td style="text-align:right;padding:8px;">{{ (count * 100 / duration.visits)|round(1) }}%</td></tr>
+  {% endfor %}
+</table>
+<p style="color:#888;font-size:0.85em;margin-bottom:24px;">Measured first&rarr;last pageview in a visit (30-minute window). Single-page visits record 0s even if they lingered on that page, so real time on site runs a bit higher than shown.</p>
+{% else %}
+<p style="color:#888;margin-bottom:24px;">Duration tracking just started — numbers appear here as visits come in.</p>
+{% endif %}
+
 <h3>Views by day</h3>
 <table style="width:100%;border-collapse:collapse;margin-bottom:24px;">
   <tr><th style="text-align:left;padding:8px;">Date</th><th style="text-align:right;padding:8px;">Views</th></tr>
