@@ -7,6 +7,7 @@ voting, not determined abuse. See the vote route below.
 """
 import hashlib
 import os
+import re
 import requests
 import secrets
 import shutil
