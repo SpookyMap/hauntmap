@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="hero-intro">
+  <h1>&#x1F6E0;&#xFE0F; DIY Halloween Decorations</h1>
+  <p>Build the displays everyone drives to see. Step-by-step decoration projects from creators we love — make your own haunt this season.</p>
+  <p>Got a DIY build to share? <a href="/upload">Add yours</a> or tag <a href="https://www.tiktok.com/@gethauntmap" target="_blank" rel="noopener">@GetHauntmap</a> on TikTok.</p>
+</div>
+
+<div class="diy-grid">
+  {% for v in videos %}
+  <div class="diy-card">
+    <h3>{{ v.title }}</h3>
+    <p class="diy-creator">by {{ v.creator }}</p>
+    <p class="diy-blurb">{{ v.blurb }}</p>
+    <blockquote class="tiktok-embed" cite="{{ v.url }}" data-video-id="{{ v.video_id }}" style="max-width: 605px; min-width: 325px;">
+      <section><a target="_blank" rel="noopener" href="{{ v.url }}">Watch on TikTok</a></section>
+    </blockquote>
+  </div>
+  {% endfor %}
+</div>
+<script async src="https://www.tiktok.com/embed.js"></script>
+{% endblock %}

@@ -487,6 +487,24 @@ def map_view(request: Request, cat: str = "halloween"):
     )
 
 
+DIY_VIDEOS = [
+    {
+        "title": "The Boo-zy Skeleton Fountain",
+        "creator": "@wyldwoodsdiy",
+        "url": "https://www.tiktok.com/@wyldwoodsdiy/video/7696649206160837902",
+        "video_id": "7696649206160837902",
+        "blurb": "A skeleton chilling in a bubbling green fountain — the porch centerpiece your neighbors will copy next year.",
+    },
+]
+
+
+@app.get("/diy", response_class=HTMLResponse)
+def diy_page(request: Request):
+    return templates.TemplateResponse(
+        request, "diy.html", {"videos": DIY_VIDEOS},
+    )
+
+
 @app.get("/tour", response_class=HTMLResponse)
 def tour_page(request: Request, s: str = "", cat: str = "halloween"):
     cat = cat if cat in CATEGORIES else "halloween"
