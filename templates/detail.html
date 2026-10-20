@@ -71,6 +71,28 @@
     <button class="btn" id="btn-add-tour" style="margin-top:0.5rem">+ Add to my tour</button>
   </div>
 
+  <div class="scare-meter" id="scare">
+    <h2>&#x1F4CA; Scare-O-Meter — how scary is it really?</h2>
+    {% set scare_meta = {'family': ('&#x1F60A;', 'Family-friendly'), 'spooky': ('&#x1F47B;', 'Spooky'), 'creepy': ('&#x1F9DB;', 'Creepy'), 'terrifying': ('&#x1F631;', 'Terrifying'), 'extreme': ('&#x1F480;', 'EXTREME')} %}
+    <div class="scare-rows">
+      {% for lvl in ['family', 'spooky', 'creepy', 'terrifying', 'extreme'] %}
+      {% set n = scare_counts[lvl] %}
+      {% set pct = (100 * n / scare_total) if scare_total else 0 %}
+      <div class="scare-row">
+        <form method="post" action="/d/{{ entry.id }}/scare/{{ lvl }}">
+          <button type="submit" class="scare-btn{% if scare_pick == lvl %} scare-picked{% endif %}">{{ scare_meta[lvl][0]|safe }} {{ scare_meta[lvl][1] }}</button>
+        </form>
+        <div class="scare-bar"><div class="scare-fill" style="width: {{ pct }}%"></div></div>
+        <span class="scare-n">{{ n }}</span>
+      </div>
+      {% endfor %}
+    </div>
+    <p class="scare-total">
+      {% if scare_total %}{{ scare_total }} scare rating{{ 's' if scare_total != 1 }}{% if scare_pick %} — tap another level to change yours{% endif %}
+      {% else %}No ratings yet — be the first to rate it!{% endif %}
+    </p>
+  </div>
+
   <div class="signup-strip signup-strip-slim">
     {% if request.query_params.get('subscribed') %}
     <p class="newsletter-success">&#x1F389; You're in! First word on new haunts near you — and first in line for the Jolly Map &#x1F384;</p>

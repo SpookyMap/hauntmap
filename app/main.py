@@ -740,10 +740,56 @@ def detail(request: Request, entry_id: int):
             "SELECT display_name, text, created_at FROM comments "
             "WHERE entry_id = ? AND hidden = 0 ORDER BY created_at DESC LIMIT 50",
             (entry_id,)).fetchall()]
+        conn.execute(SCARE_TABLE_SQL)
+        scare_counts = {lvl: 0 for lvl in SCARE_LEVELS}
+        for r in conn.execute(
+                "SELECT level, votes FROM scare_votes WHERE entry_id = ?", (entry_id,)):
+            if r["level"] in scare_counts:
+                scare_counts[r["level"]] = r["votes"]
+    scare_total = sum(scare_counts.values())
+    scare_pick = request.cookies.get(f"scare_{entry_id}", "")
+    if scare_pick not in SCARE_LEVELS:
+        scare_pick = ""
     return templates.TemplateResponse(request, "detail.html",
         {"request": request, "entry": entry, "voted": voted, "reported": reported,
-         "tips": tips},
+         "tips": tips, "scare_counts": scare_counts, "scare_total": scare_total,
+         "scare_pick": scare_pick},
     )
+
+
+SCARE_LEVELS = ("family", "spooky", "creepy", "terrifying", "extreme")
+SCARE_TABLE_SQL = (
+    "CREATE TABLE IF NOT EXISTS scare_votes "
+    "(entry_id INTEGER, level TEXT, votes INTEGER DEFAULT 0, "
+    "PRIMARY KEY (entry_id, level))"
+)
+
+
+@app.post("/d/{entry_id}/scare/{level}")
+def scare_vote(entry_id: int, level: str, request: Request):
+    entry = get_entry(entry_id)
+    if not entry or entry["hidden"]:
+        raise HTTPException(404, "Entry not found.")
+    if level not in SCARE_LEVELS:
+        raise HTTPException(400, "Bad scare level.")
+    cookie = f"scare_{entry_id}"
+    old = request.cookies.get(cookie, "")
+    resp = RedirectResponse(f"/d/{entry_id}#scare", status_code=303)
+    if old != level:
+        with get_conn(DB_PATH) as conn:
+            conn.execute(SCARE_TABLE_SQL)
+            if old in SCARE_LEVELS:
+                conn.execute(
+                    "UPDATE scare_votes SET votes = MAX(votes - 1, 0) "
+                    "WHERE entry_id = ? AND level = ?", (entry_id, old))
+            conn.execute(
+                """INSERT INTO scare_votes (entry_id, level, votes) VALUES (?, ?, 1)
+                   ON CONFLICT(entry_id, level) DO UPDATE SET votes = votes + 1""",
+                (entry_id, level))
+            conn.commit()
+        resp.set_cookie(cookie, level, max_age=365 * 24 * 3600,
+                        httponly=True, samesite="lax")
+    return resp
 
 
 @app.post("/d/{entry_id}/tip")

@@ -511,3 +511,17 @@ h1 { font-size: 1.6rem; } h2 { font-size: 1.2rem; color: var(--accent2); margin-
   .duel-vs { width: 40px; height: 40px; font-size: 1.05rem; }
   .duel-title { font-size: 0.92rem; }
 }
+
+/* Scare-O-Meter */
+.scare-meter { background: #161c24; border: 1px solid #2a3442; border-radius: 12px; padding: 1rem 1.1rem; margin: 1.25rem 0; }
+.scare-meter h2 { margin: 0 0 0.8rem; font-size: 1.15rem; }
+.scare-row { display: flex; align-items: center; gap: 0.6rem; margin: 0.35rem 0; }
+.scare-row form { margin: 0; }
+.scare-btn { background: #1d2632; color: #e8e6e3; border: 1px solid #2a3442; border-radius: 999px; padding: 0.35rem 0.8rem; cursor: pointer; font-size: 0.92rem; min-width: 158px; text-align: left; }
+.scare-btn:hover { border-color: #ff7518; }
+.scare-btn.scare-picked { border-color: #7ee081; background: rgba(126,224,129,.12); font-weight: 700; }
+.scare-bar { flex: 1; height: 10px; background: #0b0f14; border-radius: 999px; overflow: hidden; }
+.scare-fill { height: 100%; background: linear-gradient(90deg, #7ee081, #ffb02e, #ff5252); border-radius: 999px; }
+.scare-n { min-width: 2ch; text-align: right; color: #9a97a3; font-size: 0.9rem; }
+.scare-total { color: #9a97a3; font-size: 0.9rem; margin: 0.6rem 0 0; }
+@media (max-width: 640px) { .scare-btn { min-width: 128px; font-size: 0.85rem; } }
