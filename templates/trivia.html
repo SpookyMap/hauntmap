@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="hero-intro">
+  <h1>&#x1F9E0; Daily Halloween Trivia</h1>
+  <p>{{ today_label }} — five questions, fresh every day. How well do you know Halloween?</p>
+</div>
+
+<div class="trivia-box" id="trivia-box">
+  <div class="trivia-progress"><span id="t-progress">Question 1 of 5</span><span class="trivia-dots" id="t-dots"></span></div>
+  <h2 class="trivia-q" id="t-question"></h2>
+  <div class="trivia-options" id="t-options"></div>
+</div>
+
+<div class="trivia-done" id="trivia-done" hidden>
+  <p class="trivia-score" id="t-score"></p>
+  <p class="trivia-verdict" id="t-verdict"></p>
+  <button class="btn btn-big" id="t-share" type="button">&#x1F4E4; Share my score</button>
+  <p class="trivia-again">New questions drop tomorrow — come back and keep the streak alive. &#x1F525;</p>
+  <p class="trivia-streak" id="t-streak"></p>
+</div>
+
+<script>
+const QUIZ = {{ quiz|tojson }};
+let idx = 0, score = 0, locked = false;
+
+function renderDots() {
+  document.getElementById("t-dots").textContent = QUIZ.map((_, i) =>
+    i < idx ? "\u{1F7E0}" : (i === idx ? "\u26AA" : "\u{1F383}")).join(" ");
+}
+function renderQ() {
+  locked = false;
+  renderDots();
+  document.getElementById("t-progress").textContent = `Question ${idx + 1} of ${QUIZ.length}`;
+  document.getElementById("t-question").textContent = QUIZ[idx].q;
+  const box = document.getElementById("t-options");
+  box.innerHTML = "";
+  QUIZ[idx].options.forEach((opt, i) => {
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "trivia-opt"; b.textContent = opt;
+    b.addEventListener("click", () => pick(i, b));
+    box.appendChild(b);
+  });
+}
+function pick(i, btn) {
+  if (locked) return;
+  locked = true;
+  const right = QUIZ[idx].answer;
+  document.querySelectorAll(".trivia-opt").forEach((b, j) => {
+    if (j === right) b.classList.add("trivia-right");
+    else if (j === i) b.classList.add("trivia-wrong");
+    b.disabled = true;
+  });
+  if (i === right) score++;
+  idx++;
+  setTimeout(() => { idx < QUIZ.length ? renderQ() : finish(); }, 900);
+}
+function finish() {
+  document.getElementById("trivia-box").hidden = true;
+  const done = document.getElementById("trivia-done");
+  done.hidden = false;
+  document.getElementById("t-score").textContent = `You got ${score}/${QUIZ.length} \u{1F383}`;
+  const verdicts = ["The spirits are disappointed. \u{1F47B}", "A solid haunt rookie. \u{1F9DB}", "Spooky smart! \u{1F989}", "Basically a Halloween scholar. \u{1F393}", "PUMPKIN ROYALTY. Flawless! \u{1F451}"];
+  document.getElementById("t-verdict").textContent = verdicts[Math.min(score, verdicts.length - 1)];
+  const today = new Date().toISOString().slice(0, 10);
+  let streak = JSON.parse(localStorage.getItem("hm_trivia_streak") || '{"count":0,"last":""}');
+  if (streak.last !== today) {
+    const yday = new Date(Date.now() - 864e5).toISOString().slice(0, 10);
+    streak.count = (streak.last === yday) ? streak.count + 1 : 1;
+    streak.last = today;
+    localStorage.setItem("hm_trivia_streak", JSON.stringify(streak));
+  }
+  document.getElementById("t-streak").textContent = streak.count > 1 ? `\u{1F525} ${streak.count}-day streak!` : "";
+}
+document.getElementById("t-share").addEventListener("click", async () => {
+  const text = `I got ${score}/${QUIZ.length} on today's HauntMap Halloween Trivia \u{1F383} Think you can beat me? gethauntmap.com/trivia`;
+  if (navigator.share) { try { await navigator.share({text}); return; } catch (e) {} }
+  try { await navigator.clipboard.writeText(text); document.getElementById("t-share").textContent = "\u2713 Copied — paste it anywhere!"; } catch (e) {}
+});
+renderQ();
+</script>
+{% endblock %}
