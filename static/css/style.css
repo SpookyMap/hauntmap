@@ -373,7 +373,7 @@ h1 { font-size: 1.6rem; } h2 { font-size: 1.2rem; color: var(--accent2); margin-
   letter-spacing: 0.03em;
   line-height: 1.05;
   text-shadow: 3px 3px 0 #1d0b26;
-  margin: 0 0 0.6rem;
+  margin: 0 0 1.5rem;
 }
 .hero-intro p {
   color: #FFFFFF;
