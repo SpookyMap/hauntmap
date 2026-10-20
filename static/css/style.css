@@ -195,7 +195,7 @@ a { color: var(--accent); }
 .sponsor-sub { display: none; }
 .sponsor-grid {
   display: flex; flex-wrap: wrap; gap: 0.5rem; justify-content: center;
-  max-width: 700px; margin: 0 auto;
+  max-width: 980px; margin: 0 auto;
 }
 .sponsor-card {
   display: inline-flex; align-items: center; gap: 0.6rem;
@@ -218,10 +218,10 @@ a { color: var(--accent); }
   font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em;
   color: #c9a86a; font-weight: 700;
 }
-.sponsor-card.tier-title { grid-column: 1 / -1; padding: 1.8rem 2rem; border-color: #c9a86a; border-width: 2px; }
-.sponsor-card.tier-title .sponsor-logo { width: 150px !important; height: 150px !important; max-width: 150px !important; max-height: 150px !important; }
-.sponsor-card.tier-title .sponsor-name { font-size: 1.6rem; }
-.sponsor-card.tier-title .sponsor-text { font-size: 1rem; }
+.sponsor-card.tier-title { grid-column: 1 / -1; padding: 2.3rem 2.6rem; border-color: #c9a86a; border-width: 2px; width: 100%; box-sizing: border-box; justify-content: center; }
+.sponsor-card.tier-title .sponsor-logo { width: 195px !important; height: 195px !important; max-width: 195px !important; max-height: 195px !important; }
+.sponsor-card.tier-title .sponsor-name { font-size: 1.9rem; }
+.sponsor-card.tier-title .sponsor-text { font-size: 1.1rem; }
 .sponsor-card.tier-premium { border-color: #7b4fc4; }
 .sponsor-cta { margin: 1rem 0 0; font-size: 0.9rem; color: var(--muted); }
 .sponsor-cta a { color: var(--accent); }
@@ -454,7 +454,8 @@ h1 { font-size: 1.6rem; } h2 { font-size: 1.2rem; color: var(--accent2); margin-
   min-width: 0;
   margin-left: 0;
   padding-top: 0;
-  margin-top: -0.3rem;
+  margin-top: 0.3rem;
+  align-self: flex-start;
 }
 .header-center nav {
   margin-left: 0;
@@ -471,7 +472,7 @@ h1 { font-size: 1.6rem; } h2 { font-size: 1.2rem; color: var(--accent2); margin-
   line-height: 1.3;
   text-shadow: 0 1px 3px rgba(0,0,0,0.5);
   width: 100%;
-  padding-left: clamp(0.75rem, 3.5vw, 3rem);
+  padding-left: clamp(1.5rem, 7vw, 6rem);
 }
 @media (max-width: 600px) {
   .header-hook {
