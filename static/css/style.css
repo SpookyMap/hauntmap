@@ -363,6 +363,16 @@ h1 { font-size: 1.6rem; } h2 { font-size: 1.2rem; color: var(--accent2); margin-
   margin: 0 0 0.4rem;
   font-weight: 800;
 }
+.hero-intro h1.hero-title {
+  font-family: "Creepster", cursive;
+  font-size: clamp(2.4rem, 9vw, 3.8rem);
+  font-weight: 400;
+  color: #ff7518;
+  letter-spacing: 0.03em;
+  line-height: 1.05;
+  text-shadow: 3px 3px 0 #1d0b26;
+  margin: 0 0 0.6rem;
+}
 .hero-intro p {
   color: #FFFFFF;
   font-size: 0.95rem;
