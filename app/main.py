@@ -401,7 +401,7 @@ def home(request: Request, sort: str = "top", town: str = "", town_search: str =
     if scare in ("family", "spooky", "creepy", "terrifying", "extreme"):
         query += " AND scare_level = ?"
         params.append(scare)
-    if tag in ("animatronics", "inflatables", "handmade", "walkthrough", "projector", "lights", "music", "street-wide", "multi-house", "ticketed"):
+    if tag in ("animatronics", "inflatables", "handmade", "walkthrough", "projector", "lights", "music", "street-wide", "multi-house", "ticketed", "2025"):
         query += " AND (',' || COALESCE(tags,'') || ',') LIKE ?"
         params.append(f"%,{tag},%")
     query += f" ORDER BY {order} LIMIT 100"
@@ -550,7 +550,7 @@ async def upload_submit(
     tags = ",".join(sorted({t for t in form.getlist("tags")
                             if t in ("animatronics", "inflatables", "handmade", "walkthrough",
                                      "projector", "lights", "music", "street-wide",
-                                     "multi-house", "ticketed")})) or None
+                                     "multi-house", "ticketed", "2025")})) or None
 
     lat_f = lng_f = None
     if lat.strip() or lng.strip():
@@ -970,7 +970,7 @@ async def admin_tag(entry_id: int, request: Request):
     tags = ",".join(sorted({t for t in form.getlist("tags")
                             if t in ("animatronics", "inflatables", "handmade", "walkthrough",
                                      "projector", "lights", "music", "street-wide",
-                                     "multi-house", "ticketed")})) or None
+                                     "multi-house", "ticketed", "2025")})) or None
     category = form.get("category", "")
     category = category if category in CATEGORIES else None
     with get_conn(DB_PATH) as conn:
