@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Creepster&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/static/css/style.css?v=20261021b">
+<link rel="stylesheet" href="/static/css/style.css?v=20261021c">
 {% block head %}{% endblock %}
 </head>
 <body>
@@ -137,6 +137,32 @@ function hmNearMe() {
     if (pending) setTimeout(function () { show(pending); }, 900);
   } catch (e) {}
 })();
+</script>
+<script>
+// TikTok facade loader: swap a thumbnail facade for the real embed on tap,
+// fetching TikTok's embed.js exactly once per page (later facades rescan).
+function hmLoadTikTok(facade) {
+  if (!facade || facade.dataset.loaded) return;
+  facade.dataset.loaded = '1';
+  var url = facade.getAttribute('data-tt-url');
+  var bq = document.createElement('blockquote');
+  bq.className = 'tiktok-embed';
+  bq.setAttribute('cite', url);
+  bq.setAttribute('data-video-id', facade.getAttribute('data-tt-id'));
+  bq.style.maxWidth = '605px';
+  bq.style.minWidth = '325px';
+  bq.innerHTML = '<section><a href="' + url + '" target="_blank" rel="noopener">Watch on TikTok</a></section>';
+  facade.replaceWith(bq);
+  if (!window.__hmTtEmbed) {
+    window.__hmTtEmbed = true;
+    var s = document.createElement('script');
+    s.async = true;
+    s.src = 'https://www.tiktok.com/embed.js';
+    document.body.appendChild(s);
+  } else if (window.tiktokEmbed && window.tiktokEmbed.load) {
+    try { window.tiktokEmbed.load(); } catch (e) {}
+  }
+}
 </script>
 {# Speculation Rules (Chromium; ignored elsewhere): prefetch same-origin
    pages on hover/press so the next tap lands instantly. Prefetch pulls HTML

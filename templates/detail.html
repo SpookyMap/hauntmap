@@ -14,10 +14,35 @@
      It also wins over an uploaded video file. Non-/video/ TikTok URLs
      (e.g. live streams) fall through to the photo/video below. #}
   <div class="detail-media">
-    <blockquote class="tiktok-embed" cite="{{ entry.tiktok_url }}" data-video-id="{{ entry.tiktok_url.split('/video/')[1].split('?')[0] }}" style="max-width: 605px;min-width: 325px;">
-      <section><a href="{{ entry.tiktok_url }}" target="_blank">Watch on TikTok</a></section>
-    </blockquote>
-    <script async src="https://www.tiktok.com/embed.js"></script>
+    {# Facade: the pin's own thumbnail + play button stands in for the heavy
+       TikTok embed; hmLoadTikTok() swaps in the real blockquote + embed.js on
+       tap, so one tap still plays in-page. No-JS gets the direct embed. #}
+    {% set tt_id = entry.tiktok_url.split('/video/')[1].split('?')[0] %}
+    <div class="tt-facade" data-tt-url="{{ entry.tiktok_url }}" data-tt-id="{{ tt_id }}" role="button" tabindex="0" aria-label="Play TikTok video">
+      {% if entry.thumb_url %}
+      <img src="{{ entry.thumb_url }}" alt="{{ entry.title }}">
+      {% else %}
+      <div class="tt-facade-blank">&#x1F383;</div>
+      {% endif %}
+      <span class="tt-play">&#x25B6;</span>
+      <span class="tt-facade-label">&#x1F3B5; Tap to play video</span>
+    </div>
+    <noscript>
+      <blockquote class="tiktok-embed" cite="{{ entry.tiktok_url }}" data-video-id="{{ tt_id }}" style="max-width: 605px;min-width: 325px;">
+        <section><a href="{{ entry.tiktok_url }}" target="_blank">Watch on TikTok</a></section>
+      </blockquote>
+      <script async src="https://www.tiktok.com/embed.js"></script>
+    </noscript>
+    <script>
+    (function () {
+      var f = document.currentScript.parentElement.querySelector('.tt-facade');
+      if (!f) return;
+      f.addEventListener('click', function () { hmLoadTikTok(f); });
+      f.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); hmLoadTikTok(f); }
+      });
+    })();
+    </script>
     {% if entry.is_sample %}<span class="sample-badge">Sample</span>{% endif %}
   </div>
   {% elif entry.media_path %}

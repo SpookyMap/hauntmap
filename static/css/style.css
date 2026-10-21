@@ -349,6 +349,20 @@ a { color: var(--accent); }
 
 /* detail */
 .detail-media { border-radius: var(--radius); overflow: hidden; position: relative; background: #0d0916; }
+/* TikTok facade (detail + watch): pin thumbnail + play button until tapped */
+.tt-facade { position: relative; cursor: pointer; }
+.tt-facade-blank { height: 340px; display: flex; align-items: center; justify-content: center; font-size: 4rem; background: radial-gradient(600px 300px at 50% 0%, #2b1c4d 0%, #0d0916 70%); }
+.tt-play {
+  position: absolute; inset: 0; margin: auto; width: 74px; height: 74px;
+  background: rgba(0,0,0,0.62); border: 2px solid rgba(255,255,255,0.85); border-radius: 50%;
+  color: #fff; display: flex; align-items: center; justify-content: center; font-size: 1.7rem;
+  pointer-events: none;
+}
+.tt-facade-label {
+  position: absolute; left: 0; right: 0; bottom: 0; padding: 1.4rem 0.6rem 0.55rem;
+  text-align: center; color: #fff; font-weight: 700;
+  background: linear-gradient(transparent, rgba(0,0,0,0.7)); pointer-events: none;
+}
 .detail-media img, .detail-media video { width: 100%; display: block; max-height: 70vh; object-fit: contain; background: #0d0916; }
 .votes-big { font-size: 1.3rem; font-weight: 800; color: var(--accent); }
 .detail-actions { margin: 1rem 0; }
