@@ -896,3 +896,10 @@ a.game-card:hover { border-color: #ff7518; transform: translateY(-2px); }
 @media (max-width: 600px) {
   .header-tagline { font-size: 0.95rem; }
 }
+
+/* Billboard background: Pumpkin Orange (Dan, Oct 21 — supersedes lavender) */
+.sponsor-section { background: #ff7518; }
+.sponsor-card { background: #ff9a44; border-color: rgba(0, 0, 0, 0.25); }
+.sponsor-card.tier-title { background: #ff9a44; }
+.sponsor-sub { color: #402e00; }
+.sponsor-tier { color: #4a3400; border-color: rgba(0, 0, 0, 0.3); }
