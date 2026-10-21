@@ -18,6 +18,7 @@ import uuid
 import zipfile
 import math
 import random
+import random
 import json
 import urllib.request
 import urllib.parse
@@ -908,7 +909,8 @@ async def api_duel_vote(request: Request):
 def watch_page(request: Request):
     """Vertical feed of every pin with actual footage — same predicate as the
     feed's 'Has video' filter: a TikTok /video/ URL or an uploaded video file.
-    Ordered by votes so the best footage leads."""
+    Pool is the top footage by votes; the ORDER is shuffled per request
+    (Dan, Oct 21) so every visit to /watch starts somewhere new."""
     with get_conn(DB_PATH) as conn:
         rows = conn.execute(
             "SELECT * FROM entries WHERE hidden = 0 AND ("
@@ -917,8 +919,10 @@ def watch_page(request: Request):
             " OR LOWER(media_path) LIKE '%.webm'"
             " OR LOWER(media_path) LIKE '%.mov')"
             " ORDER BY votes DESC, created_at DESC LIMIT 60").fetchall()
+    entries = [row_to_dict(r) for r in rows]
+    random.shuffle(entries)
     return templates.TemplateResponse(request, "watch.html",
-        {"request": request, "entries": [row_to_dict(r) for r in rows]})
+        {"request": request, "entries": entries})
 
 
 @app.get("/tour", response_class=HTMLResponse)
