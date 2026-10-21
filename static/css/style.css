@@ -1066,3 +1066,9 @@ a.game-card:hover { border-color: #ff7518; transform: translateY(-2px); }
 @media (max-width: 760px) {
   .header-hook { font-size: 1.38rem; }
 }
+
+/* Homepage featured TikTok (Dan): the 40-hours brand video above the follow strip */
+.tt-featured { max-width: 360px; margin: 1.4rem auto 0.2rem; padding: 0 1rem; }
+.tt-featured-title { text-align: center; font-family: "Creepster", cursive; font-weight: 400; color: #f5efe0; letter-spacing: 0.03em; margin: 0 0 0.6rem; }
+.tt-featured .tt-facade { border-radius: 14px; overflow: hidden; border: 2px solid #3a2566; }
+.tt-featured .tt-facade img { width: 100%; display: block; }

@@ -26,6 +26,30 @@
 </a>
 {% endif %}
 
+<div class="tt-featured">
+  <h2 class="tt-featured-title">&#x1F3AC; From Our TikTok</h2>
+  <div class="tt-facade" data-tt-url="https://www.tiktok.com/@gethauntmap/video/7699265030251924767" data-tt-id="7699265030251924767" role="button" tabindex="0" aria-label="Play TikTok video">
+    <img src="/static/img/tt_featured_40hours.jpg" alt="He put in 40 hours of decorating — HauntMap on TikTok">
+    <span class="tt-play">&#x25B6;</span>
+    <span class="tt-facade-label">&#x1F3B5; Tap to play video</span>
+  </div>
+  <noscript>
+    <blockquote class="tiktok-embed" cite="https://www.tiktok.com/@gethauntmap/video/7699265030251924767" data-video-id="7699265030251924767" style="max-width: 605px;min-width: 325px;">
+      <section><a href="https://www.tiktok.com/@gethauntmap/video/7699265030251924767" target="_blank" rel="noopener">Watch on TikTok</a></section>
+    </blockquote>
+  </noscript>
+  <script>
+  (function () {
+    var f = document.currentScript.parentElement.querySelector('.tt-facade');
+    if (!f) return;
+    f.addEventListener('click', function () { hmLoadTikTok(f); });
+    f.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); hmLoadTikTok(f); }
+    });
+  })();
+  </script>
+</div>
+
 <div class="signup-strip tiktok-promo">
   <a class="tiktok-follow tiktok-follow-big" href="https://www.tiktok.com/@gethauntmap" target="_blank" rel="noopener"><img src="/static/img/tiktok_logo.png" alt="TikTok"><span>Follow us on TikTok</span><span class="tt-handle">@GetHauntmap</span></a>
   <p class="tiktok-line">Follow @GetHauntmap on TikTok — new haunts daily &#x1F383;</p>
