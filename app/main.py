@@ -1130,7 +1130,7 @@ def town_page(request: Request, slug: str):
 def sitemap():
     base = "https://gethauntmap.com"
     urls = ["/", "/map", "/nearby", "/tour", "/diy", "/games", "/leaderboard",
-            "/towns", "/advertise", "/costume-contest", "/trivia", "/haunt-or-not"]
+            "/towns", "/advertise", "/media-kit", "/costume-contest", "/trivia", "/haunt-or-not"]
     for t in _towns_with_counts():
         urls.append(f"/towns/{t['slug']}")
     body = ['<?xml version="1.0" encoding="UTF-8"?>',
@@ -1144,24 +1144,32 @@ def sitemap():
 # ---------------------------------------------------------------- advertise
 
 SPONSOR_PACKAGES = [
-    {"id": "featured", "name": "Featured", "price": 250,
-     "blurb": "Your business in front of local Halloween hunters.",
-     "features": ["Logo + link in the Featured Sponsors row on the homepage",
+    {"id": "tour_fuel", "name": "Tour Fuel Listing", "price": 49, "price_both": 79,
+     "blurb": "A stop on the route — coffee, food and shops near the haunts.",
+     "features": ["Listed as a \u201cTour Fuel\u201d stop on town pages and custom tours",
+                  "Logo + link on your town's page",
+                  "Runs the full season you pick"]},
+    {"id": "town_featured", "name": "Town Featured", "price": 79, "price_both": 129,
+     "blurb": "Own your town's page.",
+     "features": ["Everything in Tour Fuel Listing",
+                  "Featured placement at the top of your town's page",
                   "Featured pin for your location",
-                  "Runs through Halloween — and on the Jolly Map through Christmas"]},
-    {"id": "premium", "name": "Premium", "price": 500,
-     "blurb": "Homepage plus the weekly email.",
-     "features": ["Everything in Featured",
-                  "Sponsor spot in the weekly Haunt Weekly / Jolly Weekly email",
-                  "Logo placement on town pages",
                   "Monthly click report"]},
-    {"id": "title", "name": "Title Sponsor", "price": 1000,
-     "blurb": "The top spot, everywhere.",
-     "features": ["Everything in Premium",
-                  "Top banner placement sitewide",
-                  "Featured story in the weekly email",
-                  "Social media shoutout",
+    {"id": "sitewide_featured", "name": "Sitewide Featured", "price": 149, "price_both": 249,
+     "blurb": "The top spot, everywhere on the map.",
+     "features": ["Everything in Town Featured",
+                  "Featured sponsor banner on the homepage, sitewide",
+                  "Sponsor spot in the Haunt Weekly / Jolly Weekly email",
                   "Monthly click report"]},
+]
+
+SPONSOR_ORDER_OPTIONS = [
+    {"id": "tour_fuel", "label": "Tour Fuel Listing — $49 (one season)"},
+    {"id": "tour_fuel_both", "label": "Tour Fuel Listing — $79 (both seasons)"},
+    {"id": "town_featured", "label": "Town Featured — $79 (one season)"},
+    {"id": "town_featured_both", "label": "Town Featured — $129 (both seasons)"},
+    {"id": "sitewide_featured", "label": "Sitewide Featured — $149 (one season)"},
+    {"id": "sitewide_featured_both", "label": "Sitewide Featured — $249 (both seasons)"},
 ]
 
 
@@ -1186,10 +1194,14 @@ def advertise(request: Request):
             "SELECT * FROM sponsors WHERE is_active = 1 ORDER BY "
             "CASE tier WHEN 'title' THEN 0 WHEN 'premium' THEN 1 ELSE 2 END LIMIT 1").fetchall()]
     stats["towns"] = len(_towns_with_counts())
+    pkg = request.query_params.get("pkg", "")
+    if pkg not in {o["id"] for o in SPONSOR_ORDER_OPTIONS}:
+        pkg = ""
     return templates.TemplateResponse(
         request, "advertise.html",
         {"packages": SPONSOR_PACKAGES, "stats": stats, "example": sponsors[0] if sponsors else None,
          "towns": towns("halloween"), "site_name": SITE_NAME,
+         "order_options": SPONSOR_ORDER_OPTIONS, "selected_pkg": pkg,
          "ordered": request.query_params.get("ordered")},
     )
 
@@ -1199,7 +1211,7 @@ async def advertise_order(
     business_name: str = Form(...),
     contact_name: str = Form(""),
     email: str = Form(...),
-    package: str = Form("featured"),
+    package: str = Form("tour_fuel"),
     town: str = Form(""),
     website: str = Form(""),
     logo: UploadFile = File(None),
@@ -1228,6 +1240,77 @@ async def advertise_order(
              datetime.now(timezone.utc).isoformat()),
         )
     return RedirectResponse("/advertise?ordered=1", status_code=303)
+
+
+# ---------------------------------------------------------------- media kit
+
+MEDIA_KIT_CATEGORY_LABELS = [
+    ("halloween", "Halloween displays"),
+    ("christmas", "Christmas displays (Jolly Map)"),
+    ("haunted_houses", "Haunted houses"),
+    ("events", "Events"),
+    ("halloween_stores", "Halloween stores"),
+    ("restaurants", "Restaurants"),
+    ("coffee", "Coffee & cafes"),
+    ("shops", "Shops"),
+    ("parks", "Parks"),
+    ("live", "Live"),
+]
+
+MEDIA_KIT_GAMES = ["Haunt or Not", "Scare-O-Meter", "Daily Halloween Trivia", "Costume Contest"]
+
+
+@app.get("/media-kit", response_class=HTMLResponse)
+def media_kit(request: Request):
+    now = datetime.now(timezone.utc)
+    today_d = now.date()
+    week_start_d = today_d - timedelta(days=6)
+    fmt_day = "%B %-d, %Y"
+    kit = {
+        "updated": today_d.strftime(fmt_day),
+        "today_label": today_d.strftime(fmt_day),
+        "week_range": f"{week_start_d.strftime(fmt_day)} – {today_d.strftime(fmt_day)}",
+        "visitors_today": 0,
+        "visitors_week": 0,
+        "total_pins": 0,
+        "categories": [],
+        "town_count": 0,
+        "states": [],
+        "games": MEDIA_KIT_GAMES,
+    }
+    with get_conn(DB_PATH) as conn:
+        try:
+            kit["visitors_today"] = conn.execute(
+                "SELECT COUNT(DISTINCT sid) FROM page_views WHERE substr(viewed_at, 1, 10) = ?",
+                (today_d.isoformat(),)).fetchone()[0]
+            kit["visitors_week"] = conn.execute(
+                "SELECT COUNT(DISTINCT sid) FROM page_views WHERE substr(viewed_at, 1, 10) >= ?",
+                (week_start_d.isoformat(),)).fetchone()[0]
+        except Exception:
+            pass
+        counts = {r[0]: r[1] for r in conn.execute(
+            "SELECT category, COUNT(*) FROM entries WHERE hidden = 0 GROUP BY category").fetchall()}
+        kit["total_pins"] = sum(counts.values())
+        kit["categories"] = [
+            {"label": label, "count": counts[key]}
+            for key, label in MEDIA_KIT_CATEGORY_LABELS if counts.get(key)
+        ]
+        town_rows = conn.execute(
+            "SELECT DISTINCT town FROM entries WHERE hidden = 0").fetchall()
+    labels: set[str] = set()
+    state_set: set[str] = set()
+    for r in town_rows:
+        label = extract_city_state(r["town"] or "")
+        if label:
+            labels.add(label)
+        st = extract_state(r["town"] or "")
+        if st:
+            state_set.add(st)
+    kit["town_count"] = len(labels)
+    kit["states"] = sorted(state_set)
+    return templates.TemplateResponse(
+        request, "media_kit.html", {"kit": kit, "site_name": SITE_NAME},
+    )
 
 
 # ---------------------------------------------------------------- costume contest

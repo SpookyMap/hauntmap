@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% block title %}Advertise on {{ site_name }} · Sponsorships{% endblock %}
-{% block head %}<meta name="description" content="Put your business in front of thousands of local Halloween hunters. HauntMap sponsorship packages from $250 — homepage, town pages, the weekly email and custom tours.">{% endblock %}
+{% block head %}<meta name="description" content="Put your business in front of thousands of local Halloween hunters. HauntMap Founding-Sponsor Rates from $49 a season — town pages, tour stops, the weekly email and sitewide banners.">{% endblock %}
 {% block content %}
 <h1>&#x1F4E3; Advertise on HauntMap</h1>
 <p class="adv-sub">HauntMap is where local families plan their Halloween nights — which displays to drive to, where to stop for coffee, dinner and treats along the way. Put your business on their route.</p>
@@ -11,10 +11,11 @@
   <div class="adv-stat"><strong>{{ '{:,}'.format(stats.pins) }}</strong><span>haunts &amp; listings</span></div>
   <div class="adv-stat"><strong>{{ stats.towns }}</strong><span>towns covered</span></div>
 </div>
+<p class="adv-note">Want the full picture? See our <a href="/media-kit">media kit</a> for dated audience numbers, coverage and what's on the site.</p>
 
 {% if example %}
 <div class="adv-example">
-  <p class="adv-example-label">Live example — our current Title Sponsor:</p>
+  <p class="adv-example-label">Live example — a current featured sponsor:</p>
   <a href="/sponsor/click/{{ example.id }}" target="_blank" rel="noopener sponsored" class="sponsor-card tier-{{ example.tier }}">
     {% if example.logo_path %}<img src="/media/{{ example.logo_path }}" alt="{{ example.business_name }} logo" class="sponsor-logo">{% endif %}
     <span class="sponsor-meta"><span class="sponsor-name">{{ example.business_name }}</span>{% if example.banner_text %}<span class="sponsor-text">{{ example.banner_text }}</span>{% endif %}</span>
@@ -23,22 +24,28 @@
 </div>
 {% endif %}
 
-<h2 class="adv-h2">Packages</h2>
+<h2 class="adv-h2">Founding-Sponsor Rates</h2>
+<p class="adv-note">One season = <strong>Halloween</strong> (Sept&ndash;Oct) on HauntMap <em>or</em> the <strong>&#x1F384; Jolly Map</strong> (Nov&ndash;Dec). Bundle both seasons and save. Founding sponsors lock in these rates — and get <strong>20% off renewal next year</strong>.</p>
 <div class="adv-packages">
   {% for p in packages %}
   <article class="adv-pack">
     <h3>{{ p.name }}</h3>
-    <p class="adv-price">${{ '{:,}'.format(p.price) }} <span>one-time</span></p>
+    <p class="adv-price">${{ p.price }} <span>one season</span></p>
+    <p class="adv-price-both">or ${{ p.price_both }} for both seasons</p>
     <p class="adv-blurb">{{ p.blurb }}</p>
     <ul>
       {% for f in p.features %}<li>{{ f }}</li>{% endfor %}
     </ul>
+    <div class="adv-buy">
+      <a class="btn-buy" href="/advertise?pkg={{ p.id }}#order">Buy now — one season</a>
+      <a class="btn-buy btn-buy-alt" href="/advertise?pkg={{ p.id }}_both#order">Buy now — both seasons</a>
+    </div>
   </article>
   {% endfor %}
 </div>
-<p class="adv-note">All packages run through Halloween, and sponsors stay up on the &#x1F384; Jolly Map through Christmas — two seasons for one price. Placements include featured spots in a town, "Tour fuel" stops (coffee, food &amp; shops near the haunts), and featured-sitewide banners.</p>
+<p class="adv-note">Placements include featured spots in a town, &ldquo;Tour Fuel&rdquo; stops (coffee, food &amp; shops near the haunts) on custom tours, and featured-sitewide banners. Every sponsor click is tracked, with a monthly click report.</p>
 
-<h2 class="adv-h2">Get started — pick your package</h2>
+<h2 class="adv-h2" id="order">Get started — pick your package</h2>
 {% if ordered %}
 <p class="adv-success">&#x1F389; Got it! We'll email your secure card-payment link and confirm your placement within one business day.</p>
 {% endif %}
@@ -54,7 +61,7 @@
   </label>
   <label>Package
     <select name="package">
-      {% for p in packages %}<option value="{{ p.id }}">{{ p.name }} — ${{ '{:,}'.format(p.price) }}</option>{% endfor %}
+      {% for o in order_options %}<option value="{{ o.id }}"{% if o.id == selected_pkg %} selected{% endif %}>{{ o.label }}</option>{% endfor %}
     </select>
   </label>
   <label>Your town
@@ -85,10 +92,14 @@
 .adv-packages { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 0.8rem; }
 .adv-pack { background: #17122b; border: 1px solid #372b5e; border-radius: 12px; padding: 1rem 1.1rem; }
 .adv-pack h3 { margin: 0 0 0.3rem; }
-.adv-price { font-size: 1.6rem; font-weight: 800; color: #ff9d5c; margin: 0.2rem 0; }
+.adv-price { font-size: 1.6rem; font-weight: 800; color: #ff9d5c; margin: 0.2rem 0 0; }
 .adv-price span { font-size: 0.85rem; color: #9a8fb8; font-weight: 400; }
+.adv-price-both { color: #ffd98a; font-weight: 700; margin: 0.1rem 0 0.3rem; }
 .adv-blurb { color: #c9bce8; margin: 0.3rem 0 0.6rem; }
 .adv-pack ul { margin: 0; padding-left: 1.1rem; color: #e8e6e3; line-height: 1.5; }
+.adv-buy { display: grid; gap: 0.45rem; margin-top: 0.8rem; }
+.btn-buy { display: block; text-align: center; background: #ff7a1a; color: #fff; font-weight: 700; padding: 0.55rem 0.7rem; border-radius: 8px; text-decoration: none; }
+.btn-buy-alt { background: #372b5e; }
 .adv-note { color: #c9bce8; line-height: 1.55; }
 .adv-success { background: #14351c; color: #7ee081; padding: 0.7rem 0.9rem; border-radius: 8px; }
 .adv-form { background: #17122b; border: 1px solid #372b5e; border-radius: 12px; padding: 1rem 1.2rem; max-width: 520px; display: grid; gap: 0.7rem; }

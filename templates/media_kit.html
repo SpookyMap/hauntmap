@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}{{ site_name }} Media Kit · Audience &amp; Coverage{% endblock %}
+{% block head %}<meta name="description" content="HauntMap media kit — real, dated audience numbers, map coverage, games and sponsorship inventory.">{% endblock %}
+{% block content %}
+<h1>&#x1F4CA; HauntMap Media Kit</h1>
+<p class="mk-sub">Everything a sponsor needs to know — with real numbers pulled from the site itself, not estimates.</p>
+<p class="mk-updated">Updated {{ kit.updated }}</p>
+
+<h2 class="mk-h2">Audience</h2>
+<div class="mk-stats">
+  <div class="mk-stat"><strong>{{ '{:,}'.format(kit.visitors_week) }}</strong><span>visitors, {{ kit.week_range }}</span></div>
+  <div class="mk-stat"><strong>{{ '{:,}'.format(kit.visitors_today) }}</strong><span>visitors today ({{ kit.today_label }})</span></div>
+</div>
+<p class="mk-note">Visitors are unique browsing sessions counted by HauntMap's own on-site tracker. Families use HauntMap to plan their nights out: which displays to visit, which towns to tour, and where to stop for coffee, dinner and treats on the way — that's the moment sponsors show up in.</p>
+
+<h2 class="mk-h2">What's on the map</h2>
+<div class="mk-stats">
+  <div class="mk-stat"><strong>{{ '{:,}'.format(kit.total_pins) }}</strong><span>total listings</span></div>
+  <div class="mk-stat"><strong>{{ kit.town_count }}</strong><span>towns covered</span></div>
+  <div class="mk-stat"><strong>{{ kit.states|length }}</strong><span>states covered</span></div>
+</div>
+{% if kit.categories %}
+<ul class="mk-cats">
+  {% for c in kit.categories %}<li><strong>{{ '{:,}'.format(c.count) }}</strong> {{ c.label }}</li>{% endfor %}
+</ul>
+{% endif %}
+{% if kit.states %}<p class="mk-note">Coverage: {{ kit.states|join(', ') }} — and growing weekly through the season.</p>{% endif %}
+
+<h2 class="mk-h2">More than a map</h2>
+<ul class="mk-list">
+  <li><strong>Custom tour builder</strong> — visitors build their own driving/walking tours and share them; sponsor stops slot into the route as &ldquo;Tour Fuel.&rdquo;</li>
+  <li><strong>Games</strong> — {% for g in kit.games %}{{ g }}{% if not loop.last %}, {% endif %}{% endfor %} keep visitors coming back all season.</li>
+  <li><strong>DIY section</strong> — decoration how-tos and prop builds from creators, embedded on-site.</li>
+  <li><strong>Town pages</strong> — every covered town has its own page, so sponsorships can target exactly one town.</li>
+</ul>
+
+<h2 class="mk-h2">Newsletter</h2>
+<p class="mk-note">Our weekly email — <strong>Haunt Weekly</strong> in Halloween season and <strong>Jolly Weekly</strong> at Christmas — is launching on Beehiiv, with sign-ups collected on-site and tagged by town and ZIP. Sponsor spots in the email are part of the Sitewide Featured package, available from launch.</p>
+
+<h2 class="mk-h2">Sponsorship</h2>
+<p class="mk-note">Founding-Sponsor Rates run from <strong>$49 a season</strong>. Every sponsor click is tracked, and sponsors receive a monthly click report. See packages and buy on the <a href="/advertise">Advertise page</a>, or email <a href="mailto:gethauntmap@gmail.com">gethauntmap@gmail.com</a>.</p>
+
+<style>
+.mk-sub { color: #c9bce8; max-width: 640px; line-height: 1.55; }
+.mk-updated { display: inline-block; background: #372b5e; color: #ffd98a; font-weight: 700; padding: 0.3rem 0.7rem; border-radius: 999px; font-size: 0.9rem; }
+.mk-h2 { margin-top: 1.6rem; }
+.mk-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 0.6rem; margin: 1rem 0; }
+.mk-stat { background: #17122b; border: 1px solid #372b5e; border-radius: 12px; padding: 0.8rem; text-align: center; }
+.mk-stat strong { display: block; font-size: 1.5rem; color: #ff9d5c; }
+.mk-stat span { color: #9a8fb8; font-size: 0.85rem; }
+.mk-note { color: #c9bce8; line-height: 1.55; max-width: 680px; }
+.mk-cats { color: #e8e6e3; line-height: 1.6; padding-left: 1.1rem; }
+.mk-list { color: #e8e6e3; line-height: 1.6; padding-left: 1.1rem; max-width: 680px; }
+</style>
+{% endblock %}
