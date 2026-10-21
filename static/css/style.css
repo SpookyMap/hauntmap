@@ -903,3 +903,9 @@ a.game-card:hover { border-color: #ff7518; transform: translateY(-2px); }
 .sponsor-card.tier-title { background: #ff9a44; }
 .sponsor-sub { color: #402e00; }
 .sponsor-tier { color: #4a3400; border-color: rgba(0, 0, 0, 0.3); }
+
+/* Header hook color: Bone Cream (Dan, Oct 21 — same Creepster slime font) */
+.header-hook {
+  color: #f5efe0;
+  text-shadow: 0 3px 0 rgba(0, 0, 0, 0.45), 0 6px 18px rgba(0, 0, 0, 0.6);
+}
