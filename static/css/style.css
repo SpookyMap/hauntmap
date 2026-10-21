@@ -363,6 +363,14 @@ a { color: var(--accent); }
   text-align: center; color: #fff; font-weight: 700;
   background: linear-gradient(transparent, rgba(0,0,0,0.7)); pointer-events: none;
 }
+/* Pin chains + rails (detail page loop) */
+.next-haunt { display: block; text-align: center; margin: 0.9rem 0 0.2rem; text-decoration: none; }
+.next-haunt-sub { display: block; font-size: 0.85rem; font-weight: 600; opacity: 0.85; margin-top: 0.15rem; }
+.rail-section { margin: 1.5rem 0 0.2rem; }
+.rail-section h2 { font-size: 1.15rem; margin: 0 0 0.6rem; }
+.rail { display: flex; gap: 0.7rem; overflow-x: auto; padding-bottom: 0.5rem; scroll-snap-type: x proximity; -webkit-overflow-scrolling: touch; }
+.rail-card { flex: 0 0 218px; scroll-snap-align: start; }
+.chain-nav { display: flex; justify-content: space-between; gap: 0.7rem; margin: 1.2rem 0 0.4rem; }
 .detail-media img, .detail-media video { width: 100%; display: block; max-height: 70vh; object-fit: contain; background: #0d0916; }
 .votes-big { font-size: 1.3rem; font-weight: 800; color: var(--accent); }
 .detail-actions { margin: 1rem 0; }

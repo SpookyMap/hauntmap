@@ -228,6 +228,54 @@ def nearest_pins(entry: dict, limit: int = 6) -> list[dict]:
     return scored[:limit]
 
 
+def detail_chain(entry: dict) -> dict:
+    """Loop data for a detail page: the nearest-pin chain (next + reciprocal
+    prev), a 'More near here' rail and a 'More like this' rail, so no detail
+    page is ever a dead end. All same-category; distances in miles."""
+    peers = category_peers(entry)
+    out = {"next_pin": None, "prev_pin": None, "more_near": [], "more_like": []}
+    if entry.get("lat") is not None and entry.get("lng") is not None:
+        coord = [p for p in peers
+                 if p.get("lat") is not None and p.get("lng") is not None]
+        for p in coord:
+            p["distance"] = haversine_miles(
+                entry["lat"], entry["lng"], p["lat"], p["lng"])
+        coord.sort(key=lambda p: (p["distance"], p["id"]))
+        out["more_near"] = coord[:6]
+        out["next_pin"] = coord[0] if coord else None
+        # Prev = the closest pin whose OWN nearest neighbour is this pin
+        # (reciprocal nearest) — the step a chain-walker came from. Bounded
+        # to the 40 closest candidates so the check stays cheap.
+        if coord:
+            everyone = coord + [entry]
+            for cand in coord[:40]:
+                best_id, best_d = None, None
+                for q in everyone:
+                    if q["id"] == cand["id"]:
+                        continue
+                    d = haversine_miles(cand["lat"], cand["lng"],
+                                        q["lat"], q["lng"])
+                    if best_d is None or d < best_d:
+                        best_d, best_id = d, q["id"]
+                if best_id == entry["id"]:
+                    out["prev_pin"] = cand
+                    break
+    near_ids = {p["id"] for p in out["more_near"]}
+    entry_tags = {t.strip() for t in (entry.get("tags") or "").split(",")
+                  if t.strip()}
+
+    def like_score(p):
+        ptags = {t.strip() for t in (p.get("tags") or "").split(",") if t.strip()}
+        return (1 if entry.get("scare_level")
+                and p.get("scare_level") == entry["scare_level"] else 0,
+                len(entry_tags & ptags), p.get("votes") or 0)
+
+    pool = [p for p in peers if p["id"] not in near_ids]
+    pool.sort(key=like_score, reverse=True)
+    out["more_like"] = pool[:6]
+    return out
+
+
 _STATE_ZIP_RE = re.compile(r",\s*([A-Za-z]{2})(?:\s+\d{5}(?:-\d{4})?)?\s*$")
 _STATE_ANY_RE = re.compile(
     r",\s*(NJ|NY|PA|MD|VA|MA|NH|CT|RI|DE|DC|VT|ME|NC|SC|GA|FL|TX|OH|IL|CA|WA|OR|"
@@ -992,12 +1040,13 @@ def detail(request: Request, entry_id: int):
     scare_pick = request.cookies.get(f"scare_{entry_id}", "")
     if scare_pick not in SCARE_LEVELS:
         scare_pick = ""
-    near_chain = nearest_pins(entry, 6)
-    next_pin = near_chain[0] if near_chain else None
+    chain = detail_chain(entry)
     return templates.TemplateResponse(request, "detail.html",
         {"request": request, "entry": entry, "voted": voted, "reported": reported,
          "tips": tips, "scare_counts": scare_counts, "scare_total": scare_total,
-         "scare_pick": scare_pick, "next_pin": next_pin},
+         "scare_pick": scare_pick, "next_pin": chain["next_pin"],
+         "prev_pin": chain["prev_pin"], "more_near": chain["more_near"],
+         "more_like": chain["more_like"]},
     )
 
 

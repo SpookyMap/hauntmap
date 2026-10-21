@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "_pin_card.html" import pin_card %}
 {% block title %}{{ entry.title }} &middot; {{ site_name }}{% endblock %}
 {% block head %}
 {% if entry.lat is not none and entry.lng is not none %}
@@ -103,6 +104,10 @@
     <button class="btn" id="btn-add-tour" style="margin-top:0.5rem">+ Add to my tour</button>
   </div>
 
+  {% if next_pin %}
+  <a class="btn btn-big next-haunt" href="/d/{{ next_pin.id }}">Next haunt near here &rarr;<span class="next-haunt-sub">{{ next_pin.title }} &middot; {{ "%.1f"|format(next_pin.distance) }} mi &middot; {{ next_pin.town_label }}</span></a>
+  {% endif %}
+
   <div class="scare-meter" id="scare">
     <h2>&#x1F4CA; Scare-O-Meter — how scary is it really?</h2>
     {% set scare_meta = {'family': ('&#x1F60A;', 'Family-friendly'), 'spooky': ('&#x1F47B;', 'Spooky'), 'creepy': ('&#x1F9DB;', 'Creepy'), 'terrifying': ('&#x1F631;', 'Terrifying'), 'extreme': ('&#x1F480;', 'EXTREME')} %}
@@ -164,6 +169,31 @@
       L.marker([{{ entry.lat }}, {{ entry.lng }}]).addTo(map);
     })();
   </script>
+  {% endif %}
+
+  {% if more_near %}
+  <section class="rail-section">
+    <h2>&#x1F4CD; More near here</h2>
+    <div class="rail">
+      {% for p in more_near %}{{ pin_card(p) }}{% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+  {% if more_like %}
+  <section class="rail-section">
+    <h2>&#x1F47B; More like this</h2>
+    <div class="rail">
+      {% for p in more_like %}{{ pin_card(p) }}{% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+  {% if prev_pin or next_pin %}
+  <nav class="chain-nav">
+    {% if prev_pin %}<a class="btn" href="/d/{{ prev_pin.id }}">&larr; Previous haunt</a>{% else %}<span></span>{% endif %}
+    {% if next_pin %}<a class="btn" href="/d/{{ next_pin.id }}">Next haunt &rarr;</a>{% endif %}
+  </nav>
   {% endif %}
 
   <div class="detail-foot">
