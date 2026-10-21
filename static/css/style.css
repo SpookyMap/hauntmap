@@ -180,6 +180,9 @@ a { color: var(--accent); }
 .tiktok-follow:hover { opacity: 0.85; }
 
 /* ---- DIY page ---- */
+.diy-section-title { color: #FFF8E7; margin: 2.4rem 0 0.2rem; }
+.diy-section-title a { color: #ff7518; }
+.diy-section-sub { color: #c9bce8; margin: 0 0 0.4rem; }
 .diy-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 1.2rem; margin-top: 1rem; }
 .diy-card { background: rgba(255,255,255,0.03); border: 1px solid #33254f; border-radius: 12px; padding: 1rem; }
 .diy-card h3 { margin: 0 0 0.2rem; color: #FFF8E7; }

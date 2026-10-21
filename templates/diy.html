@@ -19,4 +19,21 @@
   </div>
   {% endfor %}
 </div>
+
+<h2 class="diy-section-title">&#x1F3ED; Nick's Nightmare Factory — <a href="https://www.tiktok.com/@nicksnightmarefac" target="_blank" rel="noopener">@nicksnightmarefac</a></h2>
+<p class="diy-section-sub">Prop builds and haunt tutorials from the Nightmare Factory — gravestone crawlers, creepers and budget builds you can make at home.</p>
+
+<div class="diy-grid">
+  {% for v in nick_videos %}
+  <div class="diy-card">
+    <h3>{{ v.title }}</h3>
+    <p class="diy-creator">by {{ v.creator }}</p>
+    <p class="diy-blurb">{{ v.blurb }}</p>
+    <div class="diy-embed">
+      <iframe src="https://www.tiktok.com/embed/v2/{{ v.video_id }}" allowfullscreen scrolling="no" allow="encrypted-media; picture-in-picture" loading="lazy" title="{{ v.title }}"></iframe>
+    </div>
+    <p class="diy-watch"><a href="{{ v.url }}" target="_blank" rel="noopener">Watch on TikTok &#x2197;</a></p>
+  </div>
+  {% endfor %}
+</div>
 {% endblock %}
