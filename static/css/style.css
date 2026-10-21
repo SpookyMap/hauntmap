@@ -686,3 +686,12 @@ a.game-card:hover { border-color: #ff7518; transform: translateY(-2px); }
 .seen-text { color: #c9bce8; font-size: 0.85rem; margin: 0 0 0.3rem; }
 .seen-bar { height: 6px; background: rgba(255,255,255,0.12); border-radius: 3px; overflow: hidden; max-width: 340px; }
 .seen-fill { height: 100%; background: #ff7518; border-radius: 3px; }
+
+/* ---- Image nav buttons (header): themed image, word underneath ---- */
+.header-nav a.navbtn { display: inline-flex; flex-direction: column; align-items: center; gap: 0.22rem; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; }
+.header-nav a.navbtn img { width: 52px; height: 52px; border-radius: 50%; object-fit: cover; border: 2px solid rgba(201, 168, 106, 0.55); }
+.header-nav a.navbtn:hover img { border-color: #ff7518; }
+@media (max-width: 760px) {
+  .header-nav a.navbtn { font-size: 0.62rem; gap: 0.15rem; }
+  .header-nav a.navbtn img { width: 40px; height: 40px; }
+}
