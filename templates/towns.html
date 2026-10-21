@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}Halloween displays by town · {{ site_name }}{% endblock %}
+{% block content %}
+<h1>&#x1F383; Halloween displays by town</h1>
+<p class="towns-sub">Every town on the map — pick yours for local displays, events and haunt alerts.</p>
+<div class="towns-grid">
+  {% for t in towns_list %}
+  <a class="town-link" href="/towns/{{ t.slug }}">{{ t.label }} <span class="town-count">{{ t.count }}</span></a>
+  {% endfor %}
+</div>
+<style>
+.towns-sub { color: #c9bce8; }
+.towns-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 0.5rem; margin-top: 1rem; }
+.town-link { display: flex; justify-content: space-between; align-items: center; background: #17122b; border: 1px solid #372b5e; border-radius: 10px; padding: 0.6rem 0.8rem; color: #e8e6e3; text-decoration: none; font-weight: 600; }
+.town-link:hover { border-color: #ff7518; color: #ff9d5c; }
+.town-count { background: #241a44; color: #ffd98a; border-radius: 999px; padding: 0.05rem 0.55rem; font-size: 0.85rem; }
+</style>
+{% endblock %}

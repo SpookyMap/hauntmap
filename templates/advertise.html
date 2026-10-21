@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% block title %}Advertise on {{ site_name }} · Sponsorships{% endblock %}
+{% block head %}<meta name="description" content="Put your business in front of thousands of local Halloween hunters. HauntMap sponsorship packages from $250 — homepage, town pages, the weekly email and custom tours.">{% endblock %}
+{% block content %}
+<h1>&#x1F4E3; Advertise on HauntMap</h1>
+<p class="adv-sub">HauntMap is where local families plan their Halloween nights — which displays to drive to, where to stop for coffee, dinner and treats along the way. Put your business on their route.</p>
+
+<div class="adv-stats">
+  <div class="adv-stat"><strong>{{ '{:,}'.format(stats.week) }}</strong><span>visitors this week</span></div>
+  <div class="adv-stat"><strong>{{ '{:,}'.format(stats.today) }}</strong><span>visitors today</span></div>
+  <div class="adv-stat"><strong>{{ '{:,}'.format(stats.pins) }}</strong><span>haunts &amp; listings</span></div>
+  <div class="adv-stat"><strong>{{ stats.towns }}</strong><span>towns covered</span></div>
+</div>
+
+{% if example %}
+<div class="adv-example">
+  <p class="adv-example-label">Live example — our current Title Sponsor:</p>
+  <a href="/sponsor/click/{{ example.id }}" target="_blank" rel="noopener sponsored" class="sponsor-card tier-{{ example.tier }}">
+    {% if example.logo_path %}<img src="/media/{{ example.logo_path }}" alt="{{ example.business_name }} logo" class="sponsor-logo">{% endif %}
+    <span class="sponsor-meta"><span class="sponsor-name">{{ example.business_name }}</span>{% if example.banner_text %}<span class="sponsor-text">{{ example.banner_text }}</span>{% endif %}</span>
+  </a>
+  <p class="adv-example-note">Every sponsor click is tracked — sponsors get a monthly report of their clicks.</p>
+</div>
+{% endif %}
+
+<h2 class="adv-h2">Packages</h2>
+<div class="adv-packages">
+  {% for p in packages %}
+  <article class="adv-pack">
+    <h3>{{ p.name }}</h3>
+    <p class="adv-price">${{ '{:,}'.format(p.price) }} <span>one-time</span></p>
+    <p class="adv-blurb">{{ p.blurb }}</p>
+    <ul>
+      {% for f in p.features %}<li>{{ f }}</li>{% endfor %}
+    </ul>
+  </article>
+  {% endfor %}
+</div>
+<p class="adv-note">All packages run through Halloween, and sponsors stay up on the &#x1F384; Jolly Map through Christmas — two seasons for one price. Placements include featured spots in a town, "Tour fuel" stops (coffee, food &amp; shops near the haunts), and featured-sitewide banners.</p>
+
+<h2 class="adv-h2">Get started — pick your package</h2>
+{% if ordered %}
+<p class="adv-success">&#x1F389; Got it! We'll email your secure card-payment link and confirm your placement within one business day.</p>
+{% endif %}
+<form class="adv-form" method="post" action="/advertise/order" enctype="multipart/form-data">
+  <label>Business name *
+    <input type="text" name="business_name" required maxlength="120">
+  </label>
+  <label>Your name
+    <input type="text" name="contact_name" maxlength="80">
+  </label>
+  <label>Email *
+    <input type="email" name="email" required maxlength="120" placeholder="you@business.com">
+  </label>
+  <label>Package
+    <select name="package">
+      {% for p in packages %}<option value="{{ p.id }}">{{ p.name }} — ${{ '{:,}'.format(p.price) }}</option>{% endfor %}
+    </select>
+  </label>
+  <label>Your town
+    <input type="text" name="town" list="advTownList" placeholder="Type your town" autocomplete="off">
+    <datalist id="advTownList">
+      {% for t in towns %}<option value="{{ t }}">{% endfor %}
+    </datalist>
+  </label>
+  <label>Website
+    <input type="text" name="website" maxlength="200" placeholder="https://…">
+  </label>
+  <label>Logo (optional — or email it later)
+    <input type="file" name="logo" accept=".jpg,.jpeg,.png,.webp">
+  </label>
+  <button type="submit" class="btn-primary">Request my placement &rarr;</button>
+  <p class="adv-fine">No payment taken on this form — we reply with a secure card-payment link, confirm your town and dates, and your placement goes live as soon as payment clears.</p>
+</form>
+<style>
+.adv-sub { color: #c9bce8; max-width: 640px; line-height: 1.55; }
+.adv-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 0.6rem; margin: 1rem 0; }
+.adv-stat { background: #17122b; border: 1px solid #372b5e; border-radius: 12px; padding: 0.8rem; text-align: center; }
+.adv-stat strong { display: block; font-size: 1.5rem; color: #ff9d5c; }
+.adv-stat span { color: #9a8fb8; font-size: 0.85rem; }
+.adv-example { margin: 1rem 0; }
+.adv-example-label { color: #ffd98a; font-weight: 700; }
+.adv-example-note { color: #9a8fb8; font-size: 0.9rem; }
+.adv-h2 { margin-top: 1.6rem; }
+.adv-packages { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 0.8rem; }
+.adv-pack { background: #17122b; border: 1px solid #372b5e; border-radius: 12px; padding: 1rem 1.1rem; }
+.adv-pack h3 { margin: 0 0 0.3rem; }
+.adv-price { font-size: 1.6rem; font-weight: 800; color: #ff9d5c; margin: 0.2rem 0; }
+.adv-price span { font-size: 0.85rem; color: #9a8fb8; font-weight: 400; }
+.adv-blurb { color: #c9bce8; margin: 0.3rem 0 0.6rem; }
+.adv-pack ul { margin: 0; padding-left: 1.1rem; color: #e8e6e3; line-height: 1.5; }
+.adv-note { color: #c9bce8; line-height: 1.55; }
+.adv-success { background: #14351c; color: #7ee081; padding: 0.7rem 0.9rem; border-radius: 8px; }
+.adv-form { background: #17122b; border: 1px solid #372b5e; border-radius: 12px; padding: 1rem 1.2rem; max-width: 520px; display: grid; gap: 0.7rem; }
+.adv-form label { display: grid; gap: 0.3rem; font-size: 0.9rem; color: #c9bce8; }
+.adv-form input, .adv-form select { padding: 0.55rem 0.6rem; border-radius: 8px; border: 1px solid #372b5e; background: #0d0a1a; color: #e8e6e3; }
+.adv-fine { color: #9a8fb8; font-size: 0.85rem; margin: 0; }
+</style>
+{% endblock %}

@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}Halloween displays in {{ label }} · {{ site_name }}{% endblock %}
+{% block head %}<meta name="description" content="The best Halloween displays, haunted houses and events in {{ label }} — photos, directions and custom tours on HauntMap.">{% endblock %}
+{% block content %}
+<h1>&#x1F383; Halloween displays in {{ label }}</h1>
+<p class="town-sub">{{ entries|length }} spooky stop{{ 's' if entries|length != 1 }} in {{ label }} — tap any card for directions, or add a few to a custom tour.</p>
+
+<div class="signup-strip">
+  <h3>&#x1F514; Haunt alerts for {{ label }}</h3>
+  <p>Get the best displays in {{ label }} every week — plus the &#x1F384; Jolly Map when the season flips. One list, no spam.</p>
+  <form method="post" action="/subscribe" class="newsletter-form">
+    <input type="email" name="email" placeholder="you@email.com" required>
+    <input type="hidden" name="location" value="{{ label }}">
+    <input type="text" name="zip" placeholder="ZIP" inputmode="numeric" autocomplete="postal-code">
+    <input type="hidden" name="interest" value="Halloween">
+    <button type="submit" class="btn">Notify me</button>
+  </form>
+</div>
+
+{% if entries %}
+<div class="grid">
+  {% for e in entries %}
+  <a class="card" href="/d/{{ e.id }}">
+    <div class="card-media">
+      {% if e.media_path %}
+      {% if e.media_type == 'video' %}
+      <video src="{{ e.media_url }}" {% if e.thumb_path %}poster="{{ e.thumb_url }}"{% endif %} preload="metadata" muted playsinline></video>
+      <span class="play-badge">&#x25B6;</span>
+      {% else %}
+      <img src="{{ e.thumb_url }}" alt="{{ e.title }}" loading="lazy">
+      {% endif %}
+      {% else %}
+      <div class="card-media-empty">&#x1F383;</div>
+      {% endif %}
+    </div>
+    <div class="card-body">
+      <h3>{{ e.title }}</h3>
+      <p class="meta">{{ e.town_label }}{% if e.display_name %} &middot; {{ e.display_name }}{% endif %}</p>
+      {% if e.votes %}
+      <p class="votes">&#x1F383; {{ e.votes }} vote{{ 's' if e.votes != 1 }}</p>
+      {% elif e.is_new %}
+      <p class="votes votes-new">&#x2728; New this week</p>
+      {% else %}
+      <p class="votes votes-first">Be the first to vote &#x1F383;</p>
+      {% endif %}
+    </div>
+  </a>
+  {% endfor %}
+</div>
+{% else %}
+<div class="empty">
+  <p class="empty-emoji">&#x1F47B;</p>
+  <p>No displays here yet — <a href="/upload">be the first to add one</a>.</p>
+</div>
+{% endif %}
+<p class="town-more"><a href="/towns">Browse all towns &rarr;</a> &middot; <a href="/?town={{ label|urlencode }}">See {{ label }} in the main feed &rarr;</a></p>
+<style>
+.town-sub { color: #c9bce8; }
+.town-more { margin-top: 1.2rem; text-align: center; }
+</style>
+{% endblock %}

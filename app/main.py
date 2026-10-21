@@ -25,7 +25,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from fastapi import BackgroundTasks, FastAPI, Form, HTTPException, Request, UploadFile, File
-from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from PIL import Image, UnidentifiedImageError
@@ -1061,6 +1061,161 @@ def leaderboard(request: Request, cat: str = "halloween"):
         {"request": request, "top": top, "per_town": per_town,
          "cat": cat, "cat_labels": CAT_LABELS, "cat_emoji": CAT_EMOJI}
     )
+
+
+# ---------------------------------------------------------------- town pages
+
+def _town_slug(label: str) -> str:
+    return re.sub(r"[^a-z0-9]+", "-", label.lower()).strip("-")
+
+
+def _towns_with_counts(category: str = "halloween") -> list[dict]:
+    with get_conn(DB_PATH) as conn:
+        rows = conn.execute(
+            "SELECT town FROM entries WHERE hidden = 0 AND category = ?",
+            (category,),
+        ).fetchall()
+    counts: dict[str, int] = {}
+    for r in rows:
+        label = extract_city_state(r["town"] or "")
+        if label:
+            counts[label] = counts.get(label, 0) + 1
+    return sorted(
+        ({"label": l, "slug": _town_slug(l), "count": c} for l, c in counts.items()),
+        key=lambda x: x["label"],
+    )
+
+
+@app.get("/towns", response_class=HTMLResponse)
+def towns_index(request: Request):
+    return templates.TemplateResponse(
+        request, "towns.html",
+        {"towns_list": _towns_with_counts(), "site_name": SITE_NAME},
+    )
+
+
+@app.get("/towns/{slug}", response_class=HTMLResponse)
+def town_page(request: Request, slug: str):
+    label = None
+    for t in _towns_with_counts():
+        if t["slug"] == slug:
+            label = t["label"]
+            break
+    if label is None:
+        return RedirectResponse("/towns", status_code=303)
+    with get_conn(DB_PATH) as conn:
+        rows = [row_to_dict(r) for r in conn.execute(
+            "SELECT * FROM entries WHERE hidden = 0 AND category = 'halloween' "
+            "ORDER BY votes DESC, created_at DESC").fetchall()]
+    entries = [e for e in rows if e["town_label"] == label]
+    return templates.TemplateResponse(
+        request, "town.html",
+        {"label": label, "entries": entries, "site_name": SITE_NAME},
+    )
+
+
+@app.get("/sitemap.xml")
+def sitemap():
+    base = "https://gethauntmap.com"
+    urls = ["/", "/map", "/nearby", "/tour", "/diy", "/games", "/leaderboard",
+            "/towns", "/advertise", "/costume-contest", "/trivia", "/haunt-or-not"]
+    for t in _towns_with_counts():
+        urls.append(f"/towns/{t['slug']}")
+    body = ['<?xml version="1.0" encoding="UTF-8"?>',
+            '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">']
+    for u in urls:
+        body.append(f"<url><loc>{base}{u}</loc></url>")
+    body.append("</urlset>")
+    return Response("\n".join(body), media_type="application/xml")
+
+
+# ---------------------------------------------------------------- advertise
+
+SPONSOR_PACKAGES = [
+    {"id": "featured", "name": "Featured", "price": 250,
+     "blurb": "Your business in front of local Halloween hunters.",
+     "features": ["Logo + link in the Featured Sponsors row on the homepage",
+                  "Featured pin for your location",
+                  "Runs through Halloween — and on the Jolly Map through Christmas"]},
+    {"id": "premium", "name": "Premium", "price": 500,
+     "blurb": "Homepage plus the weekly email.",
+     "features": ["Everything in Featured",
+                  "Sponsor spot in the weekly Haunt Weekly / Jolly Weekly email",
+                  "Logo placement on town pages",
+                  "Monthly click report"]},
+    {"id": "title", "name": "Title Sponsor", "price": 1000,
+     "blurb": "The top spot, everywhere.",
+     "features": ["Everything in Premium",
+                  "Top banner placement sitewide",
+                  "Featured story in the weekly email",
+                  "Social media shoutout",
+                  "Monthly click report"]},
+]
+
+
+@app.get("/advertise", response_class=HTMLResponse)
+def advertise(request: Request):
+    today = datetime.now(timezone.utc).date().isoformat()
+    week_ago = (datetime.now(timezone.utc) - timedelta(days=7)).isoformat()
+    stats = {"today": 0, "week": 0, "pins": 0, "towns": 0}
+    with get_conn(DB_PATH) as conn:
+        try:
+            stats["today"] = conn.execute(
+                "SELECT COUNT(DISTINCT sid) FROM page_views WHERE substr(viewed_at, 1, 10) = ?",
+                (today,)).fetchone()[0]
+            stats["week"] = conn.execute(
+                "SELECT COUNT(DISTINCT sid) FROM page_views WHERE viewed_at >= ?",
+                (week_ago,)).fetchone()[0]
+        except Exception:
+            pass
+        stats["pins"] = conn.execute(
+            "SELECT COUNT(*) FROM entries WHERE hidden = 0").fetchone()[0]
+        sponsors = [dict(r) for r in conn.execute(
+            "SELECT * FROM sponsors WHERE is_active = 1 ORDER BY "
+            "CASE tier WHEN 'title' THEN 0 WHEN 'premium' THEN 1 ELSE 2 END LIMIT 1").fetchall()]
+    stats["towns"] = len(_towns_with_counts())
+    return templates.TemplateResponse(
+        request, "advertise.html",
+        {"packages": SPONSOR_PACKAGES, "stats": stats, "example": sponsors[0] if sponsors else None,
+         "towns": towns("halloween"), "site_name": SITE_NAME,
+         "ordered": request.query_params.get("ordered")},
+    )
+
+
+@app.post("/advertise/order")
+async def advertise_order(
+    business_name: str = Form(...),
+    contact_name: str = Form(""),
+    email: str = Form(...),
+    package: str = Form("featured"),
+    town: str = Form(""),
+    website: str = Form(""),
+    logo: UploadFile = File(None),
+):
+    logo_rel = None
+    if logo and logo.filename:
+        ext = safe_ext(logo.filename)
+        if ext in PHOTO_EXTS:
+            try:
+                tmp = save_upload(logo, MAX_PHOTO_BYTES)
+                name = uuid.uuid4().hex
+                logo_rel = f"{name}{ext}"
+                shutil.move(tmp, UPLOAD_DIR / logo_rel)
+            except ValueError:
+                logo_rel = None
+    with get_conn(DB_PATH) as conn:
+        conn.execute(
+            "CREATE TABLE IF NOT EXISTS sponsor_orders "
+            "(id INTEGER PRIMARY KEY, business_name TEXT, contact_name TEXT, email TEXT, "
+            "package TEXT, town TEXT, website TEXT, logo_path TEXT, status TEXT, created_at TEXT)")
+        conn.execute(
+            "INSERT INTO sponsor_orders (business_name, contact_name, email, package, town, website, logo_path, status, created_at) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, 'new', ?)",
+            (business_name.strip()[:120], contact_name.strip()[:80], email.strip().lower()[:120],
+             package, town.strip()[:80], website.strip()[:200], logo_rel,
+             datetime.now(timezone.utc).isoformat()),
+        )
+    return RedirectResponse("/advertise?ordered=1", status_code=303)
 
 
 # ---------------------------------------------------------------- costume contest
