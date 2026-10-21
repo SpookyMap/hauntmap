@@ -1,5 +1,12 @@
 {% extends "base.html" %}
 {% block content %}
+<div class="mobile-search">
+  <form method="get" action="/nearby" class="mobile-search-form">
+    <input type="text" name="q" placeholder="&#x1F50D; Town or ZIP" autocomplete="off">
+    <button type="submit" class="btn">Search</button>
+  </form>
+  <button type="button" class="btn btn-locate" onclick="hmNearMe()">&#x1F4CD; Use my location</button>
+</div>
 <div class="hero-intro">
   <h1 class="hero-title">Find the Best Halloween Displays Near You</h1>
   <p><strong>The #1 resource for everything Halloween</strong> — haunts, haunted houses, stores, events & more.</p>
@@ -12,11 +19,13 @@
   {% if request.query_params.get('subscribed') %}
   <p class="newsletter-success">&#x1F389; You're in! You'll be first to know when new haunts drop near you — and first in line for the Jolly Map &#x1F384;</p>
   {% else %}
-  <h3>&#x1F514; Be the first to know</h3>
-  <p>New haunts are added every day. Subscribers get first word when a new display lands near them — plus first access to the &#x1F384; Jolly Map this Christmas.</p>
+  <h3>&#x1F514; Haunt alerts for <span class="js-town-name">your town</span></h3>
+  <p>Get the best displays in <span class="js-town-name">your town</span> every week — plus the &#x1F384; Jolly Map when the season flips. One list, no spam, unsubscribe anytime.</p>
   <form method="post" action="/subscribe" class="newsletter-form">
     <input type="email" name="email" placeholder="you@email.com" required>
-    <input type="text" name="location" placeholder="Your town (optional)">
+    <input type="text" name="location" class="js-town" placeholder="Your town">
+    <input type="text" name="zip" placeholder="ZIP" inputmode="numeric" autocomplete="postal-code">
+    <input type="hidden" name="interest" value="Halloween">
     <button type="submit" class="btn">Notify me</button>
   </form>
   {% if request.query_params.get('sub_error') %}
@@ -105,12 +114,12 @@
       <option value="boston" {% if region == 'boston' %}selected{% endif %}>Boston</option>
       <option value="dc-area" {% if region == 'dc-area' %}selected{% endif %}>DC Area</option>
     </select>
-    <select name="town" onchange="this.form.submit()">
-      <option value="">All towns</option>
+    <input type="text" name="town" class="town-search" list="townList" placeholder="&#x1F50D; Type your town" value="{{ town }}" autocomplete="off" onchange="this.form.submit()">
+    <datalist id="townList">
       {% for t in towns %}
-      <option value="{{ t }}" {% if t == town %}selected{% endif %}>{{ t }}</option>
+      <option value="{{ t }}">
       {% endfor %}
-    </select>
+    </datalist>
     <select name="scare" onchange="this.form.submit()">
       <option value="">Any scare level</option>
       <option value="family" {% if scare == 'family' %}selected{% endif %}>&#x1F60A; Family</option>
@@ -156,7 +165,13 @@
     <div class="card-body">
       <h3>{{ e.title }}</h3>
       <p class="meta">{{ e.town_label }}{% if e.display_name %} &middot; {{ e.display_name }}{% endif %}</p>
+      {% if e.votes %}
       <p class="votes">{% if e.category == 'christmas' %}&#x1F384;{% else %}&#x1F383;{% endif %} {{ e.votes }} vote{{ 's' if e.votes != 1 }}</p>
+      {% elif e.is_new %}
+      <p class="votes votes-new">&#x2728; New this week</p>
+      {% else %}
+      <p class="votes votes-first">Be the first to vote &#x1F383;</p>
+      {% endif %}
     </div>
   </a>
   {% endfor %}

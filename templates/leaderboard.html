@@ -23,7 +23,7 @@
       <span class="leader-info">
         <strong>#{{ loop.index }} {{ e.title }}</strong>
         <span class="meta">{{ e.town }}</span>
-        <span class="votes">&#x1F383; {{ e.votes }}</span>
+        {% if e.votes %}<span class="votes">&#x1F383; {{ e.votes }}</span>{% else %}<span class="votes votes-first">Be the first to vote &#x1F383;</span>{% endif %}
         {% if e.is_sample %}<span class="sample-badge">Sample</span>{% endif %}
       </span>
     </a>

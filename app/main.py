@@ -140,6 +140,15 @@ async def _track_page_view(request: Request, call_next):
 def row_to_dict(row: sqlite3.Row) -> dict:
     d = dict(row)
     d["town_label"] = extract_city_state(d.get("town") or "") or d.get("town") or ""
+    d["is_new"] = False
+    if d.get("created_at"):
+        try:
+            created = datetime.fromisoformat(str(d["created_at"]).replace("Z", "+00:00"))
+            if created.tzinfo is None:
+                created = created.replace(tzinfo=timezone.utc)
+            d["is_new"] = (datetime.now(timezone.utc) - created).days < 7
+        except ValueError:
+            pass
     if d["media_path"]:
         d["media_url"] = f"/media/{d['media_path']}"
         d["thumb_url"] = f"/media/{d['thumb_path']}" if d["thumb_path"] else d["media_url"]
@@ -206,6 +215,29 @@ def extract_state(town: str) -> str:
     return ""
 
 
+CITY_FIXES = {
+    "port jefferson statiom": "Port Jefferson Station",
+}
+
+
+def _smart_case_city(city: str) -> str:
+    """Normalize casing ('Massapequa park'/'MASSAPEQUA PARK' -> 'Massapequa
+    Park') while leaving names with interior capitals (McLean, LaGrange) as-is."""
+    if re.search(r"[a-z][A-Z]", city):
+        return city
+
+    def cap_word(w: str) -> str:
+        pieces = []
+        for p in w.split("'"):
+            if p.lower().startswith("mc") and len(p) > 2:
+                pieces.append("Mc" + p[2:3].upper() + p[3:].lower())
+            else:
+                pieces.append(p[:1].upper() + p[1:].lower())
+        return "'".join(pieces)
+
+    return " ".join(cap_word(w) for w in city.split(" "))
+
+
 def extract_city(town: str) -> str:
     """Clean city name from a town field in any stored format."""
     t = town or ""
@@ -217,7 +249,11 @@ def extract_city(town: str) -> str:
     st = extract_state(town)
     if st and city.upper().endswith(" " + st):
         city = city[: -(len(st) + 1)].strip()
-    return city
+    city = " ".join(city.split())
+    fix = CITY_FIXES.get(city.lower())
+    if fix:
+        return fix
+    return _smart_case_city(city)
 
 
 def extract_city_state(town: str) -> str:
@@ -335,8 +371,13 @@ def home(request: Request, sort: str = "top", town: str = "", town_search: str =
         # whenever one is known so NJ towns never leak into an MD view.
         city_part = extract_city(town)
         st_part = state or extract_state(town)
-        query += " AND LOWER(town) LIKE ?"
-        params.append(f"%{city_part.lower()}%")
+        variants = [city_part.lower()]
+        for typo, fixed in CITY_FIXES.items():
+            if fixed.lower() == city_part.lower() and typo not in variants:
+                variants.append(typo)
+        like = " OR ".join(["LOWER(town) LIKE ?"] * len(variants))
+        query += f" AND ({like})"
+        params.extend(f"%{v}%" for v in variants)
         if st_part:
             query += (" AND (LOWER(town) LIKE ? OR LOWER(town) LIKE ?"
                       " OR LOWER(town) LIKE ? OR LOWER(town) LIKE ?)")
@@ -929,6 +970,8 @@ async def subscribe(request: Request):
     form = await request.form()
     email = form.get("email", "").strip().lower()[:120]
     location = form.get("location", "").strip()[:80] or "everywhere"
+    zip_code = form.get("zip", "").strip()[:10]
+    interest = (form.get("interest", "").strip()[:20] or "Halloween")
     error = None
     success = False
     if not email or "@" not in email or "." not in email.split("@")[-1]:
@@ -937,27 +980,39 @@ async def subscribe(request: Request):
         try:
             with get_conn(DB_PATH) as conn:
                 conn.execute(
-                    "INSERT INTO subscribers (email, location, created_at) VALUES (?, ?, ?)",
-                    (email, location, datetime.now(timezone.utc).isoformat()),
+                    "CREATE TABLE IF NOT EXISTS subscribers "
+                    "(id INTEGER PRIMARY KEY, email TEXT UNIQUE, location TEXT, created_at TEXT)")
+                for col in ("zip", "interest"):
+                    try:
+                        conn.execute(f"ALTER TABLE subscribers ADD COLUMN {col} TEXT")
+                    except Exception:
+                        pass  # column already exists
+                conn.execute(
+                    "INSERT INTO subscribers (email, location, zip, interest, created_at) VALUES (?, ?, ?, ?, ?)",
+                    (email, location, zip_code, interest, datetime.now(timezone.utc).isoformat()),
                 )
                 conn.commit()
             success = True
-            # Also add to Mailchimp
-            mc_key = os.environ.get("MAILCHIMP_API_KEY")
-            mc_list = os.environ.get("MAILCHIMP_AUDIENCE_ID")
-            if mc_key and mc_list:
+            # Sync to Beehiiv (one list; ZIP/town/interest ride as custom
+            # fields). Double opt-in follows the publication's own setting —
+            # no override is sent. Local DB stays the source of truth.
+            bh_key = os.environ.get("BEEHIIV_API_KEY")
+            bh_pub = os.environ.get("BEEHIIV_PUBLICATION_ID")
+            if bh_key and bh_pub:
                 try:
-                    dc = mc_key.split("-")[-1]
-                    import hashlib
-                    sub_hash = hashlib.md5(email.encode()).hexdigest()
-                    url = f"https://{dc}.api.mailchimp.com/3.0/lists/{mc_list}/members/{sub_hash}"
-                    resp = requests.put(url,
-                        auth=("anystring", mc_key),
-                        json={"email_address": email, "status": "subscribed",
-                              "merge_fields": {"LOCATION": location}},
+                    requests.post(
+                        f"https://api.beehiiv.com/v2/publications/{bh_pub}/subscriptions",
+                        headers={"Authorization": f"Bearer {bh_key}",
+                                 "Content-Type": "application/json"},
+                        json={"email": email, "send_welcome_email": True,
+                              "custom_fields": [
+                                  {"name": "TOWN", "value": location},
+                                  {"name": "ZIP", "value": zip_code},
+                                  {"name": "INTEREST", "value": interest},
+                              ]},
                         timeout=10)
                 except Exception:
-                    pass  # local DB is source of truth; Mailchimp is best-effort
+                    pass  # best-effort sync
         except sqlite3.IntegrityError:
             # already subscribed — treat as success
             success = True
