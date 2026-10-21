@@ -813,3 +813,17 @@ a.game-card:hover { border-color: #ff7518; transform: translateY(-2px); }
 .sponsor-card.tier-title .sponsor-text { font-size: 1.3rem; color: #33373d; }
 .sponsor-cta { color: #111111; }
 .sponsor-cta a { color: #111111; font-weight: 700; text-decoration: underline; }
+
+/* Header tagline sign-off (Dan's pick, Oct 21) */
+.header-tagline {
+  font-family: "Fredoka", "Arial Rounded MT Bold", sans-serif;
+  font-weight: 600;
+  color: #ff7518;
+  letter-spacing: 0.05em;
+  font-size: clamp(0.85rem, 1.5vw, 1.05rem);
+  margin: 0.15rem 0 0.9rem;
+  text-transform: uppercase;
+}
+@media (max-width: 600px) {
+  .header-tagline { text-align: center; margin-bottom: 0.5rem; }
+}
