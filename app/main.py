@@ -378,11 +378,29 @@ def _cap_original(src: Path) -> None:
         pass
 
 
+def _recompress_jpeg(src: Path) -> None:
+    """Re-encode a byte-fat JPEG in place at q85, same dimensions (some phones
+    write ~q97: a 960x1440 frame at 1.8 MB). Only when >500 KB and smaller."""
+    try:
+        if src.suffix.lower() not in (".jpg", ".jpeg") or src.stat().st_size <= 500_000:
+            return
+        tmp = src.with_suffix(".rejpg")
+        with Image.open(src) as im:
+            im.convert("RGB").save(tmp, "JPEG", quality=85, optimize=True)
+        if tmp.stat().st_size < src.stat().st_size:
+            tmp.replace(src)
+        else:
+            tmp.unlink(missing_ok=True)
+    except (OSError, UnidentifiedImageError):
+        pass
+
+
 def make_thumb(src: Path, dest_name: str) -> str:
     """Create a JPEG thumbnail for a photo. Returns the relative thumb path."""
     rel = f"thumbs/{dest_name}_thumb.jpg"
     dest = THUMB_DIR / f"{dest_name}_thumb.jpg"
     _cap_original(src)
+    _recompress_jpeg(src)
     with Image.open(src) as im:
         _write_thumb(im, dest)
     return rel
@@ -1698,6 +1716,7 @@ def admin_recap(request: Request, offset: int = 0, limit: int = 100):
         try:
             old = f.stat().st_size
             _cap_original(f)
+            _recompress_jpeg(f)
             new = f.stat().st_size
             if new < old:
                 shrunk += 1
