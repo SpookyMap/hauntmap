@@ -1006,3 +1006,19 @@ a.game-card:hover { border-color: #ff7518; transform: translateY(-2px); }
 /* Hook split flipped (Dan): lavender leads, bone cream closes */
 .header-hook { color: #c9a7ff; }
 .hook-line.alt { color: #f5efe0; }
+
+/* DESKTOP HEADER RESTORE (Dan): small and clean like before — compact logo,
+   no ghosts/wolf/Frank clutter, tight rows. Phone untouched. */
+@media (min-width: 761px) {
+  .site-header { padding: 0.45rem 1.25rem 0.5rem; row-gap: 0.3rem; }
+  .brand-logo { height: 92px; width: 92px; max-height: 92px; max-width: 92px; }
+  .header-spooky { display: none; }
+  .header-wolf { display: none; }
+  .header-frank { display: none; }
+  .header-center { padding-left: 0; text-align: center; }
+  .header-hook { font-size: 1.18rem; line-height: 1.25; }
+  .header-nav { gap: 0.55rem; }
+  .navbtn img { width: 52px; height: 52px; }
+  .navbtn span { font-size: 0.66rem; }
+  .header-tagline { font-size: 1.45rem; margin-top: 0.1rem; }
+}
