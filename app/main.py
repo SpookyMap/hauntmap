@@ -1678,6 +1678,38 @@ def admin_rethumb(request: Request, offset: int = 0, limit: int = 200):
             "done": offset + len(batch) >= len(files)}
 
 
+@app.post("/admin/recap")
+def admin_recap(request: Request, offset: int = 0, limit: int = 100):
+    """Apply the 1920px original cap to already-stored entry photos (detail
+    pages serve originals; early phone uploads are 1.3-1.8 MB). Same chunked,
+    resumable pattern as /admin/rethumb. Videos untouched. Admin only."""
+    _require_admin(request)
+    with get_conn(DB_PATH) as conn:
+        rows = conn.execute(
+            "SELECT media_path FROM entries WHERE media_type = 'photo' "
+            "AND media_path != '' ORDER BY id").fetchall()
+    paths = [r["media_path"] for r in rows]
+    batch = paths[offset:offset + limit]
+    before = after = shrunk = 0
+    for rel in batch:
+        f = UPLOAD_DIR / rel
+        if not f.exists():
+            continue
+        try:
+            old = f.stat().st_size
+            _cap_original(f)
+            new = f.stat().st_size
+            if new < old:
+                shrunk += 1
+            before += old
+            after += new
+        except OSError:
+            continue
+    return {"total": len(paths), "offset": offset, "processed": len(batch),
+            "shrunk": shrunk, "bytes_before": before, "bytes_after": after,
+            "done": offset + len(batch) >= len(paths)}
+
+
 def _require_admin(request: Request) -> None:
     if not is_admin(request):
         raise HTTPException(403, "Admin only.")
