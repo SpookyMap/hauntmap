@@ -1002,3 +1002,7 @@ a.game-card:hover { border-color: #ff7518; transform: translateY(-2px); }
 
 /* Hook two-tone (Dan): closing line in lavender, rest bone cream */
 .hook-line.alt { color: #c9a7ff; }
+
+/* Hook split flipped (Dan): lavender leads, bone cream closes */
+.header-hook { color: #c9a7ff; }
+.hook-line.alt { color: #f5efe0; }
