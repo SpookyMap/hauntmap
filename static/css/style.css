@@ -715,7 +715,7 @@ a.game-card:hover { border-color: #ff7518; transform: translateY(-2px); }
   font-style: normal;
   font-weight: 800;
   letter-spacing: -0.022em;
-  line-height: 1.15;
+  line-height: 1.06;
 }
 .header-nav a.navbtn {
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", Inter, "Helvetica Neue", "Segoe UI", Arial, sans-serif;
@@ -753,4 +753,9 @@ a.game-card:hover { border-color: #ff7518; transform: translateY(-2px); }
    overlay buried the scene on tall phone cards. */
 .hero-intro {
   background: linear-gradient(rgba(9, 5, 17, 0.42), rgba(9, 5, 17, 0.94) 62%), url('/static/img/hero_creepy2.jpg') center top / 100% auto no-repeat, #0b0614;
+}
+
+/* Hero backdrop: image repeats behind ALL paragraphs, whole block (Dan, Oct 21) */
+.hero-intro {
+  background: linear-gradient(rgba(9, 5, 17, 0.60), rgba(9, 5, 17, 0.74)), url('/static/img/hero_creepy2.jpg') center top / 100% auto repeat-y, #0b0614;
 }
