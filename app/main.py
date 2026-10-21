@@ -203,6 +203,31 @@ def get_entry(entry_id: int) -> dict | None:
     return row_to_dict(row) if row else None
 
 
+def category_peers(entry: dict) -> list[dict]:
+    """All other visible entries in the entry's category (row dicts)."""
+    with get_conn(DB_PATH) as conn:
+        rows = conn.execute(
+            "SELECT * FROM entries WHERE hidden = 0 AND category = ? AND id != ?",
+            (entry["category"], entry["id"]),
+        ).fetchall()
+    return [row_to_dict(r) for r in rows]
+
+
+def nearest_pins(entry: dict, limit: int = 6) -> list[dict]:
+    """Same-category pins nearest to `entry`, each annotated with `distance`
+    in miles (haversine). Empty when the entry or all peers lack coords."""
+    if entry.get("lat") is None or entry.get("lng") is None:
+        return []
+    scored = []
+    for p in category_peers(entry):
+        if p.get("lat") is None or p.get("lng") is None:
+            continue
+        p["distance"] = haversine_miles(entry["lat"], entry["lng"], p["lat"], p["lng"])
+        scored.append(p)
+    scored.sort(key=lambda p: (p["distance"], p["id"]))
+    return scored[:limit]
+
+
 _STATE_ZIP_RE = re.compile(r",\s*([A-Za-z]{2})(?:\s+\d{5}(?:-\d{4})?)?\s*$")
 _STATE_ANY_RE = re.compile(
     r",\s*(NJ|NY|PA|MD|VA|MA|NH|CT|RI|DE|DC|VT|ME|NC|SC|GA|FL|TX|OH|IL|CA|WA|OR|"
@@ -967,10 +992,12 @@ def detail(request: Request, entry_id: int):
     scare_pick = request.cookies.get(f"scare_{entry_id}", "")
     if scare_pick not in SCARE_LEVELS:
         scare_pick = ""
+    near_chain = nearest_pins(entry, 6)
+    next_pin = near_chain[0] if near_chain else None
     return templates.TemplateResponse(request, "detail.html",
         {"request": request, "entry": entry, "voted": voted, "reported": reported,
          "tips": tips, "scare_counts": scare_counts, "scare_total": scare_total,
-         "scare_pick": scare_pick},
+         "scare_pick": scare_pick, "next_pin": next_pin},
     )
 
 

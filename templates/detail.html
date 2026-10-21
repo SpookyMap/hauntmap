@@ -177,3 +177,13 @@
 
 <p><a href="/">&larr; Back to all haunts</a></p>
 {% endblock %}
+{% block speculation %}
+{% if next_pin %}
+{# Prerender exactly ONE page: the nearest same-category pin, i.e. where the
+   "Next haunt near here" chain leads. Moderate eagerness = fires on
+   hover/press of a link to it, never on page load — bandwidth-safe. #}
+<script type="speculationrules">
+{"prerender": [{"source": "list", "urls": ["/d/{{ next_pin.id }}"], "eagerness": "moderate"}]}
+</script>
+{% endif %}
+{% endblock %}

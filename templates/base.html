@@ -138,5 +138,21 @@ function hmNearMe() {
   } catch (e) {}
 })();
 </script>
+{# Speculation Rules (Chromium; ignored elsewhere): prefetch same-origin
+   pages on hover/press so the next tap lands instantly. Prefetch pulls HTML
+   only (~13 KB/page) — deliberately NOT eager/viewport-triggered, and admin,
+   media and static are excluded: Render bandwidth is metered, so we never
+   prerender lists. Detail pages add ONE prerender (their likeliest next pin)
+   via the speculation block below. #}
+<script type="speculationrules">
+{"prefetch": [{"source": "document", "where": {"and": [
+  {"href_matches": "/*"},
+  {"not": {"href_matches": "/admin*"}},
+  {"not": {"href_matches": "/media/*"}},
+  {"not": {"href_matches": "/static/*"}},
+  {"not": {"href_matches": "/sitemap.xml"}}
+]}, "eagerness": "moderate"}]}
+</script>
+{% block speculation %}{% endblock %}
 </body>
 </html>
