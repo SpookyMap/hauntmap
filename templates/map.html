@@ -54,7 +54,7 @@ pins.forEach(p => {
     ? `<video src="${p.media_url}" poster="${thumb}" muted playsinline style="pointer-events:none"></video>`
     : `<img src="${thumb}" alt="">`) : '';
   const m = L.marker([p.lat, p.lng], {icon: thumbIcon(p)});
-  m.bindPopup(`<div class="pin-popup">${media}<strong>${p.title}</strong><div>&#x1F383; ${p.votes} votes</div><a href="/d/${p.id}">View haunt</a></div>`);
+  m.bindPopup(`<div class="pin-popup">${media}<strong>${p.title}</strong>${p.votes ? `<div>&#x1F383; ${p.votes} vote${p.votes != 1 ? 's' : ''}</div>` : ''}<a href="/d/${p.id}">View haunt</a></div>`);
   cluster.addLayer(m);
 });
 map.addLayer(cluster);

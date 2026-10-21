@@ -173,8 +173,6 @@
       <p class="votes">{% if e.category == 'christmas' %}&#x1F384;{% else %}&#x1F383;{% endif %} {{ e.votes }} vote{{ 's' if e.votes != 1 }}</p>
       {% elif e.is_new %}
       <p class="votes votes-new">&#x2728; New this week</p>
-      {% else %}
-      <p class="votes votes-first">Be the first to vote &#x1F383;</p>
       {% endif %}
     </div>
   </a>
