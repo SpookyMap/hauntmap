@@ -1048,3 +1048,8 @@ a.game-card:hover { border-color: #ff7518; transform: translateY(-2px); }
 
 /* Tagline font: Nosifer drip scrapped -> Creepster, same as the headline (Dan) */
 .header-tagline { font-family: "Creepster", cursive; letter-spacing: 0.02em; }
+
+/* Tagline three-color rhythm like the header (Dan): lavender / bone cream / red */
+.header-tagline .tag-a { color: #c9a7ff; }
+.header-tagline .tag-b { color: #f5efe0; }
+.header-tagline .tag-c { color: #e01e26; }
