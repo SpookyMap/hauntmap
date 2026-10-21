@@ -940,3 +940,6 @@ a.game-card:hover { border-color: #ff7518; transform: translateY(-2px); }
   vertical-align: -0.62em;
   margin-left: 0.35rem;
 }
+
+/* Wolf sizing guard (explicit box so he can never balloon) */
+.header-wolf { height: 1.9em; width: 1.9em; object-fit: contain; vertical-align: -0.45em; }
