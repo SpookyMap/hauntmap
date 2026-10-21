@@ -1143,6 +1143,29 @@ def sitemap():
 
 # ---------------------------------------------------------------- advertise
 
+# Business sponsor packages (the original pitched tiers — quotes honored).
+BUSINESS_PACKAGES = [
+    {"id": "featured", "name": "Featured", "price": 250,
+     "blurb": "Your business in front of local Halloween hunters.",
+     "features": ["Logo + link in the Featured Sponsors row on the homepage",
+                  "Featured pin for your location",
+                  "Runs through Halloween — and on the Jolly Map through Christmas"]},
+    {"id": "premium", "name": "Premium", "price": 500,
+     "blurb": "Homepage plus the weekly email.",
+     "features": ["Everything in Featured",
+                  "Sponsor spot in the weekly Haunt Weekly / Jolly Weekly email",
+                  "Logo placement on town pages",
+                  "Monthly click report"]},
+    {"id": "title", "name": "Title Sponsor", "price": 1000,
+     "blurb": "The top spot, everywhere.",
+     "features": ["Everything in Premium",
+                  "Top banner placement sitewide",
+                  "Featured story in the weekly email",
+                  "Social media shoutout",
+                  "Monthly click report"]},
+]
+
+# Homeowner ladder — the Founding-Sponsor Rates, for private home displays.
 SPONSOR_PACKAGES = [
     {"id": "tour_fuel", "name": "Tour Fuel Listing", "price": 49, "price_both": 79,
      "blurb": "A stop on the route — coffee, food and shops near the haunts.",
@@ -1163,14 +1186,23 @@ SPONSOR_PACKAGES = [
                   "Monthly click report"]},
 ]
 
-SPONSOR_ORDER_OPTIONS = [
-    {"id": "tour_fuel", "label": "Tour Fuel Listing — $49 (one season)"},
-    {"id": "tour_fuel_both", "label": "Tour Fuel Listing — $79 (both seasons)"},
-    {"id": "town_featured", "label": "Town Featured — $79 (one season)"},
-    {"id": "town_featured_both", "label": "Town Featured — $129 (both seasons)"},
-    {"id": "sitewide_featured", "label": "Sitewide Featured — $149 (one season)"},
-    {"id": "sitewide_featured_both", "label": "Sitewide Featured — $249 (both seasons)"},
+SPONSOR_ORDER_GROUPS = [
+    {"label": "Business — Sponsor Packages", "options": [
+        {"id": "featured", "label": "Business — Featured — $250"},
+        {"id": "premium", "label": "Business — Premium — $500"},
+        {"id": "title", "label": "Business — Title Sponsor — $1,000"},
+    ]},
+    {"label": "Homeowner — Feature Your Display", "options": [
+        {"id": "tour_fuel", "label": "Homeowner — Tour Fuel Listing — $49 (one season)"},
+        {"id": "tour_fuel_both", "label": "Homeowner — Tour Fuel Listing — $79 (both seasons)"},
+        {"id": "town_featured", "label": "Homeowner — Town Featured — $79 (one season)"},
+        {"id": "town_featured_both", "label": "Homeowner — Town Featured — $129 (both seasons)"},
+        {"id": "sitewide_featured", "label": "Homeowner — Sitewide Featured — $149 (one season)"},
+        {"id": "sitewide_featured_both", "label": "Homeowner — Sitewide Featured — $249 (both seasons)"},
+    ]},
 ]
+
+SPONSOR_ORDER_OPTIONS = [o for g in SPONSOR_ORDER_GROUPS for o in g["options"]]
 
 
 @app.get("/advertise", response_class=HTMLResponse)
@@ -1199,9 +1231,11 @@ def advertise(request: Request):
         pkg = ""
     return templates.TemplateResponse(
         request, "advertise.html",
-        {"packages": SPONSOR_PACKAGES, "stats": stats, "example": sponsors[0] if sponsors else None,
+        {"packages": SPONSOR_PACKAGES, "business_packages": BUSINESS_PACKAGES,
+         "stats": stats, "example": sponsors[0] if sponsors else None,
          "towns": towns("halloween"), "site_name": SITE_NAME,
-         "order_options": SPONSOR_ORDER_OPTIONS, "selected_pkg": pkg,
+         "order_options": SPONSOR_ORDER_OPTIONS, "order_groups": SPONSOR_ORDER_GROUPS,
+         "selected_pkg": pkg,
          "ordered": request.query_params.get("ordered")},
     )
 

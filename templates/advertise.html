@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% block title %}Advertise on {{ site_name }} · Sponsorships{% endblock %}
-{% block head %}<meta name="description" content="Put your business in front of thousands of local Halloween hunters. HauntMap Founding-Sponsor Rates from $49 a season — town pages, tour stops, the weekly email and sitewide banners.">{% endblock %}
+{% block head %}<meta name="description" content="Put your business in front of thousands of local Halloween hunters — business sponsor packages from $250, and homeowners can feature their own display from $49 a season.">{% endblock %}
 {% block content %}
 <h1>&#x1F4E3; Advertise on HauntMap</h1>
 <p class="adv-sub">HauntMap is where local families plan their Halloween nights — which displays to drive to, where to stop for coffee, dinner and treats along the way. Put your business on their route.</p>
@@ -24,8 +24,26 @@
 </div>
 {% endif %}
 
-<h2 class="adv-h2">Founding-Sponsor Rates</h2>
-<p class="adv-note">One season = <strong>Halloween</strong> (Sept&ndash;Oct) on HauntMap <em>or</em> the <strong>&#x1F384; Jolly Map</strong> (Nov&ndash;Dec). Bundle both seasons and save. Founding sponsors lock in these rates — and get <strong>20% off renewal next year</strong>.</p>
+<h2 class="adv-h2">Sponsor Packages — For Businesses</h2>
+<p class="adv-note">Full sponsorship for local businesses. Every package runs through Halloween — and sponsors stay up on the &#x1F384; Jolly Map through Christmas, two seasons for one price.</p>
+<div class="adv-packages">
+  {% for p in business_packages %}
+  <article class="adv-pack">
+    <h3>{{ p.name }}</h3>
+    <p class="adv-price">${{ '{:,}'.format(p.price) }} <span>one-time</span></p>
+    <p class="adv-blurb">{{ p.blurb }}</p>
+    <ul>
+      {% for f in p.features %}<li>{{ f }}</li>{% endfor %}
+    </ul>
+    <div class="adv-buy">
+      <a class="btn-buy" href="/advertise?pkg={{ p.id }}#order">Buy now</a>
+    </div>
+  </article>
+  {% endfor %}
+</div>
+
+<h2 class="adv-h2">Feature Your Display — For Homeowners</h2>
+<p class="adv-note">Decorate? Get your home display seen — no business required. These are our <strong>Founding-Sponsor Rates</strong> for private homes: one season = <strong>Halloween</strong> (Sept&ndash;Oct) on HauntMap <em>or</em> the <strong>&#x1F384; Jolly Map</strong> (Nov&ndash;Dec). Bundle both seasons and save. Founding sponsors lock in these rates — and get <strong>20% off renewal next year</strong>.</p>
 <div class="adv-packages">
   {% for p in packages %}
   <article class="adv-pack">
@@ -61,7 +79,7 @@
   </label>
   <label>Package
     <select name="package">
-      {% for o in order_options %}<option value="{{ o.id }}"{% if o.id == selected_pkg %} selected{% endif %}>{{ o.label }}</option>{% endfor %}
+      {% for g in order_groups %}<optgroup label="{{ g.label }}">{% for o in g.options %}<option value="{{ o.id }}"{% if o.id == selected_pkg %} selected{% endif %}>{{ o.label }}</option>{% endfor %}</optgroup>{% endfor %}
     </select>
   </label>
   <label>Your town
