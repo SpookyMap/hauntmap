@@ -946,3 +946,18 @@ a.game-card:hover { border-color: #ff7518; transform: translateY(-2px); }
 
 /* Wolf bigger (Dan, Oct 21) */
 .header-wolf { height: 2.9em; width: 2.9em; vertical-align: -0.85em; }
+
+/* Header cleanup (Dan, Oct 21): tight hook lines; wolf floats at the
+   hook's end so he can't stretch the paragraph. */
+.header-hook { line-height: 1.15; position: relative; }
+.header-center { position: relative; }
+.header-wolf {
+  position: absolute;
+  right: 0.3rem;
+  bottom: -0.4rem;
+  height: 2.9em;
+  width: 2.9em;
+}
+@media (max-width: 600px) {
+  .header-wolf { right: 0.1rem; bottom: -0.55rem; }
+}
