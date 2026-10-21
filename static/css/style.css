@@ -13,6 +13,7 @@
 * { box-sizing: border-box; }
 body {
   margin: 0;
+  overflow-x: clip;
   background: radial-gradient(1200px 600px at 50% -10%, #2b1c4d 0%, var(--bg) 60%) fixed, var(--bg);
   color: var(--ink);
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
@@ -37,7 +38,10 @@ a { color: var(--accent); }
 .site-header {
   display: flex; justify-content: space-between; align-items: flex-end;
   padding: 0.15rem 1rem;
-  background: rgba(20, 16, 29, 0.9);
+  /* Fully opaque: the header is sticky, so a translucent background lets
+     scrolled page content bleed through and collide with the logo/nav. */
+  background: #14101d;
+  box-shadow: 0 2px 14px rgba(0, 0, 0, 0.45);
   border-bottom: 1px solid #33254f;
   position: sticky; top: 0; z-index: 10;
   min-height: unset;
@@ -71,7 +75,7 @@ a { color: var(--accent); }
 .site-header nav a { color: var(--muted); text-decoration: none; font-size: 0.95rem; }
 .btn-upload {
   background: var(--accent); color: #1a0f00 !important; font-weight: 700;
-  padding: 0.45rem 0.9rem; border-radius: 999px;
+  padding: 0.45rem 0.9rem; border-radius: 999px; white-space: nowrap;
 }
 
 .site-footer { text-align: center; color: var(--muted); font-size: 0.85rem; padding: 2rem 1rem; }
@@ -123,7 +127,8 @@ a { color: var(--accent); }
 .filter-chip {
   background: var(--bg2); color: var(--muted); border: 1px solid #33254f;
   border-radius: 999px; padding: 0.4rem 0.8rem; font-size: 0.85rem;
-  text-decoration: none; text-align: center; flex: 1 1 160px; min-width: 0;
+  text-decoration: none; text-align: center; flex: 0 1 160px; min-width: 0;
+  white-space: nowrap;
 }
 .filter-chip.active { color: var(--ink); border-color: var(--accent); background: #1a1030; }
 .book-banner {
@@ -270,22 +275,27 @@ a { color: var(--accent); }
   font-weight: 700; font-size: 1.05rem; border: 2px solid transparent;
 }
 .cat-btn-main.active { border-color: var(--accent); background: #1a1030; }
-.cat-tabs-sub { display: flex; gap: 0.35rem; align-items: center; flex-wrap: wrap; justify-content: center; margin-bottom: 0.8rem; padding-bottom: 0.2rem; }
-.cat-sub-label { font-size: 0.8rem; color: var(--muted); flex: 0 0 auto; }
+.cat-tabs-sub { display: flex; gap: 0.35rem; align-items: stretch; flex-wrap: wrap; justify-content: center; margin-bottom: 0.8rem; padding-bottom: 0.2rem; }
+.cat-sub-label { font-size: 0.8rem; color: var(--muted); flex: 0 0 auto; align-self: center; }
 .cat-btn-sub {
   padding: 0.3rem 0.7rem; border-radius: 20px; font-size: 0.8rem; flex: 0 1 160px; text-align: center;
   background: var(--bg2); color: var(--muted); text-decoration: none;
   border: 1px solid #33254f;
+  display: flex; align-items: center; justify-content: center; white-space: nowrap;
 }
 .cat-btn-sub.active { color: var(--ink); border-color: var(--accent); }
 .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.9rem; }
 @media (max-width: 480px) {
   .grid { grid-template-columns: 1fr; }
-  /* Phone portrait: button/chip rows go exactly 5 per line, wrapping down, centered */
+  /* Phone portrait: main/state button rows go exactly 5 per line, wrapping down, centered */
   .state-btn, .cat-btn-main, .cat-tabs a { flex-basis: calc(20% - 0.5rem); }
-  .cat-btn-sub { flex-basis: calc(20% - 0.35rem); }
+  /* Tour-fuel chips: 2 per row — wide enough for single-line labels and,
+     with the row's stretch alignment, one uniform height for all four */
+  .cat-btn-sub { flex: 1 1 calc(50% - 0.35rem); }
   .cat-sub-label { flex-basis: 100%; text-align: center; }
-  .filter-row select, .filter-row .town-search, .filter-row .filter-chip { flex-basis: calc(20% - 0.4rem); }
+  /* Filter controls: 2 per row at ~half width so every label stays fully
+     readable (the old 5-across squeeze truncated them to "All s…", "Ty…") */
+  .filter-row select, .filter-row .town-search, .filter-row .filter-chip { flex: 0 1 calc(50% - 0.4rem); }
 }
 .card {
   background: var(--card); border-radius: var(--radius); overflow: hidden;
@@ -612,8 +622,11 @@ a.game-card:hover { border-color: #ff7518; transform: translateY(-2px); }
   .mobile-search .btn-locate { width: 100%; padding: 0.7rem; font-size: 1rem; }
   .hero-intro p { display: none; }
   .hero-intro h1.hero-title { font-size: 1.6rem; margin-bottom: 0.4rem; }
-  .header-nav { flex-wrap: wrap; justify-content: center; }
-  .header-nav a { white-space: nowrap; }
+  /* Span the header's full content width: in the column header layout the
+     nav otherwise shrink-wraps to its widest row and overflows the edge,
+     clipping "+ Add yours". */
+  .header-nav { flex-wrap: wrap; justify-content: center; align-self: stretch; width: 100%; max-width: 100%; gap: 0.45rem 0.9rem; }
+  .header-nav a { white-space: nowrap; font-size: 0.97rem; }
 }
 
 /* Moment-of-interest email prompt */
