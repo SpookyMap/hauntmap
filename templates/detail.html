@@ -77,6 +77,15 @@
   {% endif %}
   <p class="votes-big">&#x1F383; {{ entry.votes }} vote{{ 's' if entry.votes != 1 }}</p>
 
+  <div class="seen-strip" id="seen-strip" hidden>
+    <p class="seen-text"></p>
+    <div class="seen-bar"><div class="seen-fill"></div></div>
+  </div>
+  <script>
+    hmMarkSeen({{ entry.id }});
+    hmSeenStrip(document.getElementById('seen-strip'), {{ town_pin_ids|tojson }}, {{ entry.town_label|tojson }});
+  </script>
+
   <div class="directions-row">
     <a class="btn-dir" href="https://www.google.com/maps/dir/?api=1&destination={{ entry.lat }},{{ entry.lng }}" target="_blank" rel="noopener">📍 Google Maps</a>
     <a class="btn-dir" href="https://maps.apple.com/?daddr={{ entry.lat }},{{ entry.lng }}" target="_blank" rel="noopener">🍎 Apple Maps</a>

@@ -1058,12 +1058,23 @@ def detail(request: Request, entry_id: int):
     if scare_pick not in SCARE_LEVELS:
         scare_pick = ""
     chain = detail_chain(entry)
+    # Collection loop: ids of every visible pin in this pin's town + category,
+    # so the page can show "You've seen X of Y displays in [Town]" (the
+    # seen-set itself lives in the visitor's localStorage — no accounts).
+    entry_label = extract_city_state(entry["town"] or "") or entry["town"] or ""
+    with get_conn(DB_PATH) as conn:
+        town_pin_ids = [
+            r["id"] for r in conn.execute(
+                "SELECT id, town FROM entries WHERE category = ? AND hidden = 0",
+                (entry["category"],)).fetchall()
+            if (extract_city_state(r["town"] or "") or r["town"] or "") == entry_label
+        ]
     return templates.TemplateResponse(request, "detail.html",
         {"request": request, "entry": entry, "voted": voted, "reported": reported,
          "tips": tips, "scare_counts": scare_counts, "scare_total": scare_total,
          "scare_pick": scare_pick, "next_pin": chain["next_pin"],
          "prev_pin": chain["prev_pin"], "more_near": chain["more_near"],
-         "more_like": chain["more_like"]},
+         "more_like": chain["more_like"], "town_pin_ids": town_pin_ids},
     )
 
 

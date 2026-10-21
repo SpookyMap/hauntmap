@@ -680,3 +680,9 @@ a.game-card:hover { border-color: #ff7518; transform: translateY(-2px); }
 .tiktok-follow-big { font-size: 1.55rem; }
 .tiktok-follow-big img { width: 46px; height: 46px; }
 .tiktok-line { color: #c9bce8; font-size: 0.95rem; margin: 0.55rem 0 0.2rem; }
+
+/* ---- Collection loop: "You've seen X of Y in [Town]" ---- */
+.seen-strip { margin: 0.7rem 0; }
+.seen-text { color: #c9bce8; font-size: 0.85rem; margin: 0 0 0.3rem; }
+.seen-bar { height: 6px; background: rgba(255,255,255,0.12); border-radius: 3px; overflow: hidden; max-width: 340px; }
+.seen-fill { height: 100%; background: #ff7518; border-radius: 3px; }

@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Creepster&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/static/css/style.css?v=20261021e">
+<link rel="stylesheet" href="/static/css/style.css?v=20261021f">
 {% block head %}{% endblock %}
 </head>
 <body>
@@ -163,6 +163,39 @@ function hmLoadTikTok(facade) {
   } else if (window.tiktokEmbed && window.tiktokEmbed.load) {
     try { window.tiktokEmbed.load(); } catch (e) {}
   }
+}
+</script>
+<script>
+// Collection loop (localStorage only, no accounts): remember which pins a
+// visitor has opened and render "You've seen X of Y displays in [Town]"
+// progress strips on pin and town pages. Degrades silently without storage.
+function hmSeenList() {
+  try { return JSON.parse(localStorage.getItem('hm_seen') || '[]'); } catch (e) { return []; }
+}
+function hmMarkSeen(id) {
+  if (!id) return;
+  try {
+    var seen = hmSeenList();
+    if (seen.indexOf(id) === -1) {
+      seen.push(id);
+      if (seen.length > 3000) seen = seen.slice(seen.length - 3000);
+      localStorage.setItem('hm_seen', JSON.stringify(seen));
+    }
+  } catch (e) {}
+}
+function hmSeenStrip(el, ids, label) {
+  if (!el || !ids || !ids.length) return;
+  try {
+    var seen = hmSeenList();
+    var n = 0;
+    for (var i = 0; i < ids.length; i++) if (seen.indexOf(ids[i]) !== -1) n++;
+    if (!n) return;
+    el.hidden = false;
+    el.querySelector('.seen-text').textContent =
+      "You've seen " + n + " of " + ids.length + " displays in " + label;
+    el.querySelector('.seen-fill').style.width =
+      Math.round(100 * n / ids.length) + '%';
+  } catch (e) {}
 }
 </script>
 {# Speculation Rules (Chromium; ignored elsewhere): prefetch same-origin

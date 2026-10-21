@@ -4,6 +4,15 @@
 {% block content %}
 <h1>&#x1F383; Halloween displays in {{ label }}</h1>
 <p class="town-sub">{{ entries|length }} spooky stop{{ 's' if entries|length != 1 }} in {{ label }} — tap any card for directions, or add a few to a custom tour.</p>
+<div class="seen-strip" id="seen-strip" hidden>
+  <p class="seen-text"></p>
+  <div class="seen-bar"><div class="seen-fill"></div></div>
+</div>
+<script>
+  hmSeenStrip(document.getElementById('seen-strip'),
+    [{% for e in entries %}{{ e.id }}{{ ',' if not loop.last }}{% endfor %}],
+    {{ label|tojson }});
+</script>
 
 <div class="signup-strip">
   <h3>&#x1F514; Haunt alerts for {{ label }}</h3>
