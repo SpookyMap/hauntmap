@@ -1338,7 +1338,7 @@ def town_page(request: Request, slug: str):
 def sitemap():
     base = "https://gethauntmap.com"
     urls = ["/", "/map", "/nearby", "/tour", "/diy", "/games", "/leaderboard",
-            "/towns", "/advertise", "/media-kit", "/costume-contest", "/trivia", "/haunt-or-not"]
+            "/towns", "/advertise", "/media-kit", "/costume-contest", "/trivia", "/haunt-or-not", "/fan-art"]
     for t in _towns_with_counts():
         urls.append(f"/towns/{t['slug']}")
     body = ['<?xml version="1.0" encoding="UTF-8"?>',
@@ -1659,6 +1659,170 @@ def costume_vote(cid: int, request: Request):
     return resp
 
 
+# ---------------------------------------------------------------- fan art
+
+FANART_SQL = """CREATE TABLE IF NOT EXISTS fan_art (
+    id INTEGER PRIMARY KEY,
+    title TEXT NOT NULL,
+    artist TEXT,
+    town TEXT,
+    media_path TEXT NOT NULL,
+    thumb_path TEXT,
+    votes INTEGER DEFAULT 0,
+    approved INTEGER DEFAULT 0,
+    created_at TEXT
+)"""
+
+# Bundled starter examples (copied into the upload dir on first use) so the
+# gallery is never empty at launch; clearly labeled as starter examples.
+FANART_SEEDS = (
+    ("fanart_seed1.jpg", "Pumpkin Nights"),
+    ("fanart_seed2.jpg", "Haunted House on the Hill"),
+)
+
+
+def _seed_fanart(conn):
+    if conn.execute("SELECT COUNT(*) FROM fan_art").fetchone()[0]:
+        return
+    for fname, title in FANART_SEEDS:
+        src = BASE_DIR / "static" / "img" / fname
+        if not src.exists():
+            continue
+        name = uuid.uuid4().hex
+        media_rel = f"{name}.jpg"
+        shutil.copy(src, UPLOAD_DIR / media_rel)
+        try:
+            thumb_rel = make_thumb(UPLOAD_DIR / media_rel, name)
+        except (OSError, UnidentifiedImageError):
+            thumb_rel = None
+        conn.execute(
+            "INSERT INTO fan_art (title, artist, town, media_path, thumb_path, votes, approved, created_at) "
+            "VALUES (?, ?, ?, ?, ?, 0, 1, ?)",
+            (title, "HauntMap starter example", None, media_rel, thumb_rel,
+             datetime.now(timezone.utc).isoformat()),
+        )
+
+
+@app.get("/fan-art", response_class=HTMLResponse)
+def fan_art(request: Request):
+    voted = set()
+    for part in request.cookies.get("fanart_votes", "").split(","):
+        if part.strip().isdigit():
+            voted.add(int(part.strip()))
+    with get_conn(DB_PATH) as conn:
+        conn.execute(FANART_SQL)
+        _seed_fanart(conn)
+        rows = conn.execute(
+            "SELECT * FROM fan_art WHERE approved = 1 ORDER BY votes DESC, id DESC"
+        ).fetchall()
+    pieces = []
+    for r in rows:
+        p = dict(r)
+        p["media_url"] = f"/media/{p['media_path']}"
+        p["thumb_url"] = f"/media/{p['thumb_path']}" if p.get("thumb_path") else p["media_url"]
+        p["voted"] = p["id"] in voted
+        pieces.append(p)
+    return templates.TemplateResponse(
+        request, "fan_art.html",
+        {"pieces": pieces, "site_name": SITE_NAME,
+         "error": request.query_params.get("error"),
+         "submitted": request.query_params.get("submitted")},
+    )
+
+
+@app.post("/fan-art/upload")
+async def fanart_upload(
+    title: str = Form(...),
+    artist: str = Form(""),
+    town: str = Form(""),
+    media: UploadFile = File(...),
+):
+    ext = safe_ext(media.filename or "")
+    if ext not in PHOTO_EXTS:
+        return RedirectResponse("/fan-art?error=Please+choose+an+image+(JPG,+PNG+or+WebP).", status_code=303)
+    try:
+        tmp = save_upload(media, MAX_PHOTO_BYTES)
+        try:
+            with Image.open(tmp) as im:
+                im.verify()
+        except (UnidentifiedImageError, OSError):
+            tmp.unlink(missing_ok=True)
+            return RedirectResponse("/fan-art?error=That+file+isn%27t+a+readable+image.", status_code=303)
+        name = uuid.uuid4().hex
+        media_rel = f"{name}{ext}"
+        shutil.move(tmp, UPLOAD_DIR / media_rel)
+        try:
+            thumb_rel = make_thumb(UPLOAD_DIR / media_rel, name)
+        except (OSError, UnidentifiedImageError):
+            (UPLOAD_DIR / media_rel).unlink(missing_ok=True)
+            return RedirectResponse("/fan-art?error=Couldn%27t+process+that+image.", status_code=303)
+    except ValueError:
+        return RedirectResponse("/fan-art?error=That+image+is+too+large+(10+MB+max).", status_code=303)
+    with get_conn(DB_PATH) as conn:
+        conn.execute(FANART_SQL)
+        conn.execute(
+            "INSERT INTO fan_art (title, artist, town, media_path, thumb_path, votes, approved, created_at) "
+            "VALUES (?, ?, ?, ?, ?, 0, 0, ?)",
+            (title.strip()[:120], (artist or "").strip()[:60] or None,
+             (town or "").strip()[:80] or None, media_rel, thumb_rel,
+             datetime.now(timezone.utc).isoformat()),
+        )
+    # Submissions stay PENDING (approved = 0) until Dan approves in admin.
+    return RedirectResponse("/fan-art?submitted=1", status_code=303)
+
+
+@app.post("/fan-art/{fid}/vote")
+def fanart_vote(fid: int, request: Request):
+    voted = set()
+    for part in request.cookies.get("fanart_votes", "").split(","):
+        if part.strip().isdigit():
+            voted.add(int(part.strip()))
+    with get_conn(DB_PATH) as conn:
+        conn.execute(FANART_SQL)
+        row = conn.execute("SELECT votes FROM fan_art WHERE id = ? AND approved = 1", (fid,)).fetchone()
+        if row is None:
+            return JSONResponse({"error": "not found"}, status_code=404)
+        votes = row["votes"]
+        if fid in voted:
+            votes = max(0, votes - 1)
+            voted.discard(fid)
+            now_voted = False
+        else:
+            votes += 1
+            voted.add(fid)
+            now_voted = True
+        conn.execute("UPDATE fan_art SET votes = ? WHERE id = ?", (votes, fid))
+    resp = JSONResponse({"votes": votes, "voted": now_voted})
+    resp.set_cookie("fanart_votes", ",".join(str(v) for v in sorted(voted)),
+                    max_age=60 * 60 * 24 * 120, path="/", samesite="lax")
+    return resp
+
+
+@app.post("/admin/fan-art/{fid}/approve")
+def admin_fanart_approve(fid: int, request: Request):
+    if not is_admin(request):
+        return RedirectResponse("/admin", status_code=303)
+    with get_conn(DB_PATH) as conn:
+        conn.execute(FANART_SQL)
+        conn.execute("UPDATE fan_art SET approved = 1 WHERE id = ?", (fid,))
+    return RedirectResponse("/admin", status_code=303)
+
+
+@app.post("/admin/fan-art/{fid}/delete")
+def admin_fanart_delete(fid: int, request: Request):
+    if not is_admin(request):
+        return RedirectResponse("/admin", status_code=303)
+    with get_conn(DB_PATH) as conn:
+        conn.execute(FANART_SQL)
+        row = conn.execute("SELECT media_path, thumb_path FROM fan_art WHERE id = ?", (fid,)).fetchone()
+        if row:
+            for rel in (row["media_path"], row["thumb_path"]):
+                if rel:
+                    (UPLOAD_DIR / rel).unlink(missing_ok=True)
+            conn.execute("DELETE FROM fan_art WHERE id = ?", (fid,))
+    return RedirectResponse("/admin", status_code=303)
+
+
 # ---------------------------------------------------------------- admin
 
 @app.get("/admin", response_class=HTMLResponse)
@@ -1674,9 +1838,18 @@ def admin(request: Request):
         subs = conn.execute(
             "SELECT email, location, created_at FROM subscribers ORDER BY created_at DESC").fetchall()
         sub_count = len(subs)
+        conn.execute(FANART_SQL)
+        fanart_pending = [dict(r) for r in conn.execute(
+            "SELECT * FROM fan_art WHERE approved = 0 ORDER BY created_at DESC").fetchall()]
+        fanart_live = [dict(r) for r in conn.execute(
+            "SELECT * FROM fan_art WHERE approved = 1 ORDER BY created_at DESC").fetchall()]
+        for p in fanart_pending + fanart_live:
+            p["thumb_url"] = (f"/media/{p['thumb_path']}" if p.get("thumb_path")
+                              else f"/media/{p['media_path']}")
     return templates.TemplateResponse(request, "admin.html",
         {"request": request, "logged_in": True, "flagged": flagged,
-         "all_entries": all_entries, "subs": subs, "sub_count": sub_count, "error": None},
+         "all_entries": all_entries, "subs": subs, "sub_count": sub_count, "error": None,
+         "fanart_pending": fanart_pending, "fanart_live": fanart_live},
     )
 
 

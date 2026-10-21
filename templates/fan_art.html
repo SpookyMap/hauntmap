@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}Fan Art Gallery — {{ site_name }}{% endblock %}
+{% block content %}
+<section class="contest-wrap">
+  <h1 class="contest-title">🎨 HauntMap Fan Art Gallery</h1>
+  <p class="contest-sub">Spooky creations from the HauntMap community — drawings, paintings, digital art and carved pumpkins. Share yours below, and tap ❤️ on the pieces you love. New submissions appear here once they're approved.</p>
+
+  {% if submitted %}<p class="fanart-thanks">🎃 Thanks! Your artwork was submitted and is <strong>pending approval</strong> — it'll show up in the gallery once it's reviewed.</p>{% endif %}
+  {% if error %}<p class="contest-error">{{ error }}</p>{% endif %}
+
+  <form class="contest-form" method="post" action="/fan-art/upload" enctype="multipart/form-data">
+    <h2>Share your artwork</h2>
+    <label>Artwork image (required)
+      <input type="file" name="media" accept="image/*" required>
+    </label>
+    <label>Title
+      <input type="text" name="title" maxlength="120" placeholder="e.g. Midnight Pumpkin" required>
+    </label>
+    <label>Artist name
+      <input type="text" name="artist" maxlength="60" placeholder="e.g. Sam from Salem">
+    </label>
+    <label>Town (optional)
+      <input type="text" name="town" maxlength="80" placeholder="e.g. Hackensack, NJ">
+    </label>
+    <button type="submit" class="btn-primary">🎨 Submit artwork</button>
+  </form>
+
+  <h2 class="contest-gallery-title">The gallery — vote for your favorites ❤️</h2>
+  {% if pieces %}
+  <div class="contest-grid">
+    {% for p in pieces %}
+    <article class="contest-card">
+      <img src="{{ p.thumb_url }}" alt="{{ p.title }}" loading="lazy">
+      <div class="contest-card-body">
+        <strong>{{ p.title }}</strong>
+        {% if p.artist %}<span class="contest-by">by {{ p.artist }}{% if p.town %} · {{ p.town }}{% endif %}</span>{% elif p.town %}<span class="contest-by">{{ p.town }}</span>{% endif %}
+        <button type="button" class="contest-vote fanart-vote{% if p.voted %} voted{% endif %}" data-id="{{ p.id }}">
+          ❤️{% if p.votes %} <span class="cv-count">{{ p.votes }}</span>{% else %} <span class="cv-count" hidden></span>{% endif %} · <span class="cv-label">{% if p.voted %}Voted — tap to undo{% else %}Vote{% endif %}</span>
+        </button>
+      </div>
+    </article>
+    {% endfor %}
+  </div>
+  {% else %}
+  <p class="contest-empty">No artwork yet — be the first piece in the gallery! 🎨</p>
+  {% endif %}
+</section>
+<style>
+.fanart-thanks { background: #17351c; color: #a7e8ae; padding: 0.6rem 0.9rem; border-radius: 8px; text-align: center; max-width: 560px; margin: 0 auto 1rem; }
+</style>
+<script>
+document.querySelectorAll('.fanart-vote').forEach(function (btn) {
+  btn.addEventListener('click', function () {
+    fetch('/fan-art/' + btn.dataset.id + '/vote', {method: 'POST'})
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        if (d.error) return;
+        var c = btn.querySelector('.cv-count');
+        c.textContent = d.votes;
+        c.hidden = !(d.votes > 0);
+        btn.querySelector('.cv-label').textContent = d.voted ? 'Voted — tap to undo' : 'Vote';
+        btn.classList.toggle('voted', !!d.voted);
+      });
+  });
+});
+</script>
+{% endblock %}

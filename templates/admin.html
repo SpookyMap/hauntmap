@@ -42,6 +42,45 @@
 <p class="muted">Nothing flagged. Spooky season is peaceful.</p>
 {% endif %}
 
+<h2>&#x1F3A8; Fan art — pending approval ({{ fanart_pending|length }})</h2>
+{% if fanart_pending %}
+<div class="admin-list">
+  {% for p in fanart_pending %}
+  <div class="admin-row">
+    <img src="{{ p.thumb_url }}" alt="{{ p.title }}" style="width:52px;height:52px;object-fit:cover;border-radius:8px;">
+    <span><strong>{{ p.title }}</strong><br>
+    <span class="meta">by {{ p.artist or '—' }}{% if p.town %} &middot; {{ p.town }}{% endif %}</span></span>
+    <span class="admin-actions">
+      <form method="post" action="/admin/fan-art/{{ p.id }}/approve" class="inline-form"><button class="btn btn-small">Approve</button></form>
+      <form method="post" action="/admin/fan-art/{{ p.id }}/delete" class="inline-form"
+            onsubmit="return confirm('Permanently delete this fan art and its media?');"><button class="btn btn-small btn-danger">Delete</button></form>
+    </span>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<p class="muted">No fan art waiting for approval.</p>
+{% endif %}
+
+<h2>&#x1F3A8; Fan art — live in gallery ({{ fanart_live|length }})</h2>
+{% if fanart_live %}
+<div class="admin-list">
+  {% for p in fanart_live %}
+  <div class="admin-row">
+    <img src="{{ p.thumb_url }}" alt="{{ p.title }}" style="width:52px;height:52px;object-fit:cover;border-radius:8px;">
+    <span><strong>{{ p.title }}</strong><br>
+    <span class="meta">by {{ p.artist or '—' }}{% if p.town %} &middot; {{ p.town }}{% endif %} &middot; {{ p.votes }} votes</span></span>
+    <span class="admin-actions">
+      <form method="post" action="/admin/fan-art/{{ p.id }}/delete" class="inline-form"
+            onsubmit="return confirm('Permanently delete this fan art and its media?');"><button class="btn btn-small btn-danger">Delete</button></form>
+    </span>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<p class="muted">No approved fan art yet.</p>
+{% endif %}
+
 <h2>All entries ({{ all_entries|length }})</h2>
 <div class="admin-list">
   {% for e in all_entries %}
