@@ -982,3 +982,9 @@ a.game-card:hover { border-color: #ff7518; transform: translateY(-2px); }
 @media (max-width: 760px) {
   .hook-line { display: block; }
 }
+
+/* Header goes LIGHT: lavender band (Dan, Oct 21). Hook + nav labels flip
+   to deep purple for contrast; red tagline unchanged. */
+.site-header { background: linear-gradient(180deg, #f0eaff 0%, #e3d9ff 100%); }
+.header-hook { color: #2a1352; text-shadow: none; }
+.site-header .navbtn span { color: #2a1352; }
