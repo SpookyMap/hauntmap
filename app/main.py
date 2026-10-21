@@ -1358,7 +1358,7 @@ def sitemap():
 # Business sponsor packages (the original pitched tiers — quotes honored).
 BUSINESS_PACKAGES = [
     {"id": "featured", "name": "Featured", "price": 250,
-     "blurb": "Your business in front of local Halloween hunters.",
+     "blurb": "Your business in front of local Halloween haunters.",
      "features": ["Logo + link in the Featured Sponsors row on the homepage",
                   "Featured pin for your location",
                   "Runs through Halloween — and on the Jolly Map through Christmas"]},
