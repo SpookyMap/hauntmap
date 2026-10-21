@@ -1027,3 +1027,16 @@ a.game-card:hover { border-color: #ff7518; transform: translateY(-2px); }
    (var(--accent) orange) that beat every parent color all day — set them directly. */
 .hook-line { color: #c9a7ff; font-size: inherit; }
 .hook-line.alt { color: #f5efe0; }
+
+/* Header larger + spanning (Dan), closer in red */
+.hook-line.alt { color: #e01e26; }
+@media (min-width: 761px) {
+  .site-header { padding: 0.6rem 2rem 0.7rem; }
+  .brand-logo { height: 120px; width: 120px; max-height: 120px; max-width: 120px; }
+  .header-hook { font-size: 1.6rem; text-align: center; }
+  .header-nav { justify-content: space-between; width: 100%; }
+  .navbtn img { width: 60px; height: 60px; }
+  .navbtn span { font-size: 0.72rem; }
+  .header-tagline { font-size: 1.75rem; }
+  .header-wolf { height: 2em; }
+}
