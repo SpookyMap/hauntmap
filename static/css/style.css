@@ -1045,3 +1045,6 @@ a.game-card:hover { border-color: #ff7518; transform: translateY(-2px); }
 @media (min-width: 761px) {
   .header-hook { font-size: clamp(2rem, 3.4vw, 3.2rem); padding-left: 0; letter-spacing: 0.01em; }
 }
+
+/* Tagline font: Nosifer drip scrapped -> Creepster, same as the headline (Dan) */
+.header-tagline { font-family: "Creepster", cursive; letter-spacing: 0.02em; }
