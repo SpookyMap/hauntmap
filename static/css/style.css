@@ -1061,3 +1061,8 @@ a.game-card:hover { border-color: #ff7518; transform: translateY(-2px); }
   .hook-line.alt { white-space: nowrap; }
   .header-wolf { height: 1.8em; width: 1.8em; vertical-align: -0.35em; margin: 0 0 0 0.15em; }
 }
+
+/* Phone: headline wider, fills the banner (Dan) */
+@media (max-width: 760px) {
+  .header-hook { font-size: 1.38rem; }
+}
