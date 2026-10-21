@@ -779,3 +779,37 @@ a.game-card:hover { border-color: #ff7518; transform: translateY(-2px); }
   letter-spacing: 0.01em;
   line-height: 1.25;
 }
+
+/* Sponsor BILLBOARD (Dan, Oct 21): white panel, black frame, black
+   Apple-style type — the sponsor slot should look like a billboard. */
+.sponsor-section {
+  background: #ffffff;
+  border: 3px solid #0a0a0a;
+  border-radius: 14px;
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.5);
+  padding: 1.9rem 1.4rem 1.5rem;
+  margin: 1.1rem 0;
+  color: #111111;
+}
+.sponsor-section h2 { color: #111111; font-size: 0.95rem; letter-spacing: 0.14em; }
+.sponsor-sub { display: block; color: #555960; font-size: 1rem; margin: 0.2rem 0 1.1rem; }
+.sponsor-card {
+  background: #ffffff;
+  border: 1px solid #e4e4e7;
+  color: #111111;
+  box-shadow: none;
+}
+.sponsor-card:hover { border-color: #111111; }
+.sponsor-name {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", Inter, "Helvetica Neue", "Segoe UI", Arial, sans-serif;
+  color: #111111;
+  letter-spacing: -0.02em;
+  font-weight: 800;
+}
+.sponsor-text { color: #33373d; }
+.sponsor-tier { color: #6e7278; border-color: #d9d9de; }
+.sponsor-card.tier-title { border: none; background: #ffffff; }
+.sponsor-card.tier-title .sponsor-name { font-size: clamp(2.3rem, 7vw, 3.3rem); line-height: 1.04; }
+.sponsor-card.tier-title .sponsor-text { font-size: 1.3rem; color: #33373d; }
+.sponsor-cta { color: #111111; }
+.sponsor-cta a { color: #111111; font-weight: 700; text-decoration: underline; }
