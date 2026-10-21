@@ -673,3 +673,10 @@ a.game-card:hover { border-color: #ff7518; transform: translateY(-2px); }
 #hm-prompt .hm-prompt-x { position: absolute; top: 0.35rem; right: 0.55rem; background: none; border: none; color: #9a8fb8; font-size: 1.25rem; cursor: pointer; }
 #hm-prompt .hm-prompt-done { color: #7ee081; font-weight: 700; margin: 0.2rem 0; }
 .check-label { display: flex; gap: 0.5rem; align-items: center; font-size: 0.95rem; }
+
+/* ---- Homepage TikTok promo (replaces email signup strip) ---- */
+.tiktok-promo { text-align: center; }
+.tiktok-promo .tiktok-follow { margin-top: 0.4rem; }
+.tiktok-follow-big { font-size: 1.55rem; }
+.tiktok-follow-big img { width: 46px; height: 46px; }
+.tiktok-line { color: #c9bce8; font-size: 0.95rem; margin: 0.55rem 0 0.2rem; }

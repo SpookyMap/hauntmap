@@ -15,23 +15,9 @@
   <p>💀 Leave a like on your favorite haunts and drop a comment about the ones you love!</p>
 </div>
 
-<div class="signup-strip">
-  {% if request.query_params.get('subscribed') %}
-  <p class="newsletter-success">&#x1F389; You're in! You'll be first to know when new haunts drop near you — and first in line for the Jolly Map &#x1F384;</p>
-  {% else %}
-  <h3>&#x1F514; Haunt alerts for <span class="js-town-name">your town</span></h3>
-  <p>Get the best displays in <span class="js-town-name">your town</span> every week — plus the &#x1F384; Jolly Map when the season flips. One list, no spam, unsubscribe anytime.</p>
-  <form method="post" action="/subscribe" class="newsletter-form">
-    <input type="email" name="email" placeholder="you@email.com" required>
-    <input type="text" name="location" class="js-town" placeholder="Your town">
-    <input type="text" name="zip" placeholder="ZIP" inputmode="numeric" autocomplete="postal-code">
-    <input type="hidden" name="interest" value="Halloween">
-    <button type="submit" class="btn">Notify me</button>
-  </form>
-  {% if request.query_params.get('sub_error') %}
-  <p class="newsletter-error">Please enter a valid email address.</p>
-  {% endif %}
-  {% endif %}
+<div class="signup-strip tiktok-promo">
+  <a class="tiktok-follow tiktok-follow-big" href="https://www.tiktok.com/@gethauntmap" target="_blank" rel="noopener"><img src="/static/img/tiktok_logo.png" alt="TikTok"><span>Follow us on TikTok</span><span class="tt-handle">@GetHauntmap</span></a>
+  <p class="tiktok-line">Follow @GetHauntmap on TikTok — new haunts daily &#x1F383;</p>
 </div>
 
 <div class="tiktok-strip">
