@@ -769,3 +769,12 @@ a.game-card:hover { border-color: #ff7518; transform: translateY(-2px); }
 .hero-intro {
   background: linear-gradient(rgba(9, 5, 17, 0.60), rgba(9, 5, 17, 0.74)), url('/static/img/hero_backdrop_tall.webp') center top / 100% 100% no-repeat, #0b0614;
 }
+
+/* Header hook: Fredoka (Dan, Oct 21 — Apple stack read as a plain Shaker
+   mission statement); sentences flow as one tight paragraph, no <br> gap. */
+.header-hook {
+  font-family: "Fredoka", "Arial Rounded MT Bold", sans-serif;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  line-height: 1.25;
+}
