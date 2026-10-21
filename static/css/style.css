@@ -695,3 +695,11 @@ a.game-card:hover { border-color: #ff7518; transform: translateY(-2px); }
   .header-nav a.navbtn { font-size: 0.62rem; gap: 0.15rem; }
   .header-nav a.navbtn img { width: 40px; height: 40px; }
 }
+
+/* ---- Tonight's Display (homepage daily hook) ---- */
+.tonight-card { display: flex; gap: 0.9rem; align-items: center; background: linear-gradient(160deg, #241a44, #17122b); border: 2px solid #c9a86a; border-radius: 14px; padding: 0.7rem 0.9rem; margin: 1rem 0; text-decoration: none; }
+.tonight-card img { width: 92px; height: 92px; object-fit: cover; border-radius: 10px; flex: 0 0 auto; }
+.tonight-body { display: flex; flex-direction: column; gap: 0.15rem; }
+.tonight-kicker { color: #ff7518; font-weight: 800; font-size: 0.8rem; letter-spacing: 0.03em; text-transform: uppercase; }
+.tonight-title { color: #FFF8E7; font-weight: 800; font-size: 1.15rem; line-height: 1.25; }
+.tonight-meta { color: #c9bce8; font-size: 0.85rem; }

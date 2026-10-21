@@ -611,12 +611,36 @@ def home(request: Request, sort: str = "top", town: str = "", town_search: str =
             "SELECT * FROM sponsors WHERE is_active = 1 ORDER BY "
             "CASE tier WHEN 'title' THEN 0 WHEN 'premium' THEN 1 ELSE 2 END, created_at").fetchall()]
     voted = {k[6:] for k in request.cookies if k.startswith("voted_")}
+    # Tonight's Display: one deterministic pin per day (ET date), rotating
+    # through real-photo pins — prefer spooky/creepy with votes, then any
+    # voted/photo halloween pin, then any photo pin. No new tables.
+    try:
+        from zoneinfo import ZoneInfo
+        today_et = datetime.now(ZoneInfo("America/New_York")).date()
+    except Exception:
+        today_et = datetime.now(timezone.utc).date()
+    _photo = ("hidden = 0 AND media_type = 'photo' AND media_path IS NOT NULL "
+              "AND TRIM(media_path) != ''")
+    with get_conn(DB_PATH) as conn:
+        pool = [row_to_dict(r) for r in conn.execute(
+            f"SELECT * FROM entries WHERE {_photo} AND category = 'halloween' "
+            "AND scare_level IN ('spooky', 'creepy') AND votes > 0 ORDER BY id").fetchall()]
+        if not pool:
+            pool = [row_to_dict(r) for r in conn.execute(
+                f"SELECT * FROM entries WHERE {_photo} AND category = 'halloween' "
+                "ORDER BY id").fetchall()]
+        if not pool:
+            pool = [row_to_dict(r) for r in conn.execute(
+                f"SELECT * FROM entries WHERE {_photo} ORDER BY id").fetchall()]
+    tonight = pool[today_et.toordinal() % len(pool)] if pool else None
+    tonight_label = today_et.strftime("%A, %B ") + str(today_et.day)
     return templates.TemplateResponse(request, "index.html",
         {"request": request, "entries": entries, "sort": sort,
          "town": town, "towns": towns(cat, state), "states": states(cat),
          "state": state, "region": region, "voted": voted,
          "cat": cat, "cat_labels": CAT_LABELS, "cat_emoji": CAT_EMOJI,
          "scare": scare, "tag": tag, "video": "1" if video.strip() == "1" else "",
+         "tonight": tonight, "tonight_label": tonight_label,
          "sponsors": sponsors,
          "tier_labels": {"featured": "Featured Sponsor", "premium": "Premium Sponsor", "title": "Title Sponsor"}},
     )

@@ -15,6 +15,17 @@
   <p>💀 Leave a like on your favorite haunts and drop a comment about the ones you love!</p>
 </div>
 
+{% if tonight %}
+<a class="tonight-card" href="/d/{{ tonight.id }}">
+  <img src="{{ tonight.thumb_url }}" alt="{{ tonight.title }}" loading="lazy">
+  <span class="tonight-body">
+    <span class="tonight-kicker">&#x1F383; Tonight's Display &middot; {{ tonight_label }}</span>
+    <span class="tonight-title">{{ tonight.title }}</span>
+    <span class="tonight-meta">{{ tonight.town_label }}{% if tonight.votes %} &middot; &#x1F383; {{ tonight.votes }} vote{{ 's' if tonight.votes != 1 }}{% endif %}</span>
+  </span>
+</a>
+{% endif %}
+
 <div class="signup-strip tiktok-promo">
   <a class="tiktok-follow tiktok-follow-big" href="https://www.tiktok.com/@gethauntmap" target="_blank" rel="noopener"><img src="/static/img/tiktok_logo.png" alt="TikTok"><span>Follow us on TikTok</span><span class="tt-handle">@GetHauntmap</span></a>
   <p class="tiktok-line">Follow @GetHauntmap on TikTok — new haunts daily &#x1F383;</p>
