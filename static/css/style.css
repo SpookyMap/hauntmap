@@ -995,3 +995,7 @@ a.game-card:hover { border-color: #ff7518; transform: translateY(-2px); }
 .site-header { background: linear-gradient(180deg, #1e1038, #14092b); }
 .header-hook { color: #f5efe0; text-shadow: 0 3px 0 rgba(0, 0, 0, 0.45), 0 6px 18px rgba(0, 0, 0, 0.6); }
 .site-header .navbtn span { color: #cdbcf5; }
+
+/* Hero title off orange (Dan): bone cream + lavender */
+.hero-intro h1.hero-title { color: #f5efe0; }
+.hero-title-alt { color: #c9a7ff; }
