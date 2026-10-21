@@ -1022,3 +1022,8 @@ a.game-card:hover { border-color: #ff7518; transform: translateY(-2px); }
   .navbtn span { font-size: 0.66rem; }
   .header-tagline { font-size: 1.45rem; margin-top: 0.1rem; }
 }
+
+/* FORCED hook colors (Dan): the .hook-line spans carry their own color rule
+   (var(--accent) orange) that beat every parent color all day — set them directly. */
+.hook-line { color: #c9a7ff; font-size: inherit; }
+.hook-line.alt { color: #f5efe0; }
