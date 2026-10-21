@@ -728,7 +728,7 @@ a.game-card:hover { border-color: #ff7518; transform: translateY(-2px); }
 
 /* Creepy hero backdrop + visible intro on all screens (Dan, Oct 21) */
 .hero-intro {
-  background: linear-gradient(rgba(9, 5, 17, 0.66), rgba(9, 5, 17, 0.86)), url('/static/img/hero_creepy.jpg') center 38% / cover no-repeat;
+  background: linear-gradient(rgba(9, 5, 17, 0.66), rgba(9, 5, 17, 0.86)), url('/static/img/hero_creepy2.jpg') center 38% / cover no-repeat;
   border: 1px solid rgba(255, 117, 24, 0.25);
   border-radius: 18px;
   max-width: 780px;
