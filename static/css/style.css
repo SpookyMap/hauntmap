@@ -759,3 +759,13 @@ a.game-card:hover { border-color: #ff7518; transform: translateY(-2px); }
 .hero-intro {
   background: linear-gradient(rgba(9, 5, 17, 0.60), rgba(9, 5, 17, 0.74)), url('/static/img/hero_creepy2.jpg') center top / 100% auto repeat-y, #0b0614;
 }
+
+/* Landscape phones: no ghost photo in the header (Dan, Oct 21) */
+@media (orientation: landscape) and (max-height: 500px) {
+  .header-spooky { display: none; }
+}
+
+/* Hero backdrop: four unique scenes stacked behind the four paragraphs (Dan, Oct 21) */
+.hero-intro {
+  background: linear-gradient(rgba(9, 5, 17, 0.60), rgba(9, 5, 17, 0.74)), url('/static/img/hero_backdrop_tall.webp') center top / 100% 100% no-repeat, #0b0614;
+}
