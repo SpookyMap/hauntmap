@@ -737,3 +737,20 @@ a.game-card:hover { border-color: #ff7518; transform: translateY(-2px); }
   margin: 0.6rem auto 1rem;
   box-shadow: 0 12px 34px rgba(0, 0, 0, 0.45);
 }
+
+/* Mobile nav: clean 4-over-4 grid (Dan, Oct 21 — was wrapping 6+2) */
+@media (max-width: 760px) {
+  .header-nav {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    justify-items: center;
+    row-gap: 0.55rem;
+  }
+}
+
+/* Hero backdrop visibility (Dan, Oct 21): scene across the top of the block,
+   fading to near-solid so paragraphs stay readable; the old cover+heavy
+   overlay buried the scene on tall phone cards. */
+.hero-intro {
+  background: linear-gradient(rgba(9, 5, 17, 0.42), rgba(9, 5, 17, 0.94) 62%), url('/static/img/hero_creepy2.jpg') center top / 100% auto no-repeat, #0b0614;
+}
