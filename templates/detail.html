@@ -8,14 +8,21 @@
 {% endblock %}
 {% block content %}
 <article class="detail">
-  {% if entry.media_path %}
+  {% if entry.tiktok_url and '/video/' in entry.tiktok_url %}
+  {# A TikTok video URL is the primary media — render the playable embed even
+     when the entry also has a photo (the photo stays as the feed thumbnail).
+     It also wins over an uploaded video file. Non-/video/ TikTok URLs
+     (e.g. live streams) fall through to the photo/video below. #}
   <div class="detail-media">
-    {% if entry.media_type == 'video' and entry.tiktok_url %}
     <blockquote class="tiktok-embed" cite="{{ entry.tiktok_url }}" data-video-id="{{ entry.tiktok_url.split('/video/')[1].split('?')[0] }}" style="max-width: 605px;min-width: 325px;">
       <section><a href="{{ entry.tiktok_url }}" target="_blank">Watch on TikTok</a></section>
     </blockquote>
     <script async src="https://www.tiktok.com/embed.js"></script>
-    {% elif entry.media_type == 'video' %}
+    {% if entry.is_sample %}<span class="sample-badge">Sample</span>{% endif %}
+  </div>
+  {% elif entry.media_path %}
+  <div class="detail-media">
+    {% if entry.media_type == 'video' %}
     <video src="{{ entry.media_url }}" {% if entry.thumb_path %}poster="{{ entry.thumb_url }}"{% endif %} controls playsinline preload="metadata"></video>
     {% else %}
     <img src="{{ entry.media_url }}" alt="{{ entry.title }}">
