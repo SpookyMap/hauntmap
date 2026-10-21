@@ -1040,3 +1040,8 @@ a.game-card:hover { border-color: #ff7518; transform: translateY(-2px); }
   .header-tagline { font-size: 1.75rem; }
   .header-wolf { height: 2em; }
 }
+
+/* Hook truly spans the header on desktop (Dan) */
+@media (min-width: 761px) {
+  .header-hook { font-size: clamp(2rem, 3.4vw, 3.2rem); padding-left: 0; letter-spacing: 0.01em; }
+}
