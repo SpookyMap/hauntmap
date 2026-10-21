@@ -371,6 +371,19 @@ a { color: var(--accent); }
 .rail { display: flex; gap: 0.7rem; overflow-x: auto; padding-bottom: 0.5rem; scroll-snap-type: x proximity; -webkit-overflow-scrolling: touch; }
 .rail-card { flex: 0 0 218px; scroll-snap-align: start; }
 .chain-nav { display: flex; justify-content: space-between; gap: 0.7rem; margin: 1.2rem 0 0.4rem; }
+/* Watch feed: vertical snap-scroll of footage pins */
+.watch-sub { color: var(--muted); }
+.watch-feed { display: grid; gap: 1.1rem; }
+.watch-slide {
+  background: var(--card); border: 1px solid #33254f; border-radius: var(--radius);
+  overflow: hidden; scroll-snap-align: start;
+}
+.watch-slide .tt-facade img { width: 100%; display: block; max-height: 62vh; object-fit: contain; background: #0d0916; }
+.watch-slide video { width: 100%; display: block; max-height: 62vh; background: #0d0916; }
+.watch-meta { padding: 0.7rem 0.9rem 0.95rem; }
+.watch-meta h2 { font-size: 1.05rem; margin: 0 0 0.25rem; }
+.watch-meta h2 a { color: var(--ink); text-decoration: none; }
+.watch-actions { margin: 0.55rem 0 0; }
 .detail-media img, .detail-media video { width: 100%; display: block; max-height: 70vh; object-fit: contain; background: #0d0916; }
 .votes-big { font-size: 1.3rem; font-weight: 800; color: var(--accent); }
 .detail-actions { margin: 1rem 0; }

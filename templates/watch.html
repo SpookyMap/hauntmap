@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Watch &middot; {{ site_name }}{% endblock %}
+{% block content %}
+<h1>&#x1F3AC; Watch — real haunt footage</h1>
+<p class="watch-sub">{{ entries|length }} displays with actual video. Keep scrolling — the next one is always one swipe away. Tap a poster to play it right here.</p>
+<div class="watch-feed">
+  {% for e in entries %}
+  <section class="watch-slide">
+    {% if e.tiktok_url and '/video/' in e.tiktok_url %}
+    {% set tt_id = e.tiktok_url.split('/video/')[1].split('?')[0] %}
+    <div class="tt-facade" data-tt-url="{{ e.tiktok_url }}" data-tt-id="{{ tt_id }}" role="button" tabindex="0" aria-label="Play TikTok video">
+      {% if e.thumb_url %}
+      <img src="{{ e.thumb_url }}" alt="{{ e.title }}" loading="lazy">
+      {% else %}
+      <div class="tt-facade-blank">&#x1F383;</div>
+      {% endif %}
+      <span class="tt-play">&#x25B6;</span>
+      <span class="tt-facade-label">&#x1F3B5; Tap to play video</span>
+    </div>
+    {% elif e.media_type == 'video' %}
+    <video src="{{ e.media_url }}" {% if e.thumb_path %}poster="{{ e.thumb_url }}"{% endif %} controls playsinline preload="none"></video>
+    {% endif %}
+    <div class="watch-meta">
+      <h2><a href="/d/{{ e.id }}">{{ e.title }}</a></h2>
+      <p class="meta">{{ e.town_label }}{% if e.display_name %} &middot; {{ e.display_name }}{% endif %}{% if e.votes %} &middot; &#x1F383; {{ e.votes }} vote{{ 's' if e.votes != 1 }}{% endif %}</p>
+      <p class="watch-actions"><a class="btn btn-small" href="/d/{{ e.id }}">View pin &rarr;</a></p>
+    </div>
+  </section>
+  {% else %}
+  <div class="empty">
+    <p class="empty-emoji">&#x1F3AC;</p>
+    <p>No footage yet — check back soon.</p>
+  </div>
+  {% endfor %}
+</div>
+<script>
+document.querySelectorAll('.watch-slide .tt-facade').forEach(function (f) {
+  f.addEventListener('click', function () { hmLoadTikTok(f); });
+  f.addEventListener('keydown', function (ev) {
+    if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); hmLoadTikTok(f); }
+  });
+});
+</script>
+<style>
+  /* Page-local: gentle snap so each slide settles into place while scrolling */
+  html { scroll-snap-type: y proximity; }
+</style>
+{% endblock %}

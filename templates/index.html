@@ -144,6 +144,7 @@
       <option value="ticketed" {% if tag == 'ticketed' %}selected{% endif %}>Ticketed admission</option>
     </select>
     <a href="/?cat={{ cat }}{% if sort != 'top' %}&sort={{ sort }}{% endif %}{% if town %}&town={{ town }}{% endif %}{% if state %}&state={{ state }}{% endif %}{% if region %}&region={{ region }}{% endif %}{% if scare %}&scare={{ scare }}{% endif %}{% if tag %}&tag={{ tag }}{% endif %}{% if not video %}&video=1{% endif %}" class="filter-chip {% if video %}active{% endif %}">&#x1F3AC; Has video</a>
+    <a href="/watch" class="filter-chip">&#x1F3AC; Watch feed</a>
     </div>
   </form>
 </div>
