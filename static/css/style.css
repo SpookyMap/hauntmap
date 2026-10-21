@@ -961,3 +961,11 @@ a.game-card:hover { border-color: #ff7518; transform: translateY(-2px); }
 @media (max-width: 600px) {
   .header-wolf { right: 0.1rem; bottom: -0.55rem; }
 }
+
+/* Frankenstein at the end of the tagline (Dan, Oct 21) */
+.header-frank {
+  height: 2.5em;
+  width: auto;
+  vertical-align: -0.72em;
+  margin-left: 0.3rem;
+}
