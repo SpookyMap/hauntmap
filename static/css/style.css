@@ -932,3 +932,11 @@ a.game-card:hover { border-color: #ff7518; transform: translateY(-2px); }
 @media (max-width: 600px) {
   .header-hook { font-size: 1.12rem; }
 }
+
+/* Howling wolf at the end of the header (Dan, Oct 21) */
+.header-wolf {
+  height: 2.3em;
+  width: auto;
+  vertical-align: -0.62em;
+  margin-left: 0.35rem;
+}
