@@ -432,7 +432,8 @@ def make_video_poster(src: Path, dest_name: str) -> str | None:
 
 @app.get("/", response_class=HTMLResponse)
 def home(request: Request, sort: str = "top", town: str = "", town_search: str = "",
-         state: str = "", region: str = "", cat: str = "halloween", scare: str = "", tag: str = ""):
+         state: str = "", region: str = "", cat: str = "halloween", scare: str = "", tag: str = "",
+         video: str = ""):
     cat = cat if cat in CATEGORIES else "halloween"
     sort = sort if sort in ("top", "new") else "top"
     # text search takes priority over dropdown
@@ -523,6 +524,13 @@ def home(request: Request, sort: str = "top", town: str = "", town_search: str =
     if tag in ("animatronics", "inflatables", "handmade", "walkthrough", "projector", "lights", "music", "street-wide", "multi-house", "ticketed", "2025"):
         query += " AND (',' || COALESCE(tags,'') || ',') LIKE ?"
         params.append(f"%,{tag},%")
+    if video.strip() == "1":
+        # "Has video": actual footage only — a TikTok embed/link or an
+        # uploaded video file; photo-only pins drop out.
+        query += (" AND ((tiktok_url IS NOT NULL AND TRIM(tiktok_url) != '')"
+                  " OR LOWER(media_path) LIKE '%.mp4'"
+                  " OR LOWER(media_path) LIKE '%.webm'"
+                  " OR LOWER(media_path) LIKE '%.mov')")
     query += f" ORDER BY {order} LIMIT 100"
     with get_conn(DB_PATH) as conn:
         entries = [row_to_dict(r) for r in conn.execute(query, params).fetchall()]
@@ -535,7 +543,8 @@ def home(request: Request, sort: str = "top", town: str = "", town_search: str =
          "town": town, "towns": towns(cat, state), "states": states(cat),
          "state": state, "region": region, "voted": voted,
          "cat": cat, "cat_labels": CAT_LABELS, "cat_emoji": CAT_EMOJI,
-         "scare": scare, "tag": tag, "sponsors": sponsors,
+         "scare": scare, "tag": tag, "video": "1" if video.strip() == "1" else "",
+         "sponsors": sponsors,
          "tier_labels": {"featured": "Featured Sponsor", "premium": "Premium Sponsor", "title": "Title Sponsor"}},
     )
 

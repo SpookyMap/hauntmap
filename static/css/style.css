@@ -120,6 +120,12 @@ a { color: var(--accent); }
   border-radius: 999px; padding: 0.4rem 0.8rem; font-size: 0.85rem; flex: 1 1 160px; min-width: 0;
 }
 .filter-row .town-search { flex: 1 1 160px; min-width: 0; width: auto; }
+.filter-chip {
+  background: var(--bg2); color: var(--muted); border: 1px solid #33254f;
+  border-radius: 999px; padding: 0.4rem 0.8rem; font-size: 0.85rem;
+  text-decoration: none; text-align: center; flex: 1 1 160px; min-width: 0;
+}
+.filter-chip.active { color: var(--ink); border-color: var(--accent); background: #1a1030; }
 .book-banner {
   margin-top: 1rem; display: flex; justify-content: center;
 }
@@ -279,7 +285,7 @@ a { color: var(--accent); }
   .state-btn, .cat-btn-main, .cat-tabs a { flex-basis: calc(20% - 0.5rem); }
   .cat-btn-sub { flex-basis: calc(20% - 0.35rem); }
   .cat-sub-label { flex-basis: 100%; text-align: center; }
-  .filter-row select, .filter-row .town-search { flex-basis: calc(20% - 0.4rem); }
+  .filter-row select, .filter-row .town-search, .filter-row .filter-chip { flex-basis: calc(20% - 0.4rem); }
 }
 .card {
   background: var(--card); border-radius: var(--radius); overflow: hidden;
