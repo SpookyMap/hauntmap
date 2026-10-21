@@ -926,3 +926,9 @@ a.game-card:hover { border-color: #ff7518; transform: translateY(-2px); }
   .header-hook { font-size: 0.94rem; }
   .header-tagline { font-size: 1.12rem; }
 }
+
+/* Hook matches the tagline size (Dan, Oct 21) */
+.header-hook { font-size: clamp(1.55rem, 3vw, 2.05rem); }
+@media (max-width: 600px) {
+  .header-hook { font-size: 1.12rem; }
+}
