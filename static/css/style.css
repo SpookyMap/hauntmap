@@ -999,3 +999,6 @@ a.game-card:hover { border-color: #ff7518; transform: translateY(-2px); }
 /* Hero title off orange (Dan): bone cream + lavender */
 .hero-intro h1.hero-title { color: #f5efe0; }
 .hero-title-alt { color: #c9a7ff; }
+
+/* Hook two-tone (Dan): closing line in lavender, rest bone cream */
+.hook-line.alt { color: #c9a7ff; }
