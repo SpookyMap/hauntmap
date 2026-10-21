@@ -738,9 +738,10 @@ a.game-card:hover { border-color: #ff7518; transform: translateY(-2px); }
   box-shadow: 0 12px 34px rgba(0, 0, 0, 0.45);
 }
 
-/* Mobile nav: clean 4-over-4 grid (Dan, Oct 21 — was wrapping 6+2) */
+/* Mobile nav: clean 4-over-4 grid (Dan, Oct 21 — was wrapping 6+2).
+   Higher-specificity selector on purpose: beats the base flex rule outright. */
 @media (max-width: 760px) {
-  .header-nav {
+  .site-header .header-nav {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     justify-items: center;
