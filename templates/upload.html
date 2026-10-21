@@ -36,6 +36,13 @@
   <label>Your display name <span class="opt">(optional)</span>
     <input type="text" name="display_name" maxlength="40" placeholder="e.g. The Miller Family">
   </label>
+  <label>Your email <span class="opt">(optional)</span>
+    <input type="email" name="uploader_email" maxlength="120" placeholder="you@email.com">
+    <small>Only used for your display's updates — never shared.</small>
+  </label>
+  <label class="check-label">
+    <input type="checkbox" name="notify_votes" value="1"> &#x1F514; Get notified when people vote on your display
+  </label>
   <label>Photo or video <span class="req" id="media-req">*</span> <span class="opt" id="media-opt" style="display:none">(optional for events, stores &amp; live)</span>
     <input type="file" name="media" id="media-input" accept=".jpg,.jpeg,.png,.webp,.mp4" required>
     <small>Photo: JPG/PNG/WebP up to 10 MB. Video: MP4 up to 100 MB.</small>

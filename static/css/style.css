@@ -601,3 +601,13 @@ a.game-card:hover { border-color: #ff7518; transform: translateY(-2px); }
   .header-nav::-webkit-scrollbar { display: none; }
   .header-nav a { white-space: nowrap; }
 }
+
+/* Moment-of-interest email prompt */
+#hm-prompt { position: fixed; left: 50%; transform: translateX(-50%); bottom: 1rem; z-index: 2000; width: min(430px, calc(100vw - 2rem)); background: linear-gradient(160deg, #241a44, #17122b); border: 2px solid #c9a86a; border-radius: 14px; padding: 1rem 1.1rem 0.9rem; box-shadow: 0 12px 40px rgba(0,0,0,0.55); }
+#hm-prompt .hm-prompt-text { margin: 0 1.4rem 0.6rem 0; font-weight: 700; color: #FFF8E7; line-height: 1.4; }
+#hm-prompt .hm-prompt-form { display: flex; gap: 0.5rem; }
+#hm-prompt .hm-prompt-form input { flex: 1; padding: 0.55rem 0.7rem; border-radius: 8px; border: 1px solid #372b5e; background: #0d0a1a; color: #e8e6e3; }
+#hm-prompt .hm-prompt-form button { background: #ff7518; color: #14101f; font-weight: 800; border: none; border-radius: 8px; padding: 0.55rem 0.9rem; cursor: pointer; }
+#hm-prompt .hm-prompt-x { position: absolute; top: 0.35rem; right: 0.55rem; background: none; border: none; color: #9a8fb8; font-size: 1.25rem; cursor: pointer; }
+#hm-prompt .hm-prompt-done { color: #7ee081; font-weight: 700; margin: 0.2rem 0; }
+.check-label { display: flex; gap: 0.5rem; align-items: center; font-size: 0.95rem; }

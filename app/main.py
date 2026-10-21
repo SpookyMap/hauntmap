@@ -749,6 +749,7 @@ async def upload_submit(
     lat: str = Form(""),
     lng: str = Form(""),
     tiktok_url: str = Form(""),
+    uploader_email: str = Form(""),
     media: UploadFile = File(None),
 ):
     error: str | None = None
@@ -757,6 +758,10 @@ async def upload_submit(
     scare_level = scare_level if scare_level in ("family", "spooky", "creepy", "terrifying", "extreme") else None
     # tags come as repeated form fields from checkboxes
     form = await request.form()
+    uploader_email = uploader_email.strip().lower()[:120]
+    if "@" not in uploader_email:
+        uploader_email = ""
+    notify_votes = 1 if form.get("notify_votes") else 0
     tags = ",".join(sorted({t for t in form.getlist("tags")
                             if t in ("animatronics", "inflatables", "handmade", "walkthrough",
                                      "projector", "lights", "music", "street-wide",
@@ -823,15 +828,21 @@ async def upload_submit(
     if not error:
         now = datetime.now(timezone.utc).isoformat()
         with get_conn(DB_PATH) as conn:
+            for col, ddl in (("uploader_email", "TEXT"),
+                             ("notify_votes", "INTEGER DEFAULT 0")):
+                try:
+                    conn.execute(f"ALTER TABLE entries ADD COLUMN {col} {ddl}")
+                except Exception:
+                    pass  # column already exists
             cur = conn.execute(
                 """INSERT INTO entries
                    (title, town, display_name, media_path, thumb_path, media_type,
                     lat, lng, votes, flagged, hidden, is_sample, category, created_at,
-                    scare_level, tags, tiktok_url)
-                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, 0, 0, 0, ?, ?, ?, ?, ?)""",
+                    scare_level, tags, tiktok_url, uploader_email, notify_votes)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, 0, 0, 0, ?, ?, ?, ?, ?, ?, ?)""",
                 (title, town, display_name or None, media_rel or "", thumb_rel,
                  media_type or "none", lat_f, lng_f, category, now, scare_level, tags,
-                 tiktok_url or None),
+                 tiktok_url or None, uploader_email or None, notify_votes),
             )
             entry_id = cur.lastrowid
             conn.commit()

@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Creepster&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/static/css/style.css?v=20261020t">
+<link rel="stylesheet" href="/static/css/style.css?v=20261020u">
 {% block head %}{% endblock %}
 </head>
 <body>
@@ -67,6 +67,74 @@ function hmNearMe() {
         if (i.value.trim()) localStorage.setItem('hm_town', i.value.trim());
       });
     });
+  } catch (e) {}
+})();
+</script>
+<div id="hm-prompt" hidden>
+  <button type="button" class="hm-prompt-x" aria-label="Close">&times;</button>
+  <p class="hm-prompt-text"></p>
+  <form class="hm-prompt-form">
+    <input type="email" name="email" required placeholder="you@email.com">
+    <button type="submit">Email me</button>
+  </form>
+  <p class="hm-prompt-done" hidden>You&#x27;re in! &#x1F389; Watch your inbox.</p>
+</div>
+<script>
+(function () {
+  var TEXTS = {
+    tour: '\uD83C\uDF83 Email me this tour plus new stops near it.',
+    vote: '\uD83C\uDF83 Good taste! Email me new top haunts and fresh displays near you.',
+    directions: '\uD83D\uDDFA\uFE0F Email me this route plus new stops near it.'
+  };
+  function eligible() {
+    try {
+      return !localStorage.getItem('hm_subscribed') && !sessionStorage.getItem('hm_prompt_shown');
+    } catch (e) { return false; }
+  }
+  function show(kind) {
+    var box = document.getElementById('hm-prompt');
+    if (!box || !eligible()) return;
+    box.querySelector('.hm-prompt-text').textContent = TEXTS[kind] || TEXTS.tour;
+    box.hidden = false;
+    try { sessionStorage.setItem('hm_prompt_shown', '1'); sessionStorage.removeItem('hm_pending'); } catch (e) {}
+  }
+  function mark(kind, immediate) {
+    if (!eligible()) return;
+    try { sessionStorage.setItem('hm_pending', kind); } catch (e) {}
+    if (immediate) setTimeout(function () { show(kind); }, 1100);
+  }
+  document.addEventListener('click', function (ev) {
+    if (ev.target.closest && ev.target.closest('#btn-add-tour')) mark('tour', true);
+    var a = ev.target.closest && ev.target.closest('a[href*="google.com/maps/dir"]');
+    if (a) mark('directions', true);
+  });
+  document.addEventListener('submit', function (ev) {
+    var f = ev.target;
+    if (f.action && /\/d\/\d+\/vote/.test(f.action)) mark('vote', false);
+    if (f.classList && f.classList.contains('newsletter-form')) {
+      try { localStorage.setItem('hm_subscribed', '1'); } catch (e) {}
+    }
+  });
+  var box = document.getElementById('hm-prompt');
+  if (box) {
+    box.querySelector('.hm-prompt-x').addEventListener('click', function () { box.hidden = true; });
+    box.querySelector('.hm-prompt-form').addEventListener('submit', function (ev) {
+      ev.preventDefault();
+      var fd = new FormData();
+      fd.append('email', box.querySelector('input[name="email"]').value);
+      try { fd.append('location', localStorage.getItem('hm_town') || ''); } catch (e) {}
+      fd.append('interest', 'Halloween');
+      fetch('/subscribe', { method: 'POST', body: fd }).then(function () {
+        box.querySelector('.hm-prompt-form').hidden = true;
+        box.querySelector('.hm-prompt-done').hidden = false;
+        try { localStorage.setItem('hm_subscribed', '1'); } catch (e) {}
+        setTimeout(function () { box.hidden = true; }, 2600);
+      });
+    });
+  }
+  try {
+    var pending = sessionStorage.getItem('hm_pending');
+    if (pending) setTimeout(function () { show(pending); }, 900);
   } catch (e) {}
 })();
 </script>
