@@ -655,7 +655,6 @@ a.game-card:hover { border-color: #ff7518; transform: translateY(-2px); }
   .mobile-search-form { display: flex; gap: 0.5rem; }
   .mobile-search-form input { flex: 1; padding: 0.7rem 0.8rem; border-radius: 10px; border: 1px solid #372b5e; background: #17122b; color: #e8e6e3; font-size: 1rem; }
   .mobile-search .btn-locate { width: 100%; padding: 0.7rem; font-size: 1rem; }
-  .hero-intro p { display: none; }
   .hero-intro h1.hero-title { font-size: 1.6rem; margin-bottom: 0.4rem; }
   /* Span the header's full content width: in the column header layout the
      nav otherwise shrink-wraps to its widest row and overflows the edge,
@@ -725,4 +724,15 @@ a.game-card:hover { border-color: #ff7518; transform: translateY(-2px); }
 .brand {
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", Inter, "Helvetica Neue", "Segoe UI", Arial, sans-serif;
   letter-spacing: -0.02em;
+}
+
+/* Creepy hero backdrop + visible intro on all screens (Dan, Oct 21) */
+.hero-intro {
+  background: linear-gradient(rgba(9, 5, 17, 0.66), rgba(9, 5, 17, 0.86)), url('/static/img/hero_creepy.jpg') center 38% / cover no-repeat;
+  border: 1px solid rgba(255, 117, 24, 0.25);
+  border-radius: 18px;
+  max-width: 780px;
+  padding: 2rem 1.4rem 1.6rem;
+  margin: 0.6rem auto 1rem;
+  box-shadow: 0 12px 34px rgba(0, 0, 0, 0.45);
 }

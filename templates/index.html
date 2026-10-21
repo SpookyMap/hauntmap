@@ -1,18 +1,18 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="mobile-search">
-  <form method="get" action="/nearby" class="mobile-search-form">
-    <input type="text" name="q" placeholder="&#x1F50D; Town or ZIP" autocomplete="off">
-    <button type="submit" class="btn">Search</button>
-  </form>
-  <button type="button" class="btn btn-locate" onclick="hmNearMe()">&#x1F4CD; Use my location</button>
-</div>
 <div class="hero-intro">
   <h1 class="hero-title">Find the Best Halloween Displays Near You</h1>
   <p>Welcome to America's Halloween map — the #1 map for Halloween displays &amp; haunted houses, and the place where Halloween lives. We've pinned every great Halloween display in America: spooky houses, haunted attractions, events and video tours — mapped across 23 states + DC and 746 towns. That's 1,900+ displays, events and haunts, and climbing — every spooky house, one tap away.</p>
   <p>Stop driving around hoping. It starts simple: find the best Halloween displays near you — and tour them tonight. See the houses everyone's talking about, then go see them for real. From the house down the street to the best in the state, HauntMap turns a list of addresses into a night out: one click builds your perfect Halloween tour, with the route handled for you.</p>
   <p>Watch the displays before you go, build the tour, own the night. Every display page carries photos and video, scare levels and the details that matter, so Halloween night is planned in one click — 746 towns, thousands of frights, zero aimless driving. Find it. Tour it. Haunt it.</p>
   <p>HauntMap is built for Halloween lovers, by Halloween lovers — and it runs on the people who decorate. Put your house on the map, vote for the displays that deserve it, and help your whole town find the good stuff. Don't just trick-or-treat — tour like a pro.</p>
+</div>
+<div class="mobile-search">
+  <form method="get" action="/nearby" class="mobile-search-form">
+    <input type="text" name="q" placeholder="&#x1F50D; Town or ZIP" autocomplete="off">
+    <button type="submit" class="btn">Search</button>
+  </form>
+  <button type="button" class="btn btn-locate" onclick="hmNearMe()">&#x1F4CD; Use my location</button>
 </div>
 
 {% if tonight %}
