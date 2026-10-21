@@ -827,3 +827,18 @@ a.game-card:hover { border-color: #ff7518; transform: translateY(-2px); }
 @media (max-width: 600px) {
   .header-tagline { text-align: center; margin-bottom: 0.5rem; }
 }
+
+/* Header goes full ad campaign (Dan, Oct 21): hook bigger + bolder;
+   tagline closes the header under the nav, orange and loud. */
+.header-hook { font-size: clamp(1.3rem, 2.6vw, 1.95rem); font-weight: 700; }
+.header-tagline {
+  flex: 1 1 100%;
+  text-align: center;
+  font-size: clamp(1.05rem, 2.2vw, 1.45rem);
+  font-weight: 700;
+  margin: 0.55rem 0 0.2rem;
+}
+@media (max-width: 600px) {
+  .header-hook { font-size: 1.06rem; }
+  .header-tagline { font-size: 1.02rem; }
+}
