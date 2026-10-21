@@ -226,6 +226,8 @@ def _smart_case_city(city: str) -> str:
     if re.search(r"[a-z][A-Z]", city):
         return city
 
+    small = {"of", "de", "the", "on", "at", "in"}
+
     def cap_word(w: str) -> str:
         pieces = []
         for p in w.split("'"):
@@ -235,7 +237,11 @@ def _smart_case_city(city: str) -> str:
                 pieces.append(p[:1].upper() + p[1:].lower())
         return "'".join(pieces)
 
-    return " ".join(cap_word(w) for w in city.split(" "))
+    words = city.split(" ")
+    return " ".join(
+        w.lower() if (i > 0 and w.lower() in small) else cap_word(w)
+        for i, w in enumerate(words)
+    )
 
 
 def extract_city(town: str) -> str:
