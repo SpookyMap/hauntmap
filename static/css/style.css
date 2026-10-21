@@ -918,3 +918,11 @@ a.game-card:hover { border-color: #ff7518; transform: translateY(-2px); }
 .sponsor-card.tier-title .sponsor-logo { width: 240px !important; height: 240px !important; max-width: 240px !important; max-height: 240px !important; }
 .sponsor-card.tier-title .sponsor-name { font-size: clamp(1.85rem, 5.6vw, 2.65rem); }
 .sponsor-card.tier-title .sponsor-text { font-size: 1.05rem; }
+
+/* Header type back UP (Dan, Oct 21 — the compact pass overshot) */
+.header-hook { font-size: clamp(1.28rem, 2.4vw, 1.8rem); }
+.header-tagline { font-size: clamp(1.55rem, 3vw, 2.05rem); }
+@media (max-width: 600px) {
+  .header-hook { font-size: 0.94rem; }
+  .header-tagline { font-size: 1.12rem; }
+}
