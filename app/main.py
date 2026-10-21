@@ -46,6 +46,8 @@ VIDEO_EXTS = {".mp4"}
 MAX_PHOTO_BYTES = 10 * 1024 * 1024
 MAX_VIDEO_BYTES = 100 * 1024 * 1024
 THUMB_MAX_WIDTH = 640
+THUMB_W, THUMB_H = 800, 600  # feed thumbs: 4:3, the aspect every card renders at
+ORIG_MAX_EDGE = 1920  # stored photo originals are capped at this long edge
 
 CATEGORIES = ("halloween", "christmas", "halloween_stores", "restaurants", "coffee", "shops", "parks", "haunted_houses", "events", "live")
 CAT_LABELS = {"halloween": "Halloween", "christmas": "Christmas",
@@ -81,6 +83,18 @@ def _startup() -> None:
 
 app.mount("/media", StaticFiles(directory=str(UPLOAD_DIR)), name="media")
 app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")
+
+
+@app.middleware("http")
+async def _cache_headers(request: Request, call_next):
+    """Media/static filenames are unique per upload, so browsers and the
+    Cloudflare edge may cache them for 30 days instead of re-pulling from
+    origin on every visit (was: no origin header -> 4h default). HTML is
+    untouched and stays fresh."""
+    response = await call_next(request)
+    if request.url.path.startswith(("/media/", "/static/")):
+        response.headers["Cache-Control"] = "public, max-age=2592000"
+    return response
 
 
 @app.middleware("http")
@@ -326,18 +340,51 @@ def save_upload(upload: UploadFile, max_bytes: int) -> Path:
     return tmp
 
 
+def _crop_43(im: Image.Image) -> Image.Image:
+    """Center-crop to 4:3 — the aspect every card/duel/leader image renders at
+    (the browser was downloading full portrait frames and cropping client-side)."""
+    w, h = im.size
+    target = 4 / 3
+    if w / h > target:
+        nw = int(h * target)
+        x = (w - nw) // 2
+        return im.crop((x, 0, x + nw, h))
+    nh = int(w / target)
+    y = (h - nh) // 2
+    return im.crop((0, y, w, y + nh))
+
+
+def _write_thumb(im: Image.Image, dest: Path) -> None:
+    im = _crop_43(im.convert("RGB"))
+    if im.width > THUMB_W:
+        im = im.resize((THUMB_W, THUMB_H), Image.LANCZOS)
+    im.save(dest, "JPEG", quality=76, optimize=True)
+
+
+def _cap_original(src: Path) -> None:
+    """Downscale an oversized stored original in place (detail pages serve the
+    original; phone photos arrive at 3-5 MB). No-op when already small enough."""
+    try:
+        with Image.open(src) as im:
+            if max(im.size) <= ORIG_MAX_EDGE:
+                return
+            fmt = im.format or "JPEG"
+            im.thumbnail((ORIG_MAX_EDGE, ORIG_MAX_EDGE), Image.LANCZOS)
+            if fmt == "JPEG":
+                im.convert("RGB").save(src, "JPEG", quality=85, optimize=True)
+            else:
+                im.save(src, fmt)
+    except (OSError, UnidentifiedImageError):
+        pass
+
+
 def make_thumb(src: Path, dest_name: str) -> str:
     """Create a JPEG thumbnail for a photo. Returns the relative thumb path."""
     rel = f"thumbs/{dest_name}_thumb.jpg"
     dest = THUMB_DIR / f"{dest_name}_thumb.jpg"
+    _cap_original(src)
     with Image.open(src) as im:
-        im = im.convert("RGB")
-        if im.width > THUMB_MAX_WIDTH:
-            im = im.resize(
-                (THUMB_MAX_WIDTH, int(im.height * THUMB_MAX_WIDTH / im.width)),
-                Image.LANCZOS,
-            )
-        im.save(dest, "JPEG", quality=80)
+        _write_thumb(im, dest)
     return rel
 
 
@@ -349,9 +396,15 @@ def make_video_poster(src: Path, dest_name: str) -> str | None:
     try:
         subprocess.run(
             ["ffmpeg", "-y", "-i", str(src), "-ss", "1", "-vframes", "1",
-             "-vf", f"scale={THUMB_MAX_WIDTH}:-1", str(dest)],
+             "-vf", f"scale={THUMB_W}:-1", str(dest)],
             capture_output=True, timeout=30, check=True,
         )
+        try:  # normalize the poster to the same 4:3/q76 spec as photo thumbs
+            with Image.open(dest) as im:
+                im.load()
+                _write_thumb(im, dest)
+        except (OSError, UnidentifiedImageError):
+            pass
         return rel
     except (subprocess.SubprocessError, OSError):
         return None
@@ -1590,6 +1643,39 @@ def admin_backup(request: Request, background: BackgroundTasks):
     background.add_task(tmp.unlink, True)
     stamp = datetime.now(timezone.utc).strftime("%Y%m%d")
     return FileResponse(tmp, filename=f"hauntmap-backup-{stamp}.zip")
+
+
+@app.post("/admin/rethumb")
+def admin_rethumb(request: Request, offset: int = 0, limit: int = 200):
+    """Recompress existing thumbnails in place to the 4:3 / 800px / q76 spec
+    (older thumbs were uncropped 640px q80 — nearly as heavy as originals).
+    Chunked and resumable: call with increasing offset until done=true.
+    Only replaces a file when the new version is smaller. Admin only."""
+    _require_admin(request)
+    files = sorted(THUMB_DIR.glob("*.jpg"))
+    batch = files[offset:offset + limit]
+    before = after = shrunk = 0
+    for f in batch:
+        try:
+            old = f.stat().st_size
+            tmp = f.with_suffix(".rethmb")
+            with Image.open(f) as im:
+                im.load()
+                _write_thumb(im, tmp)
+            new = tmp.stat().st_size
+            if new < old:
+                tmp.replace(f)
+                shrunk += 1
+            else:
+                tmp.unlink(missing_ok=True)
+                new = old
+            before += old
+            after += new
+        except (OSError, UnidentifiedImageError):
+            continue
+    return {"total": len(files), "offset": offset, "processed": len(batch),
+            "shrunk": shrunk, "bytes_before": before, "bytes_after": after,
+            "done": offset + len(batch) >= len(files)}
 
 
 def _require_admin(request: Request) -> None:
