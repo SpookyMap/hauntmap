@@ -969,3 +969,16 @@ a.game-card:hover { border-color: #ff7518; transform: translateY(-2px); }
   vertical-align: -0.72em;
   margin-left: 0.3rem;
 }
+
+/* Hook formatted into 3 clean lines on mobile; wolf in-flow at the end
+   of line 3, same size, no longer covering words (Dan, Oct 21) */
+.header-wolf {
+  position: static;
+  height: 2.9em;
+  width: 2.9em;
+  vertical-align: -0.85em;
+  margin: -1.15em 0 -1.25em 0.3rem;
+}
+@media (max-width: 760px) {
+  .hook-line { display: block; }
+}
