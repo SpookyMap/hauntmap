@@ -879,3 +879,20 @@ a.game-card:hover { border-color: #ff7518; transform: translateY(-2px); }
 /* Dan's pick (Oct 21): hook in Rubik Wet Paint — wet slime green;
    tagline stays Nosifer blood red. */
 .header-hook { font-family: "Rubik Wet Paint", "Nosifer", cursive; }
+
+/* Dan's double pick (Oct 21): billboard goes Lavender Mist; header hook
+   becomes Creepster in a deeper slime green (neon was too much). */
+.sponsor-section { background: #e9e4ff; }
+.sponsor-card { background: #f4f1ff; }
+.sponsor-card.tier-title { background: #f4f1ff; }
+.header-hook {
+  font-family: "Creepster", cursive;
+  color: #66cc00;
+  text-shadow: 0 3px 0 rgba(20, 51, 0, 0.55), 0 6px 18px rgba(0, 0, 0, 0.6);
+}
+
+/* Tagline bigger (Dan, Oct 21) */
+.header-tagline { font-size: clamp(1.3rem, 2.6vw, 1.75rem); }
+@media (max-width: 600px) {
+  .header-tagline { font-size: 0.95rem; }
+}
