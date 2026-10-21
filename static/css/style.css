@@ -909,3 +909,12 @@ a.game-card:hover { border-color: #ff7518; transform: translateY(-2px); }
   color: #f5efe0;
   text-shadow: 0 3px 0 rgba(0, 0, 0, 0.45), 0 6px 18px rgba(0, 0, 0, 0.6);
 }
+
+/* Sponsor billboard 20% smaller (Dan, Oct 21) */
+.sponsor-section { padding: 1.5rem 1.1rem 1.2rem; }
+.sponsor-section h2 { font-size: 0.8rem; }
+.sponsor-sub { font-size: 0.85rem; margin-bottom: 0.9rem; }
+.sponsor-card.tier-title { padding: 2.1rem 1.6rem; gap: 0.9rem; }
+.sponsor-card.tier-title .sponsor-logo { width: 240px !important; height: 240px !important; max-width: 240px !important; max-height: 240px !important; }
+.sponsor-card.tier-title .sponsor-name { font-size: clamp(1.85rem, 5.6vw, 2.65rem); }
+.sponsor-card.tier-title .sponsor-text { font-size: 1.05rem; }
