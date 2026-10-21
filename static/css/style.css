@@ -703,3 +703,26 @@ a.game-card:hover { border-color: #ff7518; transform: translateY(-2px); }
 .tonight-kicker { color: #ff7518; font-weight: 800; font-size: 0.8rem; letter-spacing: 0.03em; text-transform: uppercase; }
 .tonight-title { color: #FFF8E7; font-weight: 800; font-size: 1.15rem; line-height: 1.25; }
 .tonight-meta { color: #c9bce8; font-size: 0.85rem; }
+
+/* Apple-style header type (Dan, Oct 21): SF on Apple devices, Inter elsewhere;
+   clean, upright, tight and strong — marketing-grade header text. */
+.site-header {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", Inter, "Helvetica Neue", "Segoe UI", Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+.header-hook {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", Inter, "Helvetica Neue", "Segoe UI", Arial, sans-serif;
+  font-style: normal;
+  font-weight: 800;
+  letter-spacing: -0.022em;
+}
+.header-nav a.navbtn {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", Inter, "Helvetica Neue", "Segoe UI", Arial, sans-serif;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.brand {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", Inter, "Helvetica Neue", "Segoe UI", Arial, sans-serif;
+  letter-spacing: -0.02em;
+}
