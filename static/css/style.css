@@ -1053,3 +1053,11 @@ a.game-card:hover { border-color: #ff7518; transform: translateY(-2px); }
 .header-tagline .tag-a { color: #c9a7ff; }
 .header-tagline .tag-b { color: #f5efe0; }
 .header-tagline .tag-c { color: #e01e26; }
+
+/* "THE" matches "NEW HAUNTS DAILY!!!" lavender (Dan) */
+.header-tagline .tag-b { color: #c9a7ff; }
+/* Phone: wolf stays glued to "BUILD YOUR NIGHT." on the same line (Dan screenshot) */
+@media (max-width: 760px) {
+  .hook-line.alt { white-space: nowrap; }
+  .header-wolf { height: 1.8em; width: 1.8em; vertical-align: -0.35em; margin: 0 0 0 0.15em; }
+}
