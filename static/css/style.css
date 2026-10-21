@@ -715,6 +715,7 @@ a.game-card:hover { border-color: #ff7518; transform: translateY(-2px); }
   font-style: normal;
   font-weight: 800;
   letter-spacing: -0.022em;
+  line-height: 1.15;
 }
 .header-nav a.navbtn {
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", Inter, "Helvetica Neue", "Segoe UI", Arial, sans-serif;
