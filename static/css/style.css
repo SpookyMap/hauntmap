@@ -1013,8 +1013,8 @@ a.game-card:hover { border-color: #ff7518; transform: translateY(-2px); }
   .site-header { padding: 0.45rem 1.25rem 0.5rem; row-gap: 0.3rem; }
   .brand-logo { height: 92px; width: 92px; max-height: 92px; max-width: 92px; }
   .header-spooky { display: none; }
-  .header-wolf { display: none; }
-  .header-frank { display: none; }
+  .header-wolf { height: 2.1em; margin: -0.55em 0 -0.55em 0.1em; }
+  .header-frank { height: 2em; }
   .header-center { padding-left: 0; text-align: center; }
   .header-hook { font-size: 1.18rem; line-height: 1.25; }
   .header-nav { gap: 0.55rem; }
