@@ -1148,8 +1148,7 @@ a.game-card:hover { border-color: #ff7518; transform: translateY(-2px); }
   .header-tagline { display: none; }
 }
 
-/* ============ z33: 15% HEADER (Dan, Oct 22) ============
-   Hard rule: the whole header banner (logo + hook + nav + tagline) must
+/* ============ z33: 15% HEADER (Dan, Oct 22) =====   Hard rule: the whole header banner (logo + hook + nav + tagline) must
    measure <=15% of viewport height at every size, the hook never wraps,
    and the header no longer sticks — on scroll a slim mini-bar (44px)
    takes over instead. Design language unchanged: dark purple gradient,
@@ -1382,4 +1381,27 @@ a.game-card:hover { border-color: #ff7518; transform: translateY(-2px); }
   .tt-follow-vert { flex-direction: column; justify-content: flex-start; gap: 0.55rem; padding: 0.85rem 0; }
   .tt-follow-vert-text, .tt-follow-vert-handle { writing-mode: vertical-rl; }
   .tt-follow-vert-text { letter-spacing: 0.05em; }
+}
+
+/* ============ z38: EVENTS ARTWORK = ROW-TWO ANCHOR (Dan, Oct 22) ====
+   The Events GIF stands ~2x the button height — the unmistakable anchor
+   of row two, still a plain image link with no button chrome. The extra
+   row height is funded WITHOUT touching the 15% header cap: the band
+   art (logo / Frankenstein) trims down and the row's padding/margins
+   tighten. Achieved sizes are measured per breakpoint below. */
+@media (min-width: 761px) {
+  .site-header.v2 { padding: 0.2rem 1rem 0.14rem; }
+  .header-band .brand-logo { height: 44px; width: 44px; max-height: 44px; max-width: 44px; }
+  .header-band .header-frank { height: 44px; }
+  .site-header.v2 .header-nav { margin-top: 0.08rem; padding-top: 0.04rem; }
+  .site-header.v2 .header-nav a.events-link img.events-gif { height: 64px; }
+}
+@media (max-width: 760px) {
+  /* Phone: the header cap has room, but the single row's WIDTH binds —
+     8 buttons plus the artwork must fit 390px. 30px is the largest
+     artwork height that keeps the row on one line. */
+  .site-header.v2 .header-nav a.events-link img.events-gif { height: 26px; }
+}
+@media (orientation: landscape) and (max-height: 500px) {
+  .site-header.v2 .header-nav a.events-link img.events-gif { height: 26px; }
 }
