@@ -942,11 +942,19 @@ def home(request: Request, sort: str = "top", town: str = "", town_search: str =
 
 @app.get("/events", response_class=HTMLResponse)
 def events_page(request: Request, type: str = "", genre: str = "",
-                venue: str = "", sort: str = "top"):
+                venue: str = "", sort: str = "top",
+                state: str = "", town: str = ""):
     # The header's Events artwork links here (Dan, Oct 22). This used to
     # 302 to /?cat=events; it is now the canonical events page so events
     # can be searched by type / genre / venue style (Dan, Oct 22) with
     # shareable filtered URLs, e.g. /events?type=DJ+Party&genre=Jazz.
+    # State + City dropdowns (Dan, Oct 22; laptop-only display, the params
+    # work anywhere): event towns are free-text in the data (a clean
+    # 'City, ST' or a full street address), so state/city are derived with
+    # the same extract_state / extract_city_state helpers that build every
+    # card's town_label. Filtering matches on the raw town strings behind
+    # each derived value. Option counts are plain totals, exactly like the
+    # facet counts above (not re-filtered by the other selections).
     sort = sort if sort in ("top", "new") else "top"
     selected = {"type": type if type in EVENT_TYPES else "",
                 "genre": genre if genre in EVENT_GENRES else "",
@@ -964,8 +972,43 @@ def events_page(request: Request, type: str = "", genre: str = "",
         if selected[key]:
             query += f" AND {col} = ?"
             params.append(selected[key])
-    query += f" ORDER BY {video_first}, {order} LIMIT 100"
     with get_conn(DB_PATH) as conn:
+        # Location maps over every visible event: derived state / city
+        # label -> event count + the raw town strings that produce it.
+        state_counts: dict[str, int] = {}
+        town_counts: dict[str, int] = {}
+        town_state: dict[str, str] = {}
+        raw_by_state: dict[str, list] = {}
+        raw_by_town: dict[str, list] = {}
+        for r in conn.execute(
+                "SELECT town, COUNT(*) AS n FROM entries "
+                "WHERE hidden = 0 AND category = 'events' GROUP BY town").fetchall():
+            raw = r["town"] or ""
+            st = extract_state(raw)
+            label = extract_city_state(raw)
+            if st:
+                state_counts[st] = state_counts.get(st, 0) + r["n"]
+                raw_by_state.setdefault(st, []).append(raw)
+            if label:
+                town_counts[label] = town_counts.get(label, 0) + r["n"]
+                raw_by_town.setdefault(label, []).append(raw)
+                if st:
+                    town_state[label] = st
+        state = state.strip().upper()
+        if state not in state_counts:
+            state = ""
+        town = town.strip()
+        if town not in town_counts:
+            town = ""
+        if state:
+            raws = raw_by_state[state]
+            query += f" AND town IN ({','.join('?' * len(raws))})"
+            params += raws
+        if town:
+            raws = raw_by_town[town]
+            query += f" AND town IN ({','.join('?' * len(raws))})"
+            params += raws
+        query += f" ORDER BY {video_first}, {order} LIMIT 100"
         entries = [row_to_dict(r) for r in conn.execute(query, params).fetchall()]
         counts: dict[str, dict[str, int]] = {}
         for key, col, _values, _labels in EVENT_FACETS:
@@ -985,10 +1028,24 @@ def events_page(request: Request, type: str = "", genre: str = "",
                          "count": counts[key][v]}
                         for v in values if counts[key].get(v)],
         })
+    loc = {
+        "state": state, "town": town,
+        "state_options": [
+            {"value": code, "label": US_STATE_NAMES.get(code, code),
+             "count": n}
+            for code, n in sorted(state_counts.items(),
+                                  key=lambda kv: (-kv[1], kv[0]))],
+        "town_options": [
+            {"value": label, "count": town_counts[label]}
+            for label in sorted(town_counts)
+            if not state or town_state.get(label) == state],
+    }
     return templates.TemplateResponse(request, "events.html",
         {"request": request, "entries": entries, "sort": sort,
          "facets": facets, "selected": selected, "total": total,
-         "filtered": any(selected.values()), "voted": voted})
+         "loc": loc,
+         "filtered": any(selected.values()) or bool(state) or bool(town),
+         "voted": voted})
 
 
 RESTAURHAUNT_CATS = ("restaurants", "coffee", "shops")

@@ -2396,3 +2396,56 @@ body.has-tourbar.has-radio { padding-bottom: 124px; }
   .header-band .header-hook .tag-b { color: #c9a7ff; }
   .header-band .header-hook .tag-c { color: #c9a7ff; }
 }
+
+/* ============ z74: /events TEXT-ALERTS COMPACT (Dan, Oct 22) =======
+   The /events copy of the signup panel only (scoped .ev-alerts; the
+   homepage hero + below-band copies keep their own sizing). The slab
+   before the filters shrinks by compacting the air — padding, gaps,
+   heading sizes and a wider, reflowing form — never the fields'
+   usability. Phone follows Dan's comfort floor: input/select text at
+   16px (no iOS tap-zoom), field boxes and the submit button at least
+   44px tall; the fields themselves do not shrink. */
+/* Laptop: 4-up form (phone spans, ZIP/town/radius share a row, the two
+   checks and the button share the last row), panel widened so the
+   consent copy wraps to fewer lines. */
+@media (min-width: 761px) {
+  .ev-alerts .text-alerts { max-width: 700px; margin: 0.7rem auto; padding: 0.55rem 0.8rem; }
+  .ev-alerts .text-alerts h3 { font-size: 0.92rem; margin: 0 0 0.1rem; }
+  .ev-alerts .text-alerts p { font-size: 0.78rem; margin: 0 0 0.2rem; }
+  .ev-alerts .text-alerts-form { grid-template-columns: repeat(4, 1fr); gap: 0.3rem; margin-top: 0.3rem; }
+  .ev-alerts .text-alerts-form input,
+  .ev-alerts .text-alerts-form select { padding: 0.32rem 0.5rem; font-size: 0.83rem; }
+  .ev-alerts .text-alerts-form .ta-radius {
+    flex-direction: row; align-items: center; grid-column: span 2;
+    font-size: 0.75rem; gap: 0.35rem;
+  }
+  .ev-alerts .text-alerts-form .ta-radius select { flex: 1; }
+  .ev-alerts .text-alerts-form .ta-check { font-size: 0.8rem; }
+  .ev-alerts .text-alerts-form .btn { grid-column: span 2; padding: 0.35rem 0.9rem; font-size: 0.88rem; }
+  .ev-alerts .text-alerts .ta-consent { font-size: 0.68rem; margin-top: 0.35rem; line-height: 1.3; }
+}
+/* Phone: same air-compacting, floor-compliant fields. ZIP + Town share
+   a row; the radius label sits beside its select; the two interest
+   checks sit side by side. */
+@media (max-width: 760px) {
+  .ev-alerts .text-alerts { margin: 0.7rem auto; padding: 0.6rem 0.7rem; }
+  .ev-alerts .text-alerts h3 { font-size: 1rem; line-height: 1.15; margin: 0 0 0.1rem; }
+  .ev-alerts .text-alerts p { font-size: 0.85rem; line-height: 1.25; margin: 0 0 0.2rem; }
+  .ev-alerts .text-alerts-form { grid-template-columns: 1fr 1fr; gap: 0.4rem; margin-top: 0.35rem; }
+  .ev-alerts .text-alerts-form input,
+  .ev-alerts .text-alerts-form select { font-size: 16px; min-height: 44px; }
+  .ev-alerts .text-alerts-form .ta-radius {
+    flex-direction: row; align-items: center; grid-column: 1 / -1;
+    font-size: 0.85rem; gap: 0.4rem;
+  }
+  .ev-alerts .text-alerts-form .ta-radius select { flex: 1; }
+  .ev-alerts .text-alerts-form .ta-check { min-height: 40px; }
+  .ev-alerts .text-alerts-form .btn { min-height: 44px; }
+  .ev-alerts .text-alerts .ta-consent { font-size: 0.72rem; margin-top: 0.4rem; line-height: 1.3; }
+}
+/* Narrow phones: ZIP and Town stack full-width (Dan, Oct 22); the
+   checks stay side by side. */
+@media (max-width: 370px) {
+  .ev-alerts .text-alerts-form input[name="zip"],
+  .ev-alerts .text-alerts-form input[name="town"] { grid-column: 1 / -1; }
+}

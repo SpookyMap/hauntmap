@@ -5,7 +5,9 @@
 <p class="lede">Halloween parties, concerts, DJ nights, parades and festivals &mdash; search the season by the kind of night you want: filter by event type, music genre and venue style.</p>
 <p class="music-crosslink">&#x1F3B5; Want the soundtrack too? <a href="/music">Halloween playlists, classic videos &amp; music icons &rarr;</a></p>
 
+<div class="ev-alerts">
 {% with sms_source = "events" %}{% include "_text_alerts.html" %}{% endwith %}
+</div>
 
 <form method="get" action="/events" class="ev-filter-form">
   {% if sort != 'top' %}<input type="hidden" name="sort" value="{{ sort }}">{% endif %}
@@ -37,6 +39,24 @@
         {% endfor %}
       </select>
     </label>
+    <label class="ev-filter ev-filter-loc">
+      <span>State</span>
+      <select name="state" onchange="this.form.town.value=''; this.form.submit()">
+        <option value="">All states</option>
+        {% for o in loc.state_options %}
+        <option value="{{ o.value }}" {% if o.value == loc.state %}selected{% endif %}>{{ o.label }} ({{ o.count }})</option>
+        {% endfor %}
+      </select>
+    </label>
+    <label class="ev-filter ev-filter-loc">
+      <span>City</span>
+      <select name="town" onchange="this.form.submit()">
+        <option value="">All cities</option>
+        {% for o in loc.town_options %}
+        <option value="{{ o.value }}" {% if o.value == loc.town %}selected{% endif %}>{{ o.value }} ({{ o.count }})</option>
+        {% endfor %}
+      </select>
+    </label>
     <a href="/events" class="btn btn-ghost ev-clear">All events</a>
   </div>
 </form>
@@ -47,8 +67,8 @@
     {% else %}{{ total }} event{{ 's' if total != 1 }} on the map{% endif %}
   </p>
   <div class="sort-toggle">
-    <a href="/events?sort=top{% if selected.type %}&type={{ selected.type|urlencode }}{% endif %}{% if selected.genre %}&genre={{ selected.genre|urlencode }}{% endif %}{% if selected.venue %}&venue={{ selected.venue|urlencode }}{% endif %}" class="{% if sort == 'top' %}active{% endif %}">Top</a>
-    <a href="/events?sort=new{% if selected.type %}&type={{ selected.type|urlencode }}{% endif %}{% if selected.genre %}&genre={{ selected.genre|urlencode }}{% endif %}{% if selected.venue %}&venue={{ selected.venue|urlencode }}{% endif %}" class="{% if sort == 'new' %}active{% endif %}">Newest</a>
+    <a href="/events?sort=top{% if selected.type %}&type={{ selected.type|urlencode }}{% endif %}{% if selected.genre %}&genre={{ selected.genre|urlencode }}{% endif %}{% if selected.venue %}&venue={{ selected.venue|urlencode }}{% endif %}{% if loc.state %}&state={{ loc.state|urlencode }}{% endif %}{% if loc.town %}&town={{ loc.town|urlencode }}{% endif %}" class="{% if sort == 'top' %}active{% endif %}">Top</a>
+    <a href="/events?sort=new{% if selected.type %}&type={{ selected.type|urlencode }}{% endif %}{% if selected.genre %}&genre={{ selected.genre|urlencode }}{% endif %}{% if selected.venue %}&venue={{ selected.venue|urlencode }}{% endif %}{% if loc.state %}&state={{ loc.state|urlencode }}{% endif %}{% if loc.town %}&town={{ loc.town|urlencode }}{% endif %}" class="{% if sort == 'new' %}active{% endif %}">Newest</a>
   </div>
 </div>
 
@@ -89,7 +109,7 @@
 <div class="empty">
   <p class="empty-emoji">&#x1F3AA;</p>
   {% if filtered %}
-  <p>No events match that mix yet &mdash; try a different type, genre or venue style.</p>
+  <p>No events match that mix yet &mdash; try a different type, genre, venue style or location.</p>
   <p><a class="btn" href="/events">Clear filters &mdash; see all events</a></p>
   {% else %}
   <p>No events on the map yet.</p>
@@ -101,6 +121,9 @@
 .ev-filter-form { margin: 1rem 0 0.4rem; }
 .ev-filter-row { display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: flex-end; }
 .ev-filter { display: flex; flex-direction: column; gap: 0.25rem; flex: 1 1 150px; max-width: 260px; }
+/* Location pair wraps as its own balanced row under the facet trio
+   (the column is ~688px; five-across would truncate every label). */
+.ev-filter-loc { flex: 1 1 40%; max-width: none; }
 .ev-filter span { font-size: 0.78rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: #ffd98a; }
 .ev-filter select { width: 100%; padding: 0.55rem 0.6rem; border-radius: 10px; background: #1d1438; border: 1px solid #372b5e; color: #f3eefc; font: inherit; font-size: 0.95rem; }
 .ev-clear { white-space: nowrap; }
@@ -111,6 +134,9 @@
 @media (max-width: 760px) {
   .ev-filter { flex: 1 1 100%; max-width: none; }
   .ev-clear { flex: 1 1 100%; text-align: center; }
+  /* State/City dropdowns are laptop-only (Dan, Oct 22): the phone
+     filter row renders exactly as before. */
+  .ev-filter-loc { display: none; }
 }
 </style>
 {% endblock %}
