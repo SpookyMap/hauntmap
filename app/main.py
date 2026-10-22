@@ -1874,7 +1874,7 @@ def town_page(request: Request, slug: str):
 def sitemap():
     base = "https://gethauntmap.com"
     urls = ["/", "/map", "/nearby", "/tour", "/diy", "/diy-costumes", "/games", "/leaderboard",
-            "/towns", "/advertise", "/media-kit", "/costume-contest", "/trivia", "/haunt-or-not", "/fan-art",
+            "/towns", "/advertise", "/media-kit", "/about", "/costume-contest", "/trivia", "/haunt-or-not", "/fan-art",
             "/restaurhaunts"]
     for t in _towns_with_counts():
         urls.append(f"/towns/{t['slug']}")
@@ -2043,6 +2043,33 @@ MEDIA_KIT_CATEGORY_LABELS = [
 ]
 
 MEDIA_KIT_GAMES = ["Haunt or Not", "Scare-O-Meter", "Daily Halloween Trivia", "Costume Contest"]
+
+
+@app.get("/about", response_class=HTMLResponse)
+def about(request: Request):
+    # The mission text lives here now (moved off the homepage hero, Dan
+    # Oct 22) — its coverage numbers are computed live, same as /media-kit.
+    stats = {"total_pins": 0, "town_count": 0, "state_count": 0, "has_dc": False}
+    with get_conn(DB_PATH) as conn:
+        stats["total_pins"] = conn.execute(
+            "SELECT COUNT(*) FROM entries WHERE hidden = 0").fetchone()[0]
+        town_rows = conn.execute(
+            "SELECT DISTINCT town FROM entries WHERE hidden = 0").fetchall()
+    labels: set[str] = set()
+    state_set: set[str] = set()
+    for r in town_rows:
+        label = extract_city_state(r["town"] or "")
+        if label:
+            labels.add(label)
+        st = extract_state(r["town"] or "")
+        if st:
+            state_set.add(st)
+    stats["town_count"] = len(labels)
+    stats["state_count"] = len(state_set - {"DC"})
+    stats["has_dc"] = "DC" in state_set
+    return templates.TemplateResponse(
+        request, "about.html", {"stats": stats, "site_name": SITE_NAME},
+    )
 
 
 @app.get("/media-kit", response_class=HTMLResponse)

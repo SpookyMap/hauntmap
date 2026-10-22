@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block title %}About Us · {{ site_name }}{% endblock %}
+{% block head %}<meta name="description" content="About HauntMap — America's Halloween map. Find the best Halloween displays near you, build a tour, and own the night.">{% endblock %}
+{% block content %}
+<h1>&#x1F47B; About Us</h1>
+<p>Welcome to America's Halloween map — the #1 map for Halloween displays &amp; haunted houses, and the place where Halloween lives. We've pinned every great Halloween display in America: spooky houses, haunted attractions, events and video tours — mapped across {{ stats.state_count }} states{% if stats.has_dc %} + DC{% endif %} and {{ stats.town_count }} towns. That's {{ '{:,}'.format(stats.total_pins) }}+ displays, events and haunts, and climbing — every spooky house, one tap away.</p>
+<p>Stop driving around hoping. It starts simple: find the best Halloween displays near you — and tour them tonight. See the houses everyone's talking about, then go see them for real. From the house down the street to the best in the state, HauntMap turns a list of addresses into a night out: one click builds your perfect Halloween tour, with the route handled for you.</p>
+<p>Watch the displays before you go, build the tour, own the night. Every display page carries photos and video, scare levels and the details that matter, so Halloween night is planned in one click — {{ stats.town_count }} towns, thousands of frights, zero aimless driving. Find it. Tour it. Haunt it.</p>
+<p>HauntMap is built for Halloween lovers, by Halloween lovers — and it runs on the people who decorate. Put your house on the map, vote for the displays that deserve it, and help your whole town find the good stuff. Don't just trick-or-treat — tour like a pro.</p>
+<p><a href="/upload">Add your haunt &rarr;</a> &middot; <a href="/towns">Browse towns &rarr;</a> &middot; <a href="/advertise">Advertise with us &rarr;</a></p>
+{% endblock %}
