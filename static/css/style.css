@@ -1068,7 +1068,7 @@ a.game-card:hover { border-color: #ff7518; transform: translateY(-2px); }
 }
 
 /* Homepage featured TikTok (Dan): the 40-hours brand video above the follow strip */
-.tt-featured { width: min(320px, 90vw, calc(60svh * 0.5625)); margin: 1.4rem auto 0.2rem; }
+.tt-featured { width: min(300px, 84vw, calc(56svh * 0.5625)); margin: 1.4rem auto 0.2rem; }
 .tt-featured-title { text-align: center; font-family: "Creepster", cursive; font-weight: 400; color: #f5efe0; letter-spacing: 0.03em; margin: 0 0 0.6rem; }
 .tt-featured .tt-facade { border-radius: 14px; overflow: hidden; border: 2px solid #3a2566; }
 .tt-featured .tt-facade img { width: 100%; aspect-ratio: 9 / 16; object-fit: cover; display: block; }
@@ -1085,4 +1085,25 @@ a.game-card:hover { border-color: #ff7518; transform: translateY(-2px); }
   .header-nav a.navbtn img { width: 40px; height: 40px; }
   .header-nav a.navbtn { font-size: 0.6rem; gap: 0.12rem; }
   .header-tagline { font-size: 0.9rem; margin: 0.35rem 0 0.1rem; }
+}
+
+/* Embedded TikTok players (Watch + pin pages): cap the player width so the
+   whole player fits a phone screen instead of TikTok's full-size embed. */
+.watch-slide .tiktok-embed, .detail-media .tiktok-embed { max-width: 340px; margin-left: auto; margin-right: auto; }
+
+/* Phone banner strip (Dan, Oct 21): logo BESIDE the headline instead of stacked
+   on top of it — same art, words and colors, roughly half the height.
+   Laptop/desktop header is untouched by this block. */
+@media (max-width: 760px) {
+  .site-header { flex-direction: row; flex-wrap: wrap; align-items: center; padding: 0.4rem 0.8rem 0.3rem; }
+  .brand { order: 1; flex: 0 0 auto; }
+  .brand-logo { height: 54px; width: 54px; max-height: 54px; max-width: 54px; }
+  .header-center { order: 2; flex: 1 1 0; min-width: 0; align-self: center; }
+  .header-hook { font-size: 0.92rem; line-height: 1.18; text-align: left; margin: 0; padding-left: 0.45rem; }
+  .header-wolf { height: 1.55em; width: 1.55em; }
+  .site-header .header-nav { order: 3; flex: 1 1 100%; row-gap: 0.35rem; margin-top: 0.35rem; padding-top: 0.35rem; }
+  .header-nav a.navbtn img { width: 38px; height: 38px; }
+  .header-nav a.navbtn { font-size: 0.58rem; }
+  .header-tagline { order: 4; flex: 1 1 100%; font-size: 0.85rem; margin: 0.3rem 0 0.05rem; }
+  .header-frank { height: 24px; }
 }
