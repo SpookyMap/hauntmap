@@ -50,6 +50,7 @@
       {% elif e.is_new %}
       <p class="votes votes-new">&#x2728; New this week</p>
       {% endif %}
+      <span class="tour-add-btn" role="button" tabindex="0" data-tour-btn data-id="{{ e.id }}" data-title="{{ e.title }}" data-town="{{ e.town }}" data-lat="{{ e.lat if e.lat is not none else '' }}" data-lng="{{ e.lng if e.lng is not none else '' }}" data-thumb="{{ e.thumb_url }}">+ Tour</span>
     </div>
   </a>
   {% endfor %}

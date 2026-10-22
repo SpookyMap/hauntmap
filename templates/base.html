@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Creepster&family=Fredoka:wght@500;600;700&family=Inter:wght@500;600;700;800;900&family=Nosifer&family=Rubik+Wet+Paint&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/static/css/style.css?v=20261022z58">
+<link rel="stylesheet" href="/static/css/style.css?v=20261022z59">
 {% block head %}{% endblock %}
 </head>
 <body>
@@ -226,6 +226,80 @@ function hmSeenStrip(el, ids, label) {
       Math.round(100 * n / ids.length) + '%';
   } catch (e) {}
 }
+</script>
+<div id="hm-tourbar" hidden>
+  <span class="tb-label">&#x1F9ED; Your tour: <strong id="hm-tour-n">0</strong> <span id="hm-tour-stops">stops</span></span>
+  <a class="tb-build" href="/tour">Build my tour &rarr;</a>
+</div>
+<script>
+// Tour bar + card "+ Tour" buttons (second-click #2): the tour itself
+// lives in localStorage 'haunt_tour' — the same store /tour reads — so
+// adds from any card, rail or pin page show up in the builder as-is.
+// Buttons toggle (tap again to remove), Zillow-save style.
+function hmTourGet() {
+  try { return JSON.parse(localStorage.getItem('haunt_tour') || '[]'); } catch (e) { return []; }
+}
+function hmTourSet(t) {
+  try { localStorage.setItem('haunt_tour', JSON.stringify(t)); } catch (e) {}
+  hmTourSync();
+}
+function hmTourSync() {
+  var tour = hmTourGet();
+  var n = tour.length;
+  var onTourPage = location.pathname === '/tour';
+  var bar = document.getElementById('hm-tourbar');
+  if (bar) {
+    bar.hidden = !(n > 0) || onTourPage;
+    document.body.classList.toggle('has-tourbar', n > 0 && !onTourPage);
+    var c = document.getElementById('hm-tour-n');
+    if (c) c.textContent = n;
+    var s = document.getElementById('hm-tour-stops');
+    if (s) s.textContent = n === 1 ? 'stop' : 'stops';
+  }
+  document.querySelectorAll('[data-tour-btn]').forEach(function (b) {
+    var inT = tour.some(function (e) { return e.id === Number(b.getAttribute('data-id')); });
+    b.classList.toggle('in-tour', inT);
+    if (!b.dataset.flash) b.textContent = inT ? '\u2713 In tour' : '+ Tour';
+  });
+}
+function hmTourBtnActivate(b) {
+  var id = Number(b.getAttribute('data-id'));
+  var tour = hmTourGet();
+  if (tour.some(function (e) { return e.id === id; })) {
+    hmTourSet(tour.filter(function (e) { return e.id !== id; }));
+    return;
+  }
+  var lat = parseFloat(b.getAttribute('data-lat'));
+  var lng = parseFloat(b.getAttribute('data-lng'));
+  if (!lat || !lng) {
+    b.dataset.flash = '1';
+    b.textContent = 'No map pin';
+    setTimeout(function () { delete b.dataset.flash; hmTourSync(); }, 1300);
+    return;
+  }
+  tour.push({ id: id, title: b.getAttribute('data-title') || '',
+              town: b.getAttribute('data-town') || '',
+              lat: lat, lng: lng, thumb: b.getAttribute('data-thumb') || '' });
+  hmTourSet(tour);
+}
+document.addEventListener('click', function (ev) {
+  var b = ev.target.closest && ev.target.closest('[data-tour-btn]');
+  if (!b) return;
+  ev.preventDefault();
+  ev.stopPropagation();
+  hmTourBtnActivate(b);
+});
+document.addEventListener('keydown', function (ev) {
+  if (ev.key !== 'Enter' && ev.key !== ' ') return;
+  var b = ev.target.closest && ev.target.closest('[data-tour-btn]');
+  if (!b) return;
+  ev.preventDefault();
+  hmTourBtnActivate(b);
+});
+window.addEventListener('storage', function (e) {
+  if (e.key === 'haunt_tour') hmTourSync();
+});
+hmTourSync();
 </script>
 {# Speculation Rules (Chromium; ignored elsewhere): prefetch same-origin
    pages on hover/press so the next tap lands instantly. Prefetch pulls HTML

@@ -49,6 +49,7 @@ document.getElementById('btn-near-me').onclick = function() {
         <h3>{{ e.title }}</h3>
         <p class="meta">{{ e.town }}{% if e.display_name %} &middot; {{ e.display_name }}{% endif %}</p>
         <p class="meta">{{ "%.1f"|format(e.distance) }} mi away &middot; &#x1F383; {{ e.votes }} vote{{ 's' if e.votes != 1 }}</p>
+        <span class="tour-add-btn" role="button" tabindex="0" data-tour-btn data-id="{{ e.id }}" data-title="{{ e.title }}" data-town="{{ e.town }}" data-lat="{{ e.lat if e.lat is not none else '' }}" data-lng="{{ e.lng if e.lng is not none else '' }}" data-thumb="{{ e.thumb_url }}">+ Tour</span>
       </div>
     </a>
     {% endfor %}

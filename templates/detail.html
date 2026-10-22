@@ -153,6 +153,7 @@
     if (!tour.some(e => e.id === entry.id)) {
       tour.push(entry);
       localStorage.setItem('haunt_tour', JSON.stringify(tour));
+      if (window.hmTourSync) hmTourSync();
     }
     location.href = '/tour';
   };
@@ -220,6 +221,7 @@
     if (tour.some(e => e.id === entry.id)) { alert('Already in your tour!'); return; }
     tour.push(entry);
     localStorage.setItem('haunt_tour', JSON.stringify(tour));
+    if (window.hmTourSync) hmTourSync();
     if (confirm('Added! Open your tour now?')) location.href = '/tour';
   };
   </script>

@@ -1776,11 +1776,11 @@ a.game-card:hover { border-color: #ff7518; transform: translateY(-2px); }
     border-top: 2px solid #ff7518; color: #fff; text-decoration: none;
     box-shadow: 0 -4px 18px rgba(0,0,0,0.45);
   }
-  body.has-tourbar .next-haunt-bar { bottom: 57px; }
+  body.has-tourbar .next-haunt-bar { bottom: 61px; }
   .next-haunt-bar .nhb-label { font-weight: 800; color: #ffb066; white-space: nowrap; }
   .next-haunt-bar .nhb-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.92rem; }
   .detail:has(.next-haunt-bar) { padding-bottom: 60px; }
-  body.has-tourbar .detail:has(.next-haunt-bar) { padding-bottom: 118px; }
+  body.has-tourbar .detail:has(.next-haunt-bar) { padding-bottom: 122px; }
 }
 
 /* ============ z58: LOGO CENTERPIECE +15% (Dan, Oct 22) ====
@@ -1811,3 +1811,19 @@ a.game-card:hover { border-color: #ff7518; transform: translateY(-2px); }
   .header-band .brand { width: 117px; }
   .header-band .brand-logo { height: 95px; width: 95px; max-height: 95px; max-width: 95px; transform: translateX(-1px); }
 }
+
+/* Second-click #2 (Oct 22): "+ Tour" save buttons on every card +
+   the persistent tour bar. The bar appears once the visitor has at
+   least one stop saved (hidden on /tour itself, where the builder
+   already shows the count); body.has-tourbar reserves scroll room so
+   page footers never hide behind it, and the email prompt stacks
+   above it instead of covering it. */
+.tour-add-btn { display: inline-block; margin-top: 0.45rem; padding: 0.34rem 0.75rem; border-radius: 999px; background: #3a2566; border: 1px solid #6b4fae; color: #ffd9a0; font-weight: 700; font-size: 0.82rem; cursor: pointer; }
+.tour-add-btn:hover, .tour-add-btn:focus-visible { background: #4a2d7a; outline: none; }
+.tour-add-btn.in-tour { background: #1e5c2e; border-color: #2f8f4a; color: #c9f5d2; }
+#hm-tourbar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 56; display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 0.65rem 1rem calc(0.65rem + env(safe-area-inset-bottom)); background: linear-gradient(160deg, #2c1a56, #1a1038); border-top: 2px solid #ff7518; color: #fff; box-shadow: 0 -4px 18px rgba(0,0,0,0.45); }
+#hm-tourbar[hidden] { display: none; }
+#hm-tourbar .tb-label { font-size: 0.95rem; }
+#hm-tourbar .tb-build { background: #ff7518; color: #1a1038; font-weight: 800; padding: 0.45rem 0.95rem; border-radius: 999px; text-decoration: none; white-space: nowrap; }
+body.has-tourbar { padding-bottom: 60px; }
+body.has-tourbar #hm-prompt { bottom: 4.4rem; }
