@@ -113,5 +113,20 @@
 {% else %}
 <p class="muted">No subscribers yet.</p>
 {% endif %}
+
+<h2>Town requests ({{ town_req_count }})</h2>
+<p class="muted">Towns real people asked to get on the map — the priority queue for the 20-per-town hunt.</p>
+{% if town_reqs %}
+<div class="admin-list">
+  {% for r in town_reqs %}
+  <div class="admin-row">
+    <strong>{{ r.town }}, {{ r.state }}</strong>{% if r.zip %} <span class="meta">{{ r.zip }}</span>{% endif %}
+    <span class="meta">{{ r.email }} &middot; {{ r.created_at[:10] }}</span>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<p class="muted">No town requests yet.</p>
+{% endif %}
 {% endif %}
 {% endblock %}

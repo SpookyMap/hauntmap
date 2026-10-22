@@ -8,6 +8,7 @@
   <a class="town-link" href="/towns/{{ t.slug }}">{{ t.label }} <span class="town-count">{{ t.count }}</span></a>
   {% endfor %}
 </div>
+{% include "_town_request.html" %}
 <style>
 .towns-sub { color: #c9bce8; }
 .towns-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 0.5rem; margin-top: 1rem; }

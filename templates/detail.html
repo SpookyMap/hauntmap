@@ -113,6 +113,32 @@
     <button class="btn" id="btn-add-tour" style="margin-top:0.5rem">+ Add to my tour</button>
   </div>
 
+  {% if more_haunts %}
+  <section class="engage-next">
+    <h2>&#x1F383; More haunts near this one</h2>
+    <div class="rail">
+      {% for p in more_haunts %}{{ pin_card(p) }}{% endfor %}
+    </div>
+    <button class="btn btn-big btn-tour-build" id="btn-build-tour">&#x1F9ED; Build a tour with this house</button>
+    <p class="tour-build-note">Adds this haunt to your tour and opens the tour builder — drop in the neighbours above and share the whole route.</p>
+  </section>
+  <script>
+  document.getElementById('btn-build-tour').onclick = function() {
+    const entry = {id: {{ entry.id }}, title: {{ entry.title|tojson }}, town: {{ entry.town|tojson }},
+                   lat: {{ entry.lat if entry.lat is not none else 'null' }}, lng: {{ entry.lng if entry.lng is not none else 'null' }},
+                   thumb: {{ entry.thumb_url|tojson }}};
+    if (!entry.lat || !entry.lng) { alert('This haunt has no map location.'); return; }
+    let tour = [];
+    try { tour = JSON.parse(localStorage.getItem('haunt_tour') || '[]'); } catch(e) {}
+    if (!tour.some(e => e.id === entry.id)) {
+      tour.push(entry);
+      localStorage.setItem('haunt_tour', JSON.stringify(tour));
+    }
+    location.href = '/tour';
+  };
+  </script>
+  {% endif %}
+
   {% if next_pin %}
   <a class="btn btn-big next-haunt" href="/d/{{ next_pin.id }}">Next haunt near here &rarr;<span class="next-haunt-sub">{{ next_pin.title }} &middot; {{ "%.1f"|format(next_pin.distance) }} mi &middot; {{ next_pin.town_label }}</span></a>
   {% endif %}
@@ -138,6 +164,17 @@
       {% else %}No ratings yet — be the first to rate it!{% endif %}
     </p>
   </div>
+
+  {% if entry.thumb_url or entry.media_url %}
+  <section class="hon-card">
+    <img src="{{ entry.thumb_url or entry.media_url }}" alt="{{ entry.title }}" loading="lazy">
+    <div class="hon-body">
+      <h2>&#x1F3AE; Haunt or Not?</h2>
+      <p>Think this haunt can beat the best on the map? Put it to the test — two haunts enter, you pick the one you'd drive to see.</p>
+      <a class="btn" href="/games">Play Haunt or Not</a>
+    </div>
+  </section>
+  {% endif %}
 
   <div class="signup-strip signup-strip-slim">
     {% if request.query_params.get('subscribed') %}
@@ -197,6 +234,8 @@
     </div>
   </section>
   {% endif %}
+
+  {% with map_label = entry.town_label %}{% include "_town_map_strip.html" %}{% endwith %}
 
   {% if prev_pin or next_pin %}
   <nav class="chain-nav">

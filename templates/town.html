@@ -60,6 +60,7 @@
   <p>No displays here yet — <a href="/upload">be the first to add one</a>.</p>
 </div>
 {% endif %}
+{% with map_label = label %}{% include "_town_map_strip.html" %}{% endwith %}
 <p class="town-more"><a href="/towns">Browse all towns &rarr;</a> &middot; <a href="/?town={{ label|urlencode }}">See {{ label }} in the main feed &rarr;</a></p>
 <style>
 .town-sub { color: #c9bce8; }

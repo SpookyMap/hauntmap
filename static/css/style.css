@@ -371,6 +371,31 @@ a { color: var(--accent); }
 .rail { display: flex; gap: 0.7rem; overflow-x: auto; padding-bottom: 0.5rem; scroll-snap-type: x proximity; -webkit-overflow-scrolling: touch; }
 .rail-card { flex: 0 0 218px; scroll-snap-align: start; }
 .chain-nav { display: flex; justify-content: space-between; gap: 0.7rem; margin: 1.2rem 0 0.4rem; }
+/* Engagement next-steps (staged Oct 22): prominent neighbour block + tour
+   builder CTA, Haunt or Not card, town-request capture */
+.engage-next { margin: 1.3rem 0 0.4rem; padding: 1rem; background: linear-gradient(160deg, #241a44, #17122b); border: 1px solid #4a2d7a; border-radius: 14px; }
+.engage-next h2 { font-size: 1.2rem; margin: 0 0 0.7rem; }
+.btn-tour-build { margin-top: 0.7rem; cursor: pointer; }
+.tour-build-note { color: #c9bce8; font-size: 0.82rem; text-align: center; margin: 0.45rem 0 0; }
+.hon-card { display: flex; gap: 0.9rem; align-items: center; margin: 1.2rem 0; padding: 0.9rem 1rem; background: linear-gradient(135deg, #241640, #311d55); border: 1px solid #4a2d7a; border-radius: 14px; }
+.hon-card img { width: 96px; height: 96px; object-fit: cover; border-radius: 10px; flex: 0 0 auto; }
+.hon-body h2 { font-size: 1.15rem; margin: 0 0 0.3rem; }
+.hon-body p { color: #c9bce8; font-size: 0.88rem; line-height: 1.4; margin: 0 0 0.6rem; }
+.town-request { max-width: 560px; margin: 1.2rem auto; text-align: left; padding: 1rem 1.1rem; }
+.town-request h3 { font-size: 1.15rem; text-align: center; }
+.town-request p { font-size: 0.9rem; text-align: center; }
+.town-request-form { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-top: 0.6rem; }
+.town-request-form input { background: rgba(0,0,0,0.25); border: 1px solid #4a2d7a; border-radius: 8px; padding: 0.55rem 0.7rem; color: #e8e6e3; width: 100%; box-sizing: border-box; }
+.town-request-form input[name="email"] { grid-column: 1 / -1; }
+.town-request-form .btn { grid-column: 1 / -1; }
+.hp-field { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
+.form-error { color: #ff7b72; font-weight: 600; }
+.town-map-strip { max-width: 560px; margin: 1.4rem auto; }
+@media (max-width: 560px) {
+  .hon-card { flex-direction: column; text-align: center; }
+  .hon-card img { width: 100%; height: 150px; }
+  .town-request-form { grid-template-columns: 1fr; }
+}
 /* Watch feed: vertical snap-scroll of footage pins */
 .watch-sub { color: var(--muted); }
 .watch-feed { display: grid; gap: 1.1rem; }

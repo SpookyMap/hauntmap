@@ -1,0 +1,22 @@
+{# "Get your town on the map" capture (staged Oct 22). Headline + support
+   line are Dan's wording, verbatim. Posts to /town-request; submissions
+   land in the town_requests table and the /admin priority queue. #}
+<div class="town-request signup-strip">
+  {% if request.query_params.get('town_requested') %}
+  <p class="newsletter-success">&#x1F389; You're on the list — we'll email you when your town goes live on the map.</p>
+  {% else %}
+  <h3>&#x1F5FA;&#xFE0F; Do you HauntMap in your town?</h3>
+  <p>Drop your email and fill in your town info and our team will get you on the map with new haunts to hunt.</p>
+  {% if request.query_params.get('town_req_error') %}
+  <p class="form-error">Please add a valid email, your town and your state.</p>
+  {% endif %}
+  <form method="post" action="/town-request" class="town-request-form">
+    <input type="email" name="email" placeholder="you@email.com" required>
+    <input type="text" name="town" placeholder="Your town" required>
+    <input type="text" name="state" placeholder="State (e.g. NJ)" required>
+    <input type="text" name="zip" placeholder="ZIP (optional)" inputmode="numeric" autocomplete="postal-code">
+    <input type="text" name="website" class="hp-field" tabindex="-1" autocomplete="off" aria-hidden="true">
+    <button type="submit" class="btn">Get my town on the map</button>
+  </form>
+  {% endif %}
+</div>

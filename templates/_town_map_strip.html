@@ -1,0 +1,19 @@
+{# Slim "Get your town's Halloween map" email capture (staged Oct 22).
+   Wired to the existing /subscribe endpoint — whatever the homepage signup
+   does today (local subscribers table; Beehiiv sync only when Dan's keys
+   are configured server-side) is what this strip does too.
+   Expects: map_label (town label to prefill as the subscription location). #}
+<div class="signup-strip signup-strip-slim town-map-strip">
+  {% if request.query_params.get('subscribed') %}
+  <p class="newsletter-success">&#x1F389; You're in! Your town's Halloween map is on its way — plus first access to the &#x1F384; Jolly Map this Christmas.</p>
+  {% else %}
+  <h3>&#x1F5FA;&#xFE0F; Get your town's Halloween map</h3>
+  <p>The best displays in {{ map_label }} in your inbox — every new haunt as it lands, and the tour map when you're ready to go.</p>
+  <form method="post" action="/subscribe" class="newsletter-form">
+    <input type="email" name="email" placeholder="you@email.com" required>
+    <input type="hidden" name="location" value="{{ map_label }}">
+    <input type="hidden" name="interest" value="Halloween">
+    <button type="submit" class="btn">Send my map</button>
+  </form>
+  {% endif %}
+</div>

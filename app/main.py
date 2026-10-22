@@ -1140,6 +1140,14 @@ def detail(request: Request, entry_id: int):
     if scare_pick not in SCARE_LEVELS:
         scare_pick = ""
     chain = detail_chain(entry)
+    # Engagement next-steps section (staged Oct 22): the 3 nearest neighbours
+    # for the prominent "More haunts near this one" block. Real-media pins
+    # (an actual uploaded photo/video — i.e. not stock-photo pins, which sit
+    # in DUEL_EXCLUDE_IDS) rank ahead of stock ones at equal distance.
+    more_haunts = sorted(
+        chain["more_near"],
+        key=lambda p: (1 if p["id"] in DUEL_EXCLUDE_IDS else 0, p["distance"]),
+    )[:3]
     # Collection loop: ids of every visible pin in this pin's town + category,
     # so the page can show "You've seen X of Y displays in [Town]" (the
     # seen-set itself lives in the visitor's localStorage — no accounts).
@@ -1156,7 +1164,8 @@ def detail(request: Request, entry_id: int):
          "tips": tips, "scare_counts": scare_counts, "scare_total": scare_total,
          "scare_pick": scare_pick, "next_pin": chain["next_pin"],
          "prev_pin": chain["prev_pin"], "more_near": chain["more_near"],
-         "more_like": chain["more_like"], "town_pin_ids": town_pin_ids},
+         "more_like": chain["more_like"], "town_pin_ids": town_pin_ids,
+         "more_haunts": more_haunts},
     )
 
 
@@ -1316,6 +1325,54 @@ async def subscribe(request: Request):
     sep = "&" if "?" in ref else "?"
     return RedirectResponse(f"{ref}{sep}subscribed=1" if success else f"{ref}{sep}sub_error=1",
                             status_code=303)
+
+
+TOWN_REQUESTS_TABLE_SQL = (
+    "CREATE TABLE IF NOT EXISTS town_requests "
+    "(id INTEGER PRIMARY KEY, email TEXT, town TEXT, state TEXT, zip TEXT, "
+    "created_at TEXT)"
+)
+
+
+@app.post("/town-request")
+async def town_request(request: Request):
+    """Capture-only 'get your town on the map' requests (staged Oct 22).
+    Submissions land in the town_requests table (carried by the nightly DB
+    backup) and surface in /admin. No email is sent — the requests become
+    the priority queue for the 20-per-town sourcing effort: towns real
+    people ask for get hunted first."""
+    form = await request.form()
+    ref = request.headers.get("referer", "/")
+    sep = "&" if "?" in ref else "?"
+    # Honeypot: real visitors never see or fill this field. Bots that do get
+    # a fake success and nothing is stored.
+    if (form.get("website") or "").strip():
+        return RedirectResponse(f"{ref}{sep}town_requested=1", status_code=303)
+    email = (form.get("email") or "").strip().lower()[:120]
+    town = (form.get("town") or "").strip()[:80]
+    state = (form.get("state") or "").strip().upper()[:40]
+    zip_code = (form.get("zip") or "").strip()[:10]
+    valid = (email and "@" in email and "." in email.split("@")[-1]
+             and town and state)
+    if valid:
+        with get_conn(DB_PATH) as conn:
+            conn.execute(TOWN_REQUESTS_TABLE_SQL)
+            # Cheap duplicate guard: same email + town within a day counts
+            # once (double-taps, refreshes, impatient second submits).
+            dupe = conn.execute(
+                "SELECT 1 FROM town_requests WHERE email = ? "
+                "AND LOWER(town) = LOWER(?) "
+                "AND created_at >= datetime('now', '-1 day')",
+                (email, town)).fetchone()
+            if not dupe:
+                conn.execute(
+                    "INSERT INTO town_requests (email, town, state, zip, created_at) "
+                    "VALUES (?, ?, ?, ?, ?)",
+                    (email, town, state, zip_code,
+                     datetime.now(timezone.utc).isoformat()))
+                conn.commit()
+        return RedirectResponse(f"{ref}{sep}town_requested=1", status_code=303)
+    return RedirectResponse(f"{ref}{sep}town_req_error=1", status_code=303)
 
 
 @app.get("/leaderboard", response_class=HTMLResponse)
@@ -1915,6 +1972,12 @@ def admin(request: Request):
         subs = conn.execute(
             "SELECT email, location, created_at FROM subscribers ORDER BY created_at DESC").fetchall()
         sub_count = len(subs)
+        conn.execute(TOWN_REQUESTS_TABLE_SQL)
+        town_reqs = conn.execute(
+            "SELECT email, town, state, zip, created_at FROM town_requests "
+            "ORDER BY created_at DESC LIMIT 100").fetchall()
+        town_req_count = conn.execute(
+            "SELECT COUNT(*) FROM town_requests").fetchone()[0]
         conn.execute(FANART_SQL)
         fanart_pending = [dict(r) for r in conn.execute(
             "SELECT * FROM fan_art WHERE approved = 0 ORDER BY created_at DESC").fetchall()]
@@ -1926,6 +1989,7 @@ def admin(request: Request):
     return templates.TemplateResponse(request, "admin.html",
         {"request": request, "logged_in": True, "flagged": flagged,
          "all_entries": all_entries, "subs": subs, "sub_count": sub_count, "error": None,
+         "town_reqs": town_reqs, "town_req_count": town_req_count,
          "fanart_pending": fanart_pending, "fanart_live": fanart_live},
     )
 
