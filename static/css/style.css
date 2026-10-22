@@ -2200,7 +2200,7 @@ body.has-tourbar.has-radio { padding-bottom: 124px; }
      (town_search / cat / scare) to GET /. */
   .hero-search {
     display: flex; align-items: stretch;
-    background: #f5efe0; border-radius: 999px; padding: 0.4rem;
+    background: #c9a7ff; border-radius: 999px; padding: 0.4rem;
     max-width: 720px; width: 100%; margin: 0 auto;
     box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45);
   }
@@ -2282,4 +2282,21 @@ body.has-tourbar.has-radio { padding-bottom: 124px; }
 }
 @media (max-width: 380px) and (orientation: portrait) {
   .events-closer { font-size: 0.82rem; max-width: 102px; }
+}
+
+/* ============ z70: DESKTOP CLOSER SPLIT + LAVENDER PILL (Dan, Oct 22) ====
+   (1) The desktop top-hook closer gets the phone's split treatment
+   (superseding Dan's Oct 22 13:59 all-red-desktop rule): "THE HAUNT
+   STARTS" (.tag-b + .tag-c) goes lavender #c9a7ff — the site's
+   lavender, same value as NEW HAUNTS DAILY!!! — and only "HERE"
+   (.tag-d) stays red #e01e26. Scoped to the desktop band with the
+   usual min-height guard, so phone and landscape computed styles are
+   untouched (phone's closer already carries this split in its new
+   nav-column home). (2) The hero search pill's background switches
+   from bone cream #f5efe0 to the same lavender — edited in place in
+   the z67 block above; dark segment text and the orange Search
+   button are unchanged and stay legible on it. */
+@media (min-width: 761px) and (min-height: 501px) {
+  .header-band .header-hook .tag-b { color: #c9a7ff; }
+  .header-band .header-hook .tag-c { color: #c9a7ff; }
 }
