@@ -35,6 +35,30 @@
   </nav>
   <p class="header-tagline"><span class="tag-a">New Haunts Daily!!!</span> <span class="tag-b">The</span> <span class="tag-c">Haunt Starts Here</span> <img class="header-frank" src="/static/img/header_frank2.webp" alt="Frankenstein's monster reaching for you"></p>
 </header>
+<div class="mini-bar" id="hmMiniBar" aria-hidden="true">
+  <a href="/"><img src="/static/img/hauntmap_logo.jpg" alt="HauntMap"></a>
+  <a href="/">HauntMap</a>
+  <nav class="mini-links">
+    <a href="/nearby">&#x1F50D; Search</a>
+    <a href="/map">Map</a>
+    <a href="/watch">Watch</a>
+    <a href="/tour">Tours</a>
+    <a href="/upload">Add Yours</a>
+  </nav>
+</div>
+<script>
+(function () {
+  var bar = document.getElementById('hmMiniBar');
+  if (!bar) return;
+  var on = false;
+  function upd() {
+    var show = window.scrollY > 160;
+    if (show !== on) { on = show; bar.classList.toggle('show', show); bar.setAttribute('aria-hidden', show ? 'false' : 'true'); }
+  }
+  window.addEventListener('scroll', upd, { passive: true });
+  upd();
+})();
+</script>
 <main class="wrap">
   {% block content %}{% endblock %}
 </main>
