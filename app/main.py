@@ -2370,6 +2370,140 @@ def about(request: Request):
     )
 
 
+# ---------------------------------------------------------------- music
+# /music (Dan, Oct 22): the site's music room — verified Spotify playlists,
+# YouTube classics and the artists who own Halloween. Every ID and URL below
+# was verified via Spotify / YouTube oEmbed on 2026-10-22 (title + author
+# match, embeddable) — never add a link here without the same check.
+MUSIC_SPOTIFY_PLAYLISTS = [
+    {"id": "6UkHy4ryQKNsBtnwoIbymc",
+     "title": "The Only Halloween Playlist You'll Ever Need",
+     "blurb": "The big one — Thriller, Ghostbusters, Monster Mash and dozens "
+              "more party staples in one list."},
+    {"id": "3GR3i1bykOapAJEncHgWnj",
+     "title": "24-Hour Halloween Party Mix",
+     "blurb": "A full day of Halloween party tracks — set it running before "
+              "the first knock at the door."},
+    {"id": "58HhYIGD0vWO54G9ftX04q",
+     "title": "Synthwave Halloween — Horror Synth",
+     "blurb": "Dark synth and horror-score energy for the drive between "
+              "haunts."},
+]
+MUSIC_YOUTUBE_FEATURED = {
+    "id": "sOnqjkJTMaA",
+    "title": "Michael Jackson — Thriller (Official 4K Video)",
+    "channel": "michaeljacksonVEVO",
+}
+MUSIC_YOUTUBE_GRID = [
+    {"id": "Fe93CLbHjxQ", "title": "Ray Parker Jr. — Ghostbusters",
+     "channel": "RayParkerJuniorVEVO"},
+    {"id": "ZVuToMilP0A",
+     "title": "The Citizens of Halloween — This Is Halloween",
+     "channel": "DisneyMusicVEVO"},
+    {"id": "EqQuihD0hoI", "title": "Rob Zombie — Dragula",
+     "channel": "RobZombieVEVO"},
+    {"id": "NF69rFld9zQ",
+     "title": "Bobby \"Boris\" Pickett — Monster Mash (Official Lyric Video)",
+     "channel": "Radial by The Orchard"},
+    {"id": "E1mU6h4Xdxc", "title": "Rihanna — Disturbia",
+     "channel": "RihannaVEVO"},
+]
+# Artist cards. "art" is the artist's own Spotify artist photo (Spotify CDN,
+# via oEmbed) — Ghost's card uses their verified Dance Macabre video still
+# instead, because Ghost's Spotify artist ID could not be verified from a
+# citable source, so Ghost ships without a Spotify button rather than a
+# guessed link.
+_SP_ART = "https://open.spotify.com/artist/"
+MUSIC_ICONS = [
+    {"slug": "weeknd", "name": "The Weeknd",
+     "art": "https://image-cdn-ak.spotifycdn.com/image/ab67616100005174c1719ac9e6a75c1c25835018",
+     "claim": "Horror runs through his videos and sound — he even turned "
+              "his After Hours era into a real haunted house at Universal's "
+              "Halloween Horror Nights.",
+     "spotify": _SP_ART + "1Xyo4u8uXC1ZmMpatF05PJ",
+     "youtube": {"id": "dqRZDebPIGs", "label": "In Your Eyes (Official Video)"}},
+    {"slug": "alice", "name": "Alice Cooper",
+     "art": "https://image-cdn-fa.spotifycdn.com/image/ab6761610000517433b97c45348420d27fb92d68",
+     "claim": "The original shock rocker — guillotines, snakes and a stage "
+              "show built like a haunted house. Still touring this Halloween.",
+     "spotify": _SP_ART + "3EhbVgyfGd7HkpsagwL9GS",
+     "youtube": {"id": "Qq4j1LtCdww", "label": "Poison"},
+     "pin": {"url": "/d/3654",
+             "label": "🎃 See his HauntMap event — Alice's Attic Tour, "
+                      "Tropicana Atlantic City · Sat Oct 31 · 8pm"}},
+    {"slug": "zombie", "name": "Rob Zombie",
+     "art": "https://image-cdn-fa.spotifycdn.com/image/ab67616100005174f0e838d90c5a7b7676ff4c43",
+     "claim": "Metal's monster-movie maker — Dragula on the stereo, and "
+              "behind the camera he directed House of 1000 Corpses and the "
+              "Halloween remakes.",
+     "spotify": _SP_ART + "3HVdAiMNjYrQIKlOGxoGh5",
+     "youtube": {"id": "EqQuihD0hoI", "label": "Dragula"}},
+    {"slug": "elfman", "name": "Danny Elfman",
+     "art": "https://image-cdn-ak.spotifycdn.com/image/ab67616100005174f741706530dbd36d43078b98",
+     "claim": "Fronted Oingo Boingo (\"Dead Man's Party\"), then wrote every "
+              "song in The Nightmare Before Christmas — and sang Jack "
+              "Skellington himself.",
+     "spotify": _SP_ART + "5qBZETtyzfYnXOobDXbmcD",
+     "youtube": {"id": "ZVuToMilP0A", "label": "This Is Halloween"}},
+    {"slug": "petras", "name": "Kim Petras",
+     "art": "https://image-cdn-ak.spotifycdn.com/image/ab6761610000517415a73d2fd90eb732c846ce06",
+     "claim": "Released two Halloween mixtapes — Turn Off the Light, "
+              "Vol. 1 & 2 — with Elvira, Mistress of the Dark, as a guest.",
+     "spotify": _SP_ART + "3Xt3RrJMFv5SZkCfUE8C1J",
+     "youtube": {"id": "DSbgQE5x2QM",
+                 "label": "Turn Off the Light (feat. Elvira)"}},
+    {"slug": "ghost", "name": "Ghost",
+     "art": "https://i.ytimg.com/vi/7Gr63DiEUxw/hqdefault.jpg",
+     "claim": "A masked metal mass led by Papa Emeritus — \"Dance Macabre\" "
+              "and \"Mary on a Cross\" turned their ritual into Halloween "
+              "anthems.",
+     "spotify": None,
+     "youtube": {"id": "7Gr63DiEUxw", "label": "Dance Macabre"}},
+    {"slug": "jackson", "name": "Michael Jackson",
+     "art": "https://image-cdn-ak.spotifycdn.com/image/ab67616100005174997cc9a4aec335d46c9481fd",
+     "claim": "\"Thriller\" didn't just top the charts — its video made "
+              "Halloween musical, and it still rises every October.",
+     "spotify": _SP_ART + "3fMbdgg4jU18AjLCKBhRSm",
+     "youtube": {"id": "sOnqjkJTMaA", "label": "Thriller"}},
+    {"slug": "carpenter", "name": "John Carpenter",
+     "art": "https://image-cdn-fa.spotifycdn.com/image/ab6761610000517464cf0c1a41bfcfec7fc3ff6e",
+     "claim": "He directed Halloween (1978) and composed the theme himself "
+              "— the most famous five notes in horror.",
+     "spotify": _SP_ART + "0hxQtmgWiPtEsDPeIuKxXq",
+     "youtube": {"id": "nZ2RQuUFznA", "label": "Halloween Theme"}},
+]
+MUSIC_POP = [
+    {"slug": "gaga", "name": "Lady Gaga",
+     "art": "https://image-cdn-ak.spotifycdn.com/image/ab67616100005174aadc18cac8d48124357c38e6",
+     "claim": "\"Bloody Mary\" became the Wednesday dance phenomenon — "
+              "dark pop has a queen, and Halloween is her season.",
+     "spotify": _SP_ART + "1HY2Jd0NmPuamShAr6KMms",
+     "youtube": {"id": "VFwmKL5OL-Q", "label": "Bloody Mary (Official Audio)"}},
+    {"slug": "billie", "name": "Billie Eilish",
+     "art": "https://image-cdn-fa.spotifycdn.com/image/ab676161000051744a21b4760d2ecb7b0dcdc8da",
+     "claim": "\"bury a friend\" built a hit out of the monster under the "
+              "bed — whispers, glitches and all.",
+     "spotify": _SP_ART + "6qqNVTkY8uBg9cP3Jd7DAH",
+     "youtube": {"id": "HUHC9tYz8ik", "label": "bury a friend"}},
+    {"slug": "rihanna", "name": "Rihanna",
+     "art": "https://image-cdn-fa.spotifycdn.com/image/ab67616100005174cb565a8e684e3be458d329ac",
+     "claim": "\"Disturbia\" is the dark-pop staple that lands on Halloween "
+              "playlists every single year.",
+     "spotify": _SP_ART + "5pKCCKE2ajJHZ9KAiaK11H",
+     "youtube": {"id": "E1mU6h4Xdxc", "label": "Disturbia"}},
+]
+
+
+@app.get("/music", response_class=HTMLResponse)
+def music_page(request: Request):
+    return templates.TemplateResponse(
+        request, "music.html",
+        {"site_name": SITE_NAME, "playlists": MUSIC_SPOTIFY_PLAYLISTS,
+         "yt_featured": MUSIC_YOUTUBE_FEATURED, "yt_grid": MUSIC_YOUTUBE_GRID,
+         "icons": MUSIC_ICONS, "pop": MUSIC_POP},
+    )
+
+
 @app.get("/media-kit", response_class=HTMLResponse)
 def media_kit(request: Request):
     now = datetime.now(timezone.utc)

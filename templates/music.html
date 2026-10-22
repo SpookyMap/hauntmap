@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% block title %}Halloween Music &middot; {{ site_name }}{% endblock %}
+{% block head %}<meta name="description" content="HauntMap's music room — Halloween playlists on Spotify, the classic videos on YouTube, and the artists who own the season, from Michael Jackson and Alice Cooper to Lady Gaga and Billie Eilish.">{% endblock %}
+{% block content %}
+<h1>&#x1F383; Halloween Music</h1>
+<p class="lede">The soundtrack of fright night. Press play on the playlists while you build your tour, watch the classic videos, and meet the artists who own the season.</p>
+
+<h2 class="music-h2">&#x1F3A7; Listen on Spotify</h2>
+<p>Three Halloween playlists, ready to go. Logged out, Spotify plays previews — sign in inside a player for the full tracks.</p>
+<div class="music-spotify-grid">
+  {% for p in playlists %}
+  <figure class="music-embed">
+    <iframe src="https://open.spotify.com/embed/playlist/{{ p.id }}?utm_source=generator&amp;theme=0" width="100%" height="352" frameborder="0" allowfullscreen loading="lazy" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" title="Spotify playlist: {{ p.title }}"></iframe>
+    <figcaption><strong>{{ p.title }}</strong> — {{ p.blurb }}</figcaption>
+  </figure>
+  {% endfor %}
+</div>
+
+<h2 class="music-h2">&#x1F4FA; Halloween Classics on YouTube</h2>
+<p>Tap any cover to play the official video right here.</p>
+<div class="yt-feature">
+  <button type="button" class="yt-facade" data-yt="{{ yt_featured.id }}" aria-label="Play {{ yt_featured.title }}">
+    <img src="https://i.ytimg.com/vi/{{ yt_featured.id }}/hqdefault.jpg" alt="" loading="lazy">
+    <span class="yt-play" aria-hidden="true">&#9654;</span>
+  </button>
+  <p class="yt-cap">{{ yt_featured.title }} &middot; {{ yt_featured.channel }}</p>
+</div>
+<div class="yt-grid">
+  {% for v in yt_grid %}
+  <div class="yt-item">
+    <button type="button" class="yt-facade" data-yt="{{ v.id }}" aria-label="Play {{ v.title }}">
+      <img src="https://i.ytimg.com/vi/{{ v.id }}/hqdefault.jpg" alt="" loading="lazy">
+      <span class="yt-play" aria-hidden="true">&#9654;</span>
+    </button>
+    <p class="yt-cap">{{ v.title }} &middot; {{ v.channel }}</p>
+  </div>
+  {% endfor %}
+</div>
+
+<h2 class="music-h2" id="icons">&#x1F451; Halloween Music Icons</h2>
+<p>The artists who built the sound of the season.</p>
+<div class="music-cards">
+  {% for a in icons %}
+  <article class="music-card" id="icon-{{ a.slug }}">
+    <img class="music-card-art" src="{{ a.art }}" alt="{{ a.name }}" loading="lazy">
+    <h3>{{ a.name }}</h3>
+    <p class="music-claim">{{ a.claim }}</p>
+    <div class="music-btns">
+      {% if a.spotify %}<a class="mbtn mbtn-spotify" href="{{ a.spotify }}" target="_blank" rel="noopener">&#9654; Listen on Spotify</a>{% endif %}
+      <a class="mbtn mbtn-yt" href="https://www.youtube.com/watch?v={{ a.youtube.id }}" target="_blank" rel="noopener">Watch: {{ a.youtube.label }}</a>
+      {% if a.pin %}<a class="mbtn mbtn-pin" href="{{ a.pin.url }}">{{ a.pin.label }}</a>{% endif %}
+    </div>
+  </article>
+  {% endfor %}
+</div>
+
+<h2 class="music-h2" id="pop">&#x1FAA9; Halloween Pop</h2>
+<p>Pop royalty with a dark side — the songs that take over every October.</p>
+<div class="music-cards">
+  {% for a in pop %}
+  <article class="music-card" id="pop-{{ a.slug }}">
+    <img class="music-card-art" src="{{ a.art }}" alt="{{ a.name }}" loading="lazy">
+    <h3>{{ a.name }}</h3>
+    <p class="music-claim">{{ a.claim }}</p>
+    <div class="music-btns">
+      {% if a.spotify %}<a class="mbtn mbtn-spotify" href="{{ a.spotify }}" target="_blank" rel="noopener">&#9654; Listen on Spotify</a>{% endif %}
+      <a class="mbtn mbtn-yt" href="https://www.youtube.com/watch?v={{ a.youtube.id }}" target="_blank" rel="noopener">Watch: {{ a.youtube.label }}</a>
+    </div>
+  </article>
+  {% endfor %}
+</div>
+<p class="music-xref">Also ruling the pop lane, from the Icons above: <a href="#icon-weeknd">The Weeknd</a> &middot; <a href="#icon-petras">Kim Petras</a> &middot; <a href="#icon-jackson">Michael Jackson</a></p>
+
+<p class="music-events-cta">Going out instead? <a href="/events">Find Halloween concerts, DJ nights &amp; parties &rarr;</a></p>
+
+<script>
+// YouTube click-to-play facades (same pattern as the feed): the real
+// player only loads when a visitor taps a cover — no autoplay, no
+// third-party requests before the tap.
+document.addEventListener('click', function (ev) {
+  var b = ev.target.closest && ev.target.closest('.yt-facade');
+  if (!b || b.dataset.loaded) return;
+  b.dataset.loaded = '1';
+  var f = document.createElement('iframe');
+  f.className = 'yt-frame';
+  f.src = 'https://www.youtube-nocookie.com/embed/' + b.getAttribute('data-yt') + '?autoplay=1&rel=0';
+  f.setAttribute('allow', 'autoplay; encrypted-media; picture-in-picture');
+  f.setAttribute('allowfullscreen', '');
+  f.setAttribute('title', b.getAttribute('aria-label') || 'YouTube video');
+  b.replaceWith(f);
+});
+</script>
+{% endblock %}
