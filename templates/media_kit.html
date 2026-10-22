@@ -17,7 +17,7 @@
 <div class="mk-stats">
   <div class="mk-stat"><strong>{{ '{:,}'.format(kit.total_pins) }}</strong><span>total listings</span></div>
   <div class="mk-stat"><strong>{{ kit.town_count }}</strong><span>towns covered</span></div>
-  <div class="mk-stat"><strong>{{ kit.states|length }}</strong><span>states covered</span></div>
+  <div class="mk-stat"><strong>{{ kit.state_count }}{% if kit.has_dc %} + DC{% endif %}</strong><span>states covered</span></div>
 </div>
 {% if kit.categories %}
 <ul class="mk-cats">

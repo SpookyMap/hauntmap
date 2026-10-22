@@ -1438,7 +1438,11 @@ def advertise(request: Request):
         sponsors = [dict(r) for r in conn.execute(
             "SELECT * FROM sponsors WHERE is_active = 1 ORDER BY "
             "CASE tier WHEN 'title' THEN 0 WHEN 'premium' THEN 1 ELSE 2 END LIMIT 1").fetchall()]
-    stats["towns"] = len(_towns_with_counts())
+    with get_conn(DB_PATH) as conn:
+        town_rows = conn.execute(
+            "SELECT DISTINCT town FROM entries WHERE hidden = 0").fetchall()
+    stats["towns"] = len({lbl for r in town_rows
+                          if (lbl := extract_city_state(r["town"] or ""))})
     pkg = request.query_params.get("pkg", "")
     if pkg not in {o["id"] for o in SPONSOR_ORDER_OPTIONS}:
         pkg = ""
@@ -1555,6 +1559,8 @@ def media_kit(request: Request):
             state_set.add(st)
     kit["town_count"] = len(labels)
     kit["states"] = sorted(state_set)
+    kit["state_count"] = len(state_set - {"DC"})
+    kit["has_dc"] = "DC" in state_set
     return templates.TemplateResponse(
         request, "media_kit.html", {"kit": kit, "site_name": SITE_NAME},
     )
