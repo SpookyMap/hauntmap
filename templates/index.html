@@ -187,7 +187,7 @@
       <img src="{{ e.thumb_url }}" alt="{{ e.title }}" loading="lazy">
       {% endif %}
       {% else %}
-      <div class="card-media-empty">{{ '&#x1F4C5;' if e.category == 'events' else ('&#x1F534;' if e.category == 'live' else '&#x1F383;') }}</div>
+      <div class="card-media-empty">{% if e.category == 'events' %}&#x1F4C5;{% elif e.category == 'live' %}&#x1F534;{% else %}&#x1F383;{% endif %}</div>
       {% endif %}
       {% if e.is_sample %}<span class="sample-badge">Sample</span>{% endif %}
     </div>
