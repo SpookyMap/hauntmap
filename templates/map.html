@@ -32,7 +32,8 @@
 </div>
 <script>
 const pins = {{ pins | tojson }};
-const map = L.map('full-map').setView([40.75, -74.0], 10);
+const map = L.map('full-map', { zoomControl: false }).setView([40.75, -74.0], 10);
+L.control.zoom({ position: 'topright' }).addTo(map);
 L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom: 19}).addTo(map);
 const cluster = L.markerClusterGroup();
 // thumbnail markers when zoomed in, plain pins when zoomed out
