@@ -30,7 +30,7 @@
   <div class="contest-grid">
     {% for p in pieces %}
     <article class="contest-card">
-      <img src="{{ p.thumb_url }}" alt="{{ p.title }}" loading="lazy">
+      <img src="{{ p.media_url }}" alt="{{ p.title }}" loading="lazy">
       <div class="contest-card-body">
         <strong>{{ p.title }}</strong>
         {% if p.artist %}<span class="contest-by">by {{ p.artist }}{% if p.town %} · {{ p.town }}{% endif %}</span>{% elif p.town %}<span class="contest-by">{{ p.town }}</span>{% endif %}
