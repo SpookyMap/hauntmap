@@ -1593,3 +1593,33 @@ a.game-card:hover { border-color: #ff7518; transform: translateY(-2px); }
   .header-band .header-hook .hook-l2 { display: none; }
   .header-band .header-hook .hook-l1 { font-size: 0.78rem; }
 }
+/* ============ z50: PHONE HERO POLISH (Dan, Oct 22) ====
+   Two fixes from Dan's live phone screenshot.
+   1) HEADLINE WRAP: "Near You" (the lavender .hero-title-alt span)
+      can never split — at 390px the break now lands exactly as Dan
+      wants it: line 1 "Find the Best Halloween Displays", line 2
+      "Near You" (before: "...Displays Near" / "You" orphaned). The
+      nowrap is global so the segment stays intact at every width;
+      the desktop headline layout is otherwise untouched.
+   2) PHONE CORNERS: the hero panel's 18px radius and the Tonight's
+      band card's 16px radius previously rested on single early rules
+      buried under dozens of later appended sections. On phone they
+      are now declared explicitly, corner by corner, as the last word
+      in the cascade — one uniform radius on all four corners of each
+      panel, nothing squared or clipped. Both panels keep their clean
+      inset from the screen edges (the .wrap 1rem gutter, untouched). */
+.hero-title-alt { white-space: nowrap; }
+@media (max-width: 760px) {
+  .hero-intro {
+    border-top-left-radius: 18px;
+    border-top-right-radius: 18px;
+    border-bottom-right-radius: 18px;
+    border-bottom-left-radius: 18px;
+  }
+  .tonight-band .tonight-card {
+    border-top-left-radius: 16px;
+    border-top-right-radius: 16px;
+    border-bottom-right-radius: 16px;
+    border-bottom-left-radius: 16px;
+  }
+}
