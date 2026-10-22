@@ -1545,3 +1545,28 @@ a.game-card:hover { border-color: #ff7518; transform: translateY(-2px); }
   .site-header.v2 .header-nav a.navbtn { font-size: 0.40rem; letter-spacing: 0.01em; }
   .site-header.v2 .header-nav a.navbtn img { width: 18px; height: 18px; }
 }
+
+/* ============ z48: ROW TWO — GIF 25% SMALLER + ALIGNMENT PASS (Dan, Oct 22) ====
+   Dan's final size word on the artwork: 25% smaller on desktop —
+   74px -> 55px tall (~185px wide at the GIF's native ~3.35:1), still
+   the plain-image anchor at the far left of row two, still clearly
+   larger than the ~49px buttons beside it. Phone keeps the artwork
+   at 100x30 (the z44/z47 phone sizing stands, untouched below), and
+   landscape keeps its own 27px override — re-declared after the
+   desktop rule so this section can't swallow it.
+   Alignment pass (Dan, twice: "button alignment is bugging me"):
+   every item in the row — artwork and all nine buttons — centers on
+   ONE shared centerline (align-items: center, reaffirmed here), the
+   buttons all carry the same box (fixed icon box, same padding,
+   labels pinned to a single line so no button can grow taller than
+   its neighbours), and space-between stays, so the width the
+   artwork gives back spreads as uniform gaps from the GIF to the
+   right edge — no bunching, no orphan gap. */
+.site-header.v2 .header-nav { align-items: center; }
+.site-header.v2 .header-nav a.navbtn span { white-space: nowrap; }
+@media (min-width: 761px) {
+  .site-header.v2 .header-nav a.events-link img.events-gif { height: 55px; }
+}
+@media (orientation: landscape) and (max-height: 500px) {
+  .site-header.v2 .header-nav a.events-link img.events-gif { height: 27px; }
+}
