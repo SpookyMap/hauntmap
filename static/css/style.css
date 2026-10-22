@@ -1650,3 +1650,20 @@ a.game-card:hover { border-color: #ff7518; transform: translateY(-2px); }
   .header-band .header-hook .hook-l2 { display: none; }
   .header-band .header-hook .hook-l1 { font-size: 0.78rem; }
 }
+
+/* ============ z52: TAGLINE +15% / "MAP" RED TOO (Dan, Oct 22) ====
+   Follow-up to z51, same day: the tuned lines grow back 15% —
+   line 1 2.35cqw -> 2.70cqw, line 2 4.31cqw -> 4.95cqw (x1.15 on the
+   z51 values, clamp bounds scaled to match; net vs the z49 original:
+   x0.805). Phone scales proportionally (same cqw rules); the
+   landscape slim row is re-declared bit-identical again (line 2
+   hidden, line 1 0.78rem). And in line 1 the word "map" joins
+   "Halloween" in red #e01e26 (same .hw-red span) — line 1's red
+   runs are now "Halloween", "map" and "Build Your Night."; every
+   other word keeps its current color. */
+.header-band .header-hook .hook-l1 { font-size: clamp(0.45rem, 2.70cqw, 3.43rem); }
+.header-band .header-hook .hook-l2 { font-size: clamp(0.64rem, 4.95cqw, 5.96rem); }
+@media (orientation: landscape) and (max-height: 500px) {
+  .header-band .header-hook .hook-l2 { display: none; }
+  .header-band .header-hook .hook-l1 { font-size: 0.78rem; }
+}
