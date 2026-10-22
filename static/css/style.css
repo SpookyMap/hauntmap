@@ -2040,3 +2040,81 @@ body.has-tourbar.has-radio { padding-bottom: 124px; }
   .hero-split { grid-template-areas: "headline" "search" "video" "strip" "sponsor" "townreq"; }
   .hero-split .mobile-search { grid-area: search; margin: 0; }
 }
+
+/* ============ z65: PHONE NAV — TWO ROWS OF FIVE (Dan, Oct 22; supersedes the z64 single row) ====
+   Dan's call, verbatim: "I don't think we should have 10 buttons in
+   a row in the phone but a row of 5 over the next 5 so we can have
+   room and size." Phone portrait only — desktop/laptop keep the
+   single row, landscape phones keep the slim row. Traffic framing
+   (Dan, same evening): most visitors are on phones, so the phone
+   first screen is the product — the two rows are sized to keep the
+   whole first screen (band + both rows + headline + search) clean,
+   with zero horizontal overflow.
+   Layout: the nav becomes a grid. The Events & Parties artwork is
+   a fixed left column spanning BOTH rows (grid-row: 1 / span 2),
+   and the ten buttons flow 5-over-5 into equal 1fr columns to its
+   right, in the existing order — Watch, Map, Nearby, Tours, DIY /
+   DIY Costumes, Games, Top Haunts, Add Yours, About Us. Columns are
+   equal by construction and the gaps are a uniform 6px on both
+   axes, so distribution is even at any width.
+   Room buys size: icons 25px -> 42px at 390px-class widths (38px
+   at 360px-class, 46px on wide phones), labels 0.40rem -> 0.50rem
+   (0.47rem at 360px). The artwork (120x36 at 390px class, 110x33
+   at 360px) stays ~2.9x a button's width — still clearly the
+   biggest element in the nav. COSTUMES keeps its one-size step
+   down so the widest word never touches its neighbours.
+   The z64 hero-order rules above stand untouched. */
+@media (max-width: 760px) and (orientation: portrait) {
+  .site-header.v2 .header-nav {
+    display: grid;
+    grid-template-columns: auto repeat(5, 1fr);
+    column-gap: 6px; row-gap: 6px;
+    align-items: center; justify-content: stretch; justify-items: stretch;
+  }
+  .site-header.v2 .header-nav a.events-link { grid-row: 1 / span 2; grid-column: 1; align-self: center; }
+  .site-header.v2 .header-nav a.events-link img.events-gif { height: 36px; }
+  .site-header.v2 .header-nav a.navbtn {
+    flex: none; min-width: 0; padding: 0;
+    font-size: 0.50rem; letter-spacing: 0; gap: 0.14rem;
+  }
+  .site-header.v2 .header-nav a.navbtn img { width: 42px; height: 42px; }
+  .site-header.v2 .header-nav a.navbtn span { white-space: normal; text-align: center; line-height: 1.15; }
+  .site-header.v2 .header-nav a.navbtn[href="/diy-costumes"] span { font-size: 0.44rem; }
+}
+@media (max-width: 380px) and (orientation: portrait) {
+  .site-header.v2 .header-nav a.events-link img.events-gif { height: 33px; }
+  .site-header.v2 .header-nav a.navbtn { font-size: 0.47rem; }
+  .site-header.v2 .header-nav a.navbtn img { width: 38px; height: 38px; }
+  .site-header.v2 .header-nav a.navbtn[href="/diy-costumes"] span { font-size: 0.43rem; }
+}
+@media (min-width: 560px) and (max-width: 760px) and (orientation: portrait) {
+  .site-header.v2 .header-nav a.events-link img.events-gif { height: 42px; }
+  .site-header.v2 .header-nav a.navbtn { font-size: 0.54rem; }
+  .site-header.v2 .header-nav a.navbtn img { width: 46px; height: 46px; }
+  .site-header.v2 .header-nav a.navbtn[href="/diy-costumes"] span { font-size: 0.50rem; }
+}
+
+/* ============ z65b: PHONE HOOK — BIGGER TYPE (Dan, Oct 22) ====
+   Dan: the hook/tagline type is too small on the phone. Measured
+   before: the two lines sat at their cqw clamp floors — line 1 at
+   7.2px, line 2 at 10.24px — set nowrap, so the paragraph (227.7px
+   of ink) overflowed the 205.6px band centre and squeezed between
+   the logo and Frankenstein. Phone portrait only (desktop keeps
+   its cqw sizing; landscape keeps the slim row): the lines may now
+   wrap, and they grow into the space the 86px logo already gives
+   the band — line 1 wraps to two lines, line 2 breaks cleanly
+   between its two phrases ("NEW HAUNTS DAILY!!!" / "THE HAUNT
+   STARTS HERE"), and the hook block (~75px) still fits under the
+   logo's 86px, so the band — and the header — does not grow at
+   all. Wording and the .hook-line / .tag-* colors are untouched. */
+@media (max-width: 760px) and (orientation: portrait) {
+  .header-band .header-hook .hook-l1 { font-size: clamp(0.80rem, 4.2cqw, 1.30rem); white-space: normal; }
+  .header-band .header-hook .hook-l2 { font-size: clamp(0.94rem, 5.6cqw, 1.60rem); white-space: normal; margin-top: 0.12em; }
+  /* The closer always starts on its own line: "NEW HAUNTS DAILY!!!"
+     never shares a line with "THE HAUNT STARTS HERE". */
+  .header-band .header-hook .hook-l2 .tag-a { display: block; }
+}
+@media (max-width: 380px) and (orientation: portrait) {
+  .header-band .header-hook .hook-l1 { font-size: 0.78rem; }
+  .header-band .header-hook .hook-l2 { font-size: 0.88rem; }
+}
