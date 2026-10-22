@@ -452,7 +452,7 @@ h1 { font-size: 1.6rem; } h2 { font-size: 1.2rem; color: var(--accent2); margin-
 }
 .hero-intro h1.hero-title {
   font-family: "Creepster", cursive;
-  font-size: clamp(2.4rem, 9vw, 3.8rem);
+  font-size: clamp(1.8rem, 6.75vw, 2.85rem);
   font-weight: 400;
   color: #ff7518;
   letter-spacing: 0.03em;
@@ -680,7 +680,7 @@ a.game-card:hover { border-color: #ff7518; transform: translateY(-2px); }
   .mobile-search-form { display: flex; gap: 0.5rem; }
   .mobile-search-form input { flex: 1; padding: 0.7rem 0.8rem; border-radius: 10px; border: 1px solid #372b5e; background: #17122b; color: #e8e6e3; font-size: 1rem; }
   .mobile-search .btn-locate { width: 100%; padding: 0.7rem; font-size: 1rem; }
-  .hero-intro h1.hero-title { font-size: 1.6rem; margin-bottom: 0.4rem; }
+  .hero-intro h1.hero-title { font-size: 1.2rem; margin-bottom: 0.4rem; }
   /* Span the header's full content width: in the column header layout the
      nav otherwise shrink-wraps to its widest row and overflows the edge,
      clipping "+ Add yours". */

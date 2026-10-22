@@ -1,5 +1,16 @@
 {% extends "base.html" %}
 {% block content %}
+{% if tonight %}
+<a class="tonight-card" href="/d/{{ tonight.id }}">
+  <img src="{{ tonight.thumb_url }}" alt="{{ tonight.title }}" loading="lazy">
+  <span class="tonight-body">
+    <span class="tonight-kicker">&#x1F383; Tonight's Display &middot; {{ tonight_label }}</span>
+    <span class="tonight-title">{{ tonight.title }}</span>
+    <span class="tonight-meta">{{ tonight.town_label }}{% if tonight.votes %} &middot; &#x1F383; {{ tonight.votes }} vote{{ 's' if tonight.votes != 1 }}{% endif %}</span>
+  </span>
+</a>
+{% endif %}
+
 <div class="mobile-search">
   <form method="get" action="/nearby" class="mobile-search-form">
     <input type="text" name="q" placeholder="&#x1F50D; Town or ZIP" autocomplete="off">
@@ -14,17 +25,6 @@
   <p>Watch the displays before you go, build the tour, own the night. Every display page carries photos and video, scare levels and the details that matter, so Halloween night is planned in one click — 779 towns, thousands of frights, zero aimless driving. Find it. Tour it. Haunt it.</p>
   <p>HauntMap is built for Halloween lovers, by Halloween lovers — and it runs on the people who decorate. Put your house on the map, vote for the displays that deserve it, and help your whole town find the good stuff. Don't just trick-or-treat — tour like a pro.</p>
 </div>
-
-{% if tonight %}
-<a class="tonight-card" href="/d/{{ tonight.id }}">
-  <img src="{{ tonight.thumb_url }}" alt="{{ tonight.title }}" loading="lazy">
-  <span class="tonight-body">
-    <span class="tonight-kicker">&#x1F383; Tonight's Display &middot; {{ tonight_label }}</span>
-    <span class="tonight-title">{{ tonight.title }}</span>
-    <span class="tonight-meta">{{ tonight.town_label }}{% if tonight.votes %} &middot; &#x1F383; {{ tonight.votes }} vote{{ 's' if tonight.votes != 1 }}{% endif %}</span>
-  </span>
-</a>
-{% endif %}
 
 {% include "_town_request.html" %}
 
