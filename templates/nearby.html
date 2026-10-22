@@ -36,7 +36,7 @@ document.getElementById('btn-near-me').onclick = function() {
       <div class="card-media">
         {% if e.media_path %}
         {% if e.media_type == 'video' %}
-        <video src="{{ e.media_url }}" {% if e.thumb_path %}poster="{{ e.thumb_url }}"{% endif %} preload="metadata" muted playsinline></video>
+        {% if e.thumb_path %}<img src="{{ e.thumb_url }}" alt="{{ e.title }}" loading="lazy">{% else %}<div class="card-media-empty">&#x1F3AC;</div>{% endif %}
         <span class="play-badge">&#x25B6;</span>
         {% else %}
         <img src="{{ e.thumb_url }}" alt="{{ e.title }}" loading="lazy">
