@@ -1827,3 +1827,25 @@ a.game-card:hover { border-color: #ff7518; transform: translateY(-2px); }
 #hm-tourbar .tb-build { background: #ff7518; color: #1a1038; font-weight: 800; padding: 0.45rem 0.95rem; border-radius: 999px; text-decoration: none; white-space: nowrap; }
 body.has-tourbar { padding-bottom: 60px; }
 body.has-tourbar #hm-prompt { bottom: 4.4rem; }
+
+/* Second-click #3 (Oct 22): first-screen modules on the unfiltered
+   homepage — "Near you tonight" (biggest haunt towns as chips, the
+   visitor's remembered town first when they have one, location
+   actions) and a "Trending today" rail ranked by live detail-page
+   view counts with the numbers shown. Added modules only; the hero,
+   Tonight's band and search are untouched. */
+.near-you { margin: 1.2rem 0 0.4rem; padding: 1rem; background: linear-gradient(160deg, #241a44, #17122b); border: 1px solid #4a2d7a; border-radius: 14px; }
+.near-you h2 { font-size: 1.25rem; margin: 0 0 0.3rem; }
+.near-you-sub { color: #c9bce8; margin: 0 0 0.7rem; }
+.near-you-mine { margin: 0 0 0.7rem; font-weight: 700; }
+.town-chips { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.8rem; }
+.town-chip { display: inline-flex; align-items: center; gap: 0.45rem; padding: 0.45rem 0.8rem; border-radius: 999px; background: #3a2566; border: 1px solid #6b4fae; color: #fff; text-decoration: none; font-weight: 700; font-size: 0.9rem; }
+.town-chip:hover { background: #4a2d7a; }
+.town-chip .chip-n { color: #ffb066; font-size: 0.8rem; font-weight: 800; }
+.near-you-actions { display: flex; flex-wrap: wrap; gap: 0.6rem; }
+.btn-ghost { background: transparent; border: 1px solid #6b4fae; color: #e8ddff; }
+.trending { margin: 1.2rem 0 0.2rem; }
+.trending h2 { font-size: 1.25rem; margin: 0 0 0.6rem; }
+.trending .card-media { position: relative; }
+.rank-badge { position: absolute; top: 0.5rem; left: 0.5rem; background: #ff7518; color: #1a1038; font-weight: 900; font-size: 0.85rem; padding: 0.15rem 0.5rem; border-radius: 999px; }
+.views-line { color: #ffb066; font-weight: 700; font-size: 0.85rem; margin: 0.25rem 0 0; }

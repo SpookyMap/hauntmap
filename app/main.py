@@ -875,6 +875,30 @@ def home(request: Request, sort: str = "top", town: str = "", town_search: str =
     with get_conn(DB_PATH) as conn:
         tonight = _pick_tonights_display(conn, exclude_id=last_id)
     tonight_label = today_et.strftime("%A, %B ") + str(today_et.day)
+    # First-screen modules (second-click #3): only on the unfiltered
+    # Haunt Map home view — filtered/category views keep their own focus.
+    trending, near_towns = [], []
+    if cat == "halloween" and not (town or state or region or scare or tag or video):
+        with get_conn(DB_PATH) as conn:
+            trows = conn.execute(
+                "SELECT e.*, COALESCE(v.views, 0) AS _views FROM entries e "
+                "LEFT JOIN (SELECT CAST(substr(path, 4) AS INTEGER) AS eid, "
+                "                  COUNT(*) AS views FROM page_views "
+                "                  WHERE path LIKE '/d/%' GROUP BY eid) v "
+                "  ON v.eid = e.id "
+                "WHERE e.hidden = 0 AND e.media_path IS NOT NULL "
+                "  AND TRIM(e.media_path) != '' "
+                "ORDER BY _views DESC, e.votes DESC, e.id LIMIT 5").fetchall()
+            trending = [row_to_dict(r) for r in trows if r["_views"] > 0]
+            counts: dict[str, int] = {}
+            for r in conn.execute(
+                    "SELECT town FROM entries "
+                    "WHERE hidden = 0 AND category = 'halloween'").fetchall():
+                label = extract_city_state(r["town"] or "")
+                if label:
+                    counts[label] = counts.get(label, 0) + 1
+            near_towns = [{"label": k, "count": v} for k, v in
+                          sorted(counts.items(), key=lambda kv: (-kv[1], kv[0]))[:8]]
     response = templates.TemplateResponse(request, "index.html",
         {"request": request, "entries": entries, "sort": sort,
          "town": town, "towns": towns(cat, state), "states": states(cat),
@@ -882,6 +906,7 @@ def home(request: Request, sort: str = "top", town: str = "", town_search: str =
          "cat": cat, "cat_labels": CAT_LABELS, "cat_emoji": CAT_EMOJI,
          "scare": scare, "tag": tag, "video": "1" if video.strip() == "1" else "",
          "tonight": tonight, "tonight_label": tonight_label,
+         "trending": trending, "near_towns": near_towns,
          "sponsors": sponsors,
          "bottom_tabs": _place_tabs(cat, state, region, sort, scare, tag,
                                     "1" if video.strip() == "1" else ""),

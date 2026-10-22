@@ -81,6 +81,63 @@
 </section>
 {% endif %}
 
+{% if near_towns %}
+<section class="near-you" aria-label="Near you tonight">
+  <h2>&#x1F4CD; Near you tonight</h2>
+  <p class="near-you-sub">The biggest haunt towns on the map right now — tap yours, or jump straight to what's around you.</p>
+  <p class="near-you-mine" hidden>&#x1F4CD; Your town: <a class="js-town-link" href="/nearby"></a> — <a href="/nearby">see what's near it &rarr;</a></p>
+  <div class="town-chips">
+    {% for t in near_towns %}
+    <a class="town-chip" href="/?town={{ t.label|urlencode }}">{{ t.label }} <span class="chip-n">{{ t.count }} haunt{{ 's' if t.count != 1 }}</span></a>
+    {% endfor %}
+  </div>
+  <div class="near-you-actions">
+    <button type="button" class="btn" onclick="hmNearMe()">&#x1F4CD; Use my location</button>
+    <a class="btn btn-ghost" href="/nearby">Search your town</a>
+  </div>
+  <script>
+  (function () {
+    try {
+      var t = localStorage.getItem('hm_town');
+      if (!t) return;
+      var box = document.querySelector('.near-you-mine');
+      var link = box.querySelector('.js-town-link');
+      link.textContent = t;
+      link.href = '/?town=' + encodeURIComponent(t);
+      box.hidden = false;
+    } catch (e) {}
+  })();
+  </script>
+</section>
+{% endif %}
+
+{% if trending %}
+<section class="trending" aria-label="Trending today">
+  <h2>&#x1F525; Trending today</h2>
+  <div class="rail trending-rail">
+    {% for p in trending %}
+    <a class="card rail-card" href="/d/{{ p.id }}">
+      <div class="card-media">
+        {% if p.media_type == 'video' %}
+        <video src="{{ p.media_url }}" {% if p.thumb_path %}poster="{{ p.thumb_url }}"{% endif %} preload="none" muted playsinline></video>
+        <span class="play-badge">&#x25B6;</span>
+        {% else %}
+        <img src="{{ p.thumb_url }}" alt="{{ p.title }}" loading="lazy">
+        {% endif %}
+        <span class="rank-badge">#{{ loop.index }}</span>
+      </div>
+      <div class="card-body">
+        <h3>{{ p.title }}</h3>
+        <p class="meta">{{ p.town_label }}</p>
+        <p class="views-line">&#x1F441;&#xFE0F; {{ p._views }} view{{ 's' if p._views != 1 }}</p>
+        <span class="tour-add-btn" role="button" tabindex="0" data-tour-btn data-id="{{ p.id }}" data-title="{{ p.title }}" data-town="{{ p.town }}" data-lat="{{ p.lat if p.lat is not none else '' }}" data-lng="{{ p.lng if p.lng is not none else '' }}" data-thumb="{{ p.thumb_url }}">+ Tour</span>
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
 <div class="cat-tabs-main">
   <a href="/?cat=halloween{% if sort != 'top' %}&sort={{ sort }}{% endif %}{% if town %}&town={{ town }}{% endif %}{% if video %}&video=1{% endif %}" class="cat-btn-main {% if cat == 'halloween' %}active{% endif %}">&#x1F383; Haunt Map</a>
   <a href="/?cat=christmas{% if sort != 'top' %}&sort={{ sort }}{% endif %}{% if town %}&town={{ town }}{% endif %}{% if video %}&video=1{% endif %}" class="cat-btn-main {% if cat == 'christmas' %}active{% endif %}">&#x1F384; Jolly Map</a>
