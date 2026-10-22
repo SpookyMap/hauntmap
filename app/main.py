@@ -30,7 +30,7 @@ from fastapi import BackgroundTasks, FastAPI, Form, HTTPException, Request, Uplo
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from PIL import Image, UnidentifiedImageError
+from PIL import Image, ImageOps, UnidentifiedImageError
 
 from .db import get_conn, init_db
 
@@ -479,8 +479,53 @@ def _crop_43(im: Image.Image) -> Image.Image:
     return im.crop((0, y, w, y + nh))
 
 
+def _exif_orientation(im: Image.Image) -> int:
+    """EXIF Orientation tag (274); 1 = upright. 1 when absent/unreadable."""
+    try:
+        return int(im.getexif().get(274) or 1)
+    except Exception:
+        return 1
+
+
+def _save_pixels(im: Image.Image, dest: Path, fmt: str) -> None:
+    """Save already-transposed pixels WITHOUT any EXIF orientation flag,
+    so no viewer can rotate the image a second time."""
+    im.info.pop("exif", None)
+    if fmt == "JPEG":
+        im.convert("RGB").save(dest, "JPEG", quality=85, optimize=True)
+    elif fmt == "PNG":
+        im.save(dest, "PNG", optimize=True)
+    elif fmt == "WEBP":
+        im.save(dest, "WEBP", quality=85)
+    else:
+        im.save(dest, fmt)
+
+
+def _normalize_orientation(src: Path) -> bool:
+    """Physically rotate a stored photo's pixels per its EXIF orientation
+    flag, then strip the flag (Dan Oct 22: pictures must ALWAYS display
+    right side up). Browsers honor the flag inconsistently — some ignore
+    it and show the raw (sideways) pixels — so the pixels themselves must
+    be upright. Returns True when the file was rewritten."""
+    if src.suffix.lower() not in PHOTO_EXTS:
+        return False
+    try:
+        with Image.open(src) as im:
+            im.load()
+            if _exif_orientation(im) == 1:
+                return False
+            fmt = im.format or "JPEG"
+            upright = ImageOps.exif_transpose(im)
+        tmp = src.with_suffix(src.suffix + ".upr")
+        _save_pixels(upright, tmp, fmt)
+        tmp.replace(src)
+        return True
+    except (OSError, UnidentifiedImageError):
+        return False
+
+
 def _write_thumb(im: Image.Image, dest: Path) -> None:
-    im = _crop_43(im.convert("RGB"))
+    im = _crop_43(ImageOps.exif_transpose(im).convert("RGB"))
     if im.width > THUMB_W:
         im = im.resize((THUMB_W, THUMB_H), Image.LANCZOS)
     im.save(dest, "JPEG", quality=76, optimize=True)
@@ -491,14 +536,15 @@ def _cap_original(src: Path) -> None:
     original; phone photos arrive at 3-5 MB). No-op when already small enough."""
     try:
         with Image.open(src) as im:
-            if max(im.size) <= ORIG_MAX_EDGE:
+            im.load()
+            rotated = _exif_orientation(im) != 1
+            im = ImageOps.exif_transpose(im)
+            if max(im.size) <= ORIG_MAX_EDGE and not rotated:
                 return
             fmt = im.format or "JPEG"
-            im.thumbnail((ORIG_MAX_EDGE, ORIG_MAX_EDGE), Image.LANCZOS)
-            if fmt == "JPEG":
-                im.convert("RGB").save(src, "JPEG", quality=85, optimize=True)
-            else:
-                im.save(src, fmt)
+            if max(im.size) > ORIG_MAX_EDGE:
+                im.thumbnail((ORIG_MAX_EDGE, ORIG_MAX_EDGE), Image.LANCZOS)
+            _save_pixels(im, src, fmt)
     except (OSError, UnidentifiedImageError):
         pass
 
@@ -511,7 +557,9 @@ def _recompress_jpeg(src: Path) -> None:
             return
         tmp = src.with_suffix(".rejpg")
         with Image.open(src) as im:
-            im.convert("RGB").save(tmp, "JPEG", quality=85, optimize=True)
+            im.load()
+            ImageOps.exif_transpose(im).convert("RGB").save(
+                tmp, "JPEG", quality=85, optimize=True)
         if tmp.stat().st_size < src.stat().st_size:
             tmp.replace(src)
         else:
@@ -524,6 +572,7 @@ def make_thumb(src: Path, dest_name: str) -> str:
     """Create a JPEG thumbnail for a photo. Returns the relative thumb path."""
     rel = f"thumbs/{dest_name}_thumb.jpg"
     dest = THUMB_DIR / f"{dest_name}_thumb.jpg"
+    _normalize_orientation(src)  # stored original's pixels upright, flag stripped
     _cap_original(src)
     _recompress_jpeg(src)
     with Image.open(src) as im:
@@ -2394,6 +2443,38 @@ def admin_recap(request: Request, offset: int = 0, limit: int = 100):
             "done": offset + len(batch) >= len(paths)}
 
 
+@app.post("/admin/fix-orientation")
+def admin_fix_orientation(request: Request, offset: int = 0, limit: int = 100):
+    """Sweep stored entry photos for EXIF-sideways originals: transpose the
+    pixels upright, strip the flag, and regenerate the thumbnail from the
+    fixed original. Same chunked, resumable pattern as /admin/recap.
+    Admin only. (Dan Oct 22: pictures must ALWAYS display right side up.)"""
+    _require_admin(request)
+    with get_conn(DB_PATH) as conn:
+        rows = conn.execute(
+            "SELECT id, media_path, thumb_path FROM entries "
+            "WHERE media_type = 'photo' AND media_path != '' ORDER BY id").fetchall()
+    batch = rows[offset:offset + limit]
+    fixed = []
+    for r in batch:
+        f = UPLOAD_DIR / r["media_path"]
+        if not f.exists():
+            continue
+        try:
+            if _normalize_orientation(f):
+                fixed.append(r["id"])
+                if r["thumb_path"]:
+                    thumb = UPLOAD_DIR / r["thumb_path"]
+                    if thumb.exists():
+                        with Image.open(f) as im:
+                            im.load()
+                            _write_thumb(im, thumb)
+        except (OSError, UnidentifiedImageError):
+            continue
+    return {"total": len(rows), "offset": offset, "processed": len(batch),
+            "fixed_ids": fixed, "done": offset + len(batch) >= len(rows)}
+
+
 def _require_admin(request: Request) -> None:
     if not is_admin(request):
         raise HTTPException(403, "Admin only.")
@@ -2583,6 +2664,7 @@ async def admin_sponsor_add(request: Request,
         sponsor_dir.mkdir(exist_ok=True)
         logo_path = f"sponsors/{uuid.uuid4().hex}{ext}"
         shutil.move(tmp, UPLOAD_DIR / logo_path)
+        _normalize_orientation(UPLOAD_DIR / logo_path)
     now = datetime.now(timezone.utc).isoformat()
     with get_conn(DB_PATH) as conn:
         conn.execute(
