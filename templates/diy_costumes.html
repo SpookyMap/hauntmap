@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}DIY Halloween Costumes — Make Your Own | {{ site_name }}{% endblock %}
+{% block content %}
+<div class="hero-intro">
+  <h1>&#x2702;&#xFE0F; DIY Halloween Costumes</h1>
+  <p>Make your own costume this year. We scoured our favorite DIY blogs and Pinterest boards for the best make-your-own ideas — every card below is our quick take, and the full step-by-step tutorial lives with the creator who made it. Just tap through.</p>
+  <p>Short on time? Jump to <a href="#last-minute">Last-Minute &amp; No-Sew</a>. Want to browse thousands more? <a href="https://www.pinterest.com/search/pins/?q=diy%20halloween%20costume" target="_blank" rel="noopener">Search DIY costumes on Pinterest &#x2197;</a></p>
+  <p>More of a decorator? Our <a href="/diy">DIY Decorations</a> page has the prop builds. Showing off a finished costume instead? Enter the <a href="/costume-contest">Costume Contest</a>.</p>
+</div>
+
+{% for s in sections %}
+<h2 class="diy-section-title" id="{{ s.id }}">{{ s.title | safe }}</h2>
+<p class="diy-section-sub">{{ s.sub }}</p>
+
+<div class="diy-grid">
+  {% for c in s.ideas %}
+  <div class="diy-card costume-card">
+    <img class="costume-img" src="/static/img/{{ c.img }}" alt="Halloween stock photo" loading="lazy">
+    <h3>{{ c.name }}</h3>
+    <p class="diy-creator">For: {{ c.who }}</p>
+    <p class="costume-meta"><span class="costume-chip">&#x1F4AA; {{ c.difficulty }}</span> <span class="costume-chip">&#x23F1;&#xFE0F; {{ c.time }}</span></p>
+    <p class="costume-materials"><strong>You&rsquo;ll need:</strong> {{ c.materials }}</p>
+    <p class="diy-blurb">{{ c.blurb }}</p>
+    <p class="diy-watch"><a href="{{ c.url }}" target="_blank" rel="noopener">See the full tutorial at {{ c.source }} &#x2197;</a></p>
+  </div>
+  {% endfor %}
+</div>
+{% endfor %}
+
+<div class="costume-credits">
+  <p>Every idea above is credited to its creator and links out to their original tutorial — we never copy their instructions or photos. Found a costume tutorial we should feature? <a href="/upload">Tell us about it</a>.</p>
+</div>
+{% endblock %}

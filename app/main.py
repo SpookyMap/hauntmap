@@ -817,6 +817,154 @@ def diy_page(request: Request):
     )
 
 
+# ------------------------------------------------------------- diy costumes
+# Curated costume ideas (Dan, Oct 22): OUR OWN short write-ups only — the full
+# step-by-step instructions live at each credited source, linked from every
+# card. Card art is the site's own stock Halloween imagery, never a creator's
+# photo. Every source link was verified live (HTTP 200) on 2026-10-22.
+
+COSTUME_SECTIONS = [
+    {
+        "id": "kids",
+        "title": "&#x1F383; For Kids",
+        "sub": "Weekend projects and after-school builds — cardboard, felt and a glue gun go a long way.",
+        "ideas": [
+            {"name": "Cardboard Robot", "who": "Kids 5–10", "difficulty": "Easy", "time": "About 2 hours",
+             "materials": "Two cardboard boxes, foil or silver tape, bottle caps, dryer ducting, glow sticks",
+             "blurb": "The classic box robot, upgraded: light-up trim, a LEGO-style control panel and glow-in-the-dark cuffs so your little bot stays visible after dark.",
+             "source": "Goodnight Fox", "url": "https://www.goodnightfox.com/blog/robot-costume", "img": "costume_stock_1.jpg"},
+            {"name": "Umbrella Jellyfish", "who": "Kids 4+", "difficulty": "Easy", "time": "About 30 minutes",
+             "materials": "Clear or white umbrella, bubble wrap, ribbon scraps, light-colored outfit",
+             "blurb": "A clear umbrella becomes the jellyfish bell and the ribbons do the floating — a showstopper that weighs almost nothing and needs zero sewing.",
+             "source": "PSECU", "url": "https://www.psecu.com/learn/6-easy-diy-halloween-costumes-for-kids", "img": "costume_stock_2.jpg"},
+            {"name": "No-Sew Superhero Cape", "who": "Kids 3–8", "difficulty": "Easy", "time": "About 20 minutes",
+             "materials": "One oversized T-shirt, fabric markers or felt, scissors",
+             "blurb": "One old tee transforms into a cape with its neckline intact — then your kid designs their own hero emblem. Sleeves become matching wristbands.",
+             "source": "NOLA Family", "url": "https://nolafamily.com/diy-halloween-costumes-for-kids/", "img": "costume_stock_3.jpg"},
+            {"name": "Pineapple Rainsuit Costume", "who": "Toddlers & kids", "difficulty": "Easy", "time": "About 45 minutes",
+             "materials": "Yellow rainsuit or sweatsuit, green felt, headband, toilet paper roll, hot glue",
+             "blurb": "A yellow outfit plus a felt pineapple crown — and because the base is rain gear, a drizzly Halloween night can't ruin it.",
+             "source": "Jan & Jul", "url": "https://janandjul.com/easy-halloween-costumes/", "img": "costume_stock_4.jpg"},
+            {"name": "Spooky Paper Mask", "who": "Kids 6+", "difficulty": "Medium", "time": "An afternoon (with drying time)",
+             "materials": "Tissue box cardboard, kitchen paper, glue, dyes or paint, elastic, coloring pens",
+             "blurb": "A build-it-from-scratch mask project: shape the base from a flattened box, then finish it as a pumpkin, a mummy, or a flower-crowned spooky face.",
+             "source": "Cushelle", "url": "https://www.cushelle.com/everyday-fun/craft-ideas/3-seriously-spooky-diy-kids-halloween-costume-ideas/", "img": "costume_stock_5.jpg"},
+            {"name": "Baby Lamb (Cotton-Ball Wool)", "who": "Babies & toddlers", "difficulty": "Easy", "time": "About 30 minutes",
+             "materials": "Black onesie and hat, cotton balls, black felt, hot glue",
+             "blurb": "The softest costume on this page: cotton balls glued over a black onesie make instant wool, and floppy felt ears finish the flock.",
+             "source": "Sustainably Kind Living", "url": "https://sustainablykindliving.com/diy-halloween-costumes/", "img": "costume_stock_6.jpg"},
+        ],
+    },
+    {
+        "id": "adults",
+        "title": "&#x1F9DB; For Adults",
+        "sub": "Closet-first costumes and pun costumes that land at the party — most start with clothes you already own.",
+        "ideas": [
+            {"name": "Wednesday Addams", "who": "Adults & teens", "difficulty": "Easy", "time": "Under 1 hour",
+             "materials": "Black dress with white collar (or layered shirt), pale makeup, black eyeliner, braids or a wig",
+             "blurb": "Deadpan is the whole costume: pale base, a widow's-peak eyeliner flick, two braids, and your most miserable expression.",
+             "source": "Slap Dash Mom", "url": "https://slapdashmom.com/wednesday-addams-costume-tutorial/", "img": "costume_stock_7.jpg"},
+            {"name": "Cereal Killer", "who": "Adults", "difficulty": "Easy", "time": "About 1 hour",
+             "materials": "White tee, mini cereal boxes, cardboard knives, red paint, duct tape, marker",
+             "blurb": "The pun costume that never dies: cereal boxes and cardboard cutlery taped to a tee, finished with a tasteful amount of 'blood' splatter.",
+             "source": "Marc and Mandy", "url": "https://marcandmandy.com/easy-cheap-diy-halloween-costumes/", "img": "costume_stock_8.jpg"},
+            {"name": "It's Raining Men", "who": "Adults", "difficulty": "Easy", "time": "About 30 minutes",
+             "materials": "Cheap umbrella, string, safety pins, printed photos of your favorite leading men",
+             "blurb": "Hallelujah — photos dangling from an umbrella on strings. Absurd, cheap, and it photographs like a dream.",
+             "source": "Goemans Appliances Blog", "url": "https://blog.goemans.com/easy-diy-halloween-costumes", "img": "costume_stock_1.jpg"},
+            {"name": "Mad Scientist", "who": "Adults", "difficulty": "Easy", "time": "About 30 minutes",
+             "materials": "Lab coat or white shirt, wild hair (backcombing or a wig), plastic bottle 'concoction', face paint",
+             "blurb": "Teased-up hair, a lab coat and a glowing mystery potion in a bottle. The cackle is up to you.",
+             "source": "The Life Planner", "url": "https://thelifeplanner.co/blog/post/10_diy_halloween_costumes_you_can_make_last_minute.html", "img": "costume_stock_2.jpg"},
+            {"name": "Rosie the Riveter", "who": "Adults", "difficulty": "Easy", "time": "About 15 minutes",
+             "materials": "Chambray or denim shirt, red bandana, red lipstick, rolled-up sleeves",
+             "blurb": "Two thrift-store staples and the most famous bandana in history. Flex mandatory, sewing nonexistent.",
+             "source": "VOA Ohio & Indiana", "url": "https://www.voaohin.org/5-last-minute-classic-diy-halloween-costumes/", "img": "costume_stock_3.jpg"},
+            {"name": "Beetlejuice (Tape-Striped Suit)", "who": "Adults", "difficulty": "Medium", "time": "About 1–2 hours",
+             "materials": "Old blazer and trousers, black electrical tape, baby powder for hair, green eyeshadow",
+             "blurb": "No striped suit? Make one: electrical-tape stripes on a thrifted blazer, powdered messy hair, and a little mossy green shading.",
+             "source": "London Mums Magazine", "url": "https://www.londonmumsmagazine.com/whats-on/activities/get-creative/simple-homemade-halloween-outfits-hairdos-on-a-budget/", "img": "costume_stock_4.jpg"},
+        ],
+    },
+    {
+        "id": "couples",
+        "title": "&#x1F491; Couples & Groups",
+        "sub": "Matching looks that are twice the fun and (mostly) half the effort each.",
+        "ideas": [
+            {"name": "Harry & Hermione", "who": "Couples", "difficulty": "Easy", "time": "A day or two of gathering pieces",
+             "materials": "White collared shirts, gray sweaters, house ties and patches, wands, round glasses, eyeliner (for the scar)",
+             "blurb": "The closet-cosplay classic that once won a Best Couple Costume prize — uniforms from your own wardrobe plus a few cheap accessories.",
+             "source": "Journey With J", "url": "https://www.journeywithjblog.com/harry-hermione-diy-halloween-costumes/", "img": "costume_stock_5.jpg"},
+            {"name": "Scarecrow Couple", "who": "Couples & families", "difficulty": "Easy", "time": "About 1–2 hours",
+             "materials": "Flannel shirts, jeans or a dress, raffia or straw, burlap patches, straw hats, rope belt",
+             "blurb": "Cozy fall energy for two: patched flannel, raffia 'straw' at the cuffs, and a sunflower or faux-corn prop to sell the harvest look.",
+             "source": "Simple Made Pretty", "url": "https://simplemadepretty.com/halloween-couples-costumes/", "img": "costume_stock_6.jpg"},
+            {"name": "Giant Waffle & Eleven", "who": "Couples, siblings, parent + kid", "difficulty": "Medium", "time": "An afternoon",
+             "materials": "Cardboard, yellow paint, yellow pool noodle, straps, red foam sheet",
+             "blurb": "One of you is a giant Eggo — pool-noodle strips make the waffle grid — and the other just needs a pink dress and a box of the real thing.",
+             "source": "See Kate Sew", "url": "https://seekatesew.com/how-to-make-a-waffle-costume-diy-eggo-costume/", "img": "costume_stock_7.jpg"},
+            {"name": "Matching Mimes", "who": "Couples & groups", "difficulty": "Easy", "time": "About 30 minutes",
+             "materials": "Striped shirts, black pants, suspenders, berets, white gloves, white face paint",
+             "blurb": "Identical stripes, silent all night. The easiest group costume ever — and the invisible box bit never gets old.",
+             "source": "Urban Mamaz", "url": "https://urbanmamaz.com/easy-diy-halloween-costumes-for-couples-that-totally-match-the-vibe/", "img": "costume_stock_8.jpg"},
+        ],
+    },
+    {
+        "id": "last-minute",
+        "title": "&#x23F0; Last-Minute & No-Sew",
+        "sub": "It's October 31st and you have a glue gun (or not even that). Start here.",
+        "ideas": [
+            {"name": "No-Sew Felt Strawberry", "who": "Kids & adults", "difficulty": "Easy", "time": "About 1 hour",
+             "materials": "Red and green felt, fabric glue, a plain tee, fabric scissors, ruler",
+             "blurb": "Felt, glue, zero stitches: a poncho-style berry body with a leafy collar and seed details, sized off a T-shirt you already have.",
+             "source": "DIY Joy", "url": "https://diyjoy.com/easy-diy-halloween-costume-ideas/", "img": "costume_stock_1.jpg"},
+            {"name": "No-Sew Airheads Candy", "who": "Kids", "difficulty": "Easy", "time": "About 1 hour",
+             "materials": "Neon sweatsuit, red/white/black felt, hot glue, printed letter template",
+             "blurb": "A sweatsuit plus felt logos becomes a walking candy wrapper — bright, warm, and comfy enough to run house-to-house all night.",
+             "source": "Jenn Hallak", "url": "https://jennhallak.com/blog/diy-airheads-costume", "img": "costume_stock_2.jpg"},
+            {"name": "15-Minute Closet Costumes", "who": "Adults", "difficulty": "Easy", "time": "5–15 minutes",
+             "materials": "Whatever is already in your closet: flannel, overalls, a suit, a black dress — plus one cheap add-on each",
+             "blurb": "Work backwards from your wardrobe: overalls plus a red tee is a plumber, a suit plus sunglasses is an agent, flannel plus raffia is a scarecrow.",
+             "source": "Bee Bulletin", "url": "https://beebulletin.com/last-minute-halloween-costumes/", "img": "costume_stock_3.jpg"},
+            {"name": "Bubble Bath", "who": "Kids", "difficulty": "Easy", "time": "About 20 minutes",
+             "materials": "White outfit, white balloons, safety pins, shower cap, rubber duck",
+             "blurb": "Pin clusters of white balloons onto a white outfit and you are a walking bubble bath. The duck is not optional — it's the whole joke.",
+             "source": "Town & Style", "url": "https://townandstyle.com/last-minute-halloween-costume-diys/", "img": "costume_stock_4.jpg"},
+        ],
+    },
+    {
+        "id": "scary",
+        "title": "&#x1F9DF; Scary & Makeup-Led",
+        "sub": "The costume is the makeup: wounds, bites and face paint that do the heavy lifting.",
+        "ideas": [
+            {"name": "Zombie Bite Wound", "who": "Adults & teens", "difficulty": "Medium", "time": "About 30–45 minutes",
+             "materials": "Scar putty or liquid latex, face powder, red and burgundy paint, fake blood, cotton swabs",
+             "blurb": "A ring of scar putty, teeth marks pressed in with a spoon handle, and layered reds — a bite wound that looks fresh off the horde.",
+             "source": "Insomniac Magazine", "url": "https://www.insomniac.com/magazine/diy-zombie-look/", "img": "costume_stock_5.jpg"},
+            {"name": "Open Wound from Glue & Tissue", "who": "Adults & teens", "difficulty": "Medium", "time": "About 45 minutes (with drying)",
+             "materials": "PVA glue, toilet tissue, foundation, black eyeshadow, stage blood (fresh + congealed)",
+             "blurb": "No latex kit needed: layered tissue and glue become torn skin you can open up, shade, and fill with blood. Genuinely gruesome.",
+             "source": "Our Family Life", "url": "https://www.ourfamilylife.co.uk/working-mums-blog/halloween-zombie-make-up", "img": "costume_stock_6.jpg"},
+            {"name": "Vampire Makeup", "who": "Adults & teens", "difficulty": "Easy", "time": "About 30 minutes",
+             "materials": "Pale foundation or white face paint, dark eyeshadow, red lipstick, fangs, fake blood",
+             "blurb": "Porcelain-pale skin, shadow-hollowed eyes and one perfect blood drip at the mouth — the eternal Halloween aristocrat.",
+             "source": "Halloween Junkie", "url": "https://halloween-junkie.com/tag/tutorials/", "img": "costume_stock_7.jpg"},
+            {"name": "Sugar Skull (Calavera) Face Paint", "who": "Adults & older kids", "difficulty": "Medium", "time": "About 1 hour",
+             "materials": "White, black and bright face paints, fine brush, faux roses, lace, headband, hot glue",
+             "blurb": "A white base, petal-ringed eyes and fine black detail work, crowned with a handmade rose-and-lace headpiece. Dramatic but forgiving — you can always repaint.",
+             "source": "Cuckoo4Design", "url": "https://cuckoo4design.com/fright-tastic-halloween-home-tour/", "img": "costume_stock_8.jpg"},
+        ],
+    },
+]
+
+
+@app.get("/diy-costumes", response_class=HTMLResponse)
+def diy_costumes_page(request: Request):
+    return templates.TemplateResponse(
+        request, "diy_costumes.html", {"sections": COSTUME_SECTIONS},
+    )
+
+
 # ------------------------------------------------------------- haunt or not
 
 DUEL_EXCLUDE_IDS = frozenset({824, 825, 826, 827, 828, 829, 830, 831, 832, 833, 834, 835, 836, 837, 838, 839, 840, 841, 842, 843, 844, 845, 846, 847, 848, 849, 850, 851, 852, 853, 854, 855, 856, 857, 858, 859, 860, 861, 862, 863, 864, 865, 866, 867, 868, 869, 870, 871, 872, 873, 874, 875, 876, 877, 878, 879, 880, 881, 882, 883, 884, 885, 886, 887, 888, 889, 890, 896, 897, 898, 899, 900, 901, 902, 903, 904, 905, 906, 907, 908, 909, 910, 911, 912, 913, 914, 915, 916, 917, 918, 919, 920, 921, 922, 924, 925, 926, 938, 939, 940, 941, 942, 943, 944, 945, 946, 947, 948, 949, 950, 951, 952, 953, 954, 955, 956, 957, 958, 959, 960, 961, 962, 963, 964, 965, 966, 967, 968, 969, 970, 971, 972, 973, 974, 975, 976, 977, 978, 979, 980, 981, 982, 983, 984, 985, 986, 987, 988, 989, 990, 991, 992, 993, 994, 995, 996, 997, 998, 999, 1000, 1001, 1002, 1003, 1004, 1005, 1006, 1007, 1008, 1009, 1010, 1011, 1012, 1013, 1014, 1015, 1016, 1017, 1018, 1019, 1020, 1021, 1022, 1023, 1024, 1025, 1026, 1027, 1028, 1029, 1030, 1031, 1032, 1033, 1034, 1035, 1036, 1037, 1038, 1039, 1040, 1041, 1042, 1043, 1044, 1045, 1046, 1047, 1048, 1049, 1050, 1051, 1052, 1053, 1054, 1055, 1056, 1057, 1058, 1059, 1060, 1061, 1062, 1063, 1064, 1065, 1066, 1067, 1068, 1069, 1070, 1071, 1072, 1073, 1074, 1075, 1076, 1077, 1078, 1079, 1080, 1081, 1082, 1083, 1084, 1085, 1086, 1087, 1088, 1089, 1090, 1091, 1092, 1093, 1094, 1095, 1096, 1097, 1098, 1099, 1100, 1101, 1102, 1103, 1104, 1105, 1106, 1107, 1108, 1109, 1110, 1111, 1112, 1113, 1114, 1115, 1116, 1117, 1118, 1119, 1120, 1121, 1122, 1123, 1124, 1125, 1126, 1127, 1128, 1129, 1130, 1131, 1132, 1133, 1134, 1135, 1136, 1137, 1138, 1139, 1140, 1141, 1142, 1143, 1144, 1145, 1146, 1147, 1148, 1149, 1150, 1151, 1152, 1153, 1154, 1155, 1156, 1157, 1158, 1159, 1160, 1161, 1162, 1163, 1164, 1165, 1166, 1167, 1168, 1169, 1170, 1171, 1172, 1173, 1174, 1175, 1176, 1177, 1178, 1179, 1180, 1181, 1182, 1183, 1184, 1185, 1186, 1187, 1188, 1189, 1190, 1191, 1192, 1193, 1194, 1195, 1196, 1197, 1198, 1199, 1200, 1201, 1202, 1203, 1204, 1205, 1206, 1207, 1208, 1209, 1210, 1211, 1212, 1213, 1214, 1215, 1216, 1217, 1218, 1219, 1220, 1221, 1222, 1223, 1224, 1225, 1226, 1227, 1228, 1229, 1230, 1231, 1232, 1233, 1234, 1235, 1236, 1237, 1238, 1239, 1240, 1241, 1242, 1243, 1244, 1245, 1246, 1247, 1248, 1249, 1250, 1251, 1252, 1253, 1254, 1255, 1256, 1257, 1258, 1259, 1260, 1261, 1262, 1263, 1264, 1265, 1266, 1267, 1268, 1269, 1270, 1273, 1274, 1275, 1276, 1277, 1278, 1279, 1280, 1281, 1282, 1283, 1284, 1285, 1286, 1287, 1288, 1289, 1290, 1291, 1292, 1293, 1294, 1295, 1296, 1297, 1298, 1299, 1300, 1301, 1302, 1303, 1304, 1305, 1306, 1307, 1308, 1309, 1310, 1311, 1312, 1313, 1314, 1315, 1316, 1317, 1318, 1319, 1320, 1321, 1322, 1323, 1324, 1325, 1326, 1327, 1328, 1329, 1330, 1331, 1332, 1333, 1334, 1335, 1336, 1337, 1338, 1339, 1340, 1341, 1342, 1343, 1344, 1345, 1346, 1347, 1348, 1349, 1350, 1351, 1352, 1353, 1355, 1356, 1357, 1358, 1359, 1360, 1361, 1362, 1363, 1364, 1365, 1366, 1367, 1368, 1369, 1370, 1371, 1372, 1373, 1374, 1375, 1376, 1377, 1378, 1379, 1380, 1381, 1382, 1383, 1384, 1385, 1386, 1387, 1388, 1389, 1390, 1391, 1392, 1393, 1394, 1395, 1396, 1397, 1398, 1399, 1400, 1401, 1402, 1403, 1404, 1405, 1406, 1407, 1408, 1409, 1410, 1411, 1412, 1413, 1414, 1415, 1416, 1417, 1418, 1419, 1420, 1421, 1422, 1423, 1424, 1425, 1426, 1427, 1428, 1429, 1430, 1431, 1432, 1433, 1434, 1435, 1436, 1437, 1438, 1439, 1440, 1441, 1442, 1443, 1444, 1445, 1446, 1447, 1448, 1449, 1450, 1451, 1452, 1453, 1454, 1455, 1456, 1457, 1458, 1459, 1460, 1461, 1462, 1463, 1464, 1465, 1466, 1467, 1468, 1469, 1470, 1471, 1472, 1473, 1474, 1475, 1476, 1477, 1478, 1479, 1480, 1481, 1482, 1483, 1484, 1485, 1486, 1487, 1488, 1489, 1490, 1491, 1492, 1493, 1494, 1495, 1496, 1497, 1498, 1499, 1500, 1501, 1502, 1503, 1504, 1505, 1506, 1507, 1508, 1509, 1510, 1511, 1512, 1513, 1514, 1515, 1516, 1517, 1518, 1519, 1520, 1521, 1522, 1523, 1524, 1525, 1526, 1527, 1528, 1529, 1530, 1531, 1532, 1533, 1534, 1535, 1536, 1537, 1538, 1539, 1540, 1541, 1542, 1543, 1544, 1545, 1546, 1547, 1548, 1549, 1550, 1551, 1552, 1553, 1554, 1555, 1556, 1557, 1558, 1559, 1560, 1561, 1562, 1563, 1564, 1565, 1566, 1567, 1568, 1569, 1570, 1571, 1572, 1573, 1574, 1575, 1576, 1577, 1578, 1579, 1580, 1581, 1582, 1583, 1584, 1585, 1586, 1587, 1588, 1589, 1590, 1591, 1592, 1593, 1594, 1595, 1596, 1597, 1598, 1599, 1600, 1601, 1602, 1603, 1604, 1605, 1606, 1607, 1608, 1609, 1610, 1611, 1612, 1613, 1614, 1615, 1616, 1617, 1618, 1619, 1620, 1621, 1622, 1623, 1624, 1625, 1626, 1627, 1628, 1629, 1630, 1631, 1632, 1633, 1634, 1635, 1636, 1637, 1638, 1639, 1640, 1641, 1642, 1643, 1644, 1645, 1646, 1647, 1648, 1649, 1650, 1651, 1652, 1653, 1654, 1655, 1656, 1657, 1658, 1659, 1660, 1661, 1662, 1663, 1664, 1665, 1666, 1667, 1668, 1669, 1670, 1671, 1672, 1673, 1674, 1675, 1676, 1677, 1678, 1679, 1680, 1681, 1682, 1683, 1684, 1685, 1686, 1687, 1688, 1689, 1690, 1691, 1692, 1693, 1694, 1695, 1696, 1697, 1698, 1699, 1700, 1701, 1702, 1703, 1704, 1705, 1706, 1707, 1708, 1709, 1710, 1711, 1712, 1713, 1714, 1715, 1716, 1717, 1718, 1719, 1720, 1721, 1722, 1723, 1724, 1725, 1726, 1727, 1728, 1729, 1730, 1731, 1732, 1733, 1734, 1735, 1736, 1737, 1738, 1739, 1740, 1741, 1742, 1743, 1744, 1745, 1746, 1747, 1748, 1749, 1750, 1751, 1752, 1753, 1754, 1755, 1756, 1757, 1758, 1759, 1760, 1761, 1762, 1763, 1764, 1765, 1766, 1767, 1768, 1769, 1770, 1771, 1772, 1773, 1774, 1775, 1776, 1777, 1778, 1779, 1780, 1781, 1782, 1783, 1784, 1785, 1786, 1787, 1788, 1789, 1790, 1791, 1792, 1793, 1794, 1795, 1796, 1797, 1798, 1799, 1800, 1801, 1802, 1803, 1804, 1805, 1806, 1807, 1808, 1809, 1810, 1811, 1812, 1813, 1814, 1815, 1816, 1817, 1818, 1819, 1820, 1821, 1822, 1823, 1824, 1825, 1826, 1827, 1828, 1829, 1830, 1831, 1832, 1833, 1834, 1835, 1836, 1837, 1838, 1839, 1840, 1841, 1842, 1843, 1844, 1845, 1846, 1847, 1848, 1849, 1850, 1851, 1852, 1853, 1854, 1855, 1856, 1857, 1858, 1859, 1860, 1861, 1862, 1863, 1864, 1865, 1866, 1867, 1868, 1869, 1870, 1871, 1872, 1873, 1874, 1875, 1876, 1877, 1878, 1879, 1880, 1881, 1882, 1883, 1884, 1885, 1886, 1887, 1888, 1889, 1890, 1891, 1892, 1893, 1894, 1895, 1896, 1897, 1898, 1899, 1900, 1901, 1902, 1903, 1904, 1905, 1906, 1907, 1908, 1909, 1910, 1911, 1912, 1913, 1914, 1915, 1916, 1917, 1918, 1919, 1920, 1921, 1922, 1923, 1924, 1925, 1926, 1927, 1928, 1929, 1930, 1931, 1932, 1933, 1934, 1935, 1936, 1937, 1938, 1939, 1940, 1941, 1942, 1943, 1944, 1945, 1946, 1947, 1948, 1949, 1950, 1951, 1952, 1953, 1954, 1955, 1956, 1957, 1958, 1959, 1969, 1970, 1971, 1972, 1973, 1974, 1975, 1976, 1977, 1978, 1979, 1980, 1981, 1982, 1983, 1984, 1985, 1986, 1987, 1988, 1989, 1990, 1991, 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025, 2064, 2073, 2081, 2082, 2084, 2094, 2098, 2100, 2101, 2104, 2106, 2107, 2108, 2109, 2110, 2112, 2119, 2120, 2121, 2122, 2126, 2127, 2130, 2131, 2133, 2134, 2135, 2136, 2137, 2140, 2142, 2143, 2144, 2145, 2146, 2147, 2148, 2149, 2150, 2151, 2152, 2153, 2155, 2156, 2160, 2162, 2168, 2169, 2170, 2172, 2174, 2178, 2179, 2181, 2182, 2186, 2193, 2199, 2202, 2204, 2205, 2206, 2208, 2209, 2211, 2214, 2217, 2221, 2226, 2227, 2228, 2230, 2232, 2233, 2234, 2235, 2236, 2237, 2238, 2239, 2240, 2241, 2242, 2243, 2244, 2245, 2246, 2247, 2248, 2251, 2252, 2253, 2254, 2255, 2256, 2257, 2258, 2259, 2260, 2261, 2262, 2264, 2265, 2266, 2267, 2268, 2269, 2270, 2271, 2272, 2273, 2274, 2275, 2276, 2277, 2280, 2284, 2288, 2291, 2292, 2293, 2294, 2295, 2296, 2300, 2302, 2311, 2312, 2313, 2315, 2320, 2321, 2322, 2323, 2324, 2327, 2328, 2329, 2330, 2332, 2333, 2334, 2335, 2336, 2337, 2338, 2340, 2341, 2343, 2347, 2348, 2350, 2352, 2359, 2363, 2364, 2365, 2366, 2367, 2368, 2369, 2371, 2374, 2375, 2376, 2377, 2379, 2380, 2381, 2386, 2389, 2397, 2398, 2399, 2404, 2405, 2406, 2412, 2417, 2418, 2420, 2421, 2422, 2423, 2431, 2432, 2438, 2440, 2441, 2443, 2444, 2446, 2449, 2450, 2455, 2457, 2460, 2463, 2465, 2470, 2475, 2476, 2478, 2479, 2481, 2482, 2483, 2484, 2485, 2486, 2487, 2488, 2490, 2491, 2492, 2493, 2494, 2495, 2497, 2498, 2499, 2500, 2501, 2502, 2505, 2506, 2507, 2508, 2512, 2513, 2514, 2515, 2516, 2517, 2518, 2519, 2520, 2521, 2522, 2523, 2524, 2525, 2526, 2527, 2528, 2531, 2533, 2534, 2537, 2539, 2540, 2541, 2542, 2543, 2544, 2545, 2546, 2547, 2548, 2549, 2550, 2551, 2552, 2553, 2554, 2555, 2556, 2557, 2558, 2559, 2560, 2561, 2562, 2563, 2564, 2575, 2576, 2577, 2578, 2579, 2580, 2581, 2582, 2583, 2584, 2585, 2586, 2587, 2588, 2590, 2591, 2592, 2593, 2594, 2595, 2596, 2597})  # stock-photo pins stay out of Haunt or Not (authenticity rule)  # stock-photo pins stay out of Haunt or Not (authenticity rule)
@@ -1472,7 +1620,7 @@ def town_page(request: Request, slug: str):
 @app.get("/sitemap.xml")
 def sitemap():
     base = "https://gethauntmap.com"
-    urls = ["/", "/map", "/nearby", "/tour", "/diy", "/games", "/leaderboard",
+    urls = ["/", "/map", "/nearby", "/tour", "/diy", "/diy-costumes", "/games", "/leaderboard",
             "/towns", "/advertise", "/media-kit", "/costume-contest", "/trivia", "/haunt-or-not", "/fan-art"]
     for t in _towns_with_counts():
         urls.append(f"/towns/{t['slug']}")

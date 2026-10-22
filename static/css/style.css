@@ -203,6 +203,16 @@ a { color: var(--accent); }
 .diy-embed iframe { width: 100%; max-width: 340px; height: 600px; border: 0; border-radius: 10px; background: #000; }
 .diy-watch { text-align: center; margin: 0.5rem 0 0; font-size: 0.9rem; }
 
+/* ---- DIY Costumes page ---- */
+.costume-card { padding-top: 0.85rem; }
+.costume-img { width: 100%; height: 150px; object-fit: cover; border-radius: 8px; margin: 0 0 0.6rem; display: block; }
+.costume-meta { margin: 0 0 0.45rem; }
+.costume-chip { display: inline-block; background: rgba(255,117,24,0.14); border: 1px solid rgba(255,117,24,0.45); color: #ffb27a; border-radius: 999px; padding: 0.08rem 0.55rem; font-size: 0.78rem; font-weight: 600; margin-right: 0.3rem; }
+.costume-materials { color: #e6defa; font-size: 0.88rem; line-height: 1.45; margin: 0 0 0.5rem; }
+.costume-credits { margin: 2.2rem 0 0.5rem; padding: 0.9rem 1rem; border: 1px dashed #33254f; border-radius: 12px; color: #c9bce8; font-size: 0.9rem; line-height: 1.5; }
+.costume-credits a { color: #ff7518; }
+.costume-crosslink { margin-top: 1.6rem; }
+
 /* ---- Sponsor banners (homepage) ---- */
 .sponsor-section { margin: 0.8rem 0; text-align: center; }
 .sponsor-section h2 { font-size: 0.85rem; margin: 0 0 0.15rem; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
