@@ -1637,6 +1637,7 @@ def sitemap():
 # Business sponsor packages (the original pitched tiers — quotes honored).
 BUSINESS_PACKAGES = [
     {"id": "featured", "name": "Featured", "price": 250,
+     "stripe_link": "https://buy.stripe.com/28EfZg2FW7H0d1SeCybbG00",
      "blurb": "Your business in front of local Halloween haunters.",
      "features": ["Logo + link in the Featured Sponsors row on the homepage",
                   "Featured pin for your location",

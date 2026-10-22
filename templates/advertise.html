@@ -36,7 +36,11 @@
       {% for f in p.features %}<li>{{ f }}</li>{% endfor %}
     </ul>
     <div class="adv-buy">
+      {% if p.stripe_link %}
+      <a class="btn-buy" href="{{ p.stripe_link }}" target="_blank" rel="noopener">Buy now</a>
+      {% else %}
       <a class="btn-buy" href="/advertise?pkg={{ p.id }}#order">Buy now</a>
+      {% endif %}
     </div>
   </article>
   {% endfor %}
