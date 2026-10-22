@@ -6,6 +6,7 @@ SOFT limit only (cookies are trivially cleared); it stops casual double
 voting, not determined abuse. See the vote route below.
 """
 import hashlib
+import logging
 import os
 import re
 import requests
@@ -84,6 +85,56 @@ def _startup() -> None:
 
 app.mount("/media", StaticFiles(directory=str(UPLOAD_DIR)), name="media")
 app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")
+
+
+logger = logging.getLogger("hauntmap")
+
+# Branded "down for construction" page (Dan, Oct 22): unhandled errors used to
+# surface as a bare "Internal Server Error" (seen site-wide during the disk
+# outage). The HTML lives in static/maintenance.html — fully self-contained
+# (inline CSS, site-hosted font/logo) — and is loaded once here so the error
+# path never depends on the template engine or the DB. The same file is
+# reachable at /static/maintenance.html for an edge service to reuse.
+try:
+    _MAINTENANCE_HTML = (BASE_DIR / "static" / "maintenance.html").read_text(encoding="utf-8")
+except OSError:  # pragma: no cover - file ships with the code
+    _MAINTENANCE_HTML = "<h1>HauntMap is briefly down while we build something better. We'll be back soon!!</h1>"
+
+
+@app.exception_handler(500)
+@app.exception_handler(Exception)
+async def _unhandled_error_page(request: Request, exc: Exception):
+    """Log the real error server-side; show visitors the branded page.
+    /api/* keeps the codebase's JSON error pattern."""
+    logger.error("Unhandled error on %s %s", request.method, request.url.path,
+                 exc_info=(type(exc), exc, exc.__traceback__))
+    if request.url.path.startswith("/api/"):
+        return JSONResponse({"error": "internal server error"}, status_code=500)
+    return HTMLResponse(_MAINTENANCE_HTML, status_code=500,
+                        headers={"Cache-Control": "no-store"})
+
+
+@app.exception_handler(HTTPException)
+async def _http_error(request: Request, exc: HTTPException):
+    """HTTPExceptions keep FastAPI's default JSON shape — except 5xx, which
+    gets the branded page like unhandled errors (all current raises are 4xx,
+    so their behavior is unchanged)."""
+    if exc.status_code >= 500:
+        logger.error("HTTP %s on %s %s: %s", exc.status_code, request.method,
+                     request.url.path, exc.detail)
+        if request.url.path.startswith("/api/"):
+            return JSONResponse({"error": "internal server error"}, status_code=exc.status_code)
+        return HTMLResponse(_MAINTENANCE_HTML, status_code=exc.status_code,
+                            headers={"Cache-Control": "no-store"})
+    return JSONResponse({"detail": exc.detail}, status_code=exc.status_code,
+                        headers=exc.headers)
+
+
+@app.get("/healthz")
+def _healthz():
+    """Render health-check target: DB-independent, 200 whenever the process
+    is up, so a deploy only takes traffic once the new instance serves."""
+    return {"status": "ok"}
 
 
 @app.middleware("http")
@@ -2556,3 +2607,4 @@ def admin_sponsor_delete(sponsor_id: int, request: Request):
     if row and row["logo_path"]:
         (UPLOAD_DIR / row["logo_path"]).unlink(missing_ok=True)
     return RedirectResponse("/admin/sponsors", status_code=303)
+
