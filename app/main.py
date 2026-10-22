@@ -6,6 +6,7 @@ SOFT limit only (cookies are trivially cleared); it stops casual double
 voting, not determined abuse. See the vote route below.
 """
 import hashlib
+import hmac
 import logging
 import os
 import re
@@ -21,6 +22,7 @@ import math
 import random
 import random
 import json
+import time
 import urllib.request
 import urllib.parse
 from datetime import datetime, timedelta, timezone
@@ -33,6 +35,7 @@ from fastapi.templating import Jinja2Templates
 from PIL import Image, ImageOps, UnidentifiedImageError
 
 from .db import get_conn, init_db
+from . import sms_alerts
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 DATA_DIR = Path(os.environ.get("DATA_DIR", BASE_DIR / "data"))
@@ -1866,6 +1869,216 @@ async def town_request(request: Request):
                 conn.commit()
         return RedirectResponse(f"{ref}{sep}town_requested=1", status_code=303)
     return RedirectResponse(f"{ref}{sep}town_req_error=1", status_code=303)
+
+
+# ------------------------------------------------------------- SMS alerts
+# Capture-first (Dan, Oct 22): phone numbers are collected now and texting
+# turns on when Twilio env vars land (see app/sms_alerts.py). Sending is
+# NEVER faked: without credentials a signup simply stays 'captured' and the
+# visitor sees the "we'll text a confirmation when alerts launch" state.
+
+_SMS_SUBMIT_LOG: dict[str, list[float]] = {}
+
+
+def _sms_rate_ok(key: str, limit: int, window_s: int = 3600) -> bool:
+    """Cheap in-memory rate limit, same spirit as the town-request dupe
+    guard. Per-IP submit caps + per-phone confirm-attempt caps."""
+    now = time.time()
+    hits = [t for t in _SMS_SUBMIT_LOG.get(key, []) if now - t < window_s]
+    if len(hits) >= limit:
+        _SMS_SUBMIT_LOG[key] = hits
+        return False
+    hits.append(now)
+    _SMS_SUBMIT_LOG[key] = hits
+    return True
+
+
+def _flag_redirect(ref: str, **flags) -> RedirectResponse:
+    """Redirect back to the referring page with our query flags swapped in
+    (any stale text_alerts/sms_error params are dropped first)."""
+    parts = urllib.parse.urlsplit(ref if ref.startswith("/") or "://" in ref
+                                  else "/")
+    q = [(k, v) for k, v in urllib.parse.parse_qsl(parts.query)
+         if k not in ("text_alerts", "sms_error")]
+    q += [(k, str(v)) for k, v in flags.items()]
+    url = urllib.parse.urlunsplit((parts.scheme, parts.netloc, parts.path,
+                                   urllib.parse.urlencode(q), ""))
+    if "://" not in ref and not url.startswith("/"):
+        url = "/" + url
+    return RedirectResponse(url, status_code=303)
+
+
+@app.post("/text-alerts")
+async def text_alerts_signup(request: Request):
+    form = await request.form()
+    ref = request.headers.get("referer", "/")
+    # Honeypot: same `website` field as the other forms. Bots get a fake
+    # success and nothing is stored.
+    if (form.get("website") or "").strip():
+        return _flag_redirect(ref, text_alerts=1)
+    ip = request.client.host if request.client else "?"
+    if not _sms_rate_ok(f"signup:{ip}", 6):
+        return _flag_redirect(ref, text_alerts=1)  # don't leak the limit
+
+    phone = sms_alerts.normalize_phone(form.get("phone", ""))
+    if not phone:
+        return _flag_redirect(ref, sms_error="phone")
+    zip_raw = re.sub(r"\D", "", form.get("zip", ""))[:5]
+    town_raw = (form.get("town") or "").strip()[:60]
+    town, state = sms_alerts.parse_city_state(town_raw)
+    if not state:  # bare town typed without ", ST" — take state field if any
+        state = (form.get("state") or "").strip().upper()[:2]
+        town = town_raw
+    try:
+        radius = int(form.get("radius", "15"))
+    except (TypeError, ValueError):
+        radius = 15
+    if radius not in (0, 5, 10, 15, 25, 50):
+        radius = 15
+    if radius == 0 and not town:
+        return _flag_redirect(ref, sms_error="town")
+    if radius != 0 and not zip_raw:
+        return _flag_redirect(ref, sms_error="zip")
+    wants_haunts = bool(form.get("want_haunts"))
+    wants_events = bool(form.get("want_events"))
+    interests = ("both" if wants_haunts and wants_events else
+                 "haunts" if wants_haunts else
+                 "events" if wants_events else "both")
+    source = (form.get("source") or "")[:40] or "site"
+    now = datetime.now(timezone.utc)
+    code = sms_alerts.new_confirm_code()
+    with get_conn(DB_PATH) as conn:
+        sms_alerts.ensure_sms_tables(conn)
+        # One row per phone: re-signup updates prefs and counts as fresh
+        # consent (an opted-out number that signs up again on the web form
+        # has explicitly opted back in — it restarts at 'captured').
+        conn.execute(
+            "INSERT INTO sms_subscribers (phone, zip, town, state, "
+            "radius_miles, interests, consent_at, status, confirm_code, "
+            "confirm_expires, source, created_at, updated_at) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, 'captured', ?, ?, ?, ?, ?) "
+            "ON CONFLICT(phone) DO UPDATE SET zip=excluded.zip, "
+            "town=excluded.town, state=excluded.state, "
+            "radius_miles=excluded.radius_miles, "
+            "interests=excluded.interests, consent_at=excluded.consent_at, "
+            "status='captured', confirm_code=excluded.confirm_code, "
+            "confirm_expires=excluded.confirm_expires, "
+            "source=excluded.source, updated_at=excluded.updated_at",
+            (phone, zip_raw or None, town or None, state or None, radius,
+             interests, now.isoformat(), code,
+             sms_alerts.code_expiry(now), source, now.isoformat(),
+             now.isoformat()))
+        sub_id = conn.execute("SELECT id FROM sms_subscribers WHERE phone = ?",
+                              (phone,)).fetchone()["id"]
+        conn.commit()
+
+    if sms_alerts.twilio_configured():
+        body = sms_alerts.CONFIRM_TEXT.format(code=code)
+        try:
+            sid = sms_alerts.send_sms(phone, body)
+            with get_conn(DB_PATH) as conn:
+                sms_alerts.ensure_sms_tables(conn)
+                conn.execute(
+                    "INSERT INTO sms_sends (subscriber_id, kind, body, "
+                    "twilio_sid, status, created_at) "
+                    "VALUES (?, 'confirm', ?, ?, 'sent', ?)",
+                    (sub_id, body, sid,
+                     datetime.now(timezone.utc).isoformat()))
+                conn.commit()
+            resp = _flag_redirect(ref, text_alerts="code")
+            resp.set_cookie("hm_sms_pending", phone, max_age=1800, path="/",
+                            httponly=True, samesite="lax")
+            return resp
+        except Exception:
+            pass  # Twilio hiccup — signup stays captured; launch state applies
+    resp = _flag_redirect(ref, text_alerts=1)
+    resp.set_cookie("hm_sms_pending", phone, max_age=1800, path="/",
+                    httponly=True, samesite="lax")
+    return resp
+
+
+@app.post("/text-alerts/confirm")
+async def text_alerts_confirm(request: Request):
+    form = await request.form()
+    ref = request.headers.get("referer", "/")
+    phone = sms_alerts.normalize_phone(
+        urllib.parse.unquote(request.cookies.get("hm_sms_pending", ""))
+        or form.get("phone", ""))
+    code = re.sub(r"\D", "", form.get("code", ""))[:6]
+    ip = request.client.host if request.client else "?"
+    if not phone or not _sms_rate_ok(f"confirm:{ip}:{phone}", 10):
+        return _flag_redirect(ref, text_alerts="code", sms_error="badcode")
+    confirmed = False
+    with get_conn(DB_PATH) as conn:
+        sms_alerts.ensure_sms_tables(conn)
+        row = conn.execute(
+            "SELECT * FROM sms_subscribers WHERE phone = ?",
+            (phone,)).fetchone()
+        if row and row["status"] == "confirmed":
+            confirmed = True
+        elif (row and row["confirm_code"] and code
+              and hmac.compare_digest(row["confirm_code"], code)
+              and sms_alerts.code_still_valid(row["confirm_expires"])):
+            conn.execute(
+                "UPDATE sms_subscribers SET status = 'confirmed', "
+                "confirm_code = NULL, confirm_expires = NULL, "
+                "updated_at = ? WHERE id = ?",
+                (datetime.now(timezone.utc).isoformat(), row["id"]))
+            conn.commit()
+            confirmed = True
+    if confirmed:
+        resp = _flag_redirect(ref, text_alerts="confirmed")
+        resp.delete_cookie("hm_sms_pending", path="/")
+        return resp
+    return _flag_redirect(ref, text_alerts="code", sms_error="badcode")
+
+
+@app.post("/sms/inbound")
+async def sms_inbound(request: Request):
+    """Twilio inbound webhook: STOP -> opted_out (never texted again),
+    HELP -> help text, YES/START -> confirm/reactivate. Signature is
+    enforced whenever TWILIO_AUTH_TOKEN is set."""
+    form = await request.form()
+    params = {k: str(v) for k, v in form.items()}
+    if sms_alerts.TWILIO_TOKEN:
+        proto = request.headers.get("x-forwarded-proto",
+                                    request.url.scheme)
+        url = f"{proto}://{request.headers.get('host', '')}{request.url.path}"
+        if not sms_alerts.valid_twilio_signature(
+                url, params, request.headers.get("X-Twilio-Signature", "")):
+            return Response("invalid signature", status_code=403)
+    phone = sms_alerts.normalize_phone(params.get("From", ""))
+    word = (params.get("Body") or "").strip().upper()
+    reply = ""
+    if phone:
+        with get_conn(DB_PATH) as conn:
+            sms_alerts.ensure_sms_tables(conn)
+            row = conn.execute(
+                "SELECT * FROM sms_subscribers WHERE phone = ?",
+                (phone,)).fetchone()
+            now = datetime.now(timezone.utc).isoformat()
+            if word in sms_alerts.STOP_WORDS and row:
+                conn.execute(
+                    "UPDATE sms_subscribers SET status = 'opted_out', "
+                    "confirm_code = NULL, updated_at = ? WHERE id = ?",
+                    (now, row["id"]))
+                conn.commit()
+            elif word in sms_alerts.YES_WORDS and row \
+                    and row["status"] in ("captured", "opted_out"):
+                conn.execute(
+                    "UPDATE sms_subscribers SET status = 'confirmed', "
+                    "confirm_code = NULL, confirm_expires = NULL, "
+                    "updated_at = ? WHERE id = ?",
+                    (now, row["id"]))
+                conn.commit()
+                reply = ("You're confirmed for HauntMap text alerts — "
+                         "new haunts & events near you. Reply STOP to end.")
+            elif word == "HELP":
+                reply = sms_alerts.HELP_TEXT
+    twiml = ('<?xml version="1.0" encoding="UTF-8"?><Response>'
+             + (f"<Message>{reply}</Message>" if reply else "")
+             + "</Response>")
+    return Response(twiml, media_type="text/xml")
 
 
 @app.get("/leaderboard", response_class=HTMLResponse)

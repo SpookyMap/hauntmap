@@ -1,0 +1,55 @@
+{# Text-alerts capture (Dan, Oct 22 — STAGED for preview, capture-first).
+   Posts to /text-alerts; rows land in sms_subscribers with status
+   'captured'. No texts are sent until Twilio is configured — the success
+   copy says exactly that. When Twilio IS configured, signup redirects
+   here with text_alerts=code and the code-entry state renders instead.
+   sms_source is set by the including template via {% with %}. #}
+<div class="text-alerts signup-strip" id="text-alerts">
+  {% if request.query_params.get('text_alerts') == 'confirmed' %}
+  <p class="newsletter-success">&#x2705; You're confirmed — HauntMap text alerts are ON. Reply STOP anytime to end them.</p>
+  {% elif request.query_params.get('text_alerts') == 'code' %}
+  <h3>&#x1F4F1; Almost there — confirm your number</h3>
+  <p>We just texted you a 6-digit code. Enter it here to turn your alerts on:</p>
+  {% if request.query_params.get('sms_error') %}
+  <p class="form-error">That code didn't match or it expired — check the text and try again.</p>
+  {% endif %}
+  <form method="post" action="/text-alerts/confirm" class="text-alerts-form">
+    <input type="text" name="code" placeholder="6-digit code" inputmode="numeric" autocomplete="one-time-code" required>
+    <input type="tel" name="phone" placeholder="Mobile number (only if asked)" autocomplete="tel" inputmode="tel">
+    <button type="submit" class="btn">Confirm my alerts</button>
+  </form>
+  {% elif request.query_params.get('text_alerts') %}
+  <p class="newsletter-success">&#x1F389; You're on the list — we'll text a confirmation when alerts launch.</p>
+  {% else %}
+  <h3>Get text alerts &#x1F4F1;</h3>
+  <p>New haunts &amp; Halloween events near you — texted as they land on the map.</p>
+  {% if request.query_params.get('sms_error') == 'phone' %}
+  <p class="form-error">Please enter a valid 10-digit US mobile number.</p>
+  {% elif request.query_params.get('sms_error') == 'zip' %}
+  <p class="form-error">Add your ZIP code so we know how far to look around you.</p>
+  {% elif request.query_params.get('sms_error') == 'town' %}
+  <p class="form-error">For town-only alerts, add your town (e.g. Morristown, NJ).</p>
+  {% endif %}
+  <form method="post" action="/text-alerts" class="text-alerts-form">
+    <input type="tel" name="phone" placeholder="Mobile number" autocomplete="tel" inputmode="tel" required>
+    <input type="text" name="zip" placeholder="ZIP code" inputmode="numeric" autocomplete="postal-code">
+    <input type="text" name="town" placeholder="Town, ST (for town-only alerts)" autocomplete="address-level2">
+    <label class="ta-radius">How far around you?
+      <select name="radius">
+        <option value="5">5 miles</option>
+        <option value="10">10 miles</option>
+        <option value="15" selected>15 miles</option>
+        <option value="25">25 miles</option>
+        <option value="50">50 miles</option>
+        <option value="0">My town only</option>
+      </select>
+    </label>
+    <label class="ta-check"><input type="checkbox" name="want_haunts" checked> New haunts</label>
+    <label class="ta-check"><input type="checkbox" name="want_events" checked> Events</label>
+    <input type="text" name="website" class="hp-field" tabindex="-1" autocomplete="off" aria-hidden="true">
+    <input type="hidden" name="source" value="{{ sms_source|default('site') }}">
+    <button type="submit" class="btn">Text me the good stuff</button>
+  </form>
+  <p class="ta-consent">By signing up you agree to receive recurring automated HauntMap text alerts. Msg &amp; data rates may apply. Reply STOP to end, HELP for help. Alerts start when our texting service launches.</p>
+  {% endif %}
+</div>

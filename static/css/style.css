@@ -401,6 +401,21 @@ a { color: var(--accent); }
 .town-request-form .btn { grid-column: 1 / -1; }
 .hp-field { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
 .form-error { color: #ff7b72; font-weight: 600; }
+/* Text-alerts capture (SMS — staged Oct 22, capture-first) */
+.text-alerts { max-width: 560px; margin: 1.2rem auto; text-align: left; padding: 1rem 1.1rem; }
+.text-alerts h3 { font-size: 1.15rem; text-align: center; }
+.text-alerts p { font-size: 0.9rem; text-align: center; }
+.text-alerts-form { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-top: 0.6rem; align-items: center; }
+.text-alerts-form input[type="tel"] { grid-column: 1 / -1; }
+.text-alerts-form input, .text-alerts-form select { background: rgba(0,0,0,0.25); border: 1px solid #4a2d7a; border-radius: 8px; padding: 0.55rem 0.7rem; color: #e8e6e3; width: 100%; box-sizing: border-box; }
+.text-alerts-form .btn { grid-column: 1 / -1; }
+.text-alerts-form .ta-radius { color: #c9bce8; font-size: 0.82rem; display: flex; flex-direction: column; gap: 0.25rem; }
+.text-alerts-form .ta-check { display: flex; gap: 0.4rem; align-items: center; color: #e8e6e3; font-size: 0.9rem; }
+.text-alerts-form .ta-check input { width: auto; }
+.text-alerts .ta-consent { font-size: 0.72rem; color: #9d8fc7; margin-top: 0.6rem; line-height: 1.4; }
+@media (max-width: 560px) {
+  .text-alerts-form { grid-template-columns: 1fr; }
+}
 .town-map-strip { max-width: 560px; margin: 1.4rem auto; }
 @media (max-width: 560px) {
   .hon-card { flex-direction: column; text-align: center; }

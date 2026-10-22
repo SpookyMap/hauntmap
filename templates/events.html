@@ -4,6 +4,8 @@
 <h1>&#x1F3AA; Events &amp; Parties</h1>
 <p class="lede">Halloween parties, concerts, DJ nights, parades and festivals &mdash; search the season by the kind of night you want: filter by event type, music genre and venue style.</p>
 
+{% with sms_source = "events" %}{% include "_text_alerts.html" %}{% endwith %}
+
 <form method="get" action="/events" class="ev-filter-form">
   {% if sort != 'top' %}<input type="hidden" name="sort" value="{{ sort }}">{% endif %}
   <div class="ev-filter-row">

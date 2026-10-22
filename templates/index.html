@@ -138,6 +138,10 @@
 </section>
 {% endif %}
 
+{% if trending %}
+{% with sms_source = "homepage" %}{% include "_text_alerts.html" %}{% endwith %}
+{% endif %}
+
 <div class="cat-tabs-main">
   <a href="/?cat=halloween{% if sort != 'top' %}&sort={{ sort }}{% endif %}{% if town %}&town={{ town }}{% endif %}{% if video %}&video=1{% endif %}" class="cat-btn-main {% if cat == 'halloween' %}active{% endif %}">&#x1F383; Haunt Map</a>
   <a href="/?cat=christmas{% if sort != 'top' %}&sort={{ sort }}{% endif %}{% if town %}&town={{ town }}{% endif %}{% if video %}&video=1{% endif %}" class="cat-btn-main {% if cat == 'christmas' %}active{% endif %}">&#x1F384; Jolly Map</a>

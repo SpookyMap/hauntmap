@@ -67,6 +67,33 @@ CREATE TABLE IF NOT EXISTS sponsors (
     created_at TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_sponsors_active ON sponsors(is_active);
+CREATE TABLE IF NOT EXISTS sms_subscribers (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    phone TEXT NOT NULL UNIQUE,           -- E.164, e.g. +19735551234
+    zip TEXT,                             -- 5-digit ZIP (radius matching)
+    town TEXT,                            -- subscriber's town (town-only matching)
+    state TEXT,                           -- 2-letter state for the town
+    radius_miles INTEGER NOT NULL DEFAULT 15,  -- 0 = my town only
+    interests TEXT NOT NULL DEFAULT 'both',    -- 'haunts' | 'events' | 'both'
+    consent_at TEXT NOT NULL,             -- UTC ISO timestamp of web opt-in
+    status TEXT NOT NULL DEFAULT 'captured',   -- captured | confirmed | opted_out
+    confirm_code TEXT,                    -- 6-digit code while status=captured
+    confirm_expires TEXT,                 -- UTC ISO expiry for the code
+    source TEXT,                          -- page the signup came from
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_sms_subscribers_status ON sms_subscribers(status);
+CREATE TABLE IF NOT EXISTS sms_sends (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    subscriber_id INTEGER NOT NULL REFERENCES sms_subscribers(id),
+    kind TEXT NOT NULL,                   -- 'confirm' | 'digest'
+    body TEXT NOT NULL,
+    pin_ids TEXT,                         -- comma-separated entry ids in a digest
+    twilio_sid TEXT,
+    status TEXT NOT NULL DEFAULT 'queued', -- queued | sent | failed | dry_run
+    created_at TEXT NOT NULL
+);
 """
 
 
