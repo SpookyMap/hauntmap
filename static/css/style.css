@@ -1305,9 +1305,11 @@ a.game-card:hover { border-color: #ff7518; transform: translateY(-2px); }
    right). Segment colors unchanged (lavender / red / lavender /
    lavender / red). The tag-* color rules in the z-sections above are
    scoped to a .header-tagline ancestor, so they are re-declared here
-   for the spans' new home inside .header-hook. Buttons row unchanged. */
+   for the spans' new home inside .header-hook. Buttons row unchanged.
+   z46 (Dan, Oct 22): "The" (.tag-b) goes red too — the whole closer
+   "The Haunt Starts Here" is now red #e01e26. */
 .header-band .header-hook .tag-a { color: #c9a7ff; }
-.header-band .header-hook .tag-b { color: #c9a7ff; }
+.header-band .header-hook .tag-b { color: #e01e26; }
 .header-band .header-hook .tag-c { color: #e01e26; }
 .header-band .header-hook { white-space: nowrap; }
 @media (min-width: 761px) {
