@@ -1263,8 +1263,7 @@ a.game-card:hover { border-color: #ff7518; transform: translateY(-2px); }
   .header-tagline { margin-top: 0.05rem; }
 }
 
-/* ============ z35: HEADER V2 (Dan, Oct 22) ============
-   One horizontal band across the top: logo far left, the two text lines
+/* ============ z35: HEADER V2 (Dan, Oct 22) =====   One horizontal band across the top: logo far left, the two text lines
    across the middle (hook on top, tagline directly beneath it), modern
    Frankenstein far right. The wolf is OUT — its space funds the buttons
    row beneath the band: the animated Events button (Dan's pick #3,
@@ -1314,8 +1313,7 @@ a.game-card:hover { border-color: #ff7518; transform: translateY(-2px); }
   .site-header.v2 .header-nav a.navbtn-events img.events-gif { height: 18px; }
 }
 
-/* ============ z36: ONE-LINE BAND (Dan, Oct 22 — final) ============
-   The band center is now ONE single line: hook + "Build Your Night." +
+/* ============ z36: ONE-LINE BAND (Dan, Oct 22 — final) =====   The band center is now ONE single line: hook + "Build Your Night." +
    tagline segments, ALL at the same font size, no wrap, fluid-sized to
    fill the width between the logo (far left) and Frankenstein (far
    right). Segment colors unchanged (lavender / red / lavender /
@@ -1343,8 +1341,7 @@ a.game-card:hover { border-color: #ff7518; transform: translateY(-2px); }
   .header-band .header-hook { font-size: 0.72rem; }
 }
 
-/* ============ z37: EVENTS ARTWORK, NOT A BUTTON (Dan, Oct 22) ============
-   The Events item in the buttons row is the full events-btn-3.gif artwork
+/* ============ z37: EVENTS ARTWORK, NOT A BUTTON (Dan, Oct 22) =====   The Events item in the buttons row is the full events-btn-3.gif artwork
    rendered AS the element itself: a plain image link to /events at the
    far left of the row, before all the buttons. No button chrome — no
    border, no background pill, no padding. The navbtn-events rules in z35
@@ -1524,8 +1521,7 @@ a.game-card:hover { border-color: #ff7518; transform: translateY(-2px); }
   .hero-split .town-request-form .btn { padding: 0.55rem 0.6rem; font-size: 0.92rem; }
 }
 
-/* ============ z42: ROW-TWO REFINEMENT (Dan, Oct 22) ============
-   One notch back on the artwork, one notch up on the buttons: the
+/* ============ z42: ROW-TWO REFINEMENT (Dan, Oct 22) =====   One notch back on the artwork, one notch up on the buttons: the
    Events & Parties GIF dials down (desktop 88px -> 74px, phone 36px
    -> 30px, landscape 32px -> 27px) and stays the plain-image anchor
    at the far left of row two. The nav buttons to its right grow a
@@ -1548,8 +1544,7 @@ a.game-card:hover { border-color: #ff7518; transform: translateY(-2px); }
   .site-header.v2 .header-nav a.events-link img.events-gif { height: 27px; }
 }
 
-/* ============ z47: DIY COSTUMES NAV BUTTON (Dan, Oct 22) ============
-   A ninth button joins row two — "DIY Costumes" (/diy-costumes),
+/* ============ z47: DIY COSTUMES NAV BUTTON (Dan, Oct 22) =====   A ninth button joins row two — "DIY Costumes" (/diy-costumes),
    right after DIY, same .navbtn treatment with its own mask icon.
    Desktop absorbs it easily (space-between redistributes the wide
    gaps). The 390px phone row was already nearly full, so the phone
@@ -1899,3 +1894,75 @@ body.has-tourbar #hm-prompt { bottom: 4.4rem; }
 .music-xref { color: var(--muted); margin-top: 0.9rem; }
 .music-events-cta { margin-top: 1.6rem; font-weight: 700; }
 .music-crosslink { color: var(--muted); margin: 0.2rem 0 0.8rem; }
+/* Halloween Radio (Spotify) — Dan, Oct 22, z61: a slim chip fixed at
+   the bottom-left of every page; expanding it lazy-loads the Spotify
+   embed (no iframe exists before first interaction). The stack sits
+   ABOVE the existing bottom bars: the tour bar is 61px tall at
+   bottom:0 (body.has-tourbar), and the mobile pin-page "Next haunt"
+   bar takes another 61px above it (body.has-nextbar, set by the
+   radio script only when that bar is actually visible) — so the
+   radio's bottom offset is 12px + 61px per visible bar. The off
+   state leaves only a small music-note tab. body.has-radio reserves
+   scroll room like body.has-tourbar does. */
+#hm-radio { position: fixed; left: 0.75rem; bottom: 0.75rem; z-index: 90; }
+body.has-tourbar #hm-radio { bottom: calc(61px + 0.75rem); }
+body.has-nextbar #hm-radio { bottom: calc(61px + 0.75rem); }
+body.has-tourbar.has-nextbar #hm-radio { bottom: calc(122px + 0.75rem); }
+body.has-radio { padding-bottom: 64px; }
+body.has-tourbar.has-radio { padding-bottom: 124px; }
+.hmr-chip { display: flex; align-items: center; gap: 0.35rem; background: linear-gradient(160deg, #2c1a56, #1a1038); border: 2px solid #ff7518; border-radius: 999px; padding: 0.3rem 0.45rem 0.3rem 0.3rem; box-shadow: 0 6px 22px rgba(0,0,0,0.5); }
+.hmr-chip[hidden], .hmr-panel[hidden], .hmr-tab[hidden] { display: none; }
+.hmr-main { display: flex; align-items: center; gap: 0.5rem; background: none; border: none; color: #fff; font: inherit; font-weight: 800; font-size: 0.95rem; cursor: pointer; padding: 0.3rem 0.35rem; }
+.hmr-main .hmr-play { color: #ff7518; font-size: 0.85rem; }
+.hmr-x { background: none; border: none; color: #b9a8d6; font-size: 1.15rem; line-height: 1; cursor: pointer; padding: 0.25rem 0.4rem; }
+.hmr-x:hover { color: #fff; }
+.hmr-tab { width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(160deg, #2c1a56, #1a1038); border: 2px solid #ff7518; color: #fff; font-size: 1.1rem; cursor: pointer; box-shadow: 0 6px 22px rgba(0,0,0,0.5); }
+.hmr-panel { width: min(400px, calc(100vw - 1.5rem)); background: linear-gradient(160deg, #2c1a56, #1a1038); border: 2px solid #ff7518; border-radius: 16px; padding: 0.8rem; box-shadow: 0 12px 40px rgba(0,0,0,0.55); color: #fff; }
+.hmr-head { display: flex; align-items: center; justify-content: space-between; gap: 0.6rem; }
+.hmr-title { font-weight: 900; font-size: 1.02rem; }
+.hmr-head-btns { display: flex; gap: 0.25rem; }
+.hmr-head-btns button { background: #3a2566; border: 1px solid #6b4fae; color: #e8ddff; width: 30px; height: 30px; border-radius: 9px; font-size: 1.05rem; line-height: 1; cursor: pointer; }
+.hmr-picks { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.65rem; }
+.hmr-pick { padding: 0.34rem 0.75rem; border-radius: 999px; background: #3a2566; border: 1px solid #6b4fae; color: #ffd9a0; font-weight: 700; font-size: 0.82rem; cursor: pointer; }
+.hmr-pick:hover, .hmr-pick:focus-visible { background: #4a2d7a; outline: none; }
+.hmr-pick.active { background: #ff7518; border-color: #ff7518; color: #1a1038; }
+.hmr-pick[hidden] { display: none; }
+.hmr-frame { margin-top: 0.65rem; min-height: 152px; }
+.hmr-frame iframe { display: block; width: 100%; height: 152px; border: 0; border-radius: 12px; background: #191919; }
+.hmr-custom { margin-top: 0.7rem; }
+.hmr-custom label { display: block; font-size: 0.83rem; font-weight: 700; color: #c9bce8; margin-bottom: 0.35rem; }
+.hmr-custom-row { display: flex; gap: 0.5rem; }
+.hmr-custom-row input { flex: 1; min-width: 0; padding: 0.55rem 0.7rem; border-radius: 8px; border: 1px solid #372b5e; background: #0d0a1a; color: #e8e6e3; font: inherit; font-size: 0.88rem; }
+.hmr-custom-row button { background: #ff7518; color: #1a1038; font-weight: 800; border: none; border-radius: 8px; padding: 0.55rem 0.9rem; cursor: pointer; white-space: nowrap; }
+.hmr-err { color: #ff9a9e; font-size: 0.82rem; margin: 0.45rem 0 0; }
+.hmr-note { color: #b9a8d6; font-size: 0.78rem; margin: 0.65rem 0 0; line-height: 1.45; }
+.hmr-reset-row { margin: 0.45rem 0 0; }
+.hmr-reset { background: none; border: none; padding: 0; color: #ff7518; font: inherit; font-size: 0.83rem; font-weight: 700; cursor: pointer; text-decoration: underline; }
+
+/* Build Your Mix (Dan, Oct 22, z61): per-visitor mix inside the
+   radio panel — cued-track controls (ours), the visitor's ordered
+   mix list with up/down/remove, a paste-a-track form, and the
+   verified staple catalog. The panel scrolls internally so the
+   stack above the bottom bars never pushes off-screen. */
+.hmr-panel { max-height: min(84vh, 780px); overflow-y: auto; }
+.hmr-mix[hidden] { display: none; }
+.hmr-mix { margin-top: 0.7rem; border-top: 1px solid #4a2d7a; padding-top: 0.7rem; }
+.hmr-mix-now { display: flex; align-items: center; gap: 0.5rem; }
+.hmr-mix-now > button { background: #3a2566; border: 1px solid #6b4fae; color: #e8ddff; border-radius: 9px; height: 34px; padding: 0 0.6rem; cursor: pointer; font-size: 0.95rem; }
+.hmr-mix-now .hmr-playmix { flex: 1; background: #ff7518; border-color: #ff7518; color: #1a1038; font-weight: 800; }
+.hmr-mix-cur { color: #ffd9a0; font-size: 0.85rem; font-weight: 700; margin: 0.55rem 0 0.3rem; }
+.hmr-mix-list { list-style: none; margin: 0.3rem 0 0; padding: 0; max-height: 148px; overflow-y: auto; }
+.hmr-mix-list li { display: flex; align-items: center; gap: 0.3rem; padding: 0.28rem 0.3rem; border-radius: 8px; }
+.hmr-mix-list li.current { background: #3a2566; }
+.hmr-mix-list .hmr-mix-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.86rem; }
+.hmr-mix-list button { background: none; border: 1px solid #6b4fae; color: #e8ddff; border-radius: 7px; min-width: 26px; height: 24px; cursor: pointer; font-size: 0.78rem; line-height: 1; }
+.hmr-mix-hint { color: #c9bce8; font-size: 0.83rem; font-weight: 700; margin: 0.7rem 0 0.35rem; }
+.hmr-catalog { list-style: none; margin: 0; padding: 0; max-height: 208px; overflow-y: auto; }
+.hmr-catalog li { display: flex; align-items: center; gap: 0.5rem; padding: 0.3rem 0.3rem; border-bottom: 1px solid #2c1a56; }
+.hmr-catalog li.hmr-cat-head { display: block; padding: 0.5rem 0.3rem 0.25rem; border-bottom: none; color: #ff7518; font-weight: 800; font-size: 0.82rem; letter-spacing: 0.04em; text-transform: uppercase; }
+.hmr-catalog .hmr-cat-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.86rem; }
+.hmr-catalog button { background: #3a2566; border: 1px solid #6b4fae; color: #ffd9a0; font-weight: 700; font-size: 0.8rem; border-radius: 999px; padding: 0.28rem 0.7rem; cursor: pointer; white-space: nowrap; }
+.hmr-catalog button.added { background: #1e5c2e; border-color: #2f8f4a; color: #c9f5d2; cursor: default; }
+.hmr-music-row { margin: 0.55rem 0 0; }
+.hmr-music-link { color: #ff7518; font-weight: 800; font-size: 0.92rem; text-decoration: none; }
+.hmr-music-link:hover { text-decoration: underline; }

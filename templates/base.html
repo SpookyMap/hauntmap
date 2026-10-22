@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Creepster&family=Fredoka:wght@500;600;700&family=Inter:wght@500;600;700;800;900&family=Nosifer&family=Rubik+Wet+Paint&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/static/css/style.css?v=20261022z62">
+<link rel="stylesheet" href="/static/css/style.css?v=20261022z63">
 {% block head %}{% endblock %}
 </head>
 <body>
@@ -301,6 +301,7 @@ window.addEventListener('storage', function (e) {
 });
 hmTourSync();
 </script>
+{% include "_radio.html" %}
 {# Speculation Rules (Chromium; ignored elsewhere): prefetch same-origin
    pages on hover/press so the next tap lands instantly. Prefetch pulls HTML
    only (~13 KB/page) — deliberately NOT eager/viewport-triggered, and admin,

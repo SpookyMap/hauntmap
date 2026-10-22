@@ -1,0 +1,409 @@
+{# Halloween Radio (Spotify) — Dan, Oct 22. A slim chip fixed at the
+   bottom of every page; expanding it lazy-loads the Spotify embed
+   (ZERO Spotify requests until a visitor first opens it). Stations:
+   HauntMap Halloween (default), genre picks, the visitor's own
+   pasted playlist/album, and "Build Your Mix" — a per-visitor mix
+   built from a verified staple catalog + pasted tracks, stepped
+   through with our own prev/next controls. All state persists in
+   localStorage. Login happens inside Spotify's iframe — we never
+   see credentials. #}
+<div id="hm-radio">
+  <div class="hmr-chip" id="hmrChip" hidden>
+    <button type="button" class="hmr-main" id="hmrOpen" aria-expanded="false" aria-controls="hmrPanel">
+      <span class="hmr-ico" aria-hidden="true">&#x1F383;&#x1F3B5;</span>
+      <span class="hmr-name">Halloween Radio</span>
+      <span class="hmr-play" aria-hidden="true">&#x25B6;</span>
+    </button>
+    <button type="button" class="hmr-x" id="hmrOff" aria-label="Turn off Halloween Radio">&times;</button>
+  </div>
+  <div class="hmr-panel" id="hmrPanel" role="region" aria-label="Halloween Radio player" hidden>
+    <div class="hmr-head">
+      <span class="hmr-title">&#x1F383;&#x1F3B5; Halloween Radio</span>
+      <span class="hmr-head-btns">
+        <button type="button" id="hmrCollapse" aria-label="Collapse player">&ndash;</button>
+        <button type="button" id="hmrOff2" aria-label="Turn off Halloween Radio">&times;</button>
+      </span>
+    </div>
+    <div class="hmr-picks" role="group" aria-label="Stations">
+      <button type="button" class="hmr-pick" data-station="hits">&#x1F383; Halloween Hits</button>
+      <button type="button" class="hmr-pick" data-station="party">&#x1FA69; Party &amp; Dance</button>
+      <button type="button" class="hmr-pick" data-station="jazz">&#x1F3B7; Spooky Jazz</button>
+      <button type="button" class="hmr-pick" data-station="horror">&#x1F47B; Horror Themes</button>
+      <button type="button" class="hmr-pick" data-station="pop">&#x1F3A4; Halloween Pop</button>
+      <button type="button" class="hmr-pick" data-station="mix">&#x1F3A7; Build Your Mix</button>
+      <button type="button" class="hmr-pick" data-station="custom" id="hmrPickCustom" hidden>&#x1F3A7; Your Music</button>
+    </div>
+    <div class="hmr-frame" id="hmrFrame"></div>
+    <div class="hmr-mix" id="hmrMix" hidden>
+      <div class="hmr-mix-now">
+        <button type="button" id="hmrPrev" aria-label="Previous track in your mix">&#x23EE;</button>
+        <button type="button" id="hmrPlayMix" class="hmr-playmix">&#x25B6; Play my mix</button>
+        <button type="button" id="hmrNext" aria-label="Next track in your mix">&#x23ED;</button>
+      </div>
+      <p class="hmr-mix-cur" id="hmrMixCur"></p>
+      <ol class="hmr-mix-list" id="hmrMixList"></ol>
+      <form class="hmr-custom" id="hmrTrackForm">
+        <label for="hmrTrackUrl">Add any song &mdash; paste a Spotify track link:</label>
+        <div class="hmr-custom-row">
+          <input id="hmrTrackUrl" type="url" inputmode="url" autocomplete="off" spellcheck="false" placeholder="https://open.spotify.com/track/&hellip;">
+          <button type="submit">Add</button>
+        </div>
+        <p class="hmr-err" id="hmrTrackErr" hidden>That doesn&rsquo;t look like a Spotify track link &mdash; copy it from Spotify&rsquo;s Share menu and try again.</p>
+      </form>
+      <p class="hmr-mix-hint">Halloween staples &mdash; tap + Add to build your mix:</p>
+      <ul class="hmr-catalog" id="hmrCatalog"></ul>
+      <p class="hmr-note">Your mix is saved in this browser and plays through Spotify &mdash; press &#x25B6; in the player to start each song. Premium hears full songs; free accounts hear previews. That&rsquo;s Spotify&rsquo;s rule, not ours.</p>
+    </div>
+    <form class="hmr-custom" id="hmrCustomForm">
+      <label for="hmrUrl">Your music &mdash; paste any Spotify playlist or album link:</label>
+      <div class="hmr-custom-row">
+        <input id="hmrUrl" type="url" inputmode="url" autocomplete="off" spellcheck="false" placeholder="https://open.spotify.com/playlist/&hellip;">
+        <button type="submit">Play mine</button>
+      </div>
+      <p class="hmr-err" id="hmrErr" hidden>That doesn&rsquo;t look like a Spotify playlist or album link &mdash; copy it from Spotify&rsquo;s Share menu and try again.</p>
+    </form>
+    <p class="hmr-note">Log in inside the player to play full songs with Spotify Premium. Free accounts hear previews &mdash; that&rsquo;s Spotify&rsquo;s rule, not ours.</p>
+    <p class="hmr-music-row"><a class="hmr-music-link" href="/music">&#x1F3B5; Full music page &rarr;</a></p>
+    <p class="hmr-reset-row"><button type="button" class="hmr-reset" id="hmrReset">&#x21A9; Back to HauntMap Halloween</button></p>
+  </div>
+  <button type="button" class="hmr-tab" id="hmrTab" aria-label="Turn on Halloween Radio" hidden>&#x1F3B5;</button>
+</div>
+<script>
+// Halloween Radio (Spotify) — chip / panel / off-tab with localStorage
+// state (hm_radio_off, hm_radio_open, hm_radio_station, hm_radio_custom,
+// hm_mix, hm_mix_idx). The embed iframe is created ONLY on first open
+// (or when restoring a returning visitor's open panel) so the player
+// adds zero requests to a fresh page load.
+(function () {
+  // === STATION PICKS ===
+  // To swap in a HauntMap-owned Halloween playlist later, change ONLY
+  // the id on the 'hits' line (the part after open.spotify.com/playlist/).
+  var STATIONS = {
+    hits:   { kind: 'playlist', id: '3pdSnN0xKbfUgjllEAHKez' }, // "Halloween Party 2026" — BraNNue LIFE (Thriller, Monster Mash, Ghostbusters, Somebody's Watching Me, Disturbia)
+    party:  { kind: 'playlist', id: '59XmZtR5h9HIA5dMg6cJ2G' }, // "HALLOWEEN PARTY" — kai
+    jazz:   { kind: 'playlist', id: '6dTllpfnqWjcHV4JPD5cVI' }, // "Halloween Jazz Songs" — jazzfuel
+    horror: { kind: 'playlist', id: '6GgiTYU7Ygz2Yn4U35za5O' }, // "Spooky Mix" — Alfredo Aguiniga (Carpenter / Herrmann horror-score picks)
+    pop:    { kind: 'playlist', id: '1MPuVAa33bE3HQ0fwTPpgA' }  // "halloweenie" — bigdog (Halloween pop staples, 7k+ saves)
+  };
+  // === BUILD-YOUR-MIX CATALOG ===
+  // Every id below was verified individually against Spotify's oEmbed
+  // endpoint (exact title match + embed iframe_url returned) after the
+  // track's canonical Spotify page was located via kworb.net chart
+  // data — never guessed. [trackId, title, artist, section?]
+  var CATALOG = [
+    ['1A1eQ01CbtSZeyxj6489IS', 'Thriller', 'Michael Jackson'],
+    ['3sLhMSePzxSrmxluIqeoAZ', 'I Put a Spell On You', "Screamin' Jay Hawkins"],
+    ['1h2xVEoJORqrg71HocgqXd', 'Superstition', 'Stevie Wonder'],
+    ['6kotXaSQaGYxE62hVpdHWu', 'Werewolves of London', 'Warren Zevon'],
+    ['5QTxFnGygVM4jFQiBovmRo', "(Don't Fear) The Reaper", 'Blue \u00D6yster Cult'],
+    ['20OFwXhEXf12DzwXmaV7fj', 'Bad Moon Rising', 'Creedence Clearwater Revival'],
+    ['6MOEQCtAWNSCmvg3SFKF5y', 'Season of the Witch', 'Donovan'],
+    ['436yrzQWA32vb1sTZKXg9r', 'Witchy Woman', 'Eagles'],
+    ['4YMQXzscifAREG0a7KNGhB', 'Black Magic Woman', 'Santana'],
+    ['2E2ZVy2fxslpAUgbb4zu84', 'Abracadabra', 'Steve Miller Band'],
+    ['6ewN9MaFbi78oDLT9wYDgn', 'Ghost Town', 'The Specials'],
+    ['1Jmqubf9kGkWeYQXQKImL5', 'People Are Strange', 'The Doors'],
+    ['1TfqLAPs4K3s2rJMoCokcS', 'Sweet Dreams (Are Made of This)', 'Eurythmics'],
+    ['7dSCxR4LqkmxoBrq9MzVSD', 'Psycho Killer', 'Talking Heads'],
+    ['2VNfJpwdEQBLyXajaa6LWT', 'Burning Down the House', 'Talking Heads'],
+    ['63T7DJ1AFDD6Bn8VzG6JE8', 'Paint It, Black', 'The Rolling Stones'],
+    ['1Ud6moTC0KyXMq1Oxfien0', 'Sympathy For The Devil', 'The Rolling Stones'],
+    ['70LcF31zb1H0PyJoS1Sx1r', 'Creep', 'Radiohead'],
+    ['3gjHnylel3PTRpjS44ocqr', 'Zombie', 'The Cranberries'],
+    ['3bVSQOLt26X8SdPUf327Ti', "Dead Man's Party", 'Oingo Boingo'],
+    ['5h5reMGNpL19vdn5wMkbNn', 'Halloween', 'Misfits'],
+    ['2zYzyRzz6pRmhPzyfMEC8s', 'Highway to Hell', 'AC/DC'],
+    ['69QHm3pustz01CJRwdo20z', 'Hells Bells', 'AC/DC'],
+    ['6CDhfV6K4yplWYFR8Ip82v', 'Dragula', 'Rob Zombie'],
+    ['10V8XpuyMoEcSMfM79WDET', 'Living Dead Girl', 'Rob Zombie'],
+    ['23V08GxMeaZNSf8Gy6KF6t', 'Spooky, Scary Skeletons', 'Andrew Gold'],
+    ['2VOomzT6VavJOGBeySqaMc', 'Disturbia', 'Rihanna', 'pop'],
+    ['3qk4i6DRjtagkjF3hZnXp2', 'Bloody Mary', 'Lady Gaga', 'pop'],
+    ['4SSnFejRGlZikf02HLewEF', 'bury a friend', 'Billie Eilish', 'pop'],
+    ['4jbmgIyjGoXjY01XxatOx6', 'Dark Horse', 'Katy Perry ft. Juicy J', 'pop'],
+    ['1di1BEgJYzPvXUuinsYJGP', "Everybody (Backstreet's Back)", 'Backstreet Boys', 'pop'],
+    ['75HFFq9W7Em0dTBG8QeGcT', 'There Will Be Blood', 'Kim Petras', 'pop'],
+    ['0phGofl3ppS5Itk1zM9eKa', 'Ghostbusters', 'Ray Parker Jr.', 'pop']
+  ];
+  var root = document.getElementById('hm-radio');
+  if (!root) return;
+  var chip = document.getElementById('hmrChip');
+  var panel = document.getElementById('hmrPanel');
+  var tab = document.getElementById('hmrTab');
+  var frameBox = document.getElementById('hmrFrame');
+  var openBtn = document.getElementById('hmrOpen');
+  var mixBox = document.getElementById('hmrMix');
+  var iframe = null;
+
+  function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+  function lsSet(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+
+  // ---- mix state ----
+  function getMix() {
+    try {
+      var m = JSON.parse(lsGet('hm_mix') || '[]');
+      return Array.isArray(m) ? m.filter(function (t) { return t && t.id; }) : [];
+    } catch (e) { return []; }
+  }
+  function setMix(m) { lsSet('hm_mix', JSON.stringify(m)); }
+  function mixIdx() {
+    var m = getMix();
+    var i = parseInt(lsGet('hm_mix_idx') || '0', 10) || 0;
+    if (i < 0) i = 0;
+    if (i > m.length - 1) i = Math.max(0, m.length - 1);
+    return i;
+  }
+  function setMixIdx(i) { lsSet('hm_mix_idx', String(i)); }
+  function trackLabel(t) { return t.a ? (t.t + ' — ' + t.a) : t.t; }
+
+  function station() {
+    var s = lsGet('hm_radio_station');
+    return (s && (STATIONS[s] || s === 'custom' || s === 'mix')) ? s : 'hits';
+  }
+  function embedPath() {
+    var s = station();
+    if (s === 'mix') {
+      var m = getMix();
+      if (m.length) return 'track/' + m[mixIdx()].id;
+      return STATIONS.hits.kind + '/' + STATIONS.hits.id; // placeholder until first add; frame stays unloaded while the mix is empty
+    }
+    if (s === 'custom') {
+      var c = lsGet('hm_radio_custom');
+      if (c) return c;
+      return STATIONS.hits.kind + '/' + STATIONS.hits.id;
+    }
+    return STATIONS[s].kind + '/' + STATIONS[s].id;
+  }
+  function embedUrl() {
+    return 'https://open.spotify.com/embed/' + embedPath() + '?utm_source=generator&theme=0';
+  }
+  function loadFrame() {
+    // (Re)point the embed at the current station/track. While the mix
+    // is empty there is nothing to play, so no iframe is created.
+    if (station() === 'mix' && !getMix().length) { renderMix(); return; }
+    ensureFrame();
+    var url = embedUrl();
+    if (iframe.getAttribute('src') !== url) iframe.src = url;
+  }
+  function ensureFrame() {
+    if (iframe) return;
+    iframe = document.createElement('iframe');
+    iframe.title = 'Spotify player — HauntMap Halloween Radio';
+    iframe.width = '100%';
+    iframe.height = '152';
+    iframe.frameBorder = '0';
+    iframe.allowFullscreen = true;
+    iframe.setAttribute('allow', 'autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture');
+    iframe.loading = 'lazy';
+    frameBox.appendChild(iframe);
+  }
+  function syncPicks() {
+    var s = station();
+    document.querySelectorAll('.hmr-pick').forEach(function (b) {
+      var on = b.getAttribute('data-station') === s;
+      b.classList.toggle('active', on);
+      if (b.id === 'hmrPickCustom') b.hidden = !(lsGet('hm_radio_custom'));
+    });
+    mixBox.hidden = s !== 'mix';
+    if (s === 'mix') renderMix();
+  }
+  function applyStation(s) {
+    lsSet('hm_radio_station', s);
+    syncPicks();
+    loadFrame();
+  }
+  function show(el) { if (el) el.hidden = false; }
+  function hide(el) { if (el) el.hidden = true; }
+  function setOff(off) {
+    lsSet('hm_radio_off', off ? '1' : '0');
+    hide(chip); hide(panel); hide(tab);
+    if (off) { show(tab); document.body.classList.remove('has-radio'); }
+    else if (lsGet('hm_radio_open') === '1') { openPanel(); document.body.classList.add('has-radio'); }
+    else { show(chip); document.body.classList.add('has-radio'); }
+  }
+  function openPanel() {
+    lsSet('hm_radio_open', '1');
+    hide(chip); show(panel);
+    openBtn.setAttribute('aria-expanded', 'true');
+    syncPicks();
+    loadFrame();
+  }
+  function collapsePanel() {
+    lsSet('hm_radio_open', '0');
+    hide(panel); show(chip);
+    openBtn.setAttribute('aria-expanded', 'false');
+  }
+
+  // ---- Build Your Mix rendering ----
+  function renderMix() {
+    var m = getMix();
+    var idx = mixIdx();
+    var cur = document.getElementById('hmrMixCur');
+    var list = document.getElementById('hmrMixList');
+    if (!m.length) {
+      cur.textContent = 'Your mix is empty — add staples below, or paste a track link.';
+    } else {
+      cur.textContent = 'Now cued: ' + (idx + 1) + ' of ' + m.length + ' — ' + trackLabel(m[idx]);
+    }
+    list.innerHTML = '';
+    m.forEach(function (t, i) {
+      var li = document.createElement('li');
+      if (i === idx) li.className = 'hmr-mix-item current';
+      var name = document.createElement('span');
+      name.className = 'hmr-mix-name';
+      name.textContent = trackLabel(t);
+      li.appendChild(name);
+      [['\u2191', 'up', 'Move up'], ['\u2193', 'down', 'Move down'], ['\u00D7', 'del', 'Remove']].forEach(function (spec) {
+        var b = document.createElement('button');
+        b.type = 'button';
+        b.textContent = spec[0];
+        b.setAttribute('aria-label', spec[2] + ': ' + trackLabel(t));
+        b.addEventListener('click', function () { mixMutate(i, spec[1]); });
+        li.appendChild(b);
+      });
+      var play = document.createElement('button');
+      play.type = 'button';
+      play.textContent = '\u25B6';
+      play.setAttribute('aria-label', 'Play: ' + trackLabel(t));
+      play.addEventListener('click', function () { setMixIdx(i); renderMix(); loadFrame(); });
+      li.insertBefore(play, li.firstChild);
+      list.appendChild(li);
+    });
+    // catalog states
+    var inMix = {};
+    m.forEach(function (t) { inMix[t.id] = true; });
+    document.querySelectorAll('#hmrCatalog [data-add]').forEach(function (b) {
+      var added = !!inMix[b.getAttribute('data-add')];
+      b.textContent = added ? '\u2713 Added' : '+ Add';
+      b.disabled = added;
+      b.classList.toggle('added', added);
+    });
+  }
+  function mixMutate(i, op) {
+    var m = getMix();
+    var curId = m.length ? m[mixIdx()].id : null;
+    if (op === 'del') m.splice(i, 1);
+    if (op === 'up' && i > 0) { var t1 = m[i - 1]; m[i - 1] = m[i]; m[i] = t1; }
+    if (op === 'down' && i < m.length - 1) { var t2 = m[i + 1]; m[i + 1] = m[i]; m[i] = t2; }
+    setMix(m);
+    // keep the cued track cued across reorder/remove when possible
+    var ni = 0;
+    if (curId) { for (var j = 0; j < m.length; j++) if (m[j].id === curId) { ni = j; break; } }
+    setMixIdx(Math.min(ni, Math.max(0, m.length - 1)));
+    renderMix();
+    if (station() === 'mix') loadFrame();
+  }
+  function mixAdd(id, title, artist) {
+    var m = getMix();
+    for (var i = 0; i < m.length; i++) if (m[i].id === id) return false;
+    m.push({ id: id, t: title, a: artist || '' });
+    setMix(m);
+    renderMix();
+    if (station() === 'mix') loadFrame();
+    return true;
+  }
+  function buildCatalog() {
+    var ul = document.getElementById('hmrCatalog');
+    var lastSection = null;
+    CATALOG.forEach(function (row) {
+      var section = row[3] || 'core';
+      if (section !== lastSection) {
+        lastSection = section;
+        var head = document.createElement('li');
+        head.className = 'hmr-cat-head';
+        head.textContent = section === 'pop' ? '\uD83C\uDFA4 Halloween Pop' : '\uD83C\uDF83 Halloween Staples';
+        ul.appendChild(head);
+      }
+      var li = document.createElement('li');
+      var name = document.createElement('span');
+      name.className = 'hmr-cat-name';
+      name.textContent = row[1] + ' — ' + row[2];
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.setAttribute('data-add', row[0]);
+      b.textContent = '+ Add';
+      b.addEventListener('click', function () { mixAdd(row[0], row[1], row[2]); });
+      li.appendChild(name);
+      li.appendChild(b);
+      ul.appendChild(li);
+    });
+  }
+
+  openBtn.addEventListener('click', openPanel);
+  document.getElementById('hmrCollapse').addEventListener('click', collapsePanel);
+  document.getElementById('hmrOff').addEventListener('click', function () { setOff(true); });
+  document.getElementById('hmrOff2').addEventListener('click', function () { setOff(true); });
+  tab.addEventListener('click', function () { setOff(false); });
+  document.querySelectorAll('.hmr-pick').forEach(function (b) {
+    b.addEventListener('click', function () { applyStation(b.getAttribute('data-station')); });
+  });
+  document.getElementById('hmrReset').addEventListener('click', function () { applyStation('hits'); });
+  document.getElementById('hmrPlayMix').addEventListener('click', function () {
+    if (!getMix().length) { renderMix(); return; }
+    applyStation('mix');
+  });
+  document.getElementById('hmrPrev').addEventListener('click', function () {
+    var m = getMix(); if (!m.length) return;
+    setMixIdx((mixIdx() - 1 + m.length) % m.length);
+    renderMix(); loadFrame();
+  });
+  document.getElementById('hmrNext').addEventListener('click', function () {
+    var m = getMix(); if (!m.length) return;
+    setMixIdx((mixIdx() + 1) % m.length);
+    renderMix(); loadFrame();
+  });
+
+  function parseSpotifyLink(raw, kinds) {
+    if (!raw) return null;
+    raw = raw.trim();
+    var re = new RegExp('^spotify:(' + kinds + '):([A-Za-z0-9]+)$');
+    var m = raw.match(re);
+    if (m) return m[1] + '/' + m[2];
+    re = new RegExp('open\\.spotify\\.com/(?:intl-[a-z-]+/)?(?:embed/)?(' + kinds + ')/([A-Za-z0-9]+)');
+    m = raw.match(re);
+    if (m) return m[1] + '/' + m[2];
+    return null;
+  }
+  document.getElementById('hmrCustomForm').addEventListener('submit', function (ev) {
+    ev.preventDefault();
+    var input = document.getElementById('hmrUrl');
+    var err = document.getElementById('hmrErr');
+    var path = parseSpotifyLink(input.value, 'playlist|album');
+    if (!path) { err.hidden = false; return; }
+    err.hidden = true;
+    lsSet('hm_radio_custom', path);
+    applyStation('custom');
+  });
+  document.getElementById('hmrTrackForm').addEventListener('submit', function (ev) {
+    ev.preventDefault();
+    var input = document.getElementById('hmrTrackUrl');
+    var err = document.getElementById('hmrTrackErr');
+    var path = parseSpotifyLink(input.value, 'track');
+    if (!path) { err.hidden = false; return; }
+    err.hidden = true;
+    var id = path.split('/')[1];
+    if (mixAdd(id, 'Your pasted track', '…' + id.slice(-6))) input.value = '';
+  });
+
+  // Stack above the mobile "Next haunt" bar on pin pages (it is in the
+  // DOM only when a next pin exists, and CSS-shown only <=760px).
+  var nb = document.querySelector('.next-haunt-bar');
+  function syncNextbar() {
+    var vis = nb && window.getComputedStyle(nb).display !== 'none';
+    document.body.classList.toggle('has-nextbar', !!vis);
+  }
+  window.addEventListener('resize', syncNextbar);
+  syncNextbar();
+
+  buildCatalog();
+  // Initial state: off -> tab only; on -> chip, restoring an expanded
+  // panel (and its embed) only for visitors who left it open.
+  if (lsGet('hm_radio_off') === '1') {
+    setOff(true);
+  } else {
+    document.body.classList.add('has-radio');
+    if (lsGet('hm_radio_open') === '1') openPanel();
+    else { show(chip); syncPicks(); }
+  }
+})();
+</script>
