@@ -1531,3 +1531,17 @@ a.game-card:hover { border-color: #ff7518; transform: translateY(-2px); }
 @media (orientation: landscape) and (max-height: 500px) {
   .site-header.v2 .header-nav a.events-link img.events-gif { height: 27px; }
 }
+
+/* ============ z47: DIY COSTUMES NAV BUTTON (Dan, Oct 22) ============
+   A ninth button joins row two — "DIY Costumes" (/diy-costumes),
+   right after DIY, same .navbtn treatment with its own mask icon.
+   Desktop absorbs it easily (space-between redistributes the wide
+   gaps). The 390px phone row was already nearly full, so the phone
+   buttons give back a sliver — icon 22px -> 18px, label 0.47rem ->
+   0.40rem, letter-spacing eased — keeping the row one line, no
+   overflow, no wrap, GIF untouched at 100x30, "DIY Costumes" fully
+   legible and never truncated. */
+@media (max-width: 760px) {
+  .site-header.v2 .header-nav a.navbtn { font-size: 0.40rem; letter-spacing: 0.01em; }
+  .site-header.v2 .header-nav a.navbtn img { width: 18px; height: 18px; }
+}
