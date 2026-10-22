@@ -58,6 +58,9 @@
   {% endif %}
   <h1>{{ entry.title }}</h1>
   <p class="meta">{{ entry.town_label }}{% if entry.display_name %} &middot; {{ entry.display_name }}{% endif %}</p>
+  {% if entry.address %}
+  <p class="entry-address">&#x1F4CD; {{ entry.address }}</p>
+  {% endif %}
   {% if entry.scare_level %}
   <p class="scare-badge">
     {% if entry.scare_level == 'family' %}&#x1F60A; Family-friendly
@@ -87,9 +90,17 @@
   </script>
 
   <div class="directions-row">
+    {% if entry.address %}
+    {# Confirmed street address on file: show it (above) and route every
+       directions/copy action to the address itself, not raw coordinates. #}
+    <a class="btn-dir" href="https://www.google.com/maps/dir/?api=1&destination={{ entry.address|urlencode }}" target="_blank" rel="noopener">📍 Google Maps</a>
+    <a class="btn-dir" href="https://maps.apple.com/?daddr={{ entry.address|urlencode }}" target="_blank" rel="noopener">🍎 Apple Maps</a>
+    <button class="btn-dir" onclick="navigator.clipboard.writeText({{ entry.address|tojson }});this.textContent='✓ Copied!';setTimeout(()=>this.textContent='📋 Copy address',2000)">📋 Copy address</button>
+    {% else %}
     <a class="btn-dir" href="https://www.google.com/maps/dir/?api=1&destination={{ entry.lat }},{{ entry.lng }}" target="_blank" rel="noopener">📍 Google Maps</a>
     <a class="btn-dir" href="https://maps.apple.com/?daddr={{ entry.lat }},{{ entry.lng }}" target="_blank" rel="noopener">🍎 Apple Maps</a>
     <button class="btn-dir" onclick="navigator.clipboard.writeText('{{ entry.town }}');this.textContent='✓ Copied!';setTimeout(()=>this.textContent='📋 Copy address',2000)">📋 Copy address</button>
+    {% endif %}
   </div>
 
   {% if entry.tiktok_url %}
