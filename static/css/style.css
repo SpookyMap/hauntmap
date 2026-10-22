@@ -2237,3 +2237,25 @@ body.has-tourbar.has-radio { padding-bottom: 124px; }
   }
   .hero-stack .text-alerts { margin: 0 auto; width: 100%; }
 }
+
+/* ============ z68: LAPTOP HEADER BALANCE (Dan, Oct 22) ============
+   Equal flank zones either side of the hook band: the logo centres
+   in a 130px left zone and Frankenstein centres in a 130px right
+   zone (his box widens; object-fit keeps the picture centred in it),
+   so the hook band's centre lands on the banner centre. The old
+   flanks totalled 165 + 93 = 258px; 2 x 130 = 260px, so the hook
+   band keeps its width and the hook stays one line at its size.
+   min-height guard: landscape phones keep their slim header. */
+@media (min-width: 761px) and (min-height: 501px) {
+  .header-band .brand {
+    flex: 0 0 130px; display: flex; align-items: center; justify-content: center;
+  }
+  /* Retire the z58 translateX(-1px) nudge — it was tuned for the old
+     165px zone; in the 130px zone flex centring is exact without it.
+     (Landscape phones are outside this media and keep their nudge.) */
+  .header-band .brand-logo { transform: none; }
+  .header-band .header-frank {
+    flex: 0 0 130px; width: 130px; height: 93px; object-position: center;
+    margin-left: 0; /* the old 0.3rem tagline margin skewed the band centre */
+  }
+}
