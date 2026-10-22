@@ -1667,3 +1667,37 @@ a.game-card:hover { border-color: #ff7518; transform: translateY(-2px); }
   .header-band .header-hook .hook-l2 { display: none; }
   .header-band .header-hook .hook-l1 { font-size: 0.78rem; }
 }
+
+/* ============ z53: HEADER FLANKS GROW (Dan, Oct 22 — revised factors) ====
+   Dan's final size word on the band art (supersedes his 2x order from
+   minutes earlier): the main logo (far left) grows 70% and
+   Frankenstein (far right) grows 40% off the z38 sizes that stood
+   since this morning — desktop 44px -> logo 75px / Frank 62px tall,
+   phone 34px -> logo 58px / Frank 48px tall. Landscape phones
+   (flanks also stood at 44px via the z38 desktop rule) scale
+   proportionally but moderated — see the landscape block below —
+   with the slim-row design untouched (line 2 still hidden, line 1
+   still the small fixed size).
+   The band between the flanks narrows; the tagline is cqw-sized
+   against .header-center (z49/z51), so it rescales on its own and
+   stays centered — on phone its line 1 simply sits at its clamp
+   floor (0.45rem after the z52 +15% tune), which the narrowed band
+   still fits with room to spare.
+   Row two is untouched. Assets: the logo source is 264x291 — at a
+   75px box it stays crisp even at 2x DPR (150 device px < 264);
+   Frank's source is 1600x1600, crisp at any of these sizes. */
+@media (min-width: 761px) {
+  .header-band .brand-logo { height: 75px; width: 75px; max-height: 75px; max-width: 75px; }
+  .header-band .header-frank { height: 62px; }
+}
+@media (max-width: 760px) {
+  .header-band .brand-logo { height: 58px; width: 58px; max-height: 58px; max-width: 58px; }
+  .header-band .header-frank { height: 48px; }
+}
+@media (orientation: landscape) and (max-height: 500px) {
+  /* Landscape moderated (logo x1.45 / Frank x1.20 off 44px): full
+     factors would push the slim landscape header to ~34% of a 390px
+     screen; at 64/53 the header holds ~31% and the row stays slim. */
+  .header-band .brand-logo { height: 64px; width: 64px; max-height: 64px; max-width: 64px; }
+  .header-band .header-frank { height: 53px; }
+}
