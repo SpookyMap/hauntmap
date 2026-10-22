@@ -1323,3 +1323,63 @@ a.game-card:hover { border-color: #ff7518; transform: translateY(-2px); }
 @media (orientation: landscape) and (max-height: 500px) {
   .site-header.v2 .header-nav a.events-link img.events-gif { height: 20px; }
 }
+
+/* Hero split (Dan, Oct 22): one compact hero band. Desktop: featured TikTok
+   video left with the sponsor billboard reflowed as a vertical rectangle
+   beneath it; headline block right with a vertical TikTok-follow banner
+   running down its right edge. Stacked (headline / video / follow button /
+   sponsor) below 1000px. Sponsor content, orange panel, black frame and
+   Apple-style type are unchanged — only reflowed for the narrow column. */
+.hero-split {
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-areas: "headline" "video" "strip" "sponsor";
+  gap: 0.9rem;
+  margin: 0.4rem 0;
+}
+.hero-split .hero-intro { grid-area: headline; max-width: none; margin: 0; }
+.hero-split .tt-featured { grid-area: video; width: min(300px, 84vw, calc(56svh * 0.5625)); margin: 0 auto; }
+.hero-split .tt-follow-vert { grid-area: strip; }
+.hero-split .sponsor-section { grid-area: sponsor; margin: 0; }
+
+/* TikTok-follow banner: full-width horizontal button when stacked */
+.tt-follow-vert {
+  display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 0.6rem;
+  background: linear-gradient(160deg, #241a44, #0d0a1a);
+  border: 2px solid #3a2566; border-radius: 12px;
+  color: #fff; font-weight: 800; font-size: 1rem; text-decoration: none;
+  padding: 0.6rem 0.9rem;
+}
+.tt-follow-vert img { width: 26px; height: 26px; flex: 0 0 auto; }
+.tt-follow-vert-handle { color: #ff7518; }
+.tt-follow-vert:hover { border-color: #ff7518; }
+
+@media (min-width: 1000px) {
+  .hero-split {
+    grid-template-columns: 252px minmax(0, 1fr) 56px;
+    grid-template-areas: "video headline strip" "sponsor headline strip";
+    gap: 0.9rem 1.1rem;
+    width: min(1060px, calc(100vw - 2rem));
+    position: relative; left: 50%; transform: translateX(-50%);
+  }
+  .hero-split .hero-intro { padding: 1.25rem 1.2rem 1rem; }
+  .hero-split .hero-intro h1.hero-title { margin-bottom: 1rem; }
+  .hero-split .hero-intro p { margin-bottom: 0.9rem; }
+  .hero-split .hero-intro p:last-child { margin-bottom: 0; }
+  .hero-split .tt-featured { width: 100%; margin: 0; }
+  .hero-split .tt-facade { height: 248px; }
+  .hero-split .tt-facade img { height: 100%; aspect-ratio: auto; }
+  /* Sponsor billboard as a vertical rectangle: same orange panel, black
+     frame and type, stacked and tightened for the 252px column */
+  .hero-split .sponsor-section { padding: 0.75rem 0.6rem 0.65rem; }
+  .hero-split .sponsor-grid { flex-direction: column; align-items: stretch; }
+  .hero-split .sponsor-card { flex-direction: column; text-align: center; gap: 0.5rem; padding: 0.65rem 0.6rem; }
+  .hero-split .sponsor-logo { width: 72px !important; height: 108px !important; max-width: 72px !important; max-height: 108px !important; }
+  .hero-split .sponsor-sub { margin-bottom: 0.5rem; }
+  .hero-split .sponsor-cta { text-align: center; margin-top: 0.5rem; }
+  .hero-split .sponsor-meta { align-items: center; }
+  /* Vertical rectangle: icon on top, text running downward */
+  .tt-follow-vert { flex-direction: column; justify-content: flex-start; gap: 0.55rem; padding: 0.85rem 0; }
+  .tt-follow-vert-text, .tt-follow-vert-handle { writing-mode: vertical-rl; }
+  .tt-follow-vert-text { letter-spacing: 0.05em; }
+}

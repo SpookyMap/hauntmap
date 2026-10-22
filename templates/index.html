@@ -18,6 +18,7 @@
   </form>
   <button type="button" class="btn btn-locate" onclick="hmNearMe()">&#x1F4CD; Use my location</button>
 </div>
+<div class="hero-split">
 <div class="hero-intro">
   <h1 class="hero-title">Find the Best Halloween Displays <span class="hero-title-alt">Near You</span></h1>
   <p>Welcome to America's Halloween map — the #1 map for Halloween displays &amp; haunted houses, and the place where Halloween lives. We've pinned every great Halloween display in America: spooky houses, haunted attractions, events and video tours — mapped across 25 states + DC and 779 towns. That's 2,100+ displays, events and haunts, and climbing — every spooky house, one tap away.</p>
@@ -25,8 +26,6 @@
   <p>Watch the displays before you go, build the tour, own the night. Every display page carries photos and video, scare levels and the details that matter, so Halloween night is planned in one click — 779 towns, thousands of frights, zero aimless driving. Find it. Tour it. Haunt it.</p>
   <p>HauntMap is built for Halloween lovers, by Halloween lovers — and it runs on the people who decorate. Put your house on the map, vote for the displays that deserve it, and help your whole town find the good stuff. Don't just trick-or-treat — tour like a pro.</p>
 </div>
-
-{% include "_town_request.html" %}
 
 <div class="tt-featured">
   <div class="tt-facade" data-tt-url="https://www.tiktok.com/@gethauntmap/video/7699265030251924767" data-tt-id="7699265030251924767" role="button" tabindex="0" aria-label="Play TikTok video">
@@ -51,10 +50,12 @@
   </script>
 </div>
 
-<div class="signup-strip tiktok-promo">
-  <a class="tiktok-follow tiktok-follow-big" href="https://www.tiktok.com/@gethauntmap" target="_blank" rel="noopener"><img src="/static/img/tiktok_logo.png" alt="TikTok"><span>Follow us on TikTok</span><span class="tt-handle">@GetHauntmap</span></a>
-  <p class="tiktok-line">Follow @GetHauntmap on TikTok — new haunts daily &#x1F383;</p>
-</div>
+<a class="tt-follow-vert" href="https://www.tiktok.com/@gethauntmap" target="_blank" rel="noopener" aria-label="Follow us on TikTok @GetHauntmap">
+  <img src="/static/img/tiktok_logo.png" alt="TikTok">
+  <span class="tt-follow-vert-note">&#x1F3B5;</span>
+  <span class="tt-follow-vert-text">Follow us on TikTok</span>
+  <span class="tt-follow-vert-handle">@GetHauntmap</span>
+</a>
 
 {% if sponsors %}
 <div class="sponsor-section">
@@ -77,6 +78,14 @@
   <p class="sponsor-cta">Want your business here? <a href="/advertise">Become a sponsor &rarr;</a></p>
 </div>
 {% endif %}
+</div>
+
+{% include "_town_request.html" %}
+
+<div class="signup-strip tiktok-promo">
+  <a class="tiktok-follow tiktok-follow-big" href="https://www.tiktok.com/@gethauntmap" target="_blank" rel="noopener"><img src="/static/img/tiktok_logo.png" alt="TikTok"><span>Follow us on TikTok</span><span class="tt-handle">@GetHauntmap</span></a>
+  <p class="tiktok-line">Follow @GetHauntmap on TikTok — new haunts daily &#x1F383;</p>
+</div>
 
 <div class="cat-tabs-main">
   <a href="/?cat=halloween{% if sort != 'top' %}&sort={{ sort }}{% endif %}{% if town %}&town={{ town }}{% endif %}{% if video %}&video=1{% endif %}" class="cat-btn-main {% if cat == 'halloween' %}active{% endif %}">&#x1F383; Haunt Map</a>
