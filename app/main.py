@@ -700,6 +700,13 @@ def home(request: Request, sort: str = "top", town: str = "", town_search: str =
     )
 
 
+@app.get("/events")
+def events_redirect():
+    # The header's Events artwork links to /events (Dan, Oct 22); the
+    # events view itself is the home feed filtered to the events category.
+    return RedirectResponse("/?cat=events", status_code=302)
+
+
 @app.get("/upload", response_class=HTMLResponse)
 def upload_form(request: Request):
     return templates.TemplateResponse(request, "upload.html", {"request": request, "error": None})

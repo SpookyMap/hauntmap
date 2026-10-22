@@ -1278,3 +1278,48 @@ a.game-card:hover { border-color: #ff7518; transform: translateY(-2px); }
   .site-header.v2 .header-nav a.navbtn img { width: 20px; height: 20px; }
   .site-header.v2 .header-nav a.navbtn-events img.events-gif { height: 18px; }
 }
+
+/* ============ z36: ONE-LINE BAND (Dan, Oct 22 — final) ============
+   The band center is now ONE single line: hook + "Build Your Night." +
+   tagline segments, ALL at the same font size, no wrap, fluid-sized to
+   fill the width between the logo (far left) and Frankenstein (far
+   right). Segment colors unchanged (lavender / red / lavender /
+   lavender / red). The tag-* color rules in the z-sections above are
+   scoped to a .header-tagline ancestor, so they are re-declared here
+   for the spans' new home inside .header-hook. Buttons row unchanged. */
+.header-band .header-hook .tag-a { color: #c9a7ff; }
+.header-band .header-hook .tag-b { color: #c9a7ff; }
+.header-band .header-hook .tag-c { color: #e01e26; }
+.header-band .header-hook { white-space: nowrap; }
+@media (min-width: 761px) {
+  .header-band .header-hook { font-size: clamp(0.85rem, 1.42vw, 1.12rem); line-height: 1.15; }
+}
+@media (max-width: 760px) {
+  /* Full line at 390px only fits at ~5.5px — below any legibility floor;
+     it stays ONE line per Dan's spec (see ship report). Flanks shrink a
+     touch to buy the line every available pixel. */
+  .header-band .brand-logo { height: 34px; width: 34px; max-height: 34px; max-width: 34px; }
+  .header-band .header-frank { height: 34px; }
+  .header-band .header-hook { font-size: 1.42vw; line-height: 1.15; }
+}
+@media (orientation: landscape) and (max-height: 500px) {
+  .header-band .header-hook { font-size: 0.72rem; }
+}
+
+/* ============ z37: EVENTS ARTWORK, NOT A BUTTON (Dan, Oct 22) ============
+   The Events item in the buttons row is the full events-btn-3.gif artwork
+   rendered AS the element itself: a plain image link to /events at the
+   far left of the row, before all the buttons. No button chrome — no
+   border, no background pill, no padding. The navbtn-events rules in z35
+   no longer apply (the class is gone); these rules own the element now. */
+.site-header.v2 .header-nav a.events-link { flex: 0 0 auto; line-height: 0; padding: 0; margin: 0; background: none; border: none; border-radius: 0; box-shadow: none; }
+.site-header.v2 .header-nav a.events-link img.events-gif { display: block; width: auto; border: none; border-radius: 0; background: none; object-fit: contain; }
+@media (min-width: 761px) {
+  .site-header.v2 .header-nav a.events-link img.events-gif { height: 33px; }
+}
+@media (max-width: 760px) {
+  .site-header.v2 .header-nav a.events-link img.events-gif { height: 22px; }
+}
+@media (orientation: landscape) and (max-height: 500px) {
+  .site-header.v2 .header-nav a.events-link img.events-gif { height: 20px; }
+}
