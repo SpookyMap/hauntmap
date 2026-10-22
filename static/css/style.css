@@ -1623,3 +1623,30 @@ a.game-card:hover { border-color: #ff7518; transform: translateY(-2px); }
     border-bottom-left-radius: 16px;
   }
 }
+
+/* ============ z51: TAGLINE TUNE + BORDERLESS EVENTS LETTERS (Dan, Oct 22) ====
+   Three refinements to the z49/z48 header:
+   1) TAGLINE 30% SMALLER: the two Creepster lines scale x0.7 —
+      line 1 3.36cqw -> 2.35cqw, line 2 6.15cqw -> 4.31cqw, clamp
+      bounds scaled by the same 0.7. The lines no longer fill the
+      whole band — that's intended. The landscape slim row is
+      re-declared below bit-identical to z49 (line 2 hidden, line 1
+      at 0.78rem) so this section can't disturb it.
+   2) "HALLOWEEN" TURNS RED: the word gets its own .hw-red span with
+      its own color rule, red #e01e26 like the other red segments.
+      The rest of line 1 stays lavender; "Build Your Night." stays red.
+   3) EVENTS & PARTIES — LETTERS ONLY: the artwork swaps to
+      events-btn-4-borderless.gif (variant 3's color-chase letters,
+      transparent canvas, no purple panel, no cream border; a thin
+      dark outline + soft dark drop shadow are baked into the art so
+      the letters read cleanly on the dark header). Same 320x96
+      canvas as btn-3, so the z48 display slot (55px desktop /
+      30px phone / 27px landscape) and row-two geometry are unchanged;
+      still a plain clickable image link to /events. */
+.header-band .header-hook .hw-red { color: #e01e26; }
+.header-band .header-hook .hook-l1 { font-size: clamp(0.39rem, 2.35cqw, 2.98rem); }
+.header-band .header-hook .hook-l2 { font-size: clamp(0.56rem, 4.31cqw, 5.18rem); }
+@media (orientation: landscape) and (max-height: 500px) {
+  .header-band .header-hook .hook-l2 { display: none; }
+  .header-band .header-hook .hook-l1 { font-size: 0.78rem; }
+}
