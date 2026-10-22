@@ -1736,3 +1736,25 @@ a.game-card:hover { border-color: #ff7518; transform: translateY(-2px); }
   .site-header.v2 .header-nav a.events-link img.events-gif { max-width: 100%; }
 
 }
+
+/* ============ z55: LOGO +30% MORE (Dan, Oct 22) ====
+   On top of the z53 flanks build (logo x1.7 of the old 44/34px),
+   the main logo (far left) grows another 30% — desktop 75px ->
+   98px, phone 58px -> 75px, landscape 64px -> 83px (net vs the
+   pre-flanks originals: x2.21 desktop, x2.21 phone, x1.89
+   landscape). Frankenstein is NOT touched — his z53 sizes stand
+   (62px desktop / 48px phone / 53px landscape).
+   The tagline band narrows again; the tagline keeps its z52
+   cqw sizing and rescales on its own — on phone line 1 stays at
+   its 0.45rem clamp floor and its ink still fits the narrowed
+   band (measured, not assumed). The logo source is 264x291: at
+   a 98px box it stays crisp even at 2x DPR (196 device px < 264). */
+@media (min-width: 761px) {
+  .header-band .brand-logo { height: 98px; width: 98px; max-height: 98px; max-width: 98px; }
+}
+@media (max-width: 760px) {
+  .header-band .brand-logo { height: 75px; width: 75px; max-height: 75px; max-width: 75px; }
+}
+@media (orientation: landscape) and (max-height: 500px) {
+  .header-band .brand-logo { height: 83px; width: 83px; max-height: 83px; max-width: 83px; }
+}
