@@ -581,13 +581,14 @@ def _tonight_pool(conn, category: str | None) -> list[dict]:
             if d["id"] not in DUEL_EXCLUDE_IDS]
 
 
-def _pick_tonights_display(conn, day) -> dict | None:
-    """Tonight's Display: one pin per ET day — the same pin for every
-    visitor all day, changing at ET midnight. Quality pool = eligible
-    halloween pins that have video, plus the 200 most-viewed eligible pins
-    (by detail-page views); the day's pick is a SHA-256 hash of the date
-    over that pool (sorted by id). If the hash would repeat yesterday's
-    pin, it bumps one slot so the feature visibly changes daily."""
+def _pick_tonights_display(conn, exclude_id=None) -> dict | None:
+    """Tonight's Display: a fresh random pick on every homepage load
+    (Dan, Oct 22 — supersedes the earlier date-seeded daily pick). Pool
+    rules unchanged: eligible halloween pins that have video, plus the
+    200 most-viewed eligible pins (by detail-page views), real media
+    only. exclude_id (the visitor's previous pick, from the tonight_last
+    cookie) is skipped when the pool has more than one entry, so a
+    reload doesn't serve the same pin twice in a row."""
     rows = _tonight_pool(conn, "halloween")
     if not rows:
         rows = _tonight_pool(conn, None)
@@ -597,17 +598,15 @@ def _pick_tonights_display(conn, day) -> dict | None:
     for r in sorted(rows, key=lambda r: (-r["_views"], r["id"]))[:200]:
         quality.setdefault(r["id"], r)
     pool = [quality[k] for k in sorted(quality)]
-
-    def _idx(d) -> int:
-        return int(hashlib.sha256(d.isoformat().encode()).hexdigest(), 16) % len(pool)
-
-    idx = _idx(day)
-    if len(pool) > 1 and idx == _idx(day - timedelta(days=1)):
-        idx = (idx + 1) % len(pool)
-    pick = dict(pool[idx])
+    pool_size = len(pool)
+    if exclude_id is not None and pool_size > 1:
+        narrowed = [r for r in pool if r["id"] != exclude_id]
+        if narrowed:
+            pool = narrowed
+    pick = dict(random.choice(pool))
     pick.pop("_views", None)
     pick.pop("_has_video", None)
-    pick["_pool_size"] = len(pool)
+    pick["_pool_size"] = pool_size
     return pick
 
 
@@ -728,18 +727,21 @@ def home(request: Request, sort: str = "top", town: str = "", town_search: str =
             "SELECT * FROM sponsors WHERE is_active = 1 ORDER BY "
             "CASE tier WHEN 'title' THEN 0 WHEN 'premium' THEN 1 ELSE 2 END, created_at").fetchall()]
     voted = {k[6:] for k in request.cookies if k.startswith("voted_")}
-    # Tonight's Display: deterministic daily pick (ET date) — same pin for
-    # every visitor all day, rotating daily through a quality pool of
-    # real-media pins. See _pick_tonights_display.
+    # Tonight's Display: fresh random pick on every homepage load from the
+    # quality pool of real-media pins (Dan, Oct 22). The tonight_last
+    # cookie carries the previous pick so a reload doesn't repeat it.
+    # See _pick_tonights_display.
     try:
         from zoneinfo import ZoneInfo
         today_et = datetime.now(ZoneInfo("America/New_York")).date()
     except Exception:
         today_et = datetime.now(timezone.utc).date()
+    last_raw = request.cookies.get("tonight_last", "")
+    last_id = int(last_raw) if last_raw.isdigit() else None
     with get_conn(DB_PATH) as conn:
-        tonight = _pick_tonights_display(conn, today_et)
+        tonight = _pick_tonights_display(conn, exclude_id=last_id)
     tonight_label = today_et.strftime("%A, %B ") + str(today_et.day)
-    return templates.TemplateResponse(request, "index.html",
+    response = templates.TemplateResponse(request, "index.html",
         {"request": request, "entries": entries, "sort": sort,
          "town": town, "towns": towns(cat, state), "states": states(cat),
          "state": state, "region": region, "voted": voted,
@@ -749,6 +751,10 @@ def home(request: Request, sort: str = "top", town: str = "", town_search: str =
          "sponsors": sponsors,
          "tier_labels": {"featured": "Featured Sponsor", "premium": "Premium Sponsor", "title": "Title Sponsor"}},
     )
+    if tonight:
+        response.set_cookie("tonight_last", str(tonight["id"]),
+                            max_age=7 * 24 * 3600, path="/", samesite="lax")
+    return response
 
 
 @app.get("/events")
