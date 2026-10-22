@@ -2680,6 +2680,14 @@ FANART_SQL = """CREATE TABLE IF NOT EXISTS fan_art (
     created_at TEXT
 )"""
 
+def _ensure_fanart_cols(conn):
+    """Idempotent migration: curated gallery pieces carry a source_url
+    (e.g. the Wikimedia Commons file page) shown as a credit link."""
+    cols = {r["name"] for r in conn.execute("PRAGMA table_info(fan_art)")}
+    if "source_url" not in cols:
+        conn.execute("ALTER TABLE fan_art ADD COLUMN source_url TEXT")
+
+
 # Bundled starter examples (copied into the upload dir on first use) so the
 # gallery is never empty at launch; clearly labeled as starter examples.
 FANART_SEEDS = (
@@ -2718,6 +2726,7 @@ def fan_art(request: Request):
             voted.add(int(part.strip()))
     with get_conn(DB_PATH) as conn:
         conn.execute(FANART_SQL)
+        _ensure_fanart_cols(conn)
         _seed_fanart(conn)
         rows = conn.execute(
             "SELECT * FROM fan_art WHERE approved = 1 ORDER BY votes DESC, id DESC"
@@ -2742,6 +2751,7 @@ async def fanart_upload(
     title: str = Form(...),
     artist: str = Form(""),
     town: str = Form(""),
+    source_url: str = Form(""),
     media: UploadFile = File(...),
 ):
     ext = safe_ext(media.filename or "")
@@ -2765,14 +2775,18 @@ async def fanart_upload(
             return RedirectResponse("/fan-art?error=Couldn%27t+process+that+image.", status_code=303)
     except ValueError:
         return RedirectResponse("/fan-art?error=That+image+is+too+large+(10+MB+max).", status_code=303)
+    src = (source_url or "").strip()[:300]
+    if not (src.startswith("https://") or src.startswith("http://")):
+        src = None
     with get_conn(DB_PATH) as conn:
         conn.execute(FANART_SQL)
+        _ensure_fanart_cols(conn)
         conn.execute(
-            "INSERT INTO fan_art (title, artist, town, media_path, thumb_path, votes, approved, created_at) "
-            "VALUES (?, ?, ?, ?, ?, 0, 0, ?)",
+            "INSERT INTO fan_art (title, artist, town, media_path, thumb_path, votes, approved, created_at, source_url) "
+            "VALUES (?, ?, ?, ?, ?, 0, 0, ?, ?)",
             (title.strip()[:120], (artist or "").strip()[:60] or None,
              (town or "").strip()[:80] or None, media_rel, thumb_rel,
-             datetime.now(timezone.utc).isoformat()),
+             datetime.now(timezone.utc).isoformat(), src),
         )
     # Submissions stay PENDING (approved = 0) until Dan approves in admin.
     return RedirectResponse("/fan-art?submitted=1", status_code=303)
@@ -2811,6 +2825,7 @@ def admin_fanart_approve(fid: int, request: Request):
         return RedirectResponse("/admin", status_code=303)
     with get_conn(DB_PATH) as conn:
         conn.execute(FANART_SQL)
+        _ensure_fanart_cols(conn)
         conn.execute("UPDATE fan_art SET approved = 1 WHERE id = ?", (fid,))
     return RedirectResponse("/admin", status_code=303)
 
@@ -2821,6 +2836,7 @@ def admin_fanart_delete(fid: int, request: Request):
         return RedirectResponse("/admin", status_code=303)
     with get_conn(DB_PATH) as conn:
         conn.execute(FANART_SQL)
+        _ensure_fanart_cols(conn)
         row = conn.execute("SELECT media_path, thumb_path FROM fan_art WHERE id = ?", (fid,)).fetchone()
         if row:
             for rel in (row["media_path"], row["thumb_path"]):
