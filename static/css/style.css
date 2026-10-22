@@ -1107,3 +1107,18 @@ a.game-card:hover { border-color: #ff7518; transform: translateY(-2px); }
   .header-tagline { order: 4; flex: 1 1 100%; font-size: 0.85rem; margin: 0.3rem 0 0.05rem; }
   .header-frank { height: 24px; }
 }
+
+/* Landscape phones (Dan, Oct 21): width crosses into desktop header rules on a
+   ~390px-tall screen and the banner eats the page. Force one slim row instead:
+   logo + headline + nav in a single line, tagline hidden in this view only. */
+@media (orientation: landscape) and (max-height: 500px) {
+  .site-header { flex-direction: row; flex-wrap: nowrap; align-items: center; padding: 0.25rem 0.8rem; gap: 0.6rem; position: static; }
+  .brand-logo { height: 40px; width: 40px; max-height: 40px; max-width: 40px; }
+  .header-center { flex: 1 1 auto; min-width: 0; }
+  .header-hook { font-size: 0.78rem; line-height: 1.15; text-align: left; margin: 0; padding-left: 0; }
+  .header-wolf { height: 1.4em; width: 1.4em; }
+  .site-header .header-nav { display: flex; flex-wrap: nowrap; flex: 0 0 auto; gap: 0.55rem; margin: 0; padding: 0; border-top: none; }
+  .header-nav a.navbtn img { width: 30px; height: 30px; }
+  .header-nav a.navbtn { font-size: 0.52rem; gap: 0.08rem; }
+  .header-tagline { display: none; }
+}
