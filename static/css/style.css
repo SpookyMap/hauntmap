@@ -738,6 +738,15 @@ a.game-card:hover { border-color: #ff7518; transform: translateY(-2px); }
 .tonight-title { color: #FFF8E7; font-weight: 800; font-size: 1.15rem; line-height: 1.25; }
 .tonight-meta { color: #c9bce8; font-size: 0.85rem; }
 
+/* Tonight's Display inside the hero panel, directly under the headline
+   (Dan, Oct 22): compact row form — smaller thumb, tighter padding — so
+   the hero band keeps its height leash. */
+.hero-intro .tonight-card { margin: 0 0 1rem; padding: 0.55rem 0.7rem; gap: 0.7rem; border-radius: 12px; }
+.hero-intro .tonight-card img { width: 64px; height: 64px; border-radius: 8px; }
+.hero-intro .tonight-title { font-size: 1.02rem; }
+.hero-intro .tonight-kicker { font-size: 0.72rem; }
+.hero-intro .tonight-meta { font-size: 0.8rem; }
+
 /* Apple-style header type (Dan, Oct 21): SF on Apple devices, Inter elsewhere;
    clean, upright, tight and strong — marketing-grade header text. */
 .site-header {

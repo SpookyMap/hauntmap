@@ -1,16 +1,5 @@
 {% extends "base.html" %}
 {% block content %}
-{% if tonight %}
-<a class="tonight-card" href="/d/{{ tonight.id }}">
-  <img src="{{ tonight.thumb_url }}" alt="{{ tonight.title }}" loading="lazy">
-  <span class="tonight-body">
-    <span class="tonight-kicker">&#x1F383; Tonight's Display &middot; {{ tonight_label }}</span>
-    <span class="tonight-title">{{ tonight.title }}</span>
-    <span class="tonight-meta">{{ tonight.town_label }}{% if tonight.votes %} &middot; &#x1F383; {{ tonight.votes }} vote{{ 's' if tonight.votes != 1 }}{% endif %}</span>
-  </span>
-</a>
-{% endif %}
-
 <div class="mobile-search">
   <form method="get" action="/nearby" class="mobile-search-form">
     <input type="text" name="q" placeholder="&#x1F50D; Town or ZIP" autocomplete="off">
@@ -21,6 +10,16 @@
 <div class="hero-split">
 <div class="hero-intro">
   <h1 class="hero-title">Find the Best Halloween Displays <span class="hero-title-alt">Near You</span></h1>
+{% if tonight %}
+  <a class="tonight-card" href="/d/{{ tonight.id }}">
+    <img src="{{ tonight.thumb_url }}" alt="{{ tonight.title }}" loading="lazy">
+    <span class="tonight-body">
+      <span class="tonight-kicker">&#x1F383; Tonight's Display &middot; {{ tonight_label }}</span>
+      <span class="tonight-title">{{ tonight.title }}</span>
+      <span class="tonight-meta">{{ tonight.town_label }}{% if tonight.votes %} &middot; &#x1F383; {{ tonight.votes }} vote{{ 's' if tonight.votes != 1 }}{% endif %}</span>
+    </span>
+  </a>
+{% endif %}
   <p>Welcome to America's Halloween map — the #1 map for Halloween displays &amp; haunted houses, and the place where Halloween lives. We've pinned every great Halloween display in America: spooky houses, haunted attractions, events and video tours — mapped across 25 states + DC and 779 towns. That's 2,100+ displays, events and haunts, and climbing — every spooky house, one tap away.</p>
   <p>Stop driving around hoping. It starts simple: find the best Halloween displays near you — and tour them tonight. See the houses everyone's talking about, then go see them for real. From the house down the street to the best in the state, HauntMap turns a list of addresses into a night out: one click builds your perfect Halloween tour, with the route handled for you.</p>
   <p>Watch the displays before you go, build the tour, own the night. Every display page carries photos and video, scare levels and the details that matter, so Halloween night is planned in one click — 779 towns, thousands of frights, zero aimless driving. Find it. Tour it. Haunt it.</p>
@@ -81,11 +80,6 @@
 </div>
 
 {% include "_town_request.html" %}
-
-<div class="signup-strip tiktok-promo">
-  <a class="tiktok-follow tiktok-follow-big" href="https://www.tiktok.com/@gethauntmap" target="_blank" rel="noopener"><img src="/static/img/tiktok_logo.png" alt="TikTok"><span>Follow us on TikTok</span><span class="tt-handle">@GetHauntmap</span></a>
-  <p class="tiktok-line">Follow @GetHauntmap on TikTok — new haunts daily &#x1F383;</p>
-</div>
 
 <div class="cat-tabs-main">
   <a href="/?cat=halloween{% if sort != 'top' %}&sort={{ sort }}{% endif %}{% if town %}&town={{ town }}{% endif %}{% if video %}&video=1{% endif %}" class="cat-btn-main {% if cat == 'halloween' %}active{% endif %}">&#x1F383; Haunt Map</a>
