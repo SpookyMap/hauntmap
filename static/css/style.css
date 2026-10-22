@@ -2300,3 +2300,60 @@ body.has-tourbar.has-radio { padding-bottom: 124px; }
   .header-band .header-hook .tag-b { color: #c9a7ff; }
   .header-band .header-hook .tag-c { color: #c9a7ff; }
 }
+
+/* ============ z71: COMPACT HERO SUB-BLOCKS (Dan, Oct 22) ============
+   Laptop only (the .hero-stack renders >=761px; phones keep the
+   full-size below-band modules). Near-you, Trending and Text Alerts
+   scale to ~60% of their z67 footprint — tighter paddings, smaller
+   headings/chips/cards/form rows — so the lavender pill dominates
+   the hero and more of the Halloween backdrop photo shows. All
+   content, fields and tap targets stay; smallest copy (views line,
+   consent) stays >= ~11px. Headline and pill untouched. */
+@media (min-width: 761px) {
+  .hero-stack { gap: 0.7rem; }
+
+  /* Near you tonight — compact */
+  .hero-stack .near-you.hero-copy { padding: 0.55rem 0.7rem; }
+  .hero-stack .near-you h2 { font-size: 0.92rem; margin-bottom: 0.12rem; }
+  .hero-stack .near-you-sub { font-size: 0.76rem; margin-bottom: 0.35rem; }
+  .hero-stack .near-you-mine { font-size: 0.85rem; margin-bottom: 0.35rem; }
+  .hero-stack .town-chips { gap: 0.3rem; margin-bottom: 0.4rem; }
+  .hero-stack .town-chip { padding: 0.22rem 0.5rem; font-size: 0.76rem; gap: 0.3rem; }
+  .hero-stack .town-chip .chip-n { font-size: 0.7rem; }
+  .hero-stack .near-you-actions { gap: 0.4rem; }
+  .hero-stack .near-you .btn { padding: 0.3rem 0.7rem; font-size: 0.8rem; }
+
+  /* Trending today — compact. The rail's height is set by its tallest
+     card, and one long event title ran 7 lines — so hero titles clamp
+     to 2 lines (full title lives on the pin page), meta/views go
+     single-line-tight, and the fat 0.9rem paragraph margins go. */
+  .hero-stack .trending.hero-copy { padding: 0.6rem 0.7rem; }
+  .hero-stack .trending h2 { font-size: 0.95rem; margin-bottom: 0.4rem; }
+  .hero-stack .trending .rail { gap: 0.5rem; padding-bottom: 0.25rem; align-items: flex-start; }
+  .hero-stack .trending .rail-card { flex-basis: 148px; }
+  .hero-stack .trending .card-body { padding: 0.45rem 0.6rem; }
+  .hero-stack .trending .card-body h3 {
+    font-size: 0.82rem; margin-bottom: 0.15rem; line-height: 1.2;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  }
+  .hero-stack .trending .card-body .meta,
+  .hero-stack .trending .views-line { font-size: 0.72rem; line-height: 1.25; }
+  .hero-stack .trending .card-body .meta { margin: 0 0 0.2rem; white-space: nowrap; }
+  .hero-stack .trending .views-line { margin: 0.15rem 0 0; white-space: nowrap; }
+  .hero-stack .trending .rank-badge { font-size: 0.7rem; padding: 0.1rem 0.4rem; top: 0.35rem; left: 0.35rem; }
+  .hero-stack .trending .tour-add-btn { font-size: 0.75rem; padding: 0.22rem 0.55rem; margin-top: 0.3rem; }
+
+  /* Text alerts — compact: the form goes 3-up (phone / ZIP / town /
+     radius share rows with the two interest checks) instead of
+     stacking a near-empty checks row. */
+  .hero-stack .text-alerts { padding: 0.55rem 0.75rem; max-width: 640px; }
+  .hero-stack .text-alerts h3 { font-size: 0.92rem; }
+  .hero-stack .text-alerts p { font-size: 0.78rem; margin-bottom: 0.25rem; }
+  .hero-stack .text-alerts-form { gap: 0.3rem; margin-top: 0.35rem; grid-template-columns: 1fr 1fr 1fr; }
+  .hero-stack .text-alerts-form input,
+  .hero-stack .text-alerts-form select { padding: 0.32rem 0.5rem; font-size: 0.83rem; }
+  .hero-stack .text-alerts-form .ta-radius { font-size: 0.75rem; gap: 0.15rem; }
+  .hero-stack .text-alerts-form .ta-check { font-size: 0.8rem; }
+  .hero-stack .text-alerts-form .btn { padding: 0.35rem 0.9rem; font-size: 0.88rem; }
+  .hero-stack .text-alerts .ta-consent { margin-top: 0.35rem; line-height: 1.32; }
+}
