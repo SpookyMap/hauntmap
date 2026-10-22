@@ -91,4 +91,9 @@ def init_db(db_path: Path) -> None:
             conn.execute("ALTER TABLE entries ADD COLUMN scare_level TEXT")
         if "tags" not in cols:
             conn.execute("ALTER TABLE entries ADD COLUMN tags TEXT")
+        if "address" not in cols:
+            # Verified street address (address-audit cleanup, Oct 2026).
+            # NULL until the pin's address has been verified; stored
+            # separately so title/town stay display text.
+            conn.execute("ALTER TABLE entries ADD COLUMN address TEXT")
         conn.commit()

@@ -2396,6 +2396,39 @@ async def admin_tag(entry_id: int, request: Request):
     return RedirectResponse("/admin", status_code=303)
 
 
+@app.post("/admin/edit/{entry_id}")
+async def admin_edit(entry_id: int, request: Request):
+    """Update title, town label and/or verified street address (admin).
+
+    Only fields present in the form are touched. `address` may be sent
+    empty to clear it back to NULL; title/town must be non-empty when sent.
+    Built for the Oct 2026 verified-address cleanup (near-miss town-label
+    corrections + storing geocode-verified addresses for bucket-B pins).
+    """
+    _require_admin(request)
+    form = await request.form()
+    updates: dict[str, str | None] = {}
+    for field in ("title", "town"):
+        if field in form:
+            value = str(form.get(field, "")).strip()
+            if not value:
+                return JSONResponse({"error": f"{field} must not be empty"}, status_code=400)
+            updates[field] = value
+    if "address" in form:
+        addr = str(form.get("address", "")).strip()
+        updates["address"] = addr or None
+    if not updates:
+        return JSONResponse({"error": "No fields to update"}, status_code=400)
+    if not get_entry(entry_id):
+        return JSONResponse({"error": "No such entry"}, status_code=404)
+    set_sql = ", ".join(f"{k} = ?" for k in updates)
+    with get_conn(DB_PATH) as conn:
+        conn.execute(f"UPDATE entries SET {set_sql} WHERE id = ?",
+                     (*updates.values(), entry_id))
+        conn.commit()
+    return JSONResponse({"ok": True, "id": entry_id, "updated": updates})
+
+
 @app.post("/admin/media/{entry_id}")
 async def admin_media(entry_id: int, request: Request, media: UploadFile = File(None)):
     """Attach/replace media for an entry (admin)."""
