@@ -1768,7 +1768,8 @@ def town_page(request: Request, slug: str):
 def sitemap():
     base = "https://gethauntmap.com"
     urls = ["/", "/map", "/nearby", "/tour", "/diy", "/diy-costumes", "/games", "/leaderboard",
-            "/towns", "/advertise", "/media-kit", "/costume-contest", "/trivia", "/haunt-or-not", "/fan-art"]
+            "/towns", "/advertise", "/media-kit", "/costume-contest", "/trivia", "/haunt-or-not", "/fan-art",
+            "/restaurhaunts"]
     for t in _towns_with_counts():
         urls.append(f"/towns/{t['slug']}")
     body = ['<?xml version="1.0" encoding="UTF-8"?>',
