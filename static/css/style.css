@@ -1227,3 +1227,54 @@ a.game-card:hover { border-color: #ff7518; transform: translateY(-2px); }
   .site-header { row-gap: 0.08rem; }
   .header-tagline { margin-top: 0.05rem; }
 }
+
+/* ============ z35: HEADER V2 (Dan, Oct 22) ============
+   One horizontal band across the top: logo far left, the two text lines
+   across the middle (hook on top, tagline directly beneath it), modern
+   Frankenstein far right. The wolf is OUT — its space funds the buttons
+   row beneath the band: the animated Events button (Dan's pick #3,
+   events-btn-3.gif) leads the existing icon nav; no nav item dropped.
+   Hard cap stands: whole header <=15% of viewport at 1100x800 and
+   390x844. Header stays non-sticky; the 44px scroll mini-bar is unchanged. */
+.site-header.v2 { display: block; }
+.header-band { display: flex; align-items: center; gap: 0.9rem; }
+.header-band .brand { flex: 0 0 auto; line-height: 0; order: 1; }
+.header-band .header-center { flex: 1 1 auto; min-width: 0; align-self: center; order: 2; }
+.header-band .header-hook { margin: 0; padding-left: 0; width: auto; text-align: center; }
+.header-band .header-tagline { margin: 0.08rem 0 0; padding: 0; text-align: center; flex: none; }
+.header-band .header-frank { flex: 0 0 auto; width: auto; object-fit: contain; order: 3; }
+.site-header.v2 .header-nav { display: flex; flex-wrap: nowrap; align-items: center; justify-content: space-between; width: 100%; }
+.site-header.v2 .header-nav a.navbtn-events { line-height: 0; }
+.site-header.v2 .header-nav a.navbtn-events img.events-gif { display: block; width: auto; border: none; border-radius: 8px; object-fit: contain; }
+@media (min-width: 761px) {
+  .site-header.v2 { padding: 0.3rem 1rem 0.28rem; }
+  .header-band .header-hook { white-space: nowrap; font-size: clamp(1.02rem, 1.72vw, 1.42rem); line-height: 1.15; }
+  .header-band .header-tagline { white-space: nowrap; font-size: 1rem; line-height: 1.15; }
+  .header-band .header-frank { height: 56px; }
+  .site-header.v2 .header-nav { margin-top: 0.22rem; padding: 0.22rem 0 0; gap: 0.5rem; }
+  .site-header.v2 .header-nav a.navbtn img { width: 24px; height: 24px; }
+  .site-header.v2 .header-nav a.navbtn-events img.events-gif { height: 30px; }
+}
+@media (max-width: 760px) {
+  .site-header.v2 { padding: 0.25rem 0.5rem 0.22rem; }
+  .header-band { gap: 0.45rem; }
+  .header-band .brand-logo { height: 38px; width: 38px; max-height: 38px; max-width: 38px; }
+  .header-band .header-hook { font-size: 0.78rem; line-height: 1.15; }
+  .header-band .header-hook .hook-line.alt { white-space: nowrap; }
+  .header-band .header-tagline { white-space: nowrap; font-size: 0.62rem; line-height: 1.15; }
+  .header-band .header-frank { height: 40px; }
+  .site-header.v2 .header-nav { margin-top: 0.18rem; padding: 0.18rem 0 0; gap: 0.28rem; flex-wrap: nowrap; }
+  .site-header.v2 .header-nav a.navbtn { font-size: 0.48rem; gap: 0.08rem; }
+  .site-header.v2 .header-nav a.navbtn img { width: 21px; height: 21px; }
+  .site-header.v2 .header-nav a.navbtn-events img.events-gif { height: 19px; }
+}
+@media (orientation: landscape) and (max-height: 500px) {
+  .site-header.v2 { padding: 0.18rem 0.8rem; }
+  .header-band .brand-logo { height: 34px; width: 34px; max-height: 34px; max-width: 34px; }
+  .header-band .header-frank { height: 34px; }
+  .header-band .header-tagline { display: none; }
+  .header-band .header-hook { font-size: 0.78rem; white-space: nowrap; }
+  .site-header.v2 .header-nav { margin-top: 0.12rem; padding-top: 0.12rem; }
+  .site-header.v2 .header-nav a.navbtn img { width: 20px; height: 20px; }
+  .site-header.v2 .header-nav a.navbtn-events img.events-gif { height: 18px; }
+}
