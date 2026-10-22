@@ -2259,3 +2259,27 @@ body.has-tourbar.has-radio { padding-bottom: 124px; }
     margin-left: 0; /* the old 0.3rem tagline margin skewed the band centre */
   }
 }
+
+/* ============ z69: PHONE CLOSER MOVES TO THE NAV COLUMN (Dan, Oct 22) ====
+   Phone portrait only: "THE HAUNT STARTS HERE" leaves the top hook
+   (the hook keeps only "The Halloween Map... Build Your Night.") and
+   joins the left nav column under NEW HAUNTS DAILY!!! — stack:
+   Events GIF / NEW HAUNTS DAILY!!! / THE HAUNT STARTS HERE, with the
+   split colours from the z66 brief (THE HAUNT STARTS lavender, HERE
+   red). Desktop and landscape never render the column copy and keep
+   the closer in the top hook, all red, exactly as before. */
+.events-closer { display: none; }
+.events-closer .ec-a { color: #c9a7ff; }
+.events-closer .ec-b { color: #e01e26; }
+
+@media (max-width: 760px) and (orientation: portrait) {
+  .header-band .header-hook .hook-l2 { display: none; }
+  .events-closer {
+    display: block; font-family: "Creepster", cursive; font-weight: 400;
+    font-size: 0.88rem; line-height: 1.12; text-align: center;
+    max-width: 112px; text-wrap: balance; letter-spacing: 0.02em;
+  }
+}
+@media (max-width: 380px) and (orientation: portrait) {
+  .events-closer { font-size: 0.82rem; max-width: 102px; }
+}
