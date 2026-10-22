@@ -1694,6 +1694,7 @@ BUSINESS_PACKAGES = [
                   "Featured pin for your location",
                   "Runs through Halloween — and on the Jolly Map through Christmas"]},
     {"id": "premium", "name": "Premium", "price": 500,
+     "stripe_link": "https://buy.stripe.com/7sY7sK3K05ySge49iebbG01",
      "blurb": "Homepage plus the weekly email.",
      "features": ["Everything in Featured",
                   "Sponsor spot in the weekly Haunt Weekly / Jolly Weekly email",
