@@ -54,7 +54,7 @@ ORIG_MAX_EDGE = 1920  # stored photo originals are capped at this long edge
 CATEGORIES = ("halloween", "christmas", "halloween_stores", "restaurants", "coffee", "shops", "parks", "haunted_houses", "events", "live")
 CAT_LABELS = {"halloween": "Halloween", "christmas": "Christmas",
               "halloween_stores": "Halloween Stores",
-              "restaurants": "Restaurants", "coffee": "Coffee & Cafes",
+              "restaurants": "Restaurhaunts", "coffee": "Coffee & Cafes",
               "shops": "Shops", "parks": "Parks",
               "haunted_houses": "Haunted Houses",
               "events": "Events", "live": "Live Streams"}
@@ -811,6 +811,47 @@ def events_redirect():
     # The header's Events artwork links to /events (Dan, Oct 22); the
     # events view itself is the home feed filtered to the events category.
     return RedirectResponse("/?cat=events", status_code=302)
+
+
+RESTAURHAUNT_CATS = ("restaurants", "coffee", "shops")
+
+
+@app.get("/restaurhaunts", response_class=HTMLResponse)
+def restaurhaunts(request: Request, sort: str = "top", f: str = "all",
+                  town_search: str = ""):
+    # Combined "Restaurhaunts & Cafes" listing (Dan, Oct 22): one mixed
+    # feed over the existing restaurants + coffee + shops categories
+    # (bars live in restaurants). Category keys are unchanged — only the
+    # display word became "restaurhaunts". Each card carries its own
+    # category chip so the mix stays legible.
+    sort = sort if sort in ("top", "new") else "top"
+    f = f if f in ("all",) + RESTAURHAUNT_CATS else "all"
+    order = "votes DESC, created_at DESC" if sort == "top" else "created_at DESC"
+    query = ("SELECT * FROM entries WHERE hidden = 0 "
+             "AND category IN ('restaurants', 'coffee', 'shops')")
+    params: list = []
+    if f != "all":
+        query += " AND category = ?"
+        params.append(f)
+    town_search = town_search.strip()
+    if town_search:
+        query += " AND LOWER(town) LIKE ?"
+        params.append(f"%{extract_city(town_search).lower()}%")
+    query += f" ORDER BY {order} LIMIT 100"
+    with get_conn(DB_PATH) as conn:
+        entries = [row_to_dict(r) for r in conn.execute(query, params).fetchall()]
+        counts = {c: 0 for c in RESTAURHAUNT_CATS}
+        for r in conn.execute(
+                "SELECT category, COUNT(*) AS n FROM entries "
+                "WHERE hidden = 0 AND category IN ('restaurants', 'coffee', 'shops') "
+                "GROUP BY category").fetchall():
+            counts[r["category"]] = r["n"]
+    voted = {k[6:] for k in request.cookies if k.startswith("voted_")}
+    return templates.TemplateResponse(request, "restaurhaunts.html",
+        {"request": request, "entries": entries, "sort": sort, "f": f,
+         "town_search": town_search, "counts": counts, "voted": voted,
+         "total": sum(counts.values()),
+         "cat_labels": CAT_LABELS, "cat_emoji": CAT_EMOJI})
 
 
 @app.get("/upload", response_class=HTMLResponse)
@@ -1887,7 +1928,7 @@ MEDIA_KIT_CATEGORY_LABELS = [
     ("haunted_houses", "Haunted houses"),
     ("events", "Events"),
     ("halloween_stores", "Halloween stores"),
-    ("restaurants", "Restaurants"),
+    ("restaurants", "Restaurhaunts"),
     ("coffee", "Coffee & cafes"),
     ("shops", "Shops"),
     ("parks", "Parks"),

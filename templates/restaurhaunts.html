@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block title %}Restaurhaunts &amp; Cafes &middot; {{ site_name }}{% endblock %}
+{% block content %}
+<h1>&#x1F37D;&#xFE0F; Restaurhaunts &amp; Cafes</h1>
+<p class="lede">Fuel for the fright night — the best restaurhaunts, bars, cafes and shops near the haunts. Grab dinner, a coffee or a souvenir between displays, and keep the tour rolling.</p>
+
+<div class="rh-controls">
+  <div class="rh-chips">
+    <a href="/restaurhaunts?f=all{% if sort != 'top' %}&sort={{ sort }}{% endif %}{% if town_search %}&town_search={{ town_search }}{% endif %}" class="filter-chip {% if f == 'all' %}active{% endif %}">All ({{ total }})</a>
+    {% for c in ['restaurants', 'coffee', 'shops'] %}
+    <a href="/restaurhaunts?f={{ c }}{% if sort != 'top' %}&sort={{ sort }}{% endif %}{% if town_search %}&town_search={{ town_search }}{% endif %}" class="filter-chip {% if f == c %}active{% endif %}">{{ cat_emoji[c] }} {{ cat_labels[c] }} ({{ counts[c] }})</a>
+    {% endfor %}
+  </div>
+  <div class="sort-toggle">
+    <a href="/restaurhaunts?f={{ f }}{% if town_search %}&town_search={{ town_search }}{% endif %}" class="{% if sort == 'top' %}active{% endif %}">Top</a>
+    <a href="/restaurhaunts?f={{ f }}&sort=new{% if town_search %}&town_search={{ town_search }}{% endif %}" class="{% if sort == 'new' %}active{% endif %}">Newest</a>
+  </div>
+</div>
+<form method="get" action="/restaurhaunts" class="rh-search">
+  <input type="hidden" name="f" value="{{ f }}">
+  {% if sort != 'top' %}<input type="hidden" name="sort" value="{{ sort }}">{% endif %}
+  <input type="text" name="town_search" value="{{ town_search }}" placeholder="&#x1F50D; Search towns..." class="town-search-inline">
+</form>
+
+{% if entries %}
+<div class="grid">
+  {% for e in entries %}
+  <a class="card" href="/d/{{ e.id }}">
+    <div class="card-media">
+      {% if e.media_path %}
+      {% if e.media_type == 'video' %}
+      <video src="{{ e.media_url }}" {% if e.thumb_path %}poster="{{ e.thumb_url }}"{% endif %} preload="metadata" muted playsinline></video>
+      <span class="play-badge">&#x25B6;</span>
+      {% else %}
+      <img src="{{ e.thumb_url }}" alt="{{ e.title }}" loading="lazy">
+      {% endif %}
+      {% else %}
+      <div class="card-media-empty">{{ cat_emoji[e.category] }}</div>
+      {% endif %}
+      {% if e.is_sample %}<span class="sample-badge">Sample</span>{% endif %}
+    </div>
+    <div class="card-body">
+      <p class="cat-chip">{{ cat_emoji[e.category] }} {{ cat_labels[e.category] }}</p>
+      <h3>{{ e.title }}</h3>
+      <p class="meta">{{ e.town_label }}{% if e.display_name %} &middot; {{ e.display_name }}{% endif %}</p>
+      {% if e.votes %}
+      <p class="votes">&#x1F383; {{ e.votes }} vote{{ 's' if e.votes != 1 }}</p>
+      {% elif e.is_new %}
+      <p class="votes votes-new">&#x2728; New this week</p>
+      {% endif %}
+    </div>
+  </a>
+  {% endfor %}
+</div>
+{% else %}
+<div class="empty">
+  <p class="empty-emoji">&#x1F37D;&#xFE0F;</p>
+  <p>No restaurhaunts, cafes or shops here yet{% if town_search %} in {{ town_search }}{% endif %}.</p>
+  <p><a class="btn" href="/upload">Be the first to add one</a></p>
+</div>
+{% endif %}
+<style>
+.rh-controls { display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: center; justify-content: space-between; margin: 1rem 0 0.6rem; }
+.rh-chips { display: flex; flex-wrap: wrap; gap: 0.45rem; }
+.rh-search { margin-bottom: 1rem; }
+.rh-search .town-search-inline { width: 100%; max-width: 340px; }
+.cat-chip { display: inline-block; margin: 0 0 0.3rem; padding: 0.12rem 0.55rem; border-radius: 999px; background: #241a44; border: 1px solid #372b5e; color: #ffd98a; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; }
+</style>
+{% endblock %}
