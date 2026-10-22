@@ -17,7 +17,7 @@
 <div class="adv-example">
   <p class="adv-example-label">Live example — a current featured sponsor:</p>
   <a href="/sponsor/click/{{ example.id }}" target="_blank" rel="noopener sponsored" class="sponsor-card tier-{{ example.tier }}">
-    {% if example.logo_path %}<img src="/media/{{ example.logo_path }}" alt="{{ example.business_name }} logo" class="sponsor-logo">{% endif %}
+    {% if example.logo_path %}<img src="/media/{{ example.logo_path }}" alt="{{ example.business_name }} logo" class="sponsor-logo" loading="lazy">{% endif %}
     <span class="sponsor-meta"><span class="sponsor-name">{{ example.business_name }}</span>{% if example.banner_text %}<span class="sponsor-text">{{ example.banner_text }}</span>{% endif %}</span>
   </a>
   <p class="adv-example-note">Every sponsor click is tracked — sponsors get a monthly report of their clicks.</p>

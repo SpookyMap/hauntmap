@@ -168,7 +168,7 @@ function render() {
       .bindPopup(`<b>${i+1}. ${e.title}</b><br>${e.town}`);
     const li = document.createElement('li');
     li.innerHTML = `<span class="tour-num">${i+1}</span>
-      ${e.thumb ? `<img class="tour-thumb" src="${e.thumb}" alt="">` : ''}
+      ${e.thumb ? `<img class="tour-thumb" src="${e.thumb}" alt="" loading="lazy">` : ''}
       <span class="tour-info"><strong>${e.title}</strong><small>${e.town}</small></span>
       <span class="tour-actions">
         ${i > 0 ? `<button data-act="up" data-i="${i}" title="Move up">&#x25B2;</button>` : ''}

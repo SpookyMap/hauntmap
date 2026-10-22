@@ -661,7 +661,16 @@ def home(request: Request, sort: str = "top", town: str = "", town_search: str =
                   " OR LOWER(media_path) LIKE '%.mp4'"
                   " OR LOWER(media_path) LIKE '%.webm'"
                   " OR LOWER(media_path) LIKE '%.mov')")
-    query += f" ORDER BY {order} LIMIT 100"
+    # Video-first ranking (engagement, Oct 22): pins with footage — a TikTok
+    # URL or an uploaded video file, the same predicate as the "Has video"
+    # filter above — sort ahead of photo-only pins; the chosen sort stays as
+    # the stable secondary order within each group.
+    video_first = (
+        "CASE WHEN ((tiktok_url IS NOT NULL AND TRIM(tiktok_url) != '')"
+        " OR LOWER(media_path) LIKE '%.mp4'"
+        " OR LOWER(media_path) LIKE '%.webm'"
+        " OR LOWER(media_path) LIKE '%.mov') THEN 0 ELSE 1 END")
+    query += f" ORDER BY {video_first}, {order} LIMIT 100"
     with get_conn(DB_PATH) as conn:
         entries = [row_to_dict(r) for r in conn.execute(query, params).fetchall()]
         sponsors = [dict(r) for r in conn.execute(
@@ -1363,6 +1372,16 @@ def towns_index(request: Request):
     )
 
 
+def _entry_has_video(e: dict) -> bool:
+    """Footage predicate matching the feed's 'Has video' filter: a TikTok URL
+    or an uploaded video file."""
+    if (e.get("tiktok_url") or "").strip():
+        return True
+    if e.get("media_type") == "video":
+        return True
+    return (e.get("media_path") or "").lower().endswith((".mp4", ".webm", ".mov"))
+
+
 @app.get("/towns/{slug}", response_class=HTMLResponse)
 def town_page(request: Request, slug: str):
     label = None
@@ -1377,6 +1396,9 @@ def town_page(request: Request, slug: str):
             "SELECT * FROM entries WHERE hidden = 0 AND category = 'halloween' "
             "ORDER BY votes DESC, created_at DESC").fetchall()]
     entries = [e for e in rows if e["town_label"] == label]
+    # Video-first ranking (engagement, Oct 22): stable sort — footage pins
+    # ahead of photo-only pins, votes/newest order kept within each group.
+    entries.sort(key=lambda e: 0 if _entry_has_video(e) else 1)
     return templates.TemplateResponse(
         request, "town.html",
         {"label": label, "entries": entries, "site_name": SITE_NAME},
