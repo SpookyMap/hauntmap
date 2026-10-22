@@ -442,6 +442,83 @@ def towns(category: str = "halloween", state: str = "") -> list[str]:
     return sorted(seen)
 
 
+US_STATE_NAMES = {
+    "NJ": "New Jersey", "NY": "New York", "PA": "Pennsylvania", "MD": "Maryland",
+    "VA": "Virginia", "MA": "Massachusetts", "NH": "New Hampshire", "CT": "Connecticut",
+    "RI": "Rhode Island", "DE": "Delaware", "DC": "Washington, DC", "VT": "Vermont",
+    "ME": "Maine", "NC": "North Carolina", "SC": "South Carolina", "GA": "Georgia",
+    "FL": "Florida", "TX": "Texas", "OH": "Ohio", "IL": "Illinois", "CA": "California",
+    "WA": "Washington", "OR": "Oregon", "CO": "Colorado", "AZ": "Arizona", "NV": "Nevada",
+    "UT": "Utah", "MI": "Michigan", "WI": "Wisconsin", "MN": "Minnesota", "IA": "Iowa",
+    "MO": "Missouri", "KS": "Kansas", "NE": "Nebraska", "OK": "Oklahoma", "AR": "Arkansas",
+    "LA": "Louisiana", "MS": "Mississippi", "AL": "Alabama", "TN": "Tennessee",
+    "KY": "Kentucky", "IN": "Indiana", "WV": "West Virginia",
+}
+
+# Region tabs shown after the state tabs in the homepage bottom place row,
+# in the row's long-standing curated order.
+REGION_TABS = [("long-island", "Long Island"), ("manhattan", "Manhattan"),
+               ("brooklyn", "Brooklyn"), ("queens", "Queens"), ("bronx", "Bronx"),
+               ("staten-island", "Staten Island"), ("boston", "Boston"),
+               ("dc-area", "DC Area")]
+
+
+def _region_terms(region: str) -> list[str]:
+    if region in METRO_TERMS:
+        return METRO_TERMS[region]
+    if region in BOROUGH_TERMS:
+        return BOROUGH_TERMS[region]
+    if region == "long-island":
+        return LONG_ISLAND_TERMS
+    return []
+
+
+def _place_tabs(cat: str, cur_state: str, cur_region: str, sort: str,
+                scare: str, tag: str, video: str) -> list[dict]:
+    """Bottom-of-homepage place tabs (Dan, Oct 22: update the cities at the
+    bottom of the page): every state the current category actually covers,
+    biggest first, plus the curated region shortcuts — each with its LIVE pin
+    count, computed from the same rows and predicates the feed filter uses,
+    so the row refreshes itself as pins come and go."""
+    with get_conn(DB_PATH) as conn:
+        rows = conn.execute(
+            "SELECT town FROM entries WHERE hidden = 0 AND category = ?",
+            (cat,),
+        ).fetchall()
+    base = f"/?cat={cat}"
+    if sort != "top":
+        base += f"&sort={sort}"
+    if scare:
+        base += f"&scare={scare}"
+    if tag:
+        base += f"&tag={tag}"
+    if video:
+        base += "&video=1"
+    lowers: list[str] = []
+    state_counts: dict[str, int] = {}
+    for r in rows:
+        t = r["town"] or ""
+        lowers.append(t.lower())
+        st = extract_state(t)
+        if st:
+            state_counts[st] = state_counts.get(st, 0) + 1
+    tabs = [{"label": "All", "href": base, "count": len(rows),
+             "active": not cur_state and not cur_region}]
+    for code in sorted(state_counts,
+                       key=lambda c: (-state_counts[c], US_STATE_NAMES.get(c, c))):
+        tabs.append({"label": US_STATE_NAMES.get(code, code),
+                     "href": f"{base}&state={code}",
+                     "count": state_counts[code],
+                     "active": cur_state == code and not cur_region})
+    for slug, label in REGION_TABS:
+        terms = _region_terms(slug)
+        n = sum(1 for lt in lowers if any(term in lt for term in terms))
+        if n:
+            tabs.append({"label": label, "href": f"{base}&region={slug}",
+                         "count": n, "active": cur_region == slug})
+    return tabs
+
+
 def is_admin(request: Request) -> bool:
     return request.cookies.get(ADMIN_COOKIE) in admin_sessions
 
@@ -659,6 +736,51 @@ def _pick_tonights_display(conn, exclude_id=None) -> dict | None:
     return pick
 
 
+# Region term lists for the homepage feed filters (boston/dc-area metros,
+# NYC boroughs, Long Island). Shared by the home() filter branches and the
+# bottom place-tabs counter so the two can never drift apart.
+METRO_TERMS = {
+            "boston": ["boston", "somerville", "cambridge", "medford", "malden",
+                       "quincy", "brookline", "weymouth", "braintree", "saugus",
+                       "lynn", "revere", "winthrop", "arlington, ma", "newton, ma",
+                       "belmont, ma", "watertown, ma", "melrose, ma", "stoneham, ma",
+                       "woburn, ma", "chelsea, ma", "everett, ma", "milton, ma",
+                       "dedham, ma", "burlington, ma"],
+            "dc-area": ["washington, dc", "district of columbia", "alexandria",
+                        "arlington, va", "silver spring", "bethesda", "potomac",
+                        "chevy chase", "falls church", "mclean", "vienna",
+                        "rockville", "kensington", "takoma park", "springfield, va",
+                        "annandale", "fairfax", "reston", "herndon", "sterling",
+                        "ashburn", "chantilly", "centreville", "hyattsville"],
+        }
+
+BOROUGH_TERMS = {
+            "staten-island": ["staten island"],
+            "brooklyn": ["brooklyn"],
+            "manhattan": ["manhattan", "new york, ny"],
+            "queens": ["queens"],
+            "bronx": ["bronx"],
+        }
+
+LONG_ISLAND_TERMS = ["wantagh", "bellmore", "merrick", "levittown", "east meadow", "malverne",
+                    "massapequa", "seaford", "farmingdale", "bethpage", "hicksville", "plainview",
+                    "syosset", "huntington", "babylon", "lindenhurst", "deer park", "brentwood",
+                    "smithtown", "commack", "melville", "wyandanch", "west babylon", "north babylon",
+                    "copiague", "amityville", "freeport", "baldwin", "oceanside", "rockville centre",
+                    "hempstead", "uniondale", "roosevelt", "garden city", "mineola", "new hyde park",
+                    "great neck", "port washington", "roslyn", "albertson", "williston park",
+                    "floral park", "franklin square", "west hempstead", "elamont", "valley stream",
+                    "lynbrook", "east rockaway", "hewlett", "woodmere", "cedarhurst", "inwood",
+                    "lawrence", "far rockaway", "long beach", "island park", "oceanside",
+                    "bay shore", "brightwaters", "islandia", "hauppauge", "central islip",
+                    "east islip", "west islip", "islip", "oakdale", "sayville", "patchogue",
+                    "bellport", "mastic", "shirley", "moriches", "center moriches", "east moriches",
+                    "manorville", "calverton", "riverhead", "jamesport", "mattituck", "cuthogue",
+                    "southold", "greenport", "orient", "shelter island", "sag harbor", "easthampton",
+                    "southampton", "bridgehampton", "watermill", "montauk", "amgansett", "wainscott",
+                    "north haven", "north sea", "nantucket", "nantucket"]
+
+
 @app.get("/", response_class=HTMLResponse)
 def home(request: Request, sort: str = "top", town: str = "", town_search: str = "",
          state: str = "", region: str = "", cat: str = "halloween", scare: str = "", tag: str = "",
@@ -691,54 +813,17 @@ def home(request: Request, sort: str = "top", town: str = "", town_search: str =
             s = st_part.lower()
             params += [f"%, {s} %", f"%, {s}", f"%,{s} %", f"%,{s}"]
     elif region in ("boston", "dc-area"):
-        metro_map = {
-            "boston": ["boston", "somerville", "cambridge", "medford", "malden",
-                       "quincy", "brookline", "weymouth", "braintree", "saugus",
-                       "lynn", "revere", "winthrop", "arlington, ma", "newton, ma",
-                       "belmont, ma", "watertown, ma", "melrose, ma", "stoneham, ma",
-                       "woburn, ma", "chelsea, ma", "everett, ma", "milton, ma",
-                       "dedham, ma", "burlington, ma"],
-            "dc-area": ["washington, dc", "district of columbia", "alexandria",
-                        "arlington, va", "silver spring", "bethesda", "potomac",
-                        "chevy chase", "falls church", "mclean", "vienna",
-                        "rockville", "kensington", "takoma park", "springfield, va",
-                        "annandale", "fairfax", "reston", "herndon", "sterling",
-                        "ashburn", "chantilly", "centreville", "hyattsville"],
-        }
-        terms = metro_map[region]
+        terms = METRO_TERMS[region]
         placeholders = " OR ".join(["LOWER(town) LIKE ?"] * len(terms))
         query += f" AND ({placeholders})"
         params.extend([f"%{t}%" for t in terms])
     elif region in ("staten-island", "brooklyn", "manhattan", "queens", "bronx"):
-        borough_map = {
-            "staten-island": ["staten island"],
-            "brooklyn": ["brooklyn"],
-            "manhattan": ["manhattan", "new york, ny"],
-            "queens": ["queens"],
-            "bronx": ["bronx"],
-        }
-        borough_terms = borough_map[region]
+        borough_terms = BOROUGH_TERMS[region]
         placeholders = " OR ".join(["LOWER(town) LIKE ?"] * len(borough_terms))
         query += f" AND ({placeholders})"
         params.extend([f"%{t}%" for t in borough_terms])
     elif region == "long-island":
-        li_towns = ["wantagh", "bellmore", "merrick", "levittown", "east meadow", "malverne",
-                    "massapequa", "seaford", "farmingdale", "bethpage", "hicksville", "plainview",
-                    "syosset", "huntington", "babylon", "lindenhurst", "deer park", "brentwood",
-                    "smithtown", "commack", "melville", "wyandanch", "west babylon", "north babylon",
-                    "copiague", "amityville", "freeport", "baldwin", "oceanside", "rockville centre",
-                    "hempstead", "uniondale", "roosevelt", "garden city", "mineola", "new hyde park",
-                    "great neck", "port washington", "roslyn", "albertson", "williston park",
-                    "floral park", "franklin square", "west hempstead", "elamont", "valley stream",
-                    "lynbrook", "east rockaway", "hewlett", "woodmere", "cedarhurst", "inwood",
-                    "lawrence", "far rockaway", "long beach", "island park", "oceanside",
-                    "bay shore", "brightwaters", "islandia", "hauppauge", "central islip",
-                    "east islip", "west islip", "islip", "oakdale", "sayville", "patchogue",
-                    "bellport", "mastic", "shirley", "moriches", "center moriches", "east moriches",
-                    "manorville", "calverton", "riverhead", "jamesport", "mattituck", "cuthogue",
-                    "southold", "greenport", "orient", "shelter island", "sag harbor", "easthampton",
-                    "southampton", "bridgehampton", "watermill", "montauk", "amgansett", "wainscott",
-                    "north haven", "north sea", "nantucket", "nantucket"]
+        li_towns = LONG_ISLAND_TERMS
         placeholders = " OR ".join(["LOWER(town) LIKE ?"] * len(li_towns))
         query += f" AND ({placeholders})"
         params.extend([f"%{t}%" for t in li_towns])
@@ -798,6 +883,8 @@ def home(request: Request, sort: str = "top", town: str = "", town_search: str =
          "scare": scare, "tag": tag, "video": "1" if video.strip() == "1" else "",
          "tonight": tonight, "tonight_label": tonight_label,
          "sponsors": sponsors,
+         "bottom_tabs": _place_tabs(cat, state, region, sort, scare, tag,
+                                    "1" if video.strip() == "1" else ""),
          "tier_labels": {"featured": "Featured Sponsor", "premium": "Premium Sponsor", "title": "Title Sponsor"}},
     )
     if tonight:

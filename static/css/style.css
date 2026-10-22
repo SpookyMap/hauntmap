@@ -279,6 +279,7 @@ a { color: var(--accent); }
   font-weight: 600; font-size: 0.95rem; border: 2px solid transparent;
 }
 .state-btn.active { border-color: var(--accent); background: #1a1030; }
+.state-btn .state-count { background: #241a44; color: #ffd98a; border-radius: 999px; padding: 0.02rem 0.5rem; font-size: 0.8em; font-weight: 700; margin-left: 0.3rem; white-space: nowrap; }
 .cat-btn-main {
   flex: 0 1 160px; text-align: center; padding: 0.7rem; border-radius: 12px;
   background: var(--bg2); color: var(--ink); text-decoration: none;
