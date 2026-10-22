@@ -2284,6 +2284,17 @@ body.has-tourbar.has-radio { padding-bottom: 124px; }
   .events-closer { font-size: 0.82rem; max-width: 102px; }
 }
 
+/* ============ z72: TAG-A RED ON DESKTOP (Dan, Oct 22) ============
+   "NEW HAUNTS DAILY!!!" (.tag-a) joins the red words on desktop:
+   line 2 becomes NEW HAUNTS DAILY!!! red / THE HAUNT STARTS lavender
+   / HERE red. Desktop media only — the phone's column copy
+   (.events-daily) is a different element and stays lavender. The
+   short-wide reassertion block at the end of this file carries the
+   same colour for short desktop windows. */
+@media (min-width: 761px) and (min-height: 501px) {
+  .header-band .header-hook .tag-a { color: #e01e26; }
+}
+
 /* ============ z70: DESKTOP CLOSER SPLIT + LAVENDER PILL (Dan, Oct 22) ====
    (1) The desktop top-hook closer gets the phone's split treatment
    (superseding Dan's Oct 22 13:59 all-red-desktop rule): "THE HAUNT
@@ -2356,4 +2367,32 @@ body.has-tourbar.has-radio { padding-bottom: 124px; }
   .hero-stack .text-alerts-form .ta-check { font-size: 0.8rem; }
   .hero-stack .text-alerts-form .btn { padding: 0.35rem 0.9rem; font-size: 0.88rem; }
   .hero-stack .text-alerts .ta-consent { margin-top: 0.35rem; line-height: 1.32; }
+}
+
+/* ============ z72: SHORT-WIDE DESKTOP HEADER FIX (Dan, Oct 22) ====
+   BUG: the landscape slim-row rules key on (orientation: landscape)
+   and (max-height: 500px) with NO width cap, so a wide-but-short
+   DESKTOP window (Dan's laptop: >1440 wide, <=500 CSS px tall) got
+   the phone-slim header — 117px brand zone, 95px logo with the old
+   -1px nudge, 53px Frankenstein, hook line 2 hidden, hook band
+   centre off by +30px. At >=1024px wide the window is never a
+   phone, so this block reasserts the full desktop band (z68 zones
+   and sizes, z52 hook clamps, z70/z72 hook colours) over the slim
+   rules. Landscape phones (<=960px wide) never match and keep the
+   slim header untouched. */
+@media (min-width: 1024px) and (orientation: landscape) and (max-height: 500px) {
+  .header-band .brand {
+    flex: 0 0 130px; width: 130px; display: flex; align-items: center; justify-content: center;
+  }
+  .header-band .brand-logo {
+    height: 113px; width: 113px; max-height: 113px; max-width: 113px; transform: none;
+  }
+  .header-band .header-frank {
+    flex: 0 0 130px; width: 130px; height: 93px; margin-left: 0; object-position: center;
+  }
+  .header-band .header-hook .hook-l1 { font-size: clamp(0.45rem, 2.70cqw, 3.43rem); }
+  .header-band .header-hook .hook-l2 { display: block; font-size: clamp(0.64rem, 4.95cqw, 5.96rem); }
+  .header-band .header-hook .tag-a { color: #e01e26; }
+  .header-band .header-hook .tag-b { color: #c9a7ff; }
+  .header-band .header-hook .tag-c { color: #c9a7ff; }
 }
