@@ -1570,3 +1570,26 @@ a.game-card:hover { border-color: #ff7518; transform: translateY(-2px); }
 @media (orientation: landscape) and (max-height: 500px) {
   .site-header.v2 .header-nav a.events-link img.events-gif { height: 27px; }
 }
+
+/* ============ z49: TAGLINE UPSIZE — FILL THE BAND (Dan, Oct 22) ====
+   The one squeezed line becomes TWO balanced lines that each span the
+   full band between the logo (far left) and Frankenstein (far right):
+   line 1 "...fright night for you. Build Your Night." and line 2
+   "NEW HAUNTS DAILY!!! THE HAUNT STARTS HERE". Segment colors are
+   unchanged (lavender / red / lavender / all-red closer). Sizing is in
+   cqw against .header-center (the band itself), so each line fills
+   ~the same share of the band at every width — fluid from phone to
+   desktop, no dead space at either end. Logo, Frankenstein and the
+   row-two buttons are untouched. Landscape phones keep the standing
+   slim-row design: line 2 hides (it was the old .header-tagline,
+   hidden in that view since z35) and line 1 stays small. */
+.header-band .header-center { container-type: inline-size; }
+.header-band .header-hook { white-space: normal; }
+.header-band .header-hook .hook-l1,
+.header-band .header-hook .hook-l2 { display: block; white-space: nowrap; }
+.header-band .header-hook .hook-l1 { font-size: clamp(0.55rem, 3.36cqw, 4.25rem); line-height: 1.12; }
+.header-band .header-hook .hook-l2 { font-size: clamp(0.8rem, 6.15cqw, 7.4rem); line-height: 1.12; margin-top: 0.05em; }
+@media (orientation: landscape) and (max-height: 500px) {
+  .header-band .header-hook .hook-l2 { display: none; }
+  .header-band .header-hook .hook-l1 { font-size: 0.78rem; }
+}
