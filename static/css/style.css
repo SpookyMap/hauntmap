@@ -1782,3 +1782,32 @@ a.game-card:hover { border-color: #ff7518; transform: translateY(-2px); }
   .detail:has(.next-haunt-bar) { padding-bottom: 60px; }
   body.has-tourbar .detail:has(.next-haunt-bar) { padding-bottom: 118px; }
 }
+
+/* ============ z58: LOGO CENTERPIECE +15% (Dan, Oct 22) ====
+   Two moves. (1) The main logo grows ANOTHER 15% on top of the
+   z55 build — desktop 98px -> 113px, phone 75px -> 86px,
+   landscape 83px -> 95px (net vs the pre-flanks originals:
+   x2.57 desktop / x2.53 phone / x2.16 landscape). Frankenstein
+   untouched (62/48/53). (2) The logo is CENTERED in its left
+   flank zone: the .brand anchor becomes an explicit zone box
+   (flex, centred content) whose width comes out of the tagline
+   band — the tagline keeps its z52 cqw sizing and rescales in
+   the narrower band. Zone widths: desktop 165px, phone 106px,
+   landscape 117px, tuned so the measured space on the logo's
+   left (from the header's left edge) equals the space on its
+   right (to the tagline band's left edge) within ~1px.
+   Sharpness: at 113px the 264px-wide source is still ~2.3x
+   oversampled at 1x DPR (1.17x at 2x DPR) — crisp. */
+.header-band .brand { display: flex; align-items: center; justify-content: center; }
+@media (min-width: 761px) {
+  .header-band .brand { width: 165px; }
+  .header-band .brand-logo { height: 113px; width: 113px; max-height: 113px; max-width: 113px; transform: translateX(-1px); }
+}
+@media (max-width: 760px) {
+  .header-band .brand { width: 106px; }
+  .header-band .brand-logo { height: 86px; width: 86px; max-height: 86px; max-width: 86px; transform: translateX(1px); }
+}
+@media (orientation: landscape) and (max-height: 500px) {
+  .header-band .brand { width: 117px; }
+  .header-band .brand-logo { height: 95px; width: 95px; max-height: 95px; max-width: 95px; transform: translateX(-1px); }
+}
