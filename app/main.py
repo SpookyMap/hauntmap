@@ -1455,19 +1455,38 @@ def detail(request: Request, entry_id: int):
     # seen-set itself lives in the visitor's localStorage — no accounts).
     entry_label = extract_city_state(entry["town"] or "") or entry["town"] or ""
     with get_conn(DB_PATH) as conn:
-        town_pin_ids = [
-            r["id"] for r in conn.execute(
-                "SELECT id, town FROM entries WHERE category = ? AND hidden = 0",
-                (entry["category"],)).fetchall()
-            if (extract_city_state(r["town"] or "") or r["town"] or "") == entry_label
-        ]
+        town_rows = conn.execute(
+            "SELECT e.*, COALESCE(v.views, 0) AS _views FROM entries e "
+            "LEFT JOIN (SELECT CAST(substr(path, 4) AS INTEGER) AS eid, "
+            "                  COUNT(*) AS views FROM page_views "
+            "                  WHERE path LIKE '/d/%' GROUP BY eid) v "
+            "  ON v.eid = e.id "
+            "WHERE e.category = ? AND e.hidden = 0",
+            (entry["category"],)).fetchall()
+    town_pin_ids = []
+    town_haunts = []
+    for r in town_rows:
+        p = row_to_dict(r)
+        if (extract_city_state(p["town"] or "") or p["town"] or "") != entry_label:
+            continue
+        town_pin_ids.append(p["id"])
+        if p["id"] != entry_id:
+            town_haunts.append(p)
+    # Second-click recirculation rail: same town, real thumbnails first,
+    # then most-viewed, then most-voted. Excludes the pin itself.
+    town_haunts.sort(key=lambda p: (0 if p.get("thumb_url") else 1,
+                                    -p.get("_views", 0), -p.get("votes", 0),
+                                    p["id"]))
+    town_haunts = town_haunts[:6]
+    for p in town_haunts:
+        p.pop("_views", None)
     return templates.TemplateResponse(request, "detail.html",
         {"request": request, "entry": entry, "voted": voted, "reported": reported,
          "tips": tips, "scare_counts": scare_counts, "scare_total": scare_total,
          "scare_pick": scare_pick, "next_pin": chain["next_pin"],
          "prev_pin": chain["prev_pin"], "more_near": chain["more_near"],
          "more_like": chain["more_like"], "town_pin_ids": town_pin_ids,
-         "more_haunts": more_haunts},
+         "more_haunts": more_haunts, "town_haunts": town_haunts},
     )
 
 

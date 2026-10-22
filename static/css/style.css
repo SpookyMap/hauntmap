@@ -1758,3 +1758,26 @@ a.game-card:hover { border-color: #ff7518; transform: translateY(-2px); }
 @media (orientation: landscape) and (max-height: 500px) {
   .header-band .brand-logo { height: 83px; width: 83px; max-height: 83px; max-width: 83px; }
 }
+/* Second-click #1 (Oct 22): pin-page recirculation — "More haunts in
+   {Town}" rail directly under the address/map buttons, plus a sticky
+   mobile "Next haunt" bar so a pin page never dead-ends on a phone.
+   The bar is mobile-only (desktop has the in-flow Next button); when
+   the tour bar (#2) is visible it stacks above it via body.has-tourbar. */
+.town-rail { margin: 1.1rem 0 0.2rem; }
+.town-rail h2 { font-size: 1.15rem; margin: 0 0 0.6rem; }
+.next-haunt-bar { display: none; }
+@media (max-width: 760px) {
+  .next-haunt-bar {
+    display: flex; align-items: center; gap: 0.6rem;
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 55;
+    padding: 0.75rem 1rem calc(0.75rem + env(safe-area-inset-bottom));
+    background: linear-gradient(160deg, #2c1a56, #1a1038);
+    border-top: 2px solid #ff7518; color: #fff; text-decoration: none;
+    box-shadow: 0 -4px 18px rgba(0,0,0,0.45);
+  }
+  body.has-tourbar .next-haunt-bar { bottom: 57px; }
+  .next-haunt-bar .nhb-label { font-weight: 800; color: #ffb066; white-space: nowrap; }
+  .next-haunt-bar .nhb-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.92rem; }
+  .detail:has(.next-haunt-bar) { padding-bottom: 60px; }
+  body.has-tourbar .detail:has(.next-haunt-bar) { padding-bottom: 118px; }
+}
