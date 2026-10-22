@@ -1701,3 +1701,38 @@ a.game-card:hover { border-color: #ff7518; transform: translateY(-2px); }
   .header-band .brand-logo { height: 64px; width: 64px; max-height: 64px; max-width: 64px; }
   .header-band .header-frank { height: 53px; }
 }
+
+/* ============ z54: PHONE NAV ROW — EVEN SPACING, NO CUTOFF (Dan, Oct 22) ====
+   Dan's phone screenshot: row two's buttons bunch on the left, the gaps
+   wander, and "Add Yours" falls off the right edge. Measured cause: the
+   row is OVER-FULL — the ten items at natural width plus the minimum
+   gaps total ~383px against a 379px row at 390px viewport (~29px of
+   overflow at 360px), so space-between has no slack to spread and the
+   row packs at the floor gap and spills past the edge (on Dan's iPhone,
+   whose text renders wider than the test browser, the spill cuts the
+   last button). The fix is structural and item-count-agnostic — the
+   distribution rule does not care how many buttons the row holds
+   (two more are coming: "Restaurhaunts & Cafes" and "About Us"):
+   - space-between stays, so whatever slack exists is distributed as
+     IDENTICAL gaps between every pair of neighbours;
+   - buttons may shrink (flex-shrink with min-width 0) instead of
+     pushing the last one off-screen, and their labels may wrap to a
+     second centred line under pressure instead of overflowing — at
+     today's count and widths they stay on one line;
+   - the Events artwork keeps its 100x30 slot (flex-basis unchanged)
+     and yields only a few px, and only under real overflow pressure,
+     via a small flex-shrink factor — never enough to notice, always
+     enough to keep the last button on screen;
+   - two micro-trims buy the slack back: icons 18px -> 16px and label
+     letter-spacing zeroed (labels stay 0.40rem, one line, readable).
+   Desktop geometry and the landscape slim row are untouched: this
+   section applies to portrait phones only. */
+@media (max-width: 760px) and (orientation: portrait) {
+  .site-header.v2 .header-nav { justify-content: space-between; gap: 0.12rem; }
+  .site-header.v2 .header-nav a.navbtn { flex: 0 1 auto; min-width: 0; font-size: 0.40rem; letter-spacing: 0; }
+  .site-header.v2 .header-nav a.navbtn img { width: 16px; height: 16px; }
+  .site-header.v2 .header-nav a.navbtn span { white-space: normal; text-align: center; }
+  .site-header.v2 .header-nav a.events-link { flex: 0 0.5 auto; min-width: 0; }
+  .site-header.v2 .header-nav a.events-link img.events-gif { max-width: 100%; }
+
+}
