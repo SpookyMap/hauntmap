@@ -1,15 +1,20 @@
 {% extends "base.html" %}
 {% block content %}
+<div class="hero-split">
+<div class="hero-intro">
+  <h1 class="hero-title">Find the Best Halloween Displays <span class="hero-title-alt">Near You</span></h1>
+</div>
+
+{# Phone-only placement (z64): .mobile-search is display:none above
+   760px, so on desktop this node renders nothing and the homepage
+   order is unchanged. On phones the z64 grid areas seat it directly
+   under the headline panel, above the video. #}
 <div class="mobile-search">
   <form method="get" action="/nearby" class="mobile-search-form">
     <input type="text" name="q" placeholder="&#x1F50D; Town or ZIP" autocomplete="off">
     <button type="submit" class="btn">Search</button>
   </form>
   <button type="button" class="btn btn-locate" onclick="hmNearMe()">&#x1F4CD; Use my location</button>
-</div>
-<div class="hero-split">
-<div class="hero-intro">
-  <h1 class="hero-title">Find the Best Halloween Displays <span class="hero-title-alt">Near You</span></h1>
 </div>
 
 <div class="tt-featured">

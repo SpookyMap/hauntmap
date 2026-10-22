@@ -1966,3 +1966,77 @@ body.has-tourbar.has-radio { padding-bottom: 124px; }
 .hmr-music-row { margin: 0.55rem 0 0; }
 .hmr-music-link { color: #ff7518; font-weight: 800; font-size: 0.92rem; text-decoration: none; }
 .hmr-music-link:hover { text-decoration: underline; }
+
+/* ============ z64: PHONE NAV — EQUAL SHARES + BIGGER BUTTONS, and HOMEPAGE HERO ORDER (Dan, Oct 22) ====
+   Two phone fixes, one section, last word in the cascade.
+   1) NAV SPACING + SIZE. Dan's screenshot (admin stats page, iPhone):
+      the first labels run together — WATCH/MAP/NEARBY/TOURS/DIY nearly
+      touching — while the rest spread out. Measured root cause in a
+      headless render of the z63 code at 390px: the row is packed
+      exactly full, so space-between has ZERO slack to distribute and
+      every inter-box gap collapses to the 0.12rem floor (1.90px);
+      worse, the buttons size to their CONTENT (flex 0 1 auto), so the
+      boxes are wildly unequal (Map 14.6px wide vs DIY Costumes 44.3px)
+      and several labels are WIDER than their own box — measured
+      label-to-label distances: 1.11, 0.96, -0.22 (overlap!), 2.91,
+      3.89, 0.90, 0.89, 1.90, 1.90 at 390px; five pairs touch or
+      overlap at 360px. Fix, structural: the Events artwork keeps a
+      fixed slot and the ten buttons become EQUAL flex shares
+      (flex: 1 1 0; min-width: 0) with one fixed 3px gap — box gaps
+      are then uniform BY CONSTRUCTION at any width, every label is
+      centred in an identical box, and nothing can overflow.
+      SIZE (Dan: "make the buttons bigger"): icons 16px -> 25px at
+      390px class widths, and every label moves from its crammed
+      content-width box (Map's was 14.6px) into a full 25.9px share
+      at the same 0.40rem — the label font itself is capped there by
+      the widest word, COSTUMES (~29px of ink), which must fit its
+      share without touching its neighbours. That icon size is the
+      largest the row's geometry allows: the row is ~379px wide at
+      390px viewport; the GIF at a modestly trimmed 90x27 (still ~3.6x
+      a button's width, still the row's anchor) plus 10 x 3px gaps
+      leaves a 25.9px share per button. 34px icons would need
+      10 x 34 + 90 + gaps > 460px of row — impossible in a single
+      nowrap row alongside the artwork at this viewport width.
+      Narrower phones step down proportionally (360px class: 22px
+      icons, GIF 86.7x26); wider phones step up (420px+: 28px icons).
+      Desktop and the landscape slim row are untouched.
+   2) HOMEPAGE HERO ORDER (phone only). The .mobile-search block now
+      lives inside .hero-split directly after .hero-intro (index.html);
+      it is display:none above 760px, so desktop renders and orders
+      exactly as before. On phones a "search" grid area seats it
+      directly under the headline panel and above the video:
+      headline -> search + Search -> Use my location -> video -> rest. */
+@media (max-width: 760px) and (orientation: portrait) {
+  .site-header.v2 .header-nav { justify-content: flex-start; gap: 3px; }
+  .site-header.v2 .header-nav a.events-link { flex: 0 0 auto; }
+  .site-header.v2 .header-nav a.events-link img.events-gif { height: 27px; }
+  .site-header.v2 .header-nav a.navbtn {
+    flex: 1 1 0; min-width: 0; padding: 0;
+    font-size: 0.40rem; letter-spacing: 0; gap: 0.14rem;
+  }
+  .site-header.v2 .header-nav a.navbtn img { width: 25px; height: 25px; }
+  .site-header.v2 .header-nav a.navbtn span { white-space: normal; text-align: center; line-height: 1.15; }
+  /* One-word-too-wide exception: COSTUMES is ~36px of ink at 0.40rem —
+     wider than any equal share — so this one label steps down a size
+     rather than touch GAMES. Shares and gaps stay identical. */
+  .site-header.v2 .header-nav a.navbtn[href="/diy-costumes"] span { font-size: 0.34rem; }
+}
+@media (max-width: 380px) and (orientation: portrait) {
+  .site-header.v2 .header-nav a.events-link img.events-gif { height: 26px; }
+  .site-header.v2 .header-nav a.navbtn { font-size: 0.38rem; }
+  .site-header.v2 .header-nav a.navbtn img { width: 22px; height: 22px; }
+  .site-header.v2 .header-nav a.navbtn[href="/diy-costumes"] span { font-size: 0.31rem; }
+}
+@media (max-width: 340px) and (orientation: portrait) {
+  .site-header.v2 .header-nav a.navbtn { font-size: 0.38rem; }
+  .site-header.v2 .header-nav a.navbtn img { width: 18px; height: 18px; }
+}
+@media (min-width: 420px) and (max-width: 760px) and (orientation: portrait) {
+  .site-header.v2 .header-nav a.navbtn { font-size: 0.42rem; }
+  .site-header.v2 .header-nav a.navbtn img { width: 28px; height: 28px; }
+  .site-header.v2 .header-nav a.navbtn[href="/diy-costumes"] span { font-size: 0.36rem; }
+}
+@media (max-width: 760px) {
+  .hero-split { grid-template-areas: "headline" "search" "video" "strip" "sponsor" "townreq"; }
+  .hero-split .mobile-search { grid-area: search; margin: 0; }
+}
