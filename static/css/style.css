@@ -2175,3 +2175,65 @@ body.has-tourbar.has-radio { padding-bottom: 124px; }
 @media (max-width: 380px) and (orientation: portrait) {
   .site-header.v2 .header-nav a.events-link .events-daily { font-size: 0.86rem; max-width: 102px; }
 }
+
+/* ============ z67: LAPTOP HERO STACK (Dan, Oct 22) ============
+   Inside the hero photo panel (.hero-intro), under the headline:
+   Airbnb-style search pill, then Near-you, Trending and Text Alerts,
+   each its own sub-block, centred with even spacing. The stack is
+   desktop-only: below 761px it never renders and phones keep the
+   original below-band modules exactly where they were. At >=761px
+   the below-band copies hide, so each module appears exactly once. */
+.hero-stack { display: none; }
+
+@media (min-width: 761px) {
+  .near-you:not(.hero-copy),
+  .trending:not(.hero-copy),
+  .below-band-only { display: none; }
+
+  .hero-stack {
+    display: flex; flex-direction: column; gap: 1rem;
+    margin-top: 0.6rem; text-align: left;
+  }
+
+  /* Airbnb-style pill: one cream bar, segmented fields, round
+     orange Search button. Submits the homepage's real params
+     (town_search / cat / scare) to GET /. */
+  .hero-search {
+    display: flex; align-items: stretch;
+    background: #f5efe0; border-radius: 999px; padding: 0.4rem;
+    max-width: 720px; width: 100%; margin: 0 auto;
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45);
+  }
+  .hero-search-seg {
+    flex: 1 1 0; min-width: 0; display: flex; flex-direction: column;
+    justify-content: center; padding: 0.3rem 1rem; cursor: pointer;
+  }
+  .hero-search-seg + .hero-search-seg { border-left: 1px solid rgba(23, 18, 43, 0.18); }
+  .hero-search-label {
+    font-size: 0.66rem; font-weight: 800; letter-spacing: 0.08em;
+    text-transform: uppercase; color: #241640;
+  }
+  .hero-search-seg input,
+  .hero-search-seg select {
+    border: 0; background: transparent; color: #17122b; width: 100%;
+    font: inherit; font-size: 0.92rem; padding: 0.1rem 0; outline: none;
+  }
+  .hero-search-btn {
+    flex: 0 0 auto; display: flex; align-items: center; gap: 0.45rem;
+    background: #ff7518; color: #fff; border: 0; border-radius: 999px;
+    font: inherit; font-weight: 800; font-size: 0.95rem;
+    padding: 0.6rem 1.25rem; cursor: pointer;
+  }
+  .hero-search-btn:hover { background: #e0640d; }
+
+  /* Sub-blocks: near-you and text-alerts keep their own panels;
+     trending gets a translucent panel so its rows stay readable
+     over the hero photo. */
+  .hero-stack .near-you.hero-copy { margin: 0; }
+  .hero-stack .trending.hero-copy {
+    margin: 0; padding: 1rem;
+    background: rgba(13, 8, 26, 0.72);
+    border: 1px solid rgba(255, 117, 24, 0.25); border-radius: 14px;
+  }
+  .hero-stack .text-alerts { margin: 0 auto; width: 100%; }
+}

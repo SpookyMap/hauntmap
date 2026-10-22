@@ -3,6 +3,105 @@
 <div class="hero-split">
 <div class="hero-intro">
   <h1 class="hero-title">Find the Best Halloween Displays <span class="hero-title-alt">Near You</span></h1>
+
+{# Laptop hero stack (z67, Dan Oct 22): inside the hero photo panel,
+   under the headline — Airbnb-style search pill, then Near-you, then
+   Trending, then Text Alerts, each in its own sub-block. .hero-stack
+   is display:none below 761px and the original below-band copies are
+   hidden at >=761px, so every viewport sees exactly one copy of each
+   module: phones keep theirs below Tonight's band, untouched. #}
+<div class="hero-stack">
+  <form method="get" action="/" class="hero-search" role="search">
+    <label class="hero-search-seg">
+      <span class="hero-search-label">Where</span>
+      <input type="text" name="town_search" placeholder="Town or ZIP" autocomplete="off">
+    </label>
+    <label class="hero-search-seg">
+      <span class="hero-search-label">What</span>
+      <select name="cat">
+        <option value="halloween" {% if cat == 'halloween' %}selected{% endif %}>&#x1F383; Haunt Map</option>
+        <option value="christmas" {% if cat == 'christmas' %}selected{% endif %}>&#x1F384; Jolly Map</option>
+        <option value="haunted_houses" {% if cat == 'haunted_houses' %}selected{% endif %}>&#x1F3DA;&#xFE0F; Haunted Houses</option>
+        <option value="events" {% if cat == 'events' %}selected{% endif %}>&#x1F3AA; Events</option>
+        <option value="halloween_stores" {% if cat == 'halloween_stores' %}selected{% endif %}>&#x1F47B; Halloween Stores</option>
+        <option value="live" {% if cat == 'live' %}selected{% endif %}>&#x1F534; Live</option>
+      </select>
+    </label>
+    <label class="hero-search-seg">
+      <span class="hero-search-label">Scare level</span>
+      <select name="scare">
+        <option value="" {% if not scare %}selected{% endif %}>Any scare level</option>
+        <option value="family" {% if scare == 'family' %}selected{% endif %}>&#x1F60A; Family</option>
+        <option value="spooky" {% if scare == 'spooky' %}selected{% endif %}>&#x1F47B; Spooky</option>
+        <option value="creepy" {% if scare == 'creepy' %}selected{% endif %}>&#x1F9DB; Creepy</option>
+        <option value="terrifying" {% if scare == 'terrifying' %}selected{% endif %}>&#x1F631; Terrifying</option>
+        <option value="extreme" {% if scare == 'extreme' %}selected{% endif %}>&#x1F480; Extreme</option>
+      </select>
+    </label>
+    <button type="submit" class="hero-search-btn">&#x1F50D;<span>Search</span></button>
+  </form>
+
+  {% if near_towns %}
+  <section class="near-you hero-copy" aria-label="Near you tonight">
+    <h2>&#x1F4CD; Near you tonight</h2>
+    <p class="near-you-sub">The biggest haunt towns on the map right now — tap yours, or jump straight to what's around you.</p>
+    <p class="near-you-mine" hidden>&#x1F4CD; Your town: <a class="js-town-link" href="/nearby"></a> — <a href="/nearby">see what's near it &rarr;</a></p>
+    <div class="town-chips">
+      {% for t in near_towns %}
+      <a class="town-chip" href="/?town={{ t.label|urlencode }}">{{ t.label }} <span class="chip-n">{{ t.count }} haunt{{ 's' if t.count != 1 }}</span></a>
+      {% endfor %}
+    </div>
+    <div class="near-you-actions">
+      <button type="button" class="btn" onclick="hmNearMe()">&#x1F4CD; Use my location</button>
+      <a class="btn btn-ghost" href="/nearby">Search your town</a>
+    </div>
+    <script>
+    (function () {
+      try {
+        var t = localStorage.getItem('hm_town');
+        if (!t) return;
+        var box = document.currentScript.closest('.near-you').querySelector('.near-you-mine');
+        var link = box.querySelector('.js-town-link');
+        link.textContent = t;
+        link.href = '/?town=' + encodeURIComponent(t);
+        box.hidden = false;
+      } catch (e) {}
+    })();
+    </script>
+  </section>
+  {% endif %}
+
+  {% if trending %}
+  <section class="trending hero-copy" aria-label="Trending today">
+    <h2>&#x1F525; Trending today</h2>
+    <div class="rail trending-rail">
+      {% for p in trending %}
+      <a class="card rail-card" href="/d/{{ p.id }}">
+        <div class="card-media">
+          {% if p.media_type == 'video' %}
+          {% if p.thumb_path %}<img src="{{ p.thumb_url }}" alt="{{ p.title }}" loading="lazy">{% else %}<div class="card-media-empty">&#x1F3AC;</div>{% endif %}
+          <span class="play-badge">&#x25B6;</span>
+          {% else %}
+          <img src="{{ p.thumb_url }}" alt="{{ p.title }}" loading="lazy">
+          {% endif %}
+          <span class="rank-badge">#{{ loop.index }}</span>
+        </div>
+        <div class="card-body">
+          <h3>{{ p.title }}</h3>
+          <p class="meta">{{ p.town_label }}</p>
+          <p class="views-line">&#x1F441;&#xFE0F; {{ p._views }} view{{ 's' if p._views != 1 }}</p>
+          <span class="tour-add-btn" role="button" tabindex="0" data-tour-btn data-id="{{ p.id }}" data-title="{{ p.title }}" data-town="{{ p.town }}" data-lat="{{ p.lat if p.lat is not none else '' }}" data-lng="{{ p.lng if p.lng is not none else '' }}" data-thumb="{{ p.thumb_url }}">+ Tour</span>
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+  {% if trending %}
+  {% with sms_source = "homepage" %}{% include "_text_alerts.html" %}{% endwith %}
+  {% endif %}
+</div>
 </div>
 
 {# Phone-only placement (z64): .mobile-search is display:none above
@@ -105,7 +204,7 @@
     try {
       var t = localStorage.getItem('hm_town');
       if (!t) return;
-      var box = document.querySelector('.near-you-mine');
+      var box = document.currentScript.closest('.near-you').querySelector('.near-you-mine');
       var link = box.querySelector('.js-town-link');
       link.textContent = t;
       link.href = '/?town=' + encodeURIComponent(t);
@@ -144,7 +243,9 @@
 {% endif %}
 
 {% if trending %}
+<div class="below-band-only">
 {% with sms_source = "homepage" %}{% include "_text_alerts.html" %}{% endwith %}
+</div>
 {% endif %}
 
 <div class="cat-tabs-main">
