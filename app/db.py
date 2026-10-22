@@ -42,7 +42,10 @@ CREATE TABLE IF NOT EXISTS entries (
     tiktok_url TEXT,                      -- optional TikTok video link
     created_at TEXT NOT NULL,             -- UTC ISO timestamp
     scare_level TEXT,                     -- 'family' | 'spooky' | 'terrifying'
-    tags TEXT                             -- comma-separated: animatronics,inflatables,handmade,walkthrough,projector,lights,music,street-wide,multi-house
+    tags TEXT,                            -- comma-separated: animatronics,inflatables,handmade,walkthrough,projector,lights,music,street-wide,multi-house
+    ev_type TEXT,                         -- events facet: event type (see EVENT_TYPES in main.py)
+    ev_genre TEXT,                        -- events facet: music genre (see EVENT_GENRES in main.py)
+    ev_venue TEXT                         -- events facet: venue style (see EVENT_VENUES in main.py)
 );
 CREATE INDEX IF NOT EXISTS idx_entries_town ON entries(town);
 CREATE INDEX IF NOT EXISTS idx_entries_votes ON entries(votes DESC);
@@ -96,4 +99,10 @@ def init_db(db_path: Path) -> None:
             # NULL until the pin's address has been verified; stored
             # separately so title/town stay display text.
             conn.execute("ALTER TABLE entries ADD COLUMN address TEXT")
+        # Events facets (Dan, Oct 22): event type / music genre / venue
+        # style powering the /events filter dropdowns. NULL = untagged;
+        # only set when a listing plainly determines the value.
+        for col in ("ev_type", "ev_genre", "ev_venue"):
+            if col not in cols:
+                conn.execute(f"ALTER TABLE entries ADD COLUMN {col} TEXT")
         conn.commit()

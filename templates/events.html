@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+{% block title %}Events &amp; Parties &middot; {{ site_name }}{% endblock %}
+{% block content %}
+<h1>&#x1F3AA; Events &amp; Parties</h1>
+<p class="lede">Halloween parties, concerts, DJ nights, parades and festivals &mdash; search the season by the kind of night you want: filter by event type, music genre and venue style.</p>
+
+<form method="get" action="/events" class="ev-filter-form">
+  {% if sort != 'top' %}<input type="hidden" name="sort" value="{{ sort }}">{% endif %}
+  <div class="ev-filter-row">
+    <label class="ev-filter">
+      <span>Event type</span>
+      <select name="type" onchange="this.form.submit()">
+        <option value="">All types</option>
+        {% for o in facets[0].options %}
+        <option value="{{ o.value }}" {% if o.value == selected.type %}selected{% endif %}>{{ o.label }} ({{ o.count }})</option>
+        {% endfor %}
+      </select>
+    </label>
+    <label class="ev-filter">
+      <span>Genre</span>
+      <select name="genre" onchange="this.form.submit()">
+        <option value="">All genres</option>
+        {% for o in facets[1].options %}
+        <option value="{{ o.value }}" {% if o.value == selected.genre %}selected{% endif %}>{{ o.label }} ({{ o.count }})</option>
+        {% endfor %}
+      </select>
+    </label>
+    <label class="ev-filter">
+      <span>Venue style</span>
+      <select name="venue" onchange="this.form.submit()">
+        <option value="">All venue styles</option>
+        {% for o in facets[2].options %}
+        <option value="{{ o.value }}" {% if o.value == selected.venue %}selected{% endif %}>{{ o.label }} ({{ o.count }})</option>
+        {% endfor %}
+      </select>
+    </label>
+    <a href="/events" class="btn btn-ghost ev-clear">All events</a>
+  </div>
+</form>
+
+<div class="ev-meta-row">
+  <p class="ev-count">
+    {% if filtered %}Showing {{ entries|length }} matching event{{ 's' if entries|length != 1 }} &middot; <a href="/events">clear filters</a>
+    {% else %}{{ total }} event{{ 's' if total != 1 }} on the map{% endif %}
+  </p>
+  <div class="sort-toggle">
+    <a href="/events?sort=top{% if selected.type %}&type={{ selected.type|urlencode }}{% endif %}{% if selected.genre %}&genre={{ selected.genre|urlencode }}{% endif %}{% if selected.venue %}&venue={{ selected.venue|urlencode }}{% endif %}" class="{% if sort == 'top' %}active{% endif %}">Top</a>
+    <a href="/events?sort=new{% if selected.type %}&type={{ selected.type|urlencode }}{% endif %}{% if selected.genre %}&genre={{ selected.genre|urlencode }}{% endif %}{% if selected.venue %}&venue={{ selected.venue|urlencode }}{% endif %}" class="{% if sort == 'new' %}active{% endif %}">Newest</a>
+  </div>
+</div>
+
+{% if entries %}
+<div class="grid">
+  {% for e in entries %}
+  <a class="card" href="/d/{{ e.id }}">
+    <div class="card-media">
+      {% if e.media_path %}
+      {% if e.media_type == 'video' %}
+      {% if e.thumb_path %}<img src="{{ e.thumb_url }}" alt="{{ e.title }}" loading="lazy">{% else %}<div class="card-media-empty">&#x1F3AC;</div>{% endif %}
+      <span class="play-badge">&#x25B6;</span>
+      {% else %}
+      <img src="{{ e.thumb_url }}" alt="{{ e.title }}" loading="lazy">
+      {% endif %}
+      {% else %}
+      <div class="card-media-empty">&#x1F4C5;</div>
+      {% endif %}
+      {% if e.is_sample %}<span class="sample-badge">Sample</span>{% endif %}
+    </div>
+    <div class="card-body">
+      <h3>{{ e.title }}</h3>
+      <p class="meta">{{ e.town_label }}{% if e.display_name %} &middot; {{ e.display_name }}{% endif %}</p>
+      {% if e.ev_type or e.ev_genre or e.ev_venue %}
+      <p class="ev-chips">{% if e.ev_type %}<span class="ev-chip">{{ e.ev_type }}</span>{% endif %}{% if e.ev_genre %}<span class="ev-chip">{{ e.ev_genre }}</span>{% endif %}{% if e.ev_venue %}<span class="ev-chip">{{ e.ev_venue }}</span>{% endif %}</p>
+      {% endif %}
+      {% if e.votes %}
+      <p class="votes">&#x1F383; {{ e.votes }} vote{{ 's' if e.votes != 1 }}</p>
+      {% elif e.is_new %}
+      <p class="votes votes-new">&#x2728; New this week</p>
+      {% endif %}
+      <span class="tour-add-btn" role="button" tabindex="0" data-tour-btn data-id="{{ e.id }}" data-title="{{ e.title }}" data-town="{{ e.town }}" data-lat="{{ e.lat if e.lat is not none else '' }}" data-lng="{{ e.lng if e.lng is not none else '' }}" data-thumb="{{ e.thumb_url }}">+ Tour</span>
+    </div>
+  </a>
+  {% endfor %}
+</div>
+{% else %}
+<div class="empty">
+  <p class="empty-emoji">&#x1F3AA;</p>
+  {% if filtered %}
+  <p>No events match that mix yet &mdash; try a different type, genre or venue style.</p>
+  <p><a class="btn" href="/events">Clear filters &mdash; see all events</a></p>
+  {% else %}
+  <p>No events on the map yet.</p>
+  <p><a class="btn" href="/upload">Be the first to add one</a></p>
+  {% endif %}
+</div>
+{% endif %}
+<style>
+.ev-filter-form { margin: 1rem 0 0.4rem; }
+.ev-filter-row { display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: flex-end; }
+.ev-filter { display: flex; flex-direction: column; gap: 0.25rem; flex: 1 1 150px; max-width: 260px; }
+.ev-filter span { font-size: 0.78rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: #ffd98a; }
+.ev-filter select { width: 100%; padding: 0.55rem 0.6rem; border-radius: 10px; background: #1d1438; border: 1px solid #372b5e; color: #f3eefc; font: inherit; font-size: 0.95rem; }
+.ev-clear { white-space: nowrap; }
+.ev-meta-row { display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: center; justify-content: space-between; margin: 0.4rem 0 0.8rem; }
+.ev-count { margin: 0; color: #cfc4ee; }
+.ev-chips { display: flex; flex-wrap: wrap; gap: 0.3rem; margin: 0.15rem 0 0.3rem; }
+.ev-chip { display: inline-block; padding: 0.1rem 0.5rem; border-radius: 999px; background: #241a44; border: 1px solid #372b5e; color: #ffd98a; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.03em; }
+@media (max-width: 760px) {
+  .ev-filter { flex: 1 1 100%; max-width: none; }
+  .ev-clear { flex: 1 1 100%; text-align: center; }
+}
+</style>
+{% endblock %}

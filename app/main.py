@@ -62,6 +62,22 @@ CAT_EMOJI = {"halloween": "🎃", "christmas": "🎄", "halloween_stores": "👻
              "restaurants": "🍽️", "coffee": "☕", "shops": "🛍️", "parks": "🌳",
              "haunted_houses": "🏚️", "events": "🎪", "live": "🔴"}
 
+# Events facets (Dan, Oct 22): /events is searchable by event type, music
+# genre and venue style. Stored values stay short (they ride in URLs);
+# a few get friendlier display labels in the dropdowns.
+EVENT_TYPES = ("DJ Party", "Live Band", "Live Music", "Concert", "Bar Party",
+               "Festival", "Parade", "Family Event", "Haunted Attraction Event",
+               "Party")
+EVENT_GENRES = ("EDM/Dance", "Hip-Hop", "Rock", "Jazz", "Latin", "Pop",
+                "Classical/Piano", "Mixed/Open Format", "Spooky/Novelty")
+EVENT_VENUES = ("Club", "Bar", "Rooftop", "Social Hall", "Ballroom/Event Space",
+                "Theater", "Restaurant", "Outdoor", "Haunted Attraction", "Venue")
+EVENT_TYPE_LABELS = {"Live Music": "Live Music (solo/duo)", "Party": "Party (general)"}
+EVENT_VENUE_LABELS = {"Venue": "Venue (general)"}
+EVENT_FACETS = (("type", "ev_type", EVENT_TYPES, EVENT_TYPE_LABELS),
+                ("genre", "ev_genre", EVENT_GENRES, {}),
+                ("venue", "ev_venue", EVENT_VENUES, EVENT_VENUE_LABELS))
+
 app = FastAPI(title=SITE_NAME, docs_url=None, redoc_url=None)
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 templates.env.globals["site_name"] = SITE_NAME
@@ -918,11 +934,55 @@ def home(request: Request, sort: str = "top", town: str = "", town_search: str =
     return response
 
 
-@app.get("/events")
-def events_redirect():
-    # The header's Events artwork links to /events (Dan, Oct 22); the
-    # events view itself is the home feed filtered to the events category.
-    return RedirectResponse("/?cat=events", status_code=302)
+@app.get("/events", response_class=HTMLResponse)
+def events_page(request: Request, type: str = "", genre: str = "",
+                venue: str = "", sort: str = "top"):
+    # The header's Events artwork links here (Dan, Oct 22). This used to
+    # 302 to /?cat=events; it is now the canonical events page so events
+    # can be searched by type / genre / venue style (Dan, Oct 22) with
+    # shareable filtered URLs, e.g. /events?type=DJ+Party&genre=Jazz.
+    sort = sort if sort in ("top", "new") else "top"
+    selected = {"type": type if type in EVENT_TYPES else "",
+                "genre": genre if genre in EVENT_GENRES else "",
+                "venue": venue if venue in EVENT_VENUES else ""}
+    order = "votes DESC, created_at DESC" if sort == "top" else "created_at DESC"
+    # Same video-first ranking as the home feed.
+    video_first = (
+        "CASE WHEN ((tiktok_url IS NOT NULL AND TRIM(tiktok_url) != '')"
+        " OR LOWER(media_path) LIKE '%.mp4'"
+        " OR LOWER(media_path) LIKE '%.webm'"
+        " OR LOWER(media_path) LIKE '%.mov') THEN 0 ELSE 1 END")
+    query = "SELECT * FROM entries WHERE hidden = 0 AND category = 'events'"
+    params: list = []
+    for key, col, _values, _labels in EVENT_FACETS:
+        if selected[key]:
+            query += f" AND {col} = ?"
+            params.append(selected[key])
+    query += f" ORDER BY {video_first}, {order} LIMIT 100"
+    with get_conn(DB_PATH) as conn:
+        entries = [row_to_dict(r) for r in conn.execute(query, params).fetchall()]
+        counts: dict[str, dict[str, int]] = {}
+        for key, col, _values, _labels in EVENT_FACETS:
+            counts[key] = {r[col]: r["n"] for r in conn.execute(
+                f"SELECT {col}, COUNT(*) AS n FROM entries "
+                f"WHERE hidden = 0 AND category = 'events' AND {col} IS NOT NULL "
+                f"GROUP BY {col}").fetchall()}
+        total = conn.execute(
+            "SELECT COUNT(*) AS n FROM entries "
+            "WHERE hidden = 0 AND category = 'events'").fetchone()["n"]
+    voted = {k[6:] for k in request.cookies if k.startswith("voted_")}
+    facets = []
+    for key, _col, values, labels in EVENT_FACETS:
+        facets.append({
+            "key": key, "selected": selected[key],
+            "options": [{"value": v, "label": labels.get(v, v),
+                         "count": counts[key][v]}
+                        for v in values if counts[key].get(v)],
+        })
+    return templates.TemplateResponse(request, "events.html",
+        {"request": request, "entries": entries, "sort": sort,
+         "facets": facets, "selected": selected, "total": total,
+         "filtered": any(selected.values()), "voted": voted})
 
 
 RESTAURHAUNT_CATS = ("restaurants", "coffee", "shops")
@@ -2738,7 +2798,7 @@ async def admin_tag(entry_id: int, request: Request):
 
 @app.post("/admin/edit/{entry_id}")
 async def admin_edit(entry_id: int, request: Request):
-    """Update title, town label and/or verified street address (admin).
+    """Update title, town label, verified street address, events facets (admin).
 
     Only fields present in the form are touched. `address` may be sent
     empty to clear it back to NULL; title/town must be non-empty when sent.
@@ -2757,6 +2817,16 @@ async def admin_edit(entry_id: int, request: Request):
     if "address" in form:
         addr = str(form.get("address", "")).strip()
         updates["address"] = addr or None
+    # Events facets: validated against the taxonomy; empty clears to NULL.
+    for field, valid in (("ev_type", EVENT_TYPES), ("ev_genre", EVENT_GENRES),
+                         ("ev_venue", EVENT_VENUES)):
+        if field in form:
+            value = str(form.get(field, "")).strip()
+            if value and value not in valid:
+                return JSONResponse(
+                    {"error": f"{field} must be one of: {', '.join(valid)}"},
+                    status_code=400)
+            updates[field] = value or None
     if not updates:
         return JSONResponse({"error": "No fields to update"}, status_code=400)
     if not get_entry(entry_id):
