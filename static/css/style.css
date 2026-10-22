@@ -2118,3 +2118,60 @@ body.has-tourbar.has-radio { padding-bottom: 124px; }
   .header-band .header-hook .hook-l1 { font-size: 0.78rem; }
   .header-band .header-hook .hook-l2 { font-size: 0.88rem; }
 }
+
+/* ============ z66: PHONE HOOK — "NEW HAUNTS DAILY!!!" MOVES UNDER THE
+   EVENTS GIF; CLOSER SPLIT; LAPTOP FRANKENSTEIN +50% (Dan, Oct 22) ====
+   Three Dan orders from his z65 phone screenshot, one section.
+   1) PHONE ONLY: "NEW HAUNTS DAILY!!!" leaves the top hook — Dan:
+      "let's create space with the text on top, let's take out New
+      Haunts Daily!!!" The .tag-a span is display:none inside the
+      phone-portrait query below (desktop keeps it in the hook, and
+      landscape keeps its standing behaviour). The freed line lets
+      the closer breathe: hook-l2's margin-top grows 0.12em -> 0.30em.
+      Type sizes are NOT shrunk back.
+   2) PHONE ONLY: the phrase reappears as .events-daily, a span inside
+      the Events & Parties anchor, stacked under the GIF in the nav's
+      left column (the column spans both button rows; GIF + text are
+      centred as one unit). .events-daily is display:none globally,
+      so it exists ONLY in phone portrait — never duplicated on
+      desktop, never in landscape. Lavender #c9a7ff (its hook color),
+      Creepster (the header display font), two balanced lines
+      ("NEW HAUNTS" / "DAILY!!!"). Its max-width stays under the
+      GIF's width (120px at 390 class, 110px at 360 class) so the
+      grid's auto column — and every button share — is untouched.
+   3) PHONE ONLY: the closer splits — "THE HAUNT STARTS" (.tag-b +
+      .tag-c) goes lavender, only "HERE" (.tag-d, split out of the
+      old .tag-c in base.html) stays red. Desktop keeps the whole
+      closer red: the global .tag-d rule below paints it the same
+      #e01e26 as .tag-c, and only the phone query recolors b/c.
+   4) LAPTOP/DESKTOP ONLY: Frankenstein grows 50% — 62px -> 93px
+      height (the min-width:761px rule near z58 set 62px). Phone
+      (48px) and landscape (53px) rules are elsewhere and untouched.
+      The band centre narrows by the extra width; the desktop hook
+      is cqw-sized against that centre (z49), so both lines rescale
+      on their own and stay one line each, exactly as before. */
+.header-band .header-hook .tag-d { color: #e01e26; }
+.events-daily { display: none; }
+@media (min-width: 761px) and (min-height: 501px) {
+  /* min-height keeps this off landscape phones: their slim-row rule
+     (landscape, max-height 500px) must keep Frank at 53px. */
+  .header-band .header-frank { height: 93px; }
+}
+@media (max-width: 760px) and (orientation: portrait) {
+  .header-band .header-hook .hook-l2 .tag-a { display: none; }
+  .header-band .header-hook .hook-l2 { margin-top: 0.30em; }
+  .header-band .header-hook .tag-b { color: #c9a7ff; }
+  .header-band .header-hook .tag-c { color: #c9a7ff; }
+  .header-band .header-hook .tag-d { color: #e01e26; }
+  .site-header.v2 .header-nav a.events-link {
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px;
+  }
+  .site-header.v2 .header-nav a.events-link .events-daily {
+    display: block; font-family: "Creepster", cursive; color: #c9a7ff;
+    font-size: 0.95rem; line-height: 1.12; text-align: center; letter-spacing: 0.02em;
+    max-width: 112px; text-wrap: balance;
+  }
+}
+@media (max-width: 380px) and (orientation: portrait) {
+  .site-header.v2 .header-nav a.events-link .events-daily { font-size: 0.86rem; max-width: 102px; }
+}
