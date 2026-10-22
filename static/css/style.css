@@ -1424,3 +1424,27 @@ a.game-card:hover { border-color: #ff7518; transform: translateY(-2px); }
 @media (orientation: landscape) and (max-height: 500px) {
   .site-header.v2 .header-nav a.events-link img.events-gif { height: 26px; }
 }
+
+/* ============ z41: EVENTS GIF BIGGER (Dan, Oct 22 — 3rd escalation) ====
+   Dan's word overrides the 15% header cap on desktop: the Events &
+   Parties artwork grows 64px -> 88px tall (~293px wide at the GIF's
+   native 3.33:1) — unmistakably the anchor of row two, still a plain
+   image link with no button chrome. The header grows with it; accepted.
+   Everything else in the header stays exactly as finalized.
+   Phone portrait: the single row's WIDTH binds at 390px, so the nav
+   tightens a touch (row gap, label size, header side padding) to buy
+   the artwork real size without horizontal overflow: 26px -> 36px.
+   Landscape phones: width is plentiful but height is precious, so the
+   artwork takes a modest bump only (26px -> 32px). */
+@media (min-width: 761px) {
+  .site-header.v2 .header-nav a.events-link img.events-gif { height: 88px; }
+}
+@media (max-width: 760px) {
+  .site-header.v2 { padding-left: 0.35rem; padding-right: 0.35rem; }
+  .site-header.v2 .header-nav { gap: 0.14rem; }
+  .site-header.v2 .header-nav a.navbtn { font-size: 0.44rem; }
+  .site-header.v2 .header-nav a.events-link img.events-gif { height: 36px; }
+}
+@media (orientation: landscape) and (max-height: 500px) {
+  .site-header.v2 .header-nav a.events-link img.events-gif { height: 32px; }
+}
