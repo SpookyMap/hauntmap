@@ -2859,7 +2859,8 @@ body.has-tourbar #hm-capture { bottom: 4.4rem; }
 .hm-find {
   margin: 0; padding: 0.85rem 1rem;
   background: linear-gradient(160deg, #241a44, #17122b);
-  border: 1px solid #ff7518; border-radius: 14px;
+  /* Black border (Dan, Oct 23) — the old locate panel's orange is gone. */
+  border: 1px solid #000; border-radius: 14px;
 }
 .hero-split .hm-find { grid-area: search; }
 .hm-find-text { margin: 0 0 0.6rem; color: #f5f2ec; font-size: 1.05rem; }
@@ -2868,8 +2869,16 @@ body.has-tourbar #hm-capture { bottom: 4.4rem; }
 .hm-find-form { display: flex; gap: 0.5rem; margin: 0 0 0.6rem; }
 .hm-find-form input { flex: 1; min-width: 0; padding: 0.7rem 0.8rem; border-radius: 10px; border: 1px solid #4a4266; background: #000; color: #f5f2ec; font-size: 1rem; }
 .hm-find-form input::placeholder { color: #9a93ad; }
-.hm-find-actions { display: flex; flex-direction: column; align-items: stretch; gap: 0.6rem; }
-.hm-find-btn { font-size: 1rem; padding: 0.6rem 1.1rem; }
+/* Side-by-side (Dan, Oct 23): the two actions share ONE row, half
+   width each, smaller than the old stacked full-width pills, so the
+   block is shorter. "Choose my town instead" may wrap to two lines
+   inside its button; text stays >= ~13px, targets >= 44px tall. */
+.hm-find-actions { display: flex; flex-direction: row; align-items: stretch; gap: 0.5rem; }
+.hm-find-btn {
+  flex: 1 1 0; min-width: 0; min-height: 44px;
+  display: flex; align-items: center; justify-content: center; text-align: center;
+  font-size: 0.88rem; line-height: 1.15; padding: 0.45rem 0.4rem;
+}
 .hm-find-msg { margin: 0.6rem 0 0; color: #ffb066; font-weight: 600; }
 .hm-find-msg[hidden] { display: none; }
 .hm-find-msg a { color: #ffd9a0; }
@@ -2886,12 +2895,19 @@ body.has-tourbar #hm-capture { bottom: 4.4rem; }
    (the Passport segment still hides until the visitor has stamps). */
 .hm-slimbar {
   display: none;
-  flex-wrap: wrap; align-items: center; gap: 0.15rem 0.45rem;
-  margin: 0.4rem 0 0.15rem; padding: 0.32rem 0.6rem;
+  flex-wrap: wrap; align-items: center; gap: 0.05rem 0.4rem;
+  margin: 0.4rem 0 0.15rem; padding: 0.22rem 0.5rem;
   background: linear-gradient(135deg, #241640 0%, #311d55 100%);
   border: 1px solid #4a2d7a; border-radius: 12px;
-  font-size: 0.82rem; line-height: 1.3;
+  font-size: 0.78rem; line-height: 1.3;
 }
+/* "See full homepage" rides inline, glued to the Passport segment
+   ("… · N towns · See full homepage") — Dan, Oct 23. The pair is one
+   nowrap flex item so the wrap can never split them; at 390px the
+   fullest state (streak + Passport) takes two lines, with only the
+   Daily Fright segment wrapping ahead of the Passport line. */
+.hm-slim-group { display: inline-flex; align-items: center; gap: 0.4rem; white-space: nowrap; }
+.hm-slimbar .hm-full-btn::before { content: "\00B7"; margin-right: 0.4rem; color: #9a8fb8; }
 body.hm-returning .hm-slimbar { display: flex; }
 .hm-slimbar-welcome { font-weight: 800; color: #FFF8E7; white-space: nowrap; }
 .hm-slimbar-link { color: #f3eefc; text-decoration: none; font-weight: 600; white-space: nowrap; }
@@ -2899,7 +2915,7 @@ body.hm-returning .hm-slimbar { display: flex; }
 .hm-slimbar-link[hidden] { display: none; }
 .hm-slimbar-link::before { content: "\00B7"; margin-right: 0.45rem; color: #9a8fb8; }
 .hm-slimbar .hm-full-btn {
-  margin-left: auto; padding: 0; background: none; border: 0; cursor: pointer;
+  padding: 0; background: none; border: 0; cursor: pointer;
   color: #c9a7ff; font: inherit; font-weight: 600; white-space: nowrap;
 }
 .hm-slimbar .hm-full-btn:hover { text-decoration: underline; }
@@ -2928,8 +2944,7 @@ body.hm-returning .hero-stack { margin-top: 0.2rem; gap: 0.5rem; }
 }
 @media (max-width: 760px) {
   .hm-find { padding: 0.7rem 0.8rem; }
-  .hm-find-actions { flex-direction: column; align-items: stretch; }
-  .hm-find-btn { width: 100%; padding: 0.7rem; }
+  .hm-find-btn { font-size: 0.85rem; padding: 0.4rem 0.3rem; }
   body.hm-returning .hero-intro h1.hero-title { font-size: 1.05rem; }
 }
 /* --- Haunt Bracket (staged Oct 2026) --- */

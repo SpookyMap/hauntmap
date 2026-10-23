@@ -25,11 +25,20 @@ function hmFullHomepage() {
   } catch (e) {}
 })();
 </script>
+{# VT/TV/Music slim strip (Dan Oct 23): the two big hero pills became one
+   thin row directly under the header nav, homepage only; Music added as
+   a third button later the same day. #}
+<div class="vt-tv-strip">
+  <a class="vt-btn" href="/virtual-tour">&#x25B6;&#xFE0F; Virtual Tour</a>
+  <a class="tv-btn" href="/virtual-tour?mode=tv">&#x1F4FA; HauntMap TV</a>
+  <a class="music-btn" href="/music">&#x1F3B5; HauntMap Music</a>
+  <a class="movies-btn" href="/movies">&#x1F3AC; HauntMap Movies</a>
+</div>
+{# Welcome-back slimbar sits UNDER the VT/TV strip (Dan, Oct 23). #}
 <div class="hm-slimbar" id="hm-slimbar">
   <span class="hm-slimbar-welcome">&#x1F383; Welcome back!</span>
   <a class="hm-slimbar-link" id="hm-slim-fright" href="/daily">&#x1F319; Daily Fright: today&#x27;s drop</a>
-  <a class="hm-slimbar-link" id="hm-slim-passport" href="/passport" hidden></a>
-  <button type="button" class="hm-full-btn" onclick="hmFullHomepage()">See full homepage</button>
+  <span class="hm-slim-group"><a class="hm-slimbar-link" id="hm-slim-passport" href="/passport" hidden></a><button type="button" class="hm-full-btn" onclick="hmFullHomepage()">See full homepage</button></span>
   <script>
   (function () {
     // Summaries reuse the existing client-side systems: Daily Fright
@@ -60,15 +69,6 @@ function hmFullHomepage() {
     } catch (e) {}
   })();
   </script>
-</div>
-{# VT/TV/Music slim strip (Dan Oct 23): the two big hero pills became one
-   thin row directly under the header nav, homepage only; Music added as
-   a third button later the same day. #}
-<div class="vt-tv-strip">
-  <a class="vt-btn" href="/virtual-tour">&#x25B6;&#xFE0F; Virtual Tour</a>
-  <a class="tv-btn" href="/virtual-tour?mode=tv">&#x1F4FA; HauntMap TV</a>
-  <a class="music-btn" href="/music">&#x1F3B5; HauntMap Music</a>
-  <a class="movies-btn" href="/movies">&#x1F3AC; HauntMap Movies</a>
 </div>
 <div class="hero-split">
 <div class="hero-intro">
@@ -175,7 +175,7 @@ function hmFullHomepage() {
   </form>
   <div class="hm-find-actions">
     <button type="button" class="btn hm-find-btn" id="hm-locate-btn">&#x1F4CD; Use my location</button>
-    <a class="btn btn-ghost" href="/nearby">Choose my town instead</a>
+    <a class="btn btn-ghost hm-find-btn" href="/nearby">Choose my town instead</a>
   </div>
   <p class="hm-find-msg" id="hm-locate-msg" hidden></p>
 </div>
