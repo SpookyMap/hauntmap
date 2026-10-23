@@ -205,7 +205,17 @@ a { color: var(--accent); }
 
 /* ---- DIY Costumes page ---- */
 .costume-card { padding-top: 0.85rem; }
-.costume-img { width: 100%; height: 150px; object-fit: cover; border-radius: 8px; margin: 0 0 0.6rem; display: block; }
+/* Creator photos arrive only via platform embeds (Dan, Oct 22 rework):
+   Pinterest's pinit.js replaces the .pin-embed-link anchor with the real
+   pin (photo served by Pinterest); until it loads — or if it can't — the
+   anchor is a styled, tappable fallback link straight to the pin. */
+.pin-slot { display: flex; justify-content: center; margin: 0 0 0.35rem; min-height: 84px; }
+.pin-slot > span, .pin-slot iframe { max-width: 100%; }
+.pin-fallback { display: block; border: 1px dashed rgba(201,167,255,0.55); border-radius: 8px; padding: 1.1rem 0.8rem; color: #c9a7ff; font-size: 0.9rem; font-weight: 600; text-align: center; line-height: 1.45; }
+.pin-embed-link { text-decoration: none; }
+.pin-embed-link:hover .pin-fallback { border-color: #ff7518; color: #ffb27a; }
+.costume-media-note { color: #9d8fc7; font-size: 0.78rem; text-align: center; margin: 0 0 0.55rem; }
+.costume-card .yt-facade { margin: 0 0 0.35rem; }
 .costume-meta { margin: 0 0 0.45rem; }
 .costume-chip { display: inline-block; background: rgba(255,117,24,0.14); border: 1px solid rgba(255,117,24,0.45); color: #ffb27a; border-radius: 999px; padding: 0.08rem 0.55rem; font-size: 0.78rem; font-weight: 600; margin-right: 0.3rem; }
 .costume-materials { color: #e6defa; font-size: 0.88rem; line-height: 1.45; margin: 0 0 0.5rem; }
