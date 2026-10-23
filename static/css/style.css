@@ -720,7 +720,8 @@ a.game-card:hover { border-color: #ff7518; transform: translateY(-2px); }
 @media (max-width: 760px) {
   .mobile-search { display: grid; gap: 0.5rem; margin: 0.2rem 0 0.7rem; }
   .mobile-search-form { display: flex; gap: 0.5rem; }
-  .mobile-search-form input { flex: 1; padding: 0.7rem 0.8rem; border-radius: 10px; border: 1px solid #372b5e; background: #17122b; color: #e8e6e3; font-size: 1rem; }
+  .mobile-search-form input { flex: 1; padding: 0.7rem 0.8rem; border-radius: 10px; border: 1px solid #4a4266; background: #000; color: #f5f2ec; font-size: 1rem; }
+  .mobile-search-form input::placeholder { color: #9a93ad; }
   .mobile-search .btn-locate { width: 100%; padding: 0.7rem; font-size: 1rem; }
   .hero-intro h1.hero-title { font-size: 1.2rem; margin-bottom: 0.4rem; }
   /* Span the header's full content width: in the column header layout the
@@ -2241,12 +2242,13 @@ body.has-tourbar.has-radio { padding-bottom: 124px; }
     margin-top: 0.6rem; text-align: left;
   }
 
-  /* Airbnb-style pill: one cream bar, segmented fields, round
-     orange Search button. Submits the homepage's real params
-     (town_search / cat / scare) to GET /. */
+  /* Airbnb-style pill: one BLACK bar (Dan, Oct 23 — was cream),
+     segmented fields, round orange Search button. Submits the
+     homepage's real params (town_search / cat / scare) to GET /. */
   .hero-search {
     display: flex; align-items: stretch;
-    background: #c9a7ff; border-radius: 999px; padding: 0.4rem;
+    background: #000; border: 1px solid rgba(255, 255, 255, 0.32);
+    border-radius: 999px; padding: 0.4rem;
     max-width: 720px; width: 100%; margin: 0 auto;
     box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45);
   }
@@ -2254,16 +2256,18 @@ body.has-tourbar.has-radio { padding-bottom: 124px; }
     flex: 1 1 0; min-width: 0; display: flex; flex-direction: column;
     justify-content: center; padding: 0.3rem 1rem; cursor: pointer;
   }
-  .hero-search-seg + .hero-search-seg { border-left: 1px solid rgba(23, 18, 43, 0.18); }
+  .hero-search-seg + .hero-search-seg { border-left: 1px solid rgba(255, 255, 255, 0.22); }
   .hero-search-label {
     font-size: 0.66rem; font-weight: 800; letter-spacing: 0.08em;
-    text-transform: uppercase; color: #241640;
+    text-transform: uppercase; color: #c9a7ff;
   }
   .hero-search-seg input,
   .hero-search-seg select {
-    border: 0; background: transparent; color: #17122b; width: 100%;
+    border: 0; background: transparent; color: #f5f2ec; width: 100%;
     font: inherit; font-size: 0.92rem; padding: 0.1rem 0; outline: none;
   }
+  .hero-search-seg input::placeholder { color: #9a93ad; }
+  .hero-search-seg select option { color: #17122b; background: #ffffff; }
   .hero-search-btn {
     flex: 0 0 auto; display: flex; align-items: center; gap: 0.45rem;
     background: #ff7518; color: #fff; border: 0; border-radius: 999px;
