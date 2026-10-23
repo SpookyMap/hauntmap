@@ -1506,6 +1506,159 @@ def watch_page(request: Request):
         {"request": request, "entries": entries})
 
 
+# ---------------------------------------------------------------- virtual tour
+
+VT_ROUTE_LEN = 12
+
+
+def _vt_video_pool(conn) -> list[dict]:
+    """Playable-video pins eligible for a Virtual Tour: a TikTok /video/
+    URL or an uploaded video file, with a thumbnail and map coordinates,
+    never 2025-tagged (the same currency rule as Tonight's Display). Each
+    dict carries _views (detail-page views) as the popularity signal —
+    votes are near-zero on video pins, views are what actually rank them.
+    A display listed twice (same title + town) appears once."""
+    rows = conn.execute(
+        """SELECT e.*, COALESCE(v.views, 0) AS _views FROM entries e
+           LEFT JOIN (SELECT CAST(substr(path, 4) AS INTEGER) AS eid,
+                             COUNT(*) AS views
+                      FROM page_views WHERE path LIKE '/d/%' GROUP BY eid) v
+             ON v.eid = e.id
+           WHERE e.hidden = 0
+             AND ((e.tiktok_url IS NOT NULL AND e.tiktok_url LIKE '%/video/%')
+                  OR LOWER(e.media_path) LIKE '%.mp4'
+                  OR LOWER(e.media_path) LIKE '%.webm'
+                  OR LOWER(e.media_path) LIKE '%.mov')
+             AND e.thumb_path IS NOT NULL AND TRIM(e.thumb_path) != ''
+             AND e.lat IS NOT NULL AND e.lng IS NOT NULL
+             AND NOT (',' || COALESCE(e.tags, '') || ',') LIKE '%,2025,%'
+           ORDER BY e.id""").fetchall()
+    out, seen_keys = [], set()
+    for r in rows:
+        d = row_to_dict(r)
+        key = ((d.get("title") or "").strip().lower(), d["town_label"])
+        if key in seen_keys:
+            continue
+        seen_keys.add(key)
+        d["_state"] = extract_state(d.get("town") or "")
+        out.append(d)
+    return out
+
+
+def _vt_pick(pool: list[dict], key, n: int = VT_ROUTE_LEN,
+             town_cap: int = 2) -> list[dict]:
+    """Greedy route pick: rank by key, cap stops per town so one town can't
+    eat the route (geographic variety), then backfill past the cap if the
+    pool runs short."""
+    ranked = sorted(pool, key=key)
+    picked, counts = [], {}
+    for d in ranked:
+        if len(picked) >= n:
+            break
+        t = d["town_label"]
+        if counts.get(t, 0) >= town_cap:
+            continue
+        counts[t] = counts.get(t, 0) + 1
+        picked.append(d)
+    if len(picked) < n:
+        have = {d["id"] for d in picked}
+        for d in ranked:
+            if len(picked) >= n:
+                break
+            if d["id"] not in have:
+                picked.append(d)
+    return picked
+
+
+@app.get("/virtual-tour", response_class=HTMLResponse)
+def virtual_tour_page(request: Request, route: str = "tonight",
+                      mode: str = ""):
+    """Virtual Tour (Dan, Oct 23 — STAGED for preview): a lean-back guided
+    run through the best video haunts on the map, presented as one tour.
+    Routes are rebuilt from live data on every load, so the 'nightly
+    rebuild' is automatic — no cron: Tonight's Tour ranks the whole video
+    pool by detail-page views; Scariest in America ranks the creepy+
+    pool by scare level, then views. Both cap at 2 stops per town.
+
+    HauntMap TV (Dan, Oct 23, scope extension — same staged branch):
+    mode=tv renders the same player machinery as a lean-back TV surface
+    with a channel picker. Channels are Tonight's Tour + Scariest plus
+    the two state/metro playlists the video supply actually supports —
+    NYC Metro (every video pin in the pool is downstate NY: the five
+    boroughs + Long Island) and New Jersey — each ranked by views with
+    the same 2-per-town cap. A channel thinner than 6 stops is hidden,
+    exactly like the Scariest tab rule."""
+    with get_conn(DB_PATH) as conn:
+        pool = _vt_video_pool(conn)
+    by_views = lambda d: (-d["_views"], -d["votes"], d["id"])  # noqa: E731
+    tonight = _vt_pick(pool, key=by_views)
+    scare_rank = {"extreme": 0, "terrifying": 1, "creepy": 2}
+    scary_pool = [d for d in pool if d.get("scare_level") in scare_rank]
+    scariest = _vt_pick(
+        scary_pool,
+        key=lambda d: (scare_rank[d["scare_level"]], -d["_views"],
+                       -d["votes"], d["id"]))
+    nyc = _vt_pick([d for d in pool if d["_state"] == "NY"], key=by_views)
+    nj = _vt_pick([d for d in pool if d["_state"] == "NJ"], key=by_views)
+    routes = {"tonight": tonight}
+    if len(scariest) >= 6:  # thinner than that isn't a tour — hide the tab
+        routes["scariest"] = scariest
+    if len(nyc) >= 6:
+        routes["nyc"] = nyc
+    if len(nj) >= 6:
+        routes["nj"] = nj
+    if route not in routes:
+        route = "tonight"
+    is_tv = mode == "tv"
+    channel_meta = [
+        {"id": "tonight", "label": "Tonight's Tour", "emoji": "🎬",
+         "title": "🎬 Tonight's Virtual Tour",
+         "sub": "The best video haunts in the country, one after another "
+                "— sit back and ride along.",
+         "blurb": "Tonight's best video haunts nationwide, ranked by "
+                  "what haunters are actually watching."},
+        {"id": "scariest", "label": "Scariest in America", "emoji": "😱",
+         "title": "😱 Scariest in America — Virtual Tour",
+         "sub": "The most terrifying video haunts on the map, ranked by "
+                "scare level — enter if you dare.",
+         "blurb": "The creepiest, most terrifying video haunts on the "
+                  "map, ranked by scare level."},
+        {"id": "nyc", "label": "NYC Metro", "emoji": "🗽",
+         "title": "🗽 NYC Metro — Virtual Tour",
+         "sub": "Video haunts across the five boroughs and Long Island "
+                "— the densest haunting in America, one stop at a time.",
+         "blurb": "The five boroughs + Long Island: Dyker Heights, "
+                  "Staten Island, Lindenhurst and more."},
+        {"id": "nj", "label": "New Jersey Haunts", "emoji": "🎃",
+         "title": "🎃 New Jersey Haunts — Virtual Tour",
+         "sub": "Jersey's best video haunts — Bergen, Essex, Morris and "
+                "beyond, ranked by views.",
+         "blurb": "Dumont, Hawthorne, Ridgewood, Hackensack — Jersey's "
+                  "most-watched video haunts."},
+    ]
+    channels = [c for c in channel_meta if c["id"] in routes]
+
+    def slim(stops: list[dict]) -> list[dict]:
+        return [{
+            "id": d["id"], "title": d["title"], "town": d["town"],
+            "town_label": d["town_label"], "state": d["_state"],
+            "address": d.get("address") or "",
+            "lat": d["lat"], "lng": d["lng"],
+            "thumb_url": d["thumb_url"], "media_url": d["media_url"],
+            "media_type": d["media_type"],
+            "tiktok_url": d.get("tiktok_url") or "",
+            "creator": d.get("display_name") or "",
+            "scare": d.get("scare_level") or "",
+            "votes": d["votes"], "views": d["_views"],
+        } for d in stops]
+
+    payload = {name: slim(stops) for name, stops in routes.items()}
+    return templates.TemplateResponse(request, "virtual_tour.html",
+        {"request": request, "routes": payload, "active_route": route,
+         "has_scariest": "scariest" in routes,
+         "channels": channels, "is_tv": is_tv})
+
+
 @app.get("/tour", response_class=HTMLResponse)
 def tour_page(request: Request, s: str = "", cat: str = "halloween"):
     cat = cat if cat in CATEGORIES else "halloween"

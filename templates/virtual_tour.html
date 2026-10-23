@@ -1,0 +1,476 @@
+{% extends "base.html" %}
+{% block title %}{% if is_tv %}HauntMap TV{% else %}Virtual Tour{% endif %} &middot; {{ site_name }}{% endblock %}
+{% block head %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+{% endblock %}
+{% block content %}
+<div class="vt-head">
+  {% if is_tv %}
+  <div class="vt-tv-brand">
+    <p class="vt-tv-logo">&#x1F4FA; HauntMap <span>TV</span></p>
+    <p class="vt-tv-tag">Lean back. Press play. Ride the haunts.</p>
+    <a class="vt-mode-toggle" href="/virtual-tour">&#x1F9ED; Exit TV mode — regular Virtual Tour</a>
+  </div>
+  {% else %}
+  <a class="vt-tv-entry" href="/virtual-tour?mode=tv">&#x1F4FA; HauntMap TV — lean back &amp; watch the channels &rarr;</a>
+  {% endif %}
+  <h1 id="vt-title">&#x1F3AC; Tonight's Virtual Tour</h1>
+  <p class="vt-sub" id="vt-sub">The best video haunts in the country, one after another — sit back and ride along.</p>
+  <div class="vt-tabs" role="tablist" aria-label="Choose a channel">
+    {% for c in channels %}
+    <a href="/virtual-tour?route={{ c.id }}{% if is_tv %}&mode=tv{% endif %}" class="vt-tab{% if active_route == c.id %} vt-tab-on{% endif %}" data-vt-route="{{ c.id }}" role="tab">{{ c.emoji }} {{ c.label }}</a>
+    {% endfor %}
+  </div>
+</div>
+
+{% if is_tv %}
+<section class="vt-picker" id="vt-picker" hidden aria-label="HauntMap TV channels">
+  <h2 class="vt-picker-title">&#x1F4FA; Pick a channel</h2>
+  <p class="vt-picker-sub">Every channel is a non-stop ride through real video haunts. Pick one and it plays stop after stop — uploaded videos roll straight into the next house; on TikTok stops, tap the video, watch, then hit the big &#x25B6; Next button.</p>
+  <div class="vt-picker-grid">
+    {% for c in channels %}
+    <article class="vt-channel" data-vt-channel="{{ c.id }}">
+      {% if routes[c.id] %}<img src="{{ routes[c.id][0].thumb_url }}" alt="" loading="lazy">{% endif %}
+      <div class="vt-channel-body">
+        <h3>{{ c.emoji }} {{ c.label }}</h3>
+        <p>{{ c.blurb }}</p>
+        <p class="vt-channel-meta">{{ routes[c.id]|length }} video haunts</p>
+        <button type="button" class="btn btn-big vt-channel-play" data-vt-play="{{ c.id }}">&#x25B6;&#xFE0F; Play channel</button>
+      </div>
+    </article>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+<div class="vt-main" id="vt-main">
+  <div class="vt-left">
+    <div class="vt-stage" id="vt-stage"></div>
+    <div class="vt-tv-next" id="vt-tv-next" hidden>
+      <p class="vt-tv-next-note">&#x1F4FA; <strong>HauntMap TV:</strong> TikTok stops can't auto-play the next house — watch this one, then ride on:</p>
+      <button type="button" class="btn vt-tv-next-btn" id="vt-tv-next-btn">&#x25B6; Next haunt</button>
+    </div>
+    <div class="vt-info" id="vt-info">
+      <h2 class="vt-stop-title"><a id="vt-stop-link" href="#">&nbsp;</a></h2>
+      <p class="meta" id="vt-stop-meta"></p>
+      <p class="entry-address" id="vt-stop-address" hidden></p>
+      <p class="scare-badge" id="vt-stop-scare" hidden></p>
+    </div>
+    <div class="vt-controls">
+      <button type="button" class="btn vt-nav" id="vt-prev">&larr; Prev house</button>
+      <span class="vt-counter" id="vt-counter">House 1 of 12</span>
+      <button type="button" class="btn vt-nav vt-next" id="vt-next">Next house &rarr;</button>
+    </div>
+    <div class="vt-progress"><div class="vt-progress-fill" id="vt-progress-fill"></div></div>
+  </div>
+  <aside class="vt-side">
+    <div id="vt-map" class="vt-map"></div>
+    <div class="vt-stops" id="vt-stops" aria-label="Tour stops"></div>
+  </aside>
+</div>
+
+<section class="vt-end" id="vt-end" hidden>
+  <p class="vt-end-emoji">&#x1F383;</p>
+  <h2 id="vt-end-title">That's tonight's tour!</h2>
+  <p class="vt-end-stats" id="vt-end-stats"></p>
+  <p class="vt-end-copy">Loved the ride? Take it for real — every stop drops into the tour builder with its address, ready to route in Google Maps.</p>
+  <button type="button" class="btn btn-big" id="vt-build">&#x1F9ED; Build this as a real tour</button>
+  {% if is_tv %}<button type="button" class="btn vt-channels-btn" id="vt-channels">&#x1F4FA; More channels — back to HauntMap TV guide</button>{% endif %}
+  <button type="button" class="btn vt-replay" id="vt-replay">&#x21BB; Replay tour</button>
+  {% with sms_source = "virtual-tour" %}{% include "_text_alerts.html" %}{% endwith %}
+</section>
+
+<style>
+  .vt-head h1 { margin-bottom: 0.3rem; }
+  .vt-sub { color: var(--muted); margin-top: 0; }
+  .vt-tabs { display: flex; gap: 0.5rem; flex-wrap: wrap; margin: 0.6rem 0 1rem; }
+  .vt-tab {
+    padding: 0.5rem 1.1rem; border-radius: 999px; text-decoration: none;
+    background: var(--bg2); color: var(--ink); border: 1px solid #443366; font-weight: 600;
+  }
+  .vt-tab-on { background: var(--accent); color: #1a0f00; border-color: var(--accent); font-weight: 800; }
+  /* ---- HauntMap TV (staged Oct 23) ---- */
+  .vt-tv-entry {
+    display: block; margin: 0 0 1rem; padding: 0.85rem 1.1rem; border-radius: 12px;
+    background: linear-gradient(90deg, #2b1650, #4a1570); border: 2px solid var(--accent2, #b266ff);
+    color: #fff; font-weight: 800; font-size: 1.05rem; text-decoration: none; text-align: center;
+  }
+  .vt-tv-brand { text-align: center; margin-bottom: 0.8rem; }
+  .vt-tv-logo { font-size: 2.3rem; font-weight: 900; margin: 0.2rem 0 0; letter-spacing: 0.01em; }
+  .vt-tv-logo span { background: var(--accent); color: #1a0f00; border-radius: 8px; padding: 0 0.45rem; }
+  .vt-tv-tag { color: var(--muted); font-weight: 700; margin: 0.25rem 0 0.5rem; }
+  .vt-mode-toggle { color: var(--accent2, #c9a7ff); font-weight: 600; }
+  body.hm-tv .vt-head h1 { font-size: 1.7rem; }
+  body.hm-tv .vt-stage { border-color: var(--accent); border-width: 3px; min-height: 340px; }
+  body.hm-tv .vt-nav { min-height: 60px; font-size: 1.08rem; padding: 0.85rem 1.3rem; }
+  body.hm-tv .vt-counter { font-size: 1.05rem; }
+  .vt-picker { margin: 0.5rem 0 1.2rem; }
+  .vt-picker-title { margin-bottom: 0.25rem; }
+  .vt-picker-sub { color: var(--muted); margin-top: 0; max-width: 46rem; }
+  .vt-picker-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 0.9rem; }
+  .vt-channel { background: var(--card); border: 2px solid #3a2a5e; border-radius: 14px; overflow: hidden; }
+  .vt-channel img { width: 100%; height: 128px; object-fit: cover; display: block; }
+  .vt-channel-body { padding: 0.75rem 0.85rem 0.95rem; }
+  .vt-channel-body h3 { margin: 0 0 0.35rem; font-size: 1.12rem; }
+  .vt-channel-body p { margin: 0 0 0.5rem; font-size: 0.92rem; }
+  .vt-channel-meta { color: var(--muted); font-weight: 700; }
+  .vt-tv-next {
+    margin-top: 0.8rem; padding: 0.8rem; border: 2px dashed var(--accent);
+    border-radius: 12px; background: #241243; text-align: center;
+  }
+  .vt-tv-next-note { margin: 0 0 0.6rem; }
+  .vt-tv-next-btn {
+    background: var(--accent); color: #1a0f00; border-color: var(--accent);
+    font-weight: 900; font-size: 1.25rem; min-height: 60px; padding: 0.8rem 2.2rem;
+    animation: vt-pulse 1.6s ease-in-out infinite;
+  }
+  @keyframes vt-pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.045); } }
+  .vt-channels-btn { margin-top: 0.7rem; margin-right: 0.5rem; }
+  .vt-main { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 1.1rem; align-items: start; }
+  /* Break out of the 720px reading column on laptop (same spirit as
+     /map's full-bleed): the stage + rail need the width, and the Prev /
+     Next controls overflow the narrow column otherwise. */
+  @media (min-width: 900px) {
+    .vt-main { width: min(1120px, calc(100vw - 2rem)); margin-left: 50%; transform: translateX(-50%); }
+    .vt-picker { width: min(1120px, calc(100vw - 2rem)); margin-left: 50%; transform: translateX(-50%); }
+  }
+  .vt-stage {
+    position: relative; background: #0d0916; border: 2px solid #3a2566;
+    border-radius: 14px; overflow: hidden; min-height: 300px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .vt-stage .tt-facade { width: 100%; }
+  .vt-stage .tt-facade img { width: 100%; max-height: 62vh; object-fit: contain; display: block; background: #0d0916; }
+  .vt-stage video { width: 100%; max-height: 62vh; display: block; background: #000; }
+  .vt-stage .tiktok-embed { margin: 0 auto; }
+  .vt-info h2 { margin: 0.7rem 0 0.2rem; font-size: 1.35rem; }
+  .vt-info h2 a { color: var(--ink); text-decoration: none; }
+  .vt-info .meta { margin: 0.1rem 0; }
+  .vt-controls {
+    display: flex; align-items: center; justify-content: space-between; gap: 0.7rem;
+    margin-top: 0.9rem;
+  }
+  .vt-nav { min-height: 52px; padding: 0.7rem 1.1rem; font-weight: 700; flex: 0 0 auto; white-space: nowrap; }
+  .vt-nav:disabled { opacity: 0.4; cursor: default; }
+  .vt-next { background: var(--accent); color: #1a0f00; border-color: var(--accent); font-weight: 800; }
+  .vt-counter { font-weight: 700; color: var(--muted); white-space: nowrap; }
+  .vt-progress { height: 8px; background: #2c2145; border-radius: 99px; margin-top: 0.7rem; overflow: hidden; }
+  .vt-progress-fill { height: 100%; background: linear-gradient(90deg, var(--accent2), var(--accent)); width: 0; transition: width 0.3s ease; }
+  .vt-side { display: flex; flex-direction: column; gap: 0.8rem; }
+  .vt-map { height: 260px; border-radius: 14px; border: 2px solid #3a2566; overflow: hidden; background: #1d1530; z-index: 0; }
+  .vt-stops { display: flex; flex-direction: column; gap: 0.45rem; max-height: 430px; overflow-y: auto; }
+  .vt-stop {
+    display: flex; align-items: center; gap: 0.6rem; text-align: left; cursor: pointer;
+    background: var(--card); border: 1px solid #3a2a5e; border-radius: 10px; padding: 0.4rem 0.55rem;
+    color: var(--ink); font: inherit;
+  }
+  .vt-stop img { width: 52px; height: 40px; object-fit: cover; border-radius: 6px; flex: 0 0 auto; }
+  .vt-stop-n {
+    flex: 0 0 auto; width: 24px; height: 24px; border-radius: 50%; background: #3a2566;
+    color: var(--ink); font-size: 0.8rem; font-weight: 800; display: flex; align-items: center; justify-content: center;
+  }
+  .vt-stop-t { font-size: 0.86rem; font-weight: 600; line-height: 1.25; }
+  .vt-stop-t small { display: block; color: var(--muted); font-weight: 500; }
+  .vt-stop-on { border-color: var(--accent); background: #322154; }
+  .vt-stop-on .vt-stop-n { background: var(--accent); color: #1a0f00; }
+  .vt-end { text-align: center; padding: 2rem 0 1rem; }
+  .vt-end-emoji { font-size: 3.2rem; margin: 0; }
+  .vt-end-stats { color: var(--muted); font-weight: 700; }
+  .vt-end-copy { max-width: 34rem; margin: 0.6rem auto 1rem; }
+  .vt-replay { margin-top: 0.7rem; }
+  .vt-end .text-alerts { text-align: left; margin-top: 1.6rem; }
+  @media (max-width: 899px) {
+    .vt-main { grid-template-columns: minmax(0, 1fr); }
+    .vt-stage { min-height: 240px; }
+    .vt-stage .tt-facade img { max-height: 52vh; }
+    .vt-map { height: 210px; }
+    .vt-stops { flex-direction: row; overflow-x: auto; overflow-y: hidden; max-height: none; padding-bottom: 0.3rem; }
+    .vt-stop { flex: 0 0 auto; max-width: 230px; }
+    .vt-controls { flex-wrap: wrap; }
+    .vt-counter { order: -1; width: 100%; text-align: center; }
+    .vt-nav { flex: 1 1 40%; }
+    .vt-tv-logo { font-size: 1.9rem; }
+    .vt-picker-grid { grid-template-columns: minmax(0, 1fr); }
+    /* Phone: channel tabs in a compact 2x2 grid instead of one per row */
+    .vt-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 0.45rem; }
+    .vt-tab { text-align: center; padding: 0.5rem 0.35rem; font-size: 0.92rem; }
+  }
+</style>
+<script>
+var VT_ROUTES = {{ routes|tojson }};
+var VT_ACTIVE = {{ active_route|tojson }};
+var VT_CHANNELS = {{ channels|tojson }};
+var VT_TV = {{ is_tv|tojson }};
+var VT_SCARE = {
+  family: ['&#x1F60A;', 'Family-friendly'], spooky: ['&#x1F47B;', 'Spooky'],
+  creepy: ['&#x1F9DB;', 'Creepy'], terrifying: ['&#x1F631;', 'Terrifying'],
+  extreme: ['&#x1F480;', 'Extreme']
+};
+(function () {
+  var stops = [], idx = 0, routeName = VT_ACTIVE, map = null, markers = [], line = null, curMarker = null;
+  var stage = document.getElementById('vt-stage'),
+      main = document.getElementById('vt-main'),
+      endCard = document.getElementById('vt-end'),
+      picker = document.getElementById('vt-picker'),
+      tvNext = document.getElementById('vt-tv-next'),
+      stopsBox = document.getElementById('vt-stops'),
+      counter = document.getElementById('vt-counter'),
+      fill = document.getElementById('vt-progress-fill'),
+      prevBtn = document.getElementById('vt-prev'),
+      nextBtn = document.getElementById('vt-next');
+  if (VT_TV) document.body.classList.add('hm-tv');
+
+  function channelMeta(name) {
+    for (var i = 0; i < VT_CHANNELS.length; i++) {
+      if (VT_CHANNELS[i].id === name) return VT_CHANNELS[i];
+    }
+    return VT_CHANNELS[0] || { title: '', sub: '' };
+  }
+
+  function havMi(a, b) {
+    var r = 3958.8, p1 = a.lat * Math.PI / 180, p2 = b.lat * Math.PI / 180,
+        dp = (b.lat - a.lat) * Math.PI / 180, dl = (b.lng - a.lng) * Math.PI / 180,
+        h = Math.sin(dp / 2) ** 2 + Math.cos(p1) * Math.cos(p2) * Math.sin(dl / 2) ** 2;
+    return 2 * r * Math.asin(Math.sqrt(h));
+  }
+  function routeMiles() {
+    var m = 0;
+    for (var i = 1; i < stops.length; i++) m += havMi(stops[i - 1], stops[i]);
+    return Math.round(m);
+  }
+  function stateCount() {
+    var s = {};
+    stops.forEach(function (x) { if (x.state) s[x.state] = 1; });
+    return Object.keys(s).length;
+  }
+
+  function renderStops() {
+    stopsBox.innerHTML = '';
+    stops.forEach(function (s, i) {
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'vt-stop' + (i === idx ? ' vt-stop-on' : '');
+      b.innerHTML = '<img src="' + s.thumb_url + '" alt="" loading="lazy">' +
+        '<span class="vt-stop-n">' + (i + 1) + '</span>' +
+        '<span class="vt-stop-t">' + s.title + '<small>' + s.town_label + '</small></span>';
+      b.addEventListener('click', function () { go(i); });
+      stopsBox.appendChild(b);
+    });
+  }
+
+  function renderStage() {
+    var s = stops[idx];
+    stage.innerHTML = '';
+    var isTikTok = !!(s.tiktok_url && s.tiktok_url.indexOf('/video/') !== -1);
+    if (isTikTok) {
+      var ttId = s.tiktok_url.split('/video/')[1].split('?')[0];
+      var f = document.createElement('div');
+      f.className = 'tt-facade';
+      f.setAttribute('data-tt-url', s.tiktok_url);
+      f.setAttribute('data-tt-id', ttId);
+      f.setAttribute('role', 'button');
+      f.setAttribute('tabindex', '0');
+      f.setAttribute('aria-label', 'Play TikTok video');
+      f.innerHTML = (s.thumb_url ? '<img src="' + s.thumb_url + '" alt="">' : '<div class="tt-facade-blank">&#x1F383;</div>') +
+        '<span class="tt-play">&#x25B6;</span><span class="tt-facade-label">&#x1F3B5; Tap to play video</span>';
+      f.addEventListener('click', function () { hmLoadTikTok(f); });
+      f.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); hmLoadTikTok(f); }
+      });
+      stage.appendChild(f);
+    } else {
+      var v = document.createElement('video');
+      v.src = s.media_url;
+      if (s.thumb_url) v.poster = s.thumb_url;
+      v.controls = true; v.playsInline = true; v.preload = 'metadata';
+      // Lean-back (TV mode): uploaded videos play straight through and
+      // roll into the next stop on 'ended' — the handler below is the
+      // auto-advance; autoplay itself is best-effort (browsers may still
+      // require one tap, and we never pretend otherwise).
+      if (VT_TV) v.autoplay = true;
+      v.addEventListener('ended', function () { if (idx < stops.length - 1) go(idx + 1); else finish(); });
+      stage.appendChild(v);
+      if (VT_TV) { try { var pr = v.play(); if (pr && pr.catch) pr.catch(function () {}); } catch (e) {} }
+    }
+    // TV mode TikTok stops: TikTok embeds expose no 'ended' event and
+    // can't be auto-advanced, so the Next prompt goes big and honest.
+    if (tvNext) {
+      tvNext.hidden = !(VT_TV && isTikTok);
+      var nb = document.getElementById('vt-tv-next-btn');
+      if (nb) nb.textContent = idx === stops.length - 1 ? '▶ Finish channel ✓' : '▶ Next haunt';
+    }
+    var link = document.getElementById('vt-stop-link');
+    link.textContent = s.title;
+    link.href = '/d/' + s.id;
+    var meta = s.town_label;
+    if (s.creator) meta += ' · ' + s.creator;
+    if (s.views) meta += ' · \uD83D\uDC41\uFE0F ' + s.views + ' views';
+    document.getElementById('vt-stop-meta').textContent = meta;
+    var addr = document.getElementById('vt-stop-address');
+    if (s.address) { addr.hidden = false; addr.innerHTML = '&#x1F4CD; ' + s.address; }
+    else addr.hidden = true;
+    var scare = document.getElementById('vt-stop-scare');
+    if (s.scare && VT_SCARE[s.scare]) {
+      scare.hidden = false;
+      scare.innerHTML = VT_SCARE[s.scare][0] + ' ' + VT_SCARE[s.scare][1];
+    } else scare.hidden = true;
+    counter.textContent = (VT_TV ? '📺 ' : '') + 'House ' + (idx + 1) + ' of ' + stops.length;
+    fill.style.width = Math.round(100 * (idx + 1) / stops.length) + '%';
+    prevBtn.disabled = idx === 0;
+    nextBtn.textContent = idx === stops.length - 1 ? 'Finish tour ✓' : 'Next house →';
+    renderStops();
+    markMap();
+    try { history.replaceState(null, '', '#stop-' + (idx + 1)); } catch (e) {}
+  }
+
+  function endShown() { return !endCard.hidden; }
+  function pickerShown() { return picker && !picker.hidden; }
+
+  function markMap() {
+    if (!map) return;
+    if (curMarker) { map.removeLayer(curMarker); curMarker = null; }
+    var s = stops[idx];
+    curMarker = L.circleMarker([s.lat, s.lng], {
+      radius: 11, color: '#14101d', weight: 2, fillColor: '#ff7b1c', fillOpacity: 1
+    }).addTo(map).bindPopup('<strong>' + s.title + '</strong><br>' + s.town_label);
+    map.panTo([s.lat, s.lng]);
+    if (map.getZoom() < 8) map.setZoom(8);
+  }
+
+  function initMap() {
+    if (!window.L || !stops.length) return;
+    if (map) { map.remove(); map = null; }
+    markers = [];
+    map = L.map('vt-map', { scrollWheelZoom: false });
+    map.invalidateSize();
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19, attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+    var pts = stops.map(function (s) { return [s.lat, s.lng]; });
+    line = L.polyline(pts, { color: '#b266ff', weight: 3, dashArray: '7 7', opacity: 0.9 }).addTo(map);
+    stops.forEach(function (s, i) {
+      markers.push(L.circleMarker([s.lat, s.lng], {
+        radius: 6, color: '#14101d', weight: 1.5, fillColor: '#b266ff', fillOpacity: 0.95
+      }).addTo(map).bindPopup((i + 1) + '. <strong>' + s.title + '</strong><br>' + s.town_label));
+    });
+    map.fitBounds(line.getBounds(), { padding: [24, 24] });
+  }
+
+  function go(i) {
+    idx = Math.max(0, Math.min(i, stops.length - 1));
+    endCard.hidden = true;
+    if (picker) picker.hidden = true;
+    main.style.display = '';
+    renderStage();
+    stage.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  }
+
+  function finish() {
+    main.style.display = 'none';
+    if (picker) picker.hidden = true;
+    endCard.hidden = false;
+    var meta = channelMeta(routeName);
+    document.getElementById('vt-end-title').textContent =
+      'That\'s the ' + meta.label + (VT_TV ? ' channel' : ' tour') + '!';
+    document.getElementById('vt-end-stats').textContent =
+      stops.length + ' video haunts · ' + stateCount() + ' states · ~' + routeMiles() + ' miles of haunting';
+    try { history.replaceState(null, '', '#end'); } catch (e) {}
+    endCard.scrollIntoView({ block: 'start', behavior: 'smooth' });
+  }
+
+  function showPicker(scroll) {
+    if (!picker) return;
+    endCard.hidden = true;
+    main.style.display = 'none';
+    picker.hidden = false;
+    try { history.replaceState(null, '', '#channels'); } catch (e) {}
+    if (scroll) picker.scrollIntoView({ block: 'start', behavior: 'smooth' });
+  }
+
+  function playChannel(name) {
+    setRoute(name);
+    if (picker) picker.hidden = true;
+    main.style.display = '';
+    stage.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  }
+
+  function setRoute(name) {
+    if (!VT_ROUTES[name]) return;
+    routeName = name;
+    stops = VT_ROUTES[name];
+    idx = 0;
+    document.querySelectorAll('.vt-tab').forEach(function (t) {
+      t.classList.toggle('vt-tab-on', t.getAttribute('data-vt-route') === name);
+    });
+    var meta = channelMeta(name);
+    document.getElementById('vt-title').innerHTML = meta.title;
+    document.getElementById('vt-sub').textContent = meta.sub;
+    endCard.hidden = true;
+    main.style.display = '';
+    initMap();
+    renderStage();
+  }
+
+  document.querySelectorAll('.vt-tab').forEach(function (t) {
+    t.addEventListener('click', function (e) {
+      e.preventDefault();
+      if (picker) picker.hidden = true;
+      setRoute(t.getAttribute('data-vt-route'));
+    });
+  });
+  document.querySelectorAll('[data-vt-play]').forEach(function (b) {
+    b.addEventListener('click', function () { playChannel(b.getAttribute('data-vt-play')); });
+  });
+  prevBtn.addEventListener('click', function () { if (idx > 0) go(idx - 1); });
+  nextBtn.addEventListener('click', function () {
+    if (idx < stops.length - 1) go(idx + 1); else finish();
+  });
+  var tvNextBtn = document.getElementById('vt-tv-next-btn');
+  if (tvNextBtn) tvNextBtn.addEventListener('click', function () {
+    if (idx < stops.length - 1) go(idx + 1); else finish();
+  });
+  var channelsBtn = document.getElementById('vt-channels');
+  if (channelsBtn) channelsBtn.addEventListener('click', function () { showPicker(true); });
+  document.addEventListener('keydown', function (e) {
+    if (e.target && /INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return;
+    if (pickerShown()) return;
+    if (e.key === 'ArrowRight' && !endShown()) { if (idx < stops.length - 1) go(idx + 1); else finish(); }
+    if (e.key === 'ArrowLeft' && !endShown() && idx > 0) go(idx - 1);
+  });
+  document.getElementById('vt-replay').addEventListener('click', function () { go(0); });
+  document.getElementById('vt-build').addEventListener('click', function () {
+    var tour = [];
+    try { tour = JSON.parse(localStorage.getItem('haunt_tour') || '[]'); } catch (e) {}
+    stops.forEach(function (s) {
+      if (!tour.some(function (x) { return x.id === s.id; })) {
+        tour.push({ id: s.id, title: s.title, town: s.town, lat: s.lat, lng: s.lng, thumb: s.thumb_url });
+      }
+    });
+    try { localStorage.setItem('haunt_tour', JSON.stringify(tour)); } catch (e) {}
+    location.href = '/tour';
+  });
+
+  function boot() {
+    var initialHash = location.hash || '';
+    var qs = new URLSearchParams(location.search);
+    var explicitRoute = qs.has('route');
+    setRoute(VT_ACTIVE);
+    var m = initialHash.match(/^#stop-(\d+)$/);
+    if (m) go(Math.min(parseInt(m[1], 10) - 1, stops.length - 1));
+    else if (initialHash === '#end' && stops.length) finish();
+    else if (initialHash === '#channels') showPicker(false);
+    // TV mode opens on the channel guide unless a channel / stop was
+    // deep-linked — picking a channel is the lean-back front door.
+    else if (VT_TV && !explicitRoute) showPicker(false);
+  }
+  // Boot after layout settles so Leaflet measures the real container size
+  // (a 0-height read makes fitBounds zoom to the max and strands the map).
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function () { requestAnimationFrame(boot); });
+  } else {
+    requestAnimationFrame(boot);
+  }
+})();
+</script>
+{% endblock %}
