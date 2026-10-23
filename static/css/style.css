@@ -1169,6 +1169,21 @@ a.game-card:hover { border-color: #ff7518; transform: translateY(-2px); }
 .tt-featured .tt-facade img { width: 100%; aspect-ratio: 9 / 16; object-fit: cover; display: block; }
 .tt-featured .tt-play { width: 64px; height: 64px; font-size: 1.45rem; }
 
+/* ============ z97: RAIL EMBED SCALE BOX (Dan, Oct 23) ============
+   A played homepage promo embed keeps TikTok's native 325px stage
+   inside .tt-scalebox-inner (see hmLoadTikTok / hmTtFitRail in
+   base.html); the box takes the rail column's width and clips while
+   JS scales the stage to fit and tracks its height. The player is
+   never cropped and the rail never widens. The blockquote's 578px
+   min-height is the v1 player's exact height at 325 wide and a
+   floor for the v0 embed until TikTok's own height message lands,
+   so the box never collapses mid-load. */
+.tt-scalebox { position: relative; width: 100%; overflow: hidden; border-radius: 14px; background: #000; }
+.tt-scalebox-inner { width: 325px; transform-origin: 0 0; }
+.tt-scalebox .tiktok-embed { margin: 0; min-height: 578px; }
+.tt-featured .tt-facade + .tt-scalebox,
+.tt-featured .tt-scalebox + .tt-facade { margin-top: 0.9rem; }
+
 /* Phone header compaction (Dan, Oct 21): the banner was eating half the phone
    screen — shrink every stacked piece on small screens only. Desktop untouched. */
 @media (max-width: 760px) {

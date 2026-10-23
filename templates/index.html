@@ -257,17 +257,18 @@ function hmFullHomepage() {
   </section>
   {% endif %}
 
-  {% if trending %}
-  {% with sms_source = "homepage" %}{% include "_text_alerts.html" %}{% endwith %}
-  {% endif %}
-
   {# z96 (Dan, Oct 23): Tonight's Display, Daily Fright and the Haunt
-     Bracket move INTO the hero photo panel, under Text Alerts — hero
-     copies in the z67 pattern; the below-band originals hide at
-     >=761px (style.css z96), so each card shows exactly once per
-     viewport and phones keep theirs in the Tonight cluster below,
-     untouched. The panel and its backdrop art are unchanged — the
-     block simply grows taller to fit the extra windows. #}
+     Bracket move INTO the hero photo panel — hero copies in the z67
+     pattern; the below-band originals hide at >=761px (style.css
+     z96), so each card shows exactly once per viewport and phones
+     keep theirs in the Tonight cluster below, untouched. The panel
+     and its backdrop art are unchanged — the block simply grows
+     taller to fit the extra windows.
+     z97 (Dan, Oct 23): the in-panel Text Alerts block moves to the
+     BOTTOM of the panel, under the Haunt Bracket — see the include
+     after the bracket sections below. Order inside the panel is now:
+     Near You -> Trending -> Tonight's -> Daily Fright -> Bracket ->
+     Text Alerts. #}
   {% if tonight %}
   <section class="tonight-band hero-copy" aria-label="Tonight's Display">
     <a class="tonight-card" href="/d/{{ tonight.id }}">
@@ -309,6 +310,14 @@ function hmFullHomepage() {
     </a>
   </section>
   {% endif %}
+  {% endif %}
+
+  {# z97 (Dan, Oct 23): Text Alerts last inside the hero panel, under
+     the Haunt Bracket (moved from between Trending and Tonight's).
+     Same include, same homepage sms_source, same {% if trending %}
+     guard it always had — only its seat in the panel changed. #}
+  {% if trending %}
+  {% with sms_source = "homepage" %}{% include "_text_alerts.html" %}{% endwith %}
   {% endif %}
 </div>
 </div>
