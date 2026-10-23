@@ -318,6 +318,22 @@ a { color: var(--accent); }
      readable (the old 5-across squeeze truncated them to "All s…", "Ty…") */
   .filter-row select, .filter-row .town-search, .filter-row .filter-chip { flex: 0 1 calc(50% - 0.4rem); }
 }
+/* Phone (Dan Oct 23): homepage state filter buttons go compact — name stacked
+   over the count pill at ~half the old height, 4 across at 390px. Long names
+   still fit: worst single word ("Massachusetts") measures ~79px at this size
+   vs ~79px of text room per button. Desktop rendering unchanged. */
+@media (max-width: 760px) {
+  .state-tabs-bottom { gap: 0.25rem; }
+  .state-tabs-bottom .state-btn {
+    flex: 1 1 calc(25% - 0.25rem); max-width: calc(25% - 0.25rem); min-width: 0;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 0.12rem; padding: 0.3rem 0.1rem; border-radius: 8px;
+    font-size: 0.7rem; line-height: 1.15; letter-spacing: -0.02em;
+  }
+  .state-tabs-bottom .state-btn .state-count {
+    margin-left: 0; font-size: 0.85em; padding: 0.02rem 0.4rem; line-height: 1.3;
+  }
+}
 .card {
   background: var(--card); border-radius: var(--radius); overflow: hidden;
   text-decoration: none; color: var(--ink); border: 1px solid #33254f;
