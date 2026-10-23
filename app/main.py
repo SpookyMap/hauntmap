@@ -2952,6 +2952,70 @@ def leaderboard(request: Request, cat: str = "halloween"):
     )
 
 
+# ------------------------------------------------- Haunt Passport (Wave 4, Item 4)
+#
+# The collection loop, surfaced. A pin-page visit marks the pin seen in
+# the visitor's localStorage (hm_seen, see base.html); /passport turns
+# that device-local set into per-town progress. Counting mirrors the
+# town feed EXACTLY: the denominators are the _towns_with_counts /
+# town_page universe — visible (hidden = 0) halloween pins grouped by
+# the extract_city_state town label — because those are the counts a
+# visitor sees on /towns/{slug}, and detail()'s own seen-strip counts
+# the same label+category set for a halloween pin. Towns whose pins
+# carry no parseable "City, ST" label never appear in the town feed,
+# so they are excluded here too (same rule as _towns_with_counts).
+# Non-halloween pins (events, stores, …) are not part of the town feed
+# and do not count toward a town — documented in item4 NOTES.
+
+def _passport_towns(conn) -> list[dict]:
+    """[{town, town_label, total, url, slug, ids}] for the passport.
+
+    `ids` rides along beyond the spec'd fields: the progress itself is
+    computed client-side from the visitor's seen set, which is a bare
+    list of pin ids, so the client needs each town's id list to count
+    how many of them were seen. `town` and `town_label` are both the
+    canonical extract_city_state label (the key the town feed groups
+    by, and the label every card displays)."""
+    grouped: dict[str, list[int]] = {}
+    for r in conn.execute(
+            "SELECT id, town FROM entries "
+            "WHERE hidden = 0 AND category = 'halloween' ORDER BY id").fetchall():
+        label = extract_city_state(r["town"] or "")
+        if not label:
+            continue
+        grouped.setdefault(label, []).append(r["id"])
+    out = []
+    for label in sorted(grouped):
+        slug = _town_slug(label)
+        out.append({"town": label, "town_label": label,
+                    "total": len(grouped[label]),
+                    "url": f"/towns/{slug}", "slug": slug,
+                    "ids": grouped[label]})
+    return out
+
+
+@app.get("/api/passport-data")
+def api_passport_data():
+    """Per-town passport denominators + pin ids, as one JSON list.
+    Computed per request (a single grouped scan of ~2k halloween rows
+    at snapshot scale — cheap); Cache-Control lets browsers / the CDN
+    reuse it briefly instead of recomputing on every homepage load,
+    since the homepage chip fetches it too."""
+    with get_conn(DB_PATH) as conn:
+        data = _passport_towns(conn)
+    resp = JSONResponse(data)
+    resp.headers["Cache-Control"] = "public, max-age=300"
+    return resp
+
+
+@app.get("/passport", response_class=HTMLResponse)
+def passport_page(request: Request):
+    """Haunt Passport page. The shell is server-rendered; the progress
+    itself is rendered client-side from hm_seen + /api/passport-data
+    (the seen set never leaves the visitor's device — no accounts)."""
+    return templates.TemplateResponse(request, "passport.html", {})
+
+
 # ---------------------------------------------------------------- town pages
 
 def _town_slug(label: str) -> str:
@@ -3025,7 +3089,7 @@ def town_page(request: Request, slug: str):
 def sitemap():
     base = "https://gethauntmap.com"
     urls = ["/", "/map", "/nearby", "/tour", "/diy", "/diy-costumes", "/games", "/leaderboard",
-            "/towns", "/advertise", "/media-kit", "/about", "/costume-contest", "/trivia", "/haunt-or-not", "/fan-art",
+            "/towns", "/passport", "/advertise", "/media-kit", "/about", "/costume-contest", "/trivia", "/haunt-or-not", "/fan-art",
             "/restaurhaunts"]
     for t in _towns_with_counts():
         urls.append(f"/towns/{t['slug']}")

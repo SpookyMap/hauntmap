@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+{% block title %}Haunt Passport &middot; {{ site_name }}{% endblock %}
+{% block content %}
+{# Wave 4, Item 4 — Haunt Passport. Server renders only this shell:
+   every number on the page is computed in the visitor's browser from
+   their own hm_seen set + /api/passport-data (town denominators that
+   mirror the town feed exactly — see _passport_towns in app/main.py).
+   No accounts, no server-side record of what anyone has seen; a new
+   device starts a new passport (the cookie mirror in base.html is the
+   webview-wipe safety net, not a sync). #}
+<div class="hero-intro">
+  <h1>&#x1F383; Haunt Passport</h1>
+  <p>Every haunt you open gets stamped into your passport. Fill a town, conquer it, screenshot the trophy.</p>
+</div>
+
+<div class="passport-stats" id="passport-stats" hidden>
+  <div class="pstat"><span class="pstat-n" id="ps-pins">0</span><span class="pstat-l">haunts seen</span></div>
+  <div class="pstat"><span class="pstat-n" id="ps-started">0</span><span class="pstat-l">towns started</span></div>
+  <div class="pstat"><span class="pstat-n" id="ps-conquered">0</span><span class="pstat-l">towns conquered &#x1F3C6;</span></div>
+</div>
+
+<div class="passport-empty" id="passport-empty" hidden>
+  <p class="passport-empty-line">Open any haunt and it lands here as a stamp — fill every haunt in a town to conquer it. &#x1F3C6;</p>
+  <p class="passport-empty-sub">Start with one of the biggest haunt towns on the map:</p>
+  <div class="town-chips" id="passport-top-towns"></div>
+  <p><a class="btn btn-ghost" href="/towns">Browse all towns &rarr;</a></p>
+</div>
+
+<div class="passport-rows" id="passport-rows"></div>
+<p class="passport-loading" id="passport-loading">Loading your passport&hellip;</p>
+<noscript><p class="passport-loading">Your passport lives in this browser, so it needs JavaScript on. Meanwhile: <a href="/towns">browse all towns &rarr;</a></p></noscript>
+
+<script>
+(function () {
+  var loading = document.getElementById('passport-loading');
+  hmPassportData(function (data) {
+    if (loading) loading.hidden = true;
+    if (!data.length) return;
+    var s = hmPassportSummary(data);
+    // Header stats — pins seen counts only pins that count toward a
+    // town (visible halloween pins with a town label), so the three
+    // numbers always reconcile with the rows below.
+    document.getElementById('ps-pins').textContent = s.pins;
+    document.getElementById('ps-started').textContent = s.started;
+    document.getElementById('ps-conquered').textContent = s.conquered;
+    document.getElementById('passport-stats').hidden = false;
+    if (!s.pins) {
+      // Honest empty state: no stamps yet, so no rows and no fake
+      // progress — one line on the loop + the biggest real towns.
+      var box = document.getElementById('passport-top-towns');
+      data.slice().sort(function (a, b) { return b.total - a.total || (a.town_label < b.town_label ? -1 : 1); })
+        .slice(0, 5).forEach(function (t) {
+          var a = document.createElement('a');
+          a.className = 'town-chip'; a.href = t.url;
+          a.textContent = t.town_label + ' ';
+          var n = document.createElement('span');
+          n.className = 'chip-n'; n.textContent = t.total + (t.total === 1 ? ' haunt' : ' haunts');
+          a.appendChild(n); box.appendChild(a);
+        });
+      document.getElementById('passport-empty').hidden = false;
+      return;
+    }
+    // Row order: started towns first, then by progress (share seen),
+    // then by stamps, then biggest towns first. Unstarted towns follow
+    // in the same biggest-first order — they are the next conquests.
+    var rows = s.rows.slice().sort(function (a, b) {
+      var as = a.seen > 0 ? 0 : 1, bs = b.seen > 0 ? 0 : 1;
+      if (as !== bs) return as - bs;
+      var ap = a.total ? a.seen / a.total : 0, bp = b.total ? b.seen / b.total : 0;
+      if (bp !== ap) return bp - ap;
+      if (b.seen !== a.seen) return b.seen - a.seen;
+      if (b.total !== a.total) return b.total - a.total;
+      return a.town < b.town ? -1 : 1;
+    });
+    var wrap = document.getElementById('passport-rows');
+    rows.forEach(function (r) {
+      var done = r.seen > 0 && r.seen === r.total;
+      var row = document.createElement('div');
+      row.className = 'prow' + (done ? ' prow-done' : '') + (r.seen ? ' prow-started' : '');
+      var head = document.createElement('div');
+      head.className = 'prow-head';
+      var name = document.createElement('span');
+      name.className = 'prow-town';
+      name.textContent = (done ? '\u{1F3C6} ' : '') + r.town;
+      var count = document.createElement('span');
+      count.className = 'prow-count';
+      count.textContent = done ? ('Town conquered — ' + r.seen + ' of ' + r.total)
+                               : (r.seen + ' of ' + r.total);
+      head.appendChild(name); head.appendChild(count);
+      var bar = document.createElement('div');
+      bar.className = 'seen-bar prow-bar';
+      var fill = document.createElement('div');
+      fill.className = 'seen-fill';
+      fill.style.width = (r.total ? Math.round(100 * r.seen / r.total) : 0) + '%';
+      bar.appendChild(fill);
+      var link = document.createElement('a');
+      link.className = 'prow-link';
+      link.href = r.url;
+      link.textContent = done ? 'View town \u2192'
+                       : (r.seen ? 'Finish this town \u2192' : 'Start this town \u2192');
+      row.appendChild(head); row.appendChild(bar); row.appendChild(link);
+      wrap.appendChild(row);
+    });
+  });
+})();
+</script>
+{% endblock %}

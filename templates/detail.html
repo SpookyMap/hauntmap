@@ -111,6 +111,11 @@
   <div class="seen-strip" id="seen-strip" hidden>
     <p class="seen-text"></p>
     <div class="seen-bar"><div class="seen-fill"></div></div>
+    {# Wave 4, Item 4: the strip is the collection loop's home — it now
+       also points at the full Haunt Passport. The strip only unhides
+       when this town has ≥1 seen pin, so the link appears exactly when
+       the visitor has a passport worth opening. #}
+    <p class="seen-passport"><a href="/passport">See your Haunt Passport &rarr;</a></p>
   </div>
   <script>
     hmMarkSeen({{ entry.id }});

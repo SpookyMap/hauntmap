@@ -2545,3 +2545,63 @@ body.has-tourbar.has-radio { padding-bottom: 124px; }
   .pin-alerts .text-alerts-form .btn { min-height: 44px; }
   .pin-alerts .text-alerts-form .ta-check { min-height: 40px; }
 }
+
+/* ============ Wave 4, Item 4: Haunt Passport =====================
+   The collection loop surfaced: a homepage chip in the Tonight
+   cluster, the /passport page (header stats, per-town progress bars,
+   a gold "Town conquered" completion state worth screenshotting),
+   and the passport link inside the pin page's seen-strip. Existing
+   language only: the signup panels' purple gradient, Tonight's gold
+   (#c9a86a), the orange progress fill the seen-strip already uses. */
+.passport-chip {
+  display: inline-block; margin: 0.15rem 0 0.6rem;
+  background: linear-gradient(135deg, #241640 0%, #311d55 100%);
+  border: 1px solid #4a2d7a; border-radius: 999px;
+  padding: 0.42rem 0.9rem; color: #f3eefc; text-decoration: none;
+  font-size: 0.9rem; font-weight: 700;
+}
+.passport-chip[hidden] { display: none; }
+.passport-chip:hover { border-color: #c9a86a; text-decoration: underline; }
+.seen-passport { margin: 0.35rem 0 0; font-size: 0.85rem; }
+.seen-passport a { color: #ff7518; font-weight: 700; text-decoration: none; }
+.seen-passport a:hover { text-decoration: underline; }
+.passport-stats { display: flex; gap: 0.7rem; flex-wrap: wrap; margin: 1rem 0; }
+.passport-stats[hidden] { display: none; }
+.pstat {
+  flex: 1 1 100px; text-align: center;
+  background: linear-gradient(160deg, #241a44, #17122b);
+  border: 1px solid #4a2d7a; border-radius: 14px; padding: 0.8rem 0.5rem;
+}
+.pstat-n { display: block; font-size: 1.7rem; font-weight: 900; color: #FFF8E7; line-height: 1.1; }
+.pstat-l { display: block; font-size: 0.8rem; color: #c9bce8; margin-top: 0.15rem; }
+.passport-empty {
+  background: linear-gradient(135deg, #241640 0%, #311d55 100%);
+  border: 1px solid #4a2d7a; border-radius: 14px;
+  padding: 1rem 1.1rem; margin: 1rem 0;
+}
+.passport-empty[hidden] { display: none; }
+.passport-empty-line { color: #FFF8E7; font-weight: 700; margin: 0 0 0.4rem; }
+.passport-empty-sub { color: #c9bce8; margin: 0 0 0.5rem; font-size: 0.92rem; }
+.passport-loading { color: #c9bce8; }
+.passport-loading[hidden] { display: none; }
+.passport-rows { margin: 0.6rem 0 1.2rem; }
+.prow {
+  background: linear-gradient(160deg, #241a44, #17122b);
+  border: 1px solid #4a2d7a; border-radius: 12px;
+  padding: 0.65rem 0.9rem; margin: 0 0 0.55rem;
+}
+.prow-head { display: flex; justify-content: space-between; align-items: baseline; gap: 0.8rem; }
+.prow-town { color: #FFF8E7; font-weight: 800; }
+.prow-count { color: #c9bce8; font-size: 0.85rem; white-space: nowrap; }
+.prow-bar { max-width: none; margin: 0.45rem 0 0.4rem; }
+.prow-link { color: #ff7518; font-weight: 700; font-size: 0.88rem; text-decoration: none; }
+.prow-link:hover { text-decoration: underline; }
+/* Completion state: gold frame + warm gradient + trophy (set in the
+   row's town name by the renderer) — built to be screenshotted. */
+.prow-done {
+  border: 2px solid #c9a86a;
+  background: linear-gradient(160deg, #3a2a10, #241a44);
+  box-shadow: 0 0 0 3px rgba(201, 168, 106, 0.22), 0 6px 22px rgba(0, 0, 0, 0.35);
+}
+.prow-done .prow-count { color: #c9a86a; font-weight: 800; }
+.prow-done .prow-link { color: #c9a86a; }
