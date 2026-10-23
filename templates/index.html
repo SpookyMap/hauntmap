@@ -1,5 +1,66 @@
 {% extends "base.html" %}
 {% block content %}
+{# Retention Wave 2, Item 4: returning-visitor compact homepage.
+   The visit flag lives HERE, on the homepage only: a first visit sets
+   localStorage 'hm_visited' and sees the full homepage exactly as
+   before; a later visit (flag present) gets body.hm-returning, which
+   collapses the hero via CSS (style.css) — nothing is removed from
+   the DOM, so every existing script keeps working. "See full
+   homepage" restores the full layout and remembers the choice for
+   the session (sessionStorage 'hm_full_home'), so coming back home
+   mid-session doesn't re-collapse it. #}
+<script>
+function hmFullHomepage() {
+  try { sessionStorage.setItem('hm_full_home', '1'); } catch (e) {}
+  document.body.classList.remove('hm-returning');
+}
+(function () {
+  try {
+    if (!localStorage.getItem('hm_visited')) {
+      localStorage.setItem('hm_visited', String(Date.now()));
+      return;
+    }
+    if (sessionStorage.getItem('hm_full_home') === '1') return;
+    document.body.classList.add('hm-returning');
+  } catch (e) {}
+})();
+</script>
+<div class="hm-slimbar" id="hm-slimbar">
+  <span class="hm-slimbar-welcome">&#x1F383; Welcome back!</span>
+  <a class="hm-slimbar-link" id="hm-slim-fright" href="/daily">&#x1F319; Daily Fright &mdash; today&#x27;s drop</a>
+  <a class="hm-slimbar-link" id="hm-slim-passport" href="/passport" hidden></a>
+  <button type="button" class="btn btn-ghost hm-full-btn" onclick="hmFullHomepage()">See full homepage</button>
+  <script>
+  (function () {
+    // Summaries reuse the existing client-side systems: Daily Fright
+    // reads the same cookies hmFrightTouch (base.html) maintains, the
+    // Passport line uses the same hmPassportData/hmPassportSummary as
+    // the homepage chip and /passport. No data yet -> the Fright line
+    // stays a plain link and the Passport line stays hidden (the
+    // normal full sections below carry the visitor from there).
+    try {
+      var streak = parseInt(hmFrightGetCookie('hm_fright_streak') || '0', 10) || 0;
+      var last = hmFrightGetCookie('hm_fright_last');
+      var el = document.getElementById('hm-slim-fright');
+      if (el && streak >= 2 && last === hmFrightTodayET()) {
+        el.textContent = '\u{1F525} Day ' + streak + ' of Daily Fright \u2014 see today\u2019s drop';
+      }
+    } catch (e) {}
+    try {
+      if (window.hmPassportData) hmPassportData(function (data) {
+        var s = hmPassportSummary(data);
+        if (!s.pins) return;
+        var p = document.getElementById('hm-slim-passport');
+        if (!p) return;
+        p.textContent = '\u{1F383} Haunt Passport \u2014 ' + s.pins +
+          ' haunt' + (s.pins === 1 ? '' : 's') + ' seen \u00B7 ' + s.started +
+          ' town' + (s.started === 1 ? '' : 's') + ' started';
+        p.hidden = false;
+      });
+    } catch (e) {}
+  })();
+  </script>
+</div>
 {# VT/TV/Music slim strip (Dan Oct 23): the two big hero pills became one
    thin row directly under the header nav, homepage only; Music added as
    a third button later the same day. #}
@@ -9,6 +70,99 @@
   <a class="music-btn" href="/music">&#x1F3B5; HauntMap Music</a>
   <a class="movies-btn" href="/movies">&#x1F3AC; HauntMap Movies</a>
 </div>
+{# Retention Wave 2, Item 1: one-tap geolocation prompt. Shown ONLY
+   when the visitor has no saved hm_town and hasn't dismissed it in
+   the last 7 days (localStorage 'hm_locate_dismiss', ms timestamp).
+   Nothing is requested on load — the browser prompt fires only on
+   tap. On a fix, the nearest town centroid (town_centers, the same
+   rows detail pages embed for the video chain) wins and its LABEL —
+   e.g. "Cranford, NJ", the same value the Near-you chips link to and
+   the /nearby + town-filter flows store — is saved as hm_town, then
+   the existing Near-you "Your town" lines update in place (no
+   reload). Denied / unavailable / in-app-webview (TikTok) failures
+   land on an inline message that points at the existing /nearby
+   town picker — never a dead end. #}
+<div class="hm-locate" id="hm-locate" role="region" aria-label="Find haunts near you">
+  <p class="hm-locate-text">&#x1F383; <strong>See the haunts closest to you</strong> &mdash; one tap, no typing.</p>
+  <div class="hm-locate-actions">
+    <button type="button" class="btn hm-locate-btn" id="hm-locate-btn">&#x1F4CD; Use my location</button>
+    <a class="btn btn-ghost" href="/nearby">Choose my town instead</a>
+    <button type="button" class="hm-locate-x" id="hm-locate-x" aria-label="Not now">&times;</button>
+  </div>
+  <p class="hm-locate-msg" id="hm-locate-msg" hidden></p>
+</div>
+<script>
+(function () {
+  var TOWNS = {{ town_centers|tojson }};
+  function havMi(a, b, c, d) {
+    var p = Math.PI / 180, p1 = a * p, p2 = c * p;
+    var dp = (c - a) * p, dl = (d - b) * p;
+    var x = Math.sin(dp / 2) * Math.sin(dp / 2) +
+            Math.cos(p1) * Math.cos(p2) * Math.sin(dl / 2) * Math.sin(dl / 2);
+    return 2 * 3958.8 * Math.asin(Math.sqrt(x));
+  }
+  function applyTown(label) {
+    // Same update the Near-you modules' own inline script performs on
+    // load: un-hide each copy's "Your town" line and point it at the
+    // town feed. Both homepage copies (hero stack + below-band) are
+    // covered; whichever the viewport shows is already updated.
+    document.querySelectorAll('.near-you').forEach(function (box) {
+      var mine = box.querySelector('.near-you-mine');
+      if (!mine) return;
+      var link = mine.querySelector('.js-town-link');
+      if (link) {
+        link.textContent = label;
+        link.href = '/?town=' + encodeURIComponent(label);
+      }
+      mine.hidden = false;
+    });
+  }
+  try {
+    if (localStorage.getItem('hm_town')) return;
+    var dismissed = parseInt(localStorage.getItem('hm_locate_dismiss') || '0', 10) || 0;
+    if (dismissed && (Date.now() - dismissed) < 7 * 24 * 3600 * 1000) return;
+    var box = document.getElementById('hm-locate');
+    if (!box) return;
+    box.classList.add('show');
+    var msg = document.getElementById('hm-locate-msg');
+    var btn = document.getElementById('hm-locate-btn');
+    function fail(html) {
+      msg.innerHTML = html;
+      msg.hidden = false;
+      btn.disabled = false;
+      btn.innerHTML = '&#x1F4CD; Use my location';
+    }
+    document.getElementById('hm-locate-x').addEventListener('click', function () {
+      try { localStorage.setItem('hm_locate_dismiss', String(Date.now())); } catch (e) {}
+      box.classList.remove('show');
+    });
+    btn.addEventListener('click', function () {
+      if (!navigator.geolocation || !navigator.geolocation.getCurrentPosition) {
+        fail('Location isn\u2019t available in this browser \u2014 <a href="/nearby">choose your town instead</a>.');
+        return;
+      }
+      btn.disabled = true;
+      btn.textContent = '\u{1F4CD} Locating\u2026';
+      navigator.geolocation.getCurrentPosition(function (pos) {
+        var best = null, bd = Infinity, i, d;
+        for (i = 0; i < TOWNS.length; i++) {
+          d = havMi(pos.coords.latitude, pos.coords.longitude, TOWNS[i][3], TOWNS[i][4]);
+          if (d < bd) { bd = d; best = TOWNS[i]; }
+        }
+        if (!best) {
+          fail('No haunt towns are on the map near you yet \u2014 <a href="/nearby">search your town</a> to see how far the closest ones are.');
+          return;
+        }
+        try { localStorage.setItem('hm_town', best[0]); } catch (e) {}
+        applyTown(best[0]);
+        box.classList.remove('show');
+      }, function () {
+        fail('Couldn\u2019t get your location \u2014 it may be blocked in this app\u2019s browser. <a href="/nearby">Choose your town instead</a>.');
+      }, { timeout: 10000, maximumAge: 600000 });
+    });
+  } catch (e) {}
+})();
+</script>
 <div class="hero-split">
 <div class="hero-intro">
   <h1 class="hero-title">Find the Best Halloween Displays <span class="hero-title-alt">Near You</span></h1>

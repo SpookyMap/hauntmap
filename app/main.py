@@ -1711,6 +1711,19 @@ def home(request: Request, sort: str = "top", town: str = "", town_search: str =
          "near_sub": resolved_area["sub"],
          "geo_mode": resolved_area["mode"],
          "geo_area": resolved_area["area_name"],
+         # Retention Wave 2, Item 1: town centroids for the homepage
+         # one-tap locate prompt, in EXACTLY the row format detail
+         # pages embed for the video chain ([label, city, state,
+         # centroid lat, centroid lng, pin count]) and built from the
+         # same _town_inventory halloween data — the browser picks the
+         # nearest centroid to the visitor's geolocation fix and saves
+         # that row's label as hm_town, the same value the Near-you
+         # chips link to / the town flows store.
+         "town_centers": [[t["label"], t["city"], t["state"],
+                           t["clat"], t["clng"], t["count"]]
+                          for t in halloween_inventory
+                          if t["clat"] is not None
+                          and t["clng"] is not None],
          "sponsors": sponsors,
          "bottom_tabs": _place_tabs(cat, state, region, sort, scare, tag,
                                     "1" if video.strip() == "1" else ""),
