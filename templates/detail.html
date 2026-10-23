@@ -19,7 +19,7 @@
        TikTok embed; hmLoadTikTok() swaps in the real blockquote + embed.js on
        tap, so one tap still plays in-page. No-JS gets the direct embed. #}
     {% set tt_id = entry.tiktok_url.split('/video/')[1].split('?')[0] %}
-    <div class="tt-facade" data-tt-url="{{ entry.tiktok_url }}" data-tt-id="{{ tt_id }}" role="button" tabindex="0" aria-label="Play TikTok video">
+    <div class="tt-facade" data-tt-url="{{ entry.tiktok_url }}" data-tt-id="{{ tt_id }}" data-entry-id="{{ entry.id }}" role="button" tabindex="0" aria-label="Play TikTok video">
       {% if entry.thumb_url %}
       <img src="{{ entry.thumb_url }}" alt="{{ entry.title }}">
       {% else %}
@@ -165,6 +165,7 @@
       tour.push(entry);
       localStorage.setItem('haunt_tour', JSON.stringify(tour));
       if (window.hmTourSync) hmTourSync();
+      if (window.hmTrack) hmTrack('tour_add', entry.id);
     }
     location.href = '/tour';
   };
@@ -233,6 +234,7 @@
     tour.push(entry);
     localStorage.setItem('haunt_tour', JSON.stringify(tour));
     if (window.hmTourSync) hmTourSync();
+    if (window.hmTrack) hmTrack('tour_add', entry.id);
     if (confirm('Added! Open your tour now?')) location.href = '/tour';
   };
   </script>
@@ -321,6 +323,123 @@
     <button type="submit" class="btn">Share</button>
   </form>
 </div>
+
+<script>
+// Wave 2, Item 2 — kill the reload tax: vote / unvote / Scare-O-Meter /
+// tip forms post via fetch and update in place (scroll never moves).
+// Progressive enhancement only: any failure (no fetch, non-JSON, HTTP
+// error, ok:false) falls back to the form's normal full-page submit,
+// which behaves exactly as before.
+(function () {
+  if (!window.fetch || !window.FormData) return;
+  var ENTRY_ID = {{ entry.id }};
+
+  function applyVote(data) {
+    var vb = document.querySelector('.votes-big');
+    if (vb) vb.textContent = '\uD83C\uDF83 ' + data.votes + ' vote' + (data.votes === 1 ? '' : 's');
+    var box = document.querySelector('.detail-actions');
+    var old = box && box.querySelector('form');
+    if (!old) return;
+    var nf = document.createElement('form');
+    nf.method = 'post';
+    var btn = document.createElement('button');
+    btn.type = 'submit';
+    if (data.voted) {
+      nf.action = '/d/' + ENTRY_ID + '/unvote';
+      btn.className = 'btn btn-voted';
+      btn.textContent = '\u2713 Voted \u2014 tap to undo';
+    } else {
+      nf.action = '/d/' + ENTRY_ID + '/vote';
+      btn.className = 'btn btn-big';
+      btn.textContent = '\uD83C\uDF83 Vote for this haunt';
+    }
+    nf.appendChild(btn);
+    old.replaceWith(nf);
+  }
+
+  function applyScare(data) {
+    document.querySelectorAll('.scare-row').forEach(function (row) {
+      var form = row.querySelector('form');
+      var m = form && (form.getAttribute('action') || '').match(/\/scare\/(\w+)$/);
+      if (!m) return;
+      var lvl = m[1];
+      var n = (data.counts && data.counts[lvl]) || 0;
+      var pct = data.total ? (100 * n / data.total) : 0;
+      var fill = row.querySelector('.scare-fill');
+      if (fill) fill.style.width = pct + '%';
+      var num = row.querySelector('.scare-n');
+      if (num) num.textContent = n;
+      var btn = row.querySelector('.scare-btn');
+      if (btn) btn.classList.toggle('scare-picked', data.pick === lvl);
+    });
+    var t = document.querySelector('.scare-total');
+    if (t) {
+      t.textContent = data.total
+        ? data.total + ' scare rating' + (data.total === 1 ? '' : 's') + ' \u2014 tap another level to change yours'
+        : 'No ratings yet \u2014 be the first to rate it!';
+    }
+  }
+
+  function applyTip(form, data) {
+    var section = document.querySelector('.tips-section');
+    if (!section || !data.tip) return;
+    var list = section.querySelector('.tips-list');
+    if (!list) {
+      list = document.createElement('div');
+      list.className = 'tips-list';
+      var muted = section.querySelector('.muted');
+      if (muted) muted.replaceWith(list);
+      else section.insertBefore(list, form);
+    }
+    var div = document.createElement('div');
+    div.className = 'tip';
+    var meta = document.createElement('div');
+    meta.className = 'tip-meta';
+    var strong = document.createElement('strong');
+    strong.textContent = data.tip.display_name || 'Anonymous';
+    meta.appendChild(strong);
+    var p = document.createElement('p');
+    p.textContent = data.tip.text;
+    div.appendChild(meta);
+    div.appendChild(p);
+    list.insertBefore(div, list.firstChild);
+    var h = section.querySelector('h3');
+    if (h) {
+      var m = h.textContent.match(/\((\d+)\)/);
+      var n = m ? parseInt(m[1], 10) + 1 : list.children.length;
+      h.textContent = '\uD83D\uDCAC Tips & experiences (' + n + ')';
+    }
+    form.reset();
+  }
+
+  document.addEventListener('submit', function (ev) {
+    var f = ev.target;
+    if (!f || !f.getAttribute) return;
+    var action = f.getAttribute('action') || '';
+    var isVote = /\/d\/\d+\/(un)?vote$/.test(action);
+    var isScare = /\/d\/\d+\/scare\/\w+$/.test(action);
+    var isTip = f.classList && f.classList.contains('tip-form');
+    if (!isVote && !isScare && !isTip) return;
+    ev.preventDefault();
+    fetch(action, {
+      method: 'POST',
+      body: new FormData(f),
+      credentials: 'same-origin',
+      headers: { 'X-Requested-With': 'fetch', 'Accept': 'application/json' }
+    }).then(function (r) {
+      if (!r.ok) throw new Error('http ' + r.status);
+      return r.json();
+    }).then(function (data) {
+      if (!data || !data.ok) throw new Error('not ok');
+      if (isVote) applyVote(data);
+      else if (isScare) applyScare(data);
+      else applyTip(f, data);
+    }).catch(function () {
+      f.submit();  // silent degradation to the classic full-page POST
+    });
+  });
+})();
+</script>
 
 <p><a href="/">&larr; Back to all haunts</a></p>
 {% endblock %}

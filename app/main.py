@@ -1987,6 +1987,92 @@ async def upload_submit(
     return RedirectResponse(f"/d/{entry_id}", status_code=303)
 
 
+# ------------------------------------------------- engagement events (Wave 2, Item 2)
+# Lightweight interaction log alongside page_views: page loads alone can't
+# see in-page behaviour (video plays, tour adds, votes that no longer
+# reload), so the interactions worth optimising for get their own rows.
+# Client-fired events arrive via POST /api/track; vote/unvote/scare/tip are
+# ALSO logged server-side in their POST handlers so those counts never
+# depend on JS surviving.
+ENGAGEMENT_TABLE_SQL = (
+    "CREATE TABLE IF NOT EXISTS engagement_events "
+    "(id INTEGER PRIMARY KEY AUTOINCREMENT, created_at TEXT NOT NULL, "
+    "event TEXT NOT NULL, entry_id INTEGER, town TEXT)"
+)
+# Whitelist for POST /api/track — anything else is a silent no-op.
+TRACK_EVENTS = ("video_play", "tour_add", "next_bar_click", "rail_click")
+# Full taxonomy shown on the admin stats page (client + server events).
+ENGAGEMENT_EVENTS_ALL = TRACK_EVENTS + ("vote", "unvote", "scare", "tip")
+
+
+def _log_engagement(event: str, entry_id: int | None = None) -> None:
+    """Insert one engagement row. Town is derived server-side from the
+    entry (its extract_city_state label). Fire-and-forget: analytics must
+    never break the interaction that produced the event."""
+    try:
+        town = None
+        if entry_id:
+            with get_conn(DB_PATH) as conn:
+                row = conn.execute(
+                    "SELECT town FROM entries WHERE id = ?", (entry_id,)).fetchone()
+            if row:
+                town = extract_city_state(row["town"] or "") or row["town"]
+        with get_conn(DB_PATH) as conn:
+            conn.execute(ENGAGEMENT_TABLE_SQL)
+            conn.execute(
+                "INSERT INTO engagement_events (created_at, event, entry_id, town) "
+                "VALUES (?, ?, ?, ?)",
+                (datetime.now(timezone.utc).isoformat(), event, entry_id, town))
+            conn.commit()
+    except Exception:
+        pass
+
+
+def _wants_json(request: Request) -> bool:
+    """True when a POST wants the in-place (fetch) response instead of the
+    classic redirect: the detail page's fetch interceptor sends
+    X-Requested-With: fetch (and an application/json Accept)."""
+    if request.headers.get("x-requested-with", "").strip().lower() == "fetch":
+        return True
+    return "application/json" in request.headers.get("accept", "")
+
+
+def _scare_counts_for(entry_id: int) -> tuple[dict, int]:
+    counts = {lvl: 0 for lvl in SCARE_LEVELS}
+    with get_conn(DB_PATH) as conn:
+        conn.execute(SCARE_TABLE_SQL)
+        for r in conn.execute(
+                "SELECT level, votes FROM scare_votes WHERE entry_id = ?", (entry_id,)):
+            if r["level"] in counts:
+                counts[r["level"]] = r["votes"]
+    return counts, sum(counts.values())
+
+
+@app.post("/api/track")
+async def api_track(request: Request):
+    """Beacon endpoint for client-side engagement events. Accepts a JSON
+    body {event, entry_id} — navigator.sendBeacon posts it as text/plain,
+    so the raw body is parsed, never request.json()/form. Whitelisted
+    events only; always 204 with no body, malformed input included, so a
+    tracking failure can never surface on a page."""
+    try:
+        raw = await request.body()
+        data = json.loads(raw.decode("utf-8", "replace")) if raw else {}
+        if not isinstance(data, dict):
+            data = {}
+        event = str(data.get("event") or "")
+        if event in TRACK_EVENTS:
+            entry_id = data.get("entry_id")
+            try:
+                entry_id = int(entry_id) if entry_id is not None else None
+            except (TypeError, ValueError):
+                entry_id = None
+            _log_engagement(event, entry_id)
+    except Exception:
+        pass
+    return Response(status_code=204)
+
+
 @app.get("/d/{entry_id}", response_class=HTMLResponse)
 def detail(request: Request, entry_id: int):
     entry = get_entry(entry_id)
@@ -2087,8 +2173,8 @@ def scare_vote(entry_id: int, level: str, request: Request):
         raise HTTPException(400, "Bad scare level.")
     cookie = f"scare_{entry_id}"
     old = request.cookies.get(cookie, "")
-    resp = RedirectResponse(f"/d/{entry_id}#scare", status_code=303)
-    if old != level:
+    changed = old != level
+    if changed:
         with get_conn(DB_PATH) as conn:
             conn.execute(SCARE_TABLE_SQL)
             if old in SCARE_LEVELS:
@@ -2100,6 +2186,17 @@ def scare_vote(entry_id: int, level: str, request: Request):
                    ON CONFLICT(entry_id, level) DO UPDATE SET votes = votes + 1""",
                 (entry_id, level))
             conn.commit()
+        _log_engagement("scare", entry_id)
+    if _wants_json(request):
+        counts, total = _scare_counts_for(entry_id)
+        resp = JSONResponse({"ok": True, "counts": counts, "total": total,
+                             "pick": level})
+        if changed:
+            resp.set_cookie(cookie, level, max_age=365 * 24 * 3600,
+                            httponly=True, samesite="lax")
+        return resp
+    resp = RedirectResponse(f"/d/{entry_id}#scare", status_code=303)
+    if changed:
         resp.set_cookie(cookie, level, max_age=365 * 24 * 3600,
                         httponly=True, samesite="lax")
     return resp
@@ -2121,6 +2218,12 @@ async def add_tip(entry_id: int, request: Request):
                 (entry_id, name, text, datetime.now(timezone.utc).isoformat()),
             )
             conn.commit()
+        _log_engagement("tip", entry_id)
+        if _wants_json(request):
+            return JSONResponse({"ok": True, "tip": {
+                "display_name": name or "Anonymous", "text": text}})
+    elif _wants_json(request):
+        return JSONResponse({"ok": False, "error": "empty tip"}, status_code=400)
     return RedirectResponse(f"/d/{entry_id}#tips", status_code=303)
 
 
@@ -2129,14 +2232,25 @@ def vote(entry_id: int, request: Request):
     entry = get_entry(entry_id)
     if not entry or entry["hidden"]:
         raise HTTPException(404, "Entry not found.")
-    resp = RedirectResponse(f"/d/{entry_id}", status_code=303)
     cookie = f"voted_{entry_id}"
     # Soft limit: one vote per browser. Clearing cookies bypasses it — by design
     # for v1 (no accounts). Good enough to stop casual double-voting.
-    if cookie not in request.cookies:
+    fresh_vote = cookie not in request.cookies
+    if fresh_vote:
         with get_conn(DB_PATH) as conn:
             conn.execute("UPDATE entries SET votes = votes + 1 WHERE id = ?", (entry_id,))
             conn.commit()
+        _log_engagement("vote", entry_id)
+    if _wants_json(request):
+        now = get_entry(entry_id)
+        resp = JSONResponse({"ok": True,
+                             "votes": now["votes"] if now else entry["votes"],
+                             "voted": True})
+        if fresh_vote:
+            resp.set_cookie(cookie, "1", max_age=365 * 24 * 3600, httponly=True, samesite="lax")
+        return resp
+    resp = RedirectResponse(f"/d/{entry_id}", status_code=303)
+    if fresh_vote:
         resp.set_cookie(cookie, "1", max_age=365 * 24 * 3600, httponly=True, samesite="lax")
     return resp
 
@@ -2146,12 +2260,23 @@ def unvote(entry_id: int, request: Request):
     entry = get_entry(entry_id)
     if not entry or entry["hidden"]:
         raise HTTPException(404, "Entry not found.")
-    resp = RedirectResponse(f"/d/{entry_id}", status_code=303)
     cookie = f"voted_{entry_id}"
-    if cookie in request.cookies:
+    had_vote = cookie in request.cookies
+    if had_vote:
         with get_conn(DB_PATH) as conn:
             conn.execute("UPDATE entries SET votes = MAX(0, votes - 1) WHERE id = ?", (entry_id,))
             conn.commit()
+        _log_engagement("unvote", entry_id)
+    if _wants_json(request):
+        now = get_entry(entry_id)
+        resp = JSONResponse({"ok": True,
+                             "votes": now["votes"] if now else entry["votes"],
+                             "voted": False})
+        if had_vote:
+            resp.delete_cookie(cookie)
+        return resp
+    resp = RedirectResponse(f"/d/{entry_id}", status_code=303)
+    if had_vote:
         resp.delete_cookie(cookie)
     return resp
 
@@ -3310,6 +3435,34 @@ def admin_stats(request: Request):
             "SELECT CASE WHEN device = '' OR device IS NULL THEN 'Unknown' "
             "ELSE device END AS dev, COUNT(*) AS views FROM page_views "
             "GROUP BY dev ORDER BY views DESC").fetchall()
+        # --- engagement events (Wave 2, Item 2): last 7 days ---
+        conn.execute(ENGAGEMENT_TABLE_SQL)
+        eng_counts = {ev: 0 for ev in ENGAGEMENT_EVENTS_ALL}
+        for r in conn.execute(
+                "SELECT event, COUNT(*) AS n FROM engagement_events "
+                "WHERE created_at >= datetime('now', '-7 days') GROUP BY event"):
+            eng_counts[r["event"]] = r["n"]
+        eng_with_pin = conn.execute(
+            "SELECT COUNT(*) FROM engagement_events WHERE entry_id IS NOT NULL "
+            "AND created_at >= datetime('now', '-7 days')").fetchone()[0]
+        pin_views_week = conn.execute(
+            "SELECT COUNT(*) FROM page_views WHERE path LIKE '/d/%' "
+            "AND viewed_at >= datetime('now', '-7 days')").fetchone()[0]
+        eng_top_pins = conn.execute(
+            "SELECT g.entry_id AS entry_id, COUNT(*) AS n, "
+            "e.title AS title, e.town AS town FROM engagement_events g "
+            "LEFT JOIN entries e ON e.id = g.entry_id "
+            "WHERE g.entry_id IS NOT NULL "
+            "AND g.created_at >= datetime('now', '-7 days') "
+            "GROUP BY g.entry_id ORDER BY n DESC, g.entry_id ASC LIMIT 5").fetchall()
+        engagement = {
+            "counts": [(ev, eng_counts[ev]) for ev in ENGAGEMENT_EVENTS_ALL],
+            "total": sum(eng_counts.values()),
+            "with_pin": eng_with_pin,
+            "pin_views": pin_views_week,
+            "ratio": (eng_with_pin / pin_views_week) if pin_views_week else 0,
+            "top_pins": eng_top_pins,
+        }
         # --- visit duration: sessionize page views per visitor (30-min window) ---
         srows = conn.execute(
             "SELECT sid, viewed_at FROM page_views WHERE sid IS NOT NULL "
@@ -3357,7 +3510,7 @@ def admin_stats(request: Request):
         {"request": request, "total": total, "today": today, "week": week,
          "by_day": by_day, "top_pages": top_pages,
          "top_referrers": top_referrers, "by_device": by_device,
-         "duration": duration})
+         "duration": duration, "engagement": engagement})
 
 
 @app.post("/admin/login", response_class=HTMLResponse)

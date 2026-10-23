@@ -169,11 +169,53 @@ function hmNearMe() {
 })();
 </script>
 <script>
+// Engagement beacons (Wave 2, Item 2): fire-and-forget interaction events
+// to POST /api/track. sendBeacon survives page navigation (next-bar and
+// rail clicks leave the page); fetch+keepalive is the fallback. Any
+// failure is swallowed — tracking must never break a page.
+function hmTrack(event, entryId) {
+  try {
+    var payload = JSON.stringify({ event: event,
+      entry_id: (entryId === null || entryId === undefined || isNaN(entryId)) ? null : Number(entryId) });
+    if (navigator.sendBeacon) {
+      var blob = new Blob([payload], { type: 'text/plain' });
+      if (navigator.sendBeacon('/api/track', blob)) return;
+    }
+    fetch('/api/track', { method: 'POST', headers: { 'Content-Type': 'text/plain' },
+                          body: payload, keepalive: true }).catch(function () {});
+  } catch (e) {}
+}
+document.addEventListener('click', function (ev) {
+  var t = ev.target;
+  if (!t || !t.closest) return;
+  // Sticky next-haunt bar: attributed to the pin the bar leads to (the
+  // clicked target, same convention as rail_click below).
+  var bar = t.closest('a.next-haunt-bar');
+  if (bar) {
+    var bm = (bar.getAttribute('href') || '').match(/\/d\/(\d+)/);
+    hmTrack('next_bar_click', bm ? Number(bm[1]) : null);
+    return;
+  }
+  // Rail clicks: pin cards inside .rail rails, on pin pages only. Tour
+  // buttons inside a card are their own event (tour_add) — excluded here.
+  if (!/^\/d\/\d+/.test(location.pathname)) return;
+  if (t.closest('[data-tour-btn]')) return;
+  var card = t.closest('a.card');
+  if (card && card.closest('.rail')) {
+    var cm = (card.getAttribute('href') || '').match(/\/d\/(\d+)/);
+    if (cm) hmTrack('rail_click', Number(cm[1]));
+  }
+});
+</script>
+<script>
 // TikTok facade loader: swap a thumbnail facade for the real embed on tap,
 // fetching TikTok's embed.js exactly once per page (later facades rescan).
 function hmLoadTikTok(facade) {
   if (!facade || facade.dataset.loaded) return;
   facade.dataset.loaded = '1';
+  var eid = facade.getAttribute('data-entry-id');
+  if (!eid) { var pm = location.pathname.match(/^\/d\/(\d+)/); if (pm) eid = pm[1]; }
+  hmTrack('video_play', eid ? Number(eid) : null);
   var url = facade.getAttribute('data-tt-url');
   var bq = document.createElement('blockquote');
   bq.className = 'tiktok-embed';
@@ -281,6 +323,7 @@ function hmTourBtnActivate(b) {
               town: b.getAttribute('data-town') || '',
               lat: lat, lng: lng, thumb: b.getAttribute('data-thumb') || '' });
   hmTourSet(tour);
+  hmTrack('tour_add', id);
 }
 document.addEventListener('click', function (ev) {
   var b = ev.target.closest && ev.target.closest('[data-tour-btn]');
