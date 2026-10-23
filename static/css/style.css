@@ -2171,6 +2171,16 @@ body.has-tourbar.has-radio { padding-bottom: 124px; }
     font-size: 0.95rem; line-height: 1.12; text-align: center; letter-spacing: 0.02em;
     max-width: 112px; text-wrap: balance;
   }
+  /* z75: PHONE ONLY — split the column copy: "NEW HAUNTS" goes red
+     #e01e26, "DAILY!!!" stays lavender #c9a7ff (Dan, Oct 22 20:45).
+     Colours live on the two spans (.nh-red / .nh-daily in base.html),
+     per the standing hook-colour rule. Scoped to this phone-portrait
+     query, so the desktop .tag-a (all-red since z72) and the closer
+     below (.events-closer: lavender / HERE red) are untouched. This
+     supersedes the z72 banner's aside that .events-daily "stays
+     lavender" — only its first two words change. */
+  .site-header.v2 .header-nav a.events-link .events-daily .nh-red { color: #e01e26; }
+  .site-header.v2 .header-nav a.events-link .events-daily .nh-daily { color: #c9a7ff; }
 }
 @media (max-width: 380px) and (orientation: portrait) {
   .site-header.v2 .header-nav a.events-link .events-daily { font-size: 0.86rem; max-width: 102px; }
