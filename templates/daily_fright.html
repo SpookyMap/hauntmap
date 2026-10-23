@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}Daily Fright &mdash; {{ date_label }} &middot; {{ site_name }}{% endblock %}
+{% block content %}
+{# Wave 4, Item 6 — Daily Fright. ONE canonical drop per
+   America/New_York date: stable all day, rotates at ET midnight.
+   (1) Today's display: _daily_display — date-seeded deterministic
+   pick from the same pool as Tonight's Display (which stays random
+   per load; this drop is the one a TikTok post can link to).
+   (2) Daily trivia: today's first question, from the exact quiz
+   /trivia serves (see _trivia_quiz_for) — answered over there.
+   (3) Haunt or Not, into /games. Visiting this page counts the day
+   for the streak (hmFrightTouch below; rules in base.html). #}
+<div class="hero-intro">
+  <h1>&#x1F319; Daily Fright &mdash; {{ date_label }}</h1>
+  <p>One fresh drop every day &mdash; a display, a question, a duel. A new one lands at midnight Eastern.</p>
+  <p class="fright-streak fright-streak-full">Start your streak &mdash; come back tomorrow to make it Day 2.</p>
+</div>
+
+{% if display %}
+<section class="daily-display" aria-label="Today's display">
+  <a class="tonight-card daily-card" href="/d/{{ display.id }}">
+    {% if display.thumb_url %}<img src="{{ display.thumb_url }}" alt="{{ display.title }}" loading="lazy">{% endif %}
+    <span class="tonight-body">
+      <span class="tonight-kicker">&#x1F383; Today's Display &middot; Daily Fright</span>
+      <span class="tonight-title">{{ display.title }}</span>
+      <span class="tonight-meta">{{ display.town_label }}{% if display.votes %} &middot; &#x1F383; {{ display.votes }} vote{{ 's' if display.votes != 1 }}{% endif %}</span>
+    </span>
+    <span class="tonight-cta">See this haunt &rarr;</span>
+  </a>
+</section>
+{% endif %}
+
+<div class="daily-grid">
+  <section class="daily-drop-card" aria-label="Daily trivia">
+    <h2>&#x1F9E0; Daily Trivia</h2>
+    <p class="daily-trivia-q">{{ trivia_q }}</p>
+    <p>That's question one of today's five. Think you know the rest?</p>
+    <a class="btn" href="/trivia">Answer today's trivia &rarr;</a>
+  </section>
+
+  <section class="daily-drop-card" aria-label="Haunt or Not">
+    <h2>&#x1F3AE; Haunt or Not?</h2>
+    <p>Two haunts enter &mdash; tap the one you'd drive to see. Every vote feeds the People's Champions leaderboard.</p>
+    <a class="btn" href="/games">Play Haunt or Not &rarr;</a>
+  </section>
+</div>
+
+<p class="daily-foot">Missed a day? No stress &mdash; your streak gets one &#x2744;&#xFE0F; freeze a week. The next drop lands at midnight Eastern. &#x1F319;</p>
+
+<script>if (window.hmFrightTouch) hmFrightTouch();</script>
+{% endblock %}

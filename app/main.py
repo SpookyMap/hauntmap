@@ -1281,6 +1281,22 @@ def _tonight_pool(conn, category: str | None) -> list[dict]:
             if d["id"] not in DUEL_EXCLUDE_IDS]
 
 
+def _tonight_quality_pool(conn) -> list[dict]:
+    """The Tonight's Display quality pool, shared by the random
+    homepage pick and Item 6's deterministic daily pick so the two can
+    never drift: eligible pins (see _tonight_pool) that have video,
+    plus the 200 most-viewed eligible pins, ordered by id."""
+    rows = _tonight_pool(conn, "halloween")
+    if not rows:
+        rows = _tonight_pool(conn, None)
+    if not rows:
+        return []
+    quality = {r["id"]: r for r in rows if r["_has_video"]}
+    for r in sorted(rows, key=lambda r: (-r["_views"], r["id"]))[:200]:
+        quality.setdefault(r["id"], r)
+    return [quality[k] for k in sorted(quality)]
+
+
 def _pick_tonights_display(conn, exclude_id=None) -> dict | None:
     """Tonight's Display: a fresh random pick on every homepage load
     (Dan, Oct 22 — supersedes the earlier date-seeded daily pick). Pool
@@ -1289,15 +1305,9 @@ def _pick_tonights_display(conn, exclude_id=None) -> dict | None:
     only. exclude_id (the visitor's previous pick, from the tonight_last
     cookie) is skipped when the pool has more than one entry, so a
     reload doesn't serve the same pin twice in a row."""
-    rows = _tonight_pool(conn, "halloween")
-    if not rows:
-        rows = _tonight_pool(conn, None)
-    if not rows:
+    pool = _tonight_quality_pool(conn)
+    if not pool:
         return None
-    quality = {r["id"]: r for r in rows if r["_has_video"]}
-    for r in sorted(rows, key=lambda r: (-r["_views"], r["id"]))[:200]:
-        quality.setdefault(r["id"], r)
-    pool = [quality[k] for k in sorted(quality)]
     pool_size = len(pool)
     if exclude_id is not None and pool_size > 1:
         narrowed = [r for r in pool if r["id"] != exclude_id]
@@ -1307,6 +1317,24 @@ def _pick_tonights_display(conn, exclude_id=None) -> dict | None:
     pick.pop("_views", None)
     pick.pop("_has_video", None)
     pick["_pool_size"] = pool_size
+    return pick
+
+
+def _daily_display(conn, et_date) -> dict | None:
+    """Item 6 (Daily Fright): the canonical display drop for one
+    America/New_York date. SAME pool as Tonight's Display (the shared
+    _tonight_quality_pool over _tonight_pool), but the pick is
+    date-seeded and deterministic — every visitor, every load, all day
+    gets the same pin, and it rotates at ET midnight when et_date
+    rolls. (Tonight's Display itself stays a per-load random pick, per
+    Dan Oct 22; the daily drop is deliberately a different contract:
+    one drop a TikTok post can deep-link to.)"""
+    pool = _tonight_quality_pool(conn)
+    if not pool:
+        return None
+    pick = dict(random.Random(et_date.toordinal()).choice(pool))
+    pick.pop("_views", None)
+    pick.pop("_has_video", None)
     return pick
 
 
@@ -1478,6 +1506,11 @@ def home(request: Request, sort: str = "top", town: str = "", town_search: str =
     last_id = int(last_raw) if last_raw.isdigit() else None
     with get_conn(DB_PATH) as conn:
         tonight = _pick_tonights_display(conn, exclude_id=last_id)
+        # Item 6: the Daily Fright band's display drop — deterministic
+        # per ET date (same pool as Tonight's, different contract), so
+        # the band names the same pin /daily leads with all day.
+        daily = _daily_display(conn, today_et)
+    daily_quiz = _trivia_quiz_for(datetime.now(timezone.utc).date())
     tonight_label = today_et.strftime("%A, %B ") + str(today_et.day)
     # First-screen modules (second-click #3): computed on EVERY homepage
     # view — all categories and filters — so the hero stack (laptop) and
@@ -1544,6 +1577,8 @@ def home(request: Request, sort: str = "top", town: str = "", town_search: str =
          "cat": cat, "cat_labels": CAT_LABELS, "cat_emoji": CAT_EMOJI,
          "scare": scare, "tag": tag, "video": "1" if video.strip() == "1" else "",
          "tonight": tonight, "tonight_label": tonight_label,
+         "daily": daily, "daily_label": tonight_label,
+         "daily_trivia_q": daily_quiz[0]["q"] if daily_quiz else "",
          "tstrip": tstrip,
          "trending": trending, "near_towns": near_towns,
          "near_heading": resolved_area["heading"],
@@ -2073,22 +2108,63 @@ TRIVIA_QUESTIONS = [
 ]
 
 
-@app.get("/trivia", response_class=HTMLResponse)
-def trivia_page(request: Request):
-    today = datetime.now(timezone.utc).date()
-    rng = random.Random(today.toordinal())
+def _trivia_quiz_for(day) -> list[dict]:
+    """The 5-question quiz /trivia serves for one date — the page's
+    existing selection logic, factored out unchanged (Item 6 needs the
+    SAME selection so /daily can surface today's first question and
+    have it match what /trivia asks). Selection is date-based: the
+    date seeds a sample of 5 questions + a per-question option shuffle.
+    NOTE the clock: /trivia has always seeded on the UTC date, so the
+    quiz flips at UTC midnight (8pm ET in season), not ET midnight.
+    That is the page's shipped behaviour; /daily mirrors it exactly
+    rather than inventing a second, diverging "today", and Item 6's
+    notes flag the ET-alignment as a separate deliberate change if
+    Dan wants it."""
+    rng = random.Random(day.toordinal())
     picks = rng.sample(TRIVIA_QUESTIONS, 5)
     quiz = []
     for i, item in enumerate(picks):
         order = list(range(4))
-        random.Random(today.toordinal() * 10 + i).shuffle(order)
+        random.Random(day.toordinal() * 10 + i).shuffle(order)
         quiz.append({
             "q": item["q"],
             "options": [item["options"][j] for j in order],
             "answer": order.index(item["answer"]),
         })
+    return quiz
+
+
+@app.get("/trivia", response_class=HTMLResponse)
+def trivia_page(request: Request):
+    today = datetime.now(timezone.utc).date()
+    quiz = _trivia_quiz_for(today)
     return templates.TemplateResponse(
         request, "trivia.html", {"quiz": quiz, "today_label": today.strftime("%A, %B %-d")},
+    )
+
+
+# ------------------------------------------------------- Daily Fright (Wave 4, Item 6)
+
+@app.get("/daily", response_class=HTMLResponse)
+def daily_page(request: Request):
+    """Daily Fright: ONE canonical drop per America/New_York date —
+    (1) today's display (date-seeded deterministic pick from the
+    Tonight's Display pool, _daily_display), (2) today's trivia
+    question (the first question of the exact quiz /trivia serves
+    today, via _trivia_quiz_for), (3) a Haunt or Not card into /games.
+    Stable all day, rotates at ET midnight. The visit streak is
+    JS/cookie-driven (hmFrightTouch in base.html) — visiting this page
+    is one of the two counting surfaces; no server state is kept."""
+    et_date = _today_et()
+    with get_conn(DB_PATH) as conn:
+        display = _daily_display(conn, et_date)
+    quiz = _trivia_quiz_for(datetime.now(timezone.utc).date())
+    date_label = et_date.strftime("%A, %B ") + str(et_date.day)
+    return templates.TemplateResponse(
+        request, "daily_fright.html",
+        {"display": display,
+         "trivia_q": quiz[0]["q"] if quiz else "",
+         "date_label": date_label, "date_iso": et_date.isoformat()},
     )
 
 
@@ -3089,7 +3165,7 @@ def town_page(request: Request, slug: str):
 def sitemap():
     base = "https://gethauntmap.com"
     urls = ["/", "/map", "/nearby", "/tour", "/diy", "/diy-costumes", "/games", "/leaderboard",
-            "/towns", "/passport", "/advertise", "/media-kit", "/about", "/costume-contest", "/trivia", "/haunt-or-not", "/fan-art",
+            "/towns", "/passport", "/daily", "/advertise", "/media-kit", "/about", "/costume-contest", "/trivia", "/haunt-or-not", "/fan-art",
             "/restaurhaunts"]
     for t in _towns_with_counts():
         urls.append(f"/towns/{t['slug']}")

@@ -196,6 +196,99 @@ function hmPassportSummary(data) {
   return { pins: pins, started: started, conquered: conquered, rows: rows };
 }
 </script>
+<script>
+// --- Item 6: Daily Fright streak-lite (cookies, forgiving) ----------
+// Cookies: hm_fright_streak (int), hm_fright_last (last ET date the
+// streak counted, YYYY-MM-DD), hm_fright_freeze (ISO week key, e.g.
+// 2026-W43, of the last used freeze). Counting surfaces are ONLY
+// /daily and the homepage Daily Fright band — both call
+// hmFrightTouch() explicitly; merely wandering the site does not
+// build a streak, the daily drop is the habit being counted.
+// State machine, run once per page load on a counting surface:
+//   last == today            -> no change (already counted today)
+//   no last                  -> streak = 1, last = today
+//   last == yesterday        -> streak += 1, last = today
+//   last == 2 days ago AND hm_fright_freeze != this ISO week
+//                            -> streak += 1, last = today, freeze is
+//                               consumed for this week, and the flame
+//                               shows a ❄️ "freeze used" note today
+//   anything older / a freeze already spent this week
+//                            -> streak restarts at 1, last = today
+// No shaming anywhere: a restart renders the same neutral "Start your
+// streak" copy as a first visit. Dates are America/New_York dates
+// (Intl), because the drop rotates at ET midnight — a UTC or
+// device-local clock would flip the streak at the wrong hour.
+function hmFrightGetCookie(name) {
+  var m = document.cookie.match(new RegExp('(?:^|; )' + name + '=([^;]*)'));
+  return m ? decodeURIComponent(m[1]) : '';
+}
+function hmFrightSetCookie(name, val) {
+  document.cookie = name + '=' + encodeURIComponent(val) +
+    '; path=/; max-age=' + (400 * 24 * 3600) + '; SameSite=Lax';
+}
+function hmFrightTodayET() {
+  try {
+    var parts = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit'
+    }).formatToParts(new Date());
+    var p = {};
+    parts.forEach(function (x) { p[x.type] = x.value; });
+    if (p.year && p.month && p.day) return p.year + '-' + p.month + '-' + p.day;
+  } catch (e) {}
+  return new Date().toISOString().slice(0, 10); // fallback: UTC date
+}
+function hmFrightIsoWeekKey(iso) {
+  var d = new Date(iso + 'T00:00:00Z');
+  var day = (d.getUTCDay() + 6) % 7; // Mon=0..Sun=6
+  d.setUTCDate(d.getUTCDate() - day + 3); // this week's Thursday
+  var firstThu = new Date(Date.UTC(d.getUTCFullYear(), 0, 4));
+  var fday = (firstThu.getUTCDay() + 6) % 7;
+  firstThu.setUTCDate(firstThu.getUTCDate() - fday + 3);
+  var week = 1 + Math.round((d - firstThu) / (7 * 864e5));
+  return d.getUTCFullYear() + '-W' + String(week).padStart(2, '0');
+}
+function hmFrightTouch() {
+  if (window.__hmFrightState) return window.__hmFrightState;
+  var today = hmFrightTodayET();
+  var streak = parseInt(hmFrightGetCookie('hm_fright_streak') || '0', 10) || 0;
+  var last = hmFrightGetCookie('hm_fright_last');
+  var freezeUsed = false;
+  if (last === today) {
+    if (streak < 1) streak = 1;
+  } else if (!last) {
+    streak = 1;
+  } else {
+    var diff = Math.round((new Date(today + 'T00:00:00Z') - new Date(last + 'T00:00:00Z')) / 864e5);
+    if (diff === 1) {
+      streak = streak > 0 ? streak + 1 : 1;
+    } else if (diff === 2 && hmFrightGetCookie('hm_fright_freeze') !== hmFrightIsoWeekKey(today)) {
+      streak = streak > 0 ? streak + 1 : 1;
+      hmFrightSetCookie('hm_fright_freeze', hmFrightIsoWeekKey(today));
+      freezeUsed = true;
+    } else {
+      streak = 1;
+    }
+  }
+  if (last !== today) {
+    hmFrightSetCookie('hm_fright_streak', String(streak));
+    hmFrightSetCookie('hm_fright_last', today);
+  }
+  var state = { streak: streak, freezeUsed: freezeUsed, today: today };
+  window.__hmFrightState = state;
+  var flame = '\u{1F525} Day ' + streak + ' of Daily Fright' +
+    (freezeUsed ? ' \u00B7 \u2744\uFE0F freeze used \u2014 streak saved' : '');
+  document.querySelectorAll('.fright-streak-full').forEach(function (el) {
+    el.textContent = streak >= 2 ? flame
+      : 'Start your streak \u2014 come back tomorrow to make it Day 2.';
+    el.hidden = false;
+  });
+  document.querySelectorAll('.fright-streak-flame').forEach(function (el) {
+    if (streak >= 2) { el.textContent = flame; el.hidden = false; }
+    else { el.hidden = true; }
+  });
+  return state;
+}
+</script>
 <main class="wrap">
   {% block content %}{% endblock %}
 </main>

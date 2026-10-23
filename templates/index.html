@@ -195,13 +195,19 @@
 </section>
 {% endif %}
 
+{# Wave 4, Item 6: Daily Fright band — directly under Tonight's Display
+   (Item 5's dated strip sits above Tonight's), above the passport
+   chip: strip = tonight's counts, Tonight's = the random pick, this
+   band = the canonical daily drop + streak flame. #}
+{% include "_daily_band.html" %}
+
 {# Wave 4, Item 4: Haunt Passport chip. Placement: with the homepage
    modules in the Tonight cluster — directly under Tonight's Display
-   (and under the Daily Fright band when Item 6 lands between them),
-   above the below-band Near-you copy; it renders once, on phone and
-   laptop alike. Client-rendered and hidden until the visitor has at
-   least one counted pin seen, so first-timers never see an empty
-   progress nag. No header button, no nav change. #}
+   and the Daily Fright band, above the below-band Near-you copy; it
+   renders once, on phone and laptop alike. Client-rendered and
+   hidden until the visitor has at least one counted pin seen, so
+   first-timers never see an empty progress nag. No header button,
+   no nav change. #}
 <a class="passport-chip" id="hm-passport-chip" href="/passport" hidden>&#x1F383; Haunt Passport &mdash; <span class="pc-text"></span> &rarr;</a>
 <script>
 (function () {
