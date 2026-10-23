@@ -2466,6 +2466,114 @@ MUSIC_YOUTUBE_GRID = [
     {"id": "E1mU6h4Xdxc", "title": "Rihanna — Disturbia",
      "channel": "RihannaVEVO"},
 ]
+# Legendary live Halloween performances (Dan's picks, Oct 23). Every ID
+# re-verified via YouTube oEmbed on 2026-10-23 (title + author match,
+# embeddable). Provenance is mixed by necessity — some are official
+# (AliceCooperVEVO, Beggars Banquet Records), the rest are the best-known
+# archival recordings; the "meta" line states the facts either way.
+MUSIC_PERFORMANCES = [
+    {"id": "7DOzITFjq70", "title": "Michael Jackson — Thriller (Live)",
+     "meta": "Munich · HIStory Tour, 1997 · 6:41",
+     "channel": "LiveMJHD"},
+    {"id": "d9QZgY4GG0M", "title": "Danny Elfman — This Is Halloween (Live)",
+     "meta": "Hollywood Bowl · Halloween night, Oct 31, 2015 · 4:03",
+     "channel": "Todd Malkin"},
+    {"id": "2X-lWDPno-g",
+     "title": "Ken Page — Oogie Boogie's Song (Live)",
+     "meta": "Hollywood Bowl · Halloween night, Oct 31, 2015 · 2:38",
+     "channel": "Todd Malkin"},
+    {"id": "s7PGHF_kza8", "title": "Oingo Boingo — Dead Man's Party (Live)",
+     "meta": "Farewell concert — their final show ever · Halloween night, "
+             "Oct 31, 1995 · 8:14",
+     "channel": "nutstothis"},
+    {"id": "aOeP4p1fjMs",
+     "title": "Alice Cooper — Welcome to My Nightmare (Live)",
+     "meta": "Trashes the World Tour · 1990",
+     "channel": "AliceCooperVEVO"},
+    {"id": "d8RH8RO0eR0", "title": "Ghost — Year Zero (Live)",
+     "meta": "Webster Hall, New York City · 2013 · 5:06",
+     "channel": "Noisey"},
+    {"id": "MDvC7Q3KtZY", "title": "John Carpenter — Halloween Theme (Live)",
+     "meta": "Aragon Ballroom, Chicago · Nov 9, 2017 · 4:11",
+     "channel": "Sean Steffen"},
+    {"id": "fDYbgLEUsMU", "title": "Bauhaus — Bela Lugosi's Dead (Live)",
+     "meta": "Live · 7:39",
+     "channel": "Beggars Banquet Records"},
+    {"id": "vNuVifA7DSU",
+     "title": "Bobby \"Boris\" Pickett — Monster Mash (Live on TV)",
+     "meta": "Television performance · 1964 · 4:24",
+     "channel": "NRRArchives2"},
+]
+# Full-length Halloween DJ sets & mixes (Dan, Oct 23). Same oEmbed
+# discipline — verified 2026-10-23; every entry is a genuine full set
+# (59+ minutes) on the DJ's or the series' own channel.
+MUSIC_DJ_SETS = [
+    {"id": "ZtOZu1LBBPE", "title": "RL Grime — Halloween XIII: The End",
+     "meta": "The final chapter of his annual Halloween mix tradition · "
+             "1:00:22",
+     "channel": "RL Grime"},
+    {"id": "e0QtfusVfas",
+     "title": "RL Grime — Halloween X (Live at the Hollywood Palladium)",
+     "meta": "Recorded live at the Hollywood Palladium · 1:15:24",
+     "channel": "RL Grime"},
+    {"id": "tufnSNynF4Q",
+     "title": "deadmau5 — mau5trap radio 371: A Special Halloween Mix",
+     "meta": "His own Halloween special on mau5trap radio · 1:00:00",
+     "channel": "deadmau5"},
+    {"id": "257wOj5Eh5o", "title": "Justin Jay — Boiler Room x Escape Halloween",
+     "meta": "Live from Escape Halloween · 1:03:14",
+     "channel": "Boiler Room"},
+    {"id": "0yxIFBOzzRI", "title": "So — Boiler Room x Dommune Halloween",
+     "meta": "Tokyo's Dommune Halloween session · 1:13:21",
+     "channel": "Boiler Room"},
+    {"id": "JGJoGtt3n5Y",
+     "title": "Mikey Lion — Live from the Desert Hearts Halloween Party",
+     "meta": "Desert Hearts' Halloween party, via Mixmag · 59:05",
+     "channel": "Mixmag"},
+    {"id": "VatiS3pNM00",
+     "title": "Adam Beyer — Drumcode Halloween at Tobacco Dock",
+     "meta": "Drumcode's London Halloween takeover · 2:02:17",
+     "channel": "DJ Mag"},
+]
+# Halloween singles not already on this page (Dan, Oct 23). oEmbed-verified
+# 2026-10-23 on official/VEVO/label channels wherever they exist; where a
+# song never got an official video, the meta line says "official audio"
+# honestly, and the Time Warp is the studio-licensed Movieclips scene.
+MUSIC_SINGLES = [
+    {"id": "7YvAYIJSSZY", "title": "Rockwell — Somebody's Watching Me",
+     "meta": "1984 · Michael Jackson sings the hook — Motown's paranoid "
+             "classic",
+     "channel": "RockwellVEVO"},
+    {"id": "82cdnAUvsw8",
+     "title": "Screamin' Jay Hawkins — I Put a Spell on You",
+     "meta": "1956 · the original spell, screamed — official audio",
+     "channel": "ScreaminJayVEVO"},
+    {"id": "RZ2oXzrnti4", "title": "The Specials — Ghost Town",
+     "meta": "1981 · the haunted ska anthem",
+     "channel": "TheSpecialsOfficVEVO"},
+    {"id": "HJWFsZ_YUc4", "title": "Ramones — Pet Sematary",
+     "meta": "1989 · written for the Stephen King film",
+     "channel": "Ramones"},
+    {"id": "hIHUzBFlcW8", "title": "Siouxsie and the Banshees — Halloween",
+     "meta": "1981 · from Ju Ju — official audio",
+     "channel": "Siouxsie And The Banshees"},
+    {"id": "D2MH5c2sTvc", "title": "Ministry — Every Day Is Halloween",
+     "meta": "1984 · the goth-club anthem — official audio",
+     "channel": "Ministry"},
+    {"id": "auzfTPp4moA", "title": "Yeah Yeah Yeahs — Heads Will Roll",
+     "meta": "2009 · off with their heads",
+     "channel": "YeahYeahYeahsVEVO"},
+    {"id": "qae25976UgA", "title": "Warren Zevon — Werewolves of London",
+     "meta": "1978 · ah-hoo!",
+     "channel": "RHINO"},
+    {"id": "GU35oCHGhJ0", "title": "Donovan — Season of the Witch",
+     "meta": "1966 · the psychedelic original — official audio",
+     "channel": "DonovanVEVO"},
+    {"id": "-w0WPkB3XJ4",
+     "title": "The Rocky Horror Picture Show — Time Warp",
+     "meta": "1975 · the film scene — it's just a jump to the left",
+     "channel": "Movieclips"},
+]
 # Artist cards. "art" is the artist's own Spotify artist photo (Spotify CDN,
 # via oEmbed) — Ghost's card uses their verified Dance Macabre video still
 # instead, because Ghost's Spotify artist ID could not be verified from a
@@ -2558,6 +2666,8 @@ def music_page(request: Request):
         request, "music.html",
         {"site_name": SITE_NAME, "playlists": MUSIC_SPOTIFY_PLAYLISTS,
          "yt_featured": MUSIC_YOUTUBE_FEATURED, "yt_grid": MUSIC_YOUTUBE_GRID,
+         "yt_performances": MUSIC_PERFORMANCES, "yt_dj_sets": MUSIC_DJ_SETS,
+         "yt_singles": MUSIC_SINGLES,
          "icons": MUSIC_ICONS, "pop": MUSIC_POP},
     )
 

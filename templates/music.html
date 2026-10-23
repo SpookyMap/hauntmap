@@ -37,6 +37,51 @@
   {% endfor %}
 </div>
 
+<h2 class="music-h2" id="performances">&#x1F3A4; Legendary Halloween Performances</h2>
+<p>The studio videos are one thing — these are the live moments. Danny Elfman singing &ldquo;This Is Halloween&rdquo; at the Hollywood Bowl on Halloween night itself, Oingo Boingo's farewell concert — their final show ever, Halloween 1995 — John Carpenter playing his own theme, and Bobby Pickett doing the &ldquo;Monster Mash&rdquo; on 1964 television. Tap any cover to play.</p>
+<div class="yt-grid">
+  {% for v in yt_performances %}
+  <div class="yt-item">
+    <button type="button" class="yt-facade" data-yt="{{ v.id }}" aria-label="Play {{ v.title }}">
+      <img src="https://i.ytimg.com/vi/{{ v.id }}/hqdefault.jpg" alt="" loading="lazy">
+      <span class="yt-play" aria-hidden="true">&#9654;</span>
+    </button>
+    <p class="yt-cap">{{ v.title }} &middot; {{ v.channel }}</p>
+    <p class="yt-meta">{{ v.meta }}</p>
+  </div>
+  {% endfor %}
+</div>
+
+<h2 class="music-h2" id="dj-sets">&#x1F39B;&#xFE0F; Full DJ Sets</h2>
+<p>Press play and let it ride — full-length Halloween sets and mixes for the party, the drive, or the haunt build. RL Grime's annual Halloween mix is a genuine October tradition; his thirteenth was billed as the final chapter. Tap any cover to play.</p>
+<div class="yt-grid">
+  {% for v in yt_dj_sets %}
+  <div class="yt-item">
+    <button type="button" class="yt-facade" data-yt="{{ v.id }}" aria-label="Play {{ v.title }}">
+      <img src="https://i.ytimg.com/vi/{{ v.id }}/hqdefault.jpg" alt="" loading="lazy">
+      <span class="yt-play" aria-hidden="true">&#9654;</span>
+    </button>
+    <p class="yt-cap">{{ v.title }} &middot; {{ v.channel }}</p>
+    <p class="yt-meta">{{ v.meta }}</p>
+  </div>
+  {% endfor %}
+</div>
+
+<h2 class="music-h2" id="singles">&#x1F47B; Halloween Singles</h2>
+<p>The essential singles that aren't already above — the watched-me paranoia of Rockwell, Screamin' Jay's original spell, the goth-club oath that every day is Halloween, and a jump to the left. Tap any cover to play.</p>
+<div class="yt-grid">
+  {% for v in yt_singles %}
+  <div class="yt-item">
+    <button type="button" class="yt-facade" data-yt="{{ v.id }}" aria-label="Play {{ v.title }}">
+      <img src="https://i.ytimg.com/vi/{{ v.id }}/hqdefault.jpg" alt="" loading="lazy">
+      <span class="yt-play" aria-hidden="true">&#9654;</span>
+    </button>
+    <p class="yt-cap">{{ v.title }} &middot; {{ v.channel }}</p>
+    <p class="yt-meta">{{ v.meta }}</p>
+  </div>
+  {% endfor %}
+</div>
+
 <h2 class="music-h2" id="icons">&#x1F451; Halloween Music Icons</h2>
 <p>The artists who built the sound of the season.</p>
 <div class="music-cards">

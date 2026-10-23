@@ -1890,6 +1890,7 @@ body.has-tourbar #hm-prompt { bottom: 4.4rem; }
 .yt-facade:hover .yt-play, .yt-facade:focus-visible .yt-play { background: #ff8c42; }
 .yt-frame { width: 100%; aspect-ratio: 16 / 9; border: 1px solid #33254f; border-radius: var(--radius); display: block; background: #000; }
 .yt-cap { color: var(--muted); font-size: 0.9rem; margin: 0.4rem 0 0; }
+.yt-meta { color: var(--muted); font-size: 0.82rem; margin: 0.15rem 0 0; opacity: 0.85; }
 .music-cards { display: grid; grid-template-columns: 1fr; gap: 1rem; margin: 0.8rem 0 0.4rem; }
 @media (min-width: 620px) { .music-cards { grid-template-columns: 1fr 1fr; } }
 .music-card { background: var(--card); border: 1px solid #33254f; border-radius: var(--radius); padding: 0.9rem; }
