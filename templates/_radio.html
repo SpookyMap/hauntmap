@@ -1,4 +1,4 @@
-{# Halloween Radio (Spotify) — Dan, Oct 22. A slim chip fixed at the
+{# HauntMap Radio (Spotify) — Dan, Oct 22. A slim chip fixed at the
    bottom of every page; expanding it lazy-loads the Spotify embed
    (ZERO Spotify requests until a visitor first opens it). Stations:
    HauntMap Halloween (default), genre picks, the visitor's own
@@ -11,17 +11,17 @@
   <div class="hmr-chip" id="hmrChip" hidden>
     <button type="button" class="hmr-main" id="hmrOpen" aria-expanded="false" aria-controls="hmrPanel">
       <span class="hmr-ico" aria-hidden="true">&#x1F383;&#x1F3B5;</span>
-      <span class="hmr-name">Halloween Radio</span>
+      <span class="hmr-name">HauntMap Radio</span>
       <span class="hmr-play" aria-hidden="true">&#x25B6;</span>
     </button>
-    <button type="button" class="hmr-x" id="hmrOff" aria-label="Turn off Halloween Radio">&times;</button>
+    <button type="button" class="hmr-x" id="hmrOff" aria-label="Turn off HauntMap Radio">&times;</button>
   </div>
-  <div class="hmr-panel" id="hmrPanel" role="region" aria-label="Halloween Radio player" hidden>
+  <div class="hmr-panel" id="hmrPanel" role="region" aria-label="HauntMap Radio player" hidden>
     <div class="hmr-head">
-      <span class="hmr-title">&#x1F383;&#x1F3B5; Halloween Radio</span>
+      <span class="hmr-title">&#x1F383;&#x1F3B5; HauntMap Radio</span>
       <span class="hmr-head-btns">
         <button type="button" id="hmrCollapse" aria-label="Collapse player">&ndash;</button>
-        <button type="button" id="hmrOff2" aria-label="Turn off Halloween Radio">&times;</button>
+        <button type="button" id="hmrOff2" aria-label="Turn off HauntMap Radio">&times;</button>
       </span>
     </div>
     <div class="hmr-picks" role="group" aria-label="Stations">
@@ -66,10 +66,10 @@
     <p class="hmr-music-row"><a class="hmr-music-link" href="/music">&#x1F3B5; Full music page &rarr;</a></p>
     <p class="hmr-reset-row"><button type="button" class="hmr-reset" id="hmrReset">&#x21A9; Back to HauntMap Halloween</button></p>
   </div>
-  <button type="button" class="hmr-tab" id="hmrTab" aria-label="Turn on Halloween Radio" hidden>&#x1F3B5;</button>
+  <button type="button" class="hmr-tab" id="hmrTab" aria-label="Turn on HauntMap Radio" hidden>&#x1F3B5;</button>
 </div>
 <script>
-// Halloween Radio (Spotify) — chip / panel / off-tab with localStorage
+// HauntMap Radio (Spotify) — chip / panel / off-tab with localStorage
 // state (hm_radio_off, hm_radio_open, hm_radio_station, hm_radio_custom,
 // hm_mix, hm_mix_idx). The embed iframe is created ONLY on first open
 // (or when restoring a returning visitor's open panel) so the player
@@ -188,7 +188,7 @@
   function ensureFrame() {
     if (iframe) return;
     iframe = document.createElement('iframe');
-    iframe.title = 'Spotify player — HauntMap Halloween Radio';
+    iframe.title = 'Spotify player — HauntMap Radio';
     iframe.width = '100%';
     iframe.height = '152';
     iframe.frameBorder = '0';
