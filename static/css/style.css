@@ -315,6 +315,15 @@ a { color: var(--accent); }
   display: flex; align-items: center; justify-content: center; white-space: nowrap;
 }
 .cat-btn-sub.active { color: var(--ink); border-color: var(--accent); }
+/* Laptop/desktop only (Dan 2026-10-23): Tour fuel buttons go two over two —
+   Coffee & Cafes / Restaurhaunts on line one, Shops / Parks on line two.
+   Capping the row at the label + two 160px chips makes Shops wrap down next
+   to Parks; the capped row stays centered like the category rows above it.
+   Phone (<=480px) is deliberately untouched: its media query below still
+   gives the label its own line and 2-across chips, exactly as before. */
+@media (min-width: 481px) {
+  .cat-tabs-sub { max-width: 30rem; margin-left: auto; margin-right: auto; }
+}
 .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.9rem; }
 @media (max-width: 480px) {
   .grid { grid-template-columns: 1fr; }
