@@ -1435,27 +1435,30 @@ a.game-card:hover { border-color: #ff7518; transform: translateY(-2px); }
    .tt-featured is a TOP-LEVEL block (after .mobile-search), NOT
    inside .hero-split, so the .hero-split-prefixed rules in this
    block matched nothing and the toks stayed stacked.
-   Phone only (<=760px); desktop/laptop rendering untouched. The two
-   homepage promo toks sit side by side (NEW Scare-O-Meter left,
-   40-hours right) instead of stacked. When one is tapped, the inline
-   binding adds .tt-playing: the tapped video's embed spans the full
-   width and the other facade drops below it full-width — a TikTok
-   embed is unusable at half phone width. */
+   z88 (Dan, Oct 23): a THIRD promo tok (Northeast coverage) joins
+   the row. Phone only (<=760px); desktop/laptop rendering untouched
+   (all three stack there). On phone the three sit side by side
+   (Scare-O-Meter left, 40-hours middle, Northeast right) instead of
+   stacked. When one is tapped, the inline binding adds .tt-playing:
+   the tapped video's embed spans the full width on top and the two
+   untouched facades drop below it full-width, stacked — a TikTok
+   embed is unusable at a third of phone width. */
 @media (max-width: 760px) {
   .tt-featured {
-    display: grid; grid-template-columns: 1fr 1fr; gap: 0.55rem;
+    display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.5rem;
     width: min(430px, 100%);
   }
   .tt-featured .tt-facade + .tt-facade { margin-top: 0; }
   .tt-featured > .tt-facade:nth-of-type(1) { grid-column: 1; grid-row: 1; }
   .tt-featured > .tt-facade:nth-of-type(2) { grid-column: 2; grid-row: 1; }
-  /* Half-width cards get scaled-down chrome (row state only) */
-  .tt-featured:not(.tt-playing) .tt-play { width: 44px; height: 44px; font-size: 1rem; }
-  .tt-featured:not(.tt-playing) .tt-facade-label { font-size: 0.78rem; padding: 1rem 0.3rem 0.4rem; }
-  /* Playing: embed full width on top; the untouched facade drops below */
+  .tt-featured > .tt-facade:nth-of-type(3) { grid-column: 3; grid-row: 1; }
+  /* Third-width cards get scaled-down chrome (row state only) */
+  .tt-featured:not(.tt-playing) .tt-play { width: 36px; height: 36px; font-size: 0.85rem; }
+  .tt-featured:not(.tt-playing) .tt-facade-label { font-size: 0.66rem; padding: 0.9rem 0.2rem 0.3rem; }
+  /* Playing: embed full width on top; the untouched facades drop below */
   .tt-featured > blockquote.tiktok-embed,
-  .tt-featured > iframe { grid-column: 1 / -1; margin: 0 auto; }
-  .tt-featured.tt-playing > .tt-facade { grid-column: 1 / -1; grid-row: 2; }
+  .tt-featured > iframe { grid-column: 1 / -1; grid-row: 1; margin: 0 auto; }
+  .tt-featured.tt-playing > .tt-facade { grid-column: 1 / -1; grid-row: auto; }
 }
 
 /* ============ z38: EVENTS ARTWORK = ROW-TWO ANCHOR (Dan, Oct 22) ====
