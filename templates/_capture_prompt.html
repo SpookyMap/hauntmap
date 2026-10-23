@@ -1,0 +1,39 @@
+{# Retention Wave 2, Item 3 — mid-browse text-alert capture sheet.
+   A dismissible bottom sheet (NOT a modal: page stays readable and
+   scrollable, obvious ×, Escape closes). Visibility, triggers and
+   suppression live in static/js/retention2.js; this partial is pure
+   markup and stays `hidden` until that script shows it (max once per
+   visitor per ~3 days, never on the homepage, never on a page that
+   already renders the static _text_alerts.html panel).
+   The form is the panel's form: same POST /text-alerts endpoint, same
+   field names, same radius options/default, same interest defaults,
+   same honeypot field and the same consent copy. source="mid-browse"
+   attributes these captures separately in sms_subscribers. #}
+<div id="hm-capture" class="hm-capture" hidden role="dialog" aria-label="Get HauntMap text alerts">
+  <button type="button" class="hm-capture-x" aria-label="Close">&times;</button>
+  <h3>Get text alerts &#x1F4F1;</h3>
+  <p>New haunts &amp; Halloween events near you — texted as they land on the map.</p>
+  <p class="form-error hm-capture-error" hidden></p>
+  <form method="post" action="/text-alerts" class="text-alerts-form hm-capture-form">
+    <input type="tel" name="phone" placeholder="Mobile number" autocomplete="tel" inputmode="tel" required>
+    <input type="text" name="zip" placeholder="ZIP code" inputmode="numeric" autocomplete="postal-code">
+    <input type="text" name="town" placeholder="Town, ST (for town-only alerts)" autocomplete="address-level2">
+    <label class="ta-radius">How far around you?
+      <select name="radius">
+        <option value="5">5 miles</option>
+        <option value="10">10 miles</option>
+        <option value="15" selected>15 miles</option>
+        <option value="25">25 miles</option>
+        <option value="50">50 miles</option>
+        <option value="0">My town only</option>
+      </select>
+    </label>
+    <label class="ta-check"><input type="checkbox" name="want_haunts" checked> New haunts</label>
+    <label class="ta-check"><input type="checkbox" name="want_events" checked> Events</label>
+    <input type="text" name="website" class="hp-field" tabindex="-1" autocomplete="off" aria-hidden="true">
+    <input type="hidden" name="source" value="mid-browse">
+    <button type="submit" class="btn">Text me the good stuff</button>
+  </form>
+  <p class="hm-capture-done" hidden></p>
+  <p class="ta-consent">By signing up you agree to receive recurring automated HauntMap text alerts. Msg &amp; data rates may apply. Reply STOP to end, HELP for help. Alerts start when our texting service launches.</p>
+</div>

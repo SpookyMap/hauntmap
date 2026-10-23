@@ -2830,3 +2830,42 @@ body.has-tourbar.has-radio { padding-bottom: 124px; }
   .below-band-only .text-alerts-form .btn { padding: 0.38rem 0.9rem; font-size: 0.85rem; }
   .below-band-only .text-alerts .ta-consent { font-size: 0.66rem; line-height: 1.3; margin-top: 0.35rem; }
 }
+
+/* ============ Retention Wave 2, Items 3+5 (retention2-capture) ====
+   Item 3: #hm-capture mid-browse text-alert sheet — a bottom sheet in
+   the signup-strip palette (same gradient/border family as
+   .text-alerts), slides up, never blocks the page. It reuses
+   .text-alerts-form field styles; only the shell + compact spacing
+   live here. Item 5: .fright-chip on pin pages, a small pill in the
+   .social-btn / tour-add-btn visual language with the streak orange
+   (#ff7518, same as .fright-streak). */
+.fright-chip-row { margin: 0.35rem 0 0.1rem; }
+.fright-chip {
+  display: inline-block; padding: 0.34rem 0.8rem; border-radius: 999px;
+  background: rgba(255, 117, 24, 0.12); border: 1px solid #6b4fae;
+  color: #ff7518; font-weight: 800; font-size: 0.85rem; text-decoration: none;
+}
+.fright-chip:hover, .fright-chip:focus-visible { background: rgba(255, 117, 24, 0.22); outline: none; }
+.fright-chip[hidden] { display: none; }
+
+#hm-capture {
+  position: fixed; left: 50%; bottom: 1rem; z-index: 2000;
+  width: min(430px, calc(100vw - 2rem));
+  transform: translate(-50%, calc(100% + 2rem));
+  transition: transform 0.35s ease;
+  background: linear-gradient(160deg, #241a44, #17122b);
+  border: 2px solid #4a2d7a; border-radius: 14px;
+  padding: 1rem 1.1rem 0.9rem; box-shadow: 0 12px 40px rgba(0,0,0,0.55);
+}
+#hm-capture.hm-capture-in { transform: translate(-50%, 0); }
+#hm-capture[hidden] { display: none; }
+body.has-tourbar #hm-capture { bottom: 4.4rem; }
+#hm-capture h3 { margin: 0 1.4rem 0.2rem 0; font-size: 1.05rem; color: #FFF8E7; }
+#hm-capture p { color: #c9bce8; margin: 0 0 0.4rem; font-size: 0.85rem; line-height: 1.35; }
+#hm-capture .hm-capture-x {
+  position: absolute; top: 0.35rem; right: 0.55rem; background: none; border: none;
+  color: #9a8fb8; font-size: 1.4rem; line-height: 1; cursor: pointer; padding: 0.3rem;
+}
+#hm-capture .text-alerts-form { margin-top: 0.5rem; }
+#hm-capture .hm-capture-done { color: #7ee787; font-weight: 700; margin: 0.4rem 0; }
+#hm-capture .ta-consent { font-size: 0.72rem; color: #9d8fc7; margin-top: 0.6rem; line-height: 1.4; }

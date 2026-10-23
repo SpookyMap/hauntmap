@@ -95,6 +95,13 @@
   {% endif %}
   <p class="votes-big">&#x1F383; {{ entry.votes }} vote{{ 's' if entry.votes != 1 }}</p>
 
+  {# Retention Wave 2, Item 5: Daily Fright streak chip. Filled and
+     unhidden by hmFrightState() in static/js/retention2.js (loaded
+     from base.html), which reads the SAME streak cookies + ET day
+     boundary hmFrightTouch() counts with in base.html — read-only:
+     pin pages never count a day. No JS / no state -> stays hidden. #}
+  <p class="fright-chip-row"><a class="fright-chip" data-fright-chip href="/daily" hidden></a></p>
+
   {% if entry.town_label %}
   {# Retention Wave 3, Item 9: high-intent text-alert prompt. Placement
      decision: directly under the media/player area AND the title/meta

@@ -644,5 +644,14 @@ hmTourSync();
 })();
 </script>
 {# ===== Retention Wave 2, Item 6: engaged-time beacon (END) ===== #}
+{# === Retention Wave 2, Items 3+5 (retention2-capture) BEGIN ===
+   Item 3 mid-browse text-alert capture sheet (partial) + Item 5 Daily
+   Fright streak-chip logic. ALL logic lives in static/js/retention2.js
+   and all markup in the partial, so this block is the feature's only
+   base.html footprint. A sibling child is editing base.html in
+   parallel (time-on-page beacon) — merge by keeping this block whole. #}
+{% include "_capture_prompt.html" %}
+<script src="/static/js/retention2.js" defer></script>
+{# === Retention Wave 2, Items 3+5 END === #}
 </body>
 </html>
