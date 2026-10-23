@@ -2258,6 +2258,149 @@ def tour_page(request: Request, s: str = "", cat: str = "halloween"):
     )
 
 
+# ---------------------------------------------------------------- shared tours
+# Item 8 (retention Wave 5): persistent, public "My Fright Night" itinerary
+# pages. The pre-Item-8 share mechanism was stateless: the tour page built
+# /tour?s=<comma-separated pin ids> entirely client-side and GET /tour above
+# re-resolved the ids per load. Nothing was stored, so links carried no
+# title, no landing page, and no view count — and a hidden/deleted pin
+# silently vanished from the link. That route is KEPT untouched (old links
+# in the wild keep resolving); the new default below stores the tour
+# server-side behind a short slug: POST /api/tours -> /t/{slug}.
+
+SHARED_TOUR_MAX_STOPS = 50
+
+
+def _shared_tour_title(entries: list[dict], requested) -> str:
+    """Title rule: an explicit non-empty title wins (trimmed, 80 chars).
+    Otherwise 'My Fright Night', enriched with the town label when at
+    least half the stops share one town_label ('My Fright Night —
+    Seekonk, MA')."""
+    if isinstance(requested, str) and requested.strip():
+        return requested.strip()[:80]
+    counts: dict[str, int] = {}
+    for e in entries:
+        label = e.get("town_label") or ""
+        if label:
+            counts[label] = counts.get(label, 0) + 1
+    if counts:
+        top_label, top_n = max(counts.items(), key=lambda kv: kv[1])
+        if top_n * 2 >= len(entries):
+            return f"My Fright Night — {top_label}"
+    return "My Fright Night"
+
+
+def _visible_tour_entries(ids: list[int]) -> list[dict]:
+    """Resolve pin ids to visible entries in the given order. Missing,
+    hidden, and coord-less pins are dropped (a tour stop needs coords for
+    the map, the directions link, and the /tour copy target — the tour
+    builder itself only ever holds coord-ful entries)."""
+    if not ids:
+        return []
+    with get_conn(DB_PATH) as conn:
+        rows = conn.execute(
+            f"SELECT * FROM entries WHERE hidden = 0 "
+            f"AND id IN ({','.join('?' * len(ids))})", ids).fetchall()
+    by_id = {r["id"]: row_to_dict(r) for r in rows}
+    return [by_id[i] for i in ids
+            if i in by_id and by_id[i].get("lat") and by_id[i].get("lng")]
+
+
+@app.post("/api/tours")
+async def api_create_shared_tour(request: Request):
+    """Create a persistent shared tour. Body: {pin_ids: [...], title?}.
+    Validates that ids exist, are visible, and carry coords; de-dupes
+    keeping first occurrence; caps at SHARED_TOUR_MAX_STOPS; needs >= 2
+    valid stops. Returns {slug, url, title, stops}."""
+    try:
+        data = await request.json()
+    except Exception:
+        data = {}
+    if not isinstance(data, dict):
+        data = {}
+    ids: list[int] = []
+    for x in data.get("pin_ids") or []:
+        try:
+            i = int(x)
+        except (TypeError, ValueError):
+            continue
+        if i not in ids:
+            ids.append(i)
+    ids = ids[:SHARED_TOUR_MAX_STOPS]
+    entries = _visible_tour_entries(ids)
+    if len(entries) < 2:
+        return JSONResponse(
+            {"error": "A shared tour needs at least 2 stops that are still on the map."},
+            status_code=400)
+    title = _shared_tour_title(entries, data.get("title"))
+    pin_ids_json = json.dumps([e["id"] for e in entries])
+    with get_conn(DB_PATH) as conn:
+        slug = None
+        for _ in range(5):  # collision-checked slug minting
+            cand = secrets.token_urlsafe(6)  # 8 URL-safe chars
+            if not conn.execute("SELECT 1 FROM shared_tours WHERE slug = ?",
+                                (cand,)).fetchone():
+                slug = cand
+                break
+        if slug is None:
+            return JSONResponse({"error": "Could not create a tour link — try again."},
+                                status_code=500)
+        conn.execute(
+            "INSERT INTO shared_tours (slug, title, pin_ids, created_at) "
+            "VALUES (?, ?, ?, ?)",
+            (slug, title, pin_ids_json, datetime.now(timezone.utc).isoformat()))
+        conn.commit()
+    return JSONResponse({"slug": slug, "url": f"/t/{slug}",
+                         "title": title, "stops": len(entries)})
+
+
+@app.get("/t/{slug}", response_class=HTMLResponse)
+def shared_tour_page(request: Request, slug: str):
+    """Public itinerary page for a shared tour. Increments the tour's view
+    counter per load (Jarvis's HauntMap-Verify checks excluded, matching
+    the page_views middleware). Pins hidden/deleted since sharing are
+    skipped and the shortfall is surfaced on the page — never a 500."""
+    with get_conn(DB_PATH) as conn:
+        row = conn.execute("SELECT * FROM shared_tours WHERE slug = ?",
+                           (slug,)).fetchone()
+        if row is None:
+            return templates.TemplateResponse(
+                request, "shared_tour_404.html", {"request": request},
+                status_code=404)
+        if "HauntMap-Verify" not in request.headers.get("user-agent", ""):
+            conn.execute("UPDATE shared_tours SET views = views + 1 WHERE slug = ?",
+                         (slug,))
+            conn.commit()
+        try:
+            ids = [int(x) for x in json.loads(row["pin_ids"] or "[]")]
+        except (TypeError, ValueError):
+            ids = []
+    stops = _visible_tour_entries(ids)
+    missing = len(ids) - len(stops)
+    # Google Maps directions, built exactly like the tour page's openGMaps
+    # (origin = first stop, destination = last, middle stops as
+    # waypoints) with driving mode — a shared itinerary is a drive plan.
+    gmaps_url = ""
+    if len(stops) >= 2:
+        origin = f"{stops[0]['lat']},{stops[0]['lng']}"
+        dest = f"{stops[-1]['lat']},{stops[-1]['lng']}"
+        waypoints = "|".join(f"{e['lat']},{e['lng']}" for e in stops[1:-1])
+        gmaps_url = ("https://www.google.com/maps/dir/?api=1"
+                     f"&origin={origin}&destination={dest}&travelmode=driving")
+        if waypoints:
+            gmaps_url += f"&waypoints={waypoints}"
+    # Payload for "Copy this tour": the exact localStorage haunt_tour
+    # entry format the tour builder reads ({id,title,town,lat,lng,thumb}).
+    copy_entries = [{"id": e["id"], "title": e["title"], "town": e["town"],
+                     "lat": e["lat"], "lng": e["lng"],
+                     "thumb": e.get("thumb_url") or ""} for e in stops]
+    return templates.TemplateResponse(request, "shared_tour.html",
+        {"request": request, "tour_title": row["title"], "slug": slug,
+         "stops": stops, "missing": missing, "gmaps_url": gmaps_url,
+         "copy_entries": copy_entries})
+
+
+
 @app.post("/upload", response_class=HTMLResponse)
 async def upload_submit(
     request: Request,

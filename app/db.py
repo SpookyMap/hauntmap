@@ -83,6 +83,14 @@ CREATE TABLE IF NOT EXISTS sms_subscribers (
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS shared_tours (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    slug TEXT NOT NULL UNIQUE,            -- URL-safe token, /t/{slug}
+    title TEXT NOT NULL,                  -- e.g. "My Fright Night — Seekonk, MA"
+    pin_ids TEXT NOT NULL,                -- JSON array of entry ids, array order = tour order
+    created_at TEXT NOT NULL,             -- UTC ISO timestamp
+    views INTEGER NOT NULL DEFAULT 0      -- GET /t/{slug} loads (verification UA excluded)
+);
 CREATE TABLE IF NOT EXISTS engagement_events (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     created_at TEXT NOT NULL,             -- UTC ISO timestamp

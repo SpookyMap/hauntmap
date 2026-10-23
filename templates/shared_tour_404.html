@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}Tour not found - {{ site_name }}{% endblock %}
+{% block content %}
+<div class="empty">
+  <p class="empty-emoji">&#x1F47B;</p>
+  <p><strong>This fright night has vanished.</strong></p>
+  <p style="color: var(--muted);">The shared tour link you followed doesn't exist &mdash; it may have been mistyped, or the tour is gone.</p>
+  <p>
+    <a class="btn" href="/tour">Build your own Fright Night &rarr;</a>
+    <a class="btn" href="/">Browse haunts</a>
+  </p>
+</div>
+{% endblock %}

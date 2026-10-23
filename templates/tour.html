@@ -212,10 +212,24 @@ document.getElementById('btn-optimize').onclick = () => {
   tour = ordered;
   render();
 };
-document.getElementById('btn-share').onclick = () => {
-  const ids = tour.map(e => e.id).join(',');
-  const link = `${location.origin}/tour?s=${ids}`;
-  document.getElementById('share-link').value = link;
+document.getElementById('btn-share').onclick = async () => {
+  // Item 8: mint a persistent /t/{slug} page server-side (POST /api/tours)
+  // and put its URL in the share box. If the API is unreachable, fall back
+  // to the legacy stateless /tour?s= link, which still resolves.
+  const btn = document.getElementById('btn-share');
+  btn.disabled = true;
+  try {
+    const r = await fetch('/api/tours', {method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({pin_ids: tour.map(e => e.id)})});
+    const j = await r.json();
+    if (!r.ok || !j.url) throw new Error(j.error || 'share failed');
+    document.getElementById('share-link').value = `${location.origin}${j.url}`;
+  } catch(e) {
+    const ids = tour.map(e => e.id).join(',');
+    document.getElementById('share-link').value = `${location.origin}/tour?s=${ids}`;
+  }
+  btn.disabled = false;
   document.getElementById('share-row').style.display = 'flex';
   document.getElementById('social-row').style.display = 'flex';
 };

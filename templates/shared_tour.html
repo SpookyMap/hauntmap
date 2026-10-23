@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% block title %}{{ tour_title }} - {{ site_name }}{% endblock %}
+{% block head %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+#shared-map { height: 320px; border-radius: 12px; margin-bottom: 1rem; }
+.stour-num { background: var(--accent); color: #1a0f00; font-weight: 700; width: 1.8rem; height: 1.8rem; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 0.95rem; }
+.stour-marker { background: var(--accent); color: #1a0f00; font-weight: 700; border: 2px solid #1a0f00; border-radius: 50%; width: 26px; height: 26px; display: flex; align-items: center; justify-content: center; font-size: 0.85rem; }
+.stour-list { list-style: none; padding: 0; margin: 0 0 1rem; }
+.stour-list li { margin-bottom: 0.5rem; }
+.stour-card { display: flex; gap: 0.6rem; align-items: center; background: var(--card); border: 1px solid #33254f; border-radius: 10px; padding: 0.6rem; text-decoration: none; color: var(--ink); }
+.stour-card:hover { border-color: var(--accent); }
+.stour-thumb { width: 3.5rem; height: 3.5rem; border-radius: 8px; object-fit: cover; flex-shrink: 0; }
+.stour-info { flex: 1; min-width: 0; }
+.stour-info strong { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.stour-info small { color: var(--ink); font-size: 0.85rem; display: block; margin-top: 2px; }
+.stour-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1rem; }
+.stour-note { color: var(--muted); font-size: 0.9rem; margin-bottom: 1rem; }
+</style>
+{% endblock %}
+{% block content %}
+<h2>&#x1F383; {{ tour_title }}</h2>
+<p style="color: var(--muted); margin-top: -0.5rem; margin-bottom: 1rem;">
+  A shared HauntMap fright night &middot; {{ stops|length }} stop{{ 's' if stops|length != 1 }} in haunt order &mdash; copy it, make it yours, and hit the road.
+</p>
+{% if missing %}
+<p class="stour-note">&#x1F47B; {{ missing }} stop{{ 's' if missing != 1 }} from the original tour {{ 'is' if missing == 1 else 'are' }} no longer on the map, so {{ 'it is' if missing == 1 else 'they are' }} not shown here.</p>
+{% endif %}
+<div id="shared-map"></div>
+<div class="stour-actions">
+  {% if gmaps_url %}
+  <a class="btn" href="{{ gmaps_url }}" target="_blank" rel="noopener">&#x1F5FA;&#xFE0F; Open in Google Maps</a>
+  {% endif %}
+  <button class="btn" id="btn-copy-tour">&#x1F4CB; Copy this tour</button>
+  <a class="btn" href="/tour">Build your own Fright Night &rarr;</a>
+</div>
+<ol class="stour-list">
+  {% for e in stops %}
+  <li>
+    <a class="stour-card" href="/d/{{ e.id }}">
+      <span class="stour-num">{{ loop.index }}</span>
+      {% if e.thumb_url %}<img class="stour-thumb" src="{{ e.thumb_url }}" alt="" loading="lazy">{% endif %}
+      <span class="stour-info">
+        <strong>{{ e.title }}</strong>
+        <small>{{ e.town_label or e.town }}</small>
+        {% if e.address %}<small>&#x1F4CD; {{ e.address }}</small>{% endif %}
+      </span>
+    </a>
+  </li>
+  {% endfor %}
+</ol>
+<p class="stour-note">Stops are in haunt order &mdash; tap any stop for photos, videos, and directions. Want this exact run? <strong>Copy this tour</strong> loads every stop into your own tour builder so you can reorder, add, and drop stops.</p>
+
+<script>
+const copyEntries = {{ copy_entries | tojson }};
+document.getElementById('btn-copy-tour').onclick = () => {
+  let existing = [];
+  try { existing = JSON.parse(localStorage.getItem('haunt_tour') || '[]'); } catch(e) { existing = []; }
+  if (existing.length && !confirm('Replace your current tour with this one?')) return;
+  try { localStorage.setItem('haunt_tour', JSON.stringify(copyEntries)); } catch(e) {}
+  location.href = '/tour';
+};
+
+const stopCoords = copyEntries.map(e => [e.lat, e.lng]);
+if (stopCoords.length) {
+  const map = L.map('shared-map').setView(stopCoords[0], 12);
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom: 19}).addTo(map);
+  copyEntries.forEach((e, i) => {
+    const icon = L.divIcon({className: '', html: `<div class="stour-marker">${i+1}</div>`, iconSize: [26, 26], iconAnchor: [13, 13]});
+    L.marker([e.lat, e.lng], {icon}).addTo(map)
+      .bindPopup(`<b>${i+1}. ${e.title}</b><br>${e.town}`);
+  });
+  map.fitBounds(stopCoords, {padding: [30, 30]});
+  if (stopCoords.length > 1) {
+    // Road route in tour order (same OSRM approach as the tour page);
+    // straight polyline fallback if the router is unreachable.
+    const coords = copyEntries.map(e => `${e.lng},${e.lat}`).join(';');
+    fetch(`https://router.project-osrm.org/route/v1/driving/${coords}?overview=full&geometries=geojson`)
+      .then(r => r.json())
+      .then(j => {
+        if (j.routes && j.routes[0]) {
+          L.geoJSON(j.routes[0].geometry, {style: {color: '#ff7a1a', weight: 4}}).addTo(map);
+        } else {
+          L.polyline(stopCoords, {color: '#ff7a1a', weight: 4}).addTo(map);
+        }
+      })
+      .catch(() => L.polyline(stopCoords, {color: '#ff7a1a', weight: 4}).addTo(map));
+  }
+}
+</script>
+{% endblock %}
