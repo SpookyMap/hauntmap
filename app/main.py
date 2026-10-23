@@ -37,6 +37,7 @@ from PIL import Image, ImageOps, UnidentifiedImageError
 
 from .db import get_conn, init_db
 from . import sms_alerts
+from . import bracket as brk
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 DATA_DIR = Path(os.environ.get("DATA_DIR", BASE_DIR / "data"))
@@ -1706,6 +1707,7 @@ def home(request: Request, sort: str = "top", town: str = "", town_search: str =
          "daily": daily, "daily_label": tonight_label,
          "daily_trivia_q": daily_quiz[0]["q"] if daily_quiz else "",
          "tstrip": tstrip,
+         "bracket_teaser": _bracket_teaser(),
          "trending": trending, "near_towns": near_towns,
          "near_heading": resolved_area["heading"],
          "near_sub": resolved_area["sub"],
@@ -2410,6 +2412,279 @@ async def api_duel_vote(request: Request):
             (loser,),
         )
     return {"ok": True}
+
+
+# ------------------------------------------------------------- haunt bracket
+# Haunt Bracket: America's Scariest House (staged Oct 2026 — see
+# app/bracket.py for seeds, round clock and rules). Voting reuses the
+# duel pattern: JSON vote endpoint + cookie identity (the hm_voter
+# cookie), one vote per matchup per browser, IP hash kept for audit.
+
+def _bracket_teaser() -> dict:
+    """Homepage module data (bracket band + Oct 31 champion treatment).
+    Never allowed to break the homepage — any failure degrades to the
+    plain pre-launch teaser."""
+    try:
+        now = brk.now_et()
+        champ = None
+        with get_conn(DB_PATH) as conn:
+            conn.executescript(brk.TABLES_SQL)
+            winners = brk.get_winners(conn)
+        if "F" in winners:
+            champ = get_entry(winners["F"])
+        label, when = brk.next_milestone(now)
+        return {"phase": brk.phase(now), "champion": champ,
+                "milestone_label": label, "milestone_at": when,
+                "crown_at": brk.CROWN_AT}
+    except Exception:
+        return {"phase": "pre", "champion": None,
+                "milestone_label": "Voting opens — Round of 16",
+                "milestone_at": brk.ROUNDS[0]["opens"], "crown_at": brk.CROWN_AT}
+
+
+def _bracket_entries() -> dict[int, dict]:
+    out: dict[int, dict] = {}
+    for seed, entry_id in brk.SEEDS.items():
+        e = get_entry(entry_id)
+        if not e:
+            continue
+        e = dict(e)
+        e["seed"] = seed
+        e["region"] = brk.REGIONS.get(entry_id, "")
+        e["has_video"] = entry_id in brk.HAS_VIDEO
+        e["seed_note"] = brk.SEED_NOTES.get(entry_id, "")
+        out[entry_id] = e
+    return out
+
+
+def _bracket_state(request: Request) -> dict:
+    now = brk.now_et()
+    entries = _bracket_entries()
+    voter = request.cookies.get("hm_voter", "")
+    with get_conn(DB_PATH) as conn:
+        conn.executescript(brk.TABLES_SQL)
+        winners = brk.get_winners(conn)
+        counts = {m: brk.vote_counts(conn, m) for m in brk.ALL_MATCHUPS}
+        my_votes: dict[str, int] = {}
+        my_prediction = None
+        if voter:
+            my_votes = {r["matchup_id"]: r["entry_id"] for r in conn.execute(
+                "SELECT matchup_id, entry_id FROM bracket_votes WHERE voter = ?",
+                (voter,)).fetchall()}
+            prow = conn.execute(
+                "SELECT * FROM bracket_predictions WHERE voter = ?",
+                (voter,)).fetchone()
+            if prow:
+                my_prediction = dict(prow)
+                my_prediction["picks"] = json.loads(my_prediction["picks"])
+                my_prediction["score"] = brk.prediction_score(
+                    my_prediction["picks"], winners)
+        board = []
+        for r in conn.execute(
+                "SELECT handle, picks FROM bracket_predictions").fetchall():
+            picks = json.loads(r["picks"])
+            board.append({
+                "handle": r["handle"],
+                "score": brk.prediction_score(picks, winners),
+                "champ": picks.get("F"),
+                "champ_alive": ("F" not in winners
+                                or picks.get("F") == winners.get("F")),
+            })
+        board.sort(key=lambda b: (-b["score"], b["handle"].lower()))
+        total_votes = sum(sum(c.values()) for c in counts.values())
+    rounds_out = []
+    for rnd in brk.ROUNDS:
+        status = ("open" if rnd["opens"] <= now <= rnd["closes"]
+                  else "upcoming" if now < rnd["opens"] else "closed")
+        ms = []
+        for mid in rnd["matchups"]:
+            a_id, b_id = brk.matchup_pair(mid, winners)
+            c = counts.get(mid, {})
+            total = sum(c.values())
+            def side(eid):
+                if eid is None:
+                    return None
+                e = dict(entries.get(eid, {}))
+                e["votes"] = c.get(eid, 0)
+                e["pct"] = round(100 * c.get(eid, 0) / total) if total else 0
+                return e
+            feeders = brk.FEEDS.get(mid)
+            ms.append({
+                "id": mid, "a": side(a_id), "b": side(b_id),
+                "a_label": (entries.get(a_id, {}).get("title") if a_id else
+                            (f"Winner of {feeders[0]}" if feeders else "TBD")),
+                "b_label": (entries.get(b_id, {}).get("title") if b_id else
+                            (f"Winner of {feeders[1]}" if feeders else "TBD")),
+                "total": total, "winner": winners.get(mid),
+                "my_vote": my_votes.get(mid), "status": status,
+            })
+        rounds_out.append({
+            "key": rnd["key"], "label": brk.ROUND_LABELS[rnd["key"]],
+            "opens": rnd["opens"], "closes": rnd["closes"],
+            "status": status, "matchups": ms,
+            "window_label": (rnd["opens"].strftime("%a %b %-d") + " – "
+                             + rnd["closes"].strftime("%a %b %-d")),
+        })
+    label, when = brk.next_milestone(now)
+    champion = None
+    if "F" in winners:
+        champion = entries.get(winners["F"])
+    return {
+        "now": now, "phase": brk.phase(now), "rounds": rounds_out,
+        "entries": entries, "winners": winners, "my_votes": my_votes,
+        "my_prediction": my_prediction, "board": board[:25],
+        "board_total": len(board), "total_votes": total_votes,
+        "milestone_label": label, "milestone_at": when,
+        "predict_open": now <= brk.PREDICT_LOCK,
+        "predict_lock": brk.PREDICT_LOCK, "champion": champion,
+        "crown_at": brk.CROWN_AT, "is_admin": is_admin(request),
+    }
+
+
+@app.get("/bracket", response_class=HTMLResponse)
+def bracket_page(request: Request):
+    st = _bracket_state(request)
+    seeds_sorted = sorted(st["entries"].values(), key=lambda e: e["seed"])
+    return templates.TemplateResponse(request, "bracket.html", {
+        "request": request, "st": st, "seeds": seeds_sorted,
+        "predicted": request.query_params.get("predicted") == "1",
+        "predict_locked_msg": request.query_params.get("predict") == "locked",
+    })
+
+
+@app.post("/api/bracket/vote")
+async def api_bracket_vote(request: Request):
+    try:
+        data = await request.json()
+        matchup_id, entry_id = str(data["matchup"]), int(data["entry"])
+    except Exception:
+        return JSONResponse({"ok": False, "error": "bad request"}, status_code=400)
+    now = brk.now_et()
+    rnd = next((r for r in brk.ROUNDS if r["key"] == brk.ROUND_OF.get(matchup_id)), None)
+    if rnd is None or not (rnd["opens"] <= now <= rnd["closes"] + timedelta(minutes=1)):
+        return JSONResponse({"ok": False, "error": "voting is not open for this matchup"},
+                            status_code=403)
+    voter = request.cookies.get("hm_voter", "")
+    new_cookie = None
+    if not voter:
+        voter = uuid.uuid4().hex
+        new_cookie = voter
+    with get_conn(DB_PATH) as conn:
+        conn.executescript(brk.TABLES_SQL)
+        winners = brk.get_winners(conn)
+        a_id, b_id = brk.matchup_pair(matchup_id, winners)
+        if entry_id not in (a_id, b_id):
+            return JSONResponse({"ok": False, "error": "not a matchup entry"},
+                                status_code=400)
+        conn.execute(
+            "INSERT OR IGNORE INTO bracket_votes (matchup_id, entry_id, voter, ip_hash, created_at) "
+            "VALUES (?, ?, ?, ?, ?)",
+            (matchup_id, entry_id, voter, brk.ip_hash(request),
+             datetime.now(timezone.utc).isoformat()))
+        conn.commit()
+        counts = brk.vote_counts(conn, matchup_id)
+    total = sum(counts.values())
+    resp = JSONResponse({"ok": True, "matchup": matchup_id, "total": total,
+                         "counts": {str(k): v for k, v in counts.items()},
+                         "pct": {str(k): (round(100 * v / total) if total else 0)
+                                 for k, v in counts.items()}})
+    if new_cookie:
+        resp.set_cookie("hm_voter", new_cookie, max_age=365 * 24 * 3600,
+                        path="/", samesite="lax")
+    return resp
+
+
+@app.get("/api/bracket/state")
+def api_bracket_state(request: Request):
+    st = _bracket_state(request)
+    out = {"phase": st["phase"], "total_votes": st["total_votes"], "matchups": {}}
+    for rnd in st["rounds"]:
+        for m in rnd["matchups"]:
+            out["matchups"][m["id"]] = {
+                "total": m["total"], "winner": m["winner"],
+                "a_votes": m["a"]["votes"] if m["a"] else 0,
+                "b_votes": m["b"]["votes"] if m["b"] else 0,
+                "a_pct": m["a"]["pct"] if m["a"] else 0,
+                "b_pct": m["b"]["pct"] if m["b"] else 0,
+                "my_vote": m["my_vote"],
+            }
+    return out
+
+
+@app.post("/bracket/predict")
+async def bracket_predict(request: Request):
+    now = brk.now_et()
+    if now > brk.PREDICT_LOCK:
+        return RedirectResponse("/bracket?predict=locked#predictions", status_code=303)
+    form = await request.form()
+    handle = re.sub(r"<[^>]*>", "", str(form.get("handle", ""))).strip()[:24]
+    contact = str(form.get("contact", "")).strip()[:120]
+    if not handle:
+        return RedirectResponse("/bracket#predictions", status_code=303)
+    picks: dict[str, int] = {}
+    ok = True
+    with get_conn(DB_PATH) as conn:
+        winners = brk.get_winners(conn)
+    for mid in brk.ALL_MATCHUPS:
+        raw = str(form.get(f"pick_{mid}", "")).strip()
+        if not raw.isdigit():
+            ok = False
+            break
+        picks[mid] = int(raw)
+    if ok:  # cascade consistency: later-round picks must come from your own
+        for mid, (f1, f2) in brk.FEEDS.items():  # feeding picks
+            if picks[mid] not in (picks[f1], picks[f2]):
+                ok = False
+                break
+    if not ok:
+        return RedirectResponse("/bracket#predictions", status_code=303)
+    voter = request.cookies.get("hm_voter", "")
+    new_cookie = None
+    if not voter:
+        voter = uuid.uuid4().hex
+        new_cookie = voter
+    ts = datetime.now(timezone.utc).isoformat()
+    with get_conn(DB_PATH) as conn:
+        conn.executescript(brk.TABLES_SQL)
+        conn.execute(
+            "INSERT INTO bracket_predictions (voter, handle, contact, picks, created_at, updated_at) "
+            "VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT(voter) DO UPDATE SET "
+            "handle = excluded.handle, contact = excluded.contact, "
+            "picks = excluded.picks, updated_at = excluded.updated_at",
+            (voter, handle, contact, json.dumps(picks), ts, ts))
+        conn.commit()
+    resp = RedirectResponse("/bracket?predicted=1#predictions", status_code=303)
+    if new_cookie:
+        resp.set_cookie("hm_voter", new_cookie, max_age=365 * 24 * 3600,
+                        path="/", samesite="lax")
+    return resp
+
+
+@app.post("/admin/bracket/resolve/{matchup_id}")
+def bracket_resolve(request: Request, matchup_id: str):
+    if not is_admin(request):
+        raise HTTPException(403, "Admin only.")
+    if matchup_id not in brk.ALL_MATCHUPS:
+        raise HTTPException(404, "No such matchup.")
+    with get_conn(DB_PATH) as conn:
+        winner = brk.resolve_matchup(conn, matchup_id)
+    if winner is None:
+        raise HTTPException(409, "Feeders unresolved.")
+    return RedirectResponse("/bracket", status_code=303)
+
+
+@app.get("/bracket/card/{entry_id}", response_class=HTMLResponse)
+def bracket_card(request: Request, entry_id: int):
+    if entry_id not in brk.SEED_OF:
+        raise HTTPException(404, "Not a bracket contender.")
+    e = get_entry(entry_id)
+    if not e:
+        raise HTTPException(404, "Entry not found.")
+    e = dict(e)
+    e["seed"] = brk.SEED_OF[entry_id]
+    e["region"] = brk.REGIONS.get(entry_id, "")
+    return templates.TemplateResponse(request, "bracket_card.html",
+                                        {"request": request, "e": e})
 
 
 @app.get("/watch", response_class=HTMLResponse)
@@ -3139,7 +3414,10 @@ def detail(request: Request, entry_id: int):
          "more_videos": chain.get("more_videos", []),
          "prev_pin": chain["prev_pin"], "more_near": chain["more_near"],
          "more_like": chain["more_like"], "town_pin_ids": town_pin_ids,
-         "more_haunts": more_haunts, "town_haunts": town_haunts},
+         "more_haunts": more_haunts, "town_haunts": town_haunts,
+         "bracket_info": ({"seed": brk.SEED_OF[entry_id],
+                           "region": brk.REGIONS.get(entry_id, "")}
+                          if entry_id in brk.SEED_OF else None)},
     )
 
 

@@ -412,6 +412,32 @@ function hmFullHomepage() {
   });
 })();
 </script>
+{% if bracket_teaser %}
+{% if bracket_teaser.phase == 'crowned' and bracket_teaser.champion %}
+<section class="bk-home-band bk-home-champ" aria-label="Haunt Bracket champion">
+  <a class="tonight-card" href="/d/{{ bracket_teaser.champion.id }}">
+    <img src="{{ bracket_teaser.champion.thumb_url }}" alt="{{ bracket_teaser.champion.title }}" loading="lazy">
+    <span class="tonight-body">
+      <span class="tonight-kicker">&#x1F451; America&rsquo;s Scariest House 2026 &mdash; Haunt Bracket Champion</span>
+      <span class="tonight-title">{{ bracket_teaser.champion.title }}</span>
+      <span class="tonight-meta">{{ bracket_teaser.champion.town_label }} &middot; crowned Halloween night</span>
+    </span>
+    <span class="tonight-cta">Meet the champion &rarr;</span>
+  </a>
+</section>
+{% else %}
+<section class="bk-home-band" aria-label="Haunt Bracket">
+  <a class="bk-home-card" href="/bracket">
+    <span class="bk-home-emoji">&#x1F3C6;</span>
+    <span class="bk-home-body">
+      <span class="bk-home-title">Haunt Bracket &mdash; America&rsquo;s Scariest House</span>
+      <span class="bk-home-meta">16 haunts. One crown. {{ bracket_teaser.milestone_label }} &middot; {{ bracket_teaser.milestone_at.strftime('%a %b %-d') }} &middot; Pick your champion before picks lock!</span>
+    </span>
+    <span class="tonight-cta">Enter the bracket &rarr;</span>
+  </a>
+</section>
+{% endif %}
+{% endif %}
 
 {% if near_towns %}
 <section class="near-you" aria-label="Near you tonight">

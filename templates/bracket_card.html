@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vote for {{ e.title }} &middot; Haunt Bracket</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #14101d; font-family: 'Inter', system-ui, sans-serif; display: flex; justify-content: center; }
+  .card { width: 1080px; height: 1350px; background: #1d1530; color: #f5efe6; display: flex; flex-direction: column; overflow: hidden; }
+  .photo { height: 610px; background: #000; position: relative; }
+  .photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .seed { position: absolute; top: 36px; left: 36px; background: #ff7b1c; color: #1a0f00; font-weight: 900; font-size: 44px; padding: 10px 26px; border-radius: 999px; }
+  .band { background: #ff7518; color: #14091f; text-align: center; padding: 24px 20px 18px; }
+  .band .vote { font-family: 'Creepster', 'Inter', sans-serif; font-size: 84px; letter-spacing: 2px; line-height: 1; }
+  .band .in { font-size: 34px; font-weight: 800; margin-top: 8px; }
+  .body { padding: 30px 54px; text-align: center; flex: 1; }
+  .title { font-size: 50px; font-weight: 900; line-height: 1.12; }
+  .town { font-size: 38px; color: #c9a7ff; font-weight: 700; margin-top: 14px; }
+  .meta { font-size: 30px; color: #b9a8d9; margin-top: 18px; }
+  .url { margin-top: 24px; font-size: 44px; font-weight: 900; color: #ff7b1c; }
+  .foot { padding: 0 54px 30px; text-align: center; font-size: 27px; color: #8f7fb5; }
+</style>
+<link href="https://fonts.googleapis.com/css2?family=Creepster&family=Inter:wght@700;800;900&display=swap" rel="stylesheet">
+</head>
+<body>
+<div class="card">
+  <div class="photo">
+    <img src="{{ e.thumb_url }}" alt="{{ e.title }}">
+    <span class="seed">SEED #{{ e.seed }}</span>
+  </div>
+  <div class="band">
+    <div class="vote">VOTE FOR ME!</div>
+    <div class="in">in the Haunt Bracket &mdash; America&rsquo;s Scariest House</div>
+  </div>
+  <div class="body">
+    <div class="title">{{ e.title }}</div>
+    <div class="town">{{ e.town_label }}</div>
+    <div class="meta">Round of 16 voting: Sat Oct 24 &ndash; Sun Oct 25 &middot; Champion crowned Halloween night</div>
+    <div class="url">gethauntmap.com/bracket</div>
+  </div>
+  <div class="foot">HauntMap &mdash; Find the Best Halloween Displays Near You &middot; One of 16 contenders chosen from 4,000+ real haunts</div>
+</div>
+</body>
+</html>
