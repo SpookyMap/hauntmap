@@ -2695,3 +2695,48 @@ body.has-tourbar.has-radio { padding-bottom: 124px; }
 .vt-tv-strip .tv-btn { background: linear-gradient(90deg, #2b1650, #4a1570); border: 2px solid #b266ff; color: #fff; }
 .vt-tv-strip .music-btn { background: #150826; border: 2px solid var(--accent); color: #ffd9a8; }
 @media (max-width: 380px) { .vt-tv-strip a { font-size: 0.8rem; } }
+
+/* ============ z80: PHONE MODULE DIET (Dan, Oct 23) ============
+   Phone only (<=760px); desktop rendering untouched. Two homepage
+   modules shrink hard at phone width:
+   - "Near you tonight" panel: town pills flow 2-up on single
+     lines, smaller heading/intro (intro now fits 2 lines at the
+     smaller size), one slim action row.
+   - "Trending today": rail cards go 218px -> 124px wide, titles
+     clamp to 2 lines, meta/views/tour button slim down.
+   Smallest text stays >= ~11px (0.7rem); tap targets stay usable. */
+@media (max-width: 760px) {
+  .near-you:not(.hero-copy) { margin: 0.6rem 0 0.25rem; padding: 0.45rem 0.6rem 0.5rem; border-radius: 12px; }
+  .near-you:not(.hero-copy) h2 { font-size: 0.92rem; line-height: 1.15; margin: 0 0 0.1rem; }
+  .near-you:not(.hero-copy) .near-you-head { gap: 0.4rem; }
+  .near-you:not(.hero-copy) .near-you-change { font-size: 0.7rem; }
+  .near-you:not(.hero-copy) .near-you-sub { font-size: 0.72rem; line-height: 1.2; margin: 0 0 0.35rem; }
+  .near-you:not(.hero-copy) .near-you-mine { font-size: 0.75rem; margin: 0 0 0.4rem; }
+  .near-you:not(.hero-copy) .town-chips { display: grid; grid-template-columns: 1fr 1fr; gap: 0.25rem; margin-bottom: 0.35rem; }
+  .near-you:not(.hero-copy) .town-chip {
+    justify-content: center; gap: 0.2rem;
+    padding: 0.18rem 0.14rem; font-size: 0.7rem; line-height: 1.15;
+    border-radius: 999px; text-align: center; white-space: nowrap; overflow: hidden;
+  }
+  .near-you:not(.hero-copy) .town-chip .chip-n { font-size: 0.7rem; line-height: 1.15; white-space: nowrap; }
+  .near-you:not(.hero-copy) .near-you-actions { flex-wrap: nowrap; gap: 0.4rem; }
+  .near-you:not(.hero-copy) .near-you-actions .btn {
+    flex: 1 1 0; text-align: center; white-space: nowrap;
+    padding: 0.26rem 0.4rem; font-size: 0.75rem; line-height: 1.25;
+  }
+
+  .trending:not(.hero-copy) { margin: 0.7rem 0 0.1rem; }
+  .trending:not(.hero-copy) h2 { font-size: 0.95rem; margin: 0 0 0.35rem; }
+  .trending:not(.hero-copy) .rail { gap: 0.45rem; padding-bottom: 0.3rem; }
+  .trending:not(.hero-copy) .rail-card { flex-basis: 124px; }
+  .trending:not(.hero-copy) .card-body { padding: 0.4rem 0.5rem 0.45rem; }
+  .trending:not(.hero-copy) .card-body h3 {
+    font-size: 0.78rem; line-height: 1.2; margin-bottom: 0.12rem;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  }
+  .trending:not(.hero-copy) .card-body .meta { font-size: 0.7rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .trending:not(.hero-copy) .views-line { font-size: 0.7rem; margin-top: 0.12rem; }
+  .trending:not(.hero-copy) .tour-add-btn { font-size: 0.7rem; padding: 0.16rem 0.5rem; margin-top: 0.3rem; }
+  .trending:not(.hero-copy) .rank-badge { font-size: 0.68rem; padding: 0.08rem 0.4rem; top: 0.35rem; left: 0.35rem; }
+  .trending:not(.hero-copy) .play-badge { width: 30px; height: 30px; font-size: 0.8rem; }
+}
