@@ -1571,27 +1571,72 @@ def _vt_pick(pool: list[dict], key, n: int = VT_ROUTE_LEN,
 
 
 @app.get("/virtual-tour", response_class=HTMLResponse)
-def virtual_tour_page(request: Request, route: str = "tonight"):
+def virtual_tour_page(request: Request, route: str = "tonight",
+                      mode: str = ""):
     """Virtual Tour (Dan, Oct 23 — STAGED for preview): a lean-back guided
     run through the best video haunts on the map, presented as one tour.
     Routes are rebuilt from live data on every load, so the 'nightly
     rebuild' is automatic — no cron: Tonight's Tour ranks the whole video
     pool by detail-page views; Scariest in America ranks the creepy+
-    pool by scare level, then views. Both cap at 2 stops per town."""
+    pool by scare level, then views. Both cap at 2 stops per town.
+
+    HauntMap TV (Dan, Oct 23, scope extension — same staged branch):
+    mode=tv renders the same player machinery as a lean-back TV surface
+    with a channel picker. Channels are Tonight's Tour + Scariest plus
+    the two state/metro playlists the video supply actually supports —
+    NYC Metro (every video pin in the pool is downstate NY: the five
+    boroughs + Long Island) and New Jersey — each ranked by views with
+    the same 2-per-town cap. A channel thinner than 6 stops is hidden,
+    exactly like the Scariest tab rule."""
     with get_conn(DB_PATH) as conn:
         pool = _vt_video_pool(conn)
-    tonight = _vt_pick(pool, key=lambda d: (-d["_views"], -d["votes"], d["id"]))
+    by_views = lambda d: (-d["_views"], -d["votes"], d["id"])  # noqa: E731
+    tonight = _vt_pick(pool, key=by_views)
     scare_rank = {"extreme": 0, "terrifying": 1, "creepy": 2}
     scary_pool = [d for d in pool if d.get("scare_level") in scare_rank]
     scariest = _vt_pick(
         scary_pool,
         key=lambda d: (scare_rank[d["scare_level"]], -d["_views"],
                        -d["votes"], d["id"]))
+    nyc = _vt_pick([d for d in pool if d["_state"] == "NY"], key=by_views)
+    nj = _vt_pick([d for d in pool if d["_state"] == "NJ"], key=by_views)
     routes = {"tonight": tonight}
     if len(scariest) >= 6:  # thinner than that isn't a tour — hide the tab
         routes["scariest"] = scariest
+    if len(nyc) >= 6:
+        routes["nyc"] = nyc
+    if len(nj) >= 6:
+        routes["nj"] = nj
     if route not in routes:
         route = "tonight"
+    is_tv = mode == "tv"
+    channel_meta = [
+        {"id": "tonight", "label": "Tonight's Tour", "emoji": "🎬",
+         "title": "🎬 Tonight's Virtual Tour",
+         "sub": "The best video haunts in the country, one after another "
+                "— sit back and ride along.",
+         "blurb": "Tonight's best video haunts nationwide, ranked by "
+                  "what haunters are actually watching."},
+        {"id": "scariest", "label": "Scariest in America", "emoji": "😱",
+         "title": "😱 Scariest in America — Virtual Tour",
+         "sub": "The most terrifying video haunts on the map, ranked by "
+                "scare level — enter if you dare.",
+         "blurb": "The creepiest, most terrifying video haunts on the "
+                  "map, ranked by scare level."},
+        {"id": "nyc", "label": "NYC Metro", "emoji": "🗽",
+         "title": "🗽 NYC Metro — Virtual Tour",
+         "sub": "Video haunts across the five boroughs and Long Island "
+                "— the densest haunting in America, one stop at a time.",
+         "blurb": "The five boroughs + Long Island: Dyker Heights, "
+                  "Staten Island, Lindenhurst and more."},
+        {"id": "nj", "label": "New Jersey Haunts", "emoji": "🎃",
+         "title": "🎃 New Jersey Haunts — Virtual Tour",
+         "sub": "Jersey's best video haunts — Bergen, Essex, Morris and "
+                "beyond, ranked by views.",
+         "blurb": "Dumont, Hawthorne, Ridgewood, Hackensack — Jersey's "
+                  "most-watched video haunts."},
+    ]
+    channels = [c for c in channel_meta if c["id"] in routes]
 
     def slim(stops: list[dict]) -> list[dict]:
         return [{
@@ -1610,7 +1655,8 @@ def virtual_tour_page(request: Request, route: str = "tonight"):
     payload = {name: slim(stops) for name, stops in routes.items()}
     return templates.TemplateResponse(request, "virtual_tour.html",
         {"request": request, "routes": payload, "active_route": route,
-         "has_scariest": "scariest" in routes})
+         "has_scariest": "scariest" in routes,
+         "channels": channels, "is_tv": is_tv})
 
 
 @app.get("/tour", response_class=HTMLResponse)
