@@ -126,6 +126,10 @@ def init_db(db_path: Path) -> None:
             # NULL until the pin's address has been verified; stored
             # separately so title/town stay display text.
             conn.execute("ALTER TABLE entries ADD COLUMN address TEXT")
+        if "description" not in cols:
+            # Free-text description sent by posting crews via /upload
+            # (Oct 2026). NULL when not provided.
+            conn.execute("ALTER TABLE entries ADD COLUMN description TEXT")
         # Events facets (Dan, Oct 22): event type / music genre / venue
         # style powering the /events filter dropdowns. NULL = untagged;
         # only set when a listing plainly determines the value.

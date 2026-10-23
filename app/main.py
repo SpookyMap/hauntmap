@@ -1540,11 +1540,17 @@ async def upload_submit(
     lat: str = Form(""),
     lng: str = Form(""),
     tiktok_url: str = Form(""),
+    address: str = Form(""),
+    description: str = Form(""),
     uploader_email: str = Form(""),
     media: UploadFile = File(None),
 ):
     error: str | None = None
     title, town, display_name = title.strip()[:120], town.strip()[:80], display_name.strip()[:40]
+    # address/description must be declared here — FastAPI silently drops
+    # undeclared form fields, which is how crew uploads lost them (Oct 2026).
+    address = address.strip()[:200]
+    description = description.strip()[:1000]
     category = category if category in CATEGORIES else "halloween"
     scare_level = scare_level if scare_level in ("family", "spooky", "creepy", "terrifying", "extreme") else None
     # tags come as repeated form fields from checkboxes
@@ -1629,11 +1635,13 @@ async def upload_submit(
                 """INSERT INTO entries
                    (title, town, display_name, media_path, thumb_path, media_type,
                     lat, lng, votes, flagged, hidden, is_sample, category, created_at,
-                    scare_level, tags, tiktok_url, uploader_email, notify_votes)
-                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, 0, 0, 0, ?, ?, ?, ?, ?, ?, ?)""",
+                    scare_level, tags, tiktok_url, uploader_email, notify_votes,
+                    address, description)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, 0, 0, 0, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
                 (title, town, display_name or None, media_rel or "", thumb_rel,
                  media_type or "none", lat_f, lng_f, category, now, scare_level, tags,
-                 tiktok_url or None, uploader_email or None, notify_votes),
+                 tiktok_url or None, uploader_email or None, notify_votes,
+                 address or None, description or None),
             )
             entry_id = cur.lastrowid
             conn.commit()
