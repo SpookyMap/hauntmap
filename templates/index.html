@@ -128,6 +128,12 @@
   <button type="button" class="btn btn-locate" onclick="hmNearMe()">&#x1F4CD; Use my location</button>
 </div>
 
+{# Item 7 audit (Oct 23): these three featured facades are @gethauntmap
+   PROMO posts (Scare-O-Meter launch, 40-hours, Northeast coverage).
+   None of their TikTok video ids matches any entry's tiktok_url in
+   the database, so they have no HauntMap page_views to show — no
+   count is rendered for them, by the never-fabricate rule. If a promo
+   ever becomes a real pin, map it here and add its views-line. #}
 <div class="tt-featured">
   <div class="tt-facade" data-tt-url="https://www.tiktok.com/@gethauntmap/video/7699668838786370847" data-tt-id="7699668838786370847" role="button" tabindex="0" aria-label="Play TikTok video">
     <img src="/static/img/tt_featured_scareometer.jpg" alt="New game on HauntMap — the Scare-O-Meter is live — HauntMap on TikTok">
@@ -443,6 +449,7 @@
       {% elif e.is_new %}
       <p class="votes votes-new">&#x2728; New this week</p>
       {% endif %}
+      {% if e._views %}<p class="views-line">&#x1F441;&#xFE0F; {{ e._views }} view{{ 's' if e._views != 1 }}</p>{% endif %}
       <span class="tour-add-btn" role="button" tabindex="0" data-tour-btn data-id="{{ e.id }}" data-title="{{ e.title }}" data-town="{{ e.town }}" data-lat="{{ e.lat if e.lat is not none else '' }}" data-lng="{{ e.lng if e.lng is not none else '' }}" data-thumb="{{ e.thumb_url }}">+ Tour</span>
     </div>
   </a>

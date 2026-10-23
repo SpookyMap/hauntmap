@@ -266,6 +266,32 @@ def row_to_dict(row: sqlite3.Row) -> dict:
     return d
 
 
+# Retention Wave 2, Item 7 (Dan, Oct 23): "views attract more views if
+# we list them on all videos" — every listing-video surface shows its
+# all-time detail-page view count, the SAME measure Trending and the
+# leaderboard use: page_views rows on '/d/{id}' paths. One grouped
+# query per handler (never per entry); templates render the count only
+# when it is > 0, so a zero-view video never shows a count.
+_VIEWS_GROUP_SQL = (
+    "SELECT CAST(substr(path, 4) AS INTEGER) AS eid, COUNT(*) AS views "
+    "FROM page_views WHERE path LIKE '/d/%' GROUP BY eid")
+
+
+def _views_by_id(conn) -> dict:
+    return {r["eid"]: r["views"] for r in conn.execute(_VIEWS_GROUP_SQL)}
+
+
+def _attach_views(conn, entries: list) -> list:
+    """Set ``_views`` (all-time /d/{id} views, 0 when never viewed) on
+    each entry dict, using a single grouped page_views query."""
+    if not entries:
+        return entries
+    views = _views_by_id(conn)
+    for e in entries:
+        e["_views"] = views.get(e["id"], 0)
+    return entries
+
+
 def haversine_miles(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
     r = 3958.8  # earth radius in miles
     p1, p2 = math.radians(lat1), math.radians(lat2)
@@ -603,6 +629,7 @@ def _fetch_area_feed(cat: str, area_labels: set, scare: str, tag: str,
                   " OR LOWER(media_path) LIKE '%.mov')")
     with get_conn(DB_PATH) as conn:
         rows = [row_to_dict(r) for r in conn.execute(query, params).fetchall()]
+        _attach_views(conn, rows)  # Item 7: area-led feed cards carry counts
     rows = [e for e in rows if e["town_label"] in area_labels]
     rows.sort(key=lambda e: e.get("created_at") or "", reverse=True)
     if sort == "top":
@@ -866,6 +893,14 @@ def detail_chain(entry: dict) -> dict:
     prev), a 'More near here' rail and a 'More like this' rail, so no detail
     page is ever a dead end. All same-category; distances in miles."""
     peers = category_peers(entry)
+    # Item 7: every peer carries its all-time view count (_views) so the
+    # pin-card rails (More videos near here / More near here / More like
+    # this / town rail) can show counts on video cards. One grouped
+    # query for the whole chain, reused by the video-chain pick below.
+    with get_conn(DB_PATH) as conn:
+        _chain_views = _views_by_id(conn)
+    for p in peers:
+        p["_views"] = _chain_views.get(p["id"], 0)
     out = {"next_pin": None, "prev_pin": None, "more_near": [], "more_like": []}
     coord: list[dict] = []
     if entry.get("lat") is not None and entry.get("lng") is not None:
@@ -930,12 +965,8 @@ def detail_chain(entry: dict) -> dict:
         #      geographic next.
         # `more_videos` (the "More videos near here" strip) stays
         # nearest-first, as its label says.
+        views_by_id = _chain_views
         with get_conn(DB_PATH) as conn:
-            views_by_id = {
-                r["eid"]: r["views"] for r in conn.execute(
-                    "SELECT CAST(substr(path, 4) AS INTEGER) AS eid, "
-                    "COUNT(*) AS views FROM page_views "
-                    "WHERE path LIKE '/d/%' GROUP BY eid").fetchall()}
             inventory = _town_inventory(conn, entry["category"])
         if vids:
             out["next_video_pin"] = sorted(
@@ -1561,6 +1592,7 @@ def home(request: Request, sort: str = "top", town: str = "", town_search: str =
     query += f" ORDER BY {video_first}, {order} LIMIT 100"
     with get_conn(DB_PATH) as conn:
         entries = [row_to_dict(r) for r in conn.execute(query, params).fetchall()]
+        _attach_views(conn, entries)  # Item 7: feed cards show view counts
         sponsors = [dict(r) for r in conn.execute(
             "SELECT * FROM sponsors WHERE is_active = 1 ORDER BY "
             "CASE tier WHEN 'title' THEN 0 WHEN 'premium' THEN 1 ELSE 2 END, created_at").fetchall()]
@@ -2371,20 +2403,55 @@ async def api_duel_vote(request: Request):
 def watch_page(request: Request):
     """Vertical feed of every pin with actual footage — same predicate as the
     feed's 'Has video' filter: a TikTok /video/ URL or an uploaded video file.
-    Pool is the top footage by votes; the ORDER is shuffled per request
-    (Dan, Oct 21) so every visit to /watch starts somewhere new."""
+
+    Retention Wave 2, Items 2 + 7 (Dan, Oct 23): /watch is the TikTok
+    landing page, so it follows the site's location-first rule. The
+    server renders the pool MOST-VIEWED first (all-time detail-page
+    views, the Trending measure — that is also the final order when
+    the visitor's town is unknown). When the visitor's town IS known
+    (localStorage 'hm_town' — the server never sees it), watch.html
+    re-orders client-side from the payload below: most-viewed footage
+    within VIDEO_CHAIN_RADIUS_MI of the visitor first, nearest to the
+    visitor breaking ties, the rest in server order behind — the same
+    anchoring detail_chain's video chain uses. This supersedes the
+    Oct 21 per-visit shuffle. Every slide also carries _views for
+    Item 7's count chips (one grouped LEFT JOIN, as in Trending)."""
     with get_conn(DB_PATH) as conn:
         rows = conn.execute(
-            "SELECT * FROM entries WHERE hidden = 0 AND ("
-            "(tiktok_url IS NOT NULL AND tiktok_url LIKE '%/video/%')"
-            " OR LOWER(media_path) LIKE '%.mp4'"
-            " OR LOWER(media_path) LIKE '%.webm'"
-            " OR LOWER(media_path) LIKE '%.mov')"
-            " ORDER BY votes DESC, created_at DESC LIMIT 60").fetchall()
+            "SELECT e.*, COALESCE(v.views, 0) AS _views FROM entries e "
+            "LEFT JOIN (SELECT CAST(substr(path, 4) AS INTEGER) AS eid, "
+            "                  COUNT(*) AS views FROM page_views "
+            "                  WHERE path LIKE '/d/%' GROUP BY eid) v "
+            "  ON v.eid = e.id "
+            "WHERE e.hidden = 0 AND ("
+            "(e.tiktok_url IS NOT NULL AND e.tiktok_url LIKE '%/video/%')"
+            " OR LOWER(e.media_path) LIKE '%.mp4'"
+            " OR LOWER(e.media_path) LIKE '%.webm'"
+            " OR LOWER(e.media_path) LIKE '%.mov')"
+            " ORDER BY _views DESC, e.votes DESC, e.id LIMIT 60").fetchall()
     entries = [row_to_dict(r) for r in rows]
-    random.shuffle(entries)
+    # Town centers for the client-side visitor anchoring, in the same
+    # [label, city, state, centroid lat, centroid lng, pin count]
+    # shape detail.html's video-chain re-pick consumes — computed from
+    # this pool's own pins (every category /watch carries, not just
+    # halloween), so the resolver's town universe matches the feed.
+    _groups: dict[str, dict] = {}
+    for e in entries:
+        if e.get("lat") is None or e.get("lng") is None or not e["town_label"]:
+            continue
+        g = _groups.setdefault(e["town_label"],
+                               {"_lats": [], "_lngs": [], "count": 0})
+        g["_lats"].append(e["lat"])
+        g["_lngs"].append(e["lng"])
+        g["count"] += 1
+    town_centers = [
+        [label, extract_city(label), extract_state(label),
+         sum(g["_lats"]) / len(g["_lats"]), sum(g["_lngs"]) / len(g["_lngs"]),
+         g["count"]]
+        for label, g in sorted(_groups.items())]
     return templates.TemplateResponse(request, "watch.html",
-        {"request": request, "entries": entries})
+        {"request": request, "entries": entries,
+         "town_centers": town_centers})
 
 
 # ---------------------------------------------------------------- virtual tour
@@ -3045,8 +3112,9 @@ def detail(request: Request, entry_id: int):
                                     -p.get("_views", 0), -p.get("votes", 0),
                                     p["id"]))
     town_haunts = town_haunts[:6]
-    for p in town_haunts:
-        p.pop("_views", None)
+    # Item 7: _views STAYS on town_haunts (it used to be popped here) —
+    # the town rail renders through _pin_card.html, which shows the
+    # count on video cards.
     return templates.TemplateResponse(request, "detail.html",
         {"request": request, "entry": entry, "voted": voted, "reported": reported,
          "tips": tips, "scare_counts": scare_counts, "scare_total": scare_total,
@@ -3671,6 +3739,9 @@ def town_page(request: Request, slug: str):
     # Video-first ranking (engagement, Oct 22): stable sort — footage pins
     # ahead of photo-only pins, votes/newest order kept within each group.
     entries.sort(key=lambda e: 0 if _entry_has_video(e) else 1)
+    # Item 7: town-page cards show all-time view counts (one grouped query).
+    with get_conn(DB_PATH) as conn:
+        _attach_views(conn, entries)
     # Retention Wave 3, Item 5: the "Tonight" strip under the town header
     # — this town is the anchor; displays lit = its halloween pins (the
     # entries list itself), events on = parsed events in this town.

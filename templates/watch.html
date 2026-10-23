@@ -2,10 +2,10 @@
 {% block title %}Watch &middot; {{ site_name }}{% endblock %}
 {% block content %}
 <h1>&#x1F3AC; Watch — real haunt footage</h1>
-<p class="watch-sub">{{ entries|length }} displays with actual video. Keep scrolling — the next one is always one swipe away. Tap a poster to play it right here.</p>
+<p class="watch-sub">{{ entries|length }} displays with actual video. Keep scrolling — the next one is always one swipe away. Tap a poster to play it right here. <span id="watch-near-note" hidden></span></p>
 <div class="watch-feed">
   {% for e in entries %}
-  <section class="watch-slide">
+  <section class="watch-slide" data-entry-id="{{ e.id }}" data-views="{{ e._views }}" data-lat="{{ e.lat if e.lat is not none else '' }}" data-lng="{{ e.lng if e.lng is not none else '' }}">
     {% if e.tiktok_url and '/video/' in e.tiktok_url %}
     {% set tt_id = e.tiktok_url.split('/video/')[1].split('?')[0] %}
     <div class="tt-facade" data-tt-url="{{ e.tiktok_url }}" data-tt-id="{{ tt_id }}" data-entry-id="{{ e.id }}" role="button" tabindex="0" aria-label="Play TikTok video">
@@ -23,6 +23,7 @@
     <div class="watch-meta">
       <h2><a href="/d/{{ e.id }}">{{ e.title }}</a></h2>
       <p class="meta">{{ e.town_label }}{% if e.display_name %} &middot; {{ e.display_name }}{% endif %}{% if e.votes %} &middot; &#x1F383; {{ e.votes }} vote{{ 's' if e.votes != 1 }}{% endif %}</p>
+      {% if e._views %}<p class="views-line">&#x1F441;&#xFE0F; {{ e._views }} view{{ 's' if e._views != 1 }}</p>{% endif %}
       <p class="watch-actions"><a class="btn btn-small" href="/d/{{ e.id }}">View pin &rarr;</a></p>
     </div>
   </section>
@@ -40,6 +41,77 @@ document.querySelectorAll('.watch-slide .tt-facade').forEach(function (f) {
     if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); hmLoadTikTok(f); }
   });
 });
+</script>
+<script>
+// Retention Wave 2, Item 2 (Dan, Oct 23): /watch is the TikTok landing
+// and follows the location-first rule. The server rendered the feed
+// most-viewed first; when this browser knows the visitor's town — the
+// same localStorage 'hm_town' signal Near You and the detail-page
+// video chain use (the server never sees it) — re-order the slides
+// here: most-viewed footage within 100 mi of the visitor first,
+// nearest-to-visitor breaking ties, the rest in server order behind.
+// No saved town, an unmapped town, or nothing near the visitor leaves
+// the server order untouched. Slides are moved as DOM nodes, so the
+// click-to-play facades keep their handlers and lazy posters —
+// nothing loads until tapped, exactly as before.
+(function () {
+  var TOWNS = {{ town_centers|tojson }};
+  var RADIUS_MI = 100.0;
+  function havMi(a, b, c, d) {
+    var p = Math.PI / 180, p1 = a * p, p2 = c * p;
+    var dp = (c - a) * p, dl = (d - b) * p;
+    var x = Math.sin(dp / 2) * Math.sin(dp / 2) +
+            Math.cos(p1) * Math.cos(p2) * Math.sin(dl / 2) * Math.sin(dl / 2);
+    return 2 * 3958.8 * Math.asin(Math.sqrt(x));
+  }
+  function resolveTown(raw) {
+    var q = (raw || '').trim().toLowerCase();
+    if (!q) return null;
+    var city = q, state = '', m = q.match(/^(.*?)[,\s]+([a-z]{2})$/);
+    if (m) { city = m[1].replace(/,+$/, '').trim(); state = m[2]; }
+    var exact = null, cityState = null, cityBest = null, stateBest = null, t, i;
+    for (i = 0; i < TOWNS.length; i++) {
+      t = TOWNS[i];  // [label, city, state, centroid lat, centroid lng, pin count]
+      if (t[0].toLowerCase() === q) { exact = t; break; }
+      if (state && t[1].toLowerCase() === city && t[2].toLowerCase() === state &&
+          (!cityState || t[5] > cityState[5])) cityState = t;
+      if (t[1].toLowerCase() === city && (!cityBest || t[5] > cityBest[5])) cityBest = t;
+      if (state && t[2].toLowerCase() === state && (!stateBest || t[5] > stateBest[5])) stateBest = t;
+    }
+    return exact || cityState || cityBest || stateBest;
+  }
+  try {
+    var town = localStorage.getItem('hm_town');
+    if (!town) return;
+    var home = resolveTown(town);
+    if (!home) return;
+    var feed = document.querySelector('.watch-feed');
+    if (!feed) return;
+    var slides = Array.prototype.slice.call(feed.querySelectorAll('.watch-slide'));
+    var near = [], rest = [];
+    slides.forEach(function (s, idx) {
+      var lat = parseFloat(s.getAttribute('data-lat'));
+      var lng = parseFloat(s.getAttribute('data-lng'));
+      var views = parseInt(s.getAttribute('data-views') || '0', 10) || 0;
+      var rec = { el: s, idx: idx, views: views, d: null };
+      if (isFinite(lat) && isFinite(lng)) {
+        var d = havMi(home[3], home[4], lat, lng);
+        if (d <= RADIUS_MI) { rec.d = d; near.push(rec); return; }
+      }
+      rest.push(rec);
+    });
+    if (!near.length) return;
+    near.sort(function (a, b) {
+      return (b.views - a.views) || (a.d - b.d) || (a.idx - b.idx);
+    });
+    near.concat(rest).forEach(function (r) { feed.appendChild(r.el); });
+    var note = document.getElementById('watch-near-note');
+    if (note) {
+      note.textContent = 'Showing the most-watched haunts near ' + home[0] + ' first.';
+      note.hidden = false;
+    }
+  } catch (e) {}
+})();
 </script>
 <style>
   /* Page-local: gentle snap so each slide settles into place while scrolling */
