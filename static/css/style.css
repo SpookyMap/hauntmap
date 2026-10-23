@@ -2886,8 +2886,8 @@ body.has-tourbar #hm-capture { bottom: 4.4rem; }
    (the Passport segment still hides until the visitor has stamps). */
 .hm-slimbar {
   display: none;
-  flex-wrap: wrap; align-items: center; gap: 0.15rem 0.55rem;
-  margin: 0.4rem 0 0.15rem; padding: 0.32rem 0.7rem;
+  flex-wrap: wrap; align-items: center; gap: 0.15rem 0.45rem;
+  margin: 0.4rem 0 0.15rem; padding: 0.32rem 0.6rem;
   background: linear-gradient(135deg, #241640 0%, #311d55 100%);
   border: 1px solid #4a2d7a; border-radius: 12px;
   font-size: 0.82rem; line-height: 1.3;
@@ -2897,8 +2897,7 @@ body.hm-returning .hm-slimbar { display: flex; }
 .hm-slimbar-link { color: #f3eefc; text-decoration: none; font-weight: 600; white-space: nowrap; }
 .hm-slimbar-link:hover { text-decoration: underline; }
 .hm-slimbar-link[hidden] { display: none; }
-.hm-slimbar-link::before,
-.hm-slimbar .hm-full-btn::before { content: "\00B7"; margin-right: 0.55rem; color: #9a8fb8; }
+.hm-slimbar-link::before { content: "\00B7"; margin-right: 0.45rem; color: #9a8fb8; }
 .hm-slimbar .hm-full-btn {
   margin-left: auto; padding: 0; background: none; border: 0; cursor: pointer;
   color: #c9a7ff; font: inherit; font-weight: 600; white-space: nowrap;
