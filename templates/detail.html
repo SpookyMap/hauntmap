@@ -57,6 +57,9 @@
   </div>
   {% endif %}
   <h1>{{ entry.title }}</h1>
+  {% if bracket_info %}
+  <a class="bk-ribbon" href="/bracket">&#x1F3C6; Haunt Bracket contender &mdash; Seed #{{ bracket_info.seed }} ({{ bracket_info.region }}) &middot; America&rsquo;s Scariest House &middot; Round of 16 voting Oct 24&ndash;25 &mdash; vote &rarr;</a>
+  {% endif %}
   <p class="meta">{{ entry.town_label }}{% if entry.display_name %} &middot; {{ entry.display_name }}{% endif %}</p>
   {% if entry.address %}
   <p class="entry-address">&#x1F4CD; {{ entry.address }}</p>

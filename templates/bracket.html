@@ -1,0 +1,281 @@
+{% extends "base.html" %}
+{% block title %}Haunt Bracket: America's Scariest House &middot; {{ site_name }}{% endblock %}
+{% block content %}
+<div class="bk-hero">
+  <p class="bk-presented">The Haunt Bracket &middot; presented by <span class="bk-presented-slot">your brand here</span> <a href="/advertise">sponsor the bracket &rarr;</a></p>
+  <h1>&#x1F3C6; Haunt Bracket</h1>
+  <p class="bk-sub">America&rsquo;s Scariest House &mdash; 16 real haunts, one crown. Vote every round, back your favorite, and watch the bracket burn down to a Halloween-night champion.</p>
+  <div class="bk-countdown" id="bk-countdown" data-target="{{ st.milestone_at.isoformat() }}">
+    <span class="bk-countdown-label">{{ st.milestone_label }}</span>
+    <span class="bk-countdown-time" id="bk-countdown-time">&hellip;</span>
+  </div>
+  <p class="bk-total">&#x1F5F3;&#xFE0F; <strong>{{ st.total_votes }}</strong> bracket votes cast &middot; Champion crowned Halloween night, Sat Oct 31 at 7pm ET</p>
+</div>
+
+{% if st.phase == 'crowned' and st.champion %}
+<section class="bk-champion" aria-label="Champion">
+  <p class="bk-champion-kicker">&#x1F451; America&rsquo;s Scariest House 2026</p>
+  <a class="bk-champion-card" href="/d/{{ st.champion.id }}">
+    <img src="{{ st.champion.thumb_url }}" alt="{{ st.champion.title }}">
+    <span class="bk-champion-body">
+      <span class="bk-champion-title">{{ st.champion.title }}</span>
+      <span class="bk-champion-meta">{{ st.champion.town_label }} &middot; Seed #{{ st.champion.seed if st.champion.seed else '' }}</span>
+      <span class="bk-champion-prize">The crown, the Halloween-night homepage, and the official 2026 champion yard sign. &#x1F3C6;</span>
+    </span>
+  </a>
+</section>
+{% endif %}
+
+{% set active = st.rounds | selectattr('status', 'equalto', 'open') | list %}
+{% set show_round = active[0] if active else (st.rounds | selectattr('status', 'equalto', 'upcoming') | list | first) %}
+{% if show_round %}
+<section class="bk-round" aria-label="{{ show_round.label }}">
+  <h2 class="section-title">{% if show_round.status == 'open' %}&#x1F525; Vote now &mdash; {% endif %}{{ show_round.label }}</h2>
+  <p class="bk-window">{{ show_round.window_label }} &middot; {% if show_round.status == 'open' %}voting closes {{ show_round.closes.strftime('%a %b %-d, %-I:%M %p ET') }}{% elif show_round.status == 'upcoming' %}voting opens {{ show_round.opens.strftime('%a %b %-d') }}{% else %}final{% endif %}</p>
+  <div class="bk-matchups">
+    {% for m in show_round.matchups %}
+    <article class="bk-matchup" id="bk-{{ m.id }}">
+      <header class="bk-matchup-head">
+        <span>Matchup {{ m.id }}</span>
+        <span class="bk-matchup-total">{{ m.total }} votes</span>
+        <button type="button" class="bk-share" data-share="{{ m.id }}" data-a="{{ m.a_label }}" data-b="{{ m.b_label }}">&#x1F4E3; Share</button>
+      </header>
+      {% for side in ['a', 'b'] %}
+      {% set e = m[side] %}
+      <div class="bk-side{% if m.winner and e and m.winner == e.id %} bk-side-win{% endif %}">
+        {% if e %}
+        <a href="/d/{{ e.id }}"><img src="{{ e.thumb_url }}" alt="{{ e.title }}"></a>
+        <div class="bk-side-body">
+          <p class="bk-side-title"><span class="bk-seed">#{{ e.seed }}</span> <a href="/d/{{ e.id }}">{{ e.title }}</a>{% if e.has_video %} <span class="bk-vid">&#x1F3AC; video</span>{% endif %}</p>
+          <p class="bk-side-meta">{{ e.town_label }} &middot; {{ e.region }}</p>
+          {% if m.my_vote or m.winner or show_round.status == 'closed' %}
+          <div class="bk-bar"><span class="bk-bar-fill" style="width: {{ e.pct }}%"></span><span class="bk-bar-label">{{ e.pct }}% &middot; {{ e.votes }} votes</span></div>
+          {% endif %}
+          {% if show_round.status == 'open' and not m.winner %}
+          <button type="button" class="bk-vote-btn{% if m.my_vote == e.id %} bk-voted{% endif %}" data-matchup="{{ m.id }}" data-entry="{{ e.id }}" {% if m.my_vote %}disabled{% endif %}>{% if m.my_vote == e.id %}&#x2713; Your pick{% elif m.my_vote %}Voted{% else %}Vote{% endif %}</button>
+          {% endif %}
+          {% if m.winner == e.id %}<p class="bk-advances">&#x1F3C6; Advances!</p>{% endif %}
+        </div>
+        {% else %}
+        <div class="bk-side-body"><p class="bk-side-title bk-tbd">{{ m[side + '_label'] }}</p><p class="bk-side-meta">Decided in the round before</p></div>
+        {% endif %}
+      </div>
+      {% if side == 'a' %}<div class="bk-vs">VS</div>{% endif %}
+      {% endfor %}
+      {% if st.is_admin and show_round.status == 'closed' and not m.winner %}
+      <form method="post" action="/admin/bracket/resolve/{{ m.id }}"><button type="submit" class="bk-resolve">Admin: resolve {{ m.id }}</button></form>
+      {% endif %}
+    </article>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+<section class="bk-tree" aria-label="Full bracket">
+  <h2 class="section-title">&#x1F5FA;&#xFE0F; The Road to Halloween Night</h2>
+  <div class="bk-tree-cols">
+    {% for rnd in st.rounds %}
+    <div class="bk-tree-col">
+      <h3>{{ rnd.label }}</h3>
+      <p class="bk-tree-window">{{ rnd.window_label }}</p>
+      {% for m in rnd.matchups %}
+      <div class="bk-tree-row{% if m.winner %} bk-tree-done{% endif %}">
+        <span class="bk-tree-mid">{{ m.id }}</span>
+        <span class="bk-tree-side{% if m.winner and m.a and m.winner == m.a.id %} bk-tree-win{% endif %}">{{ m.a.title if m.a else m.a_label }}</span>
+        <span class="bk-tree-side{% if m.winner and m.b and m.winner == m.b.id %} bk-tree-win{% endif %}">{{ m.b.title if m.b else m.b_label }}</span>
+        {% if m.winner %}<span class="bk-tree-score">{{ m.a.votes if m.a else 0 }}&ndash;{{ m.b.votes if m.b else 0 }}</span>{% endif %}
+      </div>
+      {% endfor %}
+    </div>
+    {% endfor %}
+    <div class="bk-tree-col bk-tree-champ">
+      <h3>&#x1F451; Champion</h3>
+      <p class="bk-tree-window">Crowned Oct 31, 7pm ET</p>
+      <div class="bk-tree-row">
+        {% if st.champion %}
+        <span class="bk-tree-side bk-tree-win">{{ st.champion.title }}</span>
+        <span class="bk-tree-side">{{ st.champion.town_label }}</span>
+        {% else %}
+        <span class="bk-tree-side bk-tbd">America&rsquo;s Scariest House 2026</span>
+        <span class="bk-tree-side bk-tbd">decided Halloween night</span>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="bk-predict" id="predictions" aria-label="Pick the Champion">
+  <h2 class="section-title">&#x1F52E; Pick the Champion</h2>
+  <p class="bk-predict-intro">Fill in the whole bracket &mdash; who wins every matchup, all the way to America&rsquo;s Scariest House. Points grow every round (1&ndash;2&ndash;4&ndash;8). A perfect bracket tops the board. <strong>Entries lock {{ st.predict_lock.strftime('%a %b %-d at %-I:%M %p ET') }}</strong>, when the Round of 16 closes.</p>
+  {% if predicted %}<p class="bk-thanks">&#x2705; Your bracket is in! Come back each round to watch your picks fight.</p>{% endif %}
+  {% if predict_locked_msg %}<p class="bk-thanks">&#x1F512; Picks are locked &mdash; the Round of 16 has closed. The board below is live.</p>{% endif %}
+
+  {% if st.my_prediction %}
+  <div class="bk-my-picks">
+    <h3>&#x1F4CB; {{ st.my_prediction.handle }}&rsquo;s bracket</h3>
+    <p>Your champion: <strong>{{ st.entries[st.my_prediction.picks.F].title if st.my_prediction.picks.F in st.entries else '—' }}</strong> &middot; Score so far: <strong>{{ st.my_prediction.score }} pts</strong>{% if st.predict_open %} &middot; <a href="#bk-predict-form" onclick="document.getElementById('bk-predict-form').style.display='block';">edit my picks</a>{% endif %}</p>
+  </div>
+  {% endif %}
+
+  {% if st.predict_open %}
+  <form method="post" action="/bracket/predict" class="bk-form" id="bk-predict-form" {% if st.my_prediction %}style="display:none"{% endif %}>
+    <div class="bk-form-row">
+      <label>Your haunter handle <input type="text" name="handle" required maxlength="24" placeholder="e.g. GraveyardQueen" value="{{ st.my_prediction.handle if st.my_prediction else '' }}"></label>
+      <label>Phone or email <span class="bk-optional">(optional &mdash; only used if you win)</span> <input type="text" name="contact" maxlength="120" value="{{ st.my_prediction.contact if st.my_prediction else '' }}"></label>
+    </div>
+    <div class="bk-form-rounds">
+      {% for rnd in st.rounds %}
+      <fieldset class="bk-form-round">
+        <legend>{{ rnd.label }} &mdash; {{ rnd.window_label }}</legend>
+        {% for m in rnd.matchups %}
+        <div class="bk-pick" data-matchup="{{ m.id }}">
+          <span class="bk-pick-label">{{ m.id }}</span>
+          {% if rnd.key == 'r16' %}
+          {% for side in ['a', 'b'] %}
+          {% set e = m[side] %}
+          <label class="bk-pick-opt"><input type="radio" name="pick_{{ m.id }}" value="{{ e.id }}" required {% if st.my_prediction and st.my_prediction.picks[m.id] == e.id %}checked{% endif %}> <span class="bk-seed">#{{ e.seed }}</span> {{ e.title }} <em>{{ e.town_label }}</em></label>
+          {% endfor %}
+          {% else %}
+          <select name="pick_{{ m.id }}" required data-feeds="{{ m.id }}">
+            <option value="">&mdash; pick the winner &mdash;</option>
+            {% for e in seeds %}
+            <option value="{{ e.id }}" {% if st.my_prediction and st.my_prediction.picks[m.id] == e.id %}selected{% endif %}>#{{ e.seed }} {{ e.title }} ({{ e.town_label }})</option>
+            {% endfor %}
+          </select>
+          {% endif %}
+        </div>
+        {% endfor %}
+      </fieldset>
+      {% endfor %}
+    </div>
+    <button type="submit" class="bk-submit">&#x1F3C6; Lock in my bracket</button>
+    <p class="bk-fineprint">No account, no spam &mdash; your picks live in this browser, scored nightly as rounds resolve. Closest bracket wins the presenting sponsor&rsquo;s prize + Bracket Sharp status for next season.</p>
+  </form>
+  {% endif %}
+
+  <div class="bk-board">
+    <h3>&#x1F4CA; Prediction Leaderboard <span class="bk-board-count">{{ st.board_total }} brackets in</span></h3>
+    {% if st.board %}
+    <ol class="bk-board-list">
+      {% for b in st.board %}
+      <li><span class="bk-board-handle">{{ b.handle }}</span>
+        <span class="bk-board-champ">picked {{ st.entries[b.champ].title if b.champ in st.entries else '—' }}{% if not b.champ_alive %} <span class="bk-board-out">(eliminated)</span>{% endif %}</span>
+        <span class="bk-board-score">{{ b.score }} pts</span></li>
+      {% endfor %}
+    </ol>
+    {% else %}
+    <p class="bk-empty">No brackets yet &mdash; the first perfect pick starts here.</p>
+    {% endif %}
+  </div>
+</section>
+
+<section class="bk-contenders" aria-label="The 16 contenders">
+  <h2 class="section-title">&#x1F383; Meet the 16 Contenders</h2>
+  <p class="bk-contenders-intro">Seeded from real HauntMap traffic &mdash; the most-viewed, most-voted haunts in America, spread across six regions. Decorators: grab your <strong>Vote for Me</strong> card and send your town to vote.</p>
+  <div class="bk-grid">
+    {% for e in seeds %}
+    <article class="bk-card">
+      <a href="/d/{{ e.id }}"><img src="{{ e.thumb_url }}" alt="{{ e.title }}" loading="lazy"></a>
+      <div class="bk-card-body">
+        <p class="bk-card-title"><span class="bk-seed">#{{ e.seed }}</span> <a href="/d/{{ e.id }}">{{ e.title }}</a>{% if e.has_video %} <span class="bk-vid">&#x1F3AC; video</span>{% endif %}</p>
+        <p class="bk-card-meta">{{ e.town_label }} &middot; {{ e.region }}</p>
+        <p class="bk-card-note">{{ e.seed_note }}</p>
+        <p class="bk-card-links"><a href="/d/{{ e.id }}">See the haunt &rarr;</a> &middot; <a href="/bracket/card/{{ e.id }}">&#x1F4E3; Vote for Me card</a></p>
+      </div>
+    </article>
+    {% endfor %}
+  </div>
+</section>
+
+<script>
+// countdown
+(function () {
+  var el = document.getElementById('bk-countdown-time');
+  var box = document.getElementById('bk-countdown');
+  if (!el || !box) return;
+  var target = new Date(box.dataset.target).getTime();
+  function tick() {
+    var ms = target - Date.now();
+    if (ms <= 0) { el.textContent = 'now!'; return; }
+    var d = Math.floor(ms / 86400000), h = Math.floor(ms / 3600000) % 24,
+        m = Math.floor(ms / 60000) % 60, s = Math.floor(ms / 1000) % 60;
+    el.textContent = (d ? d + 'd ' : '') + h + 'h ' + m + 'm ' + s + 's';
+    setTimeout(tick, 1000);
+  }
+  tick();
+})();
+// voting
+document.querySelectorAll('.bk-vote-btn').forEach(function (btn) {
+  btn.addEventListener('click', async function () {
+    var mid = btn.dataset.matchup, entry = btn.dataset.entry;
+    btn.disabled = true;
+    try {
+      var r = await fetch('/api/bracket/vote', {method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({matchup: mid, entry: parseInt(entry, 10)})});
+      var d = await r.json();
+      if (!d.ok) { btn.textContent = 'Voting closed'; return; }
+      var card = document.getElementById('bk-' + mid);
+      card.querySelectorAll('.bk-vote-btn').forEach(function (b) {
+        b.disabled = true;
+        b.textContent = (b.dataset.entry === entry) ? '✓ Your pick' : 'Voted';
+        if (b.dataset.entry === entry) b.classList.add('bk-voted');
+      });
+      var total = card.querySelector('.bk-matchup-total');
+      if (total) total.textContent = d.total + ' votes';
+      location.reload();
+    } catch (e) { btn.disabled = false; }
+  });
+});
+// share per matchup
+document.querySelectorAll('.bk-share').forEach(function (btn) {
+  btn.addEventListener('click', function () {
+    var url = location.origin + '/bracket#bk-' + btn.dataset.share;
+    var text = 'Haunt Bracket — ' + btn.dataset.a + ' vs ' + btn.dataset.b +
+      '. Who takes it? Vote in America\'s Scariest House: ';
+    if (navigator.share) { navigator.share({title: 'Haunt Bracket', text: text, url: url}); }
+    else if (navigator.clipboard) {
+      navigator.clipboard.writeText(text + url);
+      btn.textContent = '✓ Link copied';
+      setTimeout(function () { btn.textContent = '📣 Share'; }, 2000);
+    }
+  });
+});
+// prediction cascade: later rounds only offer your own feeding picks
+(function () {
+  var FEEDS = {QF1: ['M1','M2'], QF2: ['M3','M4'], QF3: ['M5','M6'], QF4: ['M7','M8'],
+               SF1: ['QF1','QF2'], SF2: ['QF3','QF4'], F: ['SF1','SF2']};
+  var TITLES = {};
+  document.querySelectorAll('.bk-pick-opt input[type=radio]').forEach(function (r) {
+    TITLES[r.value] = r.closest('.bk-pick-opt').textContent.trim().replace(/\s+/g, ' ');
+  });
+  document.querySelectorAll('select[data-feeds] option').forEach(function (o) {
+    if (o.value) TITLES[o.value] = o.textContent.trim();
+  });
+  function pickOf(mid) {
+    var radio = document.querySelector('input[name="pick_' + mid + '"]:checked');
+    if (radio) return radio.value;
+    var sel = document.querySelector('select[name="pick_' + mid + '"]');
+    return sel ? sel.value : '';
+  }
+  function refresh(mid) {
+    var sel = document.querySelector('select[name="pick_' + mid + '"]');
+    if (!sel) return;
+    var allowed = FEEDS[mid].map(pickOf).filter(Boolean);
+    var cur = sel.value;
+    sel.innerHTML = '<option value="">— pick the winner —</option>';
+    allowed.forEach(function (v) {
+      var o = document.createElement('option');
+      o.value = v; o.textContent = TITLES[v] || v;
+      sel.appendChild(o);
+    });
+    if (allowed.indexOf(cur) >= 0) sel.value = cur;
+  }
+  function refreshAll() { ['QF1','QF2','QF3','QF4','SF1','SF2','F'].forEach(refresh); }
+  document.querySelectorAll('.bk-form').forEach(function (f) {
+    f.addEventListener('change', refreshAll);
+    refreshAll();
+  });
+})();
+</script>
+{% endblock %}
