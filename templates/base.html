@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Creepster&family=Fredoka:wght@500;600;700&family=Inter:wght@500;600;700;800;900&family=Nosifer&family=Rubik+Wet+Paint&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/static/css/style.css?v=20261023z95">
+<link rel="stylesheet" href="/static/css/style.css?v=20261023z96">
 {% block head %}{% endblock %}
 </head>
 <body>
@@ -460,6 +460,16 @@ function hmLoadTikTok(facade) {
   bq.setAttribute('data-video-id', facade.getAttribute('data-tt-id'));
   bq.style.maxWidth = '605px';
   bq.style.minWidth = '325px';
+  // Homepage promo facades (z96): the left rail is 252px wide —
+  // narrower than the embed's 325px floor — so a played facade in
+  // the rail overflowed its column and the player looked broken
+  // ("not playing on the laptop view", Dan). In the rail the embed
+  // takes the column's width instead; pin-page facades (full-width
+  // context) keep the 325px floor.
+  if (facade.closest && facade.closest('.tt-featured')) {
+    bq.style.minWidth = '0px';
+    bq.style.width = '100%';
+  }
   bq.innerHTML = '<section><a href="' + url + '" target="_blank" rel="noopener">Watch on TikTok</a></section>';
   facade.replaceWith(bq);
   if (!window.__hmTtEmbed) {

@@ -7,7 +7,7 @@
    canonical drop a TikTok post can deep-link); the band also carries
    the streak flame, and rendering it COUNTS the day for the streak
    (hmFrightTouch) — the homepage is one of the two counting surfaces. #}
-<section class="daily-band" aria-label="Daily Fright">
+<section class="daily-band{% if daily_hero %} hero-copy{% endif %}" aria-label="Daily Fright">
   <div class="daily-band-head">
     <a class="daily-band-title" href="/daily">&#x1F319; Daily Fright &mdash; {{ daily_label }}</a>
     <span class="fright-streak-flame" hidden></span>

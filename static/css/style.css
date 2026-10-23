@@ -1401,7 +1401,7 @@ a.game-card:hover { border-color: #ff7518; transform: translateY(-2px); }
 .hero-split {
   display: grid;
   grid-template-columns: 1fr;
-  grid-template-areas: "headline" "search" "video" "strip" "sponsor";
+  grid-template-areas: "headline" "video" "strip" "sponsor";
   gap: 0.9rem;
   margin: 0.4rem 0;
 }
@@ -1561,7 +1561,7 @@ a.game-card:hover { border-color: #ff7518; transform: translateY(-2px); }
 
 /* Town-request form inside the hero grid: its own area under the sponsor
    billboard in the left column (last in the stacked order on phone). */
-.hero-split { grid-template-areas: "headline" "search" "video" "strip" "sponsor" "townreq"; }
+.hero-split { grid-template-areas: "headline" "video" "strip" "sponsor" "townreq"; }
 .hero-split .town-request {
   grid-area: townreq; margin: 0; max-width: none; width: 100%;
   box-sizing: border-box; text-align: left;
@@ -1575,7 +1575,7 @@ a.game-card:hover { border-color: #ff7518; transform: translateY(-2px); }
     position: relative; left: 50%; transform: translateX(-50%);
   }
   .hero-split {
-    grid-template-areas: "video headline strip" "sponsor headline strip" "townreq headline strip" "search search search";
+    grid-template-areas: "video headline strip" "sponsor headline strip" "townreq headline strip";
   }
   /* Restyle the form to the 252px column: one field per row, tighter type */
   .hero-split .town-request { padding: 0.85rem 0.75rem 0.9rem; }
@@ -2129,8 +2129,7 @@ body.has-tourbar.has-radio { padding-bottom: 124px; }
   .site-header.v2 .header-nav a.navbtn[href="/diy-costumes"] span { font-size: 0.36rem; }
 }
 @media (max-width: 760px) {
-  .hero-split { grid-template-areas: "headline" "search" "video" "strip" "sponsor" "townreq"; }
-  .hero-split .hm-find { grid-area: search; margin: 0; }
+  .hero-split { grid-template-areas: "headline" "video" "strip" "sponsor" "townreq"; }
 }
 
 /* ============ z65: PHONE NAV — TWO ROWS OF FIVE (Dan, Oct 22; supersedes the z64 single row) ====
@@ -2291,6 +2290,11 @@ body.has-tourbar.has-radio { padding-bottom: 124px; }
   .near-you:not(.hero-copy),
   .trending:not(.hero-copy),
   .below-band-only { display: none; }
+  /* z96: same one-copy rule for the three cards that moved into the
+     hero panel (Tonight's Display / Daily Fright / Haunt Bracket). */
+  .tonight-band:not(.hero-copy),
+  .daily-band:not(.hero-copy),
+  .bk-home-band:not(.hero-copy) { display: none; }
 
   .hero-stack {
     display: flex; flex-direction: column; gap: 1rem;
@@ -2862,7 +2866,6 @@ body.has-tourbar #hm-capture { bottom: 4.4rem; }
   /* Black border (Dan, Oct 23) — the old locate panel's orange is gone. */
   border: 1px solid #000; border-radius: 14px;
 }
-.hero-split .hm-find { grid-area: search; }
 .hm-find-text { margin: 0 0 0.6rem; color: #f5f2ec; font-size: 1.05rem; }
 /* The hero's ORIGINAL simple search bar, values unchanged from the
    old .mobile-search-form: black input, Search button beside it. */
@@ -2927,25 +2930,20 @@ body.hm-returning .hm-slimbar { display: flex; }
    under the headline; Trending / Text Alerts copies inside the hero
    stack hide, their below-band phone copies and the Tonight cluster
    below are untouched). */
-body.hm-returning .tt-featured,
-body.hm-returning .tt-follow-vert,
-body.hm-returning .sponsor-section,
-body.hm-returning .town-request,
-body.hm-returning .hero-stack .trending,
-body.hm-returning .hero-stack .text-alerts { display: none; }
-body.hm-returning .hero-intro { padding: 0.55rem 1rem 0.35rem; text-align: left; }
-body.hm-returning .hero-intro h1.hero-title { font-size: 1.25rem; margin-bottom: 0.3rem; }
-body.hm-returning .hero-stack { margin-top: 0.2rem; gap: 0.5rem; }
-@media (min-width: 1000px) {
-  body.hm-returning .hero-split {
-    grid-template-columns: 1fr;
-    grid-template-areas: "headline" "search";
-  }
-}
+/* z96 (Dan, Oct 23): the returning-mode hero collapse that used to
+   sit here is RETIRED. It hid the left video rail, the sponsor
+   billboard and the right TikTok strip, squashed the photo panel
+   into a slim strip (its 4-scene backdrop invisible) and shrank
+   the headline to 1.25rem — Dan's verdict: "I really liked the
+   formatting but it's all gone now." Returning visitors now get
+   the full homepage formatting, exactly like a first visit; the
+   only returning-only element left is the welcome-back slimbar
+   above the hero (untouched). "See full homepage" still drops
+   the hm-returning class — visually that now only removes the
+   slimbar. */
 @media (max-width: 760px) {
   .hm-find { padding: 0.7rem 0.8rem; }
   .hm-find-btn { font-size: 0.85rem; padding: 0.4rem 0.3rem; }
-  body.hm-returning .hero-intro h1.hero-title { font-size: 1.05rem; }
 }
 /* --- Haunt Bracket (staged Oct 2026) --- */
 .bk-hero { text-align: center; padding: 1.5rem 0 0.5rem; }
@@ -3045,3 +3043,35 @@ body.hm-returning .hero-stack { margin-top: 0.2rem; gap: 0.5rem; }
   .bk-champion-card img { width: 100%; height: auto; }
   .bk-home-card { flex-wrap: wrap; }
 }
+
+/* ============ z96: CARDS INSIDE THE HERO PANEL + FIND UNDER THE HEADLINE (Dan, Oct 23) ====
+   The three cards (Tonight's Display / Daily Fright / Haunt Bracket)
+   now live inside the hero photo panel under Text Alerts (hero
+   copies in index.html; below-band originals hide >=761px in the
+   z67 block above). Inside the panel they drop their full-width
+   breakout geometry (1060px centred bands) and take the panel's
+   width at the stack's compact scale, so the panel's backdrop art
+   stays visible around them; the panel simply grows taller. The
+   combined find block likewise moved inside the panel, directly
+   under the headline: it keeps its own panel styling (purple
+   gradient, black border from z95) and its form/button rows keep
+   the readable 620px measure. */
+@media (min-width: 761px) {
+  .hero-stack .tonight-band,
+  .hero-stack .daily-band,
+  .hero-stack .bk-home-band { margin: 0; }
+  .hero-stack .tonight-band,
+  .hero-stack .daily-band {
+    width: auto; position: static; left: auto; transform: none;
+    box-sizing: border-box;
+  }
+  .hero-stack .tonight-band .tonight-card { padding: 0.7rem 0.85rem; gap: 0.85rem; }
+  .hero-stack .tonight-band .tonight-card img { width: 88px; height: 88px; }
+  .hero-stack .tonight-band .tonight-title { font-size: 1.12rem; }
+  .hero-stack .bk-home-card { padding: 0.75rem 0.95rem; gap: 0.85rem; }
+  .hero-stack .bk-home-emoji { font-size: 2rem; }
+  .hero-stack .bk-home-title { font-size: 1.08rem; }
+  .hero-stack .bk-home-meta { font-size: 0.88rem; }
+}
+.hero-intro .hm-find { margin: 0.1rem 0 0.3rem; text-align: left; }
+.hero-intro .hm-find-msg { margin: 0.6rem 0 0; }
