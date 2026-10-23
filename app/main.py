@@ -3780,6 +3780,15 @@ MUSIC_SPOTIFY_PLAYLISTS = [
      "blurb": "Dark synth and horror-score energy for the drive between "
               "haunts."},
 ]
+# Top-of-page featured set (Dan, Oct 23): his friends' ZombieSquad mix on
+# the Dead On Pictures channel, featured at the top of /music by request.
+# Verified via yt-dlp 2026-10-23: public, playable_in_embed, maxres thumb.
+MUSIC_SPOTLIGHT = {
+    "id": "MlgxFvrCgoA",
+    "title": "ZombieSquad EDM Mix Session | 20261023 | EDM - Dance - House",
+    "channel": "Dead On Pictures",
+    "meta": "Full-length set · 2:13:03",
+}
 MUSIC_YOUTUBE_FEATURED = {
     "id": "sOnqjkJTMaA",
     "title": "Michael Jackson — Thriller (Official 4K Video)",
@@ -4001,6 +4010,7 @@ def music_page(request: Request):
     return templates.TemplateResponse(
         request, "music.html",
         {"site_name": SITE_NAME, "playlists": MUSIC_SPOTIFY_PLAYLISTS,
+         "yt_spotlight": MUSIC_SPOTLIGHT,
          "yt_featured": MUSIC_YOUTUBE_FEATURED, "yt_grid": MUSIC_YOUTUBE_GRID,
          "yt_performances": MUSIC_PERFORMANCES, "yt_dj_sets": MUSIC_DJ_SETS,
          "yt_singles": MUSIC_SINGLES,

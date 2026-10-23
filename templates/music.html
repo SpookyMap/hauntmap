@@ -5,6 +5,17 @@
 <h1>&#x1F383; Halloween Music</h1>
 <p class="lede">The soundtrack of fright night. Press play on the playlists while you build your tour, watch the classic videos, and meet the artists who own the season.</p>
 
+<h2 class="music-h2">&#x2B50; Featured Set</h2>
+<p>Top of the heap: a full-length EDM, dance &amp; house session from our friends at {{ yt_spotlight.channel }} — the ZombieSquad mix, over two hours of it. Tap the cover to play.</p>
+<div class="yt-feature">
+  <button type="button" class="yt-facade" data-yt="{{ yt_spotlight.id }}" aria-label="Play {{ yt_spotlight.title }}">
+    <img src="https://i.ytimg.com/vi/{{ yt_spotlight.id }}/maxresdefault.jpg" alt="" loading="lazy">
+    <span class="yt-play" aria-hidden="true">&#9654;</span>
+  </button>
+  <p class="yt-cap">{{ yt_spotlight.title }} &middot; {{ yt_spotlight.channel }}</p>
+  <p class="yt-meta">{{ yt_spotlight.meta }}</p>
+</div>
+
 <h2 class="music-h2">&#x1F3A7; Listen on Spotify</h2>
 <p>Three Halloween playlists, ready to go. Logged out, Spotify plays previews — sign in inside a player for the full tracks.</p>
 <div class="music-spotify-grid">
