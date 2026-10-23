@@ -621,6 +621,20 @@ def detail_chain(entry: dict) -> dict:
                 if best_id == entry["id"]:
                     out["prev_pin"] = cand
                     break
+    # Retention Wave 1, Item 3 (video chain): when THIS pin has footage,
+    # the primary Next target chains to the nearest OTHER pin with footage
+    # (same predicate) instead of the nearest pin of any kind, and the
+    # under-player strip lists those nearby footage pins. The radius cap
+    # keeps "near" honest — beyond it the caller falls back to the plain
+    # geographic next above.
+    out["next_video_pin"] = None
+    out["more_videos"] = []
+    if has_footage(entry):
+        # `coord` is already distance-sorted and carries `distance`.
+        vids = [p for p in coord
+                if has_footage(p) and p["distance"] <= VIDEO_CHAIN_RADIUS_MI]
+        out["more_videos"] = vids[:6]
+        out["next_video_pin"] = vids[0] if vids else None
     near_ids = {p["id"] for p in out["more_near"]}
     entry_tags = {t.strip() for t in (entry.get("tags") or "").split(",")
                   if t.strip()}
@@ -1996,6 +2010,15 @@ def detail(request: Request, entry_id: int):
     if scare_pick not in SCARE_LEVELS:
         scare_pick = ""
     chain = detail_chain(entry)
+    # Retention Wave 1, Item 3: on a pin WITH footage, the primary Next
+    # target (big button + sticky bar + prerender) is the nearest pin
+    # WITH footage when one exists within VIDEO_CHAIN_RADIUS_MI;
+    # otherwise — and on every non-footage pin — it is exactly today's
+    # geographic next. The bottom prev/next chain-nav keeps the
+    # geographic target either way (passed as next_geo_pin).
+    geo_next_pin = chain["next_pin"]
+    video_next_pin = chain.get("next_video_pin")
+    effective_next_pin = video_next_pin or geo_next_pin
     # Engagement next-steps section (staged Oct 22): the 3 nearest neighbours
     # for the prominent "More haunts near this one" block. Real-media pins
     # (an actual uploaded photo/video — i.e. not stock-photo pins, which sit
@@ -2037,7 +2060,10 @@ def detail(request: Request, entry_id: int):
     return templates.TemplateResponse(request, "detail.html",
         {"request": request, "entry": entry, "voted": voted, "reported": reported,
          "tips": tips, "scare_counts": scare_counts, "scare_total": scare_total,
-         "scare_pick": scare_pick, "next_pin": chain["next_pin"],
+         "scare_pick": scare_pick, "next_pin": effective_next_pin,
+         "next_geo_pin": geo_next_pin,
+         "next_is_video": bool(video_next_pin),
+         "more_videos": chain.get("more_videos", []),
          "prev_pin": chain["prev_pin"], "more_near": chain["more_near"],
          "more_like": chain["more_like"], "town_pin_ids": town_pin_ids,
          "more_haunts": more_haunts, "town_haunts": town_haunts},

@@ -56,6 +56,17 @@
     {% if entry.is_sample %}<span class="sample-badge">Sample</span>{% endif %}
   </div>
   {% endif %}
+  {% if more_videos %}
+  {# Retention Wave 1, Item 3: compact footage rail DIRECTLY under the
+     player, so a video visitor's next tap is another video — before the
+     title/meta block and everything that follows it. #}
+  <section class="more-videos" aria-label="More videos near here">
+    <h2>&#x1F3AC; More videos near here</h2>
+    <div class="rail">
+      {% for p in more_videos %}{{ pin_card(p) }}{% endfor %}
+    </div>
+  </section>
+  {% endif %}
   <h1>{{ entry.title }}</h1>
   <p class="meta">{{ entry.town_label }}{% if entry.display_name %} &middot; {{ entry.display_name }}{% endif %}</p>
   {% if entry.address %}
@@ -161,7 +172,7 @@
   {% endif %}
 
   {% if next_pin %}
-  <a class="btn btn-big next-haunt" href="/d/{{ next_pin.id }}">Next haunt near here &rarr;<span class="next-haunt-sub">{{ next_pin.title }} &middot; {{ "%.1f"|format(next_pin.distance) }} mi &middot; {{ next_pin.town_label }}</span></a>
+  <a class="btn btn-big next-haunt" href="/d/{{ next_pin.id }}">{% if next_is_video %}&#x1F3AC; Play next haunt &rarr;{% else %}Next haunt near here &rarr;{% endif %}<span class="next-haunt-sub">{{ next_pin.title }} &middot; {{ "%.1f"|format(next_pin.distance) }} mi &middot; {{ next_pin.town_label }}</span></a>
   {% endif %}
 
   <div class="scare-meter" id="scare">
@@ -259,10 +270,13 @@
 
   {% with map_label = entry.town_label %}{% include "_town_map_strip.html" %}{% endwith %}
 
-  {% if prev_pin or next_pin %}
+  {% if prev_pin or next_geo_pin %}
+  {# Chain-nav stays GEOGRAPHIC by decision (Item 3): it is the literal
+     walk-the-neighbourhood chain; only the primary Next button + sticky
+     bar above chain video-to-video. #}
   <nav class="chain-nav">
     {% if prev_pin %}<a class="btn" href="/d/{{ prev_pin.id }}">&larr; Previous haunt</a>{% else %}<span></span>{% endif %}
-    {% if next_pin %}<a class="btn" href="/d/{{ next_pin.id }}">Next haunt &rarr;</a>{% endif %}
+    {% if next_geo_pin %}<a class="btn" href="/d/{{ next_geo_pin.id }}">Next haunt &rarr;</a>{% endif %}
   </nav>
   {% endif %}
 
@@ -281,7 +295,8 @@
 
 {% if next_pin %}
 <a class="next-haunt-bar" href="/d/{{ next_pin.id }}" aria-label="Next haunt: {{ next_pin.title }}">
-  <span class="nhb-label">Next haunt &rarr;</span>
+  {% if next_is_video and next_pin.thumb_url %}<img class="nhb-thumb" src="{{ next_pin.thumb_url }}" alt="" loading="lazy">{% endif %}
+  <span class="nhb-label">{% if next_is_video %}&#x25B6; Play next haunt &rarr;{% else %}Next haunt &rarr;{% endif %}</span>
   <span class="nhb-title">{{ next_pin.title }} &middot; {{ next_pin.town_label }}</span>
 </a>
 {% endif %}
@@ -311,9 +326,11 @@
 {% endblock %}
 {% block speculation %}
 {% if next_pin %}
-{# Prerender exactly ONE page: the nearest same-category pin, i.e. where the
-   "Next haunt near here" chain leads. Moderate eagerness = fires on
-   hover/press of a link to it, never on page load — bandwidth-safe. #}
+{# Prerender exactly ONE page: the primary Next target (Item 3: the nearest
+   same-category pin WITH footage on video pins, else the nearest
+   same-category pin), i.e. where the big Next button + sticky bar lead.
+   Moderate eagerness = fires on hover/press of a link to it, never on
+   page load — bandwidth-safe. #}
 <script type="speculationrules">
 {"prerender": [{"source": "list", "urls": ["/d/{{ next_pin.id }}"], "eagerness": "moderate"}]}
 </script>

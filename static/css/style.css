@@ -1786,6 +1786,13 @@ a.game-card:hover { border-color: #ff7518; transform: translateY(-2px); }
    the tour bar (#2) is visible it stacks above it via body.has-tourbar. */
 .town-rail { margin: 1.1rem 0 0.2rem; }
 .town-rail h2 { font-size: 1.15rem; margin: 0 0 0.6rem; }
+/* Retention Wave 1, Item 3 (Oct 23): the under-player "More videos near
+   here" rail on video pin pages (existing .rail/pin-card styling does
+   the rest), and a thumbnail in the sticky next-haunt bar when it
+   chains video-to-video. */
+.more-videos { margin: 1rem 0 0.2rem; }
+.more-videos h2 { font-size: 1.15rem; margin: 0 0 0.6rem; }
+.next-haunt-bar .nhb-thumb { width: 42px; height: 42px; border-radius: 8px; object-fit: cover; flex: none; }
 .next-haunt-bar { display: none; }
 @media (max-width: 760px) {
   .next-haunt-bar {
