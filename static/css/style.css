@@ -1904,6 +1904,17 @@ body.has-tourbar #hm-prompt { bottom: 4.4rem; }
 .mbtn-pin { background: var(--accent); border-color: var(--accent); color: #1a0f00; }
 .music-xref { color: var(--muted); margin-top: 0.9rem; }
 .music-events-cta { margin-top: 1.6rem; font-weight: 700; }
+
+/* /movies page (Dan Oct 23) — the screening room: trailer shelves reusing
+   the /music facade grid, plus a cross-link card at the foot of /music. */
+.movies-subnav { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 1rem 0 0.2rem; }
+.movies-subnav a { text-decoration: none; font-weight: 700; padding: 0.45rem 0.85rem; border-radius: 999px; border: 1px solid #33254f; background: var(--card); color: var(--ink); }
+.movies-subnav a:hover { border-color: var(--accent); }
+.movie-title { margin: 0.55rem 0 0.1rem; font-size: 1.12rem; }
+.movie-year { color: var(--muted); font-weight: 400; }
+.movie-meta { color: #ffb066; font-weight: 700; font-size: 0.9rem; margin: 0.15rem 0 0; }
+.movie-blurb { color: var(--muted); margin: 0.3rem 0 0; }
+.movies-cta { background: var(--card); border: 1px solid #33254f; border-radius: var(--radius); padding: 0.85rem 1rem; }
 .music-crosslink { color: var(--muted); margin: 0.2rem 0 0.8rem; }
 /* Halloween Radio (Spotify) — Dan, Oct 22, z61: a slim chip fixed at
    the bottom-left of every page; expanding it lazy-loads the Spotify

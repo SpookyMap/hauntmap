@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block title %}Halloween Movies &middot; {{ site_name }}{% endblock %}
+{% block head %}<meta name="description" content="HauntMap's screening room — the new Halloween movies of 2026, the classics every superfan rewatches, and the deep cuts, with official trailers to watch right here.">{% endblock %}
+{% block content %}
+<h1>&#x1F3AC; The Screening Room</h1>
+<p class="lede">The movies that built Halloween. This season's new nightmares, the classics superfans rewatch every October, and the deep cuts they swear by — tap any cover to play the official trailer right here.</p>
+
+<nav class="movies-subnav" aria-label="Movie shelves">
+  <a href="#new">&#x1F195; New for 2026</a>
+  <a href="#classics">&#x1F3C6; The Classics</a>
+  <a href="#deep-cuts">&#x1F52A; Superfan Deep Cuts</a>
+</nav>
+
+<h2 class="music-h2" id="new">&#x1F195; New for 2026</h2>
+<p>Fresh blood for this Halloween season — in theaters and streaming now, or landing before the big night.</p>
+<div class="yt-grid">
+  {% for v in new %}
+  <article class="yt-item movie-card">
+    <button type="button" class="yt-facade" data-yt="{{ v.id }}" aria-label="Play trailer: {{ v.title }}">
+      <img src="https://i.ytimg.com/vi/{{ v.id }}/hqdefault.jpg" alt="" loading="lazy">
+      <span class="yt-play" aria-hidden="true">&#9654;</span>
+    </button>
+    <h3 class="movie-title">{{ v.title }} <span class="movie-year">({{ v.year }})</span></h3>
+    <p class="movie-meta">{{ v.meta }}</p>
+    <p class="movie-blurb">{{ v.blurb }}</p>
+    <p class="yt-cap">{{ v.kind }} &middot; {{ v.channel }}</p>
+  </article>
+  {% endfor %}
+</div>
+
+<h2 class="music-h2" id="classics">&#x1F3C6; The Classics</h2>
+<p>The canon. If it's October and you're not rewatching at least three of these, are you even a superfan?</p>
+<div class="yt-grid">
+  {% for v in classics %}
+  <article class="yt-item movie-card">
+    <button type="button" class="yt-facade" data-yt="{{ v.id }}" aria-label="Play trailer: {{ v.title }}">
+      <img src="https://i.ytimg.com/vi/{{ v.id }}/hqdefault.jpg" alt="" loading="lazy">
+      <span class="yt-play" aria-hidden="true">&#9654;</span>
+    </button>
+    <h3 class="movie-title">{{ v.title }} <span class="movie-year">({{ v.year }})</span></h3>
+    <p class="movie-blurb">{{ v.blurb }}</p>
+    <p class="yt-cap">{{ v.kind }} &middot; {{ v.channel }}</p>
+  </article>
+  {% endfor %}
+</div>
+
+<h2 class="music-h2" id="deep-cuts">&#x1F52A; Superfan Deep Cuts</h2>
+<p>Beyond the canon — the ones superfans pass hand to hand like a cursed videotape. Start here when the classics feel too easy.</p>
+<div class="yt-grid">
+  {% for v in deep_cuts %}
+  <article class="yt-item movie-card">
+    <button type="button" class="yt-facade" data-yt="{{ v.id }}" aria-label="Play trailer: {{ v.title }}">
+      <img src="https://i.ytimg.com/vi/{{ v.id }}/hqdefault.jpg" alt="" loading="lazy">
+      <span class="yt-play" aria-hidden="true">&#9654;</span>
+    </button>
+    <h3 class="movie-title">{{ v.title }} <span class="movie-year">({{ v.year }})</span></h3>
+    <p class="movie-blurb">{{ v.blurb }}</p>
+    <p class="yt-cap">{{ v.kind }} &middot; {{ v.channel }}</p>
+  </article>
+  {% endfor %}
+</div>
+
+<p class="music-events-cta">Set the mood first: <a href="/music">Halloween Music &rarr;</a> &middot; Going out instead? <a href="/events">Find Halloween concerts, DJ nights &amp; parties &rarr;</a></p>
+
+<script>
+// YouTube click-to-play facades (same pattern as /music): the real
+// player only loads when a visitor taps a cover — no autoplay, no
+// third-party requests before the tap.
+document.addEventListener('click', function (ev) {
+  var b = ev.target.closest && ev.target.closest('.yt-facade');
+  if (!b || b.dataset.loaded) return;
+  b.dataset.loaded = '1';
+  var f = document.createElement('iframe');
+  f.className = 'yt-frame';
+  f.src = 'https://www.youtube-nocookie.com/embed/' + b.getAttribute('data-yt') + '?autoplay=1&rel=0';
+  f.setAttribute('allow', 'autoplay; encrypted-media; picture-in-picture');
+  f.setAttribute('allowfullscreen', '');
+  f.setAttribute('title', b.getAttribute('aria-label') || 'YouTube video');
+  b.replaceWith(f);
+});
+</script>
+{% endblock %}
