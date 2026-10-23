@@ -895,19 +895,70 @@ def detail_chain(entry: dict) -> dict:
                     out["prev_pin"] = cand
                     break
     # Retention Wave 1, Item 3 (video chain): when THIS pin has footage,
-    # the primary Next target chains to the nearest OTHER pin with footage
-    # (same predicate) instead of the nearest pin of any kind, and the
+    # the primary Next target chains to ANOTHER pin with footage (same
+    # predicate) instead of the nearest pin of any kind, and the
     # under-player strip lists those nearby footage pins. The radius cap
     # keeps "near" honest — beyond it the caller falls back to the plain
-    # geographic next above.
+    # geographic next above. WHICH footage pin leads the chain is the
+    # most-viewed one (see the Dan note inside the block below).
     out["next_video_pin"] = None
     out["more_videos"] = []
+    out["video_chain"] = []
+    out["town_centers"] = []
     if has_footage(entry):
         # `coord` is already distance-sorted and carries `distance`.
         vids = [p for p in coord
                 if has_footage(p) and p["distance"] <= VIDEO_CHAIN_RADIUS_MI]
         out["more_videos"] = vids[:6]
-        out["next_video_pin"] = vids[0] if vids else None
+        # Dan (Oct 23, later the same day): "Play the most viewed
+        # first" — and it should be based on the USER's location, like
+        # everything else on the site. The pick is now the MOST-VIEWED
+        # footage pin (all-time detail-page views, the Trending
+        # measure), not the nearest:
+        #   1. when the visitor's town is known, the detail template
+        #      re-picks client-side from `video_chain` below — most-
+        #      viewed footage pin within the radius of the VISITOR,
+        #      using the same localStorage 'hm_town' signal Near You
+        #      uses (the server never sees it, and the Cloudflare city
+        #      header does not reach the app, so the browser is the
+        #      only place this signal exists);
+        #   2. the server-rendered default — most-viewed within the
+        #      radius of THIS pin, distance breaking ties — is both
+        #      the no-signal case and the fallback when no footage pin
+        #      is near the visitor;
+        #   3. if that pool is empty the caller keeps today's plain
+        #      geographic next.
+        # `more_videos` (the "More videos near here" strip) stays
+        # nearest-first, as its label says.
+        with get_conn(DB_PATH) as conn:
+            views_by_id = {
+                r["eid"]: r["views"] for r in conn.execute(
+                    "SELECT CAST(substr(path, 4) AS INTEGER) AS eid, "
+                    "COUNT(*) AS views FROM page_views "
+                    "WHERE path LIKE '/d/%' GROUP BY eid").fetchall()}
+            inventory = _town_inventory(conn, entry["category"])
+        if vids:
+            out["next_video_pin"] = sorted(
+                vids, key=lambda p: (-views_by_id.get(p["id"], 0),
+                                     p["distance"], p["id"]))[0]
+        # Client-side pool for the visitor-anchored re-pick: EVERY
+        # footage peer with coordinates (the visitor may be nowhere
+        # near this pin, so no radius cut here — the browser applies
+        # the radius around the visitor instead).
+        out["video_chain"] = [
+            {"id": p["id"], "title": p["title"],
+             "town_label": p.get("town_label") or "",
+             "lat": p["lat"], "lng": p["lng"],
+             "thumb_url": p.get("thumb_url") or "",
+             "views": views_by_id.get(p["id"], 0)}
+            for p in peers
+            if has_footage(p) and p.get("lat") is not None
+            and p.get("lng") is not None]
+        out["town_centers"] = [
+            [t["label"], t["city"], t["state"], t["clat"], t["clng"],
+             t["count"]]
+            for t in inventory
+            if t["clat"] is not None and t["clng"] is not None]
     near_ids = {p["id"] for p in out["more_near"]}
     entry_tags = {t.strip() for t in (entry.get("tags") or "").split(",")
                   if t.strip()}
@@ -2887,12 +2938,15 @@ def detail(request: Request, entry_id: int):
     if scare_pick not in SCARE_LEVELS:
         scare_pick = ""
     chain = detail_chain(entry)
-    # Retention Wave 1, Item 3: on a pin WITH footage, the primary Next
-    # target (big button + sticky bar + prerender) is the nearest pin
-    # WITH footage when one exists within VIDEO_CHAIN_RADIUS_MI;
-    # otherwise — and on every non-footage pin — it is exactly today's
-    # geographic next. The bottom prev/next chain-nav keeps the
-    # geographic target either way (passed as next_geo_pin).
+    # Retention Wave 1, Item 3 (+ Dan's Oct 23 most-viewed-first /
+    # location-first revision in detail_chain): on a pin WITH footage,
+    # the primary Next target (big button + sticky bar + prerender) is
+    # the most-viewed pin WITH footage within VIDEO_CHAIN_RADIUS_MI —
+    # of the visitor when their town is known (client-side re-pick in
+    # detail.html), else of this pin; otherwise — and on every
+    # non-footage pin — it is exactly today's geographic next. The
+    # bottom prev/next chain-nav keeps the geographic target either
+    # way (passed as next_geo_pin).
     geo_next_pin = chain["next_pin"]
     video_next_pin = chain.get("next_video_pin")
     effective_next_pin = video_next_pin or geo_next_pin
@@ -2940,6 +2994,8 @@ def detail(request: Request, entry_id: int):
          "scare_pick": scare_pick, "next_pin": effective_next_pin,
          "next_geo_pin": geo_next_pin,
          "next_is_video": bool(video_next_pin),
+         "video_chain": chain.get("video_chain", []),
+         "town_centers": chain.get("town_centers", []),
          "more_videos": chain.get("more_videos", []),
          "prev_pin": chain["prev_pin"], "more_near": chain["more_near"],
          "more_like": chain["more_like"], "town_pin_ids": town_pin_ids,

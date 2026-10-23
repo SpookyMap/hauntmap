@@ -386,6 +386,81 @@
 </a>
 {% endif %}
 
+{% if next_is_video and video_chain %}
+<script>
+// Dan (Oct 23): "Play the most viewed first" — based on the USER's
+// location. The server rendered its best pick (most-viewed footage pin
+// near THIS pin); when this browser knows the visitor's town — the
+// same localStorage 'hm_town' signal the Near You module uses —
+// re-pick here: the most-viewed footage pin within 100 mi of the
+// VISITOR, nearest-to-visitor breaking ties, and point the big Next
+// button + sticky bar at it. No saved town, an unmapped town, or no
+// footage near the visitor leaves the server pick untouched.
+(function () {
+  var CHAIN = {{ video_chain|tojson }};
+  var TOWNS = {{ town_centers|tojson }};
+  var RADIUS_MI = 100.0;
+  var SERVER_ID = {{ next_pin.id }};
+  function havMi(a, b, c, d) {
+    var p = Math.PI / 180, p1 = a * p, p2 = c * p;
+    var dp = (c - a) * p, dl = (d - b) * p;
+    var x = Math.sin(dp / 2) * Math.sin(dp / 2) +
+            Math.cos(p1) * Math.cos(p2) * Math.sin(dl / 2) * Math.sin(dl / 2);
+    return 2 * 3958.8 * Math.asin(Math.sqrt(x));
+  }
+  function resolveTown(raw) {
+    var q = (raw || '').trim().toLowerCase();
+    if (!q) return null;
+    var city = q, state = '', m = q.match(/^(.*?)[,\s]+([a-z]{2})$/);
+    if (m) { city = m[1].replace(/,+$/, '').trim(); state = m[2]; }
+    var exact = null, cityState = null, cityBest = null, stateBest = null, t, i;
+    for (i = 0; i < TOWNS.length; i++) {
+      t = TOWNS[i];  // [label, city, state, centroid lat, centroid lng, pin count]
+      if (t[0].toLowerCase() === q) { exact = t; break; }
+      if (state && t[1].toLowerCase() === city && t[2].toLowerCase() === state &&
+          (!cityState || t[5] > cityState[5])) cityState = t;
+      if (t[1].toLowerCase() === city && (!cityBest || t[5] > cityBest[5])) cityBest = t;
+      if (state && t[2].toLowerCase() === state && (!stateBest || t[5] > stateBest[5])) stateBest = t;
+    }
+    return exact || cityState || cityBest || stateBest;
+  }
+  try {
+    var town = localStorage.getItem('hm_town');
+    if (!town) return;
+    var home = resolveTown(town);
+    if (!home) return;
+    var best = null, i, p, d;
+    for (i = 0; i < CHAIN.length; i++) {
+      p = CHAIN[i];
+      d = havMi(home[3], home[4], p.lat, p.lng);
+      if (d > RADIUS_MI) continue;
+      if (!best || p.views > best.pin.views ||
+          (p.views === best.pin.views && (d < best.d || (d === best.d && p.id < best.pin.id)))) {
+        best = { pin: p, d: d };
+      }
+    }
+    if (!best || best.pin.id === SERVER_ID) return;
+    var pin = best.pin, href = '/d/' + pin.id;
+    var big = document.querySelector('a.next-haunt');
+    if (big) {
+      big.href = href;
+      var sub = big.querySelector('.next-haunt-sub');
+      if (sub) sub.textContent = pin.title + ' \u00B7 ' + best.d.toFixed(1) + ' mi \u00B7 ' + pin.town_label;
+    }
+    var bar = document.querySelector('a.next-haunt-bar');
+    if (bar) {
+      bar.href = href;
+      bar.setAttribute('aria-label', 'Next haunt: ' + pin.title);
+      var ttl = bar.querySelector('.nhb-title');
+      if (ttl) ttl.textContent = pin.title + ' \u00B7 ' + pin.town_label;
+      var img = bar.querySelector('.nhb-thumb');
+      if (img && pin.thumb_url) img.src = pin.thumb_url;
+    }
+  } catch (e) {}
+})();
+</script>
+{% endif %}
+
 <div class="tips-section" id="tips">
   <h3>&#x1F4AC; Tips & experiences ({{ tips|length }})</h3>
   {% if tips %}
