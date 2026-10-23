@@ -457,7 +457,9 @@ function hmTtFitRail(box, inner) {
   window.addEventListener('resize', fit);
 }
 // TikTok facade loader: swap a thumbnail facade for the real embed on tap,
-// fetching TikTok's embed.js exactly once per page (later facades rescan).
+// then (re-)execute TikTok's embed.js so it renders the new blockquote —
+// the current SDK rescans ONLY on re-execution (see the note at the
+// bottom of hmLoadTikTok).
 function hmLoadTikTok(facade) {
   if (!facade || facade.dataset.loaded) return;
   facade.dataset.loaded = '1';
@@ -513,15 +515,27 @@ function hmLoadTikTok(facade) {
   } else {
     facade.replaceWith(bq);
   }
-  if (!window.__hmTtEmbed) {
-    window.__hmTtEmbed = true;
-    var s = document.createElement('script');
-    s.async = true;
-    s.src = 'https://www.tiktok.com/embed.js';
-    document.body.appendChild(s);
-  } else if (window.tiktokEmbed && window.tiktokEmbed.load) {
-    try { window.tiktokEmbed.load(); } catch (e) {}
-  }
+  // Rescan = re-execute embed.js, on EVERY activation. TikTok's
+  // current embed SDK (package "tiktok_embed_v2", served today as
+  // embed_v1.0.14.js + embed_lib_v1.0.14.js) has NO
+  // window.tiktokEmbed.load() — the old call silently no-oped, so
+  // every facade after the first on a page stayed an unprocessed
+  // blockquote forever (TikTok's own embed CSS paints that state as
+  // a white loading-skeleton card) and only a reload restored play.
+  // The SDK's designed rescan path is re-running embed.js — exactly
+  // what TikTok's standard snippet does by repeating the script tag
+  // per embed: the loader coordinates repeat executions via
+  // sessionStorage and renders only blockquotes that don't carry an
+  // id yet, so already-playing embeds are never touched. A fresh
+  // script node is required each time (a reused node won't re-run);
+  // the node removes itself once executed to keep the DOM tidy.
+  // Diagnosis: goals/hauntmap-halloween-web-app/files/
+  //   tiktok-sequential-playback-diagnosis-2026-10-23.md
+  var s = document.createElement('script');
+  s.async = true;
+  s.src = 'https://www.tiktok.com/embed.js';
+  s.onload = function () { try { s.remove(); } catch (e) {} };
+  document.body.appendChild(s);
 }
 </script>
 {# The seen system (hmSeenList / hmMarkSeen / hmSeenStrip + the Item 4
