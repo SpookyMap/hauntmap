@@ -4,7 +4,8 @@
    suppression live in static/js/retention2.js; this partial is pure
    markup and stays `hidden` until that script shows it (max once per
    visitor per ~3 days, never on the homepage, never on a page that
-   already renders the static _text_alerts.html panel).
+   already renders the static _text_alerts.html panel — except pin
+   pages (/d/{id}), which Dan exempted on 2026-10-23).
    The form is the panel's form: same POST /text-alerts endpoint, same
    field names, same radius options/default, same interest defaults,
    same honeypot field and the same consent copy. source="mid-browse"

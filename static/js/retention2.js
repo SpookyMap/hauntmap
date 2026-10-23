@@ -31,8 +31,10 @@
 //   or ~25s of tab-visible time on the page.
 //   Suppression: already subscribed; homepage (the static panel lives
 //   there); any page that already renders a static .text-alerts panel
-//   (pin pages, /events, /virtual-tour — no duplicate forms); /admin;
-//   shown within the last ~3 days.
+//   (/events, /virtual-tour — no duplicate forms); /admin; shown
+//   within the last ~3 days. PIN PAGES (/d/{id}) are EXEMPT from the
+//   static-panel suppression (Dan, 2026-10-23): most traffic lands
+//   there, so the sheet fires on pin pages too, panel notwithstanding.
 //   Subscribed detection: POST /text-alerts is a classic form POST
 //   that 303-redirects back with ?text_alerts=1|code|confirmed in the
 //   URL, so any landing page carrying that flag marks the visitor
@@ -106,8 +108,11 @@
     var last = parseInt(lsGet('hm_ta_prompt_at') || '0', 10) || 0;
     if (last && (Date.now() - last) < THREE_DAYS_MS) return false;
     // No duplication: pages with a static text-alerts panel already
-    // carry the form (homepage, pin pages, /events, /virtual-tour).
-    if (document.querySelector('.text-alerts')) return false;
+    // carry the form (/events, /virtual-tour) — EXCEPT pin pages.
+    // Dan 2026-10-23: pin pages are where most traffic lands, so the
+    // sheet fires there too despite the static panel.
+    var onPinPage = /^\/d\/\d+/.test(path);
+    if (!onPinPage && document.querySelector('.text-alerts')) return false;
     return true;
   }
 
