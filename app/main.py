@@ -3559,6 +3559,7 @@ BUSINESS_PACKAGES = [
                   "Logo placement on town pages",
                   "Monthly click report"]},
     {"id": "title", "name": "Title Sponsor", "price": 1000,
+     "stripe_link": "https://buy.stripe.com/4gM7sK3K0bXg7Hy8eabbG02",
      "blurb": "The top spot, everywhere.",
      "features": ["Everything in Premium",
                   "Top banner placement sitewide",
