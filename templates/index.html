@@ -151,11 +151,19 @@
   </noscript>
   <script>
   (function () {
-    var facades = document.currentScript.parentElement.querySelectorAll('.tt-facade');
+    var wrap = document.currentScript.parentElement;
+    var facades = wrap.querySelectorAll('.tt-facade');
     facades.forEach(function (f) {
-      f.addEventListener('click', function () { hmLoadTikTok(f); });
+      function play() {
+        // Phone row layout (<=760px CSS): flag the block as playing so
+        // the tapped video's embed expands full-width and the other
+        // facade drops below it. No-op on desktop (no styles use it).
+        wrap.classList.add('tt-playing');
+        hmLoadTikTok(f);
+      }
+      f.addEventListener('click', play);
       f.addEventListener('keydown', function (e) {
-        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); hmLoadTikTok(f); }
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); play(); }
       });
     });
   })();

@@ -1430,6 +1430,30 @@ a.game-card:hover { border-color: #ff7518; transform: translateY(-2px); }
   .tt-follow-vert-text { letter-spacing: 0.05em; }
 }
 
+/* ============ z86: PHONE FEATURED-TOKS ROW (Dan, Oct 23) ====
+   Phone only (<=760px); desktop/laptop rendering untouched. The two
+   homepage promo toks sit side by side (NEW Scare-O-Meter left,
+   40-hours right) instead of stacked. When one is tapped, the inline
+   binding adds .tt-playing: the tapped video's embed spans the full
+   width and the other facade drops below it full-width — a TikTok
+   embed is unusable at half phone width. */
+@media (max-width: 760px) {
+  .hero-split .tt-featured {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 0.55rem;
+    width: min(430px, 100%);
+  }
+  .hero-split .tt-featured .tt-facade + .tt-facade { margin-top: 0; }
+  .hero-split .tt-featured > .tt-facade:nth-of-type(1) { grid-column: 1; grid-row: 1; }
+  .hero-split .tt-featured > .tt-facade:nth-of-type(2) { grid-column: 2; grid-row: 1; }
+  /* Half-width cards get scaled-down chrome (row state only) */
+  .hero-split .tt-featured:not(.tt-playing) .tt-play { width: 44px; height: 44px; font-size: 1rem; }
+  .hero-split .tt-featured:not(.tt-playing) .tt-facade-label { font-size: 0.78rem; padding: 1rem 0.3rem 0.4rem; }
+  /* Playing: embed full width on top; the untouched facade drops below */
+  .hero-split .tt-featured > blockquote.tiktok-embed,
+  .hero-split .tt-featured > iframe { grid-column: 1 / -1; margin: 0 auto; }
+  .hero-split .tt-featured.tt-playing > .tt-facade { grid-column: 1 / -1; grid-row: 2; }
+}
+
 /* ============ z38: EVENTS ARTWORK = ROW-TWO ANCHOR (Dan, Oct 22) ====
    The Events GIF stands ~2x the button height — the unmistakable anchor
    of row two, still a plain image link with no button chrome. The extra
