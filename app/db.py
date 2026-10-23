@@ -94,9 +94,12 @@ CREATE TABLE IF NOT EXISTS shared_tours (
 CREATE TABLE IF NOT EXISTS engagement_events (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     created_at TEXT NOT NULL,             -- UTC ISO timestamp
-    event TEXT NOT NULL,                   -- video_play | tour_add | next_bar_click | rail_click | vote | unvote | scare | tip
+    event TEXT NOT NULL,                   -- video_play | tour_add | next_bar_click | rail_click | vote | unvote | scare | tip | engaged
     entry_id INTEGER,                      -- pin the interaction is attributed to, NULL when not pin-bound
-    town TEXT                              -- pin's town label, derived server-side from entry_id
+    town TEXT,                             -- pin's town label, derived server-side from entry_id
+    path TEXT,                             -- 'engaged' rows only: page path the time was spent on
+    seconds INTEGER,                       -- 'engaged' rows only: incremental engaged seconds (clamped server-side)
+    sid TEXT                               -- 'engaged' rows only: visitor's hm_sid cookie (same id page_views stores)
 );
 CREATE INDEX IF NOT EXISTS idx_engagement_created_event ON engagement_events(created_at, event);
 CREATE INDEX IF NOT EXISTS idx_engagement_entry ON engagement_events(entry_id);
@@ -153,4 +156,11 @@ def init_db(db_path: Path) -> None:
         for col in ("ev_type", "ev_genre", "ev_venue"):
             if col not in cols:
                 conn.execute(f"ALTER TABLE entries ADD COLUMN {col} TEXT")
+        # Retention Wave 2, Item 6: engaged-time beacon columns on
+        # engagement_events (path / seconds / sid) for DBs created before
+        # the beacon existed. main.py also ensures these lazily on insert.
+        ecols = {r["name"] for r in conn.execute("PRAGMA table_info(engagement_events)").fetchall()}
+        for col, ddl in (("path", "TEXT"), ("seconds", "INTEGER"), ("sid", "TEXT")):
+            if col not in ecols:
+                conn.execute(f"ALTER TABLE engagement_events ADD COLUMN {col} {ddl}")
         conn.commit()

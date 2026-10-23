@@ -569,5 +569,80 @@ hmTourSync();
 ]}, "eagerness": "moderate"}]}
 </script>
 {% block speculation %}{% endblock %}
+{# ===== Retention Wave 2, Item 6: engaged-time beacon (BEGIN) =====
+   Measures REAL time-on-page: page_views alone record 0s for a visitor
+   who lands, watches a 2-minute video and leaves. This block accumulates
+   only VISIBLE time and reports INCREMENTAL seconds to POST /api/track
+   as {event:'engaged', seconds, path} — a heartbeat every 15s of engaged
+   time plus a final flush on pagehide / tab-hide. Server clamps each
+   beacon to 60s and SUMs the rows. No timers run while the tab is
+   hidden; nothing is sent for sub-second remainders. Focus is
+   deliberately NOT required: window blur fires when a visitor clicks
+   into an embedded video iframe — exactly the watching being measured. #}
+<script>
+(function () {
+  var PATH = location.pathname;
+  var HEARTBEAT = 15;          // send after this many engaged seconds
+  var pending = 0;             // banked, unsent engaged seconds (float)
+  var visibleSince = null;     // ms timestamp the current visible stretch began
+  var timer = null;
+
+  function bank() {
+    if (visibleSince !== null) {
+      pending += (Date.now() - visibleSince) / 1000;
+      visibleSince = null;
+    }
+  }
+  function total() {
+    return pending + (visibleSince !== null ? (Date.now() - visibleSince) / 1000 : 0);
+  }
+  function send(secs) {
+    try {
+      var payload = JSON.stringify({ event: 'engaged', seconds: secs, path: PATH });
+      if (navigator.sendBeacon) {
+        var blob = new Blob([payload], { type: 'text/plain' });
+        if (navigator.sendBeacon('/api/track', blob)) return;
+      }
+      fetch('/api/track', { method: 'POST', headers: { 'Content-Type': 'text/plain' },
+                            body: payload, keepalive: true }).catch(function () {});
+    } catch (e) {}
+  }
+  // Consume `whole` seconds from the unsent pool, keeping the fraction.
+  function consume(whole) {
+    var t = total() - whole;
+    bank();
+    pending = t;
+    if (document.visibilityState === 'visible') visibleSince = Date.now();
+  }
+  function heartbeat() {
+    var whole = Math.floor(total());
+    if (whole >= HEARTBEAT) { consume(whole); send(whole); }
+  }
+  function flush() {
+    // Final flush sends any remainder of >=1 whole second. Banking +
+    // consuming here is the double-flush guard: pagehide AND
+    // visibilitychange->hidden both fire on unload, but the second call
+    // finds <1s left and sends nothing.
+    bank();
+    var whole = Math.floor(pending);
+    if (whole >= 1) { pending -= whole; send(whole); }
+  }
+  function startClock() {
+    if (visibleSince === null) visibleSince = Date.now();
+    if (timer === null) timer = setInterval(heartbeat, 5000);
+  }
+  function stopClock() {
+    bank();
+    if (timer !== null) { clearInterval(timer); timer = null; }
+  }
+  document.addEventListener('visibilitychange', function () {
+    if (document.visibilityState === 'visible') startClock();
+    else { stopClock(); flush(); }
+  });
+  window.addEventListener('pagehide', flush);
+  if (document.visibilityState === 'visible') startClock();
+})();
+</script>
+{# ===== Retention Wave 2, Item 6: engaged-time beacon (END) ===== #}
 </body>
 </html>

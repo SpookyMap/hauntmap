@@ -2839,10 +2839,21 @@ async def upload_submit(
 ENGAGEMENT_TABLE_SQL = (
     "CREATE TABLE IF NOT EXISTS engagement_events "
     "(id INTEGER PRIMARY KEY AUTOINCREMENT, created_at TEXT NOT NULL, "
-    "event TEXT NOT NULL, entry_id INTEGER, town TEXT)"
+    "event TEXT NOT NULL, entry_id INTEGER, town TEXT, path TEXT, "
+    "seconds INTEGER, sid TEXT)"
 )
 # Whitelist for POST /api/track — anything else is a silent no-op.
 TRACK_EVENTS = ("video_play", "tour_add", "next_bar_click", "rail_click")
+# Retention Wave 2, Item 6: engaged-time beacon. Deliberately NOT in
+# TRACK_EVENTS / ENGAGEMENT_EVENTS_ALL: those are pin interactions counted
+# per-row on the admin stats page, while 'engaged' rows each carry a
+# SECONDS value that must be SUM-med, not counted (see _log_engaged).
+# sid is the visitor's existing hm_sid cookie — the same anonymous session
+# id page_views already stores; no new identifier is minted or stored.
+ENGAGED_EVENT = "engaged"
+# Per-beacon clamp: the client heartbeats every 15s of engaged time, so a
+# single beacon claiming more than 60s is a stalled tab or garbage.
+ENGAGED_MAX_SECONDS = 60
 # Full taxonomy shown on the admin stats page (client + server events).
 ENGAGEMENT_EVENTS_ALL = TRACK_EVENTS + ("vote", "unvote", "scare", "tip")
 
@@ -2865,6 +2876,37 @@ def _log_engagement(event: str, entry_id: int | None = None) -> None:
                 "INSERT INTO engagement_events (created_at, event, entry_id, town) "
                 "VALUES (?, ?, ?, ?)",
                 (datetime.now(timezone.utc).isoformat(), event, entry_id, town))
+            conn.commit()
+    except Exception:
+        pass
+
+
+def _ensure_engagement_columns(conn) -> None:
+    """PRAGMA-checked ALTERs adding the Item 6 columns (path / seconds /
+    sid) to engagement_events on DBs created before they existed — same
+    migration style as the fan_art / entries column additions."""
+    cols = {r["name"] for r in conn.execute("PRAGMA table_info(engagement_events)")}
+    for col, ddl in (("path", "TEXT"), ("seconds", "INTEGER"), ("sid", "TEXT")):
+        if col not in cols:
+            conn.execute(f"ALTER TABLE engagement_events ADD COLUMN {col} {ddl}")
+
+
+def _log_engaged(seconds: int, path: str, sid: str | None) -> None:
+    """Insert one engaged-time beacon row: `seconds` of INCREMENTAL engaged
+    time (client sends deltas, never cumulative totals) spent on `path`.
+    Real time-on-page per page/session is SUM(seconds) over these rows —
+    e.g. SELECT path, SUM(seconds) FROM engagement_events
+    WHERE event='engaged' GROUP BY path. Fire-and-forget like
+    _log_engagement: analytics must never break a page."""
+    try:
+        with get_conn(DB_PATH) as conn:
+            conn.execute(ENGAGEMENT_TABLE_SQL)
+            _ensure_engagement_columns(conn)
+            conn.execute(
+                "INSERT INTO engagement_events (created_at, event, path, seconds, sid) "
+                "VALUES (?, ?, ?, ?, ?)",
+                (datetime.now(timezone.utc).isoformat(), ENGAGED_EVENT,
+                 path, seconds, sid))
             conn.commit()
     except Exception:
         pass
@@ -2893,7 +2935,8 @@ def _scare_counts_for(entry_id: int) -> tuple[dict, int]:
 @app.post("/api/track")
 async def api_track(request: Request):
     """Beacon endpoint for client-side engagement events. Accepts a JSON
-    body {event, entry_id} — navigator.sendBeacon posts it as text/plain,
+    body {event, entry_id} — or {event:'engaged', seconds, path} for the
+    Item 6 time-on-page beacon. navigator.sendBeacon posts as text/plain,
     so the raw body is parsed, never request.json()/form. Whitelisted
     events only; always 204 with no body, malformed input included, so a
     tracking failure can never surface on a page."""
@@ -2903,7 +2946,23 @@ async def api_track(request: Request):
         if not isinstance(data, dict):
             data = {}
         event = str(data.get("event") or "")
-        if event in TRACK_EVENTS:
+        if event == ENGAGED_EVENT:
+            # Item 6 beacon: {event:'engaged', seconds:<int>, path:</x>}.
+            # Garbage is dropped silently, same as every other event here:
+            # non-numeric or non-positive seconds never land; oversized
+            # claims clamp to ENGAGED_MAX_SECONDS instead of inflating
+            # totals; only a bare path is stored — query/fragment (which
+            # could carry tokens) are stripped, length capped.
+            try:
+                seconds = int(data.get("seconds"))
+            except (TypeError, ValueError):
+                seconds = 0
+            seconds = max(0, min(seconds, ENGAGED_MAX_SECONDS))
+            path = str(data.get("path") or "")
+            path = path.split("?")[0].split("#")[0][:500]
+            if seconds > 0 and path.startswith("/"):
+                _log_engaged(seconds, path, request.cookies.get("hm_sid"))
+        elif event in TRACK_EVENTS:
             entry_id = data.get("entry_id")
             try:
                 entry_id = int(entry_id) if entry_id is not None else None
