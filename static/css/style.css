@@ -2698,7 +2698,7 @@ body.has-tourbar.has-radio { padding-bottom: 124px; }
 .vt-tv-strip .vt-btn { background: var(--accent); color: #1a0f00; }
 .vt-tv-strip .tv-btn { background: linear-gradient(90deg, #2b1650, #4a1570); border: 2px solid #b266ff; color: #fff; }
 .vt-tv-strip .music-btn { background: #150826; border: 2px solid var(--accent); color: #ffd9a8; }
-@media (max-width: 380px) { .vt-tv-strip a { font-size: 0.8rem; } }
+@media (max-width: 480px) { .vt-tv-strip { gap: 0.4rem; } .vt-tv-strip a { font-size: 0.78rem; padding: 0.28rem 0.3rem; } }
 
 /* ============ z80: PHONE MODULE DIET (Dan, Oct 23) ============
    Phone only (<=760px); desktop rendering untouched. Two homepage
