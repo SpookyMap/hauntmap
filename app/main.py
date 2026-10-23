@@ -3406,9 +3406,18 @@ async def sms_inbound(request: Request):
 def leaderboard(request: Request, cat: str = "halloween"):
     cat = cat if cat in CATEGORIES else "halloween"
     with get_conn(DB_PATH) as conn:
+        # Dan, Oct 23: rank by detail-page views, same logic as the
+        # homepage Trending strip — votes aren't flowing yet, so the old
+        # votes-first board was effectively newest-first. Revisit votes
+        # as a ranking input once they pick up.
         top = [row_to_dict(r) for r in conn.execute(
-            "SELECT * FROM entries WHERE hidden = 0 AND category = ? "
-            "ORDER BY votes DESC, created_at DESC LIMIT 10",
+            "SELECT e.*, COALESCE(v.views, 0) AS _views FROM entries e "
+            "LEFT JOIN (SELECT CAST(substr(path, 4) AS INTEGER) AS eid, "
+            "                  COUNT(*) AS views FROM page_views "
+            "                  WHERE path LIKE '/d/%' GROUP BY eid) v "
+            "  ON v.eid = e.id "
+            "WHERE e.hidden = 0 AND e.category = ? "
+            "ORDER BY _views DESC, e.votes DESC, e.id LIMIT 15",
             (cat,),
         ).fetchall()]
         per_town = []
