@@ -15,9 +15,9 @@
     <a href="/d/{{ e.id }}">
       {% if e.media_path %}
       {% if e.media_type == 'video' %}
-      {% if e.thumb_path %}<img src="{{ e.thumb_url }}" alt="{{ e.title }}" loading="lazy">{% else %}<video src="{{ e.media_url }}" preload="none" muted playsinline></video>{% endif %}
+      {% if e.thumb_path %}<img src="{{ e.thumb_card_url or e.thumb_url }}" alt="{{ e.title }}" width="800" height="600" loading="lazy" onerror="this.onerror=null;this.src='{{ e.thumb_url }}'">{% else %}<video src="{{ e.media_url }}" preload="none" muted playsinline></video>{% endif %}
       {% else %}
-      <img src="{{ e.thumb_url }}" alt="{{ e.title }}" loading="lazy">
+      <img src="{{ e.thumb_card_url or e.thumb_url }}" alt="{{ e.title }}" width="800" height="600" loading="lazy" onerror="this.onerror=null;this.src='{{ e.thumb_url }}'">
       {% endif %}
       {% endif %}
       <span class="leader-info">

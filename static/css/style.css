@@ -2654,3 +2654,15 @@ body.has-tourbar.has-radio { padding-bottom: 124px; }
 .daily-drop-card p { color: #c9bce8; margin: 0 0 0.6rem; }
 .daily-drop-card .daily-trivia-q { color: #FFF8E7; font-weight: 700; font-size: 1.02rem; }
 .daily-foot { color: #9d8fc7; font-size: 0.9rem; }
+
+/* Item 10 — lazy map placeholder (detail pages). The placeholder sits in
+   the exact .detail-map box (height from .detail-map), so the real
+   Leaflet map swapping in causes no layout shift. On CDN failure the
+   .hm-map-failed box stays as a static panel with a directions link. */
+.hm-map-lazy { position: relative; overflow: hidden; background: #14102a; }
+.hm-map-ph { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.35rem; text-align: center; padding: 1rem; }
+.hm-map-ph-pin { font-size: 1.8rem; }
+.hm-map-ph-text { color: #c9bce8; font-size: 0.95rem; }
+.hm-map-ph-link { color: #ffa25e; font-weight: 700; text-decoration: none; }
+.hm-map-ph-link:hover { text-decoration: underline; }
+.hm-map-lazy.hm-map-ready { background: #0d0916; }

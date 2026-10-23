@@ -53,6 +53,11 @@ MAX_PHOTO_BYTES = 10 * 1024 * 1024
 MAX_VIDEO_BYTES = 100 * 1024 * 1024
 THUMB_MAX_WIDTH = 640
 THUMB_W, THUMB_H = 800, 600  # feed thumbs: 4:3, the aspect every card renders at
+# Item 10 (speed diet): feed-card variant of each thumb — 480x360, same
+# filename in thumbs/card/, served at /media/thumbs/card/<name>. Phone
+# cards render ~380px wide, so the 800px thumb was ~2x overserved.
+CARD_THUMB_W, CARD_THUMB_H = 480, 360
+CARD_THUMB_DIR = THUMB_DIR / "card"
 ORIG_MAX_EDGE = 1920  # stored photo originals are capped at this long edge
 
 CATEGORIES = ("halloween", "christmas", "halloween_stores", "restaurants", "coffee", "shops", "parks", "haunted_houses", "events", "live")
@@ -96,6 +101,7 @@ ADMIN_COOKIE = "haunt_admin"
 DATA_DIR.mkdir(parents=True, exist_ok=True)
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 THUMB_DIR.mkdir(parents=True, exist_ok=True)
+CARD_THUMB_DIR.mkdir(parents=True, exist_ok=True)
 
 
 @app.on_event("startup")
@@ -242,6 +248,20 @@ def row_to_dict(row: sqlite3.Row) -> dict:
         # media-less listings (events / halloween_stores)
         d["media_url"] = ""
         d["thumb_url"] = ""
+    # Item 10: feed-card variant URL (480w). Server-side existence check:
+    # the variant is used only when its file is actually on disk, else
+    # the card falls back to the full thumb_url — a missing variant can
+    # never produce a broken image. Card templates ALSO carry an
+    # onerror swap to thumb_url as a second net. Detail-page hero
+    # imagery keeps using thumb_url (full size) and never this field.
+    d["thumb_card_url"] = d["thumb_url"]
+    if d.get("thumb_path"):
+        try:
+            card_file = CARD_THUMB_DIR / Path(d["thumb_path"]).name
+            if card_file.is_file():
+                d["thumb_card_url"] = f"/media/thumbs/card/{card_file.name}"
+        except OSError:
+            pass
     return d
 
 
@@ -1182,6 +1202,25 @@ def _write_thumb(im: Image.Image, dest: Path) -> None:
     im.save(dest, "JPEG", quality=76, optimize=True)
 
 
+def make_card_variant(thumb_dest: Path) -> None:
+    """Item 10: write the 480x360 feed-card variant for a thumb that
+    was just (re)generated, at thumbs/card/<same filename>. Guarded:
+    a variant failure must NEVER break an upload or a rethumb — the
+    card templates fall back to the full thumb when no variant file
+    exists, so skipping is always safe."""
+    try:
+        CARD_THUMB_DIR.mkdir(parents=True, exist_ok=True)
+        dest = CARD_THUMB_DIR / thumb_dest.name
+        with Image.open(thumb_dest) as im:
+            im.load()
+            im = ImageOps.exif_transpose(im).convert("RGB")
+            if im.size != (CARD_THUMB_W, CARD_THUMB_H):
+                im = im.resize((CARD_THUMB_W, CARD_THUMB_H), Image.LANCZOS)
+            im.save(dest, "JPEG", quality=76, optimize=True)
+    except (OSError, UnidentifiedImageError):
+        pass
+
+
 def _cap_original(src: Path) -> None:
     """Downscale an oversized stored original in place (detail pages serve the
     original; phone photos arrive at 3-5 MB). No-op when already small enough."""
@@ -1228,6 +1267,7 @@ def make_thumb(src: Path, dest_name: str) -> str:
     _recompress_jpeg(src)
     with Image.open(src) as im:
         _write_thumb(im, dest)
+    make_card_variant(dest)
     return rel
 
 
@@ -1248,6 +1288,7 @@ def make_video_poster(src: Path, dest_name: str) -> str | None:
                 _write_thumb(im, dest)
         except (OSError, UnidentifiedImageError):
             pass
+        make_card_variant(dest)
         return rel
     except (subprocess.SubprocessError, OSError):
         return None
@@ -4184,6 +4225,7 @@ def admin_rethumb(request: Request, offset: int = 0, limit: int = 200):
             new = tmp.stat().st_size
             if new < old:
                 tmp.replace(f)
+                make_card_variant(f)  # keep the Item 10 card variant in sync
                 shrunk += 1
             else:
                 tmp.unlink(missing_ok=True)
@@ -4256,6 +4298,7 @@ def admin_fix_orientation(request: Request, offset: int = 0, limit: int = 100):
                         with Image.open(f) as im:
                             im.load()
                             _write_thumb(im, thumb)
+                        make_card_variant(thumb)
         except (OSError, UnidentifiedImageError):
             continue
     return {"total": len(rows), "offset": offset, "processed": len(batch),
@@ -4293,6 +4336,8 @@ def admin_delete(entry_id: int, request: Request):
         for rel in {entry["media_path"], entry.get("thumb_path")}:
             if rel:
                 (UPLOAD_DIR / rel).unlink(missing_ok=True)
+        if entry.get("thumb_path"):  # Item 10 card variant, if any
+            (CARD_THUMB_DIR / Path(entry["thumb_path"]).name).unlink(missing_ok=True)
         with get_conn(DB_PATH) as conn:
             conn.execute("DELETE FROM entries WHERE id = ?", (entry_id,))
             conn.commit()

@@ -197,6 +197,17 @@
     iframe.loading = 'lazy';
     frameBox.appendChild(iframe);
   }
+  var catalogBuilt = false;
+  function ensureCatalog() {
+    // Item 10 audit: the 36-track catalog DOM was built on EVERY page
+    // load, though the mix UI only exists inside the closed panel.
+    // Build it lazily — first time the panel is open on the mix
+    // station — with identical behaviour from the visitor's side.
+    if (catalogBuilt) return;
+    catalogBuilt = true;
+    buildCatalog();
+    renderMix();
+  }
   function syncPicks() {
     var s = station();
     document.querySelectorAll('.hmr-pick').forEach(function (b) {
@@ -205,7 +216,10 @@
       if (b.id === 'hmrPickCustom') b.hidden = !(lsGet('hm_radio_custom'));
     });
     mixBox.hidden = s !== 'mix';
-    if (s === 'mix') renderMix();
+    if (s === 'mix') {
+      if (!panel.hidden) ensureCatalog();
+      renderMix();
+    }
   }
   function applyStation(s) {
     lsSet('hm_radio_station', s);
@@ -395,7 +409,9 @@
   window.addEventListener('resize', syncNextbar);
   syncNextbar();
 
-  buildCatalog();
+  // Item 10: catalog build deferred to ensureCatalog() (first open on
+  // the mix station); openPanel()->syncPicks() covers the restored-
+  // open-panel path below, so returning mix users see the same panel.
   // Initial state: off -> tab only; on -> chip, restoring an expanded
   // panel (and its embed) only for visitors who left it open.
   if (lsGet('hm_radio_off') === '1') {

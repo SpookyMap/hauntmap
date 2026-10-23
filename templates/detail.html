@@ -2,10 +2,14 @@
 {% from "_pin_card.html" import pin_card %}
 {% block title %}{{ entry.title }} &middot; {{ site_name }}{% endblock %}
 {% block head %}
-{% if entry.lat is not none and entry.lng is not none %}
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-{% endif %}
+{# Item 10 (speed diet): Leaflet is NO LONGER loaded in <head> on pin
+   pages. It used to cost CSS+JS+tiles on every pin view, render-
+   blocking, even though the map sits far below the fold. The map
+   block below renders a lightweight placeholder and an
+   IntersectionObserver lazy-loads the same Leaflet 1.9.4 assets only
+   when the map nears the viewport, then runs the original init.
+   Scope: detail.html ONLY — /map, /tour, /upload and /t/{slug} keep
+   their eager <head> includes (different pages, different jobs). #}
 {% endblock %}
 {% block content %}
 <article class="detail">
@@ -262,14 +266,71 @@
   </script>
 
   {% if entry.lat is not none and entry.lng is not none %}
-  <div id="map" class="detail-map"></div>
+  {# Item 10: lazy Leaflet. Placeholder occupies the exact .detail-map
+     box (same height — no layout shift when the real map swaps in).
+     The loader is fully guarded: L is only ever touched after the
+     script's onload AND a typeof check, so a blocked/failed CDN can
+     never produce an 'L is not defined' error — the placeholder just
+     stays as a static box (the Google/Apple directions links above
+     remain the wayfinding path). #}
+  <div id="map" class="detail-map hm-map-lazy" data-lat="{{ entry.lat }}" data-lng="{{ entry.lng }}">
+    <div class="hm-map-ph">
+      <span class="hm-map-ph-pin" aria-hidden="true">&#x1F4CD;</span>
+      <span class="hm-map-ph-text">Map &mdash; loading as you scroll&hellip;</span>
+      {% if entry.address %}
+      <a class="hm-map-ph-link" href="https://www.google.com/maps/dir/?api=1&destination={{ entry.address|urlencode }}" target="_blank" rel="noopener">Get directions &rarr;</a>
+      {% else %}
+      <a class="hm-map-ph-link" href="https://www.google.com/maps/dir/?api=1&destination={{ entry.lat }},{{ entry.lng }}" target="_blank" rel="noopener">Get directions &rarr;</a>
+      {% endif %}
+    </div>
+  </div>
   <script>
     (function () {
-      var map = L.map('map').setView([{{ entry.lat }}, {{ entry.lng }}], 15);
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 19, attribution: '&copy; OpenStreetMap contributors'
-      }).addTo(map);
-      L.marker([{{ entry.lat }}, {{ entry.lng }}]).addTo(map);
+      var el = document.getElementById('map');
+      if (!el) return;
+      var lat = parseFloat(el.getAttribute('data-lat'));
+      var lng = parseFloat(el.getAttribute('data-lng'));
+      if (!isFinite(lat) || !isFinite(lng)) { el.classList.add('hm-map-failed'); return; }
+      var started = false;
+      function init() {
+        if (typeof L === 'undefined') { el.classList.add('hm-map-failed'); return; }
+        try {
+          el.innerHTML = '';
+          el.classList.add('hm-map-ready');
+          var map = L.map('map').setView([lat, lng], 15);
+          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19, attribution: '&copy; OpenStreetMap contributors'
+          }).addTo(map);
+          L.marker([lat, lng]).addTo(map);
+        } catch (e) {
+          el.classList.add('hm-map-failed');
+        }
+      }
+      function load() {
+        if (started) return;
+        started = true;
+        if (typeof L !== 'undefined') { init(); return; }
+        var css = document.createElement('link');
+        css.rel = 'stylesheet';
+        css.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+        document.head.appendChild(css);
+        var s = document.createElement('script');
+        s.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+        s.async = true;
+        s.onload = init;
+        s.onerror = function () { el.classList.add('hm-map-failed'); };
+        document.head.appendChild(s);
+      }
+      if ('IntersectionObserver' in window) {
+        var io = new IntersectionObserver(function (entries) {
+          for (var i = 0; i < entries.length; i++) {
+            if (entries[i].isIntersecting) { io.disconnect(); load(); return; }
+          }
+        }, { rootMargin: '400px 0px' });
+        io.observe(el);
+      } else {
+        load();
+      }
     })();
   </script>
   {% endif %}
