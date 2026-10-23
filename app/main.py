@@ -299,12 +299,302 @@ def nearest_pins(entry: dict, limit: int = 6) -> list[dict]:
     return scored[:limit]
 
 
+# ---------------------------------------------------------------------------
+# Retention Wave 1 (Oct 23): Item 3 video chain + Item 1 true "Near You".
+# ---------------------------------------------------------------------------
+
+# Item 3: sane radius for the video chain / "More videos near here" strip.
+# Beyond this, a "next video" is not near in any useful sense and the pin
+# page falls back to the plain geographic chain.
+VIDEO_CHAIN_RADIUS_MI = 100.0
+
+
+def has_footage(entry: dict) -> bool:
+    """Footage predicate for the video chain (Item 3 spec): a TikTok
+    /video/ URL or an uploaded video file. Deliberately narrower than the
+    homepage "Has video" filter (any tiktok_url) — a live/profile TikTok
+    link is not playable footage of the haunt."""
+    tt = entry.get("tiktok_url") or ""
+    return "/video/" in tt or entry.get("media_type") == "video"
+
+
+# Item 1: Cloudflare visitor-location headers. The site sits behind
+# Cloudflare, whose "Add visitor location headers" managed transform can
+# attach cf-ipcity / cf-ipregion / cf-ipcountry / cf-iplatitude /
+# cf-iplongitude to every origin request. Whether that transform is
+# enabled on Dan's zone is NOT verifiable from staging — every consumer
+# below treats missing/garbled headers as "unknown" and falls back to
+# today's behaviour. Deploy-day check: curl the live homepage with a
+# known CF-PoP request (or inspect a real request's headers server-side)
+# and confirm the Denver/Miami simulations below reproduce with real
+# visitor headers.
+_GEO_NEAR_RADIUS_MI = 100.0   # towns within this of the visitor point = near
+_GEO_EXACT_FILL_RADIUS_MI = 75.0  # neighbours that join an exact-town anchor
+
+# cf-ipregion arrives as a full name ("Colorado"); tests/tooling may send
+# the 2-letter code instead. Map both to the state code used in town data.
+_STATE_NAME_TO_CODE: dict[str, str] = {}
+
+
+def _state_code_from_region(region: str, region_code: str = "") -> str:
+    """Resolve a Cloudflare region value to a US state code, '' if unknown."""
+    global _STATE_NAME_TO_CODE
+    if not _STATE_NAME_TO_CODE:
+        _STATE_NAME_TO_CODE = {name.lower(): code
+                               for code, name in US_STATE_NAMES.items()}
+        _STATE_NAME_TO_CODE["district of columbia"] = "DC"
+        _STATE_NAME_TO_CODE["washington dc"] = "DC"
+    for raw in (region_code, region):
+        v = (raw or "").strip()
+        if not v:
+            continue
+        if v.upper() in US_STATE_CODES:
+            return v.upper()
+        hit = _STATE_NAME_TO_CODE.get(v.lower())
+        if hit:
+            return hit
+    return ""
+
+
+def _visitor_geo(request: Request) -> dict | None:
+    """Visitor's coarse area from Cloudflare headers, or None when the
+    headers are absent/unusable (the staging + fallback case). Only the
+    five documented headers are read (plus cf-ipregion-code when present,
+    which some zones send alongside cf-ipregion). Non-US visitors get
+    None: every mapped town is in the US, so geo cannot help them yet."""
+    h = request.headers
+    country = (h.get("cf-ipcountry") or "").strip().upper()
+    if country and country != "US":
+        return None
+    city = (h.get("cf-ipcity") or "").strip()
+    state = _state_code_from_region(h.get("cf-ipregion") or "",
+                                    h.get("cf-ipregion-code") or "")
+    lat = lng = None
+    try:
+        lat = float(h.get("cf-iplatitude") or "")
+        lng = float(h.get("cf-iplongitude") or "")
+        if not (-90 <= lat <= 90 and -180 <= lng <= 180):
+            lat = lng = None
+    except (TypeError, ValueError):
+        lat = lng = None
+    if not city and not state and lat is None:
+        return None
+    return {"city": city, "state": state, "lat": lat, "lng": lng}
+
+
+def _town_inventory(conn, category: str = "halloween") -> list[dict]:
+    """Every visible town in a category as {label, city, state, count,
+    clat, clng} — the label/city/state come from the same extract_*
+    helpers that build card town_labels, and the centroid is the mean of
+    the town's pin coordinates (all halloween pins carry coords today)."""
+    inv: dict[str, dict] = {}
+    for r in conn.execute(
+            "SELECT town, lat, lng FROM entries "
+            "WHERE hidden = 0 AND category = ?", (category,)).fetchall():
+        label = extract_city_state(r["town"] or "")
+        if not label:
+            continue
+        t = inv.setdefault(label, {"label": label, "count": 0,
+                                   "_lats": [], "_lngs": []})
+        t["count"] += 1
+        if r["lat"] is not None and r["lng"] is not None:
+            t["_lats"].append(r["lat"])
+            t["_lngs"].append(r["lng"])
+    out = []
+    for t in inv.values():
+        t["city"] = extract_city(t["label"])
+        t["state"] = extract_state(t["label"])
+        t["clat"] = (sum(t["_lats"]) / len(t["_lats"])) if t["_lats"] else None
+        t["clng"] = (sum(t["_lngs"]) / len(t["_lngs"])) if t["_lngs"] else None
+        del t["_lats"], t["_lngs"]
+        out.append(t)
+    return out
+
+
+def _resolve_visitor_area(inventory: list[dict], geo: dict | None) -> dict:
+    """Resolve the visitor's area against the town inventory.
+
+    Resolution order (Item 1 spec):
+      (a) exact town match — a mapped town whose city equals the header
+          city (in the header state, when known);
+      (b) nearest towns by haversine from the header lat/lng, within
+          _GEO_NEAR_RADIUS_MI;
+      (c) biggest towns in the visitor's state;
+      (d) today's behaviour — biggest towns site-wide ("fallback").
+    A visitor whose area is known but has NO mapped supply at all (no
+    exact/near/state town) resolves to mode "nomap": the module names
+    their area honestly and shows the fallback towns rather than
+    pretending New Jersey is near Denver (nearest mapped town to Denver
+    is ~626 mi away in the Oct 23 snapshot).
+
+    Returns {mode, area_name, heading, sub, chips, area_labels} where
+    chips are the Near-you module's top-8 [{label, count}] and
+    area_labels is the full set of town labels that count as "the
+    visitor's area" for feed-leading (empty for fallback/nomap)."""
+    biggest = sorted(inventory, key=lambda t: (-t["count"], t["label"]))
+    fallback_chips = [{"label": t["label"], "count": t["count"]}
+                      for t in biggest[:8]]
+    base = {"mode": "fallback", "area_name": "",
+            "heading": "Near you tonight",
+            "sub": "The biggest haunt towns on the map right now — "
+                   "tap yours, or jump straight to what's around you.",
+            "chips": fallback_chips, "area_labels": set()}
+    if not geo:
+        return base
+    city = (geo.get("city") or "").strip()
+    state = geo.get("state") or ""
+    vlat, vlng = geo.get("lat"), geo.get("lng")
+    city_disp = _smart_case_city(city) if city else ""
+    state_name = US_STATE_NAMES.get(state, state)
+
+    def chips_of(towns: list[dict]) -> list[dict]:
+        return [{"label": t["label"], "count": t["count"]} for t in towns[:8]]
+
+    def dist_to(t: dict, lat: float, lng: float) -> float | None:
+        if t["clat"] is None or t["clng"] is None:
+            return None
+        return haversine_miles(lat, lng, t["clat"], t["clng"])
+
+    # (a) exact town match
+    exact = None
+    if city:
+        cands = [t for t in inventory if t["city"].lower() == city.lower()]
+        if state:
+            in_state = [t for t in cands if t["state"] == state]
+            if in_state:
+                cands = in_state
+        if cands:
+            exact = sorted(cands, key=lambda t: -t["count"])[0]
+    if exact is not None:
+        alat = vlat if vlat is not None else exact["clat"]
+        alng = vlng if vlng is not None else exact["clng"]
+        neighbours: list[dict] = []
+        if alat is not None and alng is not None:
+            scored = []
+            for t in inventory:
+                if t["label"] == exact["label"]:
+                    continue
+                d = dist_to(t, alat, alng)
+                if d is not None and d <= _GEO_EXACT_FILL_RADIUS_MI:
+                    scored.append((d, t))
+            neighbours = [t for _d, t in sorted(
+                scored, key=lambda x: (x[0], -x[1]["count"], x[1]["label"]))]
+        chips = [exact] + neighbours
+        if len(chips) < 8 and state:
+            have = {t["label"] for t in chips}
+            for t in biggest:
+                if len(chips) >= 8:
+                    break
+                if t["state"] == state and t["label"] not in have:
+                    chips.append(t)
+                    have.add(t["label"])
+        area = {exact["label"]} | {t["label"] for t in neighbours}
+        return {"mode": "exact",
+                "area_name": f"{city_disp} area",
+                "heading": f"Near You — {city_disp} area",
+                "sub": f"Closest haunt towns to {city_disp} first — "
+                       "tap a town to see its haunts, or change your area.",
+                "chips": chips_of(chips), "area_labels": area}
+    # (b) nearest towns to the header coordinates
+    if vlat is not None and vlng is not None:
+        scored = []
+        for t in inventory:
+            d = dist_to(t, vlat, vlng)
+            if d is not None and d <= _GEO_NEAR_RADIUS_MI:
+                scored.append((d, t))
+        if scored:
+            near = [t for _d, t in sorted(
+                scored, key=lambda x: (x[0], -x[1]["count"], x[1]["label"]))]
+            chips = list(near)
+            if len(chips) < 8 and state:
+                have = {t["label"] for t in chips}
+                for t in biggest:
+                    if len(chips) >= 8:
+                        break
+                    if t["state"] == state and t["label"] not in have:
+                        chips.append(t)
+                        have.add(t["label"])
+            area_name = (f"{city_disp} area" if city_disp
+                         else (state_name or "your area"))
+            return {"mode": "near",
+                    "area_name": area_name,
+                    "heading": f"Near You — {area_name}",
+                    "sub": f"Closest haunt towns to {area_name} first — "
+                           "tap a town to see its haunts, or change your area.",
+                    "chips": chips_of(chips),
+                    "area_labels": {t["label"] for t in near}}
+    # (c) biggest towns in the visitor's state
+    if state:
+        in_state = [t for t in biggest if t["state"] == state]
+        if in_state:
+            return {"mode": "state",
+                    "area_name": state_name,
+                    "heading": f"Near You — {state_name}",
+                    "sub": f"Biggest haunt towns in {state_name} — "
+                           "tap a town to see its haunts, or change your area.",
+                    "chips": chips_of(in_state),
+                    "area_labels": {t["label"] for t in in_state}}
+    # Known area, zero mapped supply: name it honestly, show fallback towns.
+    if city or state:
+        area_name = f"{city_disp} area" if city_disp else state_name
+        return {"mode": "nomap",
+                "area_name": area_name,
+                "heading": f"Near You — {area_name}",
+                "sub": f"No haunts mapped near {area_name} yet — add yours "
+                       "or request your town below. Meanwhile, the biggest "
+                       "haunt towns on the map:",
+                "chips": fallback_chips, "area_labels": set()}
+    return base
+
+
+def _feed_has_video(e: dict) -> bool:
+    """The homepage feed's "has video" predicate (same as the SQL
+    video-first CASE in home()): any TikTok URL or an uploaded video file."""
+    if (e.get("tiktok_url") or "").strip():
+        return True
+    return (e.get("media_path") or "").lower().endswith((".mp4", ".webm", ".mov"))
+
+
+def _fetch_area_feed(cat: str, area_labels: set, scare: str, tag: str,
+                     video: str, sort: str) -> list[dict]:
+    """All pins of a category whose town label is in the visitor's area,
+    honouring the feed's scare/tag/video filters and ordered exactly
+    like the main feed (video-first, then the chosen sort). Used to lead
+    the default feed with near-area pins (Item 1) — the caller merges
+    these ahead of the regular feed and de-dupes, so the feed is never
+    emptied, only re-led."""
+    query = "SELECT * FROM entries WHERE hidden = 0 AND category = ?"
+    params: list = [cat]
+    if scare in ("family", "spooky", "creepy", "terrifying", "extreme"):
+        query += " AND scare_level = ?"
+        params.append(scare)
+    if tag in ("animatronics", "inflatables", "handmade", "walkthrough",
+               "projector", "lights", "music", "street-wide", "multi-house",
+               "ticketed", "2025"):
+        query += " AND (',' || COALESCE(tags,'') || ',') LIKE ?"
+        params.append(f"%,{tag},%")
+    if video.strip() == "1":
+        query += (" AND ((tiktok_url IS NOT NULL AND TRIM(tiktok_url) != '')"
+                  " OR LOWER(media_path) LIKE '%.mp4'"
+                  " OR LOWER(media_path) LIKE '%.webm'"
+                  " OR LOWER(media_path) LIKE '%.mov')")
+    with get_conn(DB_PATH) as conn:
+        rows = [row_to_dict(r) for r in conn.execute(query, params).fetchall()]
+    rows = [e for e in rows if e["town_label"] in area_labels]
+    rows.sort(key=lambda e: e.get("created_at") or "", reverse=True)
+    if sort == "top":
+        rows.sort(key=lambda e: -(e.get("votes") or 0))
+    rows.sort(key=lambda e: 0 if _feed_has_video(e) else 1)
+    return rows
+
+
 def detail_chain(entry: dict) -> dict:
     """Loop data for a detail page: the nearest-pin chain (next + reciprocal
     prev), a 'More near here' rail and a 'More like this' rail, so no detail
     page is ever a dead end. All same-category; distances in miles."""
     peers = category_peers(entry)
     out = {"next_pin": None, "prev_pin": None, "more_near": [], "more_like": []}
+    coord: list[dict] = []
     if entry.get("lat") is not None and entry.get("lng") is not None:
         coord = [p for p in peers
                  if p.get("lat") is not None and p.get("lng") is not None]
@@ -810,6 +1100,14 @@ def home(request: Request, sort: str = "top", town: str = "", town_search: str =
     town = town_search.strip() or town
     state = state.strip().upper()
     region = region.strip().lower()
+    # Retention Wave 1, Item 1: visitor geo (Cloudflare headers) only ever
+    # personalises the DEFAULT homepage. An explicit town/state/region in
+    # the URL is an explicit choice and overrides geo completely; the
+    # visitor's saved town (localStorage, rendered client-side by the
+    # Near-you module's existing script) is likewise untouched.
+    geo = None
+    if not town and not state and not region:
+        geo = _visitor_geo(request)
     order = "votes DESC, created_at DESC" if sort == "top" else "created_at DESC"
     query = "SELECT * FROM entries WHERE hidden = 0 AND category = ?"
     params: list = [cat]
@@ -879,6 +1177,28 @@ def home(request: Request, sort: str = "top", town: str = "", town_search: str =
         sponsors = [dict(r) for r in conn.execute(
             "SELECT * FROM sponsors WHERE is_active = 1 ORDER BY "
             "CASE tier WHEN 'title' THEN 0 WHEN 'premium' THEN 1 ELSE 2 END, created_at").fetchall()]
+    # Item 1: resolve the visitor's area once — it drives both the
+    # Near-you module (below) and the feed lead. With geo=None this is
+    # exactly today's biggest-towns-site-wide behaviour.
+    with get_conn(DB_PATH) as conn:
+        halloween_inventory = _town_inventory(conn, "halloween")
+    resolved_area = _resolve_visitor_area(halloween_inventory, geo)
+    if geo and resolved_area["area_labels"]:
+        # Lead the default feed with the visitor's area: area pins first
+        # (in normal feed order), then the regular feed de-duped behind
+        # them, still capped at 100 — the feed is re-led, never emptied.
+        area_labels = resolved_area["area_labels"]
+        if cat != "halloween":
+            with get_conn(DB_PATH) as conn:
+                cat_inventory = _town_inventory(conn, cat)
+            area_labels = _resolve_visitor_area(cat_inventory, geo)["area_labels"]
+        if area_labels:
+            area_entries = _fetch_area_feed(cat, area_labels, scare, tag,
+                                            video, sort)
+            if area_entries:
+                area_ids = {e["id"] for e in area_entries}
+                entries = (area_entries +
+                           [e for e in entries if e["id"] not in area_ids])[:100]
     voted = {k[6:] for k in request.cookies if k.startswith("voted_")}
     # Tonight's Display: fresh random pick on every homepage load from the
     # quality pool of real-media pins (Dan, Oct 22). The tonight_last
@@ -898,9 +1218,10 @@ def home(request: Request, sort: str = "top", town: str = "", town_search: str =
     # view — all categories and filters — so the hero stack (laptop) and
     # the below-band copies (phone) stay consistent wherever the visitor
     # lands (Dan, Oct 22: "keep the blocks consistent"). The data is
-    # site-wide discovery data and intentionally does NOT re-filter with
-    # the feed: Near-you = biggest haunt towns overall, Trending = top
-    # pins by detail-page views.
+    # discovery data and intentionally does NOT re-filter with the feed:
+    # Near-you = the visitor's resolved area (Item 1; biggest haunt towns
+    # overall when geo is unknown or an explicit location filter is in
+    # the URL), Trending = top pins by detail-page views.
     with get_conn(DB_PATH) as conn:
         trows = conn.execute(
             "SELECT e.*, COALESCE(v.views, 0) AS _views FROM entries e "
@@ -912,15 +1233,11 @@ def home(request: Request, sort: str = "top", town: str = "", town_search: str =
             "  AND TRIM(e.media_path) != '' "
             "ORDER BY _views DESC, e.votes DESC, e.id LIMIT 5").fetchall()
         trending = [row_to_dict(r) for r in trows if r["_views"] > 0]
-        counts: dict[str, int] = {}
-        for r in conn.execute(
-                "SELECT town FROM entries "
-                "WHERE hidden = 0 AND category = 'halloween'").fetchall():
-            label = extract_city_state(r["town"] or "")
-            if label:
-                counts[label] = counts.get(label, 0) + 1
-        near_towns = [{"label": k, "count": v} for k, v in
-                      sorted(counts.items(), key=lambda kv: (-kv[1], kv[0]))[:8]]
+        # Near-you towns now come from the Item 1 resolution (geo-aware
+        # when Cloudflare headers are present, biggest-site-wide when
+        # not) computed above; the counts are the same live halloween
+        # town counts this block used to compute inline.
+        near_towns = resolved_area["chips"]
     response = templates.TemplateResponse(request, "index.html",
         {"request": request, "entries": entries, "sort": sort,
          "town": town, "towns": towns(cat, state), "states": states(cat),
@@ -929,6 +1246,10 @@ def home(request: Request, sort: str = "top", town: str = "", town_search: str =
          "scare": scare, "tag": tag, "video": "1" if video.strip() == "1" else "",
          "tonight": tonight, "tonight_label": tonight_label,
          "trending": trending, "near_towns": near_towns,
+         "near_heading": resolved_area["heading"],
+         "near_sub": resolved_area["sub"],
+         "geo_mode": resolved_area["mode"],
+         "geo_area": resolved_area["area_name"],
          "sponsors": sponsors,
          "bottom_tabs": _place_tabs(cat, state, region, sort, scare, tag,
                                     "1" if video.strip() == "1" else ""),

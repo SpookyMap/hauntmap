@@ -1864,6 +1864,13 @@ body.has-tourbar #hm-prompt { bottom: 4.4rem; }
 .town-chip .chip-n { color: #ffb066; font-size: 0.8rem; font-weight: 800; }
 .near-you-actions { display: flex; flex-wrap: wrap; gap: 0.6rem; }
 .btn-ghost { background: transparent; border: 1px solid #6b4fae; color: #e8ddff; }
+
+/* Retention Wave 1, Item 1 (Oct 23): the Near-you module gets a heading
+   row with a visible "Change area" affordance (links into the existing
+   /nearby town search — no new header/nav controls). */
+.near-you-head { display: flex; align-items: baseline; justify-content: space-between; gap: 0.6rem; }
+.near-you-head h2 { margin-bottom: 0.3rem; }
+.near-you-change { font-size: 0.82rem; font-weight: 700; color: #ffb066; white-space: nowrap; }
 .trending { margin: 1.2rem 0 0.2rem; }
 .trending h2 { font-size: 1.25rem; margin: 0 0 0.6rem; }
 .trending .card-media { position: relative; }
