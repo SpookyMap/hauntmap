@@ -3219,7 +3219,7 @@ async def admin_tag(entry_id: int, request: Request):
 
 @app.post("/admin/edit/{entry_id}")
 async def admin_edit(entry_id: int, request: Request):
-    """Update title, town label, verified street address, events facets (admin).
+    """Update title, town label, verified street address, TikTok URL, events facets (admin).
 
     Only fields present in the form are touched. `address` may be sent
     empty to clear it back to NULL; title/town must be non-empty when sent.
@@ -3238,6 +3238,11 @@ async def admin_edit(entry_id: int, request: Request):
     if "address" in form:
         addr = str(form.get("address", "")).strip()
         updates["address"] = addr or None
+    if "tiktok_url" in form:
+        tt = str(form.get("tiktok_url", "")).strip()
+        if tt and "tiktok.com" not in tt:
+            return JSONResponse({"error": "tiktok_url must be a TikTok URL"}, status_code=400)
+        updates["tiktok_url"] = tt or None
     # Events facets: validated against the taxonomy; empty clears to NULL.
     for field, valid in (("ev_type", EVENT_TYPES), ("ev_genre", EVENT_GENRES),
                          ("ev_venue", EVENT_VENUES)):
