@@ -83,6 +83,23 @@ CREATE TABLE IF NOT EXISTS sms_subscribers (
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS shared_tours (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    slug TEXT NOT NULL UNIQUE,            -- URL-safe token, /t/{slug}
+    title TEXT NOT NULL,                  -- e.g. "My Fright Night — Seekonk, MA"
+    pin_ids TEXT NOT NULL,                -- JSON array of entry ids, array order = tour order
+    created_at TEXT NOT NULL,             -- UTC ISO timestamp
+    views INTEGER NOT NULL DEFAULT 0      -- GET /t/{slug} loads (verification UA excluded)
+);
+CREATE TABLE IF NOT EXISTS engagement_events (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    created_at TEXT NOT NULL,             -- UTC ISO timestamp
+    event TEXT NOT NULL,                   -- video_play | tour_add | next_bar_click | rail_click | vote | unvote | scare | tip
+    entry_id INTEGER,                      -- pin the interaction is attributed to, NULL when not pin-bound
+    town TEXT                              -- pin's town label, derived server-side from entry_id
+);
+CREATE INDEX IF NOT EXISTS idx_engagement_created_event ON engagement_events(created_at, event);
+CREATE INDEX IF NOT EXISTS idx_engagement_entry ON engagement_events(entry_id);
 CREATE INDEX IF NOT EXISTS idx_sms_subscribers_status ON sms_subscribers(status);
 CREATE TABLE IF NOT EXISTS sms_sends (
     id INTEGER PRIMARY KEY AUTOINCREMENT,

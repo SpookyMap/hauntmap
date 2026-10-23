@@ -63,6 +63,232 @@
   upd();
 })();
 </script>
+<script>
+// Collection loop (localStorage only, no accounts): remember which pins a
+// visitor has opened and render "You've seen X of Y displays in [Town]"
+// progress strips on pin and town pages. Degrades silently without storage.
+//
+// RELOCATION (Wave 4, Item 4): this block used to sit after the footer,
+// BELOW the main content block — but detail.html and town.html call
+// hmMarkSeen/hmSeenStrip from inline scripts inside the content block,
+// which run during parsing, before a later <script> is ever defined.
+// Verified locally: every pin page threw "hmMarkSeen is not defined"
+// and the seen set never recorded a single pin. The block now loads
+// before <main> so the calls work; nothing else about it changed
+// except the Item 4 mirror + passport helpers added below.
+function hmSeenList() {
+  try { return JSON.parse(localStorage.getItem('hm_seen') || '[]'); } catch (e) { return []; }
+}
+function hmSeenSet(seen) {
+  try { localStorage.setItem('hm_seen', JSON.stringify(seen)); } catch (e) {}
+}
+// --- Item 4: cookie mirror of the seen set (webview survival) --------
+// TikTok's in-app browser can wipe localStorage between opens while
+// cookies survive, which silently reset the whole collection loop for
+// exactly our majority cohort. So the most recent HM_SEEN_MIRROR_MAX
+// seen ids are ALSO kept in the `hm_seen_mirror` cookie.
+// Size math: the value is encodeURIComponent(JSON) of up to 250 ids.
+// Snapshot ids run 1–4 digits (max 4355); at the worst case a 4-digit
+// id costs 4 digits + an encoded comma (%2C = 3 chars) = 7 chars, so
+// 250 ids ≈ 1,750 bytes + ~6 for the encoded brackets — plus the
+// 15-char cookie name, comfortably under the ~4,096-byte per-cookie
+// browser limit. At 5-digit ids it would be ≈2,000 bytes, still safe.
+// Trade-off (documented): only the LAST 250 seen ids are mirrored. A
+// visitor with a bigger history whose localStorage is wiped recovers
+// their 250 most recent haunts; older ones stay lost unless the
+// original localStorage survives somewhere. 250 covers the realistic
+// season history of all but the heaviest haunters, and is the cap
+// that keeps the cookie safely sized.
+var HM_SEEN_MIRROR_MAX = 250;
+function hmSeenMirrorWrite(seen) {
+  try {
+    var tail = seen.slice(-HM_SEEN_MIRROR_MAX);
+    document.cookie = 'hm_seen_mirror=' + encodeURIComponent(JSON.stringify(tail)) +
+      '; path=/; max-age=' + (90 * 24 * 3600) + '; SameSite=Lax';
+  } catch (e) {}
+}
+function hmSeenMirrorRead() {
+  try {
+    var m = document.cookie.match(/(?:^|; )hm_seen_mirror=([^;]*)/);
+    if (!m) return [];
+    var ids = JSON.parse(decodeURIComponent(m[1]));
+    return Array.isArray(ids) ? ids.filter(function (n) { return Number.isFinite(n); }) : [];
+  } catch (e) { return []; }
+}
+// On every load: merge the mirror into localStorage as a UNION — the
+// spec'd restore (localStorage empty, cookie present) is the special
+// case where the union is just the cookie's ids. Mirrored ids are the
+// older ones, so they go first; localStorage order (chronological)
+// wins for the rest. Then the mirror is rewritten from the merged
+// set, which also refreshes its 90-day expiry on every visit.
+(function hmSeenRestore() {
+  try {
+    var seen = hmSeenList();
+    var mirrored = hmSeenMirrorRead();
+    if (mirrored.length) {
+      var have = {};
+      seen.forEach(function (id) { have[id] = 1; });
+      var older = mirrored.filter(function (id) { return !have[id]; });
+      if (older.length) {
+        seen = older.concat(seen);
+        if (seen.length > 3000) seen = seen.slice(seen.length - 3000);
+        hmSeenSet(seen);
+      }
+    }
+    if (seen.length) hmSeenMirrorWrite(seen);
+  } catch (e) {}
+})();
+function hmMarkSeen(id) {
+  if (!id) return;
+  try {
+    var seen = hmSeenList();
+    if (seen.indexOf(id) === -1) {
+      seen.push(id);
+      if (seen.length > 3000) seen = seen.slice(seen.length - 3000);
+      hmSeenSet(seen);
+      hmSeenMirrorWrite(seen);
+    }
+  } catch (e) {}
+}
+function hmSeenStrip(el, ids, label) {
+  if (!el || !ids || !ids.length) return;
+  try {
+    var seen = hmSeenList();
+    var n = 0;
+    for (var i = 0; i < ids.length; i++) if (seen.indexOf(ids[i]) !== -1) n++;
+    if (!n) return;
+    el.hidden = false;
+    el.querySelector('.seen-text').textContent =
+      "You've seen " + n + " of " + ids.length + " displays in " + label;
+    el.querySelector('.seen-fill').style.width =
+      Math.round(100 * n / ids.length) + '%';
+  } catch (e) {}
+}
+// --- Item 4: Haunt Passport data + summary (shared by /passport and
+// the homepage chip). Fetched once per page; progress is computed
+// against hm_seen entirely on-device. -------------------------------
+var _hmPassportData = null, _hmPassportWaiters = null;
+function hmPassportData(cb) {
+  if (_hmPassportData) { cb(_hmPassportData); return; }
+  if (_hmPassportWaiters) { _hmPassportWaiters.push(cb); return; }
+  _hmPassportWaiters = [cb];
+  fetch('/api/passport-data').then(function (r) { return r.json(); }).then(function (d) {
+    _hmPassportData = Array.isArray(d) ? d : [];
+    var w = _hmPassportWaiters; _hmPassportWaiters = null;
+    w.forEach(function (f) { f(_hmPassportData); });
+  }).catch(function () {
+    var w = _hmPassportWaiters || []; _hmPassportWaiters = null;
+    w.forEach(function (f) { f([]); });
+  });
+}
+function hmPassportSummary(data) {
+  var have = {};
+  hmSeenList().forEach(function (id) { have[id] = 1; });
+  var pins = 0, started = 0, conquered = 0;
+  var rows = (data || []).map(function (t) {
+    var n = 0;
+    (t.ids || []).forEach(function (id) { if (have[id]) n++; });
+    if (n > 0) started++;
+    if (n > 0 && n === t.total) conquered++;
+    pins += n;
+    return { town: t.town_label || t.town, total: t.total, url: t.url, seen: n };
+  });
+  return { pins: pins, started: started, conquered: conquered, rows: rows };
+}
+</script>
+<script>
+// --- Item 6: Daily Fright streak-lite (cookies, forgiving) ----------
+// Cookies: hm_fright_streak (int), hm_fright_last (last ET date the
+// streak counted, YYYY-MM-DD), hm_fright_freeze (ISO week key, e.g.
+// 2026-W43, of the last used freeze). Counting surfaces are ONLY
+// /daily and the homepage Daily Fright band — both call
+// hmFrightTouch() explicitly; merely wandering the site does not
+// build a streak, the daily drop is the habit being counted.
+// State machine, run once per page load on a counting surface:
+//   last == today            -> no change (already counted today)
+//   no last                  -> streak = 1, last = today
+//   last == yesterday        -> streak += 1, last = today
+//   last == 2 days ago AND hm_fright_freeze != this ISO week
+//                            -> streak += 1, last = today, freeze is
+//                               consumed for this week, and the flame
+//                               shows a ❄️ "freeze used" note today
+//   anything older / a freeze already spent this week
+//                            -> streak restarts at 1, last = today
+// No shaming anywhere: a restart renders the same neutral "Start your
+// streak" copy as a first visit. Dates are America/New_York dates
+// (Intl), because the drop rotates at ET midnight — a UTC or
+// device-local clock would flip the streak at the wrong hour.
+function hmFrightGetCookie(name) {
+  var m = document.cookie.match(new RegExp('(?:^|; )' + name + '=([^;]*)'));
+  return m ? decodeURIComponent(m[1]) : '';
+}
+function hmFrightSetCookie(name, val) {
+  document.cookie = name + '=' + encodeURIComponent(val) +
+    '; path=/; max-age=' + (400 * 24 * 3600) + '; SameSite=Lax';
+}
+function hmFrightTodayET() {
+  try {
+    var parts = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit'
+    }).formatToParts(new Date());
+    var p = {};
+    parts.forEach(function (x) { p[x.type] = x.value; });
+    if (p.year && p.month && p.day) return p.year + '-' + p.month + '-' + p.day;
+  } catch (e) {}
+  return new Date().toISOString().slice(0, 10); // fallback: UTC date
+}
+function hmFrightIsoWeekKey(iso) {
+  var d = new Date(iso + 'T00:00:00Z');
+  var day = (d.getUTCDay() + 6) % 7; // Mon=0..Sun=6
+  d.setUTCDate(d.getUTCDate() - day + 3); // this week's Thursday
+  var firstThu = new Date(Date.UTC(d.getUTCFullYear(), 0, 4));
+  var fday = (firstThu.getUTCDay() + 6) % 7;
+  firstThu.setUTCDate(firstThu.getUTCDate() - fday + 3);
+  var week = 1 + Math.round((d - firstThu) / (7 * 864e5));
+  return d.getUTCFullYear() + '-W' + String(week).padStart(2, '0');
+}
+function hmFrightTouch() {
+  if (window.__hmFrightState) return window.__hmFrightState;
+  var today = hmFrightTodayET();
+  var streak = parseInt(hmFrightGetCookie('hm_fright_streak') || '0', 10) || 0;
+  var last = hmFrightGetCookie('hm_fright_last');
+  var freezeUsed = false;
+  if (last === today) {
+    if (streak < 1) streak = 1;
+  } else if (!last) {
+    streak = 1;
+  } else {
+    var diff = Math.round((new Date(today + 'T00:00:00Z') - new Date(last + 'T00:00:00Z')) / 864e5);
+    if (diff === 1) {
+      streak = streak > 0 ? streak + 1 : 1;
+    } else if (diff === 2 && hmFrightGetCookie('hm_fright_freeze') !== hmFrightIsoWeekKey(today)) {
+      streak = streak > 0 ? streak + 1 : 1;
+      hmFrightSetCookie('hm_fright_freeze', hmFrightIsoWeekKey(today));
+      freezeUsed = true;
+    } else {
+      streak = 1;
+    }
+  }
+  if (last !== today) {
+    hmFrightSetCookie('hm_fright_streak', String(streak));
+    hmFrightSetCookie('hm_fright_last', today);
+  }
+  var state = { streak: streak, freezeUsed: freezeUsed, today: today };
+  window.__hmFrightState = state;
+  var flame = '\u{1F525} Day ' + streak + ' of Daily Fright' +
+    (freezeUsed ? ' \u00B7 \u2744\uFE0F freeze used \u2014 streak saved' : '');
+  document.querySelectorAll('.fright-streak-full').forEach(function (el) {
+    el.textContent = streak >= 2 ? flame
+      : 'Start your streak \u2014 come back tomorrow to make it Day 2.';
+    el.hidden = false;
+  });
+  document.querySelectorAll('.fright-streak-flame').forEach(function (el) {
+    if (streak >= 2) { el.textContent = flame; el.hidden = false; }
+    else { el.hidden = true; }
+  });
+  return state;
+}
+</script>
 <main class="wrap">
   {% block content %}{% endblock %}
 </main>
@@ -169,11 +395,64 @@ function hmNearMe() {
 })();
 </script>
 <script>
+// Engagement beacons (Wave 2, Item 2): fire-and-forget interaction events
+// to POST /api/track. sendBeacon survives page navigation (next-bar and
+// rail clicks leave the page); fetch+keepalive is the fallback. Any
+// failure is swallowed — tracking must never break a page.
+function hmTrack(event, entryId) {
+  try {
+    var payload = JSON.stringify({ event: event,
+      entry_id: (entryId === null || entryId === undefined || isNaN(entryId)) ? null : Number(entryId) });
+    if (navigator.sendBeacon) {
+      var blob = new Blob([payload], { type: 'text/plain' });
+      if (navigator.sendBeacon('/api/track', blob)) return;
+    }
+    fetch('/api/track', { method: 'POST', headers: { 'Content-Type': 'text/plain' },
+                          body: payload, keepalive: true }).catch(function () {});
+  } catch (e) {}
+}
+document.addEventListener('click', function (ev) {
+  var t = ev.target;
+  if (!t || !t.closest) return;
+  // Sticky next-haunt bar: attributed to the pin the bar leads to (the
+  // clicked target, same convention as rail_click below).
+  var bar = t.closest('a.next-haunt-bar');
+  if (bar) {
+    var bm = (bar.getAttribute('href') || '').match(/\/d\/(\d+)/);
+    hmTrack('next_bar_click', bm ? Number(bm[1]) : null);
+    return;
+  }
+  // Rail clicks: pin cards inside .rail rails, on pin pages only. Tour
+  // buttons inside a card are their own event (tour_add) — excluded here.
+  if (!/^\/d\/\d+/.test(location.pathname)) return;
+  if (t.closest('[data-tour-btn]')) return;
+  var card = t.closest('a.card');
+  if (card && card.closest('.rail')) {
+    var cm = (card.getAttribute('href') || '').match(/\/d\/(\d+)/);
+    if (cm) hmTrack('rail_click', Number(cm[1]));
+  }
+});
+</script>
+<script>
 // TikTok facade loader: swap a thumbnail facade for the real embed on tap,
 // fetching TikTok's embed.js exactly once per page (later facades rescan).
 function hmLoadTikTok(facade) {
   if (!facade || facade.dataset.loaded) return;
   facade.dataset.loaded = '1';
+  var eid = facade.getAttribute('data-entry-id');
+  if (!eid) { var pm = location.pathname.match(/^\/d\/(\d+)/); if (pm) eid = pm[1]; }
+  hmTrack('video_play', eid ? Number(eid) : null);
+  // Retention Wave 3, Item 9: the moment of proven intent — the first
+  // facade play on a pin page gives that page's text-alert prompt a
+  // one-time gentle highlight (a gold edge + soft glow via the
+  // .ta-highlight class; no popups, no modals, no scroll-jacking).
+  // Pin pages are the only pages with a .pin-alerts block, so this is
+  // a no-op on the homepage / /watch facades. facade.dataset.loaded
+  // above already makes this once-per-facade.
+  try {
+    var ta = document.querySelector('.pin-alerts .text-alerts');
+    if (ta) ta.classList.add('ta-highlight');
+  } catch (e) {}
   var url = facade.getAttribute('data-tt-url');
   var bq = document.createElement('blockquote');
   bq.className = 'tiktok-embed';
@@ -194,39 +473,10 @@ function hmLoadTikTok(facade) {
   }
 }
 </script>
-<script>
-// Collection loop (localStorage only, no accounts): remember which pins a
-// visitor has opened and render "You've seen X of Y displays in [Town]"
-// progress strips on pin and town pages. Degrades silently without storage.
-function hmSeenList() {
-  try { return JSON.parse(localStorage.getItem('hm_seen') || '[]'); } catch (e) { return []; }
-}
-function hmMarkSeen(id) {
-  if (!id) return;
-  try {
-    var seen = hmSeenList();
-    if (seen.indexOf(id) === -1) {
-      seen.push(id);
-      if (seen.length > 3000) seen = seen.slice(seen.length - 3000);
-      localStorage.setItem('hm_seen', JSON.stringify(seen));
-    }
-  } catch (e) {}
-}
-function hmSeenStrip(el, ids, label) {
-  if (!el || !ids || !ids.length) return;
-  try {
-    var seen = hmSeenList();
-    var n = 0;
-    for (var i = 0; i < ids.length; i++) if (seen.indexOf(ids[i]) !== -1) n++;
-    if (!n) return;
-    el.hidden = false;
-    el.querySelector('.seen-text').textContent =
-      "You've seen " + n + " of " + ids.length + " displays in " + label;
-    el.querySelector('.seen-fill').style.width =
-      Math.round(100 * n / ids.length) + '%';
-  } catch (e) {}
-}
-</script>
+{# The seen system (hmSeenList / hmMarkSeen / hmSeenStrip + the Item 4
+   cookie mirror + passport helpers) lives BEFORE <main> above — the
+   pin/town templates call it from inline scripts inside the content
+   block, so it must be defined before the content is parsed. #}
 <div id="hm-tourbar" hidden>
   <span class="tb-label">&#x1F9ED; Your tour: <strong id="hm-tour-n">0</strong> <span id="hm-tour-stops">stops</span></span>
   <a class="tb-build" href="/tour">Build my tour &rarr;</a>
@@ -281,6 +531,7 @@ function hmTourBtnActivate(b) {
               town: b.getAttribute('data-town') || '',
               lat: lat, lng: lng, thumb: b.getAttribute('data-thumb') || '' });
   hmTourSet(tour);
+  hmTrack('tour_add', id);
 }
 document.addEventListener('click', function (ev) {
   var b = ev.target.closest && ev.target.closest('[data-tour-btn]');

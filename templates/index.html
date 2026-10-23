@@ -45,8 +45,11 @@
 
   {% if near_towns %}
   <section class="near-you hero-copy" aria-label="Near you tonight">
-    <h2>&#x1F4CD; Near you tonight</h2>
-    <p class="near-you-sub">The biggest haunt towns on the map right now — tap yours, or jump straight to what's around you.</p>
+    <div class="near-you-head">
+      <h2>&#x1F4CD; {{ near_heading }}</h2>
+      <a class="near-you-change" href="/nearby">Change area</a>
+    </div>
+    <p class="near-you-sub">{{ near_sub }}</p>
     <p class="near-you-mine" hidden>&#x1F4CD; Your town: <a class="js-town-link" href="/nearby"></a> — <a href="/nearby">see what's near it &rarr;</a></p>
     <div class="town-chips">
       {% for t in near_towns %}
@@ -81,10 +84,10 @@
       <a class="card rail-card" href="/d/{{ p.id }}">
         <div class="card-media">
           {% if p.media_type == 'video' %}
-          {% if p.thumb_path %}<img src="{{ p.thumb_url }}" alt="{{ p.title }}" loading="lazy">{% else %}<div class="card-media-empty">&#x1F3AC;</div>{% endif %}
+          {% if p.thumb_path %}<img src="{{ p.thumb_card_url or p.thumb_url }}" alt="{{ p.title }}" width="800" height="600" loading="lazy" onerror="this.onerror=null;this.src='{{ p.thumb_url }}'">{% else %}<div class="card-media-empty">&#x1F3AC;</div>{% endif %}
           <span class="play-badge">&#x25B6;</span>
           {% else %}
-          <img src="{{ p.thumb_url }}" alt="{{ p.title }}" loading="lazy">
+          <img src="{{ p.thumb_card_url or p.thumb_url }}" alt="{{ p.title }}" width="800" height="600" loading="lazy" onerror="this.onerror=null;this.src='{{ p.thumb_url }}'">
           {% endif %}
           <span class="rank-badge">#{{ loop.index }}</span>
         </div>
@@ -173,6 +176,13 @@
 {% include "_town_request.html" %}
 </div>
 
+{% if tstrip %}
+{# Item 5 "Tonight" strip: directly above Tonight's Display band, so
+   the countdown + on-tonight counts sit adjacent to the band on every
+   homepage view (the band itself only renders when a pick exists). #}
+{% with tstrip_wide = True %}{% include "_tonight_strip.html" %}{% endwith %}
+{% endif %}
+
 {% if tonight %}
 <section class="tonight-band" aria-label="Tonight's Display">
   <a class="tonight-card" href="/d/{{ tonight.id }}">
@@ -187,10 +197,42 @@
 </section>
 {% endif %}
 
+{# Wave 4, Item 6: Daily Fright band — directly under Tonight's Display
+   (Item 5's dated strip sits above Tonight's), above the passport
+   chip: strip = tonight's counts, Tonight's = the random pick, this
+   band = the canonical daily drop + streak flame. #}
+{% include "_daily_band.html" %}
+
+{# Wave 4, Item 4: Haunt Passport chip. Placement: with the homepage
+   modules in the Tonight cluster — directly under Tonight's Display
+   and the Daily Fright band, above the below-band Near-you copy; it
+   renders once, on phone and laptop alike. Client-rendered and
+   hidden until the visitor has at least one counted pin seen, so
+   first-timers never see an empty progress nag. No header button,
+   no nav change. #}
+<a class="passport-chip" id="hm-passport-chip" href="/passport" hidden>&#x1F383; Haunt Passport &mdash; <span class="pc-text"></span> &rarr;</a>
+<script>
+(function () {
+  var chip = document.getElementById('hm-passport-chip');
+  if (!chip || !window.hmPassportData) return;
+  hmPassportData(function (data) {
+    var s = hmPassportSummary(data);
+    if (!s.pins) return;
+    chip.querySelector('.pc-text').textContent =
+      s.started + ' town' + (s.started === 1 ? '' : 's') + ' started \u00B7 ' +
+      s.pins + ' haunt' + (s.pins === 1 ? '' : 's') + ' seen';
+    chip.hidden = false;
+  });
+})();
+</script>
+
 {% if near_towns %}
 <section class="near-you" aria-label="Near you tonight">
-  <h2>&#x1F4CD; Near you tonight</h2>
-  <p class="near-you-sub">The biggest haunt towns on the map right now — tap yours, or jump straight to what's around you.</p>
+  <div class="near-you-head">
+    <h2>&#x1F4CD; {{ near_heading }}</h2>
+    <a class="near-you-change" href="/nearby">Change area</a>
+  </div>
+  <p class="near-you-sub">{{ near_sub }}</p>
   <p class="near-you-mine" hidden>&#x1F4CD; Your town: <a class="js-town-link" href="/nearby"></a> — <a href="/nearby">see what's near it &rarr;</a></p>
   <div class="town-chips">
     {% for t in near_towns %}
@@ -225,10 +267,10 @@
     <a class="card rail-card" href="/d/{{ p.id }}">
       <div class="card-media">
         {% if p.media_type == 'video' %}
-        {% if p.thumb_path %}<img src="{{ p.thumb_url }}" alt="{{ p.title }}" loading="lazy">{% else %}<div class="card-media-empty">&#x1F3AC;</div>{% endif %}
+        {% if p.thumb_path %}<img src="{{ p.thumb_card_url or p.thumb_url }}" alt="{{ p.title }}" width="800" height="600" loading="lazy" onerror="this.onerror=null;this.src='{{ p.thumb_url }}'">{% else %}<div class="card-media-empty">&#x1F3AC;</div>{% endif %}
         <span class="play-badge">&#x25B6;</span>
         {% else %}
-        <img src="{{ p.thumb_url }}" alt="{{ p.title }}" loading="lazy">
+        <img src="{{ p.thumb_card_url or p.thumb_url }}" alt="{{ p.title }}" width="800" height="600" loading="lazy" onerror="this.onerror=null;this.src='{{ p.thumb_url }}'">
         {% endif %}
         <span class="rank-badge">#{{ loop.index }}</span>
       </div>
@@ -346,10 +388,10 @@
     <div class="card-media">
       {% if e.media_path %}
       {% if e.media_type == 'video' %}
-      {% if e.thumb_path %}<img src="{{ e.thumb_url }}" alt="{{ e.title }}" loading="lazy">{% else %}<div class="card-media-empty">&#x1F3AC;</div>{% endif %}
+      {% if e.thumb_path %}<img src="{{ e.thumb_card_url or e.thumb_url }}" alt="{{ e.title }}" width="800" height="600" loading="lazy" onerror="this.onerror=null;this.src='{{ e.thumb_url }}'">{% else %}<div class="card-media-empty">&#x1F3AC;</div>{% endif %}
       <span class="play-badge">&#x25B6;</span>
       {% else %}
-      <img src="{{ e.thumb_url }}" alt="{{ e.title }}" loading="lazy">
+      <img src="{{ e.thumb_card_url or e.thumb_url }}" alt="{{ e.title }}" width="800" height="600" loading="lazy" onerror="this.onerror=null;this.src='{{ e.thumb_url }}'">
       {% endif %}
       {% else %}
       <div class="card-media-empty">{% if e.category == 'events' %}&#x1F4C5;{% elif e.category == 'live' %}&#x1F534;{% else %}&#x1F383;{% endif %}</div>

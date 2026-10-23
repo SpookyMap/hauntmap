@@ -57,6 +57,40 @@
 <p style="color:#888;margin-bottom:24px;">Duration tracking just started — numbers appear here as visits come in.</p>
 {% endif %}
 
+<h3>🤝 Engagement <span style="font-size:0.75em;color:#888;">(last 7 days)</span></h3>
+<div style="display:flex;gap:16px;margin:12px 0;flex-wrap:wrap;">
+  <div style="background:#1a1a2e;padding:16px;border-radius:12px;flex:1;text-align:center;min-width:110px;">
+    <div style="font-size:1.6em;font-weight:bold;">{{ engagement.total }}</div>
+    <div>Interactions</div>
+  </div>
+  <div style="background:#1a1a2e;padding:16px;border-radius:12px;flex:1;text-align:center;min-width:110px;">
+    <div style="font-size:1.6em;font-weight:bold;">{{ engagement.pin_views }}</div>
+    <div>Pin page views</div>
+  </div>
+  <div style="background:#1a1a2e;padding:16px;border-radius:12px;flex:1;text-align:center;min-width:110px;">
+    <div style="font-size:1.6em;font-weight:bold;">{{ "%.3f"|format(engagement.ratio) }}</div>
+    <div>Interactions / pin visit</div>
+  </div>
+</div>
+<table style="width:100%;border-collapse:collapse;margin-bottom:8px;">
+  <tr><th style="text-align:left;padding:8px;">Event</th><th style="text-align:right;padding:8px;">Count</th></tr>
+  {% for ev, n in engagement.counts %}
+  <tr><td style="padding:8px;">{{ ev }}</td><td style="text-align:right;padding:8px;">{{ n }}</td></tr>
+  {% endfor %}
+</table>
+<p style="color:#888;font-size:0.85em;">Interactions / pin visit = engagement events tied to a pin ({{ engagement.with_pin }}) &divide; pin page views ({{ engagement.pin_views }}) in the same 7 days. Client events (video_play, tour_add, next_bar_click, rail_click) arrive via beacon; vote / unvote / scare / tip are logged server-side.</p>
+{% if engagement.top_pins %}
+<h4 style="margin-bottom:8px;">Top pins by interactions</h4>
+<table style="width:100%;border-collapse:collapse;margin-bottom:24px;">
+  <tr><th style="text-align:left;padding:8px;">Pin</th><th style="text-align:right;padding:8px;">Interactions</th></tr>
+  {% for row in engagement.top_pins %}
+  <tr><td style="padding:8px;"><a href="/d/{{ row["entry_id"] }}">#{{ row["entry_id"] }} {{ row["title"] or "(deleted pin)" }}</a>{% if row["town"] %} <span style="color:#888;">· {{ row["town"] }}</span>{% endif %}</td><td style="text-align:right;padding:8px;">{{ row["n"] }}</td></tr>
+  {% endfor %}
+</table>
+{% else %}
+<p style="color:#888;margin-bottom:24px;">No pin interactions yet in the last 7 days.</p>
+{% endif %}
+
 <h3>Views by day</h3>
 <table style="width:100%;border-collapse:collapse;margin-bottom:24px;">
   <tr><th style="text-align:left;padding:8px;">Date</th><th style="text-align:right;padding:8px;">Views</th></tr>

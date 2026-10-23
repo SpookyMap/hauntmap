@@ -1,0 +1,21 @@
+{# Wave 4, Item 6: the homepage Daily Fright band. Placement (with
+   Item 5's strip): Tonight strip → Tonight's Display → THIS band →
+   Haunt Passport chip → Near-you copy — the whole "tonight / today"
+   cluster stays together and nothing collides: the strip is dated
+   counts, Tonight's is the random per-load pick, this band is the
+   canonical daily drop. All three mini-links land on /daily (the one
+   canonical drop a TikTok post can deep-link); the band also carries
+   the streak flame, and rendering it COUNTS the day for the streak
+   (hmFrightTouch) — the homepage is one of the two counting surfaces. #}
+<section class="daily-band" aria-label="Daily Fright">
+  <div class="daily-band-head">
+    <a class="daily-band-title" href="/daily">&#x1F319; Daily Fright &mdash; {{ daily_label }}</a>
+    <span class="fright-streak-flame" hidden></span>
+  </div>
+  <div class="daily-band-links">
+    {% if daily %}<a class="daily-mini" href="/daily">&#x1F383; Today's display: <strong>{{ daily.title }}</strong> &middot; {{ daily.town_label }}</a>{% endif %}
+    <a class="daily-mini" href="/daily">&#x1F9E0; Daily trivia: {{ daily_trivia_q|truncate(72, True, '…') }}</a>
+    <a class="daily-mini" href="/daily">&#x1F3AE; Haunt or Not &mdash; today's duel</a>
+  </div>
+  <script>if (window.hmFrightTouch) hmFrightTouch();</script>
+</section>

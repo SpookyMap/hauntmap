@@ -5,6 +5,7 @@ Voting is limited to one vote per browser per entry via cookie — this is a
 SOFT limit only (cookies are trivially cleared); it stops casual double
 voting, not determined abuse. See the vote route below.
 """
+import calendar
 import hashlib
 import hmac
 import logging
@@ -52,6 +53,11 @@ MAX_PHOTO_BYTES = 10 * 1024 * 1024
 MAX_VIDEO_BYTES = 100 * 1024 * 1024
 THUMB_MAX_WIDTH = 640
 THUMB_W, THUMB_H = 800, 600  # feed thumbs: 4:3, the aspect every card renders at
+# Item 10 (speed diet): feed-card variant of each thumb — 480x360, same
+# filename in thumbs/card/, served at /media/thumbs/card/<name>. Phone
+# cards render ~380px wide, so the 800px thumb was ~2x overserved.
+CARD_THUMB_W, CARD_THUMB_H = 480, 360
+CARD_THUMB_DIR = THUMB_DIR / "card"
 ORIG_MAX_EDGE = 1920  # stored photo originals are capped at this long edge
 
 CATEGORIES = ("halloween", "christmas", "halloween_stores", "restaurants", "coffee", "shops", "parks", "haunted_houses", "events", "live")
@@ -95,6 +101,7 @@ ADMIN_COOKIE = "haunt_admin"
 DATA_DIR.mkdir(parents=True, exist_ok=True)
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 THUMB_DIR.mkdir(parents=True, exist_ok=True)
+CARD_THUMB_DIR.mkdir(parents=True, exist_ok=True)
 
 
 @app.on_event("startup")
@@ -241,6 +248,20 @@ def row_to_dict(row: sqlite3.Row) -> dict:
         # media-less listings (events / halloween_stores)
         d["media_url"] = ""
         d["thumb_url"] = ""
+    # Item 10: feed-card variant URL (480w). Server-side existence check:
+    # the variant is used only when its file is actually on disk, else
+    # the card falls back to the full thumb_url — a missing variant can
+    # never produce a broken image. Card templates ALSO carry an
+    # onerror swap to thumb_url as a second net. Detail-page hero
+    # imagery keeps using thumb_url (full size) and never this field.
+    d["thumb_card_url"] = d["thumb_url"]
+    if d.get("thumb_path"):
+        try:
+            card_file = CARD_THUMB_DIR / Path(d["thumb_path"]).name
+            if card_file.is_file():
+                d["thumb_card_url"] = f"/media/thumbs/card/{card_file.name}"
+        except OSError:
+            pass
     return d
 
 
@@ -299,12 +320,552 @@ def nearest_pins(entry: dict, limit: int = 6) -> list[dict]:
     return scored[:limit]
 
 
+# ---------------------------------------------------------------------------
+# Retention Wave 1 (Oct 23): Item 3 video chain + Item 1 true "Near You".
+# ---------------------------------------------------------------------------
+
+# Item 3: sane radius for the video chain / "More videos near here" strip.
+# Beyond this, a "next video" is not near in any useful sense and the pin
+# page falls back to the plain geographic chain.
+VIDEO_CHAIN_RADIUS_MI = 100.0
+
+
+def has_footage(entry: dict) -> bool:
+    """Footage predicate for the video chain (Item 3 spec): a TikTok
+    /video/ URL or an uploaded video file. Deliberately narrower than the
+    homepage "Has video" filter (any tiktok_url) — a live/profile TikTok
+    link is not playable footage of the haunt."""
+    tt = entry.get("tiktok_url") or ""
+    return "/video/" in tt or entry.get("media_type") == "video"
+
+
+# Item 1: Cloudflare visitor-location headers. The site sits behind
+# Cloudflare, whose "Add visitor location headers" managed transform can
+# attach cf-ipcity / cf-ipregion / cf-ipcountry / cf-iplatitude /
+# cf-iplongitude to every origin request. Whether that transform is
+# enabled on Dan's zone is NOT verifiable from staging — every consumer
+# below treats missing/garbled headers as "unknown" and falls back to
+# today's behaviour. Deploy-day check: curl the live homepage with a
+# known CF-PoP request (or inspect a real request's headers server-side)
+# and confirm the Denver/Miami simulations below reproduce with real
+# visitor headers.
+_GEO_NEAR_RADIUS_MI = 100.0   # towns within this of the visitor point = near
+_GEO_EXACT_FILL_RADIUS_MI = 75.0  # neighbours that join an exact-town anchor
+
+# cf-ipregion arrives as a full name ("Colorado"); tests/tooling may send
+# the 2-letter code instead. Map both to the state code used in town data.
+_STATE_NAME_TO_CODE: dict[str, str] = {}
+
+
+def _state_code_from_region(region: str, region_code: str = "") -> str:
+    """Resolve a Cloudflare region value to a US state code, '' if unknown."""
+    global _STATE_NAME_TO_CODE
+    if not _STATE_NAME_TO_CODE:
+        _STATE_NAME_TO_CODE = {name.lower(): code
+                               for code, name in US_STATE_NAMES.items()}
+        _STATE_NAME_TO_CODE["district of columbia"] = "DC"
+        _STATE_NAME_TO_CODE["washington dc"] = "DC"
+    for raw in (region_code, region):
+        v = (raw or "").strip()
+        if not v:
+            continue
+        if v.upper() in US_STATE_CODES:
+            return v.upper()
+        hit = _STATE_NAME_TO_CODE.get(v.lower())
+        if hit:
+            return hit
+    return ""
+
+
+def _visitor_geo(request: Request) -> dict | None:
+    """Visitor's coarse area from Cloudflare headers, or None when the
+    headers are absent/unusable (the staging + fallback case). Only the
+    five documented headers are read (plus cf-ipregion-code when present,
+    which some zones send alongside cf-ipregion). Non-US visitors get
+    None: every mapped town is in the US, so geo cannot help them yet."""
+    h = request.headers
+    country = (h.get("cf-ipcountry") or "").strip().upper()
+    if country and country != "US":
+        return None
+    city = (h.get("cf-ipcity") or "").strip()
+    state = _state_code_from_region(h.get("cf-ipregion") or "",
+                                    h.get("cf-ipregion-code") or "")
+    lat = lng = None
+    try:
+        lat = float(h.get("cf-iplatitude") or "")
+        lng = float(h.get("cf-iplongitude") or "")
+        if not (-90 <= lat <= 90 and -180 <= lng <= 180):
+            lat = lng = None
+    except (TypeError, ValueError):
+        lat = lng = None
+    if not city and not state and lat is None:
+        return None
+    return {"city": city, "state": state, "lat": lat, "lng": lng}
+
+
+def _town_inventory(conn, category: str = "halloween") -> list[dict]:
+    """Every visible town in a category as {label, city, state, count,
+    clat, clng} — the label/city/state come from the same extract_*
+    helpers that build card town_labels, and the centroid is the mean of
+    the town's pin coordinates (all halloween pins carry coords today)."""
+    inv: dict[str, dict] = {}
+    for r in conn.execute(
+            "SELECT town, lat, lng FROM entries "
+            "WHERE hidden = 0 AND category = ?", (category,)).fetchall():
+        label = extract_city_state(r["town"] or "")
+        if not label:
+            continue
+        t = inv.setdefault(label, {"label": label, "count": 0,
+                                   "_lats": [], "_lngs": []})
+        t["count"] += 1
+        if r["lat"] is not None and r["lng"] is not None:
+            t["_lats"].append(r["lat"])
+            t["_lngs"].append(r["lng"])
+    out = []
+    for t in inv.values():
+        t["city"] = extract_city(t["label"])
+        t["state"] = extract_state(t["label"])
+        t["clat"] = (sum(t["_lats"]) / len(t["_lats"])) if t["_lats"] else None
+        t["clng"] = (sum(t["_lngs"]) / len(t["_lngs"])) if t["_lngs"] else None
+        del t["_lats"], t["_lngs"]
+        out.append(t)
+    return out
+
+
+def _resolve_visitor_area(inventory: list[dict], geo: dict | None) -> dict:
+    """Resolve the visitor's area against the town inventory.
+
+    Resolution order (Item 1 spec):
+      (a) exact town match — a mapped town whose city equals the header
+          city (in the header state, when known);
+      (b) nearest towns by haversine from the header lat/lng, within
+          _GEO_NEAR_RADIUS_MI;
+      (c) biggest towns in the visitor's state;
+      (d) today's behaviour — biggest towns site-wide ("fallback").
+    A visitor whose area is known but has NO mapped supply at all (no
+    exact/near/state town) resolves to mode "nomap": the module names
+    their area honestly and shows the fallback towns rather than
+    pretending New Jersey is near Denver (nearest mapped town to Denver
+    is ~626 mi away in the Oct 23 snapshot).
+
+    Returns {mode, area_name, heading, sub, chips, area_labels} where
+    chips are the Near-you module's top-8 [{label, count}] and
+    area_labels is the full set of town labels that count as "the
+    visitor's area" for feed-leading (empty for fallback/nomap)."""
+    biggest = sorted(inventory, key=lambda t: (-t["count"], t["label"]))
+    fallback_chips = [{"label": t["label"], "count": t["count"]}
+                      for t in biggest[:8]]
+    base = {"mode": "fallback", "area_name": "",
+            "heading": "Near you tonight",
+            "sub": "The biggest haunt towns on the map right now — "
+                   "tap yours, or jump straight to what's around you.",
+            "chips": fallback_chips, "area_labels": set()}
+    if not geo:
+        return base
+    city = (geo.get("city") or "").strip()
+    state = geo.get("state") or ""
+    vlat, vlng = geo.get("lat"), geo.get("lng")
+    city_disp = _smart_case_city(city) if city else ""
+    state_name = US_STATE_NAMES.get(state, state)
+
+    def chips_of(towns: list[dict]) -> list[dict]:
+        return [{"label": t["label"], "count": t["count"]} for t in towns[:8]]
+
+    def dist_to(t: dict, lat: float, lng: float) -> float | None:
+        if t["clat"] is None or t["clng"] is None:
+            return None
+        return haversine_miles(lat, lng, t["clat"], t["clng"])
+
+    # (a) exact town match
+    exact = None
+    if city:
+        cands = [t for t in inventory if t["city"].lower() == city.lower()]
+        if state:
+            in_state = [t for t in cands if t["state"] == state]
+            if in_state:
+                cands = in_state
+        if cands:
+            exact = sorted(cands, key=lambda t: -t["count"])[0]
+    if exact is not None:
+        alat = vlat if vlat is not None else exact["clat"]
+        alng = vlng if vlng is not None else exact["clng"]
+        neighbours: list[dict] = []
+        if alat is not None and alng is not None:
+            scored = []
+            for t in inventory:
+                if t["label"] == exact["label"]:
+                    continue
+                d = dist_to(t, alat, alng)
+                if d is not None and d <= _GEO_EXACT_FILL_RADIUS_MI:
+                    scored.append((d, t))
+            neighbours = [t for _d, t in sorted(
+                scored, key=lambda x: (x[0], -x[1]["count"], x[1]["label"]))]
+        chips = [exact] + neighbours
+        if len(chips) < 8 and state:
+            have = {t["label"] for t in chips}
+            for t in biggest:
+                if len(chips) >= 8:
+                    break
+                if t["state"] == state and t["label"] not in have:
+                    chips.append(t)
+                    have.add(t["label"])
+        area = {exact["label"]} | {t["label"] for t in neighbours}
+        return {"mode": "exact",
+                "area_name": f"{city_disp} area",
+                "heading": f"Near You — {city_disp} area",
+                "sub": f"Closest haunt towns to {city_disp} first — "
+                       "tap a town to see its haunts, or change your area.",
+                "chips": chips_of(chips), "area_labels": area}
+    # (b) nearest towns to the header coordinates
+    if vlat is not None and vlng is not None:
+        scored = []
+        for t in inventory:
+            d = dist_to(t, vlat, vlng)
+            if d is not None and d <= _GEO_NEAR_RADIUS_MI:
+                scored.append((d, t))
+        if scored:
+            near = [t for _d, t in sorted(
+                scored, key=lambda x: (x[0], -x[1]["count"], x[1]["label"]))]
+            chips = list(near)
+            if len(chips) < 8 and state:
+                have = {t["label"] for t in chips}
+                for t in biggest:
+                    if len(chips) >= 8:
+                        break
+                    if t["state"] == state and t["label"] not in have:
+                        chips.append(t)
+                        have.add(t["label"])
+            area_name = (f"{city_disp} area" if city_disp
+                         else (state_name or "your area"))
+            return {"mode": "near",
+                    "area_name": area_name,
+                    "heading": f"Near You — {area_name}",
+                    "sub": f"Closest haunt towns to {area_name} first — "
+                           "tap a town to see its haunts, or change your area.",
+                    "chips": chips_of(chips),
+                    "area_labels": {t["label"] for t in near}}
+    # (c) biggest towns in the visitor's state
+    if state:
+        in_state = [t for t in biggest if t["state"] == state]
+        if in_state:
+            return {"mode": "state",
+                    "area_name": state_name,
+                    "heading": f"Near You — {state_name}",
+                    "sub": f"Biggest haunt towns in {state_name} — "
+                           "tap a town to see its haunts, or change your area.",
+                    "chips": chips_of(in_state),
+                    "area_labels": {t["label"] for t in in_state}}
+    # Known area, zero mapped supply: name it honestly, show fallback towns.
+    if city or state:
+        area_name = f"{city_disp} area" if city_disp else state_name
+        return {"mode": "nomap",
+                "area_name": area_name,
+                "heading": f"Near You — {area_name}",
+                "sub": f"No haunts mapped near {area_name} yet — add yours "
+                       "or request your town below. Meanwhile, the biggest "
+                       "haunt towns on the map:",
+                "chips": fallback_chips, "area_labels": set()}
+    return base
+
+
+def _feed_has_video(e: dict) -> bool:
+    """The homepage feed's "has video" predicate (same as the SQL
+    video-first CASE in home()): any TikTok URL or an uploaded video file."""
+    if (e.get("tiktok_url") or "").strip():
+        return True
+    return (e.get("media_path") or "").lower().endswith((".mp4", ".webm", ".mov"))
+
+
+def _fetch_area_feed(cat: str, area_labels: set, scare: str, tag: str,
+                     video: str, sort: str) -> list[dict]:
+    """All pins of a category whose town label is in the visitor's area,
+    honouring the feed's scare/tag/video filters and ordered exactly
+    like the main feed (video-first, then the chosen sort). Used to lead
+    the default feed with near-area pins (Item 1) — the caller merges
+    these ahead of the regular feed and de-dupes, so the feed is never
+    emptied, only re-led."""
+    query = "SELECT * FROM entries WHERE hidden = 0 AND category = ?"
+    params: list = [cat]
+    if scare in ("family", "spooky", "creepy", "terrifying", "extreme"):
+        query += " AND scare_level = ?"
+        params.append(scare)
+    if tag in ("animatronics", "inflatables", "handmade", "walkthrough",
+               "projector", "lights", "music", "street-wide", "multi-house",
+               "ticketed", "2025"):
+        query += " AND (',' || COALESCE(tags,'') || ',') LIKE ?"
+        params.append(f"%,{tag},%")
+    if video.strip() == "1":
+        query += (" AND ((tiktok_url IS NOT NULL AND TRIM(tiktok_url) != '')"
+                  " OR LOWER(media_path) LIKE '%.mp4'"
+                  " OR LOWER(media_path) LIKE '%.webm'"
+                  " OR LOWER(media_path) LIKE '%.mov')")
+    with get_conn(DB_PATH) as conn:
+        rows = [row_to_dict(r) for r in conn.execute(query, params).fetchall()]
+    rows = [e for e in rows if e["town_label"] in area_labels]
+    rows.sort(key=lambda e: e.get("created_at") or "", reverse=True)
+    if sort == "top":
+        rows.sort(key=lambda e: -(e.get("votes") or 0))
+    rows.sort(key=lambda e: 0 if _feed_has_video(e) else 1)
+    return rows
+
+
+# ---------------------------------------------------------------------------
+# Retention Wave 3 (Oct 23): Item 5 "Tonight" layer — event-date parsing.
+#
+# Event pins carry their dates ONLY inside their titles, in the wild
+# formats the seeding pipeline produced. parse_event_dates(title) pulls a
+# (start, end) date span out of a title, or None when the title carries
+# no usable date. It handles:
+#   * ISO dates and ranges: "2026-10-23", "2026-09-26 to 2026-11-01"
+#   * full ranges, shared or explicit years: "September 18 – November 8,
+#     2026", "September 18 – November 1, 2026", "Oct 16 to Oct 18"
+#   * short (same-month) ranges: "October 2–31, 2026", "Oct 9-10"
+#   * single dates: "Saturday, October 31, 2026", "Oct 31", "Oct 31, 2026"
+#   * date lists: "Oct 30 & 31, 2026", "Oct 23, 24, 30 & 31, 2026",
+#     compound ranges "Oct 9-10, 16-17, 23-24, 2026"
+#   * month-only spans: "October 2026", "All October 2026", "Nightly in
+#     October" -> the whole month
+# Approximations (documented, deliberate):
+#   * Weekday qualifiers are IGNORED: "Fridays & Saturdays in October",
+#     "Select Thursdays–Sundays, September 18 – November 1" count as on
+#     EVERY day of the span. The alternative (parsing weekday sets per
+#     title) would exclude most of the catalogue for a precision the
+#     "on tonight" count does not need.
+#   * Discrete date lists / compound ranges collapse to their spanning
+#     interval (min date – max date): "Oct 17 and Oct 24" reads as
+#     Oct 17–24. Same reasoning as the weekday rule.
+#   * An end-only run ("Through Oct 31", "Weekends thru Oct 31") is
+#     widened to start on the 1st of the end month — seasonal pop-ups and
+#     farm runs that say "through" were running before the end date;
+#     calling them single-day events would badly under-count.
+#   * A yearless date belongs to the current season: the year of
+#     "today" in America/New_York (titles are seeded for this season).
+#   * Titles with NO date at all (in the Oct 23 snapshot: the Brooklyn
+#     Halloween-day listings that carry only times like "10am-6:30pm",
+#     plus "Fall Season" farm listings) return None and are EXCLUDED
+#     from every "on tonight" count — never guessed onto Halloween day.
+_EVENT_MONTHS = {
+    "january": 1, "february": 2, "march": 3, "april": 4, "may": 5,
+    "june": 6, "july": 7, "august": 8, "september": 9, "october": 10,
+    "november": 11, "december": 12, "jan": 1, "feb": 2, "mar": 3,
+    "apr": 4, "jun": 6, "jul": 7, "aug": 8, "sep": 9, "sept": 9,
+    "oct": 10, "nov": 11, "dec": 12,
+}
+_EVENT_MONTH_RE = (r"(January|February|March|April|May|June|July|August|"
+                   r"September|October|November|December|Jan|Feb|Mar|Apr|"
+                   r"Jun|Jul|Aug|Sep|Sept|Oct|Nov|Dec)\.?")
+_EVENT_PARSE_CACHE: dict = {}
+
+
+def _today_et():
+    """Today's date in America/New_York — the site's season clock.
+    Never server-local: Render runs UTC, which flips the date at 8pm ET."""
+    try:
+        from zoneinfo import ZoneInfo
+        return datetime.now(ZoneInfo("America/New_York")).date()
+    except Exception:
+        return datetime.now(timezone.utc).date()
+
+
+def _mkdate(year: int, month: int, day: int):
+    try:
+        return datetime(year, month, day).date()
+    except ValueError:
+        return None
+
+
+def _event_month_num(name: str) -> int:
+    return _EVENT_MONTHS[name.lower().rstrip(".")]
+
+
+def parse_event_dates(title: str):
+    """(start, end) dates a title's event runs on, or None. See the
+    Wave 3 banner above for formats + documented approximations."""
+    if not title:
+        return None
+    cache_key = (title, _today_et().year)
+    if cache_key in _EVENT_PARSE_CACHE:
+        return _EVENT_PARSE_CACHE[cache_key]
+    result = _parse_event_dates(title)
+    _EVENT_PARSE_CACHE[cache_key] = result
+    return result
+
+
+def _parse_event_dates(title: str):
+    s = (title.replace("\u2013", "-").replace("\u2014", "-")
+              .replace("\u2212", "-"))
+    # ISO dates / ranges first (unambiguous).
+    m = re.search(r"(\d{4})-(\d{2})-(\d{2})\s*(?:to|-)\s*"
+                  r"(\d{4})-(\d{2})-(\d{2})", s)
+    if m:
+        a = _mkdate(int(m.group(1)), int(m.group(2)), int(m.group(3)))
+        b = _mkdate(int(m.group(4)), int(m.group(5)), int(m.group(6)))
+        if a and b:
+            return (a, b)
+    m = re.search(r"(\d{4})-(\d{2})-(\d{2})", s)
+    if m:
+        a = _mkdate(int(m.group(1)), int(m.group(2)), int(m.group(3)))
+        if a:
+            return (a, a)
+    # Default year for yearless atoms: an explicit 202x year anywhere in
+    # the title (film years like "(1981)" never match 202\d), else the
+    # current season's year.
+    years = re.findall(r"\b(202\d)\b", s)
+    dyear = int(years[-1]) if years else _today_et().year
+
+    atoms: list = []      # (start, end, position)
+    consumed: list = []   # spans already claimed by range atoms
+
+    def overlapped(span) -> bool:
+        return any(span[0] < c[1] and c[0] < span[1] for c in consumed)
+
+    def continuations(pos: int, month: int, year: int, anchor: int) -> None:
+        """Bare-day list continuations right after a date atom:
+        ", 24" / "& 31" / "and 24" / ", 16-17" / "& 30-Nov 1".
+        Stops cold at anything that looks like a time or a price:
+        a token followed by ':' or am/pm is a clock time, not a day."""
+        while True:
+            cm = re.match(
+                r"\s*(?:,|&|\+|\band\b)\s*(\d{1,2})(?!\d)"
+                r"(?:\s*-\s*(?:(\d{1,2})(?!\d)|" + _EVENT_MONTH_RE +
+                r"\s+(\d{1,2})(?!\d)))?", s[pos:pos + 40], re.I)
+            if not cm:
+                return
+            tail = s[pos + cm.end():pos + cm.end() + 4].lower().lstrip()
+            if tail.startswith(("am", "pm")) or tail.startswith(":"):
+                return
+            d1 = _mkdate(year, month, int(cm.group(1)))
+            if d1 is None:
+                return
+            if cm.group(2):
+                d2 = _mkdate(year, month, int(cm.group(2)))
+            elif cm.group(3):
+                emonth = _event_month_num(cm.group(3))
+                eyear = year + 1 if emonth < month else year
+                d2 = _mkdate(eyear, emonth, int(cm.group(4)))
+            else:
+                d2 = d1
+            if d2 is None:
+                return
+            atoms.append((d1, d2, anchor))
+            pos += cm.end()
+
+    # Full ranges: Month D - Month D (shared or explicit years, "-" or "to").
+    for m in re.finditer(
+            _EVENT_MONTH_RE + r"\s+(\d{1,2})(?!\d)(?:\s*,\s*(202\d))?"
+            r"\s*(?:-|\bto\b)\s*" + _EVENT_MONTH_RE +
+            r"\s+(\d{1,2})(?!\d)(?:\s*,\s*(202\d))?", s, re.I):
+        y2 = (int(m.group(6)) if m.group(6)
+              else (int(m.group(3)) if m.group(3) else dyear))
+        y1 = int(m.group(3)) if m.group(3) else y2
+        a = _mkdate(y1, _event_month_num(m.group(1)), int(m.group(2)))
+        b = _mkdate(y2, _event_month_num(m.group(4)), int(m.group(5)))
+        if a and b:
+            atoms.append((a, b, m.start()))
+            consumed.append(m.span())
+            continuations(m.end(), b.month, b.year, m.start())
+    # Short ranges: Month D-D / Month D to D.
+    for m in re.finditer(
+            _EVENT_MONTH_RE + r"\s+(\d{1,2})(?!\d)\s*(?:-|\bto\b)\s*"
+            r"(\d{1,2})(?!\d)(?:\s*,\s*(202\d))?", s, re.I):
+        if overlapped(m.span()):
+            continue
+        y = int(m.group(4)) if m.group(4) else dyear
+        mo = _event_month_num(m.group(1))
+        a = _mkdate(y, mo, int(m.group(2)))
+        b = _mkdate(y, mo, int(m.group(3)))
+        if a and b:
+            atoms.append((a, b, m.start()))
+            consumed.append(m.span())
+            continuations(m.end(), mo, y, m.start())
+    # Single dates: Month D [, YYYY] — the (?!\d) guard keeps a year from
+    # being misread as a day ("October 2026" must NOT become October 20).
+    for m in re.finditer(
+            _EVENT_MONTH_RE + r"\s+(\d{1,2})(?!\d)(?:\s*,\s*(202\d))?",
+            s, re.I):
+        if overlapped(m.span()):
+            continue
+        y = int(m.group(3)) if m.group(3) else dyear
+        mo = _event_month_num(m.group(1))
+        a = _mkdate(y, mo, int(m.group(2)))
+        if a:
+            atoms.append((a, a, m.start()))
+            consumed.append(m.span())
+            continuations(m.end(), mo, y, m.start())
+
+    if atoms:
+        start = min(a[0] for a in atoms)
+        end = max(a[1] for a in atoms)
+        # End-only "through/thru/until <date>": one single-day atom that
+        # the through-word directly introduces -> widen to the 1st of
+        # that month (documented approximation above).
+        tm = re.search(r"\b(?:through|thru|until)\b", s, re.I)
+        if tm and start == end:
+            first_pos = min(a[2] for a in atoms)
+            if 0 <= first_pos - tm.end() <= 3:
+                start = _mkdate(end.year, end.month, 1) or start
+        return (start, end)
+    # Month-only spans: a month name with no day attached anywhere
+    # ("October 2026 evenings", "Nightly, October 2026", "in October").
+    m = re.search(_EVENT_MONTH_RE + r"(?:\s+(202\d))?", s, re.I)
+    if m:
+        mo = _event_month_num(m.group(1))
+        y = int(m.group(2)) if m.group(2) else dyear
+        return (_mkdate(y, mo, 1),
+                _mkdate(y, mo, calendar.monthrange(y, mo)[1]))
+    return None
+
+
+def event_on_date(title: str, on_date) -> bool:
+    """True when a title's parsed span covers `on_date`. Undated titles
+    (parse -> None) are never "on" — the honest exclusion, see banner."""
+    span = parse_event_dates(title)
+    return bool(span and span[0] <= on_date <= span[1])
+
+
+def _events_on_count(conn, town_label: str, on_date) -> int:
+    """Parsed events covering `on_date` whose town_label (the same
+    extract_city_state label every card shows) equals `town_label`."""
+    n = 0
+    for r in conn.execute(
+            "SELECT title, town FROM entries "
+            "WHERE hidden = 0 AND category = 'events'").fetchall():
+        label = extract_city_state(r["town"] or "") or r["town"] or ""
+        if label == town_label and event_on_date(r["title"], on_date):
+            n += 1
+    return n
+
+
+def _tonight_strip(town_label: str, displays: int, town_note: str = "") -> dict:
+    """Data for the _tonight_strip.html partial (Item 5): ET countdown,
+    events on tonight near the anchor town, displays lit tonight.
+    `displays` = halloween-category pins in the town (house displays run
+    nightly through the season, so every display pin counts as lit)."""
+    today = _today_et()
+    halloween = _mkdate(today.year, 10, 31)
+    days = (halloween - today).days
+    if days > 1:
+        countdown = f"\U0001F383 {days} days to Halloween"
+    elif days == 1:
+        countdown = "\U0001F383 1 day to Halloween"
+    elif days == 0:
+        countdown = "\U0001F383 It's Halloween night!"
+    else:
+        countdown = "\U0001F383 Halloween night has passed — still lit tonight"
+    with get_conn(DB_PATH) as conn:
+        events_on = _events_on_count(conn, town_label, today)
+    return {"town_label": town_label, "town_note": town_note,
+            "countdown": countdown, "today_iso": today.isoformat(),
+            "events_on": events_on, "displays": displays}
+
+
 def detail_chain(entry: dict) -> dict:
     """Loop data for a detail page: the nearest-pin chain (next + reciprocal
     prev), a 'More near here' rail and a 'More like this' rail, so no detail
     page is ever a dead end. All same-category; distances in miles."""
     peers = category_peers(entry)
     out = {"next_pin": None, "prev_pin": None, "more_near": [], "more_like": []}
+    coord: list[dict] = []
     if entry.get("lat") is not None and entry.get("lng") is not None:
         coord = [p for p in peers
                  if p.get("lat") is not None and p.get("lng") is not None]
@@ -331,6 +892,20 @@ def detail_chain(entry: dict) -> dict:
                 if best_id == entry["id"]:
                     out["prev_pin"] = cand
                     break
+    # Retention Wave 1, Item 3 (video chain): when THIS pin has footage,
+    # the primary Next target chains to the nearest OTHER pin with footage
+    # (same predicate) instead of the nearest pin of any kind, and the
+    # under-player strip lists those nearby footage pins. The radius cap
+    # keeps "near" honest — beyond it the caller falls back to the plain
+    # geographic next above.
+    out["next_video_pin"] = None
+    out["more_videos"] = []
+    if has_footage(entry):
+        # `coord` is already distance-sorted and carries `distance`.
+        vids = [p for p in coord
+                if has_footage(p) and p["distance"] <= VIDEO_CHAIN_RADIUS_MI]
+        out["more_videos"] = vids[:6]
+        out["next_video_pin"] = vids[0] if vids else None
     near_ids = {p["id"] for p in out["more_near"]}
     entry_tags = {t.strip() for t in (entry.get("tags") or "").split(",")
                   if t.strip()}
@@ -627,6 +1202,25 @@ def _write_thumb(im: Image.Image, dest: Path) -> None:
     im.save(dest, "JPEG", quality=76, optimize=True)
 
 
+def make_card_variant(thumb_dest: Path) -> None:
+    """Item 10: write the 480x360 feed-card variant for a thumb that
+    was just (re)generated, at thumbs/card/<same filename>. Guarded:
+    a variant failure must NEVER break an upload or a rethumb — the
+    card templates fall back to the full thumb when no variant file
+    exists, so skipping is always safe."""
+    try:
+        CARD_THUMB_DIR.mkdir(parents=True, exist_ok=True)
+        dest = CARD_THUMB_DIR / thumb_dest.name
+        with Image.open(thumb_dest) as im:
+            im.load()
+            im = ImageOps.exif_transpose(im).convert("RGB")
+            if im.size != (CARD_THUMB_W, CARD_THUMB_H):
+                im = im.resize((CARD_THUMB_W, CARD_THUMB_H), Image.LANCZOS)
+            im.save(dest, "JPEG", quality=76, optimize=True)
+    except (OSError, UnidentifiedImageError):
+        pass
+
+
 def _cap_original(src: Path) -> None:
     """Downscale an oversized stored original in place (detail pages serve the
     original; phone photos arrive at 3-5 MB). No-op when already small enough."""
@@ -673,6 +1267,7 @@ def make_thumb(src: Path, dest_name: str) -> str:
     _recompress_jpeg(src)
     with Image.open(src) as im:
         _write_thumb(im, dest)
+    make_card_variant(dest)
     return rel
 
 
@@ -693,6 +1288,7 @@ def make_video_poster(src: Path, dest_name: str) -> str | None:
                 _write_thumb(im, dest)
         except (OSError, UnidentifiedImageError):
             pass
+        make_card_variant(dest)
         return rel
     except (subprocess.SubprocessError, OSError):
         return None
@@ -726,6 +1322,22 @@ def _tonight_pool(conn, category: str | None) -> list[dict]:
             if d["id"] not in DUEL_EXCLUDE_IDS]
 
 
+def _tonight_quality_pool(conn) -> list[dict]:
+    """The Tonight's Display quality pool, shared by the random
+    homepage pick and Item 6's deterministic daily pick so the two can
+    never drift: eligible pins (see _tonight_pool) that have video,
+    plus the 200 most-viewed eligible pins, ordered by id."""
+    rows = _tonight_pool(conn, "halloween")
+    if not rows:
+        rows = _tonight_pool(conn, None)
+    if not rows:
+        return []
+    quality = {r["id"]: r for r in rows if r["_has_video"]}
+    for r in sorted(rows, key=lambda r: (-r["_views"], r["id"]))[:200]:
+        quality.setdefault(r["id"], r)
+    return [quality[k] for k in sorted(quality)]
+
+
 def _pick_tonights_display(conn, exclude_id=None) -> dict | None:
     """Tonight's Display: a fresh random pick on every homepage load
     (Dan, Oct 22 — supersedes the earlier date-seeded daily pick). Pool
@@ -734,15 +1346,9 @@ def _pick_tonights_display(conn, exclude_id=None) -> dict | None:
     only. exclude_id (the visitor's previous pick, from the tonight_last
     cookie) is skipped when the pool has more than one entry, so a
     reload doesn't serve the same pin twice in a row."""
-    rows = _tonight_pool(conn, "halloween")
-    if not rows:
-        rows = _tonight_pool(conn, None)
-    if not rows:
+    pool = _tonight_quality_pool(conn)
+    if not pool:
         return None
-    quality = {r["id"]: r for r in rows if r["_has_video"]}
-    for r in sorted(rows, key=lambda r: (-r["_views"], r["id"]))[:200]:
-        quality.setdefault(r["id"], r)
-    pool = [quality[k] for k in sorted(quality)]
     pool_size = len(pool)
     if exclude_id is not None and pool_size > 1:
         narrowed = [r for r in pool if r["id"] != exclude_id]
@@ -752,6 +1358,24 @@ def _pick_tonights_display(conn, exclude_id=None) -> dict | None:
     pick.pop("_views", None)
     pick.pop("_has_video", None)
     pick["_pool_size"] = pool_size
+    return pick
+
+
+def _daily_display(conn, et_date) -> dict | None:
+    """Item 6 (Daily Fright): the canonical display drop for one
+    America/New_York date. SAME pool as Tonight's Display (the shared
+    _tonight_quality_pool over _tonight_pool), but the pick is
+    date-seeded and deterministic — every visitor, every load, all day
+    gets the same pin, and it rotates at ET midnight when et_date
+    rolls. (Tonight's Display itself stays a per-load random pick, per
+    Dan Oct 22; the daily drop is deliberately a different contract:
+    one drop a TikTok post can deep-link to.)"""
+    pool = _tonight_quality_pool(conn)
+    if not pool:
+        return None
+    pick = dict(random.Random(et_date.toordinal()).choice(pool))
+    pick.pop("_views", None)
+    pick.pop("_has_video", None)
     return pick
 
 
@@ -810,6 +1434,14 @@ def home(request: Request, sort: str = "top", town: str = "", town_search: str =
     town = town_search.strip() or town
     state = state.strip().upper()
     region = region.strip().lower()
+    # Retention Wave 1, Item 1: visitor geo (Cloudflare headers) only ever
+    # personalises the DEFAULT homepage. An explicit town/state/region in
+    # the URL is an explicit choice and overrides geo completely; the
+    # visitor's saved town (localStorage, rendered client-side by the
+    # Near-you module's existing script) is likewise untouched.
+    geo = None
+    if not town and not state and not region:
+        geo = _visitor_geo(request)
     order = "votes DESC, created_at DESC" if sort == "top" else "created_at DESC"
     query = "SELECT * FROM entries WHERE hidden = 0 AND category = ?"
     params: list = [cat]
@@ -879,6 +1511,28 @@ def home(request: Request, sort: str = "top", town: str = "", town_search: str =
         sponsors = [dict(r) for r in conn.execute(
             "SELECT * FROM sponsors WHERE is_active = 1 ORDER BY "
             "CASE tier WHEN 'title' THEN 0 WHEN 'premium' THEN 1 ELSE 2 END, created_at").fetchall()]
+    # Item 1: resolve the visitor's area once — it drives both the
+    # Near-you module (below) and the feed lead. With geo=None this is
+    # exactly today's biggest-towns-site-wide behaviour.
+    with get_conn(DB_PATH) as conn:
+        halloween_inventory = _town_inventory(conn, "halloween")
+    resolved_area = _resolve_visitor_area(halloween_inventory, geo)
+    if geo and resolved_area["area_labels"]:
+        # Lead the default feed with the visitor's area: area pins first
+        # (in normal feed order), then the regular feed de-duped behind
+        # them, still capped at 100 — the feed is re-led, never emptied.
+        area_labels = resolved_area["area_labels"]
+        if cat != "halloween":
+            with get_conn(DB_PATH) as conn:
+                cat_inventory = _town_inventory(conn, cat)
+            area_labels = _resolve_visitor_area(cat_inventory, geo)["area_labels"]
+        if area_labels:
+            area_entries = _fetch_area_feed(cat, area_labels, scare, tag,
+                                            video, sort)
+            if area_entries:
+                area_ids = {e["id"] for e in area_entries}
+                entries = (area_entries +
+                           [e for e in entries if e["id"] not in area_ids])[:100]
     voted = {k[6:] for k in request.cookies if k.startswith("voted_")}
     # Tonight's Display: fresh random pick on every homepage load from the
     # quality pool of real-media pins (Dan, Oct 22). The tonight_last
@@ -893,14 +1547,20 @@ def home(request: Request, sort: str = "top", town: str = "", town_search: str =
     last_id = int(last_raw) if last_raw.isdigit() else None
     with get_conn(DB_PATH) as conn:
         tonight = _pick_tonights_display(conn, exclude_id=last_id)
+        # Item 6: the Daily Fright band's display drop — deterministic
+        # per ET date (same pool as Tonight's, different contract), so
+        # the band names the same pin /daily leads with all day.
+        daily = _daily_display(conn, today_et)
+    daily_quiz = _trivia_quiz_for(datetime.now(timezone.utc).date())
     tonight_label = today_et.strftime("%A, %B ") + str(today_et.day)
     # First-screen modules (second-click #3): computed on EVERY homepage
     # view — all categories and filters — so the hero stack (laptop) and
     # the below-band copies (phone) stay consistent wherever the visitor
     # lands (Dan, Oct 22: "keep the blocks consistent"). The data is
-    # site-wide discovery data and intentionally does NOT re-filter with
-    # the feed: Near-you = biggest haunt towns overall, Trending = top
-    # pins by detail-page views.
+    # discovery data and intentionally does NOT re-filter with the feed:
+    # Near-you = the visitor's resolved area (Item 1; biggest haunt towns
+    # overall when geo is unknown or an explicit location filter is in
+    # the URL), Trending = top pins by detail-page views.
     with get_conn(DB_PATH) as conn:
         trows = conn.execute(
             "SELECT e.*, COALESCE(v.views, 0) AS _views FROM entries e "
@@ -912,15 +1572,45 @@ def home(request: Request, sort: str = "top", town: str = "", town_search: str =
             "  AND TRIM(e.media_path) != '' "
             "ORDER BY _views DESC, e.votes DESC, e.id LIMIT 5").fetchall()
         trending = [row_to_dict(r) for r in trows if r["_views"] > 0]
-        counts: dict[str, int] = {}
-        for r in conn.execute(
-                "SELECT town FROM entries "
-                "WHERE hidden = 0 AND category = 'halloween'").fetchall():
-            label = extract_city_state(r["town"] or "")
-            if label:
-                counts[label] = counts.get(label, 0) + 1
-        near_towns = [{"label": k, "count": v} for k, v in
-                      sorted(counts.items(), key=lambda kv: (-kv[1], kv[0]))[:8]]
+        # Near-you towns now come from the Item 1 resolution (geo-aware
+        # when Cloudflare headers are present, biggest-site-wide when
+        # not) computed above; the counts are the same live halloween
+        # town counts this block used to compute inline.
+        near_towns = resolved_area["chips"]
+    # Retention Wave 3, Item 5: the "Tonight" strip's anchor town.
+    # Resolution: the visitor's explicit ?town= context first; then Item
+    # 1's geo-resolved anchor (the first Near-you chip in exact/near/
+    # state mode — that town leads the chips); else the biggest town on
+    # the map, labelled honestly via town_note (this also covers Item
+    # 1's "nomap" mode: the visitor's own area has no supply, so the
+    # strip names the biggest town AS the biggest town, never as "near
+    # you"). Displays = halloween pins in the anchor town, counted from
+    # the same inventory that builds the Near-you chips.
+    strip_label, strip_note = "", ""
+    if town:
+        want = extract_city_state(town) or town
+        hit = next((t for t in halloween_inventory if t["label"] == want),
+                   None)
+        if hit is None:
+            city_want = extract_city(town).lower()
+            hit = next((t for t in halloween_inventory
+                        if t["city"].lower() == city_want), None)
+        strip_label = hit["label"] if hit else want
+        strip_displays = hit["count"] if hit else 0
+    elif resolved_area["mode"] in ("exact", "near", "state") \
+            and resolved_area["chips"]:
+        strip_label = resolved_area["chips"][0]["label"]
+        hit = next((t for t in halloween_inventory
+                    if t["label"] == strip_label), None)
+        strip_displays = hit["count"] if hit else 0
+    elif halloween_inventory:
+        biggest = max(halloween_inventory,
+                      key=lambda t: (t["count"], t["label"]))
+        strip_label = biggest["label"]
+        strip_displays = biggest["count"]
+        strip_note = "biggest town on the map"
+    tstrip = (_tonight_strip(strip_label, strip_displays, strip_note)
+              if strip_label else None)
     response = templates.TemplateResponse(request, "index.html",
         {"request": request, "entries": entries, "sort": sort,
          "town": town, "towns": towns(cat, state), "states": states(cat),
@@ -928,7 +1618,14 @@ def home(request: Request, sort: str = "top", town: str = "", town_search: str =
          "cat": cat, "cat_labels": CAT_LABELS, "cat_emoji": CAT_EMOJI,
          "scare": scare, "tag": tag, "video": "1" if video.strip() == "1" else "",
          "tonight": tonight, "tonight_label": tonight_label,
+         "daily": daily, "daily_label": tonight_label,
+         "daily_trivia_q": daily_quiz[0]["q"] if daily_quiz else "",
+         "tstrip": tstrip,
          "trending": trending, "near_towns": near_towns,
+         "near_heading": resolved_area["heading"],
+         "near_sub": resolved_area["sub"],
+         "geo_mode": resolved_area["mode"],
+         "geo_area": resolved_area["area_name"],
          "sponsors": sponsors,
          "bottom_tabs": _place_tabs(cat, state, region, sort, scare, tag,
                                     "1" if video.strip() == "1" else ""),
@@ -943,7 +1640,7 @@ def home(request: Request, sort: str = "top", town: str = "", town_search: str =
 @app.get("/events", response_class=HTMLResponse)
 def events_page(request: Request, type: str = "", genre: str = "",
                 venue: str = "", sort: str = "top",
-                state: str = "", town: str = ""):
+                state: str = "", town: str = "", on: str = ""):
     # The header's Events artwork links here (Dan, Oct 22). This used to
     # 302 to /?cat=events; it is now the canonical events page so events
     # can be searched by type / genre / venue style (Dan, Oct 22) with
@@ -959,6 +1656,19 @@ def events_page(request: Request, type: str = "", genre: str = "",
     selected = {"type": type if type in EVENT_TYPES else "",
                 "genre": genre if genre in EVENT_GENRES else "",
                 "venue": venue if venue in EVENT_VENUES else ""}
+    # Retention Wave 3, Item 5: ?on=YYYY-MM-DD date view. Events carry
+    # dates only in their titles, so the filter is applied in Python via
+    # parse_event_dates AFTER the facet/state/town SQL filters (it
+    # composes with all of them) and BEFORE the 100-card cap, so a date
+    # view never loses on-date events to the unfiltered cap. An
+    # unparseable `on` value is ignored — the page behaves as today.
+    on_date = None
+    if on.strip():
+        try:
+            on_date = datetime.strptime(on.strip(), "%Y-%m-%d").date()
+        except ValueError:
+            on_date = None
+    on_str = on_date.isoformat() if on_date else ""
     order = "votes DESC, created_at DESC" if sort == "top" else "created_at DESC"
     # Same video-first ranking as the home feed.
     video_first = (
@@ -1008,7 +1718,12 @@ def events_page(request: Request, type: str = "", genre: str = "",
             raws = raw_by_town[town]
             query += f" AND town IN ({','.join('?' * len(raws))})"
             params += raws
-        query += f" ORDER BY {video_first}, {order} LIMIT 100"
+        # With a date view active the SQL cap comes off (the events
+        # catalogue is ~553 rows): the Python date filter below runs
+        # over the full facet/town-filtered set, then caps at 100.
+        query += f" ORDER BY {video_first}, {order}"
+        if on_date is None:
+            query += " LIMIT 100"
         entries = [row_to_dict(r) for r in conn.execute(query, params).fetchall()]
         counts: dict[str, dict[str, int]] = {}
         for key, col, _values, _labels in EVENT_FACETS:
@@ -1040,11 +1755,25 @@ def events_page(request: Request, type: str = "", genre: str = "",
             for label in sorted(town_counts)
             if not state or town_state.get(label) == state],
     }
+    # Item 5 date view: keep only events whose parsed title span covers
+    # the requested date (undated titles never match — documented in
+    # parse_event_dates), then apply the usual 100-card cap.
+    on_total = None
+    if on_date is not None:
+        entries = [e for e in entries if event_on_date(e["title"], on_date)]
+        on_total = len(entries)
+        entries = entries[:100]
+    on_label = ""
+    if on_date is not None:
+        on_label = (on_date.strftime("%A, %B ") + str(on_date.day)
+                    + on_date.strftime(", %Y"))
     return templates.TemplateResponse(request, "events.html",
         {"request": request, "entries": entries, "sort": sort,
          "facets": facets, "selected": selected, "total": total,
          "loc": loc,
-         "filtered": any(selected.values()) or bool(state) or bool(town),
+         "filtered": any(selected.values()) or bool(state) or bool(town)
+                     or bool(on_date),
+         "on": on_str, "on_label": on_label, "on_total": on_total,
          "voted": voted})
 
 
@@ -1420,22 +2149,63 @@ TRIVIA_QUESTIONS = [
 ]
 
 
-@app.get("/trivia", response_class=HTMLResponse)
-def trivia_page(request: Request):
-    today = datetime.now(timezone.utc).date()
-    rng = random.Random(today.toordinal())
+def _trivia_quiz_for(day) -> list[dict]:
+    """The 5-question quiz /trivia serves for one date — the page's
+    existing selection logic, factored out unchanged (Item 6 needs the
+    SAME selection so /daily can surface today's first question and
+    have it match what /trivia asks). Selection is date-based: the
+    date seeds a sample of 5 questions + a per-question option shuffle.
+    NOTE the clock: /trivia has always seeded on the UTC date, so the
+    quiz flips at UTC midnight (8pm ET in season), not ET midnight.
+    That is the page's shipped behaviour; /daily mirrors it exactly
+    rather than inventing a second, diverging "today", and Item 6's
+    notes flag the ET-alignment as a separate deliberate change if
+    Dan wants it."""
+    rng = random.Random(day.toordinal())
     picks = rng.sample(TRIVIA_QUESTIONS, 5)
     quiz = []
     for i, item in enumerate(picks):
         order = list(range(4))
-        random.Random(today.toordinal() * 10 + i).shuffle(order)
+        random.Random(day.toordinal() * 10 + i).shuffle(order)
         quiz.append({
             "q": item["q"],
             "options": [item["options"][j] for j in order],
             "answer": order.index(item["answer"]),
         })
+    return quiz
+
+
+@app.get("/trivia", response_class=HTMLResponse)
+def trivia_page(request: Request):
+    today = datetime.now(timezone.utc).date()
+    quiz = _trivia_quiz_for(today)
     return templates.TemplateResponse(
         request, "trivia.html", {"quiz": quiz, "today_label": today.strftime("%A, %B %-d")},
+    )
+
+
+# ------------------------------------------------------- Daily Fright (Wave 4, Item 6)
+
+@app.get("/daily", response_class=HTMLResponse)
+def daily_page(request: Request):
+    """Daily Fright: ONE canonical drop per America/New_York date —
+    (1) today's display (date-seeded deterministic pick from the
+    Tonight's Display pool, _daily_display), (2) today's trivia
+    question (the first question of the exact quiz /trivia serves
+    today, via _trivia_quiz_for), (3) a Haunt or Not card into /games.
+    Stable all day, rotates at ET midnight. The visit streak is
+    JS/cookie-driven (hmFrightTouch in base.html) — visiting this page
+    is one of the two counting surfaces; no server state is kept."""
+    et_date = _today_et()
+    with get_conn(DB_PATH) as conn:
+        display = _daily_display(conn, et_date)
+    quiz = _trivia_quiz_for(datetime.now(timezone.utc).date())
+    date_label = et_date.strftime("%A, %B ") + str(et_date.day)
+    return templates.TemplateResponse(
+        request, "daily_fright.html",
+        {"display": display,
+         "trivia_q": quiz[0]["q"] if quiz else "",
+         "date_label": date_label, "date_iso": et_date.isoformat()},
     )
 
 
@@ -1682,6 +2452,149 @@ def tour_page(request: Request, s: str = "", cat: str = "halloween"):
     )
 
 
+# ---------------------------------------------------------------- shared tours
+# Item 8 (retention Wave 5): persistent, public "My Fright Night" itinerary
+# pages. The pre-Item-8 share mechanism was stateless: the tour page built
+# /tour?s=<comma-separated pin ids> entirely client-side and GET /tour above
+# re-resolved the ids per load. Nothing was stored, so links carried no
+# title, no landing page, and no view count — and a hidden/deleted pin
+# silently vanished from the link. That route is KEPT untouched (old links
+# in the wild keep resolving); the new default below stores the tour
+# server-side behind a short slug: POST /api/tours -> /t/{slug}.
+
+SHARED_TOUR_MAX_STOPS = 50
+
+
+def _shared_tour_title(entries: list[dict], requested) -> str:
+    """Title rule: an explicit non-empty title wins (trimmed, 80 chars).
+    Otherwise 'My Fright Night', enriched with the town label when at
+    least half the stops share one town_label ('My Fright Night —
+    Seekonk, MA')."""
+    if isinstance(requested, str) and requested.strip():
+        return requested.strip()[:80]
+    counts: dict[str, int] = {}
+    for e in entries:
+        label = e.get("town_label") or ""
+        if label:
+            counts[label] = counts.get(label, 0) + 1
+    if counts:
+        top_label, top_n = max(counts.items(), key=lambda kv: kv[1])
+        if top_n * 2 >= len(entries):
+            return f"My Fright Night — {top_label}"
+    return "My Fright Night"
+
+
+def _visible_tour_entries(ids: list[int]) -> list[dict]:
+    """Resolve pin ids to visible entries in the given order. Missing,
+    hidden, and coord-less pins are dropped (a tour stop needs coords for
+    the map, the directions link, and the /tour copy target — the tour
+    builder itself only ever holds coord-ful entries)."""
+    if not ids:
+        return []
+    with get_conn(DB_PATH) as conn:
+        rows = conn.execute(
+            f"SELECT * FROM entries WHERE hidden = 0 "
+            f"AND id IN ({','.join('?' * len(ids))})", ids).fetchall()
+    by_id = {r["id"]: row_to_dict(r) for r in rows}
+    return [by_id[i] for i in ids
+            if i in by_id and by_id[i].get("lat") and by_id[i].get("lng")]
+
+
+@app.post("/api/tours")
+async def api_create_shared_tour(request: Request):
+    """Create a persistent shared tour. Body: {pin_ids: [...], title?}.
+    Validates that ids exist, are visible, and carry coords; de-dupes
+    keeping first occurrence; caps at SHARED_TOUR_MAX_STOPS; needs >= 2
+    valid stops. Returns {slug, url, title, stops}."""
+    try:
+        data = await request.json()
+    except Exception:
+        data = {}
+    if not isinstance(data, dict):
+        data = {}
+    ids: list[int] = []
+    for x in data.get("pin_ids") or []:
+        try:
+            i = int(x)
+        except (TypeError, ValueError):
+            continue
+        if i not in ids:
+            ids.append(i)
+    ids = ids[:SHARED_TOUR_MAX_STOPS]
+    entries = _visible_tour_entries(ids)
+    if len(entries) < 2:
+        return JSONResponse(
+            {"error": "A shared tour needs at least 2 stops that are still on the map."},
+            status_code=400)
+    title = _shared_tour_title(entries, data.get("title"))
+    pin_ids_json = json.dumps([e["id"] for e in entries])
+    with get_conn(DB_PATH) as conn:
+        slug = None
+        for _ in range(5):  # collision-checked slug minting
+            cand = secrets.token_urlsafe(6)  # 8 URL-safe chars
+            if not conn.execute("SELECT 1 FROM shared_tours WHERE slug = ?",
+                                (cand,)).fetchone():
+                slug = cand
+                break
+        if slug is None:
+            return JSONResponse({"error": "Could not create a tour link — try again."},
+                                status_code=500)
+        conn.execute(
+            "INSERT INTO shared_tours (slug, title, pin_ids, created_at) "
+            "VALUES (?, ?, ?, ?)",
+            (slug, title, pin_ids_json, datetime.now(timezone.utc).isoformat()))
+        conn.commit()
+    return JSONResponse({"slug": slug, "url": f"/t/{slug}",
+                         "title": title, "stops": len(entries)})
+
+
+@app.get("/t/{slug}", response_class=HTMLResponse)
+def shared_tour_page(request: Request, slug: str):
+    """Public itinerary page for a shared tour. Increments the tour's view
+    counter per load (Jarvis's HauntMap-Verify checks excluded, matching
+    the page_views middleware). Pins hidden/deleted since sharing are
+    skipped and the shortfall is surfaced on the page — never a 500."""
+    with get_conn(DB_PATH) as conn:
+        row = conn.execute("SELECT * FROM shared_tours WHERE slug = ?",
+                           (slug,)).fetchone()
+        if row is None:
+            return templates.TemplateResponse(
+                request, "shared_tour_404.html", {"request": request},
+                status_code=404)
+        if "HauntMap-Verify" not in request.headers.get("user-agent", ""):
+            conn.execute("UPDATE shared_tours SET views = views + 1 WHERE slug = ?",
+                         (slug,))
+            conn.commit()
+        try:
+            ids = [int(x) for x in json.loads(row["pin_ids"] or "[]")]
+        except (TypeError, ValueError):
+            ids = []
+    stops = _visible_tour_entries(ids)
+    missing = len(ids) - len(stops)
+    # Google Maps directions, built exactly like the tour page's openGMaps
+    # (origin = first stop, destination = last, middle stops as
+    # waypoints) with driving mode — a shared itinerary is a drive plan.
+    gmaps_url = ""
+    if len(stops) >= 2:
+        origin = f"{stops[0]['lat']},{stops[0]['lng']}"
+        dest = f"{stops[-1]['lat']},{stops[-1]['lng']}"
+        waypoints = "|".join(f"{e['lat']},{e['lng']}" for e in stops[1:-1])
+        gmaps_url = ("https://www.google.com/maps/dir/?api=1"
+                     f"&origin={origin}&destination={dest}&travelmode=driving")
+        if waypoints:
+            gmaps_url += f"&waypoints={waypoints}"
+    # Payload for "Copy this tour": the exact localStorage haunt_tour
+    # entry format the tour builder reads ({id,title,town,lat,lng,thumb}).
+    copy_entries = [{"id": e["id"], "title": e["title"], "town": e["town"],
+                     "lat": e["lat"], "lng": e["lng"],
+                     "thumb": e.get("thumb_url") or ""} for e in stops]
+    return templates.TemplateResponse(request, "shared_tour.html",
+        {"request": request, "tour_title": row["title"], "slug": slug,
+         "stops": stops, "missing": missing, "gmaps_url": gmaps_url,
+         "copy_entries": copy_entries})
+
+
+
 @app.post("/upload", response_class=HTMLResponse)
 async def upload_submit(
     request: Request,
@@ -1805,6 +2718,92 @@ async def upload_submit(
     return RedirectResponse(f"/d/{entry_id}", status_code=303)
 
 
+# ------------------------------------------------- engagement events (Wave 2, Item 2)
+# Lightweight interaction log alongside page_views: page loads alone can't
+# see in-page behaviour (video plays, tour adds, votes that no longer
+# reload), so the interactions worth optimising for get their own rows.
+# Client-fired events arrive via POST /api/track; vote/unvote/scare/tip are
+# ALSO logged server-side in their POST handlers so those counts never
+# depend on JS surviving.
+ENGAGEMENT_TABLE_SQL = (
+    "CREATE TABLE IF NOT EXISTS engagement_events "
+    "(id INTEGER PRIMARY KEY AUTOINCREMENT, created_at TEXT NOT NULL, "
+    "event TEXT NOT NULL, entry_id INTEGER, town TEXT)"
+)
+# Whitelist for POST /api/track — anything else is a silent no-op.
+TRACK_EVENTS = ("video_play", "tour_add", "next_bar_click", "rail_click")
+# Full taxonomy shown on the admin stats page (client + server events).
+ENGAGEMENT_EVENTS_ALL = TRACK_EVENTS + ("vote", "unvote", "scare", "tip")
+
+
+def _log_engagement(event: str, entry_id: int | None = None) -> None:
+    """Insert one engagement row. Town is derived server-side from the
+    entry (its extract_city_state label). Fire-and-forget: analytics must
+    never break the interaction that produced the event."""
+    try:
+        town = None
+        if entry_id:
+            with get_conn(DB_PATH) as conn:
+                row = conn.execute(
+                    "SELECT town FROM entries WHERE id = ?", (entry_id,)).fetchone()
+            if row:
+                town = extract_city_state(row["town"] or "") or row["town"]
+        with get_conn(DB_PATH) as conn:
+            conn.execute(ENGAGEMENT_TABLE_SQL)
+            conn.execute(
+                "INSERT INTO engagement_events (created_at, event, entry_id, town) "
+                "VALUES (?, ?, ?, ?)",
+                (datetime.now(timezone.utc).isoformat(), event, entry_id, town))
+            conn.commit()
+    except Exception:
+        pass
+
+
+def _wants_json(request: Request) -> bool:
+    """True when a POST wants the in-place (fetch) response instead of the
+    classic redirect: the detail page's fetch interceptor sends
+    X-Requested-With: fetch (and an application/json Accept)."""
+    if request.headers.get("x-requested-with", "").strip().lower() == "fetch":
+        return True
+    return "application/json" in request.headers.get("accept", "")
+
+
+def _scare_counts_for(entry_id: int) -> tuple[dict, int]:
+    counts = {lvl: 0 for lvl in SCARE_LEVELS}
+    with get_conn(DB_PATH) as conn:
+        conn.execute(SCARE_TABLE_SQL)
+        for r in conn.execute(
+                "SELECT level, votes FROM scare_votes WHERE entry_id = ?", (entry_id,)):
+            if r["level"] in counts:
+                counts[r["level"]] = r["votes"]
+    return counts, sum(counts.values())
+
+
+@app.post("/api/track")
+async def api_track(request: Request):
+    """Beacon endpoint for client-side engagement events. Accepts a JSON
+    body {event, entry_id} — navigator.sendBeacon posts it as text/plain,
+    so the raw body is parsed, never request.json()/form. Whitelisted
+    events only; always 204 with no body, malformed input included, so a
+    tracking failure can never surface on a page."""
+    try:
+        raw = await request.body()
+        data = json.loads(raw.decode("utf-8", "replace")) if raw else {}
+        if not isinstance(data, dict):
+            data = {}
+        event = str(data.get("event") or "")
+        if event in TRACK_EVENTS:
+            entry_id = data.get("entry_id")
+            try:
+                entry_id = int(entry_id) if entry_id is not None else None
+            except (TypeError, ValueError):
+                entry_id = None
+            _log_engagement(event, entry_id)
+    except Exception:
+        pass
+    return Response(status_code=204)
+
+
 @app.get("/d/{entry_id}", response_class=HTMLResponse)
 def detail(request: Request, entry_id: int):
     entry = get_entry(entry_id)
@@ -1828,6 +2827,15 @@ def detail(request: Request, entry_id: int):
     if scare_pick not in SCARE_LEVELS:
         scare_pick = ""
     chain = detail_chain(entry)
+    # Retention Wave 1, Item 3: on a pin WITH footage, the primary Next
+    # target (big button + sticky bar + prerender) is the nearest pin
+    # WITH footage when one exists within VIDEO_CHAIN_RADIUS_MI;
+    # otherwise — and on every non-footage pin — it is exactly today's
+    # geographic next. The bottom prev/next chain-nav keeps the
+    # geographic target either way (passed as next_geo_pin).
+    geo_next_pin = chain["next_pin"]
+    video_next_pin = chain.get("next_video_pin")
+    effective_next_pin = video_next_pin or geo_next_pin
     # Engagement next-steps section (staged Oct 22): the 3 nearest neighbours
     # for the prominent "More haunts near this one" block. Real-media pins
     # (an actual uploaded photo/video — i.e. not stock-photo pins, which sit
@@ -1869,7 +2877,10 @@ def detail(request: Request, entry_id: int):
     return templates.TemplateResponse(request, "detail.html",
         {"request": request, "entry": entry, "voted": voted, "reported": reported,
          "tips": tips, "scare_counts": scare_counts, "scare_total": scare_total,
-         "scare_pick": scare_pick, "next_pin": chain["next_pin"],
+         "scare_pick": scare_pick, "next_pin": effective_next_pin,
+         "next_geo_pin": geo_next_pin,
+         "next_is_video": bool(video_next_pin),
+         "more_videos": chain.get("more_videos", []),
          "prev_pin": chain["prev_pin"], "more_near": chain["more_near"],
          "more_like": chain["more_like"], "town_pin_ids": town_pin_ids,
          "more_haunts": more_haunts, "town_haunts": town_haunts},
@@ -1893,8 +2904,8 @@ def scare_vote(entry_id: int, level: str, request: Request):
         raise HTTPException(400, "Bad scare level.")
     cookie = f"scare_{entry_id}"
     old = request.cookies.get(cookie, "")
-    resp = RedirectResponse(f"/d/{entry_id}#scare", status_code=303)
-    if old != level:
+    changed = old != level
+    if changed:
         with get_conn(DB_PATH) as conn:
             conn.execute(SCARE_TABLE_SQL)
             if old in SCARE_LEVELS:
@@ -1906,6 +2917,17 @@ def scare_vote(entry_id: int, level: str, request: Request):
                    ON CONFLICT(entry_id, level) DO UPDATE SET votes = votes + 1""",
                 (entry_id, level))
             conn.commit()
+        _log_engagement("scare", entry_id)
+    if _wants_json(request):
+        counts, total = _scare_counts_for(entry_id)
+        resp = JSONResponse({"ok": True, "counts": counts, "total": total,
+                             "pick": level})
+        if changed:
+            resp.set_cookie(cookie, level, max_age=365 * 24 * 3600,
+                            httponly=True, samesite="lax")
+        return resp
+    resp = RedirectResponse(f"/d/{entry_id}#scare", status_code=303)
+    if changed:
         resp.set_cookie(cookie, level, max_age=365 * 24 * 3600,
                         httponly=True, samesite="lax")
     return resp
@@ -1927,6 +2949,12 @@ async def add_tip(entry_id: int, request: Request):
                 (entry_id, name, text, datetime.now(timezone.utc).isoformat()),
             )
             conn.commit()
+        _log_engagement("tip", entry_id)
+        if _wants_json(request):
+            return JSONResponse({"ok": True, "tip": {
+                "display_name": name or "Anonymous", "text": text}})
+    elif _wants_json(request):
+        return JSONResponse({"ok": False, "error": "empty tip"}, status_code=400)
     return RedirectResponse(f"/d/{entry_id}#tips", status_code=303)
 
 
@@ -1935,14 +2963,25 @@ def vote(entry_id: int, request: Request):
     entry = get_entry(entry_id)
     if not entry or entry["hidden"]:
         raise HTTPException(404, "Entry not found.")
-    resp = RedirectResponse(f"/d/{entry_id}", status_code=303)
     cookie = f"voted_{entry_id}"
     # Soft limit: one vote per browser. Clearing cookies bypasses it — by design
     # for v1 (no accounts). Good enough to stop casual double-voting.
-    if cookie not in request.cookies:
+    fresh_vote = cookie not in request.cookies
+    if fresh_vote:
         with get_conn(DB_PATH) as conn:
             conn.execute("UPDATE entries SET votes = votes + 1 WHERE id = ?", (entry_id,))
             conn.commit()
+        _log_engagement("vote", entry_id)
+    if _wants_json(request):
+        now = get_entry(entry_id)
+        resp = JSONResponse({"ok": True,
+                             "votes": now["votes"] if now else entry["votes"],
+                             "voted": True})
+        if fresh_vote:
+            resp.set_cookie(cookie, "1", max_age=365 * 24 * 3600, httponly=True, samesite="lax")
+        return resp
+    resp = RedirectResponse(f"/d/{entry_id}", status_code=303)
+    if fresh_vote:
         resp.set_cookie(cookie, "1", max_age=365 * 24 * 3600, httponly=True, samesite="lax")
     return resp
 
@@ -1952,12 +2991,23 @@ def unvote(entry_id: int, request: Request):
     entry = get_entry(entry_id)
     if not entry or entry["hidden"]:
         raise HTTPException(404, "Entry not found.")
-    resp = RedirectResponse(f"/d/{entry_id}", status_code=303)
     cookie = f"voted_{entry_id}"
-    if cookie in request.cookies:
+    had_vote = cookie in request.cookies
+    if had_vote:
         with get_conn(DB_PATH) as conn:
             conn.execute("UPDATE entries SET votes = MAX(0, votes - 1) WHERE id = ?", (entry_id,))
             conn.commit()
+        _log_engagement("unvote", entry_id)
+    if _wants_json(request):
+        now = get_entry(entry_id)
+        resp = JSONResponse({"ok": True,
+                             "votes": now["votes"] if now else entry["votes"],
+                             "voted": False})
+        if had_vote:
+            resp.delete_cookie(cookie)
+        return resp
+    resp = RedirectResponse(f"/d/{entry_id}", status_code=303)
+    if had_vote:
         resp.delete_cookie(cookie)
     return resp
 
@@ -2315,6 +3365,70 @@ def leaderboard(request: Request, cat: str = "halloween"):
     )
 
 
+# ------------------------------------------------- Haunt Passport (Wave 4, Item 4)
+#
+# The collection loop, surfaced. A pin-page visit marks the pin seen in
+# the visitor's localStorage (hm_seen, see base.html); /passport turns
+# that device-local set into per-town progress. Counting mirrors the
+# town feed EXACTLY: the denominators are the _towns_with_counts /
+# town_page universe — visible (hidden = 0) halloween pins grouped by
+# the extract_city_state town label — because those are the counts a
+# visitor sees on /towns/{slug}, and detail()'s own seen-strip counts
+# the same label+category set for a halloween pin. Towns whose pins
+# carry no parseable "City, ST" label never appear in the town feed,
+# so they are excluded here too (same rule as _towns_with_counts).
+# Non-halloween pins (events, stores, …) are not part of the town feed
+# and do not count toward a town — documented in item4 NOTES.
+
+def _passport_towns(conn) -> list[dict]:
+    """[{town, town_label, total, url, slug, ids}] for the passport.
+
+    `ids` rides along beyond the spec'd fields: the progress itself is
+    computed client-side from the visitor's seen set, which is a bare
+    list of pin ids, so the client needs each town's id list to count
+    how many of them were seen. `town` and `town_label` are both the
+    canonical extract_city_state label (the key the town feed groups
+    by, and the label every card displays)."""
+    grouped: dict[str, list[int]] = {}
+    for r in conn.execute(
+            "SELECT id, town FROM entries "
+            "WHERE hidden = 0 AND category = 'halloween' ORDER BY id").fetchall():
+        label = extract_city_state(r["town"] or "")
+        if not label:
+            continue
+        grouped.setdefault(label, []).append(r["id"])
+    out = []
+    for label in sorted(grouped):
+        slug = _town_slug(label)
+        out.append({"town": label, "town_label": label,
+                    "total": len(grouped[label]),
+                    "url": f"/towns/{slug}", "slug": slug,
+                    "ids": grouped[label]})
+    return out
+
+
+@app.get("/api/passport-data")
+def api_passport_data():
+    """Per-town passport denominators + pin ids, as one JSON list.
+    Computed per request (a single grouped scan of ~2k halloween rows
+    at snapshot scale — cheap); Cache-Control lets browsers / the CDN
+    reuse it briefly instead of recomputing on every homepage load,
+    since the homepage chip fetches it too."""
+    with get_conn(DB_PATH) as conn:
+        data = _passport_towns(conn)
+    resp = JSONResponse(data)
+    resp.headers["Cache-Control"] = "public, max-age=300"
+    return resp
+
+
+@app.get("/passport", response_class=HTMLResponse)
+def passport_page(request: Request):
+    """Haunt Passport page. The shell is server-rendered; the progress
+    itself is rendered client-side from hm_seen + /api/passport-data
+    (the seen set never leaves the visitor's device — no accounts)."""
+    return templates.TemplateResponse(request, "passport.html", {})
+
+
 # ---------------------------------------------------------------- town pages
 
 def _town_slug(label: str) -> str:
@@ -2373,9 +3487,14 @@ def town_page(request: Request, slug: str):
     # Video-first ranking (engagement, Oct 22): stable sort — footage pins
     # ahead of photo-only pins, votes/newest order kept within each group.
     entries.sort(key=lambda e: 0 if _entry_has_video(e) else 1)
+    # Retention Wave 3, Item 5: the "Tonight" strip under the town header
+    # — this town is the anchor; displays lit = its halloween pins (the
+    # entries list itself), events on = parsed events in this town.
+    tstrip = _tonight_strip(label, len(entries))
     return templates.TemplateResponse(
         request, "town.html",
-        {"label": label, "entries": entries, "site_name": SITE_NAME},
+        {"label": label, "entries": entries, "site_name": SITE_NAME,
+         "tstrip": tstrip},
     )
 
 
@@ -2383,7 +3502,7 @@ def town_page(request: Request, slug: str):
 def sitemap():
     base = "https://gethauntmap.com"
     urls = ["/", "/map", "/nearby", "/tour", "/diy", "/diy-costumes", "/games", "/leaderboard",
-            "/towns", "/advertise", "/media-kit", "/about", "/costume-contest", "/trivia", "/haunt-or-not", "/fan-art",
+            "/towns", "/passport", "/daily", "/advertise", "/media-kit", "/about", "/costume-contest", "/trivia", "/haunt-or-not", "/fan-art",
             "/restaurhaunts"]
     for t in _towns_with_counts():
         urls.append(f"/towns/{t['slug']}")
@@ -3380,6 +4499,34 @@ def admin_stats(request: Request):
             "SELECT CASE WHEN device = '' OR device IS NULL THEN 'Unknown' "
             "ELSE device END AS dev, COUNT(*) AS views FROM page_views "
             "GROUP BY dev ORDER BY views DESC").fetchall()
+        # --- engagement events (Wave 2, Item 2): last 7 days ---
+        conn.execute(ENGAGEMENT_TABLE_SQL)
+        eng_counts = {ev: 0 for ev in ENGAGEMENT_EVENTS_ALL}
+        for r in conn.execute(
+                "SELECT event, COUNT(*) AS n FROM engagement_events "
+                "WHERE created_at >= datetime('now', '-7 days') GROUP BY event"):
+            eng_counts[r["event"]] = r["n"]
+        eng_with_pin = conn.execute(
+            "SELECT COUNT(*) FROM engagement_events WHERE entry_id IS NOT NULL "
+            "AND created_at >= datetime('now', '-7 days')").fetchone()[0]
+        pin_views_week = conn.execute(
+            "SELECT COUNT(*) FROM page_views WHERE path LIKE '/d/%' "
+            "AND viewed_at >= datetime('now', '-7 days')").fetchone()[0]
+        eng_top_pins = conn.execute(
+            "SELECT g.entry_id AS entry_id, COUNT(*) AS n, "
+            "e.title AS title, e.town AS town FROM engagement_events g "
+            "LEFT JOIN entries e ON e.id = g.entry_id "
+            "WHERE g.entry_id IS NOT NULL "
+            "AND g.created_at >= datetime('now', '-7 days') "
+            "GROUP BY g.entry_id ORDER BY n DESC, g.entry_id ASC LIMIT 5").fetchall()
+        engagement = {
+            "counts": [(ev, eng_counts[ev]) for ev in ENGAGEMENT_EVENTS_ALL],
+            "total": sum(eng_counts.values()),
+            "with_pin": eng_with_pin,
+            "pin_views": pin_views_week,
+            "ratio": (eng_with_pin / pin_views_week) if pin_views_week else 0,
+            "top_pins": eng_top_pins,
+        }
         # --- visit duration: sessionize page views per visitor (30-min window) ---
         srows = conn.execute(
             "SELECT sid, viewed_at FROM page_views WHERE sid IS NOT NULL "
@@ -3427,7 +4574,7 @@ def admin_stats(request: Request):
         {"request": request, "total": total, "today": today, "week": week,
          "by_day": by_day, "top_pages": top_pages,
          "top_referrers": top_referrers, "by_device": by_device,
-         "duration": duration})
+         "duration": duration, "engagement": engagement})
 
 
 @app.post("/admin/login", response_class=HTMLResponse)
@@ -3495,6 +4642,7 @@ def admin_rethumb(request: Request, offset: int = 0, limit: int = 200):
             new = tmp.stat().st_size
             if new < old:
                 tmp.replace(f)
+                make_card_variant(f)  # keep the Item 10 card variant in sync
                 shrunk += 1
             else:
                 tmp.unlink(missing_ok=True)
@@ -3567,6 +4715,7 @@ def admin_fix_orientation(request: Request, offset: int = 0, limit: int = 100):
                         with Image.open(f) as im:
                             im.load()
                             _write_thumb(im, thumb)
+                        make_card_variant(thumb)
         except (OSError, UnidentifiedImageError):
             continue
     return {"total": len(rows), "offset": offset, "processed": len(batch),
@@ -3604,6 +4753,8 @@ def admin_delete(entry_id: int, request: Request):
         for rel in {entry["media_path"], entry.get("thumb_path")}:
             if rel:
                 (UPLOAD_DIR / rel).unlink(missing_ok=True)
+        if entry.get("thumb_path"):  # Item 10 card variant, if any
+            (CARD_THUMB_DIR / Path(entry["thumb_path"]).name).unlink(missing_ok=True)
         with get_conn(DB_PATH) as conn:
             conn.execute("DELETE FROM entries WHERE id = ?", (entry_id,))
             conn.commit()

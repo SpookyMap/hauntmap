@@ -8,7 +8,7 @@
   <section class="watch-slide">
     {% if e.tiktok_url and '/video/' in e.tiktok_url %}
     {% set tt_id = e.tiktok_url.split('/video/')[1].split('?')[0] %}
-    <div class="tt-facade" data-tt-url="{{ e.tiktok_url }}" data-tt-id="{{ tt_id }}" role="button" tabindex="0" aria-label="Play TikTok video">
+    <div class="tt-facade" data-tt-url="{{ e.tiktok_url }}" data-tt-id="{{ tt_id }}" data-entry-id="{{ e.id }}" role="button" tabindex="0" aria-label="Play TikTok video">
       {% if e.thumb_url %}
       <img src="{{ e.thumb_url }}" alt="{{ e.title }}" loading="lazy">
       {% else %}

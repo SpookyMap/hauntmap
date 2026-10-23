@@ -1,0 +1,14 @@
+{# Retention Wave 3, Item 5: the "Tonight" strip — a slim, always-fresh
+   line: ET countdown to Halloween + what's on TONIGHT near one anchor
+   town (tstrip, built by _tonight_strip() in app/main.py). Events link
+   into the date-filtered /events view for the anchor town; displays
+   link into the town feed. When the anchor is the fallback biggest
+   town, tstrip.town_note says so — the strip never pretends a faraway
+   town is "near you". Include with {% with tstrip_wide = True %} on
+   the homepage for the Tonight's-band breakout width. #}
+<div class="tonight-strip{% if tstrip_wide %} ts-wide{% endif %}" aria-label="On tonight near {{ tstrip.town_label }}">
+  <span class="ts-count">{{ tstrip.countdown }}</span>
+  <a class="ts-link" href="/events?town={{ tstrip.town_label|urlencode }}&amp;on={{ tstrip.today_iso }}">&#x1F3AA; <strong class="ts-n">{{ tstrip.events_on }} event{{ 's' if tstrip.events_on != 1 }}</strong> on tonight near {{ tstrip.town_label }}</a>
+  <a class="ts-link" href="/?town={{ tstrip.town_label|urlencode }}">&#x1F383; <strong class="ts-n">{{ tstrip.displays }} display{{ 's' if tstrip.displays != 1 }}</strong> lit tonight</a>
+  {% if tstrip.town_note %}<span class="ts-note">({{ tstrip.town_note }})</span>{% endif %}
+</div>

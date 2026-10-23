@@ -2,10 +2,14 @@
 {% from "_pin_card.html" import pin_card %}
 {% block title %}{{ entry.title }} &middot; {{ site_name }}{% endblock %}
 {% block head %}
-{% if entry.lat is not none and entry.lng is not none %}
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-{% endif %}
+{# Item 10 (speed diet): Leaflet is NO LONGER loaded in <head> on pin
+   pages. It used to cost CSS+JS+tiles on every pin view, render-
+   blocking, even though the map sits far below the fold. The map
+   block below renders a lightweight placeholder and an
+   IntersectionObserver lazy-loads the same Leaflet 1.9.4 assets only
+   when the map nears the viewport, then runs the original init.
+   Scope: detail.html ONLY — /map, /tour, /upload and /t/{slug} keep
+   their eager <head> includes (different pages, different jobs). #}
 {% endblock %}
 {% block content %}
 <article class="detail">
@@ -19,7 +23,7 @@
        TikTok embed; hmLoadTikTok() swaps in the real blockquote + embed.js on
        tap, so one tap still plays in-page. No-JS gets the direct embed. #}
     {% set tt_id = entry.tiktok_url.split('/video/')[1].split('?')[0] %}
-    <div class="tt-facade" data-tt-url="{{ entry.tiktok_url }}" data-tt-id="{{ tt_id }}" role="button" tabindex="0" aria-label="Play TikTok video">
+    <div class="tt-facade" data-tt-url="{{ entry.tiktok_url }}" data-tt-id="{{ tt_id }}" data-entry-id="{{ entry.id }}" role="button" tabindex="0" aria-label="Play TikTok video">
       {% if entry.thumb_url %}
       <img src="{{ entry.thumb_url }}" alt="{{ entry.title }}">
       {% else %}
@@ -56,6 +60,17 @@
     {% if entry.is_sample %}<span class="sample-badge">Sample</span>{% endif %}
   </div>
   {% endif %}
+  {% if more_videos %}
+  {# Retention Wave 1, Item 3: compact footage rail DIRECTLY under the
+     player, so a video visitor's next tap is another video — before the
+     title/meta block and everything that follows it. #}
+  <section class="more-videos" aria-label="More videos near here">
+    <h2>&#x1F3AC; More videos near here</h2>
+    <div class="rail">
+      {% for p in more_videos %}{{ pin_card(p) }}{% endfor %}
+    </div>
+  </section>
+  {% endif %}
   <h1>{{ entry.title }}</h1>
   <p class="meta">{{ entry.town_label }}{% if entry.display_name %} &middot; {{ entry.display_name }}{% endif %}</p>
   {% if entry.address %}
@@ -80,9 +95,31 @@
   {% endif %}
   <p class="votes-big">&#x1F383; {{ entry.votes }} vote{{ 's' if entry.votes != 1 }}</p>
 
+  {% if entry.town_label %}
+  {# Retention Wave 3, Item 9: high-intent text-alert prompt. Placement
+     decision: directly under the media/player area AND the title/meta
+     block (title, town, address, votes) — the visitor has just watched
+     or looked at this haunt and read where it is, which is the proven-
+     intent moment; the prompt still sits in the first screenful on
+     phones, and it does not displace Item 3's under-player video rail
+     (the proven next click). It is the shared _text_alerts.html form
+     (same fields, honeypot, radius/interest defaults and success
+     behaviour as homepage + /events), with the pin's town pre-filled
+     and source="pin-page" so captures attribute per pin page. The
+     .pin-alerts wrapper scopes every style override to this copy. #}
+  <div class="pin-alerts">
+    {% with sms_source = "pin-page", sms_heading = "📱 Text me new haunts near " ~ entry.town_label, sms_sub = "New haunts & Halloween events near " ~ entry.town_label ~ " — texted as they land on the map.", sms_town = entry.town_label %}{% include "_text_alerts.html" %}{% endwith %}
+  </div>
+  {% endif %}
+
   <div class="seen-strip" id="seen-strip" hidden>
     <p class="seen-text"></p>
     <div class="seen-bar"><div class="seen-fill"></div></div>
+    {# Wave 4, Item 4: the strip is the collection loop's home — it now
+       also points at the full Haunt Passport. The strip only unhides
+       when this town has ≥1 seen pin, so the link appears exactly when
+       the visitor has a passport worth opening. #}
+    <p class="seen-passport"><a href="/passport">See your Haunt Passport &rarr;</a></p>
   </div>
   <script>
     hmMarkSeen({{ entry.id }});
@@ -154,6 +191,7 @@
       tour.push(entry);
       localStorage.setItem('haunt_tour', JSON.stringify(tour));
       if (window.hmTourSync) hmTourSync();
+      if (window.hmTrack) hmTrack('tour_add', entry.id);
     }
     location.href = '/tour';
   };
@@ -161,7 +199,7 @@
   {% endif %}
 
   {% if next_pin %}
-  <a class="btn btn-big next-haunt" href="/d/{{ next_pin.id }}">Next haunt near here &rarr;<span class="next-haunt-sub">{{ next_pin.title }} &middot; {{ "%.1f"|format(next_pin.distance) }} mi &middot; {{ next_pin.town_label }}</span></a>
+  <a class="btn btn-big next-haunt" href="/d/{{ next_pin.id }}">{% if next_is_video %}&#x1F3AC; Play next haunt &rarr;{% else %}Next haunt near here &rarr;{% endif %}<span class="next-haunt-sub">{{ next_pin.title }} &middot; {{ "%.1f"|format(next_pin.distance) }} mi &middot; {{ next_pin.town_label }}</span></a>
   {% endif %}
 
   <div class="scare-meter" id="scare">
@@ -222,19 +260,77 @@
     tour.push(entry);
     localStorage.setItem('haunt_tour', JSON.stringify(tour));
     if (window.hmTourSync) hmTourSync();
+    if (window.hmTrack) hmTrack('tour_add', entry.id);
     if (confirm('Added! Open your tour now?')) location.href = '/tour';
   };
   </script>
 
   {% if entry.lat is not none and entry.lng is not none %}
-  <div id="map" class="detail-map"></div>
+  {# Item 10: lazy Leaflet. Placeholder occupies the exact .detail-map
+     box (same height — no layout shift when the real map swaps in).
+     The loader is fully guarded: L is only ever touched after the
+     script's onload AND a typeof check, so a blocked/failed CDN can
+     never produce an 'L is not defined' error — the placeholder just
+     stays as a static box (the Google/Apple directions links above
+     remain the wayfinding path). #}
+  <div id="map" class="detail-map hm-map-lazy" data-lat="{{ entry.lat }}" data-lng="{{ entry.lng }}">
+    <div class="hm-map-ph">
+      <span class="hm-map-ph-pin" aria-hidden="true">&#x1F4CD;</span>
+      <span class="hm-map-ph-text">Map &mdash; loading as you scroll&hellip;</span>
+      {% if entry.address %}
+      <a class="hm-map-ph-link" href="https://www.google.com/maps/dir/?api=1&destination={{ entry.address|urlencode }}" target="_blank" rel="noopener">Get directions &rarr;</a>
+      {% else %}
+      <a class="hm-map-ph-link" href="https://www.google.com/maps/dir/?api=1&destination={{ entry.lat }},{{ entry.lng }}" target="_blank" rel="noopener">Get directions &rarr;</a>
+      {% endif %}
+    </div>
+  </div>
   <script>
     (function () {
-      var map = L.map('map').setView([{{ entry.lat }}, {{ entry.lng }}], 15);
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 19, attribution: '&copy; OpenStreetMap contributors'
-      }).addTo(map);
-      L.marker([{{ entry.lat }}, {{ entry.lng }}]).addTo(map);
+      var el = document.getElementById('map');
+      if (!el) return;
+      var lat = parseFloat(el.getAttribute('data-lat'));
+      var lng = parseFloat(el.getAttribute('data-lng'));
+      if (!isFinite(lat) || !isFinite(lng)) { el.classList.add('hm-map-failed'); return; }
+      var started = false;
+      function init() {
+        if (typeof L === 'undefined') { el.classList.add('hm-map-failed'); return; }
+        try {
+          el.innerHTML = '';
+          el.classList.add('hm-map-ready');
+          var map = L.map('map').setView([lat, lng], 15);
+          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19, attribution: '&copy; OpenStreetMap contributors'
+          }).addTo(map);
+          L.marker([lat, lng]).addTo(map);
+        } catch (e) {
+          el.classList.add('hm-map-failed');
+        }
+      }
+      function load() {
+        if (started) return;
+        started = true;
+        if (typeof L !== 'undefined') { init(); return; }
+        var css = document.createElement('link');
+        css.rel = 'stylesheet';
+        css.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+        document.head.appendChild(css);
+        var s = document.createElement('script');
+        s.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+        s.async = true;
+        s.onload = init;
+        s.onerror = function () { el.classList.add('hm-map-failed'); };
+        document.head.appendChild(s);
+      }
+      if ('IntersectionObserver' in window) {
+        var io = new IntersectionObserver(function (entries) {
+          for (var i = 0; i < entries.length; i++) {
+            if (entries[i].isIntersecting) { io.disconnect(); load(); return; }
+          }
+        }, { rootMargin: '400px 0px' });
+        io.observe(el);
+      } else {
+        load();
+      }
     })();
   </script>
   {% endif %}
@@ -259,10 +355,13 @@
 
   {% with map_label = entry.town_label %}{% include "_town_map_strip.html" %}{% endwith %}
 
-  {% if prev_pin or next_pin %}
+  {% if prev_pin or next_geo_pin %}
+  {# Chain-nav stays GEOGRAPHIC by decision (Item 3): it is the literal
+     walk-the-neighbourhood chain; only the primary Next button + sticky
+     bar above chain video-to-video. #}
   <nav class="chain-nav">
     {% if prev_pin %}<a class="btn" href="/d/{{ prev_pin.id }}">&larr; Previous haunt</a>{% else %}<span></span>{% endif %}
-    {% if next_pin %}<a class="btn" href="/d/{{ next_pin.id }}">Next haunt &rarr;</a>{% endif %}
+    {% if next_geo_pin %}<a class="btn" href="/d/{{ next_geo_pin.id }}">Next haunt &rarr;</a>{% endif %}
   </nav>
   {% endif %}
 
@@ -281,7 +380,8 @@
 
 {% if next_pin %}
 <a class="next-haunt-bar" href="/d/{{ next_pin.id }}" aria-label="Next haunt: {{ next_pin.title }}">
-  <span class="nhb-label">Next haunt &rarr;</span>
+  {% if next_is_video and next_pin.thumb_url %}<img class="nhb-thumb" src="{{ next_pin.thumb_url }}" alt="" loading="lazy">{% endif %}
+  <span class="nhb-label">{% if next_is_video %}&#x25B6; Play next haunt &rarr;{% else %}Next haunt &rarr;{% endif %}</span>
   <span class="nhb-title">{{ next_pin.title }} &middot; {{ next_pin.town_label }}</span>
 </a>
 {% endif %}
@@ -307,13 +407,132 @@
   </form>
 </div>
 
+<script>
+// Wave 2, Item 2 — kill the reload tax: vote / unvote / Scare-O-Meter /
+// tip forms post via fetch and update in place (scroll never moves).
+// Progressive enhancement only: any failure (no fetch, non-JSON, HTTP
+// error, ok:false) falls back to the form's normal full-page submit,
+// which behaves exactly as before.
+(function () {
+  if (!window.fetch || !window.FormData) return;
+  var ENTRY_ID = {{ entry.id }};
+
+  function applyVote(data) {
+    var vb = document.querySelector('.votes-big');
+    if (vb) vb.textContent = '\uD83C\uDF83 ' + data.votes + ' vote' + (data.votes === 1 ? '' : 's');
+    var box = document.querySelector('.detail-actions');
+    var old = box && box.querySelector('form');
+    if (!old) return;
+    var nf = document.createElement('form');
+    nf.method = 'post';
+    var btn = document.createElement('button');
+    btn.type = 'submit';
+    if (data.voted) {
+      nf.action = '/d/' + ENTRY_ID + '/unvote';
+      btn.className = 'btn btn-voted';
+      btn.textContent = '\u2713 Voted \u2014 tap to undo';
+    } else {
+      nf.action = '/d/' + ENTRY_ID + '/vote';
+      btn.className = 'btn btn-big';
+      btn.textContent = '\uD83C\uDF83 Vote for this haunt';
+    }
+    nf.appendChild(btn);
+    old.replaceWith(nf);
+  }
+
+  function applyScare(data) {
+    document.querySelectorAll('.scare-row').forEach(function (row) {
+      var form = row.querySelector('form');
+      var m = form && (form.getAttribute('action') || '').match(/\/scare\/(\w+)$/);
+      if (!m) return;
+      var lvl = m[1];
+      var n = (data.counts && data.counts[lvl]) || 0;
+      var pct = data.total ? (100 * n / data.total) : 0;
+      var fill = row.querySelector('.scare-fill');
+      if (fill) fill.style.width = pct + '%';
+      var num = row.querySelector('.scare-n');
+      if (num) num.textContent = n;
+      var btn = row.querySelector('.scare-btn');
+      if (btn) btn.classList.toggle('scare-picked', data.pick === lvl);
+    });
+    var t = document.querySelector('.scare-total');
+    if (t) {
+      t.textContent = data.total
+        ? data.total + ' scare rating' + (data.total === 1 ? '' : 's') + ' \u2014 tap another level to change yours'
+        : 'No ratings yet \u2014 be the first to rate it!';
+    }
+  }
+
+  function applyTip(form, data) {
+    var section = document.querySelector('.tips-section');
+    if (!section || !data.tip) return;
+    var list = section.querySelector('.tips-list');
+    if (!list) {
+      list = document.createElement('div');
+      list.className = 'tips-list';
+      var muted = section.querySelector('.muted');
+      if (muted) muted.replaceWith(list);
+      else section.insertBefore(list, form);
+    }
+    var div = document.createElement('div');
+    div.className = 'tip';
+    var meta = document.createElement('div');
+    meta.className = 'tip-meta';
+    var strong = document.createElement('strong');
+    strong.textContent = data.tip.display_name || 'Anonymous';
+    meta.appendChild(strong);
+    var p = document.createElement('p');
+    p.textContent = data.tip.text;
+    div.appendChild(meta);
+    div.appendChild(p);
+    list.insertBefore(div, list.firstChild);
+    var h = section.querySelector('h3');
+    if (h) {
+      var m = h.textContent.match(/\((\d+)\)/);
+      var n = m ? parseInt(m[1], 10) + 1 : list.children.length;
+      h.textContent = '\uD83D\uDCAC Tips & experiences (' + n + ')';
+    }
+    form.reset();
+  }
+
+  document.addEventListener('submit', function (ev) {
+    var f = ev.target;
+    if (!f || !f.getAttribute) return;
+    var action = f.getAttribute('action') || '';
+    var isVote = /\/d\/\d+\/(un)?vote$/.test(action);
+    var isScare = /\/d\/\d+\/scare\/\w+$/.test(action);
+    var isTip = f.classList && f.classList.contains('tip-form');
+    if (!isVote && !isScare && !isTip) return;
+    ev.preventDefault();
+    fetch(action, {
+      method: 'POST',
+      body: new FormData(f),
+      credentials: 'same-origin',
+      headers: { 'X-Requested-With': 'fetch', 'Accept': 'application/json' }
+    }).then(function (r) {
+      if (!r.ok) throw new Error('http ' + r.status);
+      return r.json();
+    }).then(function (data) {
+      if (!data || !data.ok) throw new Error('not ok');
+      if (isVote) applyVote(data);
+      else if (isScare) applyScare(data);
+      else applyTip(f, data);
+    }).catch(function () {
+      f.submit();  // silent degradation to the classic full-page POST
+    });
+  });
+})();
+</script>
+
 <p><a href="/">&larr; Back to all haunts</a></p>
 {% endblock %}
 {% block speculation %}
 {% if next_pin %}
-{# Prerender exactly ONE page: the nearest same-category pin, i.e. where the
-   "Next haunt near here" chain leads. Moderate eagerness = fires on
-   hover/press of a link to it, never on page load — bandwidth-safe. #}
+{# Prerender exactly ONE page: the primary Next target (Item 3: the nearest
+   same-category pin WITH footage on video pins, else the nearest
+   same-category pin), i.e. where the big Next button + sticky bar lead.
+   Moderate eagerness = fires on hover/press of a link to it, never on
+   page load — bandwidth-safe. #}
 <script type="speculationrules">
 {"prerender": [{"source": "list", "urls": ["/d/{{ next_pin.id }}"], "eagerness": "moderate"}]}
 </script>
