@@ -2740,3 +2740,30 @@ body.has-tourbar.has-radio { padding-bottom: 124px; }
   .trending:not(.hero-copy) .rank-badge { font-size: 0.68rem; padding: 0.08rem 0.4rem; top: 0.35rem; left: 0.35rem; }
   .trending:not(.hero-copy) .play-badge { width: 30px; height: 30px; font-size: 0.8rem; }
 }
+
+/* ============ z81: TEXT-ALERTS PANEL DIET (Dan, Oct 23) ============
+   Phone only (<=760px), scoped to the below-band homepage copy via
+   .below-band-only: NOT the hero-stack copy, NOT pin pages
+   (.pin-alerts / detail), NOT /events (.ev-alerts).
+   The single-column stack becomes a compact 2-up form: phone spans
+   the row; ZIP + town pair up; the radius label sits beside its
+   select; the two checkboxes share a row. Input/select font-size is
+   deliberately untouched — fields shrink via padding only, so focus
+   behavior (incl. iOS zoom semantics) is exactly today's. Copy,
+   field order, and POST /text-alerts are unchanged. */
+@media (max-width: 760px) {
+  .below-band-only .text-alerts { margin: 0.55rem auto; padding: 0.55rem 0.7rem 0.6rem; border-radius: 12px; }
+  .below-band-only .text-alerts h3 { font-size: 0.92rem; line-height: 1.15; margin: 0 0 0.15rem; }
+  .below-band-only .text-alerts p { font-size: 0.75rem; line-height: 1.25; margin: 0 0 0.2rem; }
+  .below-band-only .text-alerts-form { grid-template-columns: 1fr 1fr; gap: 0.28rem; margin-top: 0.3rem; }
+  .below-band-only .text-alerts-form input,
+  .below-band-only .text-alerts-form select { padding: 0.32rem 0.55rem; border-radius: 7px; }
+  .below-band-only .text-alerts-form .ta-radius {
+    flex-direction: row; align-items: center; gap: 0.45rem;
+    grid-column: 1 / -1; font-size: 0.78rem; white-space: nowrap;
+  }
+  .below-band-only .text-alerts-form .ta-radius select { flex: 1; }
+  .below-band-only .text-alerts-form .ta-check { font-size: 0.8rem; gap: 0.3rem; }
+  .below-band-only .text-alerts-form .btn { padding: 0.38rem 0.9rem; font-size: 0.85rem; }
+  .below-band-only .text-alerts .ta-consent { font-size: 0.66rem; line-height: 1.3; margin-top: 0.35rem; }
+}
