@@ -216,6 +216,17 @@ function hmLoadTikTok(facade) {
   var eid = facade.getAttribute('data-entry-id');
   if (!eid) { var pm = location.pathname.match(/^\/d\/(\d+)/); if (pm) eid = pm[1]; }
   hmTrack('video_play', eid ? Number(eid) : null);
+  // Retention Wave 3, Item 9: the moment of proven intent — the first
+  // facade play on a pin page gives that page's text-alert prompt a
+  // one-time gentle highlight (a gold edge + soft glow via the
+  // .ta-highlight class; no popups, no modals, no scroll-jacking).
+  // Pin pages are the only pages with a .pin-alerts block, so this is
+  // a no-op on the homepage / /watch facades. facade.dataset.loaded
+  // above already makes this once-per-facade.
+  try {
+    var ta = document.querySelector('.pin-alerts .text-alerts');
+    if (ta) ta.classList.add('ta-highlight');
+  } catch (e) {}
   var url = facade.getAttribute('data-tt-url');
   var bq = document.createElement('blockquote');
   bq.className = 'tiktok-embed';

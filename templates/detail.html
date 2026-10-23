@@ -91,6 +91,23 @@
   {% endif %}
   <p class="votes-big">&#x1F383; {{ entry.votes }} vote{{ 's' if entry.votes != 1 }}</p>
 
+  {% if entry.town_label %}
+  {# Retention Wave 3, Item 9: high-intent text-alert prompt. Placement
+     decision: directly under the media/player area AND the title/meta
+     block (title, town, address, votes) — the visitor has just watched
+     or looked at this haunt and read where it is, which is the proven-
+     intent moment; the prompt still sits in the first screenful on
+     phones, and it does not displace Item 3's under-player video rail
+     (the proven next click). It is the shared _text_alerts.html form
+     (same fields, honeypot, radius/interest defaults and success
+     behaviour as homepage + /events), with the pin's town pre-filled
+     and source="pin-page" so captures attribute per pin page. The
+     .pin-alerts wrapper scopes every style override to this copy. #}
+  <div class="pin-alerts">
+    {% with sms_source = "pin-page", sms_heading = "📱 Text me new haunts near " ~ entry.town_label, sms_sub = "New haunts & Halloween events near " ~ entry.town_label ~ " — texted as they land on the map.", sms_town = entry.town_label %}{% include "_text_alerts.html" %}{% endwith %}
+  </div>
+  {% endif %}
+
   <div class="seen-strip" id="seen-strip" hidden>
     <p class="seen-text"></p>
     <div class="seen-bar"><div class="seen-fill"></div></div>

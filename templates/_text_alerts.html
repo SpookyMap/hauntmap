@@ -3,7 +3,11 @@
    'captured'. No texts are sent until Twilio is configured — the success
    copy says exactly that. When Twilio IS configured, signup redirects
    here with text_alerts=code and the code-entry state renders instead.
-   sms_source is set by the including template via {% with %}. #}
+   sms_source is set by the including template via {% with %}.
+   Optional {% with %} overrides (Wave 3, Item 9 — pin pages): sms_heading
+   / sms_sub replace the heading + intro line, sms_town pre-fills the
+   town field. All three default to EXACTLY today's copy, so the
+   homepage and /events includes render unchanged. #}
 <div class="text-alerts signup-strip" id="text-alerts">
   {% if request.query_params.get('text_alerts') == 'confirmed' %}
   <p class="newsletter-success">&#x2705; You're confirmed — HauntMap text alerts are ON. Reply STOP anytime to end them.</p>
@@ -21,8 +25,8 @@
   {% elif request.query_params.get('text_alerts') %}
   <p class="newsletter-success">&#x1F389; You're on the list — we'll text a confirmation when alerts launch.</p>
   {% else %}
-  <h3>Get text alerts &#x1F4F1;</h3>
-  <p>New haunts &amp; Halloween events near you — texted as they land on the map.</p>
+  <h3>{% if sms_heading %}{{ sms_heading }}{% else %}Get text alerts &#x1F4F1;{% endif %}</h3>
+  <p>{% if sms_sub %}{{ sms_sub }}{% else %}New haunts &amp; Halloween events near you — texted as they land on the map.{% endif %}</p>
   {% if request.query_params.get('sms_error') == 'phone' %}
   <p class="form-error">Please enter a valid 10-digit US mobile number.</p>
   {% elif request.query_params.get('sms_error') == 'zip' %}
@@ -33,7 +37,7 @@
   <form method="post" action="/text-alerts" class="text-alerts-form">
     <input type="tel" name="phone" placeholder="Mobile number" autocomplete="tel" inputmode="tel" required>
     <input type="text" name="zip" placeholder="ZIP code" inputmode="numeric" autocomplete="postal-code">
-    <input type="text" name="town" placeholder="Town, ST (for town-only alerts)" autocomplete="address-level2">
+    <input type="text" name="town" placeholder="Town, ST (for town-only alerts)" autocomplete="address-level2"{% if sms_town %} value="{{ sms_town }}"{% endif %}>
     <label class="ta-radius">How far around you?
       <select name="radius">
         <option value="5">5 miles</option>
