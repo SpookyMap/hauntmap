@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}Flea Markets &amp; Pop-Ups &middot; {{ site_name }}{% endblock %}
+{% block head %}<meta name="description" content="Halloween flea markets, oddities expos, witchy night markets and pop-up shops near you — dates, hours and addresses on HauntMap.">{% endblock %}
+{% block content %}
+<h1>&#x1F6D2; Flea Markets &amp; Pop-Ups</h1>
+<p class="lede">Halloween flea markets, oddities expos, witchy night markets and pop-up shops &mdash; the places to hunt costumes, d&eacute;cor, antiques and curiosities before the big night. Soonest first.</p>
+<p class="music-crosslink">&#x1F3AA; Looking for parties and haunted events instead? <a href="/events">All Events &amp; Parties &rarr;</a></p>
+
+<p class="ev-count">{{ total }} market{{ 's' if total != 1 }} on the map</p>
+
+{% if entries %}
+<div class="grid">
+  {% for e in entries %}
+  <a class="card" href="/d/{{ e.id }}">
+    <div class="card-media">
+      {% if e.media_path %}
+      <img src="{{ e.thumb_card_url or e.thumb_url }}" alt="{{ e.title }}" width="800" height="600" loading="lazy" onerror="this.onerror=null;this.src='{{ e.thumb_url }}'">
+      {% else %}
+      <div class="card-media-empty">&#x1F6D2;</div>
+      {% endif %}
+      {% if e.is_sample %}<span class="sample-badge">Sample</span>{% endif %}
+    </div>
+    <div class="card-body">
+      <h3>{{ e.title }}</h3>
+      <p class="meta">{{ e.town_label }}{% if e.display_name %} &middot; {{ e.display_name }}{% endif %}</p>
+      {% if e.ev_type or e.ev_genre or e.ev_venue %}
+      <p class="ev-chips">{% if e.ev_type %}<span class="ev-chip">{{ e.ev_type }}</span>{% endif %}{% if e.ev_genre %}<span class="ev-chip">{{ e.ev_genre }}</span>{% endif %}{% if e.ev_venue %}<span class="ev-chip">{{ e.ev_venue }}</span>{% endif %}</p>
+      {% endif %}
+      {% if e.votes %}
+      <p class="votes">&#x1F383; {{ e.votes }} vote{{ 's' if e.votes != 1 }}</p>
+      {% elif e.is_new %}
+      <p class="votes votes-new">&#x2728; New this week</p>
+      {% endif %}
+      <span class="tour-add-btn" role="button" tabindex="0" data-tour-btn data-id="{{ e.id }}" data-title="{{ e.title }}" data-town="{{ e.town }}" data-lat="{{ e.lat if e.lat is not none else '' }}" data-lng="{{ e.lng if e.lng is not none else '' }}" data-thumb="{{ e.thumb_url }}">+ Tour</span>
+    </div>
+  </a>
+  {% endfor %}
+</div>
+{% else %}
+<div class="empty">
+  <p class="empty-emoji">&#x1F6D2;</p>
+  <p>No markets on the map yet &mdash; check back as the season builds.</p>
+  <p><a class="btn" href="/events">Browse all events</a></p>
+</div>
+{% endif %}
+<style>
+.ev-chips { display: flex; flex-wrap: wrap; gap: 0.3rem; margin: 0.15rem 0 0.3rem; }
+.ev-chip { display: inline-block; padding: 0.1rem 0.5rem; border-radius: 999px; background: #241a44; border: 1px solid #372b5e; color: #ffd98a; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.03em; }
+.ev-count { margin: 0.4rem 0 0.8rem; color: #cfc4ee; }
+</style>
+{% endblock %}
