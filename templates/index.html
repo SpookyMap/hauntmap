@@ -128,6 +128,16 @@
 </div>
 
 <div class="tt-featured">
+  <div class="tt-facade" data-tt-url="https://www.tiktok.com/@gethauntmap/video/7699668838786370847" data-tt-id="7699668838786370847" role="button" tabindex="0" aria-label="Play TikTok video">
+    <img src="/static/img/tt_featured_scareometer.jpg" alt="New game on HauntMap — the Scare-O-Meter is live — HauntMap on TikTok">
+    <span class="tt-play">&#x25B6;</span>
+    <span class="tt-facade-label">&#x1F3B5; Tap to play video</span>
+  </div>
+  <noscript>
+    <blockquote class="tiktok-embed" cite="https://www.tiktok.com/@gethauntmap/video/7699668838786370847" data-video-id="7699668838786370847" style="max-width: 605px;min-width: 325px;">
+      <section><a href="https://www.tiktok.com/@gethauntmap/video/7699668838786370847" target="_blank" rel="noopener">Watch on TikTok</a></section>
+    </blockquote>
+  </noscript>
   <div class="tt-facade" data-tt-url="https://www.tiktok.com/@gethauntmap/video/7699265030251924767" data-tt-id="7699265030251924767" role="button" tabindex="0" aria-label="Play TikTok video">
     <img src="/static/img/tt_featured_40hours.jpg" alt="He put in 40 hours of decorating — HauntMap on TikTok">
     <span class="tt-play">&#x25B6;</span>
@@ -140,11 +150,12 @@
   </noscript>
   <script>
   (function () {
-    var f = document.currentScript.parentElement.querySelector('.tt-facade');
-    if (!f) return;
-    f.addEventListener('click', function () { hmLoadTikTok(f); });
-    f.addEventListener('keydown', function (e) {
-      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); hmLoadTikTok(f); }
+    var facades = document.currentScript.parentElement.querySelectorAll('.tt-facade');
+    facades.forEach(function (f) {
+      f.addEventListener('click', function () { hmLoadTikTok(f); });
+      f.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); hmLoadTikTok(f); }
+      });
     });
   })();
   </script>
