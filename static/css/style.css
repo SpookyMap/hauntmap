@@ -738,17 +738,13 @@ a.game-card:hover { border-color: #ff7518; transform: translateY(-2px); }
 .header-spooky { height: 118px; width: 168px; object-fit: cover; border-radius: 12px; border: 2px solid #c9a86a; align-self: center; flex: 0 0 auto; }
 @media (max-width: 700px) { .header-spooky { display: none; } }
 
-/* Mobile-first search (homepage, phones only) */
-.mobile-search { display: none; }
+/* (The old .mobile-search block is gone — Oct 23: it merged with
+   the locate panel into the combined .hm-find block under the hero
+   headline; its simple-bar styles live on as .hm-find-form below.) */
 .town-search { padding: 0.45rem 0.6rem; border-radius: 8px; border: 1px solid #372b5e; background: #17122b; color: #e8e6e3; font-size: 0.95rem; min-width: 170px; }
 .votes-new { color: #ffd98a; font-weight: 700; }
 .votes-first { color: #9a8fb8; font-style: italic; }
 @media (max-width: 760px) {
-  .mobile-search { display: grid; gap: 0.5rem; margin: 0.2rem 0 0.7rem; }
-  .mobile-search-form { display: flex; gap: 0.5rem; }
-  .mobile-search-form input { flex: 1; padding: 0.7rem 0.8rem; border-radius: 10px; border: 1px solid #4a4266; background: #000; color: #f5f2ec; font-size: 1rem; }
-  .mobile-search-form input::placeholder { color: #9a93ad; }
-  .mobile-search .btn-locate { width: 100%; padding: 0.7rem; font-size: 1rem; }
   .hero-intro h1.hero-title { font-size: 1.2rem; margin-bottom: 0.4rem; }
   /* Span the header's full content width: in the column header layout the
      nav otherwise shrink-wraps to its widest row and overflows the edge,
@@ -1405,7 +1401,7 @@ a.game-card:hover { border-color: #ff7518; transform: translateY(-2px); }
 .hero-split {
   display: grid;
   grid-template-columns: 1fr;
-  grid-template-areas: "headline" "video" "strip" "sponsor";
+  grid-template-areas: "headline" "search" "video" "strip" "sponsor";
   gap: 0.9rem;
   margin: 0.4rem 0;
 }
@@ -1565,7 +1561,7 @@ a.game-card:hover { border-color: #ff7518; transform: translateY(-2px); }
 
 /* Town-request form inside the hero grid: its own area under the sponsor
    billboard in the left column (last in the stacked order on phone). */
-.hero-split { grid-template-areas: "headline" "video" "strip" "sponsor" "townreq"; }
+.hero-split { grid-template-areas: "headline" "search" "video" "strip" "sponsor" "townreq"; }
 .hero-split .town-request {
   grid-area: townreq; margin: 0; max-width: none; width: 100%;
   box-sizing: border-box; text-align: left;
@@ -1579,7 +1575,7 @@ a.game-card:hover { border-color: #ff7518; transform: translateY(-2px); }
     position: relative; left: 50%; transform: translateX(-50%);
   }
   .hero-split {
-    grid-template-areas: "video headline strip" "sponsor headline strip" "townreq headline strip";
+    grid-template-areas: "video headline strip" "sponsor headline strip" "townreq headline strip" "search search search";
   }
   /* Restyle the form to the 252px column: one field per row, tighter type */
   .hero-split .town-request { padding: 0.85rem 0.75rem 0.9rem; }
@@ -2095,12 +2091,13 @@ body.has-tourbar.has-radio { padding-bottom: 124px; }
       Narrower phones step down proportionally (360px class: 22px
       icons, GIF 86.7x26); wider phones step up (420px+: 28px icons).
       Desktop and the landscape slim row are untouched.
-   2) HOMEPAGE HERO ORDER (phone only). The .mobile-search block now
-      lives inside .hero-split directly after .hero-intro (index.html);
-      it is display:none above 760px, so desktop renders and orders
-      exactly as before. On phones a "search" grid area seats it
-      directly under the headline panel and above the video:
-      headline -> search + Search -> Use my location -> video -> rest. */
+   2) HOMEPAGE HERO ORDER (phone only). The search block lives
+      inside .hero-split directly after .hero-intro (index.html) —
+      since Oct 23 that block is the combined .hm-find (heading +
+      simple search bar + Use my location + Choose my town), one
+      node on every viewport. On phones the "search" grid area seats
+      it directly under the headline panel and above the video:
+      headline -> find block -> video -> rest. */
 @media (max-width: 760px) and (orientation: portrait) {
   .site-header.v2 .header-nav { justify-content: flex-start; gap: 3px; }
   .site-header.v2 .header-nav a.events-link { flex: 0 0 auto; }
@@ -2133,7 +2130,7 @@ body.has-tourbar.has-radio { padding-bottom: 124px; }
 }
 @media (max-width: 760px) {
   .hero-split { grid-template-areas: "headline" "search" "video" "strip" "sponsor" "townreq"; }
-  .hero-split .mobile-search { grid-area: search; margin: 0; }
+  .hero-split .hm-find { grid-area: search; margin: 0; }
 }
 
 /* ============ z65: PHONE NAV — TWO ROWS OF FIVE (Dan, Oct 22; supersedes the z64 single row) ====
@@ -2300,40 +2297,10 @@ body.has-tourbar.has-radio { padding-bottom: 124px; }
     margin-top: 0.6rem; text-align: left;
   }
 
-  /* Airbnb-style pill: one BLACK bar (Dan, Oct 23 — was cream),
-     segmented fields, round orange Search button. Submits the
-     homepage's real params (town_search / cat / scare) to GET /. */
-  .hero-search {
-    display: flex; align-items: stretch;
-    background: #000; border: 1px solid rgba(255, 255, 255, 0.32);
-    border-radius: 999px; padding: 0.4rem;
-    max-width: 720px; width: 100%; margin: 0 auto;
-    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45);
-  }
-  .hero-search-seg {
-    flex: 1 1 0; min-width: 0; display: flex; flex-direction: column;
-    justify-content: center; padding: 0.3rem 1rem; cursor: pointer;
-  }
-  .hero-search-seg + .hero-search-seg { border-left: 1px solid rgba(255, 255, 255, 0.22); }
-  .hero-search-label {
-    font-size: 0.66rem; font-weight: 800; letter-spacing: 0.08em;
-    text-transform: uppercase; color: #c9a7ff;
-  }
-  .hero-search-seg input,
-  .hero-search-seg select {
-    border: 0; background: transparent; color: #f5f2ec; width: 100%;
-    font: inherit; font-size: 0.92rem; padding: 0.1rem 0; outline: none;
-  }
-  .hero-search-seg input::placeholder { color: #9a93ad; }
-  .hero-search-seg select option { color: #17122b; background: #ffffff; }
-  .hero-search-btn {
-    flex: 0 0 auto; display: flex; align-items: center; gap: 0.45rem;
-    background: #ff7518; color: #fff; border: 0; border-radius: 999px;
-    font: inherit; font-weight: 800; font-size: 0.95rem;
-    padding: 0.6rem 1.25rem; cursor: pointer;
-  }
-  .hero-search-btn:hover { background: #e0640d; }
-
+  /* (The Airbnb-style search pill that used to sit here moved out
+     on Oct 23 — Dan merged it with the locate panel and the phone
+     search into the ONE combined .hm-find block under the headline;
+     its styles went with it. See the Wave-2 section below.) */
   /* Sub-blocks: near-you and text-alerts keep their own panels;
      trending gets a translucent panel so its rows stay readable
      over the hero photo. */
@@ -2871,60 +2838,84 @@ body.has-tourbar #hm-capture { bottom: 4.4rem; }
 #hm-capture .ta-consent { font-size: 0.72rem; color: #9d8fc7; margin-top: 0.6rem; line-height: 1.4; }
 
 /* ============ Retention Wave 2, Items 1 + 4 (homepage only) ========
-   Item 1: the one-tap locate prompt — same purple panel language as
-   .near-you, orange primary like the other location actions. Hidden
-   until its script adds .show (no hm_town + not dismissed <7 days),
-   so there is no flash for visitors who already have a town.
+   Item 1 (REVISED Oct 23, Dan): the one-tap locate prompt no longer
+   stands alone above the hero. It merged with the hero's simple
+   search bar and the duplicate locate button under it into ONE
+   combined block, .hm-find, seated with the search bar directly
+   under the hero headline (grid area "search" in .hero-split):
+   heading "See the haunts closest to you" (the old "— one tap, no
+   typing." tail is gone), the original simple bar (black Town-or-ZIP
+   input + Search), ONE Use-my-location button, Choose-my-town link.
+   Always rendered — it is part of the hero now, so the old panel's
+   7-day dismissal is gone with the panel. Same purple panel language
+   as .near-you, orange primary like the other location actions.
    Item 4: body.hm-returning (set by index.html's detector when the
    hm_visited flag exists) collapses the hero to a slim bar and shows
    the welcome-back slimbar; every section stays in the DOM — the
    class only hides/shrinks — and "See full homepage" drops the
-   class, restoring today's layout exactly. Header untouched. */
-.hm-locate {
-  display: none;
-  margin: 0.7rem 0 0.2rem; padding: 0.85rem 1rem;
+   class, restoring today's layout exactly. .hm-find is NOT hidden
+   for returners: it stays reachable under the welcome bar. Header
+   untouched. */
+.hm-find {
+  margin: 0; padding: 0.85rem 1rem;
   background: linear-gradient(160deg, #241a44, #17122b);
   border: 1px solid #ff7518; border-radius: 14px;
 }
-.hm-locate.show { display: block; }
-.hm-locate-text { margin: 0 0 0.6rem; color: #f5f2ec; font-size: 1rem; }
-.hm-locate-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem; }
-.hm-locate-btn { font-size: 1rem; padding: 0.6rem 1.1rem; }
-.hm-locate-x {
-  margin-left: auto; background: transparent; border: 0; color: #c9bce8;
-  font-size: 1.35rem; line-height: 1; cursor: pointer; padding: 0.2rem 0.4rem;
+.hero-split .hm-find { grid-area: search; }
+.hm-find-text { margin: 0 0 0.6rem; color: #f5f2ec; font-size: 1.05rem; }
+/* The hero's ORIGINAL simple search bar, values unchanged from the
+   old .mobile-search-form: black input, Search button beside it. */
+.hm-find-form { display: flex; gap: 0.5rem; margin: 0 0 0.6rem; }
+.hm-find-form input { flex: 1; min-width: 0; padding: 0.7rem 0.8rem; border-radius: 10px; border: 1px solid #4a4266; background: #000; color: #f5f2ec; font-size: 1rem; }
+.hm-find-form input::placeholder { color: #9a93ad; }
+.hm-find-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem; }
+.hm-find-btn { font-size: 1rem; padding: 0.6rem 1.1rem; }
+.hm-find-msg { margin: 0.6rem 0 0; color: #ffb066; font-weight: 600; }
+.hm-find-msg[hidden] { display: none; }
+.hm-find-msg a { color: #ffd9a0; }
+@media (min-width: 761px) {
+  /* On the full-width laptop row the bar keeps a readable measure. */
+  .hm-find-form { max-width: 620px; }
 }
-.hm-locate-x:hover { color: #fff; }
-.hm-locate-msg { margin: 0.6rem 0 0; color: #ffb066; font-weight: 600; }
-.hm-locate-msg[hidden] { display: none; }
-.hm-locate-msg a { color: #ffd9a0; }
 
+/* Slim strip (Dan, Oct 23: "much thinner and smaller" — the old
+   pill wrapped into a tall card on phones). One row, two lines max
+   at 390px: ~13px text, hairline padding, middot separators, and
+   "See full homepage" demoted from a pill button to a small text
+   link at the end of the row. Segments keep their graceful states
+   (the Passport segment still hides until the visitor has stamps). */
 .hm-slimbar {
   display: none;
-  flex-wrap: wrap; align-items: center; gap: 0.4rem 1rem;
-  margin: 0.5rem 0 0.2rem; padding: 0.5rem 0.85rem;
+  flex-wrap: wrap; align-items: center; gap: 0.15rem 0.55rem;
+  margin: 0.4rem 0 0.15rem; padding: 0.32rem 0.7rem;
   background: linear-gradient(135deg, #241640 0%, #311d55 100%);
-  border: 1px solid #4a2d7a; border-radius: 999px;
+  border: 1px solid #4a2d7a; border-radius: 12px;
+  font-size: 0.82rem; line-height: 1.3;
 }
 body.hm-returning .hm-slimbar { display: flex; }
-.hm-slimbar-welcome { font-weight: 800; color: #FFF8E7; }
-.hm-slimbar-link { color: #f3eefc; text-decoration: none; font-size: 0.92rem; font-weight: 600; }
+.hm-slimbar-welcome { font-weight: 800; color: #FFF8E7; white-space: nowrap; }
+.hm-slimbar-link { color: #f3eefc; text-decoration: none; font-weight: 600; white-space: nowrap; }
 .hm-slimbar-link:hover { text-decoration: underline; }
 .hm-slimbar-link[hidden] { display: none; }
-.hm-slimbar .hm-full-btn { margin-left: auto; padding: 0.32rem 0.8rem; font-size: 0.85rem; white-space: nowrap; }
+.hm-slimbar-link::before,
+.hm-slimbar .hm-full-btn::before { content: "\00B7"; margin-right: 0.55rem; color: #9a8fb8; }
+.hm-slimbar .hm-full-btn {
+  margin-left: auto; padding: 0; background: none; border: 0; cursor: pointer;
+  color: #c9a7ff; font: inherit; font-weight: 600; white-space: nowrap;
+}
+.hm-slimbar .hm-full-btn:hover { text-decoration: underline; }
 
 /* Compact hero: the big first-visit furniture goes away, the hero
    intro shrinks to a slim left-aligned bar, and the laptop hero grid
    collapses to its headline column (its Near-you copy — the "Tonight
-   near you" module — stays; search / Trending / Text Alerts copies
-   inside the hero stack hide, their below-band phone copies and the
-   Tonight cluster below are untouched). */
+   near you" module — stays, and so does the combined .hm-find block
+   under the headline; Trending / Text Alerts copies inside the hero
+   stack hide, their below-band phone copies and the Tonight cluster
+   below are untouched). */
 body.hm-returning .tt-featured,
 body.hm-returning .tt-follow-vert,
 body.hm-returning .sponsor-section,
 body.hm-returning .town-request,
-body.hm-returning .mobile-search,
-body.hm-returning .hero-stack .hero-search,
 body.hm-returning .hero-stack .trending,
 body.hm-returning .hero-stack .text-alerts { display: none; }
 body.hm-returning .hero-intro { padding: 0.55rem 1rem 0.35rem; text-align: left; }
@@ -2933,14 +2924,12 @@ body.hm-returning .hero-stack { margin-top: 0.2rem; gap: 0.5rem; }
 @media (min-width: 1000px) {
   body.hm-returning .hero-split {
     grid-template-columns: 1fr;
-    grid-template-areas: "headline";
+    grid-template-areas: "headline" "search";
   }
 }
 @media (max-width: 760px) {
-  .hm-locate { padding: 0.7rem 0.8rem; }
-  .hm-locate-btn { width: 100%; }
-  .hm-locate-x { margin-left: 0; }
+  .hm-find { padding: 0.7rem 0.8rem; }
+  .hm-find-actions { flex-direction: column; align-items: stretch; }
+  .hm-find-btn { width: 100%; padding: 0.7rem; }
   body.hm-returning .hero-intro h1.hero-title { font-size: 1.05rem; }
-  .hm-slimbar { border-radius: 14px; }
-  .hm-slimbar .hm-full-btn { margin-left: 0; }
 }

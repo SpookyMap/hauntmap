@@ -27,9 +27,9 @@ function hmFullHomepage() {
 </script>
 <div class="hm-slimbar" id="hm-slimbar">
   <span class="hm-slimbar-welcome">&#x1F383; Welcome back!</span>
-  <a class="hm-slimbar-link" id="hm-slim-fright" href="/daily">&#x1F319; Daily Fright &mdash; today&#x27;s drop</a>
+  <a class="hm-slimbar-link" id="hm-slim-fright" href="/daily">&#x1F319; Daily Fright: today&#x27;s drop</a>
   <a class="hm-slimbar-link" id="hm-slim-passport" href="/passport" hidden></a>
-  <button type="button" class="btn btn-ghost hm-full-btn" onclick="hmFullHomepage()">See full homepage</button>
+  <button type="button" class="hm-full-btn" onclick="hmFullHomepage()">See full homepage</button>
   <script>
   (function () {
     // Summaries reuse the existing client-side systems: Daily Fright
@@ -43,7 +43,7 @@ function hmFullHomepage() {
       var last = hmFrightGetCookie('hm_fright_last');
       var el = document.getElementById('hm-slim-fright');
       if (el && streak >= 2 && last === hmFrightTodayET()) {
-        el.textContent = '\u{1F525} Day ' + streak + ' of Daily Fright \u2014 see today\u2019s drop';
+        el.textContent = '\u{1F525} Daily Fright: Day ' + streak;
       }
     } catch (e) {}
     try {
@@ -52,9 +52,9 @@ function hmFullHomepage() {
         if (!s.pins) return;
         var p = document.getElementById('hm-slim-passport');
         if (!p) return;
-        p.textContent = '\u{1F383} Haunt Passport \u2014 ' + s.pins +
-          ' haunt' + (s.pins === 1 ? '' : 's') + ' seen \u00B7 ' + s.started +
-          ' town' + (s.started === 1 ? '' : 's') + ' started';
+        p.textContent = '\u{1F383} Passport: ' + s.pins +
+          ' haunt' + (s.pins === 1 ? '' : 's') + ' \u00B7 ' + s.started +
+          ' town' + (s.started === 1 ? '' : 's');
         p.hidden = false;
       });
     } catch (e) {}
@@ -70,26 +70,114 @@ function hmFullHomepage() {
   <a class="music-btn" href="/music">&#x1F3B5; HauntMap Music</a>
   <a class="movies-btn" href="/movies">&#x1F3AC; HauntMap Movies</a>
 </div>
-{# Retention Wave 2, Item 1: one-tap geolocation prompt. Shown ONLY
-   when the visitor has no saved hm_town and hasn't dismissed it in
-   the last 7 days (localStorage 'hm_locate_dismiss', ms timestamp).
-   Nothing is requested on load — the browser prompt fires only on
-   tap. On a fix, the nearest town centroid (town_centers, the same
-   rows detail pages embed for the video chain) wins and its LABEL —
-   e.g. "Cranford, NJ", the same value the Near-you chips link to and
-   the /nearby + town-filter flows store — is saved as hm_town, then
-   the existing Near-you "Your town" lines update in place (no
-   reload). Denied / unavailable / in-app-webview (TikTok) failures
-   land on an inline message that points at the existing /nearby
-   town picker — never a dead end. #}
-<div class="hm-locate" id="hm-locate" role="region" aria-label="Find haunts near you">
-  <p class="hm-locate-text">&#x1F383; <strong>See the haunts closest to you</strong> &mdash; one tap, no typing.</p>
-  <div class="hm-locate-actions">
-    <button type="button" class="btn hm-locate-btn" id="hm-locate-btn">&#x1F4CD; Use my location</button>
+<div class="hero-split">
+<div class="hero-intro">
+  <h1 class="hero-title">Find the Best Halloween Displays <span class="hero-title-alt">Near You</span></h1>
+
+{# Laptop hero stack (z67, Dan Oct 22): inside the hero photo panel,
+   under the headline — Near-you, then Trending, then Text Alerts,
+   each in its own sub-block. (The z67 Airbnb-style search pill that
+   used to lead the stack moved out on Oct 23: Dan merged it with the
+   locate panel and the phone search into ONE combined find block
+   under the headline — see .hm-find below.) .hero-stack is
+   display:none below 761px and the original below-band copies are
+   hidden at >=761px, so every viewport sees exactly one copy of each
+   module: phones keep theirs below Tonight's band, untouched. #}
+<div class="hero-stack">
+  {% if near_towns %}
+  <section class="near-you hero-copy" aria-label="Near you tonight">
+    <div class="near-you-head">
+      <h2>&#x1F4CD; {{ near_heading }}</h2>
+      <a class="near-you-change" href="/nearby">Change area</a>
+    </div>
+    <p class="near-you-sub">{{ near_sub }}</p>
+    <p class="near-you-mine" hidden>&#x1F4CD; Your town: <a class="js-town-link" href="/nearby"></a> — <a href="/nearby">see what's near it &rarr;</a></p>
+    <div class="town-chips">
+      {% for t in near_towns %}
+      <a class="town-chip" href="/?town={{ t.label|urlencode }}">{{ t.label }} <span class="chip-n">{{ t.count }} haunt{{ 's' if t.count != 1 }}</span></a>
+      {% endfor %}
+    </div>
+    <div class="near-you-actions">
+      <a class="btn btn-ghost" href="/nearby">Search your town</a>
+    </div>
+    <script>
+    (function () {
+      try {
+        var t = localStorage.getItem('hm_town');
+        if (!t) return;
+        var box = document.currentScript.closest('.near-you').querySelector('.near-you-mine');
+        var link = box.querySelector('.js-town-link');
+        link.textContent = t;
+        link.href = '/?town=' + encodeURIComponent(t);
+        box.hidden = false;
+      } catch (e) {}
+    })();
+    </script>
+  </section>
+  {% endif %}
+
+  {% if trending %}
+  <section class="trending hero-copy" aria-label="Trending today">
+    <h2>&#x1F525; Trending today</h2>
+    <div class="rail trending-rail">
+      {% for p in trending %}
+      <a class="card rail-card" href="/d/{{ p.id }}">
+        <div class="card-media">
+          {% if p.media_type == 'video' %}
+          {% if p.thumb_path %}<img src="{{ p.thumb_card_url or p.thumb_url }}" alt="{{ p.title }}" width="800" height="600" loading="lazy" onerror="this.onerror=null;this.src='{{ p.thumb_url }}'">{% else %}<div class="card-media-empty">&#x1F3AC;</div>{% endif %}
+          <span class="play-badge">&#x25B6;</span>
+          {% else %}
+          <img src="{{ p.thumb_card_url or p.thumb_url }}" alt="{{ p.title }}" width="800" height="600" loading="lazy" onerror="this.onerror=null;this.src='{{ p.thumb_url }}'">
+          {% endif %}
+          <span class="rank-badge">#{{ loop.index }}</span>
+        </div>
+        <div class="card-body">
+          <h3>{{ p.title }}</h3>
+          <p class="meta">{{ p.town_label }}</p>
+          <p class="views-line">&#x1F441;&#xFE0F; {{ p._views }} view{{ 's' if p._views != 1 }}</p>
+          <span class="tour-add-btn" role="button" tabindex="0" data-tour-btn data-id="{{ p.id }}" data-title="{{ p.title }}" data-town="{{ p.town }}" data-lat="{{ p.lat if p.lat is not none else '' }}" data-lng="{{ p.lng if p.lng is not none else '' }}" data-thumb="{{ p.thumb_url }}">+ Tour</span>
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+  {% if trending %}
+  {% with sms_source = "homepage" %}{% include "_text_alerts.html" %}{% endwith %}
+  {% endif %}
+</div>
+</div>
+
+{# Combined find block (Dan, Oct 23): ONE block seated with the
+   search bar directly under the hero headline, merging three blocks
+   that used to stack here — the Wave-2 #hm-locate panel (which sat
+   above the hero), the hero's simple search bar, and the duplicate
+   Use-my-location button under that bar. Contents: the heading, the
+   ORIGINAL simple search bar (black Town-or-ZIP input + Search,
+   GET /nearby — same look, same behaviour, NOT a redesign), ONE
+   Use-my-location button, and the Choose-my-town fallback. The
+   button keeps the panel's logic: geolocation -> nearest of the
+   town_centers centroids -> save the canonical label as hm_town ->
+   both Near-you copies rebuild in place; denied / unavailable /
+   in-app-webview failures land on the message line, which points at
+   the /nearby town picker — never a dead end. Nothing is requested
+   on load; the browser prompt fires only on tap. The block lives in
+   the old .mobile-search seat (grid area "search" in .hero-split),
+   so it sits directly under the headline panel on phone and laptop
+   alike, and body.hm-returning does NOT hide it: returning visitors
+   keep it under the welcome bar. #}
+<div class="hm-find" id="hm-find" role="region" aria-label="Find haunts near you">
+  <p class="hm-find-text">&#x1F383; <strong>See the haunts closest to you</strong></p>
+  <form method="get" action="/nearby" class="hm-find-form" role="search">
+    <input type="text" name="q" placeholder="&#x1F50D; Town or ZIP" autocomplete="off">
+    <button type="submit" class="btn">Search</button>
+  </form>
+  <div class="hm-find-actions">
+    <button type="button" class="btn hm-find-btn" id="hm-locate-btn">&#x1F4CD; Use my location</button>
     <a class="btn btn-ghost" href="/nearby">Choose my town instead</a>
-    <button type="button" class="hm-locate-x" id="hm-locate-x" aria-label="Not now">&times;</button>
   </div>
-  <p class="hm-locate-msg" id="hm-locate-msg" hidden></p>
+  <p class="hm-find-msg" id="hm-locate-msg" hidden></p>
 </div>
 <script>
 (function () {
@@ -143,24 +231,16 @@ function hmFullHomepage() {
     });
   }
   try {
-    if (localStorage.getItem('hm_town')) return;
-    var dismissed = parseInt(localStorage.getItem('hm_locate_dismiss') || '0', 10) || 0;
-    if (dismissed && (Date.now() - dismissed) < 7 * 24 * 3600 * 1000) return;
-    var box = document.getElementById('hm-locate');
-    if (!box) return;
-    box.classList.add('show');
     var msg = document.getElementById('hm-locate-msg');
     var btn = document.getElementById('hm-locate-btn');
+    if (!btn || !msg) return;
+    var label = btn.innerHTML;
     function fail(html) {
       msg.innerHTML = html;
       msg.hidden = false;
       btn.disabled = false;
-      btn.innerHTML = '&#x1F4CD; Use my location';
+      btn.innerHTML = label;
     }
-    document.getElementById('hm-locate-x').addEventListener('click', function () {
-      try { localStorage.setItem('hm_locate_dismiss', String(Date.now())); } catch (e) {}
-      box.classList.remove('show');
-    });
     btn.addEventListener('click', function () {
       if (!navigator.geolocation || !navigator.geolocation.getCurrentPosition) {
         fail('Location isn\u2019t available in this browser \u2014 <a href="/nearby">choose your town instead</a>.');
@@ -180,7 +260,10 @@ function hmFullHomepage() {
         }
         try { localStorage.setItem('hm_town', best[0]); } catch (e) {}
         applyTown(best[0], pos.coords.latitude, pos.coords.longitude);
-        box.classList.remove('show');
+        btn.disabled = false;
+        btn.innerHTML = label;
+        msg.textContent = '\u{1F4CD} You\u2019re set \u2014 Near You now leads with the towns closest to ' + best[0] + '.';
+        msg.hidden = false;
       }, function () {
         fail('Couldn\u2019t get your location \u2014 it may be blocked in this app\u2019s browser. <a href="/nearby">Choose your town instead</a>.');
       }, { timeout: 10000, maximumAge: 600000 });
@@ -188,124 +271,6 @@ function hmFullHomepage() {
   } catch (e) {}
 })();
 </script>
-<div class="hero-split">
-<div class="hero-intro">
-  <h1 class="hero-title">Find the Best Halloween Displays <span class="hero-title-alt">Near You</span></h1>
-
-{# Laptop hero stack (z67, Dan Oct 22): inside the hero photo panel,
-   under the headline — Airbnb-style search pill, then Near-you, then
-   Trending, then Text Alerts, each in its own sub-block. .hero-stack
-   is display:none below 761px and the original below-band copies are
-   hidden at >=761px, so every viewport sees exactly one copy of each
-   module: phones keep theirs below Tonight's band, untouched. #}
-<div class="hero-stack">
-  <form method="get" action="/" class="hero-search" role="search">
-    <label class="hero-search-seg">
-      <span class="hero-search-label">Where</span>
-      <input type="text" name="town_search" placeholder="Town or ZIP" autocomplete="off">
-    </label>
-    <label class="hero-search-seg">
-      <span class="hero-search-label">What</span>
-      <select name="cat">
-        <option value="halloween" {% if cat == 'halloween' %}selected{% endif %}>&#x1F383; Haunt Map</option>
-        <option value="christmas" {% if cat == 'christmas' %}selected{% endif %}>&#x1F384; Jolly Map</option>
-        <option value="haunted_houses" {% if cat == 'haunted_houses' %}selected{% endif %}>&#x1F3DA;&#xFE0F; Haunted Houses</option>
-        <option value="events" {% if cat == 'events' %}selected{% endif %}>&#x1F3AA; Events</option>
-        <option value="halloween_stores" {% if cat == 'halloween_stores' %}selected{% endif %}>&#x1F47B; Halloween Stores</option>
-        <option value="live" {% if cat == 'live' %}selected{% endif %}>&#x1F534; Live</option>
-      </select>
-    </label>
-    <label class="hero-search-seg">
-      <span class="hero-search-label">Scare level</span>
-      <select name="scare">
-        <option value="" {% if not scare %}selected{% endif %}>Any scare level</option>
-        <option value="family" {% if scare == 'family' %}selected{% endif %}>&#x1F60A; Family</option>
-        <option value="spooky" {% if scare == 'spooky' %}selected{% endif %}>&#x1F47B; Spooky</option>
-        <option value="creepy" {% if scare == 'creepy' %}selected{% endif %}>&#x1F9DB; Creepy</option>
-        <option value="terrifying" {% if scare == 'terrifying' %}selected{% endif %}>&#x1F631; Terrifying</option>
-        <option value="extreme" {% if scare == 'extreme' %}selected{% endif %}>&#x1F480; Extreme</option>
-      </select>
-    </label>
-    <button type="submit" class="hero-search-btn">&#x1F50D;<span>Search</span></button>
-  </form>
-
-  {% if near_towns %}
-  <section class="near-you hero-copy" aria-label="Near you tonight">
-    <div class="near-you-head">
-      <h2>&#x1F4CD; {{ near_heading }}</h2>
-      <a class="near-you-change" href="/nearby">Change area</a>
-    </div>
-    <p class="near-you-sub">{{ near_sub }}</p>
-    <p class="near-you-mine" hidden>&#x1F4CD; Your town: <a class="js-town-link" href="/nearby"></a> — <a href="/nearby">see what's near it &rarr;</a></p>
-    <div class="town-chips">
-      {% for t in near_towns %}
-      <a class="town-chip" href="/?town={{ t.label|urlencode }}">{{ t.label }} <span class="chip-n">{{ t.count }} haunt{{ 's' if t.count != 1 }}</span></a>
-      {% endfor %}
-    </div>
-    <div class="near-you-actions">
-      <button type="button" class="btn" onclick="hmNearMe()">&#x1F4CD; Use my location</button>
-      <a class="btn btn-ghost" href="/nearby">Search your town</a>
-    </div>
-    <script>
-    (function () {
-      try {
-        var t = localStorage.getItem('hm_town');
-        if (!t) return;
-        var box = document.currentScript.closest('.near-you').querySelector('.near-you-mine');
-        var link = box.querySelector('.js-town-link');
-        link.textContent = t;
-        link.href = '/?town=' + encodeURIComponent(t);
-        box.hidden = false;
-      } catch (e) {}
-    })();
-    </script>
-  </section>
-  {% endif %}
-
-  {% if trending %}
-  <section class="trending hero-copy" aria-label="Trending today">
-    <h2>&#x1F525; Trending today</h2>
-    <div class="rail trending-rail">
-      {% for p in trending %}
-      <a class="card rail-card" href="/d/{{ p.id }}">
-        <div class="card-media">
-          {% if p.media_type == 'video' %}
-          {% if p.thumb_path %}<img src="{{ p.thumb_card_url or p.thumb_url }}" alt="{{ p.title }}" width="800" height="600" loading="lazy" onerror="this.onerror=null;this.src='{{ p.thumb_url }}'">{% else %}<div class="card-media-empty">&#x1F3AC;</div>{% endif %}
-          <span class="play-badge">&#x25B6;</span>
-          {% else %}
-          <img src="{{ p.thumb_card_url or p.thumb_url }}" alt="{{ p.title }}" width="800" height="600" loading="lazy" onerror="this.onerror=null;this.src='{{ p.thumb_url }}'">
-          {% endif %}
-          <span class="rank-badge">#{{ loop.index }}</span>
-        </div>
-        <div class="card-body">
-          <h3>{{ p.title }}</h3>
-          <p class="meta">{{ p.town_label }}</p>
-          <p class="views-line">&#x1F441;&#xFE0F; {{ p._views }} view{{ 's' if p._views != 1 }}</p>
-          <span class="tour-add-btn" role="button" tabindex="0" data-tour-btn data-id="{{ p.id }}" data-title="{{ p.title }}" data-town="{{ p.town }}" data-lat="{{ p.lat if p.lat is not none else '' }}" data-lng="{{ p.lng if p.lng is not none else '' }}" data-thumb="{{ p.thumb_url }}">+ Tour</span>
-        </div>
-      </a>
-      {% endfor %}
-    </div>
-  </section>
-  {% endif %}
-
-  {% if trending %}
-  {% with sms_source = "homepage" %}{% include "_text_alerts.html" %}{% endwith %}
-  {% endif %}
-</div>
-</div>
-
-{# Phone-only placement (z64): .mobile-search is display:none above
-   760px, so on desktop this node renders nothing and the homepage
-   order is unchanged. On phones the z64 grid areas seat it directly
-   under the headline panel, above the video. #}
-<div class="mobile-search">
-  <form method="get" action="/nearby" class="mobile-search-form">
-    <input type="text" name="q" placeholder="&#x1F50D; Town or ZIP" autocomplete="off">
-    <button type="submit" class="btn">Search</button>
-  </form>
-  <button type="button" class="btn btn-locate" onclick="hmNearMe()">&#x1F4CD; Use my location</button>
-</div>
 
 {# Item 7 audit (Oct 23): these three featured facades are @gethauntmap
    PROMO posts (Scare-O-Meter launch, 40-hours, Northeast coverage).
@@ -462,7 +427,6 @@ function hmFullHomepage() {
     {% endfor %}
   </div>
   <div class="near-you-actions">
-    <button type="button" class="btn" onclick="hmNearMe()">&#x1F4CD; Use my location</button>
     <a class="btn btn-ghost" href="/nearby">Search your town</a>
   </div>
   <script>
