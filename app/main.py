@@ -3876,6 +3876,39 @@ async def sms_inbound(request: Request):
     return Response(twiml, media_type="text/xml")
 
 
+def _entries_with_views(conn, cat: str) -> list[dict]:
+    """Every visible entry in a category with its detail-page view count
+    attached as _views — the ranking currency Top Haunts has used since
+    Dan's Oct 23 change (detail-page views, same LEFT JOIN as the
+    original leaderboard query and the homepage Trending strip)."""
+    return [row_to_dict(r) for r in conn.execute(
+        "SELECT e.*, COALESCE(v.views, 0) AS _views FROM entries e "
+        "LEFT JOIN (SELECT CAST(substr(path, 4) AS INTEGER) AS eid, "
+        "                  COUNT(*) AS views FROM page_views "
+        "                  WHERE path LIKE '/d/%' GROUP BY eid) v "
+        "  ON v.eid = e.id "
+        "WHERE e.hidden = 0 AND e.category = ?",
+        (cat,),
+    ).fetchall()]
+
+
+def _rank_with_featured(entries: list[dict], limit: int) -> list[dict]:
+    """Rank entries for a Top-N list, honoring editor's-pick pins.
+
+    Base order is the site's ranking currency: detail-page views DESC,
+    votes DESC, id. A pin flagged is_featured (Dan's hand-picked
+    "feature as top 10" placements) is guaranteed a slot: featured pins
+    lead the list (in base order among themselves) and the remaining
+    slots fill from the base order. View/vote counts are NEVER altered —
+    a featured pin shows its real counts beside a ⭐ Featured marker, so
+    the placement is editorial and labeled as such."""
+    def key(e):
+        return (-(e.get("_views") or 0), -(e.get("votes") or 0), e["id"])
+    featured = sorted((e for e in entries if e.get("is_featured")), key=key)
+    rest = sorted((e for e in entries if not e.get("is_featured")), key=key)
+    return (featured + rest)[:limit]
+
+
 @app.get("/leaderboard", response_class=HTMLResponse)
 def leaderboard(request: Request, cat: str = "halloween"):
     cat = cat if cat in CATEGORIES else "halloween"
@@ -3884,16 +3917,10 @@ def leaderboard(request: Request, cat: str = "halloween"):
         # homepage Trending strip — votes aren't flowing yet, so the old
         # votes-first board was effectively newest-first. Revisit votes
         # as a ranking input once they pick up.
-        top = [row_to_dict(r) for r in conn.execute(
-            "SELECT e.*, COALESCE(v.views, 0) AS _views FROM entries e "
-            "LEFT JOIN (SELECT CAST(substr(path, 4) AS INTEGER) AS eid, "
-            "                  COUNT(*) AS views FROM page_views "
-            "                  WHERE path LIKE '/d/%' GROUP BY eid) v "
-            "  ON v.eid = e.id "
-            "WHERE e.hidden = 0 AND e.category = ? "
-            "ORDER BY _views DESC, e.votes DESC, e.id LIMIT 15",
-            (cat,),
-        ).fetchall()]
+        # Top 10 by State staging: the overall list now goes through
+        # _rank_with_featured, so a flagged editor's pick is guaranteed
+        # a slot here too (⭐ Featured marker; counts untouched).
+        top = _rank_with_featured(_entries_with_views(conn, cat), 15)
         per_town = []
         for t in towns(cat):
             rows = conn.execute(
@@ -3904,6 +3931,67 @@ def leaderboard(request: Request, cat: str = "halloween"):
             per_town.append({"town": t, "entries": [row_to_dict(r) for r in rows]})
     return templates.TemplateResponse(request, "leaderboard.html",
         {"request": request, "top": top, "per_town": per_town,
+         "cat": cat, "cat_labels": CAT_LABELS, "cat_emoji": CAT_EMOJI}
+    )
+
+
+# ------------------------------------------- Top 10 by State (staged)
+#
+# Dan, Oct 23: "We should make a top ten list for every state."
+# One clean ranked list per state, ranked by the same currency as Top
+# Haunts (detail-page views), fewer than 10 rows where a state has
+# fewer than 10 pins. Editor's picks (is_featured) are guaranteed a
+# slot in their state's list via _rank_with_featured and carry a
+# ⭐ Featured marker — counts are never altered.
+#
+# Metro groups: a featured pick can belong to a metro that spans
+# states (Dan's Silver Spring, MD pick is his "top ten in DMV" pick —
+# DMV = DC/MD/VA, not a state). The pin is honored on its own state's
+# list regardless; METRO_GROUPS additionally renders a combined metro
+# Top 10 above the state sections so Dan can decide at preview
+# whether metro spotlights live alongside the state lists.
+METRO_GROUPS = (
+    {"code": "DMV", "name": "DMV — DC · Maryland · Virginia",
+     "states": ("DC", "MD", "VA")},
+)
+
+
+@app.get("/leaderboard/states", response_class=HTMLResponse)
+def leaderboard_states(request: Request, cat: str = "halloween"):
+    cat = cat if cat in CATEGORIES else "halloween"
+    with get_conn(DB_PATH) as conn:
+        entries = _entries_with_views(conn, cat)
+    by_state: dict[str, list[dict]] = {}
+    for e in entries:
+        code = extract_state(e.get("town") or "")
+        if not code:
+            continue  # no parseable state in the town label — the pin
+            # still ranks in the overall Top Haunts, just no state list
+        by_state.setdefault(code, []).append(e)
+    states = []
+    for code, rows in by_state.items():
+        states.append({
+            "code": code,
+            "name": US_STATE_NAMES.get(code, code),
+            "count": len(rows),
+            "total_views": sum(e["_views"] for e in rows),
+            "entries": _rank_with_featured(rows, 10),
+        })
+    # Most pins first, then most views — the states with the deepest
+    # lists lead the page.
+    states.sort(key=lambda s: (-s["count"], -s["total_views"], s["name"]))
+    metros = []
+    for g in METRO_GROUPS:
+        rows = [e for code in g["states"] for e in by_state.get(code, [])]
+        if not rows:
+            continue
+        metros.append({
+            "code": g["code"], "name": g["name"],
+            "count": len(rows),
+            "entries": _rank_with_featured(rows, 10),
+        })
+    return templates.TemplateResponse(request, "leaderboard_states.html",
+        {"request": request, "states": states, "metros": metros,
          "cat": cat, "cat_labels": CAT_LABELS, "cat_emoji": CAT_EMOJI}
     )
 
@@ -4047,7 +4135,7 @@ def town_page(request: Request, slug: str):
 @app.get("/sitemap.xml")
 def sitemap():
     base = "https://gethauntmap.com"
-    urls = ["/", "/map", "/nearby", "/tour", "/diy", "/diy-costumes", "/games", "/leaderboard",
+    urls = ["/", "/map", "/nearby", "/tour", "/diy", "/diy-costumes", "/games", "/leaderboard", "/leaderboard/states",
             "/towns", "/passport", "/daily", "/advertise", "/media-kit", "/about", "/costume-contest", "/trivia", "/haunt-or-not", "/fan-art",
             "/restaurhaunts"]
     for t in _towns_with_counts():

@@ -24,6 +24,7 @@
         <strong>#{{ loop.index }} {{ e.title }}</strong>
         <span class="meta">{{ e.town }}</span>
         <span class="votes">&#x1F441;&#xFE0F; {{ e._views }} view{{ 's' if e._views != 1 }}</span>
+        {% if e.is_featured %}<span class="featured-badge">&#x2B50; Featured</span>{% endif %}
         <span class="tour-add-btn" role="button" tabindex="0" data-tour-btn data-id="{{ e.id }}" data-title="{{ e.title }}" data-town="{{ e.town }}" data-lat="{{ e.lat if e.lat is not none else '' }}" data-lng="{{ e.lng if e.lng is not none else '' }}" data-thumb="{{ e.thumb_url }}">+ Tour</span>
         {% if e.is_sample %}<span class="sample-badge">Sample</span>{% endif %}
       </span>
@@ -31,6 +32,9 @@
   </li>
   {% endfor %}
 </ol>
+<div class="states-cta">
+  <a href="/leaderboard/states?cat={{ cat }}">&#x1F5FA;&#xFE0F; <strong>Top 10 by state</strong> &mdash; the best {{ cat_labels[cat]|lower }} haunts in every state &rarr;</a>
+</div>
 {% endif %}
 
 {% if not top %}

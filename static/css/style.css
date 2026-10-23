@@ -500,6 +500,28 @@ a { color: var(--accent); }
 .leader-info { display: flex; flex-direction: column; gap: 0.1rem; }
 .leader-info strong { font-size: 0.98rem; }
 
+/* Top 10 by State (staged) */
+.featured-badge {
+  align-self: flex-start; margin-top: 0.3rem; background: var(--accent);
+  color: #1a0f00; font-size: 0.72rem; font-weight: 800; padding: 0.15rem 0.55rem;
+  border-radius: 999px; text-transform: uppercase; letter-spacing: 0.04em;
+}
+.states-cta { margin: 0 0 2rem; }
+.states-cta a {
+  display: block; background: var(--card); border: 1px solid #33254f;
+  border-radius: var(--radius); padding: 0.9rem 1rem; color: var(--ink);
+  text-decoration: none;
+}
+.states-cta a:hover { border-color: var(--accent); }
+.state-jump a { flex: 0 1 auto; padding: 0.35rem 0.7rem; font-size: 0.85rem; border-radius: 999px; }
+.state-top10 { margin-bottom: 2.2rem; scroll-margin-top: 90px; }
+.state-top10 h2 { margin-bottom: 0.15rem; }
+.state-meta { margin: 0 0 0.8rem; }
+.metro-eyebrow {
+  margin: 0 0 0.2rem; color: var(--accent); font-size: 0.78rem; font-weight: 800;
+  text-transform: uppercase; letter-spacing: 0.08em;
+}
+
 /* admin */
 .admin-list { display: grid; gap: 0.6rem; margin-bottom: 2rem; }
 .admin-row {

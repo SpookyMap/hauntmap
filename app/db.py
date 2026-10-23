@@ -35,6 +35,7 @@ CREATE TABLE IF NOT EXISTS entries (
     flagged INTEGER NOT NULL DEFAULT 0,   -- 1 when a visitor reported it
     hidden INTEGER NOT NULL DEFAULT 0,    -- 1 hides it from public pages (admin action)
     is_sample INTEGER NOT NULL DEFAULT 0, -- 1 for seeded demo entries
+    is_featured INTEGER NOT NULL DEFAULT 0, -- 1 for editor's-pick pins (Dan's hand-picked Top 10 placements)
     -- Future "food & drink" section (post-Halloween). V1 UI stays Halloween-only;
     -- these columns let the food section ship without a schema rebuild.
     category TEXT NOT NULL DEFAULT 'halloween', -- 'halloween' | 'food'
@@ -150,6 +151,15 @@ def init_db(db_path: Path) -> None:
             # Free-text description sent by posting crews via /upload
             # (Oct 2026). NULL when not provided.
             conn.execute("ALTER TABLE entries ADD COLUMN description TEXT")
+        if "is_featured" not in cols:
+            # Editor's-pick flag (Top 10 by State staging): Dan's
+            # hand-picked pins are guaranteed a slot in their state's
+            # Top 10 (and in the sitewide Top Haunts) with an honest
+            # "Featured" marker. Ranking data (views/votes) is never
+            # altered — the flag only affects list placement.
+            conn.execute(
+                "ALTER TABLE entries ADD COLUMN is_featured INTEGER NOT NULL DEFAULT 0"
+            )
         # Events facets (Dan, Oct 22): event type / music genre / venue
         # style powering the /events filter dropdowns. NULL = untagged;
         # only set when a listing plainly determines the value.
