@@ -3,14 +3,64 @@
 {% block content %}
 <h1>&#x1F383; Halloween displays by town</h1>
 <p class="towns-sub">Every town on the map — pick yours for local displays, events and haunt alerts.</p>
+<div class="towns-search-wrap">
+  <input id="towns-search" class="towns-search" type="search" placeholder="Search your town…" aria-label="Search towns" autocomplete="off">
+  <button id="towns-search-clear" class="towns-search-clear" type="button" aria-label="Clear search" hidden>&times;</button>
+</div>
 <div class="towns-grid">
   {% for t in towns_list %}
   <a class="town-link" href="/towns/{{ t.slug }}">{{ t.label }} <span class="town-count">{{ t.count }}</span></a>
   {% endfor %}
 </div>
+<p id="towns-empty" class="towns-empty" hidden>No towns match &lsquo;<span id="towns-empty-q"></span>&rsquo; yet — try a nearby town, or <a href="/upload">add yours!</a></p>
+<script>
+(function () {
+  var input = document.getElementById('towns-search');
+  var clearBtn = document.getElementById('towns-search-clear');
+  var empty = document.getElementById('towns-empty');
+  var emptyQ = document.getElementById('towns-empty-q');
+  if (!input) return;
+  var rows = Array.prototype.slice.call(document.querySelectorAll('.towns-grid .town-link'));
+  rows.forEach(function (r) {
+    var badge = r.querySelector('.town-count');
+    var label = badge ? r.textContent.replace(badge.textContent, '') : r.textContent;
+    r.setAttribute('data-label', label.trim().toLowerCase());
+  });
+  function applyFilter() {
+    var q = input.value.trim().toLowerCase();
+    var shown = 0;
+    rows.forEach(function (r) {
+      var match = !q || r.getAttribute('data-label').indexOf(q) !== -1;
+      r.style.display = match ? '' : 'none';
+      if (match) shown++;
+    });
+    clearBtn.hidden = !input.value;
+    if (q && shown === 0) {
+      emptyQ.textContent = input.value.trim();
+      empty.hidden = false;
+    } else {
+      empty.hidden = true;
+    }
+  }
+  input.addEventListener('input', applyFilter);
+  clearBtn.addEventListener('click', function () {
+    input.value = '';
+    applyFilter();
+    input.focus();
+  });
+})();
+</script>
 {% include "_town_request.html" %}
 <style>
 .towns-sub { color: #c9bce8; }
+.towns-search-wrap { position: relative; margin-top: 1rem; max-width: 640px; }
+.towns-search { width: 100%; box-sizing: border-box; background: #000; border: 1px solid rgba(255, 255, 255, 0.32); border-radius: 999px; padding: 0.7rem 2.6rem 0.7rem 1.1rem; color: #f5f2ec; font: inherit; font-size: 1rem; outline: none; box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45); }
+.towns-search::placeholder { color: #9a93ad; }
+.towns-search:focus { border-color: #ff7518; }
+.towns-search-clear { position: absolute; right: 0.45rem; top: 50%; transform: translateY(-50%); width: 1.9rem; height: 1.9rem; border: 0; border-radius: 999px; background: #241a44; color: #ffd98a; font-size: 1.15rem; line-height: 1; cursor: pointer; }
+.towns-search-clear:hover { background: #372b5e; }
+.towns-empty { margin-top: 1rem; color: #c9bce8; }
+.towns-empty a { color: #ff9d5c; font-weight: 700; }
 .towns-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 0.5rem; margin-top: 1rem; }
 .town-link { display: flex; justify-content: space-between; align-items: center; background: #17122b; border: 1px solid #372b5e; border-radius: 10px; padding: 0.6rem 0.8rem; color: #e8e6e3; text-decoration: none; font-weight: 600; }
 .town-link:hover { border-color: #ff7518; color: #ff9d5c; }
