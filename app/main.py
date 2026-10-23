@@ -1642,7 +1642,8 @@ def home(request: Request, sort: str = "top", town: str = "", town_search: str =
 @app.get("/events", response_class=HTMLResponse)
 def events_page(request: Request, type: str = "", genre: str = "",
                 venue: str = "", sort: str = "top",
-                state: str = "", town: str = "", on: str = ""):
+                state: str = "", town: str = "", region: str = "",
+                on: str = ""):
     # The header's Events artwork links here (Dan, Oct 22). This used to
     # 302 to /?cat=events; it is now the canonical events page so events
     # can be searched by type / genre / venue style (Dan, Oct 22) with
@@ -1658,6 +1659,16 @@ def events_page(request: Request, type: str = "", genre: str = "",
     selected = {"type": type if type in EVENT_TYPES else "",
                 "genre": genre if genre in EVENT_GENRES else "",
                 "venue": venue if venue in EVENT_VENUES else ""}
+    # Region dropdown (Dan, Oct 23): the same curated REGION_TABS /
+    # _region_terms definitions the homepage feed + place tabs use —
+    # no second region semantics. An unknown slug is ignored (the page
+    # behaves as today), exactly like an unparseable `on` below.
+    region = region.strip().lower()
+    region_labels = dict(REGION_TABS)
+    if region not in region_labels:
+        region = ""
+    region_label = region_labels.get(region, "")
+    region_terms = _region_terms(region) if region else []
     # Retention Wave 3, Item 5: ?on=YYYY-MM-DD date view. Events carry
     # dates only in their titles, so the filter is applied in Python via
     # parse_event_dates AFTER the facet/state/town SQL filters (it
@@ -1692,10 +1703,12 @@ def events_page(request: Request, type: str = "", genre: str = "",
         town_state: dict[str, str] = {}
         raw_by_state: dict[str, list] = {}
         raw_by_town: dict[str, list] = {}
+        town_groups: list = []
         for r in conn.execute(
                 "SELECT town, COUNT(*) AS n FROM entries "
                 "WHERE hidden = 0 AND category = 'events' GROUP BY town").fetchall():
             raw = r["town"] or ""
+            town_groups.append((raw, r["n"]))
             st = extract_state(raw)
             label = extract_city_state(raw)
             if st:
@@ -1720,6 +1733,22 @@ def events_page(request: Request, type: str = "", genre: str = "",
             raws = raw_by_town[town]
             query += f" AND town IN ({','.join('?' * len(raws))})"
             params += raws
+        # Region counts over every visible event, in the curated
+        # REGION_TABS order; matching is the place-tabs predicate — a
+        # term appearing anywhere in the raw town string.
+        region_counts = {
+            slug: sum(n for raw, n in town_groups
+                      if any(t in raw.lower()
+                             for t in _region_terms(slug)))
+            for slug, _label in REGION_TABS}
+        if region:
+            raws = [raw for raw, _n in town_groups
+                    if any(t in raw.lower() for t in region_terms)]
+            if raws:
+                query += f" AND town IN ({','.join('?' * len(raws))})"
+                params += raws
+            else:
+                query += " AND 1 = 0"
         # With a date view active the SQL cap comes off (the events
         # catalogue is ~553 rows): the Python date filter below runs
         # over the full facet/town-filtered set, then caps at 100.
@@ -1747,6 +1776,10 @@ def events_page(request: Request, type: str = "", genre: str = "",
         })
     loc = {
         "state": state, "town": town,
+        "region": region, "region_label": region_label,
+        "region_options": [
+            {"value": slug, "label": label, "count": region_counts[slug]}
+            for slug, label in REGION_TABS if region_counts.get(slug)],
         "state_options": [
             {"value": code, "label": US_STATE_NAMES.get(code, code),
              "count": n}
@@ -1774,7 +1807,7 @@ def events_page(request: Request, type: str = "", genre: str = "",
          "facets": facets, "selected": selected, "total": total,
          "loc": loc,
          "filtered": any(selected.values()) or bool(state) or bool(town)
-                     or bool(on_date),
+                     or bool(region) or bool(on_date),
          "on": on_str, "on_label": on_label, "on_total": on_total,
          "voted": voted})
 
