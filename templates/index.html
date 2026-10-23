@@ -1,10 +1,14 @@
 {% extends "base.html" %}
 {% block content %}
+{# VT/TV slim strip (Dan Oct 23): the two big hero pills became one thin
+   two-up row directly under the header nav, homepage only. #}
+<div class="vt-tv-strip">
+  <a class="vt-btn" href="/virtual-tour">&#x25B6;&#xFE0F; Virtual Tour</a>
+  <a class="tv-btn" href="/virtual-tour?mode=tv">&#x1F4FA; HauntMap TV</a>
+</div>
 <div class="hero-split">
 <div class="hero-intro">
   <h1 class="hero-title">Find the Best Halloween Displays <span class="hero-title-alt">Near You</span></h1>
-  <a class="btn btn-big" href="/virtual-tour" style="margin: 0.9rem 0 0.2rem;">&#x25B6;&#xFE0F; Virtual Tour — ride through tonight's best video haunts</a>
-  <a class="btn" href="/virtual-tour?mode=tv" style="margin: 0.35rem 0 0.2rem; display: block; text-align: center; background: linear-gradient(90deg, #2b1650, #4a1570); border: 2px solid #b266ff; color: #fff; font-weight: 800; padding: 0.7rem;">&#x1F4FA; HauntMap TV — lean back &amp; watch the channels</a>
 
 {# Laptop hero stack (z67, Dan Oct 22): inside the hero photo panel,
    under the headline — Airbnb-style search pill, then Near-you, then

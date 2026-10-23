@@ -2678,3 +2678,19 @@ body.has-tourbar.has-radio { padding-bottom: 124px; }
 .hm-map-ph-link { color: #ffa25e; font-weight: 700; text-decoration: none; }
 .hm-map-ph-link:hover { text-decoration: underline; }
 .hm-map-lazy.hm-map-ready { background: #0d0916; }
+
+/* VT/TV slim strip (Dan Oct 23): replaces the two big stacked hero pills
+   (~125px of full-width hero space) with one thin two-up row under the
+   header nav, homepage only — about a quarter of the old footprint.
+   Brand treatment kept: VT = accent orange / dark text (ex .btn-big),
+   TV = purple gradient + #b266ff border / white text (ex inline pill). */
+.vt-tv-strip { display: flex; gap: 0.5rem; margin: 0 0 0.9rem; }
+.vt-tv-strip a {
+  flex: 1 1 0; display: flex; align-items: center; justify-content: center;
+  gap: 0.3rem; padding: 0.28rem 0.5rem; border-radius: 999px;
+  font-size: 0.85rem; line-height: 1.25; font-weight: 800;
+  text-decoration: none; text-align: center; white-space: nowrap;
+}
+.vt-tv-strip .vt-btn { background: var(--accent); color: #1a0f00; }
+.vt-tv-strip .tv-btn { background: linear-gradient(90deg, #2b1650, #4a1570); border: 2px solid #b266ff; color: #fff; }
+@media (max-width: 380px) { .vt-tv-strip a { font-size: 0.8rem; } }
