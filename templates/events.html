@@ -156,9 +156,10 @@
 @media (max-width: 760px) {
   .ev-filter { flex: 1 1 100%; max-width: none; }
   .ev-clear { flex: 1 1 100%; text-align: center; }
-  /* State/City dropdowns are laptop-only (Dan, Oct 22): the phone
-     filter row renders exactly as before. */
-  .ev-filter-loc { display: none; }
+  /* State/Region/City selects show on phone too (Dan, Oct 23 —
+     reverses the Oct 22 laptop-only rule): full-width, one per row,
+     same as the Type/Genre/Venue selects above. */
+  .ev-filter-loc { flex: 1 1 100%; max-width: none; }
 }
 </style>
 {% endblock %}
