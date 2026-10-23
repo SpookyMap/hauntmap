@@ -174,6 +174,13 @@
 {% include "_town_request.html" %}
 </div>
 
+{% if tstrip %}
+{# Item 5 "Tonight" strip: directly above Tonight's Display band, so
+   the countdown + on-tonight counts sit adjacent to the band on every
+   homepage view (the band itself only renders when a pick exists). #}
+{% with tstrip_wide = True %}{% include "_tonight_strip.html" %}{% endwith %}
+{% endif %}
+
 {% if tonight %}
 <section class="tonight-band" aria-label="Tonight's Display">
   <a class="tonight-card" href="/d/{{ tonight.id }}">

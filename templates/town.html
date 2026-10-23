@@ -4,6 +4,7 @@
 {% block content %}
 <h1>&#x1F383; Halloween displays in {{ label }}</h1>
 <p class="town-sub">{{ entries|length }} spooky stop{{ 's' if entries|length != 1 }} in {{ label }} — tap any card for directions, or add a few to a custom tour.</p>
+{% if tstrip %}{% include "_tonight_strip.html" %}{% endif %}
 <div class="seen-strip" id="seen-strip" hidden>
   <p class="seen-text"></p>
   <div class="seen-bar"><div class="seen-fill"></div></div>

@@ -11,6 +11,7 @@
 
 <form method="get" action="/events" class="ev-filter-form">
   {% if sort != 'top' %}<input type="hidden" name="sort" value="{{ sort }}">{% endif %}
+  {% if on %}<input type="hidden" name="on" value="{{ on }}">{% endif %}
   <div class="ev-filter-row">
     <label class="ev-filter">
       <span>Event type</span>
@@ -61,14 +62,22 @@
   </div>
 </form>
 
+{% if on %}
+{# Item 5: visible active-filter chip for the date view — visitors must
+   be able to SEE they're looking at one date, and clear just the date
+   without losing the facet/town filters. #}
+<p class="ev-on-chip">&#x1F4C5; Showing events on <strong>{{ on_label }}</strong> &middot; {{ on_total }} on that date{% if loc.town %} near {{ loc.town }}{% endif %} &middot; <a href="/events?{% if selected.type %}type={{ selected.type|urlencode }}&{% endif %}{% if selected.genre %}genre={{ selected.genre|urlencode }}&{% endif %}{% if selected.venue %}venue={{ selected.venue|urlencode }}&{% endif %}{% if loc.state %}state={{ loc.state|urlencode }}&{% endif %}{% if loc.town %}town={{ loc.town|urlencode }}&{% endif %}{% if sort != 'top' %}sort={{ sort }}{% endif %}">Clear date &#x2715;</a></p>
+{% endif %}
+
 <div class="ev-meta-row">
   <p class="ev-count">
-    {% if filtered %}Showing {{ entries|length }} matching event{{ 's' if entries|length != 1 }} &middot; <a href="/events">clear filters</a>
+    {% if on %}Showing {{ entries|length }}{% if on_total and on_total > entries|length %} of {{ on_total }}{% endif %} event{{ 's' if entries|length != 1 }} on {{ on_label }} &middot; <a href="/events">clear filters</a>
+    {% elif filtered %}Showing {{ entries|length }} matching event{{ 's' if entries|length != 1 }} &middot; <a href="/events">clear filters</a>
     {% else %}{{ total }} event{{ 's' if total != 1 }} on the map{% endif %}
   </p>
   <div class="sort-toggle">
-    <a href="/events?sort=top{% if selected.type %}&type={{ selected.type|urlencode }}{% endif %}{% if selected.genre %}&genre={{ selected.genre|urlencode }}{% endif %}{% if selected.venue %}&venue={{ selected.venue|urlencode }}{% endif %}{% if loc.state %}&state={{ loc.state|urlencode }}{% endif %}{% if loc.town %}&town={{ loc.town|urlencode }}{% endif %}" class="{% if sort == 'top' %}active{% endif %}">Top</a>
-    <a href="/events?sort=new{% if selected.type %}&type={{ selected.type|urlencode }}{% endif %}{% if selected.genre %}&genre={{ selected.genre|urlencode }}{% endif %}{% if selected.venue %}&venue={{ selected.venue|urlencode }}{% endif %}{% if loc.state %}&state={{ loc.state|urlencode }}{% endif %}{% if loc.town %}&town={{ loc.town|urlencode }}{% endif %}" class="{% if sort == 'new' %}active{% endif %}">Newest</a>
+    <a href="/events?sort=top{% if selected.type %}&type={{ selected.type|urlencode }}{% endif %}{% if selected.genre %}&genre={{ selected.genre|urlencode }}{% endif %}{% if selected.venue %}&venue={{ selected.venue|urlencode }}{% endif %}{% if loc.state %}&state={{ loc.state|urlencode }}{% endif %}{% if loc.town %}&town={{ loc.town|urlencode }}{% endif %}{% if on %}&on={{ on }}{% endif %}" class="{% if sort == 'top' %}active{% endif %}">Top</a>
+    <a href="/events?sort=new{% if selected.type %}&type={{ selected.type|urlencode }}{% endif %}{% if selected.genre %}&genre={{ selected.genre|urlencode }}{% endif %}{% if selected.venue %}&venue={{ selected.venue|urlencode }}{% endif %}{% if loc.state %}&state={{ loc.state|urlencode }}{% endif %}{% if loc.town %}&town={{ loc.town|urlencode }}{% endif %}{% if on %}&on={{ on }}{% endif %}" class="{% if sort == 'new' %}active{% endif %}">Newest</a>
   </div>
 </div>
 
@@ -129,6 +138,9 @@
 .ev-clear { white-space: nowrap; }
 .ev-meta-row { display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: center; justify-content: space-between; margin: 0.4rem 0 0.8rem; }
 .ev-count { margin: 0; color: #cfc4ee; }
+.ev-on-chip { display: inline-block; margin: 0.6rem 0 0; padding: 0.45rem 0.8rem; border-radius: 999px; background: #241a44; border: 1px solid #c9a86a; color: #f3eefc; font-size: 0.88rem; }
+.ev-on-chip strong { color: #ffd98a; }
+.ev-on-chip a { color: #ff7518; font-weight: 700; white-space: nowrap; }
 .ev-chips { display: flex; flex-wrap: wrap; gap: 0.3rem; margin: 0.15rem 0 0.3rem; }
 .ev-chip { display: inline-block; padding: 0.1rem 0.5rem; border-radius: 999px; background: #241a44; border: 1px solid #372b5e; color: #ffd98a; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.03em; }
 @media (max-width: 760px) {

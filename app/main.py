@@ -5,6 +5,7 @@ Voting is limited to one vote per browser per entry via cookie — this is a
 SOFT limit only (cookies are trivially cleared); it stops casual double
 voting, not determined abuse. See the vote route below.
 """
+import calendar
 import hashlib
 import hmac
 import logging
@@ -586,6 +587,256 @@ def _fetch_area_feed(cat: str, area_labels: set, scare: str, tag: str,
         rows.sort(key=lambda e: -(e.get("votes") or 0))
     rows.sort(key=lambda e: 0 if _feed_has_video(e) else 1)
     return rows
+
+
+# ---------------------------------------------------------------------------
+# Retention Wave 3 (Oct 23): Item 5 "Tonight" layer — event-date parsing.
+#
+# Event pins carry their dates ONLY inside their titles, in the wild
+# formats the seeding pipeline produced. parse_event_dates(title) pulls a
+# (start, end) date span out of a title, or None when the title carries
+# no usable date. It handles:
+#   * ISO dates and ranges: "2026-10-23", "2026-09-26 to 2026-11-01"
+#   * full ranges, shared or explicit years: "September 18 – November 8,
+#     2026", "September 18 – November 1, 2026", "Oct 16 to Oct 18"
+#   * short (same-month) ranges: "October 2–31, 2026", "Oct 9-10"
+#   * single dates: "Saturday, October 31, 2026", "Oct 31", "Oct 31, 2026"
+#   * date lists: "Oct 30 & 31, 2026", "Oct 23, 24, 30 & 31, 2026",
+#     compound ranges "Oct 9-10, 16-17, 23-24, 2026"
+#   * month-only spans: "October 2026", "All October 2026", "Nightly in
+#     October" -> the whole month
+# Approximations (documented, deliberate):
+#   * Weekday qualifiers are IGNORED: "Fridays & Saturdays in October",
+#     "Select Thursdays–Sundays, September 18 – November 1" count as on
+#     EVERY day of the span. The alternative (parsing weekday sets per
+#     title) would exclude most of the catalogue for a precision the
+#     "on tonight" count does not need.
+#   * Discrete date lists / compound ranges collapse to their spanning
+#     interval (min date – max date): "Oct 17 and Oct 24" reads as
+#     Oct 17–24. Same reasoning as the weekday rule.
+#   * An end-only run ("Through Oct 31", "Weekends thru Oct 31") is
+#     widened to start on the 1st of the end month — seasonal pop-ups and
+#     farm runs that say "through" were running before the end date;
+#     calling them single-day events would badly under-count.
+#   * A yearless date belongs to the current season: the year of
+#     "today" in America/New_York (titles are seeded for this season).
+#   * Titles with NO date at all (in the Oct 23 snapshot: the Brooklyn
+#     Halloween-day listings that carry only times like "10am-6:30pm",
+#     plus "Fall Season" farm listings) return None and are EXCLUDED
+#     from every "on tonight" count — never guessed onto Halloween day.
+_EVENT_MONTHS = {
+    "january": 1, "february": 2, "march": 3, "april": 4, "may": 5,
+    "june": 6, "july": 7, "august": 8, "september": 9, "october": 10,
+    "november": 11, "december": 12, "jan": 1, "feb": 2, "mar": 3,
+    "apr": 4, "jun": 6, "jul": 7, "aug": 8, "sep": 9, "sept": 9,
+    "oct": 10, "nov": 11, "dec": 12,
+}
+_EVENT_MONTH_RE = (r"(January|February|March|April|May|June|July|August|"
+                   r"September|October|November|December|Jan|Feb|Mar|Apr|"
+                   r"Jun|Jul|Aug|Sep|Sept|Oct|Nov|Dec)\.?")
+_EVENT_PARSE_CACHE: dict = {}
+
+
+def _today_et():
+    """Today's date in America/New_York — the site's season clock.
+    Never server-local: Render runs UTC, which flips the date at 8pm ET."""
+    try:
+        from zoneinfo import ZoneInfo
+        return datetime.now(ZoneInfo("America/New_York")).date()
+    except Exception:
+        return datetime.now(timezone.utc).date()
+
+
+def _mkdate(year: int, month: int, day: int):
+    try:
+        return datetime(year, month, day).date()
+    except ValueError:
+        return None
+
+
+def _event_month_num(name: str) -> int:
+    return _EVENT_MONTHS[name.lower().rstrip(".")]
+
+
+def parse_event_dates(title: str):
+    """(start, end) dates a title's event runs on, or None. See the
+    Wave 3 banner above for formats + documented approximations."""
+    if not title:
+        return None
+    cache_key = (title, _today_et().year)
+    if cache_key in _EVENT_PARSE_CACHE:
+        return _EVENT_PARSE_CACHE[cache_key]
+    result = _parse_event_dates(title)
+    _EVENT_PARSE_CACHE[cache_key] = result
+    return result
+
+
+def _parse_event_dates(title: str):
+    s = (title.replace("\u2013", "-").replace("\u2014", "-")
+              .replace("\u2212", "-"))
+    # ISO dates / ranges first (unambiguous).
+    m = re.search(r"(\d{4})-(\d{2})-(\d{2})\s*(?:to|-)\s*"
+                  r"(\d{4})-(\d{2})-(\d{2})", s)
+    if m:
+        a = _mkdate(int(m.group(1)), int(m.group(2)), int(m.group(3)))
+        b = _mkdate(int(m.group(4)), int(m.group(5)), int(m.group(6)))
+        if a and b:
+            return (a, b)
+    m = re.search(r"(\d{4})-(\d{2})-(\d{2})", s)
+    if m:
+        a = _mkdate(int(m.group(1)), int(m.group(2)), int(m.group(3)))
+        if a:
+            return (a, a)
+    # Default year for yearless atoms: an explicit 202x year anywhere in
+    # the title (film years like "(1981)" never match 202\d), else the
+    # current season's year.
+    years = re.findall(r"\b(202\d)\b", s)
+    dyear = int(years[-1]) if years else _today_et().year
+
+    atoms: list = []      # (start, end, position)
+    consumed: list = []   # spans already claimed by range atoms
+
+    def overlapped(span) -> bool:
+        return any(span[0] < c[1] and c[0] < span[1] for c in consumed)
+
+    def continuations(pos: int, month: int, year: int, anchor: int) -> None:
+        """Bare-day list continuations right after a date atom:
+        ", 24" / "& 31" / "and 24" / ", 16-17" / "& 30-Nov 1".
+        Stops cold at anything that looks like a time or a price:
+        a token followed by ':' or am/pm is a clock time, not a day."""
+        while True:
+            cm = re.match(
+                r"\s*(?:,|&|\+|\band\b)\s*(\d{1,2})(?!\d)"
+                r"(?:\s*-\s*(?:(\d{1,2})(?!\d)|" + _EVENT_MONTH_RE +
+                r"\s+(\d{1,2})(?!\d)))?", s[pos:pos + 40], re.I)
+            if not cm:
+                return
+            tail = s[pos + cm.end():pos + cm.end() + 4].lower().lstrip()
+            if tail.startswith(("am", "pm")) or tail.startswith(":"):
+                return
+            d1 = _mkdate(year, month, int(cm.group(1)))
+            if d1 is None:
+                return
+            if cm.group(2):
+                d2 = _mkdate(year, month, int(cm.group(2)))
+            elif cm.group(3):
+                emonth = _event_month_num(cm.group(3))
+                eyear = year + 1 if emonth < month else year
+                d2 = _mkdate(eyear, emonth, int(cm.group(4)))
+            else:
+                d2 = d1
+            if d2 is None:
+                return
+            atoms.append((d1, d2, anchor))
+            pos += cm.end()
+
+    # Full ranges: Month D - Month D (shared or explicit years, "-" or "to").
+    for m in re.finditer(
+            _EVENT_MONTH_RE + r"\s+(\d{1,2})(?!\d)(?:\s*,\s*(202\d))?"
+            r"\s*(?:-|\bto\b)\s*" + _EVENT_MONTH_RE +
+            r"\s+(\d{1,2})(?!\d)(?:\s*,\s*(202\d))?", s, re.I):
+        y2 = (int(m.group(6)) if m.group(6)
+              else (int(m.group(3)) if m.group(3) else dyear))
+        y1 = int(m.group(3)) if m.group(3) else y2
+        a = _mkdate(y1, _event_month_num(m.group(1)), int(m.group(2)))
+        b = _mkdate(y2, _event_month_num(m.group(4)), int(m.group(5)))
+        if a and b:
+            atoms.append((a, b, m.start()))
+            consumed.append(m.span())
+            continuations(m.end(), b.month, b.year, m.start())
+    # Short ranges: Month D-D / Month D to D.
+    for m in re.finditer(
+            _EVENT_MONTH_RE + r"\s+(\d{1,2})(?!\d)\s*(?:-|\bto\b)\s*"
+            r"(\d{1,2})(?!\d)(?:\s*,\s*(202\d))?", s, re.I):
+        if overlapped(m.span()):
+            continue
+        y = int(m.group(4)) if m.group(4) else dyear
+        mo = _event_month_num(m.group(1))
+        a = _mkdate(y, mo, int(m.group(2)))
+        b = _mkdate(y, mo, int(m.group(3)))
+        if a and b:
+            atoms.append((a, b, m.start()))
+            consumed.append(m.span())
+            continuations(m.end(), mo, y, m.start())
+    # Single dates: Month D [, YYYY] — the (?!\d) guard keeps a year from
+    # being misread as a day ("October 2026" must NOT become October 20).
+    for m in re.finditer(
+            _EVENT_MONTH_RE + r"\s+(\d{1,2})(?!\d)(?:\s*,\s*(202\d))?",
+            s, re.I):
+        if overlapped(m.span()):
+            continue
+        y = int(m.group(3)) if m.group(3) else dyear
+        mo = _event_month_num(m.group(1))
+        a = _mkdate(y, mo, int(m.group(2)))
+        if a:
+            atoms.append((a, a, m.start()))
+            consumed.append(m.span())
+            continuations(m.end(), mo, y, m.start())
+
+    if atoms:
+        start = min(a[0] for a in atoms)
+        end = max(a[1] for a in atoms)
+        # End-only "through/thru/until <date>": one single-day atom that
+        # the through-word directly introduces -> widen to the 1st of
+        # that month (documented approximation above).
+        tm = re.search(r"\b(?:through|thru|until)\b", s, re.I)
+        if tm and start == end:
+            first_pos = min(a[2] for a in atoms)
+            if 0 <= first_pos - tm.end() <= 3:
+                start = _mkdate(end.year, end.month, 1) or start
+        return (start, end)
+    # Month-only spans: a month name with no day attached anywhere
+    # ("October 2026 evenings", "Nightly, October 2026", "in October").
+    m = re.search(_EVENT_MONTH_RE + r"(?:\s+(202\d))?", s, re.I)
+    if m:
+        mo = _event_month_num(m.group(1))
+        y = int(m.group(2)) if m.group(2) else dyear
+        return (_mkdate(y, mo, 1),
+                _mkdate(y, mo, calendar.monthrange(y, mo)[1]))
+    return None
+
+
+def event_on_date(title: str, on_date) -> bool:
+    """True when a title's parsed span covers `on_date`. Undated titles
+    (parse -> None) are never "on" — the honest exclusion, see banner."""
+    span = parse_event_dates(title)
+    return bool(span and span[0] <= on_date <= span[1])
+
+
+def _events_on_count(conn, town_label: str, on_date) -> int:
+    """Parsed events covering `on_date` whose town_label (the same
+    extract_city_state label every card shows) equals `town_label`."""
+    n = 0
+    for r in conn.execute(
+            "SELECT title, town FROM entries "
+            "WHERE hidden = 0 AND category = 'events'").fetchall():
+        label = extract_city_state(r["town"] or "") or r["town"] or ""
+        if label == town_label and event_on_date(r["title"], on_date):
+            n += 1
+    return n
+
+
+def _tonight_strip(town_label: str, displays: int, town_note: str = "") -> dict:
+    """Data for the _tonight_strip.html partial (Item 5): ET countdown,
+    events on tonight near the anchor town, displays lit tonight.
+    `displays` = halloween-category pins in the town (house displays run
+    nightly through the season, so every display pin counts as lit)."""
+    today = _today_et()
+    halloween = _mkdate(today.year, 10, 31)
+    days = (halloween - today).days
+    if days > 1:
+        countdown = f"\U0001F383 {days} days to Halloween"
+    elif days == 1:
+        countdown = "\U0001F383 1 day to Halloween"
+    elif days == 0:
+        countdown = "\U0001F383 It's Halloween night!"
+    else:
+        countdown = "\U0001F383 Halloween night has passed — still lit tonight"
+    with get_conn(DB_PATH) as conn:
+        events_on = _events_on_count(conn, town_label, today)
+    return {"town_label": town_label, "town_note": town_note,
+            "countdown": countdown, "today_iso": today.isoformat(),
+            "events_on": events_on, "displays": displays}
 
 
 def detail_chain(entry: dict) -> dict:
@@ -1252,6 +1503,40 @@ def home(request: Request, sort: str = "top", town: str = "", town_search: str =
         # not) computed above; the counts are the same live halloween
         # town counts this block used to compute inline.
         near_towns = resolved_area["chips"]
+    # Retention Wave 3, Item 5: the "Tonight" strip's anchor town.
+    # Resolution: the visitor's explicit ?town= context first; then Item
+    # 1's geo-resolved anchor (the first Near-you chip in exact/near/
+    # state mode — that town leads the chips); else the biggest town on
+    # the map, labelled honestly via town_note (this also covers Item
+    # 1's "nomap" mode: the visitor's own area has no supply, so the
+    # strip names the biggest town AS the biggest town, never as "near
+    # you"). Displays = halloween pins in the anchor town, counted from
+    # the same inventory that builds the Near-you chips.
+    strip_label, strip_note = "", ""
+    if town:
+        want = extract_city_state(town) or town
+        hit = next((t for t in halloween_inventory if t["label"] == want),
+                   None)
+        if hit is None:
+            city_want = extract_city(town).lower()
+            hit = next((t for t in halloween_inventory
+                        if t["city"].lower() == city_want), None)
+        strip_label = hit["label"] if hit else want
+        strip_displays = hit["count"] if hit else 0
+    elif resolved_area["mode"] in ("exact", "near", "state") \
+            and resolved_area["chips"]:
+        strip_label = resolved_area["chips"][0]["label"]
+        hit = next((t for t in halloween_inventory
+                    if t["label"] == strip_label), None)
+        strip_displays = hit["count"] if hit else 0
+    elif halloween_inventory:
+        biggest = max(halloween_inventory,
+                      key=lambda t: (t["count"], t["label"]))
+        strip_label = biggest["label"]
+        strip_displays = biggest["count"]
+        strip_note = "biggest town on the map"
+    tstrip = (_tonight_strip(strip_label, strip_displays, strip_note)
+              if strip_label else None)
     response = templates.TemplateResponse(request, "index.html",
         {"request": request, "entries": entries, "sort": sort,
          "town": town, "towns": towns(cat, state), "states": states(cat),
@@ -1259,6 +1544,7 @@ def home(request: Request, sort: str = "top", town: str = "", town_search: str =
          "cat": cat, "cat_labels": CAT_LABELS, "cat_emoji": CAT_EMOJI,
          "scare": scare, "tag": tag, "video": "1" if video.strip() == "1" else "",
          "tonight": tonight, "tonight_label": tonight_label,
+         "tstrip": tstrip,
          "trending": trending, "near_towns": near_towns,
          "near_heading": resolved_area["heading"],
          "near_sub": resolved_area["sub"],
@@ -1278,7 +1564,7 @@ def home(request: Request, sort: str = "top", town: str = "", town_search: str =
 @app.get("/events", response_class=HTMLResponse)
 def events_page(request: Request, type: str = "", genre: str = "",
                 venue: str = "", sort: str = "top",
-                state: str = "", town: str = ""):
+                state: str = "", town: str = "", on: str = ""):
     # The header's Events artwork links here (Dan, Oct 22). This used to
     # 302 to /?cat=events; it is now the canonical events page so events
     # can be searched by type / genre / venue style (Dan, Oct 22) with
@@ -1294,6 +1580,19 @@ def events_page(request: Request, type: str = "", genre: str = "",
     selected = {"type": type if type in EVENT_TYPES else "",
                 "genre": genre if genre in EVENT_GENRES else "",
                 "venue": venue if venue in EVENT_VENUES else ""}
+    # Retention Wave 3, Item 5: ?on=YYYY-MM-DD date view. Events carry
+    # dates only in their titles, so the filter is applied in Python via
+    # parse_event_dates AFTER the facet/state/town SQL filters (it
+    # composes with all of them) and BEFORE the 100-card cap, so a date
+    # view never loses on-date events to the unfiltered cap. An
+    # unparseable `on` value is ignored — the page behaves as today.
+    on_date = None
+    if on.strip():
+        try:
+            on_date = datetime.strptime(on.strip(), "%Y-%m-%d").date()
+        except ValueError:
+            on_date = None
+    on_str = on_date.isoformat() if on_date else ""
     order = "votes DESC, created_at DESC" if sort == "top" else "created_at DESC"
     # Same video-first ranking as the home feed.
     video_first = (
@@ -1343,7 +1642,12 @@ def events_page(request: Request, type: str = "", genre: str = "",
             raws = raw_by_town[town]
             query += f" AND town IN ({','.join('?' * len(raws))})"
             params += raws
-        query += f" ORDER BY {video_first}, {order} LIMIT 100"
+        # With a date view active the SQL cap comes off (the events
+        # catalogue is ~553 rows): the Python date filter below runs
+        # over the full facet/town-filtered set, then caps at 100.
+        query += f" ORDER BY {video_first}, {order}"
+        if on_date is None:
+            query += " LIMIT 100"
         entries = [row_to_dict(r) for r in conn.execute(query, params).fetchall()]
         counts: dict[str, dict[str, int]] = {}
         for key, col, _values, _labels in EVENT_FACETS:
@@ -1375,11 +1679,25 @@ def events_page(request: Request, type: str = "", genre: str = "",
             for label in sorted(town_counts)
             if not state or town_state.get(label) == state],
     }
+    # Item 5 date view: keep only events whose parsed title span covers
+    # the requested date (undated titles never match — documented in
+    # parse_event_dates), then apply the usual 100-card cap.
+    on_total = None
+    if on_date is not None:
+        entries = [e for e in entries if event_on_date(e["title"], on_date)]
+        on_total = len(entries)
+        entries = entries[:100]
+    on_label = ""
+    if on_date is not None:
+        on_label = (on_date.strftime("%A, %B ") + str(on_date.day)
+                    + on_date.strftime(", %Y"))
     return templates.TemplateResponse(request, "events.html",
         {"request": request, "entries": entries, "sort": sort,
          "facets": facets, "selected": selected, "total": total,
          "loc": loc,
-         "filtered": any(selected.values()) or bool(state) or bool(town),
+         "filtered": any(selected.values()) or bool(state) or bool(town)
+                     or bool(on_date),
+         "on": on_str, "on_label": on_label, "on_total": on_total,
          "voted": voted})
 
 
@@ -2692,9 +3010,14 @@ def town_page(request: Request, slug: str):
     # Video-first ranking (engagement, Oct 22): stable sort — footage pins
     # ahead of photo-only pins, votes/newest order kept within each group.
     entries.sort(key=lambda e: 0 if _entry_has_video(e) else 1)
+    # Retention Wave 3, Item 5: the "Tonight" strip under the town header
+    # — this town is the anchor; displays lit = its halloween pins (the
+    # entries list itself), events on = parsed events in this town.
+    tstrip = _tonight_strip(label, len(entries))
     return templates.TemplateResponse(
         request, "town.html",
-        {"label": label, "entries": entries, "site_name": SITE_NAME},
+        {"label": label, "entries": entries, "site_name": SITE_NAME,
+         "tstrip": tstrip},
     )
 
 
