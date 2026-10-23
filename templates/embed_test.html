@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block title %}Video Player Test · {{ site_name }}{% endblock %}
+{% block head %}<meta name="robots" content="noindex, nofollow">
+<style>
+  .et-wrap { max-width: 640px; margin: 0 auto; padding: 0 1rem 3rem; }
+  .et-sec { margin: 2.4rem 0; }
+  .et-sec h2 { margin-bottom: 0.3rem; }
+  .et-note { margin-top: 0; }
+  /* A mirrors Dan's laptop rail: the homepage promo column is ~252px
+     wide there, and .tt-featured's own cap is 300px — pin it to the
+     rail width so the scale box behaves exactly as on the homepage. */
+  .et-a .tt-featured { width: 252px; margin-left: 0; margin-right: 0; }
+  .et-b iframe { width: 100%; max-width: 325px; aspect-ratio: 325 / 578; border: 0; display: block; background: #000; }
+</style>
+{% endblock %}
+{% block content %}
+<div class="et-wrap">
+<h1>&#x1F9EA; Video player test</h1>
+<p>Same video three ways. Please try to play <strong>all three</strong> below, then tell Jarvis which ones played — A, B, C, or none of them.</p>
+
+<section class="et-sec et-a">
+  <h2>A — Current way</h2>
+  <p class="et-note">The exact setup the homepage uses today. Tap the picture to play.</p>
+  <div class="tt-featured">
+    <div class="tt-facade" data-tt-url="https://www.tiktok.com/@gethauntmap/video/7699668838786370847" data-tt-id="7699668838786370847" role="button" tabindex="0" aria-label="Play TikTok video">
+      <img src="/static/img/tt_featured_scareometer.jpg" alt="New game on HauntMap — the Scare-O-Meter is live — HauntMap on TikTok">
+      <span class="tt-play">&#x25B6;</span>
+      <span class="tt-facade-label">&#x1F3B5; Tap to play video</span>
+    </div>
+    <script>
+    (function () {
+      var wrap = document.currentScript.parentElement;
+      var f = wrap.querySelector('.tt-facade');
+      function play() {
+        wrap.classList.add('tt-playing');
+        hmLoadTikTok(f);
+      }
+      f.addEventListener('click', play);
+      f.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); play(); }
+      });
+    })();
+    </script>
+  </div>
+</section>
+
+<section class="et-sec et-b">
+  <h2>B — Direct player</h2>
+  <p class="et-note">A plain player frame straight from TikTok, with nothing of ours in between. Press play on the player itself.</p>
+  <iframe src="https://www.tiktok.com/embed/v2/7699668838786370847" allowfullscreen scrolling="no" allow="encrypted-media" title="TikTok video — the Scare-O-Meter is live"></iframe>
+</section>
+
+<section class="et-sec et-c">
+  <h2>C — TikTok standard</h2>
+  <p class="et-note">The standard block TikTok itself hands out when you share a video onto a website. Press play on the player.</p>
+  <blockquote class="tiktok-embed" cite="https://www.tiktok.com/@gethauntmap/video/7699668838786370847" data-video-id="7699668838786370847" style="max-width: 605px;min-width: 325px;">
+    <section>
+      <a target="_blank" rel="noopener" title="@gethauntmap" href="https://www.tiktok.com/@gethauntmap?refer=embed">@gethauntmap</a>
+      <p>New game on HauntMap — the Scare-O-Meter is live &#x1F383;</p>
+      <a target="_blank" rel="noopener" href="https://www.tiktok.com/@gethauntmap/video/7699668838786370847">Watch on TikTok</a>
+    </section>
+  </blockquote>
+  <script async src="https://www.tiktok.com/embed.js"></script>
+</section>
+
+<p><strong>When you're done:</strong> tell Jarvis which letters played — for example, &ldquo;B played, A and C didn't.&rdquo;</p>
+</div>
+{% endblock %}

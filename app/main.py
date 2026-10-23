@@ -4247,6 +4247,23 @@ def about(request: Request):
     )
 
 
+@app.get("/embed-test", response_class=HTMLResponse)
+def embed_test(request: Request):
+    # Unlisted diagnostic (Oct 23): TikTok embeds load their player on
+    # Dan's laptop but never play, on every surface and in both Safari
+    # and Chrome, while tiktok.com itself plays once he logs in — the
+    # leading theory is the third-party embed frame can't reach a
+    # TikTok session. This page shows the SAME Scare-O-Meter rail video
+    # (7699668838786370847) three ways — A: the production facade ->
+    # hmLoadTikTok swap, B: a plain embed/v2 iframe, C: TikTok's raw
+    # share-sheet blockquote + embed.js — so Dan can tap each on the
+    # laptop and report which (if any) plays; that result picks the
+    # production fix. No nav links anywhere; template carries noindex.
+    return templates.TemplateResponse(
+        request, "embed_test.html", {"site_name": SITE_NAME},
+    )
+
+
 # ---------------------------------------------------------------- music
 # /music (Dan, Oct 22): the site's music room — verified Spotify playlists,
 # YouTube classics and the artists who own Halloween. Every ID and URL below
