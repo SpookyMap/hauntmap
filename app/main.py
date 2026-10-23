@@ -2562,6 +2562,157 @@ def music_page(request: Request):
     )
 
 
+# ---------------------------------------------------------------- movies
+# /movies (Dan, Oct 23): the screening room — new Halloween-season releases,
+# the classics and superfan deep cuts, every card a click-to-play YouTube
+# facade for the official trailer (or, for Halloweentown, Disney Channel's
+# own clip — Disney has never posted a trailer). Card art is the trailer's
+# own YouTube still; no posters are downloaded or hotlinked. Every ID below
+# was verified via YouTube oEmbed on 2026-10-23 (title + channel match,
+# embeddable) — never add a link here without the same check. Release dates
+# and the three R ratings are from the studios' own trailers and the
+# October 2026 release calendars (see the staged build report).
+MOVIE_NEW = [
+    {"title": "Resident Evil", "year": 2026,
+     "meta": "In theaters now · Sep 18",
+     "blurb": "Zach Cregger (Barbarian, Weapons) takes the keys to Raccoon "
+              "City — the fall's biggest horror swing.",
+     "id": "mNd1gb19A-c", "channel": "Sony Pictures Entertainment",
+     "kind": "Official Trailer"},
+    {"title": "Other Mommy", "year": 2026,
+     "meta": "In theaters Oct 9 · Rated R",
+     "blurb": "Jessica Chastain plays a mother — and the thing wearing her "
+              "face. The season's creepiest double act.",
+     "id": "bEpTgowZ1dI", "channel": "Universal Pictures",
+     "kind": "Official Trailer"},
+    {"title": "V/H/S/Mixtape", "year": 2026,
+     "meta": "Streaming on Shudder · Oct 9",
+     "blurb": "Found footage gets a soundtrack — this year's V/H/S "
+              "anthology wires every scare to the music.",
+     "id": "GrIouRKyPDw", "channel": "Shudder",
+     "kind": "Official Trailer"},
+    {"title": "Crawlers", "year": 2026,
+     "meta": "In theaters Oct 16 · Rated R",
+     "blurb": "Venomous spiders seal an apartment block — and a city "
+              "quarantines it with everyone still inside. Eight legs, no "
+              "exits.",
+     "id": "4DowjB87tRE", "channel": "RoadsideFlix",
+     "kind": "Official Trailer"},
+    {"title": "Whalefall", "year": 2026,
+     "meta": "In theaters Oct 16",
+     "blurb": "Swallowed whole by a sperm whale with an hour of air left "
+              "— the survival nightmare you'll feel in your chest.",
+     "id": "rN9F6-tbySY", "channel": "20th Century Studios",
+     "kind": "Official Trailer"},
+    {"title": "Clayface", "year": 2026,
+     "meta": "In theaters Oct 23 · Rated R",
+     "blurb": "DC goes full body horror — a disfigured actor, a desperate "
+              "experiment, and Gotham's most tragic monster, landing the "
+              "weekend before Halloween.",
+     "id": "OGO4Mqvo3jI", "channel": "DC",
+     "kind": "Official Trailer"},
+]
+MOVIE_CLASSICS = [
+    {"title": "The Rocky Horror Picture Show", "year": 1975,
+     "blurb": "Fifty years of midnight crowds still do the Time Warp in "
+              "costume. Not a screening — a ritual.",
+     "id": "4plqh6obZW4", "channel": "20th Century Studios",
+     "kind": "Official Trailer"},
+    {"title": "Halloween", "year": 1978,
+     "blurb": "The night he came home. Carpenter's shoestring slasher "
+              "wrote the blueprint horror still follows — and Haddonfield "
+              "is sacred ground.",
+     "id": "3JsrH8eUVOo", "channel": "Scream Factory TV",
+     "kind": "Official Trailer"},
+    {"title": "Beetlejuice", "year": 1988,
+     "blurb": "The ghost with the most turned a haunted house into a "
+              "comedy club. Go ahead — say his name three times.",
+     "id": "po1HJbmow0g", "channel": "Warner Bros. Entertainment",
+     "kind": "Official Trailer"},
+    {"title": "Hocus Pocus", "year": 1993,
+     "blurb": "Three resurrected witches, one black-flame candle, "
+              "infinite rewatches. The official film of October.",
+     "id": "F4e6YQFrt1s", "channel": "Rotten Tomatoes Classic Trailers",
+     "kind": "Official Trailer"},
+    {"title": "The Nightmare Before Christmas", "year": 1993,
+     "blurb": "Halloween movie or Christmas movie? Superfans settled it "
+              "long ago: it's both, forever — and Halloween Town is home.",
+     "id": "wr6N_hZyBCk", "channel": "Rotten Tomatoes Classic Trailers",
+     "kind": "Official Trailer"},
+    {"title": "Scream", "year": 1996,
+     "blurb": "The film that made horror self-aware — and made every "
+              "ringing phone in 1996 sound like a threat.",
+     "id": "U0LETmDvuXc", "channel": "Paramount Movies",
+     "kind": "Official Trailer"},
+    {"title": "Halloweentown", "year": 1998,
+     "blurb": "Disney Channel's 1998 original is pure bottled nostalgia — "
+              "Grandma Aggie, a giant pumpkin in the town square, and a "
+              "town where it's always Halloween.",
+     "id": "ozGLDYRjvN0", "channel": "Disney Channel",
+     "kind": "Official Clip"},
+    {"title": "Trick 'r Treat", "year": 2007,
+     "blurb": "Sam's rules are the superfans' rules: wear a costume, hand "
+              "out treats, and never blow out a jack-o'-lantern early.",
+     "id": "ZTOHbEOLcCU", "channel": "Legendary",
+     "kind": "Official Trailer"},
+    {"title": "Coraline", "year": 2009,
+     "blurb": "The 'kids' movie that genuinely terrifies adults. Button "
+              "eyes beat jump scares, every single time.",
+     "id": "P8lfdvXkhu0", "channel": "LAIKA Studios",
+     "kind": "Official Trailer"},
+]
+MOVIE_DEEP_CUTS = [
+    {"title": "The Monster Squad", "year": 1987,
+     "blurb": "Kids vs. Dracula, Frankenstein's monster and the Wolfman "
+              "— the '80s clubhouse horror that raised a generation of "
+              "superfans.",
+     "id": "bdLO3riTwJU", "channel": "Arrow Video",
+     "kind": "Official Trailer"},
+    {"title": "Ginger Snaps", "year": 2000,
+     "blurb": "Puberty as lycanthropy — Canada's sharpest cult classic, "
+              "and the werewolf movie superfans gatekeep hardest.",
+     "id": "011YdVip2KM", "channel": "Lionsgate Movies",
+     "kind": "Official Trailer"},
+    {"title": "Shaun of the Dead", "year": 2004,
+     "blurb": "A rom-com with zombies that loves the genre too much to "
+              "mock it. The Cornetto standard, set in a London pub.",
+     "id": "cqDy3dXLBO8", "channel": "Focus Features",
+     "kind": "Official Trailer"},
+    {"title": "Monster House", "year": 2006,
+     "blurb": "The house across the street is literally alive — animated "
+              "suburbia with real teeth, and a finale that goes full "
+              "monster movie.",
+     "id": "2bhP8oH1TJs", "channel": "Amblin Entertainment",
+     "kind": "Official Trailer"},
+    {"title": "The House of the Devil", "year": 2009,
+     "blurb": "Shot like a lost tape from 1983 — Ti West's babysitter "
+              "slow-burn is the purist's pick, Walkman and all.",
+     "id": "z9vJF61_NLU", "channel": "Magnolia Pictures & Magnet Releasing",
+     "kind": "Official Trailer"},
+    {"title": "ParaNorman", "year": 2012,
+     "blurb": "A boy who talks to the dead saves a town that fears him — "
+              "LAIKA's stop-motion love letter to every weird kid who "
+              "loves horror.",
+     "id": "skGT6aorNng", "channel": "LAIKA Studios",
+     "kind": "Official Trailer"},
+    {"title": "What We Do in the Shadows", "year": 2014,
+     "blurb": "Four vampire flatmates, one documentary crew — the "
+              "funniest bloodsuckers ever filmed, straight out of "
+              "Wellington.",
+     "id": "IAZEWtyhpes", "channel": "Madman Films",
+     "kind": "Official Trailer"},
+]
+
+
+@app.get("/movies", response_class=HTMLResponse)
+def movies_page(request: Request):
+    return templates.TemplateResponse(
+        request, "movies.html",
+        {"site_name": SITE_NAME, "new": MOVIE_NEW,
+         "classics": MOVIE_CLASSICS, "deep_cuts": MOVIE_DEEP_CUTS},
+    )
+
+
 @app.get("/media-kit", response_class=HTMLResponse)
 def media_kit(request: Request):
     now = datetime.now(timezone.utc)
