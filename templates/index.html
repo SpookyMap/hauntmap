@@ -315,7 +315,11 @@ function hmFullHomepage() {
   {# z97 (Dan, Oct 23): Text Alerts last inside the hero panel, under
      the Haunt Bracket (moved from between Trending and Tonight's).
      Same include, same homepage sms_source, same {% if trending %}
-     guard it always had — only its seat in the panel changed. #}
+     guard it always had — only its seat in the panel changed.
+     z99 (Dan, Oct 23): the form is also anchored to the panel's
+     BOTTOM edge (flex column + margin-top:auto in style.css), so it
+     sits over the backdrop's castle scene with open art between it
+     and the Bracket. #}
   {% if trending %}
   {% with sms_source = "homepage" %}{% include "_text_alerts.html" %}{% endwith %}
   {% endif %}

@@ -3099,3 +3099,59 @@ body.hm-returning .hm-slimbar { display: flex; }
 }
 .hero-intro .hm-find { margin: 0.1rem 0 0.3rem; text-align: left; }
 .hero-intro .hm-find-msg { margin: 0.6rem 0 0; }
+
+/* ============ z99: TEXT ALERTS ANCHORED TO THE HERO BLOCK'S BOTTOM + PHONE BLOCKS SHRUNK/CENTRED (Dan, Oct 23) ====
+   (1) Laptop hero block: Dan's photo showed the in-panel Text Alerts
+   form sitting directly under the Haunt Bracket while a long stretch
+   of the backdrop's castle scene sat empty at the block's bottom. The
+   panel is now a flex column and the stack fills its height, with the
+   form's margin-top:auto pushing it to the block's bottom edge — over
+   the castle — so whatever slack the block has becomes open art
+   between the Bracket and the form. The find block's vertical margins
+   are zeroed in this context because flex margins don't collapse:
+   the collapsed block-layout gaps (headline 1rem, stack 0.6rem) come
+   out identical, so nothing above the form moves.
+   (2) Phone only: the TikTok-follow strip, the sponsor billboard and
+   the town-request form were sized by the hero grid's 408px
+   min-content column — they ran 408px wide on a 390px screen and
+   hung off the right edge while the blocks below sit at the page's
+   358px measure. They now take the same measure as the blocks below
+   (100vw - 2rem = the content column), left-aligned to the same edge,
+   with their padding/type/logo scaled ~15% down. Colours and the
+   billboard's locked design are untouched — sizes only. */
+@media (min-width: 761px) {
+  .hero-intro { display: flex; flex-direction: column; }
+  .hero-intro .hm-find { margin-top: 0; margin-bottom: 0; }
+  .hero-stack { flex: 1 1 auto; }
+  .hero-stack .text-alerts { margin-top: auto; }
+}
+@media (max-width: 760px) {
+  .hero-split .tt-follow-vert,
+  .hero-split .sponsor-section,
+  .hero-split .town-request {
+    width: calc(100vw - 2rem); max-width: calc(100vw - 2rem);
+    min-width: 0; justify-self: start; box-sizing: border-box;
+  }
+  /* TikTok-follow strip: 49px -> ~42px tall */
+  .hero-split .tt-follow-vert { padding: 0.5rem 0.75rem; gap: 0.5rem; font-size: 0.85rem; }
+  .hero-split .tt-follow-vert img { width: 22px; height: 22px; }
+  /* Sponsor billboard: same orange panel, black frame and type, ~15% smaller */
+  .hero-split .sponsor-section { padding: 1.25rem 0.95rem 1rem; }
+  .hero-split .sponsor-section h2 { font-size: 0.72rem; }
+  .hero-split .sponsor-sub { font-size: 0.74rem; margin: 0.15rem 0 0.7rem; }
+  .hero-split .sponsor-grid { gap: 0.42rem; }
+  .hero-split .sponsor-card { padding: 0.34rem 0.6rem; gap: 0.5rem; }
+  .hero-split .sponsor-logo { width: 41px !important; height: 61px !important; max-width: 41px !important; max-height: 61px !important; }
+  .hero-split .sponsor-name { font-size: 0.92rem; }
+  .hero-split .sponsor-text { font-size: 0.74rem; }
+  .hero-split .sponsor-tier { font-size: 0.62rem; }
+  .hero-split .sponsor-cta { margin-top: 0.8rem; font-size: 0.8rem; }
+  /* Town-request form: ~15% smaller (input font size kept at 16px so
+     iOS doesn't auto-zoom on focus — padding carries the shrink) */
+  .hero-split .town-request { padding: 0.85rem 0.95rem; }
+  .hero-split .town-request h3 { font-size: 0.98rem; }
+  .hero-split .town-request p { font-size: 0.78rem; line-height: 1.3; }
+  .hero-split .town-request-form { gap: 0.35rem; margin-top: 0.5rem; }
+  .hero-split .town-request-form input { padding: 0.42rem 0.6rem; }
+  .hero-split .town-request-form .btn { padding: 0.5rem 0.6rem; font-size: 0.92rem; }
+}
