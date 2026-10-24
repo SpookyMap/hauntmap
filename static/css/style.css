@@ -3396,3 +3396,28 @@ body.hm-returning .hm-slimbar { display: flex; }
 .top10-home .states-cta a { display: flex; align-items: center; gap: 0.6rem; }
 .top10-home .states-cta-img { width: 36px; height: 36px; flex: 0 0 auto; }
 .top10-home .states-cta-arrow { flex: 0 0 auto; }
+/* ============ z109: TOP 10 BY STATE BAR FILLS ITS BLOCK (Dan, Oct 23 ~22:38) ====
+   Dan: "Let's make the top ten by state fill the block." The generic
+   bar's visible face is the .states-cta anchor (var(--card) bg), but
+   it sat inset inside the .top10-home section's own panel — 1rem of
+   section padding + border on every side — so the bar measured 34px
+   narrower than the blocks around it (phone: 324 face inside the
+   358 block, vs the 358 Follow-us bar below; laptop: 642.4 face
+   inside the 676.4 hero-stack column, vs Near You / Trending panels
+   at 676.4), and its pumpkin + label + arrow clustered at the left
+   with dead bar trailing right. For the generic variant the section
+   wrapper is redundant — the anchor already carries a card face
+   (bg, border, 14px radius) — so the .top10-home--cta section (set
+   in _top10_home.html when home_top10 is falsy) drops its padding,
+   background and border and the bar's face spans the block
+   edge-to-edge in both seats. Inside the wider bar the layout reads
+   pumpkin + label left, arrow pushed to the right edge
+   (margin-left: auto on the arrow). The personalized variant keeps
+   its panel and padding — its rows already fill the block — and is
+   untouched. /leaderboard .states-cta bars are outside .top10-home
+   and unchanged. */
+.top10-home.top10-home--cta,
+.hero-stack .top10-home.hero-copy.top10-home--cta {
+  padding: 0; background: none; border: none;
+}
+.top10-home .states-cta-arrow { margin-left: auto; }

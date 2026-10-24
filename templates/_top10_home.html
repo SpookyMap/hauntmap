@@ -10,7 +10,7 @@
    .hero-split, under the TikTok videos and above the Follow-us
    banner (Dan, Oct 23 ~21:33) — with CSS keeping exactly one copy
    visible per viewport. #}
-<section class="top10-home{% if hero %} hero-copy{% endif %}" aria-label="Top 10 by state">
+<section class="top10-home{% if hero %} hero-copy{% endif %}{% if not home_top10 %} top10-home--cta{% endif %}" aria-label="Top 10 by state">
   {% if home_top10 %}
   <h2>&#x1F3C6; Top {{ home_top10.entries|length }} in {{ home_top10.name }}</h2>
   <p class="top10-home-sub">The most-viewed {{ cat_labels[cat]|lower }} haunts in your state</p>
