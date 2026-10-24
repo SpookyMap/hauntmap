@@ -43,9 +43,17 @@ function hmFullHomepage() {
   <a class="markets-btn" href="/markets"><span class="vt-ic">&#x1F6D2;</span><span class="vt-label"><span class="vt-l1">Flea</span> <span class="vt-l2">Markets</span> <span class="vt-l3">&amp; Pop-Ups</span></span></a>
   <a class="top100-btn" href="/leaderboard/top-100"><span class="vt-ic">&#x1F3C6;</span><span class="vt-label"><span class="vt-l1">Top 100</span> <span class="vt-l2">Nationwide</span></span></a>
 </div>
-{# Welcome-back slimbar sits UNDER the VT/TV strip (Dan, Oct 23). #}
+{# Welcome-back slimbar sits UNDER the VT/TV strip (Dan, Oct 23).
+   Events segment (Dan, Oct 23): server-rendered from slim_events,
+   which the homepage route builds out of the SAME Tonight-strip
+   resolution (anchor town + parsed-date count) — town scope names
+   the town and tonight's (or the next event day's) real count and
+   links into that town's date-filtered /events view; map scope is
+   the plain location-discovery link. No client-side enhancement:
+   the strip's path is server-side geo, and this reuses it as-is. #}
 <div class="hm-slimbar" id="hm-slimbar">
   <span class="hm-slimbar-welcome">&#x1F383; Welcome back!</span>
+  <a class="hm-slimbar-link" id="hm-slim-events" href="{{ slim_events.href }}">{{ slim_events.text }}</a>
   <a class="hm-slimbar-link" id="hm-slim-fright" href="/daily">&#x1F319; Daily Fright: today&#x27;s drop</a>
   <span class="hm-slim-group"><a class="hm-slimbar-link" id="hm-slim-passport" href="/passport" hidden></a><button type="button" class="hm-full-btn" onclick="hmFullHomepage()">See full homepage</button></span>
   <script>

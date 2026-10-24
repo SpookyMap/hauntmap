@@ -1952,6 +1952,35 @@ def home(request: Request, sort: str = "new", town: str = "", town_search: str =
                                 events_day=strip_events_day)
     else:
         tstrip = None
+    # Welcome-back slimbar events segment (Dan, Oct 23): reuses the
+    # Tonight strip's resolution wholesale — same anchor town, same
+    # parsed-date count, same link target — compressed to one slim
+    # link. Copy is deliberately terse ("9 tonight in Brooklyn, NY";
+    # the strip further down carries the full "events on tonight"
+    # wording): at 0.78rem the full phrasing measured ~226px and
+    # pushed the phone bar past its two-line ceiling. "in {town}"
+    # names where the events ARE, so it stays literally true in
+    # every anchor mode (the visitor's own town, or the nearest town
+    # with events tonight when theirs has none); a next-event-day
+    # anchor names that day instead of "tonight". Map scope
+    # (location unknown / no anchor) and a zero count fall back to
+    # the plain discovery link — no invented town, no count.
+    if tstrip and tstrip["scope"] == "town" and tstrip["events_on"]:
+        _sn = tstrip["events_on"]
+        if tstrip["events_iso"] == tstrip["today_iso"]:
+            _stext = f"\U0001F3AA {_sn} tonight in {tstrip['town_label']}"
+        else:
+            _stext = (f"\U0001F3AA {_sn} in {tstrip['town_label']} "
+                      f"{tstrip['events_when']}")
+        slim_events = {
+            "text": _stext,
+            "href": ("/events?town="
+                     + urllib.parse.quote(tstrip["town_label"])
+                     + "&on=" + tstrip["events_iso"]),
+        }
+    else:
+        slim_events = {"text": "\U0001F3AA Events near you \u2192",
+                       "href": "/events"}
     response = templates.TemplateResponse(request, "index.html",
         {"request": request, "entries": entries, "sort": sort,
          "town": town, "towns": towns(cat, state), "states": states(cat),
@@ -1962,6 +1991,7 @@ def home(request: Request, sort: str = "new", town: str = "", town_search: str =
          "daily": daily, "daily_label": tonight_label,
          "daily_trivia_q": daily_quiz[0]["q"] if daily_quiz else "",
          "tstrip": tstrip,
+         "slim_events": slim_events,
          "bracket_teaser": _bracket_teaser(),
          "trending": trending, "near_towns": near_towns,
          "home_top10": home_top10,
