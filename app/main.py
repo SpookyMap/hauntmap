@@ -30,7 +30,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from fastapi import BackgroundTasks, FastAPI, Form, HTTPException, Request, UploadFile, File
-from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse, Response
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse, Response, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from PIL import Image, ImageOps, UnidentifiedImageError
@@ -5624,26 +5624,93 @@ def admin_logout(request: Request):
     return resp
 
 
+class _ZipStreamSink:
+    """Non-seekable file-like sink zipfile writes into while streaming.
+
+    Bytes land in a small buffer that the response generator drains after
+    every source chunk, so memory stays bounded no matter how large the
+    archive grows. tell() tracks total bytes written (zipfile needs it for
+    header offsets); with seekable() False, zipfile emits a data descriptor
+    per entry instead of seeking back to patch the local header.
+    """
+
+    def __init__(self):
+        self._buf = bytearray()
+        self._pos = 0
+
+    def write(self, data):
+        self._buf += data
+        self._pos += len(data)
+        return len(data)
+
+    def tell(self):
+        return self._pos
+
+    def seekable(self):
+        return False
+
+    def flush(self):
+        pass
+
+    def drain(self):
+        chunk = bytes(self._buf)
+        self._buf.clear()
+        return chunk
+
+
+def _backup_zip_chunks():
+    """Yield the backup zip (database + all uploads) as it is generated.
+
+    Same archive layout as the old temp-file version: hauntmap.db first,
+    then uploads/<path> for every file under UPLOAD_DIR, in sorted order.
+    Entries are ZIP_STORED — the payloads are already-compressed media, so
+    storing costs almost no CPU — and source files are copied through in
+    256 KB chunks, so even a large video never lands in RAM whole.
+    """
+    sink = _ZipStreamSink()
+    files = []
+    if DB_PATH.exists():
+        files.append((DB_PATH, "hauntmap.db"))
+    if UPLOAD_DIR.exists():
+        for f in sorted(UPLOAD_DIR.rglob("*")):
+            if f.is_file():
+                files.append((f, f"uploads/{f.relative_to(UPLOAD_DIR)}"))
+    with zipfile.ZipFile(sink, "w", zipfile.ZIP_STORED) as z:
+        for path, arcname in files:
+            zinfo = zipfile.ZipInfo.from_file(path, arcname)
+            with z.open(zinfo, "w") as dest, open(path, "rb") as src:
+                while chunk := src.read(256 * 1024):
+                    dest.write(chunk)
+                    data = sink.drain()
+                    if data:
+                        yield data
+            data = sink.drain()
+            if data:
+                yield data
+    data = sink.drain()
+    if data:
+        yield data
+
+
 @app.get("/admin/backup")
-def admin_backup(request: Request, background: BackgroundTasks):
-    """Download a zip of the database + all uploads (for automated backups). Admin only."""
+def admin_backup(request: Request):
+    """Download a zip of the database + all uploads (for automated backups). Admin only.
+
+    Streamed: the archive is generated on the fly into the response. The old
+    version built the whole ~2 GB zip as a temp file first — Render's /tmp
+    is capped at 2 GB, so once the backup grew past it a backup run filled
+    /tmp and Render killed the instance (Oct 24 outage). No temp file and
+    no Content-Length now: the response is chunked.
+    """
     if not is_admin(request):
         raise HTTPException(401, "Not authorized.")
-    tmp = Path(tempfile.mkstemp(prefix="hauntmap-backup-", suffix=".zip")[1])
-    try:
-        with zipfile.ZipFile(tmp, "w", zipfile.ZIP_DEFLATED) as z:
-            if DB_PATH.exists():
-                z.write(DB_PATH, "hauntmap.db")
-            if UPLOAD_DIR.exists():
-                for f in sorted(UPLOAD_DIR.rglob("*")):
-                    if f.is_file():
-                        z.write(f, f"uploads/{f.relative_to(UPLOAD_DIR)}")
-    except Exception:
-        tmp.unlink(missing_ok=True)
-        raise
-    background.add_task(tmp.unlink, True)
     stamp = datetime.now(timezone.utc).strftime("%Y%m%d")
-    return FileResponse(tmp, filename=f"hauntmap-backup-{stamp}.zip")
+    return StreamingResponse(
+        _backup_zip_chunks(),
+        media_type="application/zip",
+        headers={"Content-Disposition":
+                 f'attachment; filename="hauntmap-backup-{stamp}.zip"'},
+    )
 
 
 @app.post("/admin/rethumb")
