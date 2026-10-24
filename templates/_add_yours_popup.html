@@ -1,0 +1,107 @@
+{# Add Yours invite popup (Dan, Oct 24 — STAGED for preview, NOT live).
+   A closable invite to add your own house decorations, linking to the
+   public submission flow at /upload (the "Add Yours" nav target).
+   Server-side gate: never rendered for a visitor carrying the admin
+   cookie (haunt_admin is set httpOnly at /admin/login, deleted at
+   logout, so presence = Dan). JS-side gates live in the script below:
+   never on /upload or /admin*, once per session, 30-day snooze after
+   any dismiss (90 days after clicking through), and it NEVER stacks
+   on the email-capture prompt (#hm-prompt) — it waits that out. #}
+{% if not (request is defined and request.cookies and request.cookies.get('haunt_admin')) %}
+<div id="hm-addyours" hidden>
+  <div class="hm-addyours-backdrop" data-ay-close aria-hidden="true"></div>
+  <div class="hm-addyours-card" role="dialog" aria-modal="true" aria-labelledby="hmAddyoursTitle">
+    <button type="button" class="hm-addyours-x" data-ay-close aria-label="Close popup">&times;</button>
+    <h2 class="hm-addyours-title" id="hmAddyoursTitle">&#x1F383; Your House Belongs on the Map!</h2>
+    <p class="hm-addyours-text">Decorated for Halloween? Add your display so neighbors can find it on a tour.</p>
+    <a class="hm-addyours-cta" id="hmAddyoursCta" href="/upload">Add Your House</a>
+    <button type="button" class="hm-addyours-later" data-ay-close>Maybe later</button>
+  </div>
+</div>
+<script>
+(function () {
+  var root = document.getElementById('hm-addyours');
+  if (!root) return;
+  var path = location.pathname;
+  if (path === '/upload' || path.indexOf('/admin') === 0) return;
+
+  var DAY = 24 * 3600 * 1000;
+  function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+  function lsSet(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+  function ssGet(k) { try { return sessionStorage.getItem(k); } catch (e) { return null; } }
+  function ssSet(k, v) { try { sessionStorage.setItem(k, v); } catch (e) {} }
+
+  if (ssGet('hm_addyours_shown')) return; // once per session, whatever happens
+  var snoozeUntil = parseInt(lsGet('hm_addyours_snooze') || '0', 10) || 0;
+  if (Date.now() < snoozeUntil) return; // dismissed (or clicked through) recently
+
+  // Trigger: a returning/engaged visitor sees it fast-ish (8s into
+  // their 2nd+ pageview); a first-ever visit gets 18s on the page.
+  var views = (parseInt(lsGet('hm_addyours_views') || '0', 10) || 0) + 1;
+  lsSet('hm_addyours_views', String(views));
+  var delay = views >= 2 ? 8000 : 18000;
+
+  var shown = false, closed = false, lastFocus = null;
+  var giveUp = Date.now() + delay + 75000;
+
+  function promptVisible() {
+    var p = document.getElementById('hm-prompt');
+    // NOTE: #hm-prompt is position:fixed, so offsetParent is always
+    // null for it — visibility must go through layout boxes instead.
+    return !!(p && !p.hidden && p.getClientRects().length);
+  }
+  function tryShow() {
+    if (shown || closed) return;
+    // Never stack on #hm-prompt (email capture) or fire into a
+    // background tab: wait, with a hard give-up so a stuck prompt
+    // can never make this nag later in the session.
+    if (document.hidden || promptVisible()) {
+      if (Date.now() < giveUp) setTimeout(tryShow, 2000);
+      return;
+    }
+    open();
+  }
+  setTimeout(tryShow, delay);
+
+  function open() {
+    shown = true;
+    ssSet('hm_addyours_shown', '1');
+    try { lastFocus = document.activeElement; } catch (e) { lastFocus = null; }
+    root.hidden = false;
+    requestAnimationFrame(function () { root.classList.add('open'); });
+    var x = root.querySelector('.hm-addyours-x');
+    if (x) { try { x.focus({ preventScroll: true }); } catch (e) {} }
+    document.addEventListener('keydown', onKey, true);
+  }
+  function snooze(days) { lsSet('hm_addyours_snooze', String(Date.now() + days * DAY)); }
+  function close(days) {
+    if (closed) return;
+    closed = true;
+    snooze(days);
+    root.classList.remove('open');
+    document.removeEventListener('keydown', onKey, true);
+    setTimeout(function () { root.hidden = true; }, 220);
+    if (lastFocus && lastFocus.focus) { try { lastFocus.focus({ preventScroll: true }); } catch (e) {} }
+  }
+  function onKey(ev) {
+    if (ev.key === 'Escape') { ev.preventDefault(); close(30); return; }
+    if (ev.key !== 'Tab') return;
+    // Light focus trap: keep Tab cycling inside the card.
+    var f = root.querySelectorAll('a[href], button:not([disabled])');
+    if (!f.length) return;
+    var first = f[0], last = f[f.length - 1];
+    if (ev.shiftKey && document.activeElement === first) { ev.preventDefault(); last.focus(); }
+    else if (!ev.shiftKey && document.activeElement === last) { ev.preventDefault(); first.focus(); }
+  }
+  root.querySelectorAll('[data-ay-close]').forEach(function (el) {
+    el.addEventListener('click', function () { close(30); });
+  });
+  var cta = document.getElementById('hmAddyoursCta');
+  if (cta) cta.addEventListener('click', function () {
+    // They took the invite — don't nag again for a long while.
+    ssSet('hm_addyours_shown', '1');
+    snooze(90);
+  });
+})();
+</script>
+{% endif %}

@@ -832,6 +832,33 @@ a.game-card:hover { border-color: #ff7518; transform: translateY(-2px); }
 #hm-prompt .hm-prompt-form button { background: #ff7518; color: #14101f; font-weight: 800; border: none; border-radius: 8px; padding: 0.55rem 0.9rem; cursor: pointer; }
 #hm-prompt .hm-prompt-x { position: absolute; top: 0.35rem; right: 0.55rem; background: none; border: none; color: #9a8fb8; font-size: 1.25rem; cursor: pointer; }
 #hm-prompt .hm-prompt-done { color: #7ee081; font-weight: 700; margin: 0.2rem 0; }
+
+/* Add Yours invite popup (Dan, Oct 24 — STAGED for preview). Centered
+   card on laptop, bottom sheet on phone. z-index 1500 sits BELOW
+   #hm-prompt (2000) on purpose: the JS also waits #hm-prompt out, so
+   the two never stack, and if both ever fired the email prompt wins. */
+#hm-addyours { position: fixed; inset: 0; z-index: 1500; display: flex; align-items: center; justify-content: center; padding: 1rem; }
+#hm-addyours[hidden] { display: none; }
+.hm-addyours-backdrop { position: absolute; inset: 0; background: rgba(8, 4, 18, 0.68); opacity: 0; transition: opacity 0.22s ease; }
+#hm-addyours.open .hm-addyours-backdrop { opacity: 1; }
+.hm-addyours-card { position: relative; width: min(440px, 100%); background: linear-gradient(160deg, #2c1a56, #17122b); border: 2px solid #ff7518; border-radius: 18px; padding: 1.7rem 1.5rem 1.25rem; text-align: center; box-shadow: 0 18px 50px rgba(0, 0, 0, 0.6); opacity: 0; transform: translateY(14px) scale(0.98); transition: opacity 0.22s ease, transform 0.22s ease; }
+#hm-addyours.open .hm-addyours-card { opacity: 1; transform: none; }
+.hm-addyours-x { position: absolute; top: 0.3rem; right: 0.45rem; width: 2.4rem; height: 2.4rem; background: none; border: none; color: #9a8fb8; font-size: 1.5rem; line-height: 1; cursor: pointer; }
+.hm-addyours-x:hover, .hm-addyours-x:focus-visible { color: #FFF8E7; }
+.hm-addyours-title { font-family: "Creepster", cursive; font-weight: 400; font-size: 1.95rem; letter-spacing: 0.02em; line-height: 1.15; color: #FFF8E7; margin: 0 1.4rem 0.55rem; }
+.hm-addyours-text { color: var(--muted); margin: 0 0 1.15rem; line-height: 1.45; }
+.hm-addyours-cta { display: block; background: #ff7518; color: #1a1038; font-weight: 800; font-size: 1.05rem; padding: 0.8rem 1rem; border-radius: 10px; text-decoration: none; }
+.hm-addyours-cta:hover, .hm-addyours-cta:focus-visible { background: #ff8c3a; }
+.hm-addyours-later { display: block; margin: 0.65rem auto 0; padding: 0.35rem 0.8rem; background: none; border: none; color: #9a8fb8; font-size: 0.92rem; cursor: pointer; text-decoration: underline; }
+.hm-addyours-later:hover, .hm-addyours-later:focus-visible { color: #FFF8E7; }
+@media (max-width: 760px) {
+  #hm-addyours { align-items: flex-end; padding: 0; }
+  .hm-addyours-card { width: 100%; border-radius: 18px 18px 0 0; border-bottom: none; padding: 1.5rem 1.2rem calc(1.15rem + env(safe-area-inset-bottom)); transform: translateY(26px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hm-addyours-backdrop, .hm-addyours-card { transition: none; }
+  .hm-addyours-card { transform: none; }
+}
 .check-label { display: flex; gap: 0.5rem; align-items: center; font-size: 0.95rem; }
 
 /* ---- Homepage TikTok promo (replaces email signup strip) ---- */
