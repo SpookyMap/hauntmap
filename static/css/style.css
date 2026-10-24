@@ -3482,3 +3482,35 @@ body.hm-returning .hm-slimbar { display: flex; }
   .site-header.v2 .header-nav a.navbtn span { font-size: 0.70rem; }
   .site-header.v2 .header-nav a.navbtn img { width: 27px; height: 27px; }
 }
+/* ============ z113: TOP 10 BY STATE BAR — ARROW OUT, TEXT FILLS THE BLOCK (Dan, Oct 24 ~14:06) ====
+   Dan: "Let's get rid of the arrow in the top 10 by state and fill
+   the block with the text." Generic homepage bar only (scoped
+   .top10-home--cta, the z108–z110 discipline; the personalized
+   state list and the /leaderboard .states-cta bars are untouched):
+   the arrow span is removed from _top10_home.html (both homepage
+   seats render from that one include), and the Creepster label now
+   flexes across the whole bar face beside the pumpkin — a bigger
+   type ladder plus open tracking, tuned per band so the glyph run
+   spans its flex zone edge-to-edge on one line. A tighter
+   line-height (1.1, vs Creepster's ~1.58 default) keeps the bar
+   near its z110 height instead of growing with the type. The
+   z108–z110 .states-cta-arrow rules match nothing on the homepage
+   now and are inert. */
+.top10-home.top10-home--cta .states-cta a strong {
+  flex: 1 1 auto;
+  font-size: 2.35rem;
+  letter-spacing: 0.075em;
+  line-height: 1.1;
+}
+@media (min-width: 761px) and (max-width: 1199px) {
+  .top10-home.top10-home--cta .states-cta a strong {
+    font-size: 4.6rem;
+    letter-spacing: 0.235em;
+  }
+}
+@media (min-width: 1200px) {
+  .top10-home.top10-home--cta .states-cta a strong {
+    font-size: 3.9rem;
+    letter-spacing: 0.22em;
+  }
+}
