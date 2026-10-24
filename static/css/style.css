@@ -3279,3 +3279,16 @@ body.hm-returning .hm-slimbar { display: flex; }
   .header-band .header-hook .hook-l1 { font-size: clamp(0.90rem, 4.7cqw, 1.46rem); }
   .header-band .header-hook .hook-dot { display: none; }
 }
+
+/* ============ z104: PHONE HOOK — EVEN LARGER (Dan, Oct 23 ~21:38) ====
+   Phone portrait only; same media query as z101, later in the cascade,
+   so this clamp overrides z101's. Dan saw z101 live (14.4px at 390)
+   and asked for the hook bigger still. The floor binds at phone widths
+   (the cqw term resolves well under it against the ~206px band centre),
+   so the whole clamp scales ~+20%: floor 0.90 -> 1.08rem (17.28px at
+   390), coefficient 4.7 -> 5.6cqw, cap 1.46 -> 1.75rem. Periods stay
+   hidden via z101's .hook-dot rule; colors and hook-l2 untouched;
+   laptop is outside this query and renders exactly as before. */
+@media (max-width: 760px) and (orientation: portrait) {
+  .header-band .header-hook .hook-l1 { font-size: clamp(1.08rem, 5.6cqw, 1.75rem); }
+}
