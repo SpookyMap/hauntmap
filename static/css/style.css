@@ -3421,3 +3421,30 @@ body.hm-returning .hm-slimbar { display: flex; }
   padding: 0; background: none; border: none;
 }
 .top10-home .states-cta-arrow { margin-left: auto; }
+/* ============ z110: TOP 10 BY STATE BAR — BIG FONT FILLS THE BLOCK (Dan, Oct 23 ~22:54) ====
+   Dan, replying to the z109 iPad fill screenshot: "Top ten by state
+   needs to big font to fill the entire block it's in." The bar spans
+   its block (z109) but the Creepster label was still 1.15em (~18px)
+   with a 36px pumpkin — modest type adrift in a wide bar. The generic
+   variant only (scoped to .top10-home--cta; the personalized state
+   list and the /leaderboard .states-cta bars are untouched): the
+   label scales up a step ladder — 1.7rem on phone, 2.3rem at
+   >=761px — on one line at every width (white-space: nowrap; the
+   rendered Creepster text measures ~165px at the phone step and
+   ~223px at the wide step against 324px / 639px of bar inner width,
+   so nothing wraps or overflows), the jack-o'-lantern grows with it
+   (46px / 58px) and the arrow takes the label's size. The bar grows
+   taller to fit (~70px phone, ~87px wide) — that is the fill Dan
+   asked for; width-fill from z109 is unchanged. */
+.top10-home.top10-home--cta .states-cta a { gap: 0.8rem; padding: 0.7rem 1rem; }
+.top10-home.top10-home--cta .states-cta a strong {
+  font-size: 1.7rem; white-space: nowrap;
+}
+.top10-home.top10-home--cta .states-cta-img { width: 46px; height: 46px; }
+.top10-home.top10-home--cta .states-cta-arrow { font-size: 1.7rem; line-height: 1; }
+@media (min-width: 761px) {
+  .top10-home.top10-home--cta .states-cta a { padding: 0.85rem 1.1rem; }
+  .top10-home.top10-home--cta .states-cta a strong { font-size: 2.3rem; }
+  .top10-home.top10-home--cta .states-cta-img { width: 58px; height: 58px; }
+  .top10-home.top10-home--cta .states-cta-arrow { font-size: 2.3rem; }
+}
