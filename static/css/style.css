@@ -3448,3 +3448,30 @@ body.hm-returning .hm-slimbar { display: flex; }
   .top10-home.top10-home--cta .states-cta-img { width: 58px; height: 58px; }
   .top10-home.top10-home--cta .states-cta-arrow { font-size: 2.3rem; }
 }
+/* ============ z111: TABLET HEADER NAV FITS ITS ROW (Dan, Oct 23 ~22:55) ====
+   Dan's iPad photo: header nav row two (Events GIF + Watch …
+   About Us) overflows the tablet width — the Events GIF clips at
+   the left edge and About Us at the right, spacing uneven. Measured
+   at 820 portrait on the pre-fix tree: the 11 items' intrinsic
+   widths total ~759px + 10 × 12px minimum gaps = ~879px against a
+   788px row — About Us ended at x≈895, ~75px off-screen. Band
+   761–1199px ONLY (phone ≤760 and laptop ≥1200 rules untouched):
+   the Events GIF steps down 55px → 46px tall (still the row's
+   anchor at ~1.8× the icon size), labels 0.72rem → 0.67rem with
+   tighter tracking, icons 28px → 26px, and the base gap drops so
+   justify-content: space-between distributes what's left EVENLY
+   across all ten slots. The 1000–1199 sub-band keeps slightly
+   larger art/type since it has the width for it. */
+@media (min-width: 761px) and (max-width: 1199px) {
+  .site-header.v2 .header-nav { gap: 0.45rem; }
+  .site-header.v2 .header-nav a.events-link img.events-gif { height: 46px; }
+  .site-header.v2 .header-nav a.navbtn { font-size: 0.67rem; letter-spacing: 0.02em; }
+  .site-header.v2 .header-nav a.navbtn span { font-size: 0.67rem; }
+  .site-header.v2 .header-nav a.navbtn img { width: 26px; height: 26px; }
+}
+@media (min-width: 1000px) and (max-width: 1199px) {
+  .site-header.v2 .header-nav a.events-link img.events-gif { height: 50px; }
+  .site-header.v2 .header-nav a.navbtn { font-size: 0.70rem; }
+  .site-header.v2 .header-nav a.navbtn span { font-size: 0.70rem; }
+  .site-header.v2 .header-nav a.navbtn img { width: 27px; height: 27px; }
+}
