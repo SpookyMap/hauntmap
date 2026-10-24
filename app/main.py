@@ -2330,7 +2330,10 @@ def nearby(request: Request, q: str = "", miles: float = 10, cat: str = "hallowe
     return templates.TemplateResponse(request, "nearby.html",
         {"request": request, "entries": entries, "q": q, "miles": miles,
          "err": err, "voted": voted, "cat": cat, "cat_labels": CAT_LABELS,
-         "cat_emoji": CAT_EMOJI, "sort": sort},
+         "cat_emoji": CAT_EMOJI, "sort": sort,
+         # Town dropdown options for the search field — the same
+         # 'City, ST' labels the homepage town filter offers.
+         "town_options": towns(cat)},
     )
 
 

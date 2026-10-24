@@ -2,8 +2,8 @@
 {% block title %}Nearby haunts - {{ site_name }}{% endblock %}
 {% block content %}
 <h2>&#x1F50D; Find haunts near you</h2>
-<form method="get" action="/nearby" class="nearby-form">
-  <input type="text" name="q" value="{{ q if q != 'your location' else '' }}" placeholder="Town, city, or address..." >
+<form method="get" action="/nearby" class="nearby-form" id="nearby-form">
+  <input type="text" name="q" id="nearby-q" value="{{ q if q != 'your location' else '' }}" placeholder="Town, city, or address..." autocomplete="off">
   <select name="miles">
     {% for m in [2, 5, 10, 25, 50] %}
     <option value="{{ m }}" {% if miles == m %}selected{% endif %}>within {{ m }} mi</option>
@@ -13,6 +13,78 @@
   <button type="submit" class="btn">Search</button>
   <button type="button" class="btn" id="btn-near-me">&#x1F4CD; Near me</button>
 </form>
+
+{# Town dropdown (Dan, Oct 23): the pick-a-town list for the search
+   field above — the same 'City, ST' labels the homepage town filter
+   offers (town_options from the /nearby route). Picking a town fills
+   q and submits the search form unchanged (GET /nearby?q=<town>...),
+   exactly what typing the town + Search does today. The panel opens
+   when the field is tapped/focused, and it opens ON ARRIVAL —
+   scrolled into view and focused — when the visitor came via the
+   hero's "Choose my town instead" button (/nearby?choose=town). A
+   native <datalist> can't be force-opened on arrival (showPicker()
+   needs fresh user activation, which a navigation doesn't carry),
+   so the presented dropdown is rendered by the page itself. #}
+<div class="town-dd" id="town-dd" hidden>
+  <p class="town-dd-head">&#x1F3D8;&#xFE0F; Pick your town</p>
+  <div class="town-dd-list" id="town-dd-list">
+    {% for t in town_options %}
+    <button type="button" class="town-dd-item" data-town="{{ t }}">{{ t }}</button>
+    {% endfor %}
+  </div>
+  <p class="town-dd-empty" id="town-dd-empty" hidden>No town on the map matches that yet — tap Search to look it up anyway.</p>
+</div>
+<style>
+.town-dd { border: 1px solid #33254f; border-radius: 12px; background: var(--bg2); padding: 0.6rem; margin: -0.4rem 0 1rem; }
+.town-dd-head { margin: 0 0 0.45rem; color: var(--muted); font-size: 0.85rem; font-weight: 600; }
+.town-dd-list { max-height: 264px; overflow-y: auto; display: flex; flex-direction: column; }
+.town-dd-item { background: transparent; border: 0; border-radius: 8px; color: var(--ink); text-align: left; padding: 0.5rem 0.6rem; font-size: 0.95rem; cursor: pointer; }
+.town-dd-item:hover, .town-dd-item:focus-visible { background: rgba(255, 255, 255, 0.07); }
+.town-dd-empty { margin: 0.3rem 0 0; color: var(--muted); font-size: 0.88rem; }
+</style>
+<script>
+(function () {
+  var q = document.getElementById('nearby-q');
+  var form = document.getElementById('nearby-form');
+  var dd = document.getElementById('town-dd');
+  if (!q || !form || !dd) return;
+  var empty = document.getElementById('town-dd-empty');
+  var items = Array.prototype.slice.call(dd.querySelectorAll('.town-dd-item'));
+  function openDd() { dd.hidden = false; }
+  function closeDd() { dd.hidden = true; }
+  function filterDd() {
+    var v = q.value.trim().toLowerCase();
+    var shown = 0;
+    items.forEach(function (it) {
+      var match = !v || it.getAttribute('data-town').toLowerCase().indexOf(v) !== -1;
+      it.style.display = match ? '' : 'none';
+      if (match) shown++;
+    });
+    if (empty) empty.hidden = shown !== 0;
+  }
+  q.addEventListener('focus', openDd);
+  q.addEventListener('click', openDd);
+  q.addEventListener('input', function () { openDd(); filterDd(); });
+  items.forEach(function (it) {
+    it.addEventListener('click', function () {
+      q.value = it.getAttribute('data-town');
+      form.submit();
+    });
+  });
+  document.addEventListener('click', function (e) {
+    if (!dd.hidden && !dd.contains(e.target) && !form.contains(e.target)) closeDd();
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') closeDd();
+  });
+  {% if request.query_params.get('choose') == 'town' %}
+  // Arrived via "Choose my town instead": present the dropdown now.
+  form.scrollIntoView({ block: 'start' });
+  q.focus({ preventScroll: true });
+  openDd();
+  {% endif %}
+})();
+</script>
 <script>
 document.getElementById('btn-near-me').onclick = function() {
   if (!navigator.geolocation) { alert('Geolocation not supported'); return; }

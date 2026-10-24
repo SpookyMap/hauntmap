@@ -100,7 +100,10 @@ function hmFullHomepage() {
   </form>
   <div class="hm-find-actions">
     <button type="button" class="btn hm-find-btn" id="hm-locate-btn">&#x1F4CD; Use my location</button>
-    <a class="btn btn-ghost hm-find-btn" href="/nearby">Choose my town instead</a>
+    {# ?choose=town (Dan, Oct 23): /nearby reads the flag on arrival
+       and presents its town dropdown already open + focused, so this
+       button lands on a ready-to-pick town list, not a bare page. #}
+    <a class="btn btn-ghost hm-find-btn" href="/nearby?choose=town">Choose my town instead</a>
   </div>
   <p class="hm-find-msg" id="hm-locate-msg" hidden></p>
 </div>
