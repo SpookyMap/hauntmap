@@ -3326,3 +3326,43 @@ body.hm-returning .hm-slimbar { display: flex; }
   font-weight: 400;
   letter-spacing: 0.03em;
 }
+/* ============ z106: TABLET FEATURED-TOKS ROW (Dan, Oct 23 ~21:46) ====
+   Dan, from his iPad: the three promo toks stacked in one narrow
+   centred column "looks ridiculous" — "let's put those in one row
+   all together." Band 761–1199px only: phone (<=760px) keeps its
+   z86 three-across row untouched, desktop (>=1200px) keeps the
+   approved left-rail stack untouched.
+   761–999: the hero band is stacked full-width here, so the block
+   simply goes full width as a 3-column grid, natural 9/16 posters.
+   1000–1199: the hero grid's "video" area spans the whole top row
+   and the toks sit three-across in it; posters are capped at
+   400px tall (cover-cropped, same treatment as the desktop rail)
+   so the row doesn't eat the landscape screen. Headline, sponsor,
+   town-request and the follow strip keep their rail-era seats in
+   the rows below. Playback untouched: at >=761px the loader swaps
+   a tapped facade for its scale box in place (z97), and the scale
+   box inherits the facade's grid slot via the nth-of-type rules. */
+@media (min-width: 761px) and (max-width: 1199px) {
+  .hero-split .tt-featured {
+    width: 100%; margin: 0;
+    display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.6rem;
+  }
+  .hero-split .tt-featured > .tt-facade:nth-of-type(1),
+  .hero-split .tt-featured > .tt-scalebox:nth-of-type(1) { grid-column: 1; grid-row: 1; }
+  .hero-split .tt-featured > .tt-facade:nth-of-type(2),
+  .hero-split .tt-featured > .tt-scalebox:nth-of-type(2) { grid-column: 2; grid-row: 1; }
+  .hero-split .tt-featured > .tt-facade:nth-of-type(3),
+  .hero-split .tt-featured > .tt-scalebox:nth-of-type(3) { grid-column: 3; grid-row: 1; }
+  .hero-split .tt-featured .tt-facade + .tt-facade,
+  .hero-split .tt-featured .tt-facade + .tt-scalebox,
+  .hero-split .tt-featured .tt-scalebox + .tt-facade,
+  .hero-split .tt-featured .tt-scalebox + .tt-scalebox { margin-top: 0; }
+}
+@media (min-width: 1000px) and (max-width: 1199px) {
+  .hero-split {
+    grid-template-areas: "video video video" "sponsor headline strip" "townreq headline strip";
+  }
+  .hero-split .tt-featured { gap: 1.1rem; }
+  .hero-split .tt-featured .tt-facade { height: 400px; }
+  .hero-split .tt-featured .tt-facade img { height: 100%; aspect-ratio: auto; }
+}
