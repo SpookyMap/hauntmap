@@ -2027,7 +2027,8 @@ def home(request: Request, sort: str = "new", town: str = "", town_search: str =
 def events_page(request: Request, type: str = "", genre: str = "",
                 venue: str = "", sort: str = "top",
                 state: str = "", town: str = "", region: str = "",
-                on: str = ""):
+                on: str = "", near: str = "", area: str = "",
+                lat: str = "", lng: str = ""):
     # The header's Events artwork links here (Dan, Oct 22). This used to
     # 302 to /?cat=events; it is now the canonical events page so events
     # can be searched by type / genre / venue style (Dan, Oct 22) with
@@ -2133,6 +2134,71 @@ def events_page(request: Request, type: str = "", genre: str = "",
                 params += raws
             else:
                 query += " AND 1 = 0"
+        # "Events near me" (Dan, Oct 24 — STAGED for his preview): the
+        # button at the top of /events lands here with ?near=1 plus one
+        # of the location inputs the site already uses — ?lat=&lng=
+        # from browser geolocation (the hmNearMe / /nearby flow),
+        # ?area= carrying the visitor's saved town (localStorage
+        # hm_town, the homepage's saved-town model) or a town picked
+        # in the chooser below, or nothing at all, in which case the
+        # Cloudflare headers the homepage Near You module reads
+        # (_visitor_geo) get their chance. Resolution itself is the
+        # homepage's own _resolve_visitor_area over the EVENTS town
+        # inventory — exact town (+ neighbours within 75 mi), nearest
+        # towns within 100 mi of the point, or the visitor's state —
+        # never a second, invented proximity rule. The filter then
+        # applies through the same raw-town map as the City dropdown,
+        # so it composes with every facet/date filter and the by-day
+        # grouping below exactly like a town pick does.
+        near_active = False
+        near_label = ""
+        near_prompt = False
+        near_nomap_name = ""
+        if near:
+            geo = None
+            try:
+                flat, flng = float(lat), float(lng)
+                if -90 <= flat <= 90 and -180 <= flng <= 180:
+                    geo = {"city": "", "state": "",
+                           "lat": flat, "lng": flng}
+            except (TypeError, ValueError):
+                geo = None
+            if geo is None and area.strip():
+                acity = extract_city(area)
+                if acity:
+                    geo = {"city": acity,
+                           "state": extract_state(area),
+                           "lat": None, "lng": None}
+            if geo is None:
+                geo = _visitor_geo(request)
+            resolved = (_resolve_visitor_area(
+                _town_inventory(conn, "events"), geo) if geo else None)
+            if resolved and resolved["mode"] in ("exact", "near", "state") \
+                    and resolved["area_labels"]:
+                raws = []
+                for lbl in resolved["area_labels"]:
+                    raws += raw_by_town.get(lbl, [])
+                if raws:
+                    query += f" AND town IN ({','.join('?' * len(raws))})"
+                    params += raws
+                    near_active = True
+                    if resolved["mode"] == "state":
+                        # Chips lead with the state's biggest town,
+                        # which would mislabel the filter — name the
+                        # state itself instead.
+                        near_label = resolved["area_name"]
+                    elif resolved["chips"]:
+                        near_label = resolved["chips"][0]["label"]
+                    else:
+                        near_label = resolved["area_name"]
+            if not near_active:
+                # Asked for near but nothing resolved (no signal at
+                # all, or a known area with zero mapped events): the
+                # template opens the town chooser instead of silently
+                # showing the whole country.
+                near_prompt = True
+                if resolved and resolved["mode"] == "nomap":
+                    near_nomap_name = resolved["area_name"]
         # No SQL cap in any view (the events catalogue is ~553 rows):
         # the by-day grouping below runs over the full facet/state/
         # town/region-filtered set — a cap would silently cut whole
@@ -2225,13 +2291,29 @@ def events_page(request: Request, type: str = "", genre: str = "",
                 "anchor": "day-more",
                 "entries": _ev_sort_day(undated, sort)})
     entries = [e for g in day_groups for e in g["entries"]]
+    # Near-me state carried through the facet form + sort toggles as
+    # hidden fields / a query fragment, so changing type/genre/sort
+    # never drops the visitor's area. Bare "clear filters" links stay
+    # the full reset (they are the Show-all-events path).
+    near_fields = []
+    if near:
+        near_fields.append(("near", "1"))
+        if area.strip():
+            near_fields.append(("area", area.strip()))
+        if lat.strip() and lng.strip():
+            near_fields += [("lat", lat.strip()), ("lng", lng.strip())]
+    near_qs = "&".join(
+        f"{k}={urllib.parse.quote_plus(v)}" for k, v in near_fields)
     return templates.TemplateResponse(request, "events.html",
         {"request": request, "entries": entries, "sort": sort,
          "day_groups": day_groups,
          "facets": facets, "selected": selected, "total": total,
          "loc": loc,
          "filtered": any(selected.values()) or bool(state) or bool(town)
-                     or bool(region) or bool(on_date),
+                     or bool(region) or bool(on_date) or near_active,
+         "near_active": near_active, "near_label": near_label,
+         "near_prompt": near_prompt, "near_nomap_name": near_nomap_name,
+         "near_fields": near_fields, "near_qs": near_qs,
          "on": on_str, "on_label": on_label, "on_total": on_total,
          "voted": voted})
 
