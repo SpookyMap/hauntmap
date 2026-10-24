@@ -3379,3 +3379,20 @@ body.hm-returning .hm-slimbar { display: flex; }
    already clean and render unchanged (verified by measurement). */
 .top10-home-list { grid-template-columns: minmax(0, 1fr); }
 .top10-home-list li { min-width: 0; }
+/* ============ z108: TOP 10 BY STATE BAR — JACK-O'-LANTERN, NO TAIL (Dan, Oct 23 ~22:18) ====
+   Dan: "Let's put a fun Halloween image next to top ten by state and
+   get rid of 'the best in every state'." The generic states-cta bar
+   drops its descriptive tail ("— the best … haunts in every state")
+   and the 🗺️ emoji; a flat jack-o'-lantern (static/img/pumpkin_jack.svg,
+   drawn in the site's flat style — the only pumpkin art in the repo
+   lives inside the full logo composition, ring/trail/background and
+   all, so no standalone asset existed to reuse) sits left of the
+   Creepster "Top 10 by state", with the trailing arrow kept. The
+   homepage copy of the bar lays out as a flex row so the image and
+   text centre vertically; the /leaderboard pages' own .states-cta
+   bars are outside .top10-home and stay block layout, untouched.
+   Personalized variant ("Top N in {State}") has no tail and is
+   unchanged. */
+.top10-home .states-cta a { display: flex; align-items: center; gap: 0.6rem; }
+.top10-home .states-cta-img { width: 36px; height: 36px; flex: 0 0 auto; }
+.top10-home .states-cta-arrow { flex: 0 0 auto; }

@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Jack-o'-lantern">
+  <!-- Flat jack-o'-lantern in the HauntMap art style (Dan, Oct 23):
+       orange pumpkin, brown stem, glowing cream carved face. -->
+  <path d="M29.5 14.5c-.6-4.8 1.8-8.6 6.4-9.7 1.9 2.3 1.2 5.6-.9 8.1-1.7-.4-3.6-.5-5.5-.4z" fill="#7a4a21"/>
+  <path d="M32 13.2c-9.8-5-23.4.8-26 14.2-2.1 11 4.3 24.4 15.8 26.4 3.2.6 17 .6 20.2 0C53.5 51.8 59.9 38.4 57.8 27.4 55.2 14 41.8 8.2 32 13.2z" fill="#f57d14"/>
+  <path d="M21.5 11.8c-4.2 6.8-4.2 30.4 0 40.4" fill="none" stroke="#e06800" stroke-width="2.4" stroke-linecap="round" opacity=".55"/>
+  <path d="M42.5 11.8c4.2 6.8 4.2 30.4 0 40.4" fill="none" stroke="#e06800" stroke-width="2.4" stroke-linecap="round" opacity=".55"/>
+  <path d="M32 13.5c-2.2 7-2.2 29 0 38" fill="none" stroke="#e06800" stroke-width="2.2" stroke-linecap="round" opacity=".35"/>
+  <g fill="#ffedb0">
+    <path d="M17.5 26.8l9.8-2.7-3.4 8.6z"/>
+    <path d="M46.5 26.8l-9.8-2.7 3.4 8.6z"/>
+    <path d="M32 31.6l3.1 6h-6.2z"/>
+    <path d="M15.8 41.6l6 3.2 3-3.4 4 4.4 3.2-4.2 3.4 4.6 3-4.4 3.9 3.6 5.9-3c-1.8 7.2-8.6 11.2-16.2 11.2S17.6 48.8 15.8 41.6z"/>
+  </g>
+</svg>
