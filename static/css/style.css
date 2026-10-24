@@ -3292,3 +3292,37 @@ body.hm-returning .hm-slimbar { display: flex; }
 @media (max-width: 760px) and (orientation: portrait) {
   .header-band .header-hook .hook-l1 { font-size: clamp(1.08rem, 5.6cqw, 1.75rem); }
 }
+
+/* ============ z105: TOP 10 BY STATE HEADINGS IN CREEPSTER (Dan, Oct 23 ~21:47) ====
+   Dan: "Let's give the top ten by state some cool Halloween font
+   letters." The Top 10 headings now wear the site's Halloween display
+   face — Creepster, the same family as the hero headline ("Find the
+   Best Halloween Displays Near You", .hero-intro h1.hero-title) and
+   already loaded in base.html; no new font is fetched. Heading text
+   ONLY: the ranked rows, view counts and Featured badges stay in the
+   readable UI type, and heading colors are unchanged.
+   - Homepage block, personalized variant: .top10-home h2 ("Top N in
+     {State}") — covers both copies (laptop in-hero + phone twin),
+     which share the _top10_home.html include.
+   - Homepage block, generic variant: the "Top 10 by state" lead-in of
+     the states-cta bar; the descriptive tail of the bar ("— the best
+     … haunts in every state →") keeps UI type, like the personalized
+     variant's "See the full Top 10…" line.
+   - /leaderboard/states page title: h1.states-title. The per-state
+     section h2s on that page are untouched. */
+.top10-home h2 {
+  font-family: "Creepster", cursive;
+  font-weight: 400;
+  letter-spacing: 0.03em;
+}
+.top10-home .states-cta a strong {
+  font-family: "Creepster", cursive;
+  font-weight: 400;
+  letter-spacing: 0.03em;
+  font-size: 1.15em;
+}
+.states-title {
+  font-family: "Creepster", cursive;
+  font-weight: 400;
+  letter-spacing: 0.03em;
+}

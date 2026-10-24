@@ -5,7 +5,7 @@
   <a href="/leaderboard/states?cat=halloween" class="{% if cat == 'halloween' %}active{% endif %}">&#x1F383; Haunt Map</a>
   <a href="/leaderboard/states?cat=christmas" class="{% if cat == 'christmas' %}active{% endif %}">&#x1F384; Jolly Map</a>
 </div>
-<h1>&#x1F3C6; Top 10 by state</h1>
+<h1 class="states-title">&#x1F3C6; Top 10 by state</h1>
 <p class="muted">The most-viewed {{ cat_labels[cat]|lower }} haunts in every state, ranked by visits to each display's page &mdash; the same ranking as <a href="/leaderboard?cat={{ cat }}">Top Haunts</a>. &#x2B50; <strong>Featured</strong> marks one of Dan's hand-picked displays, guaranteed a spot on its list.</p>
 
 {% macro leader_items(entries) %}
