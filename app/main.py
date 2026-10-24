@@ -5241,6 +5241,19 @@ def music_page(request: Request):
 # and the three R ratings are from the studios' own trailers and the
 # October 2026 release calendars (see the staged build report).
 MOVIE_NEW = [
+    # Practical Magic pair (Dan, Oct 24): the full film is a Warner Bros.
+    # title with NO legal free embed (HBO Max / transactional VOD only —
+    # checked Oct 24), so the page carries the official trailers instead.
+    # Both IDs oEmbed-verified 2026-10-24 (title + channel match,
+    # embeddable).
+    {"title": "Practical Magic 2", "year": 2026,
+     "meta": "In theaters now · Sep 11",
+     "blurb": "The Owens sisters return after 28 years — Bullock and "
+              "Kidman face down the family curse as it reaches for the "
+              "next generation. Based on Alice Hoffman's The Book of "
+              "Magic.",
+     "id": "Ho10_4IX1jE", "channel": "Warner Bros.",
+     "kind": "Official Trailer"},
     {"title": "Resident Evil", "year": 2026,
      "meta": "In theaters now · Sep 18",
      "blurb": "Zach Cregger (Barbarian, Weapons) takes the keys to Raccoon "
@@ -5311,6 +5324,13 @@ MOVIE_CLASSICS = [
      "blurb": "The film that made horror self-aware — and made every "
               "ringing phone in 1996 sound like a threat.",
      "id": "U0LETmDvuXc", "channel": "Paramount Movies",
+     "kind": "Official Trailer"},
+    {"title": "Practical Magic", "year": 1998,
+     "blurb": "Two witch sisters, one family curse: every man who loves "
+              "an Owens woman is doomed. Bullock and Kidman's midnight-"
+              "margarita classic — the coziest spell of the season. Its "
+              "official trailer, from Warner Bros.' own vault channel.",
+     "id": "R7uixLkpjPs", "channel": "Warner Bros. Rewind",
      "kind": "Official Trailer"},
     {"title": "Halloweentown", "year": 1998,
      "blurb": "Disney Channel's 1998 original is pure bottled nostalgia — "
