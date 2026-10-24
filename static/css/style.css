@@ -3366,3 +3366,16 @@ body.hm-returning .hm-slimbar { display: flex; }
   .hero-split .tt-featured .tt-facade { height: 400px; }
   .hero-split .tt-featured .tt-facade img { height: 100%; aspect-ratio: auto; }
 }
+/* ============ z107: TOP 10 HOME LIST — PHONE OVERFLOW FIX (Oct 23) ====
+   The personalized homepage block ("Top N in {State}") overflowed at
+   phone width: .top10-home-list is a grid with no explicit columns,
+   so its single implicit track sized to max-content and the rows
+   (long title + nowrap .t10-meta) measured ~515px inside the ~356px
+   block (block scrollW 531, page scrollW 548 at 390). Pin the track
+   to the block with minmax(0, 1fr) and let the row items shrink
+   (min-width: 0): .t10-title already carries min-width: 0 + ellipsis,
+   so titles truncate gracefully while rank, ⭐ badge and the views
+   meta stay inside the row. Generic variant and laptop widths were
+   already clean and render unchanged (verified by measurement). */
+.top10-home-list { grid-template-columns: minmax(0, 1fr); }
+.top10-home-list li { min-width: 0; }
