@@ -3215,3 +3215,23 @@ body.hm-returning .hm-slimbar { display: flex; }
   .hero-split .town-request-form input { padding: 0.42rem 0.6rem; }
   .hero-split .town-request-form .btn { padding: 0.5rem 0.6rem; font-size: 0.92rem; }
 }
+
+/* ============ z101: PHONE HOOK — SLIGHTLY LARGER, NO PERIODS (Dan, Oct 23) ====
+   Phone portrait only; laptop renders exactly as before (the two
+   periods live in unstyled .hook-dot spans in base.html and show
+   inline everywhere except this query).
+   1) The periods at the ends of the hook's two sentences drop out:
+      "…fright night for you." / "Build Your Night." lose their dots.
+      (hook-l2 — "NEW HAUNTS DAILY!!!" / "THE HAUNT STARTS HERE" — has
+      no periods and is untouched, colors included.)
+   2) hook-l1 grows ~12%: it sat at the z65b clamp floor (0.80rem =
+      12.8px at 390 — the 4.2cqw term resolves to ~8.6px against the
+      ~206px band centre, so the floor binds). Floor rises to 0.90rem
+      (14.4px); coefficient and cap scale with it. hook-l2 is
+      display:none on phone (z69), so only line 1 is affected. The
+      hook block stays well under the 86px logo height, so the band —
+      and the header's height discipline — does not grow. */
+@media (max-width: 760px) and (orientation: portrait) {
+  .header-band .header-hook .hook-l1 { font-size: clamp(0.90rem, 4.7cqw, 1.46rem); }
+  .header-band .header-hook .hook-dot { display: none; }
+}
