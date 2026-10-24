@@ -500,7 +500,7 @@ a { color: var(--accent); }
 .leader-info { display: flex; flex-direction: column; gap: 0.1rem; }
 .leader-info strong { font-size: 0.98rem; }
 
-/* Top 10 by State (staged) */
+/* Top 10 by State */
 .featured-badge {
   align-self: flex-start; margin-top: 0.3rem; background: var(--accent);
   color: #1a0f00; font-size: 0.72rem; font-weight: 800; padding: 0.15rem 0.55rem;
@@ -521,6 +521,34 @@ a { color: var(--accent); }
   margin: 0 0 0.2rem; color: var(--accent); font-size: 0.78rem; font-weight: 800;
   text-transform: uppercase; letter-spacing: 0.08em;
 }
+
+/* Top 10 by State — homepage block (Dan, Oct 23): the visitor's own
+   state's Top 10, in the hero above Trending (laptop hero copy) with
+   a below-band twin on phone; generic states-cta when state unknown. */
+.top10-home {
+  margin: 1.2rem 0 0.4rem; padding: 1rem;
+  background: linear-gradient(160deg, #241a44, #17122b);
+  border: 1px solid #4a2d7a; border-radius: 14px;
+}
+.top10-home h2 { font-size: 1.25rem; margin: 0 0 0.3rem; }
+.top10-home-sub { color: #c9bce8; margin: 0 0 0.7rem; }
+.top10-home .states-cta { margin: 0; }
+.top10-home-list { list-style: none; margin: 0 0 0.6rem; padding: 0; display: grid; gap: 0.35rem; }
+.top10-home-list a {
+  display: flex; align-items: center; gap: 0.55rem;
+  color: var(--ink); text-decoration: none;
+  background: rgba(255, 255, 255, 0.04); border: 1px solid #33254f;
+  border-radius: 10px; padding: 0.45rem 0.6rem;
+}
+.top10-home-list a:hover { border-color: var(--accent); }
+.t10-rank { font-weight: 800; color: var(--accent); }
+.t10-title {
+  font-weight: 700; flex: 1 1 auto; min-width: 0;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.t10-meta { color: var(--muted); font-size: 0.8rem; white-space: nowrap; }
+.top10-home-list .featured-badge { margin-top: 0; flex: 0 0 auto; }
+.top10-home-more { font-weight: 700; }
 
 /* admin */
 .admin-list { display: grid; gap: 0.6rem; margin-bottom: 2rem; }
@@ -2335,6 +2363,7 @@ body.has-tourbar.has-radio { padding-bottom: 124px; }
 @media (min-width: 761px) {
   .near-you:not(.hero-copy),
   .trending:not(.hero-copy),
+  .top10-home:not(.hero-copy),
   .below-band-only { display: none; }
   /* z96: same one-copy rule for the three cards that moved into the
      hero panel (Tonight's Display / Daily Fright / Haunt Bracket). */
@@ -2355,6 +2384,13 @@ body.has-tourbar.has-radio { padding-bottom: 124px; }
      trending gets a translucent panel so its rows stay readable
      over the hero photo. */
   .hero-stack .near-you.hero-copy { margin: 0; }
+  .hero-stack .top10-home.hero-copy {
+    margin: 0; background: rgba(13, 8, 26, 0.72);
+  }
+  .hero-stack .top10-home h2 { font-size: 0.95rem; margin-bottom: 0.2rem; }
+  .hero-stack .top10-home-sub { font-size: 0.76rem; margin-bottom: 0.4rem; }
+  .hero-stack .top10-home-list a { padding: 0.35rem 0.55rem; font-size: 0.85rem; }
+  .hero-stack .top10-home-more { font-size: 0.85rem; }
   .hero-stack .trending.hero-copy {
     margin: 0; padding: 1rem;
     background: rgba(13, 8, 26, 0.72);
@@ -2774,6 +2810,8 @@ body.has-tourbar.has-radio { padding-bottom: 124px; }
 .vt-tv-strip .tv-btn { background: linear-gradient(90deg, #2b1650, #4a1570); border: 2px solid #b266ff; color: #fff; }
 .vt-tv-strip .music-btn { background: #150826; border: 2px solid var(--accent); color: #ffd9a8; }
 .vt-tv-strip .movies-btn { background: #0d0205; border: 2px solid #c1122f; color: #ffe9d6; }
+.vt-tv-strip .markets-btn { background: #0b1f14; border: 2px solid #2fbf71; color: #d9ffe9; }
+.vt-tv-strip .top100-btn { background: linear-gradient(90deg, #4a2d00, #8a5a00); border: 2px solid #ffb02e; color: #fff3d6; }
 @media (max-width: 480px) { .vt-tv-strip { gap: 0.25rem; } .vt-tv-strip a { font-size: 0.66rem; padding: 0.26rem 0.15rem; gap: 0.2rem; white-space: normal; line-height: 1.15; } }
 
 /* ============ z80: PHONE MODULE DIET (Dan, Oct 23) ============

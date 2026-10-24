@@ -1663,6 +1663,27 @@ def home(request: Request, sort: str = "top", town: str = "", town_search: str =
         # not) computed above; the counts are the same live halloween
         # town counts this block used to compute inline.
         near_towns = resolved_area["chips"]
+        # Top 10 by State hero block (Dan, Oct 23): the visitor's OWN
+        # state's Top 10, personalized from the same _visitor_geo
+        # signal Near You uses (geo["state"], Cloudflare region
+        # headers). Unknown state — or a state with no pins in this
+        # category — leaves home_top10 None and the template renders
+        # the generic Top-10-by-state entry instead; a wrong state is
+        # never presented as the visitor's.
+        home_top10 = None
+        visitor_state = (geo or {}).get("state") or ""
+        if visitor_state:
+            state_rows = [e for e in _entries_with_views(conn, cat)
+                          if extract_state(e.get("town") or "")
+                          == visitor_state]
+            if state_rows:
+                home_top10 = {
+                    "code": visitor_state,
+                    "name": US_STATE_NAMES.get(visitor_state,
+                                               visitor_state),
+                    "count": len(state_rows),
+                    "entries": _rank_with_featured(state_rows, 10),
+                }
     # Retention Wave 3, Item 5: the "Tonight" strip's anchor town.
     # Resolution: the visitor's explicit ?town= context first; then Item
     # 1's geo-resolved anchor (the first Near-you chip in exact/near/
@@ -1709,6 +1730,7 @@ def home(request: Request, sort: str = "top", town: str = "", town_search: str =
          "tstrip": tstrip,
          "bracket_teaser": _bracket_teaser(),
          "trending": trending, "near_towns": near_towns,
+         "home_top10": home_top10,
          "near_heading": resolved_area["heading"],
          "near_sub": resolved_area["sub"],
          "geo_mode": resolved_area["mode"],
@@ -3935,7 +3957,7 @@ def leaderboard(request: Request, cat: str = "halloween"):
     )
 
 
-# ------------------------------------------- Top 10 by State (staged)
+# ------------------------------------------- Top 10 by State
 #
 # Dan, Oct 23: "We should make a top ten list for every state."
 # One clean ranked list per state, ranked by the same currency as Top
@@ -3992,6 +4014,25 @@ def leaderboard_states(request: Request, cat: str = "halloween"):
         })
     return templates.TemplateResponse(request, "leaderboard_states.html",
         {"request": request, "states": states, "metros": metros,
+         "cat": cat, "cat_labels": CAT_LABELS, "cat_emoji": CAT_EMOJI}
+    )
+
+
+# ------------------------------------------- Top 100 Nationwide
+#
+# Dan, Oct 23: a "Top 100 Nationwide" button joins the homepage VT/TV
+# strip — and ships only with this real page behind it. The nation's
+# top 100 pins ranked exactly like Top Haunts (detail-page views,
+# votes tiebreak, via _rank_with_featured, so ⭐ Featured editor's
+# picks follow the same flag logic; counts are never altered).
+@app.get("/leaderboard/top-100", response_class=HTMLResponse)
+def leaderboard_top100(request: Request, cat: str = "halloween"):
+    cat = cat if cat in CATEGORIES else "halloween"
+    with get_conn(DB_PATH) as conn:
+        entries = _entries_with_views(conn, cat)
+    top = _rank_with_featured(entries, 100)
+    return templates.TemplateResponse(request, "leaderboard_top100.html",
+        {"request": request, "top": top,
          "cat": cat, "cat_labels": CAT_LABELS, "cat_emoji": CAT_EMOJI}
     )
 
@@ -4135,7 +4176,7 @@ def town_page(request: Request, slug: str):
 @app.get("/sitemap.xml")
 def sitemap():
     base = "https://gethauntmap.com"
-    urls = ["/", "/map", "/nearby", "/tour", "/diy", "/diy-costumes", "/games", "/leaderboard", "/leaderboard/states",
+    urls = ["/", "/map", "/nearby", "/tour", "/diy", "/diy-costumes", "/games", "/leaderboard", "/leaderboard/states", "/leaderboard/top-100",
             "/towns", "/passport", "/daily", "/advertise", "/media-kit", "/about", "/costume-contest", "/trivia", "/haunt-or-not", "/fan-art",
             "/restaurhaunts"]
     for t in _towns_with_counts():

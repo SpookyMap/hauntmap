@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Top 100 nationwide &middot; {{ site_name }}{% endblock %}
+{% block content %}
+<div class="cat-tabs">
+  <a href="/leaderboard/top-100?cat=halloween" class="{% if cat == 'halloween' %}active{% endif %}">&#x1F383; Haunt Map</a>
+  <a href="/leaderboard/top-100?cat=christmas" class="{% if cat == 'christmas' %}active{% endif %}">&#x1F384; Jolly Map</a>
+</div>
+<h1>&#x1F3C6; Top 100 nationwide</h1>
+<p class="muted">The most-viewed {{ cat_labels[cat]|lower }} displays in the country, ranked by visits to each display's page &mdash; the same ranking as <a href="/leaderboard?cat={{ cat }}">Top Haunts</a>. &#x2B50; <strong>Featured</strong> marks one of Dan's hand-picked displays.</p>
+
+{% if top %}
+<ol class="leader-list">
+  {% for e in top %}
+  <li>
+    <a href="/d/{{ e.id }}">
+      {% if e.media_path %}
+      {% if e.media_type == 'video' %}
+      {% if e.thumb_path %}<img src="{{ e.thumb_card_url or e.thumb_url }}" alt="{{ e.title }}" width="800" height="600" loading="lazy" onerror="this.onerror=null;this.src='{{ e.thumb_url }}'">{% else %}<video src="{{ e.media_url }}" preload="none" muted playsinline></video>{% endif %}
+      {% else %}
+      <img src="{{ e.thumb_card_url or e.thumb_url }}" alt="{{ e.title }}" width="800" height="600" loading="lazy" onerror="this.onerror=null;this.src='{{ e.thumb_url }}'">
+      {% endif %}
+      {% endif %}
+      <span class="leader-info">
+        <strong>#{{ loop.index }} {{ e.title }}</strong>
+        <span class="meta">{{ e.town }}</span>
+        <span class="votes">&#x1F441;&#xFE0F; {{ e._views }} view{{ 's' if e._views != 1 }}</span>
+        {% if e.is_featured %}<span class="featured-badge">&#x2B50; Featured</span>{% endif %}
+        <span class="tour-add-btn" role="button" tabindex="0" data-tour-btn data-id="{{ e.id }}" data-title="{{ e.title }}" data-town="{{ e.town }}" data-lat="{{ e.lat if e.lat is not none else '' }}" data-lng="{{ e.lng if e.lng is not none else '' }}" data-thumb="{{ e.thumb_url }}">+ Tour</span>
+        {% if e.is_sample %}<span class="sample-badge">Sample</span>{% endif %}
+      </span>
+    </a>
+  </li>
+  {% endfor %}
+</ol>
+<div class="states-cta">
+  <a href="/leaderboard/states?cat={{ cat }}">&#x1F5FA;&#xFE0F; <strong>Top 10 by state</strong> &mdash; the best {{ cat_labels[cat]|lower }} haunts in every state &rarr;</a>
+</div>
+{% endif %}
+
+{% if not top %}
+<div class="empty">
+  <p class="empty-emoji">&#x1F47B;</p>
+  <p>No haunts yet. <a href="/upload">Add the first one</a>.</p>
+</div>
+{% endif %}
+{% endblock %}

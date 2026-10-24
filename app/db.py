@@ -6,6 +6,18 @@ enforced with cookies in main.py (a soft limit, documented there).
 import sqlite3
 from pathlib import Path
 
+# Editor's-pick pins (Dan, Oct 23): hand-picked "feature as Top 10"
+# placements, guaranteed a slot in their state's Top 10 list (and the
+# sitewide Top Haunts board) with an honest ⭐ Featured marker. The
+# list is code-owned and enforced by init_db on every boot, so the
+# flagged set is exactly these pins and survives deploys/restarts.
+# Ranking data (views/votes) is never altered. No DMV pick: Dan ruled
+# his Silver Spring (DMV) candidate stays held (2024 video).
+#   5541 NC Wake Forest · 5542 SC Mauldin · 5551 CA Mission Viejo
+#   5584 CA Santa Fe Springs · 5587 OR Happy Valley
+#   5175 IL Oak Lawn · 4370 CO Denver
+FEATURED_ENTRY_IDS = (5541, 5542, 5551, 5584, 5587, 5175, 4370)
+
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS comments (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -160,6 +172,19 @@ def init_db(db_path: Path) -> None:
             conn.execute(
                 "ALTER TABLE entries ADD COLUMN is_featured INTEGER NOT NULL DEFAULT 0"
             )
+        # Enforce the code-owned editor's-pick set (FEATURED_ENTRY_IDS):
+        # exactly those pins flagged, every other pin unflagged. Runs on
+        # every init (idempotent) so the set survives deploys/restarts.
+        _ph = ",".join("?" * len(FEATURED_ENTRY_IDS))
+        conn.execute(
+            f"UPDATE entries SET is_featured = 1 WHERE id IN ({_ph})",
+            FEATURED_ENTRY_IDS,
+        )
+        conn.execute(
+            "UPDATE entries SET is_featured = 0 "
+            f"WHERE is_featured != 0 AND id NOT IN ({_ph})",
+            FEATURED_ENTRY_IDS,
+        )
         # Events facets (Dan, Oct 22): event type / music genre / venue
         # style powering the /events filter dropdowns. NULL = untagged;
         # only set when a listing plainly determines the value.

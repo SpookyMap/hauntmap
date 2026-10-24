@@ -27,12 +27,15 @@ function hmFullHomepage() {
 </script>
 {# VT/TV/Music slim strip (Dan Oct 23): the two big hero pills became one
    thin row directly under the header nav, homepage only; Music added as
-   a third button later the same day. #}
+   a third button later the same day. Flea Markets & Pop-Ups and Top 100
+   Nationwide added as the fifth and sixth buttons (Dan, Oct 23). #}
 <div class="vt-tv-strip">
   <a class="vt-btn" href="/virtual-tour">&#x25B6;&#xFE0F; Virtual Tour</a>
   <a class="tv-btn" href="/virtual-tour?mode=tv">&#x1F4FA; HauntMap TV</a>
   <a class="music-btn" href="/music">&#x1F3B5; HauntMap Music</a>
   <a class="movies-btn" href="/movies">&#x1F3AC; HauntMap Movies</a>
+  <a class="markets-btn" href="/markets">&#x1F6D2; Flea Markets &amp; Pop-Ups</a>
+  <a class="top100-btn" href="/leaderboard/top-100">&#x1F3C6; Top 100 Nationwide</a>
 </div>
 {# Welcome-back slimbar sits UNDER the VT/TV strip (Dan, Oct 23). #}
 <div class="hm-slimbar" id="hm-slimbar">
@@ -229,6 +232,12 @@ function hmFullHomepage() {
     </script>
   </section>
   {% endif %}
+
+  {# Top 10 by State (Dan, Oct 23): personalized in-hero block —
+     the visitor's own state's Top 10 — above Trending, per Dan's
+     hero order: Near You -> Top 10 -> Trending -> Tonight's ->
+     Daily Fright -> Bracket -> Text Alerts. #}
+  {% with hero = True %}{% include "_top10_home.html" %}{% endwith %}
 
   {% if trending %}
   <section class="trending hero-copy" aria-label="Trending today">
@@ -524,6 +533,11 @@ function hmFullHomepage() {
   </script>
 </section>
 {% endif %}
+
+{# Top 10 by State, phone copy (Dan, Oct 23): below-band twin of the
+   hero block, in the same relative seat — after Near You, above
+   Trending. Hidden at >=761px where the hero copy shows. #}
+{% include "_top10_home.html" %}
 
 {% if trending %}
 <section class="trending" aria-label="Trending today">
