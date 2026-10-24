@@ -28,14 +28,20 @@ function hmFullHomepage() {
 {# VT/TV/Music slim strip (Dan Oct 23): the two big hero pills became one
    thin row directly under the header nav, homepage only; Music added as
    a third button later the same day. Flea Markets & Pop-Ups and Top 100
-   Nationwide added as the fifth and sixth buttons (Dan, Oct 23). #}
-<div class="vt-tv-strip">
-  <a class="vt-btn" href="/virtual-tour">&#x25B6;&#xFE0F; Virtual Tour</a>
-  <a class="tv-btn" href="/virtual-tour?mode=tv">&#x1F4FA; HauntMap TV</a>
-  <a class="music-btn" href="/music">&#x1F3B5; HauntMap Music</a>
-  <a class="movies-btn" href="/movies">&#x1F3AC; HauntMap Movies</a>
-  <a class="markets-btn" href="/markets">&#x1F6D2; Flea Markets &amp; Pop-Ups</a>
-  <a class="top100-btn" href="/leaderboard/top-100">&#x1F3C6; Top 100 Nationwide</a>
+   Nationwide added as the fifth and sixth buttons (Dan, Oct 23).
+   strip-fit (Dan, Oct 23): labels are span-structured (icon + label
+   lines) so phone CSS can stack them INSIDE the bubbles — the raw
+   one-line text spilled past the bubble edges at 390px. This top copy
+   is the >=761px seat; the phone twin (.vt-tv-strip-phone) sits in
+   .hero-split directly under the hero panel. Exactly one copy shows
+   per viewport (style.css, strip-fit block). #}
+<div class="vt-tv-strip vt-tv-strip-top">
+  <a class="vt-btn" href="/virtual-tour"><span class="vt-ic">&#x25B6;&#xFE0F;</span><span class="vt-label"><span class="vt-l1">Virtual</span> <span class="vt-l2">Tour</span></span></a>
+  <a class="tv-btn" href="/virtual-tour?mode=tv"><span class="vt-ic">&#x1F4FA;</span><span class="vt-label"><span class="vt-l1">HauntMap</span> <span class="vt-l2">TV</span></span></a>
+  <a class="music-btn" href="/music"><span class="vt-ic">&#x1F3B5;</span><span class="vt-label"><span class="vt-l1">HauntMap</span> <span class="vt-l2">Music</span></span></a>
+  <a class="movies-btn" href="/movies"><span class="vt-ic">&#x1F3AC;</span><span class="vt-label"><span class="vt-l1">HauntMap</span> <span class="vt-l2">Movies</span></span></a>
+  <a class="markets-btn" href="/markets"><span class="vt-ic">&#x1F6D2;</span><span class="vt-label"><span class="vt-l1">Flea</span> <span class="vt-l2">Markets</span> <span class="vt-l3">&amp; Pop-Ups</span></span></a>
+  <a class="top100-btn" href="/leaderboard/top-100"><span class="vt-ic">&#x1F3C6;</span><span class="vt-label"><span class="vt-l1">Top 100</span> <span class="vt-l2">Nationwide</span></span></a>
 </div>
 {# Welcome-back slimbar sits UNDER the VT/TV strip (Dan, Oct 23). #}
 <div class="hm-slimbar" id="hm-slimbar">
@@ -333,6 +339,22 @@ function hmFullHomepage() {
   {% with sms_source = "homepage" %}{% include "_text_alerts.html" %}{% endwith %}
   {% endif %}
 </div>
+</div>
+
+{# strip-fit (Dan, Oct 23): PHONE twin of the VT/TV strip — Dan moved
+   the row on phone from above the hero to DIRECTLY UNDER the hero
+   panel ("Find the Best Halloween Displays" block). Same paired-copy
+   pattern as the hero modules: this copy renders only <=760px and
+   the top copy only >=761px, so exactly one strip shows per
+   viewport. Grid area "vtstrip" sits right after "headline" in the
+   stacked .hero-split layouts (style.css, strip-fit block). #}
+<div class="vt-tv-strip vt-tv-strip-phone">
+  <a class="vt-btn" href="/virtual-tour"><span class="vt-ic">&#x25B6;&#xFE0F;</span><span class="vt-label"><span class="vt-l1">Virtual</span> <span class="vt-l2">Tour</span></span></a>
+  <a class="tv-btn" href="/virtual-tour?mode=tv"><span class="vt-ic">&#x1F4FA;</span><span class="vt-label"><span class="vt-l1">HauntMap</span> <span class="vt-l2">TV</span></span></a>
+  <a class="music-btn" href="/music"><span class="vt-ic">&#x1F3B5;</span><span class="vt-label"><span class="vt-l1">HauntMap</span> <span class="vt-l2">Music</span></span></a>
+  <a class="movies-btn" href="/movies"><span class="vt-ic">&#x1F3AC;</span><span class="vt-label"><span class="vt-l1">HauntMap</span> <span class="vt-l2">Movies</span></span></a>
+  <a class="markets-btn" href="/markets"><span class="vt-ic">&#x1F6D2;</span><span class="vt-label"><span class="vt-l1">Flea</span> <span class="vt-l2">Markets</span> <span class="vt-l3">&amp; Pop-Ups</span></span></a>
+  <a class="top100-btn" href="/leaderboard/top-100"><span class="vt-ic">&#x1F3C6;</span><span class="vt-label"><span class="vt-l1">Top 100</span> <span class="vt-l2">Nationwide</span></span></a>
 </div>
 
 {# Item 7 audit (Oct 23): these three featured facades are @gethauntmap
