@@ -83,7 +83,7 @@
   <p class="ev-count">
     {% if on %}Showing {{ entries|length }}{% if on_total and on_total > entries|length %} of {{ on_total }}{% endif %} event{{ 's' if entries|length != 1 }} on {{ on_label }}{% if loc.region %} in {{ loc.region_label }}{% endif %} &middot; <a href="/events">clear filters</a>
     {% elif filtered %}Showing {{ entries|length }} matching event{{ 's' if entries|length != 1 }}{% if loc.region %} in {{ loc.region_label }}{% endif %} &middot; <a href="/events">clear filters</a>
-    {% else %}{{ total }} event{{ 's' if total != 1 }} on the map{% endif %}
+    {% else %}{{ entries|length }} upcoming event{{ 's' if entries|length != 1 }} on the map{% endif %}
   </p>
   <div class="sort-toggle">
     <a href="/events?sort=top{% if selected.type %}&type={{ selected.type|urlencode }}{% endif %}{% if selected.genre %}&genre={{ selected.genre|urlencode }}{% endif %}{% if selected.venue %}&venue={{ selected.venue|urlencode }}{% endif %}{% if loc.state %}&state={{ loc.state|urlencode }}{% endif %}{% if loc.region %}&region={{ loc.region|urlencode }}{% endif %}{% if loc.town %}&town={{ loc.town|urlencode }}{% endif %}{% if on %}&on={{ on }}{% endif %}" class="{% if sort == 'top' %}active{% endif %}">Top</a>
@@ -91,9 +91,11 @@
   </div>
 </div>
 
-{% if entries %}
+{% if day_groups %}
+{% for g in day_groups %}
+<h2 class="ev-day-head" id="{{ g.anchor }}">{{ g.label }} <span class="ev-day-count">{{ g.entries|length }} event{{ 's' if g.entries|length != 1 }}</span></h2>
 <div class="grid">
-  {% for e in entries %}
+  {% for e in g.entries %}
   <a class="card" href="/d/{{ e.id }}">
     <div class="card-media">
       {% if e.media_path %}
@@ -117,13 +119,14 @@
       {% if e.votes %}
       <p class="votes">&#x1F383; {{ e.votes }} vote{{ 's' if e.votes != 1 }}</p>
       {% elif e.is_new %}
-      <p class="votes votes-new">&#x2728; New this week</p>
+      <p class="votes votes-new">&#x2728; New</p>
       {% endif %}
       <span class="tour-add-btn" role="button" tabindex="0" data-tour-btn data-id="{{ e.id }}" data-title="{{ e.title }}" data-town="{{ e.town }}" data-lat="{{ e.lat if e.lat is not none else '' }}" data-lng="{{ e.lng if e.lng is not none else '' }}" data-thumb="{{ e.thumb_url }}">+ Tour</span>
     </div>
   </a>
   {% endfor %}
 </div>
+{% endfor %}
 {% else %}
 <div class="empty">
   <p class="empty-emoji">&#x1F3AA;</p>
@@ -148,6 +151,8 @@
 .ev-clear { white-space: nowrap; }
 .ev-meta-row { display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: center; justify-content: space-between; margin: 0.4rem 0 0.8rem; }
 .ev-count { margin: 0; color: #cfc4ee; }
+.ev-day-head { margin: 1.7rem 0 0.7rem; font-size: 1.35rem; color: #ffd98a; border-bottom: 1px solid #372b5e; padding-bottom: 0.35rem; }
+.ev-day-count { font-size: 0.85rem; font-weight: 600; color: #cfc4ee; margin-left: 0.35rem; white-space: nowrap; }
 .ev-on-chip { display: inline-block; margin: 0.6rem 0 0; padding: 0.45rem 0.8rem; border-radius: 999px; background: #241a44; border: 1px solid #c9a86a; color: #f3eefc; font-size: 0.88rem; }
 .ev-on-chip strong { color: #ffd98a; }
 .ev-on-chip a { color: #ff7518; font-weight: 700; white-space: nowrap; }

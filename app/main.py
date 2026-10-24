@@ -853,6 +853,56 @@ def event_on_date(title: str, on_date) -> bool:
     return bool(span and span[0] <= on_date <= span[1])
 
 
+def _event_start_minutes(title: str):
+    """An event title's first start time as minutes past midnight, or
+    None when the title carries no clock time. Handles
+    '11:00 AM – 3:00 PM', '10am-6:30pm', '8pm' and the shared-meridiem
+    range '7–11 PM' (a bare range start inherits the end's am/pm —
+    the standard way these titles are written)."""
+    if not title:
+        return None
+    s = title.replace("\u2013", "-").replace("\u2014", "-")
+    if re.search(r"\bnoon\s*-", s, re.I):
+        return 12 * 60  # a range that starts at noon, e.g. 'noon-5pm'
+    m = re.search(r"(\d{1,2})(?::(\d{2}))?\s*(am|pm)?\s*-\s*"
+                  r"(\d{1,2})(?::(\d{2}))?\s*(am|pm)\b", s, re.I)
+    if m:
+        mer = (m.group(3) or m.group(6)).lower()
+        hour = int(m.group(1)) % 12 + (12 if mer == "pm" else 0)
+        return hour * 60 + int(m.group(2) or 0)
+    m = re.search(r"(\d{1,2})(?::(\d{2}))?\s*(am|pm)\b", s, re.I)
+    if m:
+        mer = m.group(3).lower()
+        hour = int(m.group(1)) % 12 + (12 if mer == "pm" else 0)
+        return hour * 60 + int(m.group(2) or 0)
+    return None
+
+
+def _ev_day_label(d, today) -> str:
+    """Section header for one by-day events section."""
+    base = d.strftime("%A, %B ") + str(d.day)
+    if d.year != today.year:
+        base += d.strftime(", %Y")
+    if d == today:
+        return "Tonight \u2014 " + base
+    if d == today + timedelta(days=1):
+        return "Tomorrow \u2014 " + base
+    return base
+
+
+def _ev_sort_day(entries: list, sort: str) -> list:
+    """Order inside one day section: by start time (timed events
+    before untimed), then title. The Newest view puts the most
+    recently added first, then start time / title."""
+    def key(e):
+        t = _event_start_minutes(e["title"])
+        return (t is None, t or 0, (e["title"] or "").lower(), e["id"])
+    out = sorted(entries, key=key)
+    if sort == "new":
+        out.sort(key=lambda e: e.get("created_at") or "", reverse=True)
+    return out
+
+
 def _events_on_count(conn, town_label: str, on_date) -> int:
     """Parsed events covering `on_date` whose town_label (the same
     extract_city_state label every card shows) equals `town_label`."""
@@ -1869,12 +1919,12 @@ def events_page(request: Request, type: str = "", genre: str = "",
                 params += raws
             else:
                 query += " AND 1 = 0"
-        # With a date view active the SQL cap comes off (the events
-        # catalogue is ~553 rows): the Python date filter below runs
-        # over the full facet/town-filtered set, then caps at 100.
+        # No SQL cap in any view (the events catalogue is ~553 rows):
+        # the by-day grouping below runs over the full facet/state/
+        # town/region-filtered set — a cap would silently cut whole
+        # days off the end of the listing. The ?on= view still caps
+        # its single day at 100 cards, as before.
         query += f" ORDER BY {video_first}, {order}"
-        if on_date is None:
-            query += " LIMIT 100"
         entries = [row_to_dict(r) for r in conn.execute(query, params).fetchall()]
         counts: dict[str, dict[str, int]] = {}
         for key, col, _values, _labels in EVENT_FACETS:
@@ -1922,8 +1972,48 @@ def events_page(request: Request, type: str = "", genre: str = "",
     if on_date is not None:
         on_label = (on_date.strftime("%A, %B ") + str(on_date.day)
                     + on_date.strftime(", %Y"))
+    # By-day organization (Dan, Oct 23): the listing is grouped under
+    # per-day sections — America/New_York calendar days, soonest
+    # first, never by week. A dated event appears once, under the
+    # first day of its parsed run that is today or later (a run
+    # already in progress sits under Tonight); a run that ended
+    # before today has no section and drops off the listing. Titles
+    # with no parseable date keep a trailing section so no live
+    # listing is lost. In the ?on= view the filter above has already
+    # reduced the set to the requested day, so it forms one section
+    # headed by that day (the visitor lands on the day they asked
+    # for); each section also carries a day-YYYY-MM-DD anchor.
+    today = _today_et()
+    day_groups = []
+    if on_date is not None:
+        if entries:
+            day_groups.append({
+                "label": _ev_day_label(on_date, today),
+                "anchor": "day-" + on_date.isoformat(),
+                "entries": _ev_sort_day(entries, sort)})
+    else:
+        by_day: dict = {}
+        undated: list = []
+        for e in entries:
+            span = parse_event_dates(e["title"])
+            if span is None:
+                undated.append(e)
+            elif span[1] >= today:
+                by_day.setdefault(max(span[0], today), []).append(e)
+        for d in sorted(by_day):
+            day_groups.append({
+                "label": _ev_day_label(d, today),
+                "anchor": "day-" + d.isoformat(),
+                "entries": _ev_sort_day(by_day[d], sort)})
+        if undated:
+            day_groups.append({
+                "label": "More events \u2014 see the listing for dates",
+                "anchor": "day-more",
+                "entries": _ev_sort_day(undated, sort)})
+    entries = [e for g in day_groups for e in g["entries"]]
     return templates.TemplateResponse(request, "events.html",
         {"request": request, "entries": entries, "sort": sort,
+         "day_groups": day_groups,
          "facets": facets, "selected": selected, "total": total,
          "loc": loc,
          "filtered": any(selected.values()) or bool(state) or bool(town)
