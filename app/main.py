@@ -33,6 +33,7 @@ from fastapi import BackgroundTasks, FastAPI, Form, HTTPException, Request, Uplo
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse, Response, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from starlette.middleware.gzip import GZipMiddleware
 from PIL import Image, ImageOps, UnidentifiedImageError
 
 from .db import get_conn, init_db
@@ -165,15 +166,107 @@ def _healthz():
     return {"status": "ok"}
 
 
+# ------------------------------------------------------------ perf: page cache
+# In-app short-TTL cache for the two heaviest ANONYMOUS page renders
+# (stability plan, Oct 24). The homepage and the events index run the
+# site's most expensive queries; for a visitor carrying no state, the
+# renders inside a short window are interchangeable, so repeat hits are
+# served from memory instead of re-running the queries. Safety contract
+# — a cached page must NEVER reach a request it wasn't rendered for:
+#   * only GET, only the bare paths in PAGE_CACHE_PATHS, only with an
+#     EMPTY query string — any parameter at all (town / sort / cat /
+#     near / area / lat / lng / choose / type / genre / venue / state /
+#     on / ...) bypasses;
+#   * any cookie other than hm_sid bypasses. hm_sid is the analytics
+#     id: set and read by _track_page_view (and read by the engaged-
+#     time beacon); it never changes a render. Every other cookie in
+#     this codebase is render state somewhere — haunt_admin (admin
+#     session), hm_member (member session), tonight_last, voted_*,
+#     scare_*, reported_*, hm_voter, costume_votes, fanart_votes,
+#     hm_sms_pending — so its presence means "not the generic page";
+#   * any Cloudflare location header _visitor_geo reads (cf-ipcity,
+#     cf-ipregion, cf-ipregion-code, cf-iplatitude, cf-iplongitude)
+#     bypasses: with the geo transform on, the homepage re-leads its
+#     feed and Top-10 block by the visitor's area. (cf-ipcountry alone
+#     can never produce a geo — _visitor_geo returns None without
+#     city/region/coords — so it is not a bypass trigger.);
+#   * an Authorization header bypasses; only 200 text/html is stored;
+#   * Set-Cookie is never stored and never replayed (home() sets
+#     tonight_last on its own response — that cookie goes only to the
+#     visitor whose request earned the MISS).
+# Defined FIRST so it runs INNERMOST of the http middlewares:
+# _track_page_view still logs every hit (analytics + card view counts
+# unaffected) and _cache_headers still owns media/static lifetimes.
+# Known contract change, flagged for Dan: inside the TTL, Tonight's
+# Display (a per-load random pick today) and the view counts printed
+# on cards are shared/frozen — one pick serves every anonymous visitor
+# until the entry expires. HAUNTMAP_PAGE_CACHE=off disables the cache.
+PAGE_CACHE_PATHS = ("/", "/events")
+PAGE_CACHE_TTL = float(os.environ.get("HAUNTMAP_PAGE_CACHE_TTL", "90"))
+_PAGE_CACHE: dict[str, tuple[float, list, bytes]] = {}
+_GEO_BYPASS_HEADERS = ("cf-ipcity", "cf-ipregion", "cf-ipregion-code",
+                       "cf-iplatitude", "cf-iplongitude")
+_STATELESS_COOKIES = frozenset({"hm_sid"})
+
+
+def _page_cache_admits(request: Request) -> bool:
+    if os.environ.get("HAUNTMAP_PAGE_CACHE", "on").lower() == "off":
+        return False
+    if request.method != "GET" or request.url.query:
+        return False
+    if request.headers.get("authorization"):
+        return False
+    if any(h in request.headers for h in _GEO_BYPASS_HEADERS):
+        return False
+    return not (set(request.cookies) - _STATELESS_COOKIES)
+
+
+@app.middleware("http")
+async def _page_cache(request: Request, call_next):
+    if request.url.path not in PAGE_CACHE_PATHS:
+        return await call_next(request)
+    if not _page_cache_admits(request):
+        response = await call_next(request)
+        response.headers["X-Cache"] = "BYPASS"
+        return response
+    key = request.url.path
+    entry = _PAGE_CACHE.get(key)
+    if entry and entry[0] > time.monotonic():
+        _, headers, body = entry
+        return Response(content=body, status_code=200,
+                        headers={**dict(headers), "X-Cache": "HIT"})
+    response = await call_next(request)
+    body = b"".join([chunk async for chunk in response.body_iterator])
+    headers = [(k, v) for k, v in response.headers.items()
+               if k.lower() not in ("set-cookie", "content-length")]
+    out = Response(content=body, status_code=response.status_code,
+                   headers={**dict(headers), "X-Cache": "MISS"})
+    if (response.status_code == 200
+            and response.headers.get("content-type", "").startswith("text/html")
+            and len(body) <= 8 * 1024 * 1024):
+        _PAGE_CACHE[key] = (time.monotonic() + PAGE_CACHE_TTL, headers, body)
+    return out
+
+
 @app.middleware("http")
 async def _cache_headers(request: Request, call_next):
-    """Media/static filenames are unique per upload, so browsers and the
-    Cloudflare edge may cache them for 30 days instead of re-pulling from
-    origin on every visit (was: no origin header -> 4h default). HTML is
-    untouched and stays fresh."""
+    """Cache lifetimes for file responses (stability plan, Oct 24).
+    /media/ filenames are uuid4 hex on EVERY write path (public upload,
+    admin media replace, costume / fan-art uploads, sponsor logos), and
+    a replace mints a NEW name instead of overwriting — a media URL's
+    bytes never change, so it earns a year + immutable.
+    /static/ gets the same year WITHOUT immutable: the CSS/JS references
+    are version-bumped per ship (?v=...z113), but header art is
+    referenced unversioned and HAS been swapped in place before
+    (header_frank2.webp exists because the frank art was replaced) —
+    immutable would pin superseded art in returning browsers for a
+    year. HTML is untouched and stays fresh, as before."""
     response = await call_next(request)
-    if request.url.path.startswith(("/media/", "/static/")):
-        response.headers["Cache-Control"] = "public, max-age=2592000"
+    path = request.url.path
+    if path.startswith("/media/"):
+        response.headers["Cache-Control"] = "public, max-age=31536000, immutable"
+    elif path.startswith("/static/"):
+        response.headers["Cache-Control"] = "public, max-age=31536000"
     return response
 
 
@@ -227,6 +320,15 @@ async def _track_page_view(request: Request, call_next):
     except Exception:
         pass  # never break a page load for analytics
     return response
+
+
+# Gzip for text responses (stability plan, Oct 24). Starlette's
+# GZipMiddleware by default refuses image/video/audio/font/zip and
+# event-stream content types, so media bytes are never re-compressed;
+# HTML/CSS/JS/JSON/SVG shrink ~4-5x on the wire. Registered last so it
+# wraps every other middleware, page-cache HITs included. Level 6:
+# near-maximum ratio at a fraction of level 9's CPU on a 1-CPU box.
+app.add_middleware(GZipMiddleware, minimum_size=1024, compresslevel=6)
 
 
 # ---------------------------------------------------------------- helpers
