@@ -3514,3 +3514,33 @@ body.hm-returning .hm-slimbar { display: flex; }
     letter-spacing: 0.22em;
   }
 }
+/* ============ z114: TOP 10 PHONE BLOCK — SAME LENGTH AS THE BLOCKS BELOW (Dan, Oct 24 ~14:32) ====
+   Dan: "Let's make the top ten haunts by state block the same
+   length as the blocks below it in a nice clean uniform look for
+   the phone view." Measured at 390px on the z113 tree: the phone
+   column's blocks are uniformly 358 wide at x=16 — Follow-us
+   (358x42), sponsor section, town-request, tonight strip/band,
+   Daily Fright, Near You, Trending, every one — but the Top 10
+   block measured 408 wide, ending at x=424, off the phone's edge.
+   Cause: the block is a stretch grid item in .hero-split, whose
+   single 1fr column is sized by the widest min-content in the
+   stack (the hero headline's, 408px); the three blocks below that
+   already look right (follow strip, sponsor, town-request) only
+   escape it because the strip-fit block above pins them to
+   width: calc(100vw - 2rem) with justify-self: start. The Top 10
+   seat (added z103) never got that treatment. Phone band only:
+   give the phone-seat section the identical pin, so the stack
+   reads one clean uniform column — same width, same left edge,
+   same right edge as every block below it. Nothing else changes:
+   the bar keeps its z110/z113 face (the z113 label was already
+   tuned for exactly this 358 width: glyph run 262.3 of the 265.2
+   zone, bar 70.4 tall), the personalized variant in the same seat
+   gets the same outer width, and tablet/laptop geometry is
+   untouched (their copies are not .hero-split children in this
+   band's reach and the hero-seat rules are unchanged). */
+@media (max-width: 760px) {
+  .hero-split > .top10-home {
+    width: calc(100vw - 2rem); max-width: calc(100vw - 2rem);
+    min-width: 0; justify-self: start; box-sizing: border-box;
+  }
+}
