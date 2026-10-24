@@ -3544,3 +3544,71 @@ body.hm-returning .hm-slimbar { display: flex; }
     min-width: 0; justify-self: start; box-sizing: border-box;
   }
 }
+
+/* ============ z115: PHONE STACK — ONE CENTRED MEASURE + BAR THINS (Dan, Oct 24 ~15:07) ====
+   Dan, from his phone screenshot: "Let's clean up and center the
+   spacing margins of the circles for Virtual Tour through Top 100
+   Nationwide... one end/side of the page should have equal spacing.
+   Center the three TikTok videos in the middle. Let's make Top 10
+   by State a little thinner" — then, widening it: "Center all the
+   blocks on each side so it looks smooth and clean."
+   Measured at 390px on the z114 tree: every block BELOW the hero
+   grid already sits at the page measure (358 wide at x=16 — follow
+   strip, sponsors, town-request were pinned by z99, the Top 10 seat
+   by z114, and the below-band panels flow in the 358 content
+   column). The unevenness lives INSIDE .hero-split: its single 1fr
+   track still sizes to the hero headline's ~408px min-content, so
+   the two children nobody pinned render 408 wide ending at x=424 —
+   the hero panel itself, and the circle strip (its last circle,
+   Top 100 Nationwide, clips off the phone's right edge; the first
+   sat flush to the column's left edge). The TikTok group was
+   centred in that 408 track (x=87, right slack 37 against the
+   screen) instead of in the screen. Phone band only:
+   1) The track itself is capped: minmax(0, 1fr) removes the
+      automatic min-content minimum, so the column IS the content
+      column and every stretch child takes the shared measure.
+   2) The hero panel and the circle strip get the same pin z99/z114
+      gave their neighbours (calc(100vw - 2rem), start-aligned): the
+      whole stack now reads one centred column, 358 at x=16, edges
+      aligned top to bottom.
+   3) Circles: the seven buttons measured unequal — the borderless
+      first button 52.8 wide against 56.8 for the six bordered
+      ones. flex-grow distributes onto each item's content box, so
+      the 2px borders ride on top of the equal share and the orange
+      (borderless) pill comes up exactly 4px short; the 0.15rem
+      gaps were already uniform. On phone the strip container
+      becomes a 7-column grid (repeat(7, minmax(0, 1fr))), whose
+      tracks size the border box itself — all seven circles come
+      out identical, end margins are the strip's own 16px like
+      every other block, and the buttons' internal icon/label
+      stacking (their own flex) is unchanged. The >=761px top
+      copy stays flex, untouched.
+   4) The TikTok group needs no rule of its own: with the track at
+      358 its existing margin: 0 auto centres it in the screen —
+      equal slack both sides.
+   5) Top 10 bar a little thinner: the generic bar's face drops
+      70.4px -> ~59px (−16%) WITHOUT touching the label: the
+      pumpkin steps 46 -> 34px and the vertical padding 0.7rem ->
+      0.5rem, so the Creepster line box (2.35rem at line-height
+      1.1, z113) becomes the tallest element and the glyph run
+      keeps its z113 edge-to-edge fill of the flex zone — nothing
+      clips top, bottom or sides (verified: anchor scroll height
+      equals client height, label fully inside). The personalized
+      variant is a list panel, not a bar — it keeps the shared
+      width from z114; there is no bar face to thin. The laptop
+      hero-seat bar (in .hero-stack, outside .hero-split) and
+      every >=761px rule are untouched. */
+@media (max-width: 760px) {
+  .hero-split { grid-template-columns: minmax(0, 1fr); }
+  .hero-split > .hero-intro,
+  .hero-split > .vt-tv-strip-phone {
+    width: calc(100vw - 2rem); max-width: calc(100vw - 2rem);
+    min-width: 0; justify-self: start; box-sizing: border-box;
+  }
+  .hero-split .vt-tv-strip-phone {
+    display: grid; grid-template-columns: repeat(7, minmax(0, 1fr));
+  }
+  .hero-split .top10-home.top10-home--cta .states-cta a { padding: 0.5rem 1rem; }
+  .hero-split .top10-home.top10-home--cta .states-cta-img { width: 34px; height: 34px; }
+}
+
