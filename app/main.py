@@ -5370,6 +5370,75 @@ MOVIE_DEEP_CUTS = [
      "id": "IAZEWtyhpes", "channel": "Madman Films",
      "kind": "Official Trailer"},
 ]
+# Free Full Movies (Dan, Oct 24): the whole film, free and legal — embeds
+# only, never re-hosted. The nine classics are public domain in the US and
+# stream from the Internet Archive's own player (embed:
+# https://archive.org/embed/<id>; card art is IA's item-image service).
+# The one modern title streams from Kings of Horror, a rights-holder
+# channel (Blue Sky Media LLC), verified via YouTube oEmbed on 2026-10-24
+# (title + channel match, embeddable). Full rights research per title:
+# free-full-movies-catalog.md in the goal's movies-catalog folder — check
+# it before adding, swapping or "upgrading" any print here (some famous
+# titles, e.g. Horror Express, are NOT as public domain as claimed).
+MOVIE_FREE_FULL = [
+    {"title": "Night of the Living Dead", "year": 1968,
+     "blurb": "Romero's original nightmare — the dead walk in rural "
+              "Pennsylvania and modern horror is born.",
+     "host": "ia", "id": "night-of-the-living-dead-1968",
+     "channel": "Internet Archive", "kind": "Full Movie", "pd": True},
+    {"title": "House on Haunted Hill", "year": 1959,
+     "blurb": "Vincent Price offers five guests $10,000 to survive one "
+              "night in a haunted house. William Castle's beloved bag of "
+              "tricks.",
+     "host": "ia", "id": "house-on-haunted-hill",
+     "channel": "Internet Archive", "kind": "Full Movie", "pd": True},
+    {"title": "Carnival of Souls", "year": 1962,
+     "blurb": "After a car crash, an organist is drawn to an abandoned "
+              "carnival — and a pale stranger keeps appearing. Dream-logic "
+              "dread on a shoestring.",
+     "host": "ia", "id": "CarnivalofSouls",
+     "channel": "Internet Archive", "kind": "Full Movie", "pd": True},
+    {"title": "The Last Man on Earth", "year": 1964,
+     "blurb": "Vincent Price, last survivor of a plague — the first "
+              "I Am Legend adaptation, decades before Will Smith.",
+     "host": "ia", "id": "lastmanonearth-1964",
+     "channel": "Internet Archive", "kind": "Full Movie", "pd": True},
+    {"title": "The Little Shop of Horrors", "year": 1960,
+     "blurb": "A meek florist, a man-eating plant, and a blink-and-miss "
+              "cameo by a young Jack Nicholson. Feed me, Seymour.",
+     "host": "ia", "id": "the-little-shop-of-horrors",
+     "channel": "Internet Archive", "kind": "Full Movie", "pd": True},
+    {"title": "Dementia 13", "year": 1963,
+     "blurb": "A scheming widow, a drowned sister, an axe murderer — "
+              "Francis Ford Coppola's directorial debut, made for Roger "
+              "Corman.",
+     "host": "ia", "id": "dementia-13-1963_202312",
+     "channel": "Internet Archive", "kind": "Full Movie", "pd": True},
+    {"title": "White Zombie", "year": 1932,
+     "blurb": "Bela Lugosi staffs a Haitian sugar mill with zombie "
+              "labor — the first feature-length zombie film ever made.",
+     "host": "ia", "id": "white_zombie",
+     "channel": "Internet Archive", "kind": "Full Movie", "pd": True},
+    {"title": "Nosferatu", "year": 1922,
+     "blurb": "Murnau's unauthorized Dracula. Max Schreck's Count Orlok "
+              "still casts the longest shadow in horror — complete "
+              "93-minute tinted print.",
+     "host": "ia", "id": "Nosferatu_most_complete_version_93_mins.",
+     "channel": "Internet Archive", "kind": "Full Movie", "pd": True},
+    {"title": "The Cabinet of Dr. Caligari", "year": 1920,
+     "blurb": "The twisted sets that started it all — German "
+              "expressionism's founding nightmare, silent with its "
+              "original German intertitles.",
+     "note": "Silent · German intertitles",
+     "host": "ia", "id": "1919DasCabinetDesDr.Caligari",
+     "channel": "Internet Archive", "kind": "Full Movie", "pd": True},
+    {"title": "The Night Devours", "year": 2024,
+     "blurb": "A modern indie chiller from a verified distributor "
+              "channel — a killer's confessions unravel into something "
+              "far worse. Full feature, officially licensed.",
+     "host": "yt", "id": "qGGTwchOUys",
+     "channel": "Kings of Horror", "kind": "Full Movie", "pd": False},
+]
 
 
 @app.get("/movies", response_class=HTMLResponse)
@@ -5377,7 +5446,8 @@ def movies_page(request: Request):
     return templates.TemplateResponse(
         request, "movies.html",
         {"site_name": SITE_NAME, "new": MOVIE_NEW,
-         "classics": MOVIE_CLASSICS, "deep_cuts": MOVIE_DEEP_CUTS},
+         "classics": MOVIE_CLASSICS, "deep_cuts": MOVIE_DEEP_CUTS,
+         "free_full": MOVIE_FREE_FULL},
     )
 
 

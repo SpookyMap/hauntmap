@@ -9,6 +9,7 @@
   <a href="#new">&#x1F195; New for 2026</a>
   <a href="#classics">&#x1F3C6; The Classics</a>
   <a href="#deep-cuts">&#x1F52A; Superfan Deep Cuts</a>
+  <a href="#free">&#x1F3AC; Free Full Movies</a>
 </nav>
 
 <h2 class="music-h2" id="new">&#x1F195; New for 2026</h2>
@@ -60,6 +61,28 @@
   {% endfor %}
 </div>
 
+<h2 class="music-h2" id="free">&#x1F3AC; Free Full Movies</h2>
+<p>Yes, really — the whole movie, free and legal. The classics are public domain and stream from the Internet Archive's own player; the new one comes from a distributor's official channel. Tap any cover to watch right here.</p>
+<div class="yt-grid">
+  {% for v in free_full %}
+  <article class="yt-item movie-card">
+    {% if v.host == 'ia' %}
+    <button type="button" class="yt-facade" data-ia="{{ v.id }}" aria-label="Play the full movie: {{ v.title }}">
+      <img src="https://archive.org/services/img/{{ v.id }}" alt="" loading="lazy">
+    {% else %}
+    <button type="button" class="yt-facade" data-yt="{{ v.id }}" aria-label="Play the full movie: {{ v.title }}">
+      <img src="https://i.ytimg.com/vi/{{ v.id }}/hqdefault.jpg" alt="" loading="lazy">
+    {% endif %}
+      <span class="yt-play" aria-hidden="true">&#9654;</span>
+    </button>
+    <h3 class="movie-title">{{ v.title }} <span class="movie-year">({{ v.year }})</span></h3>
+    {% if v.note %}<p class="movie-meta">{{ v.note }}</p>{% endif %}
+    <p class="movie-blurb">{{ v.blurb }}</p>
+    <p class="yt-cap">{{ v.kind }} &middot; {{ v.channel }}{% if v.pd %} &middot; Public domain classic{% endif %}</p>
+  </article>
+  {% endfor %}
+</div>
+
 <p class="music-events-cta">Set the mood first: <a href="/music">Halloween Music &rarr;</a> &middot; Going out instead? <a href="/events">Find Halloween concerts, DJ nights &amp; parties &rarr;</a></p>
 
 <script>
@@ -72,10 +95,18 @@ document.addEventListener('click', function (ev) {
   b.dataset.loaded = '1';
   var f = document.createElement('iframe');
   f.className = 'yt-frame';
-  f.src = 'https://www.youtube-nocookie.com/embed/' + b.getAttribute('data-yt') + '?autoplay=1&rel=0';
-  f.setAttribute('allow', 'autoplay; encrypted-media; picture-in-picture');
+  var ia = b.getAttribute('data-ia');
+  if (ia) {
+    // Free Full Movies: public-domain classics stream from the Internet
+    // Archive's own player — embed only, nothing is re-hosted here.
+    f.src = 'https://archive.org/embed/' + ia;
+    f.setAttribute('allow', 'autoplay; fullscreen');
+  } else {
+    f.src = 'https://www.youtube-nocookie.com/embed/' + b.getAttribute('data-yt') + '?autoplay=1&rel=0';
+    f.setAttribute('allow', 'autoplay; encrypted-media; picture-in-picture');
+  }
   f.setAttribute('allowfullscreen', '');
-  f.setAttribute('title', b.getAttribute('aria-label') || 'YouTube video');
+  f.setAttribute('title', b.getAttribute('aria-label') || 'Video player');
   b.replaceWith(f);
 });
 </script>
