@@ -5292,6 +5292,29 @@ MOVIE_NEW = [
               "weekend before Halloween.",
      "id": "OGO4Mqvo3jI", "channel": "DC",
      "kind": "Official Trailer"},
+    # Scream 7 + Scary Movie pair (Dan, Oct 24): both franchises are
+    # Miramax/Paramount copyright — NO legal free full-length embed
+    # exists (subscription streaming / transactional VOD only, checked
+    # Oct 24), so the page carries the official trailers instead. All
+    # IDs below oEmbed-verified 2026-10-24 (title + channel match,
+    # embeddable). The 1996 Scream trailer was already in The Classics
+    # (Paramount Movies) — not duplicated.
+    {"title": "Scream 7", "year": 2026,
+     "meta": "In theaters Feb 27",
+     "blurb": "Sidney Prescott is back. A new Ghostface finds the quiet "
+              "town where she built her life — and her daughter is the "
+              "target. Kevin Williamson, who wrote the 1996 original, "
+              "directs.",
+     "id": "UJrghaPJ0RY", "channel": "Paramount Pictures",
+     "kind": "Official Trailer"},
+    {"title": "Scary Movie 6", "year": 2026,
+     "meta": "In theaters Jun 5",
+     "blurb": "The Core Four rides again — Cindy, Brenda, Shorty and Ray "
+              "reunite 26 years later to slash through every reboot, "
+              "requel and elevated-horror hit of the last decade. No "
+              "trope survives.",
+     "id": "0fZ58S-7QP0", "channel": "Paramount Pictures",
+     "kind": "Official Trailer"},
 ]
 MOVIE_CLASSICS = [
     {"title": "The Rocky Horror Picture Show", "year": 1975,
@@ -5338,6 +5361,12 @@ MOVIE_CLASSICS = [
               "town where it's always Halloween.",
      "id": "ozGLDYRjvN0", "channel": "Disney Channel",
      "kind": "Official Clip"},
+    {"title": "Scary Movie", "year": 2000,
+     "blurb": "The parody that took a chainsaw to the rules — the "
+              "Wayans brothers and Anna Faris spoof Scream, The Sixth "
+              "Sense and every teen-slasher cliché in the book. Wazzup!",
+     "id": "HTLPULt0eJ4", "channel": "Miramax",
+     "kind": "Official Trailer"},
     {"title": "Trick 'r Treat", "year": 2007,
      "blurb": "Sam's rules are the superfans' rules: wear a costume, hand "
               "out treats, and never blow out a jack-o'-lantern early.",
