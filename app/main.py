@@ -921,27 +921,132 @@ def _events_on_count(conn, town_label: str, on_date) -> int:
     return n
 
 
-def _tonight_strip(town_label: str, displays: int, town_note: str = "") -> dict:
-    """Data for the _tonight_strip.html partial (Item 5): ET countdown,
-    events on tonight near the anchor town, displays lit tonight.
-    `displays` = halloween-category pins in the town (house displays run
-    nightly through the season, so every display pin counts as lit)."""
-    today = _today_et()
+def _events_on_by_town(conn, on_date) -> dict:
+    """{town_label: count} of parsed events covering `on_date`, in one
+    pass over the events category (the same labels _events_on_count
+    matches against)."""
+    counts: dict[str, int] = {}
+    for r in conn.execute(
+            "SELECT title, town FROM entries "
+            "WHERE hidden = 0 AND category = 'events'").fetchall():
+        if event_on_date(r["title"], on_date):
+            label = extract_city_state(r["town"] or "") or r["town"] or ""
+            if label:
+                counts[label] = counts.get(label, 0) + 1
+    return counts
+
+
+def _next_events_day(conn, town_label: str, today, horizon: int = 14):
+    """(date, count) of the first day AFTER today, within `horizon`
+    days, on which `town_label` has a parsed event — None when the
+    town has nothing coming up in the window."""
+    for off in range(1, horizon + 1):
+        day = today + timedelta(days=off)
+        n = _events_on_count(conn, town_label, day)
+        if n:
+            return (day, n)
+    return None
+
+
+def _nearest_events_town(counts: dict, halloween_inv: list[dict],
+                         vpoint) -> dict | None:
+    """Nearest town with >= 1 event tonight, as {label, count} where
+    count is the town's halloween display pins. Distance is haversine
+    from `vpoint` (lat, lng) to the town centroid, capped at
+    _GEO_NEAR_RADIUS_MI (the same "near" radius Item 1 uses); centroids
+    come from the halloween inventory, filled from the events inventory
+    for towns that have events but no display pins. Towns that also
+    have display pins are preferred — the strip pairs the events count
+    with a displays count, so a 0-display anchor reads as a dead end —
+    but only when such a town is comparably near (within 25 mi, or
+    twice the nearest distance, whichever is larger); otherwise the
+    truly nearest events town wins. None when no town qualifies."""
+    if not counts or vpoint is None:
+        return None
+    cents = {t["label"]: t for t in halloween_inv}
+    if any(lbl not in cents for lbl in counts):
+        with get_conn(DB_PATH) as conn:
+            for t in _town_inventory(conn, "events"):
+                cents.setdefault(t["label"], t)
+    hw_counts = {t["label"]: t["count"] for t in halloween_inv}
+    cands = []
+    for label, n in counts.items():
+        if n < 1:
+            continue
+        t = cents.get(label)
+        if not t or t["clat"] is None or t["clng"] is None:
+            continue
+        d = haversine_miles(vpoint[0], vpoint[1], t["clat"], t["clng"])
+        if d <= _GEO_NEAR_RADIUS_MI:
+            cands.append((d, label))
+    if not cands:
+        return None
+    cands.sort()
+    nearest_d = cands[0][0]
+    with_displays = [c for c in cands if hw_counts.get(c[1], 0) > 0]
+    pick = cands[0]
+    if with_displays and with_displays[0][0] <= max(25.0, 2 * nearest_d):
+        pick = with_displays[0]
+    return {"label": pick[1], "count": hw_counts.get(pick[1], 0)}
+
+
+def _halloween_countdown(today) -> str:
     halloween = _mkdate(today.year, 10, 31)
     days = (halloween - today).days
     if days > 1:
-        countdown = f"\U0001F383 {days} days to Halloween"
-    elif days == 1:
-        countdown = "\U0001F383 1 day to Halloween"
-    elif days == 0:
-        countdown = "\U0001F383 It's Halloween night!"
-    else:
-        countdown = "\U0001F383 Halloween night has passed — still lit tonight"
+        return f"\U0001F383 {days} days to Halloween"
+    if days == 1:
+        return "\U0001F383 1 day to Halloween"
+    if days == 0:
+        return "\U0001F383 It's Halloween night!"
+    return "\U0001F383 Halloween night has passed — still lit tonight"
+
+
+def _tonight_strip(town_label: str, displays: int, town_note: str = "",
+                   events_day=None) -> dict:
+    """Data for the _tonight_strip.html partial (Item 5): ET countdown,
+    events near the anchor town, displays lit tonight. `displays` =
+    halloween-category pins in the town (house displays run nightly
+    through the season, so every display pin counts as lit).
+    `events_day` counts events for a day other than today; the strip
+    then names that day via events_when/events_iso instead of claiming
+    the events are "on tonight" (used when the visitor's home town has
+    nothing tonight but has an event coming up)."""
+    today = _today_et()
+    day = events_day or today
     with get_conn(DB_PATH) as conn:
-        events_on = _events_on_count(conn, town_label, today)
+        events_on = _events_on_count(conn, town_label, day)
+    if day == today:
+        events_when = "on tonight"
+    else:
+        events_when = "on " + day.strftime("%a, %b ") + str(day.day)
     return {"town_label": town_label, "town_note": town_note,
-            "countdown": countdown, "today_iso": today.isoformat(),
-            "events_on": events_on, "displays": displays}
+            "countdown": _halloween_countdown(today),
+            "today_iso": today.isoformat(),
+            "events_on": events_on, "displays": displays,
+            "events_iso": day.isoformat(), "events_when": events_when,
+            "scope": "town"}
+
+
+def _tonight_strip_map() -> dict:
+    """Map-wide variant of the Tonight strip, for visitors whose
+    location is unknown: tonight's totals across the whole map, with
+    no town presented as "near" them. (Dan, Oct 23: the strip used to
+    anchor on the biggest town on the map — Staten Island — and show
+    it to everyone next to the countdown.)"""
+    today = _today_et()
+    with get_conn(DB_PATH) as conn:
+        counts = _events_on_by_town(conn, today)
+        displays = conn.execute(
+            "SELECT COUNT(*) AS n FROM entries "
+            "WHERE hidden = 0 AND category = 'halloween'"
+        ).fetchone()["n"]
+    return {"town_label": "", "town_note": "",
+            "countdown": _halloween_countdown(today),
+            "today_iso": today.isoformat(),
+            "events_on": sum(counts.values()), "displays": displays,
+            "events_iso": today.isoformat(), "events_when": "on tonight",
+            "scope": "map"}
 
 
 def detail_chain(entry: dict) -> dict:
@@ -1749,15 +1854,26 @@ def home(request: Request, sort: str = "new", town: str = "", town_search: str =
                     "entries": _rank_with_featured(state_rows, 10),
                 }
     # Retention Wave 3, Item 5: the "Tonight" strip's anchor town.
-    # Resolution: the visitor's explicit ?town= context first; then Item
-    # 1's geo-resolved anchor (the first Near-you chip in exact/near/
-    # state mode — that town leads the chips); else the biggest town on
-    # the map, labelled honestly via town_note (this also covers Item
-    # 1's "nomap" mode: the visitor's own area has no supply, so the
-    # strip names the biggest town AS the biggest town, never as "near
-    # you"). Displays = halloween pins in the anchor town, counted from
-    # the same inventory that builds the Near-you chips.
+    # Resolution: the visitor's explicit ?town= context first (their
+    # chosen town, as-is). With a geo-resolved area (exact/near/state),
+    # the anchor is the visitor's OWN town (the first Near-you chip) —
+    # with two honest adjustments (Dan, Oct 23, LOCATION-FIRST: the
+    # strip used to fall back to the biggest town on the map — Staten
+    # Island — and show it to everyone): when the home town has no
+    # events tonight, the anchor moves to the NEAREST town that does
+    # have events tonight, named as that town and noted as such; when
+    # no town nearby has events tonight either, the home town stays
+    # and the events segment names its next event day instead of a
+    # bare 0. A "nomap" visitor (area known, no mapped supply) anchors
+    # on the nearest town with events tonight, else the biggest such
+    # town in their state. A visitor with NO known location gets the
+    # map-wide line (tonight's totals across the whole map) — no town
+    # is ever presented as "near you" when it isn't. Displays =
+    # halloween pins in the anchor town, from the same inventory that
+    # builds the Near-you chips.
     strip_label, strip_note = "", ""
+    strip_events_day = None
+    strip_map_wide = False
     if town:
         want = extract_city_state(town) or town
         hit = next((t for t in halloween_inventory if t["label"] == want),
@@ -1770,18 +1886,72 @@ def home(request: Request, sort: str = "new", town: str = "", town_search: str =
         strip_displays = hit["count"] if hit else 0
     elif resolved_area["mode"] in ("exact", "near", "state") \
             and resolved_area["chips"]:
-        strip_label = resolved_area["chips"][0]["label"]
+        home_label = resolved_area["chips"][0]["label"]
         hit = next((t for t in halloween_inventory
-                    if t["label"] == strip_label), None)
+                    if t["label"] == home_label), None)
+        strip_label = home_label
         strip_displays = hit["count"] if hit else 0
-    elif halloween_inventory:
-        biggest = max(halloween_inventory,
-                      key=lambda t: (t["count"], t["label"]))
-        strip_label = biggest["label"]
-        strip_displays = biggest["count"]
-        strip_note = "biggest town on the map"
-    tstrip = (_tonight_strip(strip_label, strip_displays, strip_note)
-              if strip_label else None)
+        with get_conn(DB_PATH) as conn:
+            tonight_counts = _events_on_by_town(conn, _today_et())
+        if not tonight_counts.get(home_label):
+            vpoint = None
+            if geo and geo.get("lat") is not None \
+                    and geo.get("lng") is not None:
+                vpoint = (geo["lat"], geo["lng"])
+            elif hit and hit["clat"] is not None:
+                vpoint = (hit["clat"], hit["clng"])
+            near_hit = (_nearest_events_town(tonight_counts,
+                                             halloween_inventory, vpoint)
+                        if vpoint else None)
+            if near_hit:
+                strip_label = near_hit["label"]
+                strip_displays = near_hit["count"]
+                strip_note = "nearest town with events tonight"
+            else:
+                with get_conn(DB_PATH) as conn:
+                    nxt = _next_events_day(conn, home_label, _today_et())
+                if nxt:
+                    strip_events_day = nxt[0]
+    elif resolved_area["mode"] == "nomap":
+        with get_conn(DB_PATH) as conn:
+            tonight_counts = _events_on_by_town(conn, _today_et())
+        vpoint = None
+        if geo and geo.get("lat") is not None \
+                and geo.get("lng") is not None:
+            vpoint = (geo["lat"], geo["lng"])
+        near_hit = (_nearest_events_town(tonight_counts,
+                                         halloween_inventory, vpoint)
+                    if vpoint else None)
+        if near_hit:
+            strip_label = near_hit["label"]
+            strip_displays = near_hit["count"]
+            strip_note = "nearest town with events tonight"
+        elif geo and geo.get("state"):
+            in_state = [t for t in halloween_inventory
+                        if t["state"] == geo["state"]
+                        and tonight_counts.get(t["label"])]
+            if in_state:
+                best = max(in_state,
+                           key=lambda t: (tonight_counts[t["label"]],
+                                          t["count"], t["label"]))
+                strip_label = best["label"]
+                strip_displays = best["count"]
+                strip_note = ("in " + US_STATE_NAMES.get(geo["state"],
+                                                         geo["state"]))
+            else:
+                strip_map_wide = True
+        else:
+            strip_map_wide = True
+    else:
+        # Location entirely unknown (no geo headers): map-wide line.
+        strip_map_wide = True
+    if strip_map_wide:
+        tstrip = _tonight_strip_map()
+    elif strip_label:
+        tstrip = _tonight_strip(strip_label, strip_displays, strip_note,
+                                events_day=strip_events_day)
+    else:
+        tstrip = None
     response = templates.TemplateResponse(request, "index.html",
         {"request": request, "entries": entries, "sort": sort,
          "town": town, "towns": towns(cat, state), "states": states(cat),
