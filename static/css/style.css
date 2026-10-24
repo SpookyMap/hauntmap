@@ -550,6 +550,18 @@ a { color: var(--accent); }
 .top10-home-list .featured-badge { margin-top: 0; flex: 0 0 auto; }
 .top10-home-more { font-weight: 700; }
 
+/* ============ z103: TOP 10 PHONE SEAT (Dan, Oct 23 ~21:33) ====
+   Dan: "Put the top ten by state under the my tik tok videos above
+   the follow us on tik tok view on the phone." The phone copy moves
+   out of the below-band cluster into .hero-split as its own grid
+   area, between "video" (.tt-featured) and "strip"
+   (.tt-follow-vert); the three stacked grid-template-areas lists
+   below carry the new "top10home" row. Grid gap spaces it, so the
+   block's below-band margin goes. The copy is display:none at
+   >=761px (z67 rule), so the laptop grid never sees it and the
+   in-hero copy + laptop layout are untouched. */
+.hero-split > .top10-home { grid-area: top10home; margin: 0; }
+
 /* admin */
 .admin-list { display: grid; gap: 0.6rem; margin-bottom: 2rem; }
 .admin-row {
@@ -1475,7 +1487,7 @@ a.game-card:hover { border-color: #ff7518; transform: translateY(-2px); }
 .hero-split {
   display: grid;
   grid-template-columns: 1fr;
-  grid-template-areas: "headline" "vtstrip" "video" "strip" "sponsor";
+  grid-template-areas: "headline" "vtstrip" "video" "top10home" "strip" "sponsor";
   gap: 0.9rem;
   margin: 0.4rem 0;
 }
@@ -1636,7 +1648,7 @@ a.game-card:hover { border-color: #ff7518; transform: translateY(-2px); }
 /* Town-request form inside the hero grid: its own area under the sponsor
    billboard in the left column (last in the stacked order on phone).
    strip-fit: "vtstrip" (phone VT/TV twin) joins right after "headline". */
-.hero-split { grid-template-areas: "headline" "vtstrip" "video" "strip" "sponsor" "townreq"; }
+.hero-split { grid-template-areas: "headline" "vtstrip" "video" "top10home" "strip" "sponsor" "townreq"; }
 .hero-split .town-request {
   grid-area: townreq; margin: 0; max-width: none; width: 100%;
   box-sizing: border-box; text-align: left;
@@ -2204,7 +2216,7 @@ body.has-tourbar.has-radio { padding-bottom: 124px; }
   .site-header.v2 .header-nav a.navbtn[href="/diy-costumes"] span { font-size: 0.36rem; }
 }
 @media (max-width: 760px) {
-  .hero-split { grid-template-areas: "headline" "vtstrip" "video" "strip" "sponsor" "townreq"; }
+  .hero-split { grid-template-areas: "headline" "vtstrip" "video" "top10home" "strip" "sponsor" "townreq"; }
 }
 
 /* ============ z65: PHONE NAV — TWO ROWS OF FIVE (Dan, Oct 22; supersedes the z64 single row) ====
