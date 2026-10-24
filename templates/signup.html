@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Join HauntMap · {{ site_name }}{% endblock %}
+{% block content %}
+<section class="soc-auth">
+  <h1>&#x1F383; Join HauntMap</h1>
+  <p class="soc-lede">Get your own page at <strong>gethauntmap.com/@yourname</strong> —
+     your haunts, your music, your wall. Free, and the map stays open to
+     everyone either way.</p>
+  {% if error %}<p class="soc-error">{{ error }}</p>{% endif %}
+  <form class="form soc-form" method="post" action="/signup">
+    <label>Email <span class="req">*</span>
+      <input type="email" name="email" required autocomplete="email"
+             value="{{ values.email or '' }}" placeholder="you@example.com">
+    </label>
+    <label>Your @handle <span class="req">*</span>
+      <input type="text" name="handle" required autocomplete="username"
+             value="{{ values.handle or '' }}" placeholder="e.g. spooky_sam"
+             pattern="[a-z0-9_]{3,20}">
+      <small>3–20 characters: lowercase letters, numbers, underscores. This is
+        your page address — pick the name you want to be known by.</small>
+    </label>
+    <label>Password <span class="req">*</span>
+      <input type="password" name="password" required minlength="8"
+             autocomplete="new-password">
+      <small>At least 8 characters.</small>
+    </label>
+    <label>Date of birth <span class="req">*</span>
+      <input type="date" name="dob" required value="{{ values.dob or '' }}">
+      <small>You need to be 13 or older to join. We use this only for the age check.</small>
+    </label>
+    <label class="soc-check">
+      <input type="checkbox" name="agree_terms" value="yes" required>
+      I agree to the <a href="/terms">Terms</a> and <a href="/privacy">Privacy Policy</a>,
+      and I know my profile is public.
+    </label>
+    <button class="btn btn-big" type="submit">Create my page &#x1F47B;</button>
+  </form>
+  <p class="soc-alt">Already a member? <a href="/login">Sign in</a></p>
+</section>
+{% endblock %}

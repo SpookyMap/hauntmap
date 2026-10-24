@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}Edit profile · {{ site_name }}{% endblock %}
+{% block content %}
+<section class="soc-auth">
+  <h1>&#x270F;&#xFE0F; Edit your profile</h1>
+  <p class="soc-lede">Your page: <a href="/@{{ member.handle }}">gethauntmap.com/@{{ member.handle }}</a></p>
+  {% if error %}<p class="soc-error">{{ error }}</p>{% endif %}
+  <form class="form soc-form" method="post" action="/profile/edit">
+    <label>Display name
+      <input type="text" name="display_name" maxlength="60"
+             value="{{ profile.display_name or '' }}" placeholder="The name everyone sees">
+    </label>
+    <label>Bio <span class="opt">(500 max)</span>
+      <textarea name="bio" rows="3" maxlength="500"
+                placeholder="Decorator? Haunter? Horror band? Tell the neighborhood.">{{ profile.bio or '' }}</textarea>
+    </label>
+    <label>Home town
+      <input type="text" name="town" maxlength="80"
+             value="{{ profile.town or '' }}" placeholder="e.g. Hackensack, NJ">
+    </label>
+    <label>Avatar
+      <span class="soc-picker">
+        <label class="soc-pick"><input type="radio" name="avatar_choice" value="" {% if not profile.avatar_choice %}checked{% endif %}>
+          <span class="soc-avatar soc-avatar-sm" style="background:#3a1c66"><span>{{ (profile.display_name or member.handle)[:1]|upper }}</span></span> Initial</label>
+        {% for key, (emoji, bg) in avatars.items() %}
+        <label class="soc-pick"><input type="radio" name="avatar_choice" value="{{ key }}" {% if profile.avatar_choice == key %}checked{% endif %}>
+          <span class="soc-avatar soc-avatar-sm" style="background:{{ bg }}"><span>{{ emoji }}</span></span> {{ key|title }}</label>
+        {% endfor %}
+      </span>
+    </label>
+    <label>Banner
+      <span class="soc-picker">
+        {% for key, grad in banners.items() %}
+        <label class="soc-pick"><input type="radio" name="banner_choice" value="{{ key }}" {% if profile.banner_choice == key or (not profile.banner_choice and key == 'midnight') %}checked{% endif %}>
+          <span class="soc-banner-chip" style="background:{{ grad }}"></span> {{ key|title }}</label>
+        {% endfor %}
+      </span>
+    </label>
+    <label>Music embed <span class="opt">(Spotify, SoundCloud, or YouTube link)</span>
+      <input type="url" name="music_embed_url"
+             value="{{ profile.music_embed_url or '' }}"
+             placeholder="https://open.spotify.com/track/…">
+      <small>Your profile song, the MySpace way — paste a track, album, or
+        playlist link and it plays right on your page.</small>
+    </label>
+    <button class="btn btn-big" type="submit">Save profile</button>
+  </form>
+  <p class="soc-alt"><a href="/@{{ member.handle }}">View my page</a></p>
+</section>
+{% endblock %}

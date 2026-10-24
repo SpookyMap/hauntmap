@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Sign in · {{ site_name }}{% endblock %}
+{% block content %}
+<section class="soc-auth">
+  <h1>&#x1F47B; Welcome back</h1>
+  {% if error %}<p class="soc-error">{{ error }}</p>{% endif %}
+  <form class="form soc-form" method="post" action="/login">
+    <input type="hidden" name="next" value="{{ next }}">
+    <label>Email <span class="req">*</span>
+      <input type="email" name="email" required autocomplete="email"
+             value="{{ email or '' }}">
+    </label>
+    <label>Password <span class="req">*</span>
+      <input type="password" name="password" required autocomplete="current-password">
+    </label>
+    <button class="btn btn-big" type="submit">Sign in</button>
+  </form>
+  <p class="soc-alt"><a href="/forgot-password">Forgot your password?</a>
+     &middot; New here? <a href="/signup">Join HauntMap</a></p>
+</section>
+{% endblock %}

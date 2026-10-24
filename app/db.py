@@ -165,6 +165,80 @@ CREATE TABLE IF NOT EXISTS sms_sends (
     status TEXT NOT NULL DEFAULT 'queued', -- queued | sent | failed | dry_run
     created_at TEXT NOT NULL
 );
+-- ------------------------------------------------ HauntMap Social (Phase 1)
+-- Member accounts + profiles (plan: hauntmap-social-plan-2026-10-24.md).
+-- Sessions are DATABASE-backed (the admin's in-memory set wipes on every
+-- deploy; member sessions must not). Only the token HASH is stored.
+CREATE TABLE IF NOT EXISTS users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    email TEXT NOT NULL UNIQUE,           -- stored lowercase
+    password_hash TEXT NOT NULL,          -- pbkdf2_hmac hex
+    password_salt TEXT NOT NULL,          -- per-user salt hex
+    handle TEXT NOT NULL UNIQUE,          -- lowercase, 3-20 chars [a-z0-9_]
+    dob TEXT,                             -- ISO date, age gate at signup
+    is_admin INTEGER NOT NULL DEFAULT 0,
+    status TEXT NOT NULL DEFAULT 'active', -- active | suspended
+    created_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_users_handle ON users(handle);
+CREATE TABLE IF NOT EXISTS profiles (
+    user_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+    display_name TEXT,
+    bio TEXT,
+    town TEXT,
+    avatar_choice TEXT,                   -- preset key, NULL = initial tile
+    banner_choice TEXT,                   -- preset key, NULL = default banner
+    music_embed_url TEXT,                 -- member-supplied Spotify/SC/YT URL
+    website_url TEXT,
+    updated_at TEXT
+);
+CREATE TABLE IF NOT EXISTS sessions (
+    token_hash TEXT PRIMARY KEY,          -- sha256 of the cookie token
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    created_at TEXT NOT NULL,
+    expires_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_sessions_user ON sessions(user_id);
+CREATE TABLE IF NOT EXISTS follows (
+    follower_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    followee_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    created_at TEXT NOT NULL,
+    UNIQUE (follower_id, followee_id)
+);
+CREATE TABLE IF NOT EXISTS wall_comments (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    profile_user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    author_user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    text TEXT NOT NULL,
+    hidden INTEGER NOT NULL DEFAULT 0,
+    created_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_wall_profile ON wall_comments(profile_user_id, created_at);
+CREATE TABLE IF NOT EXISTS reports (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    reporter_user_id INTEGER REFERENCES users(id),
+    target_type TEXT NOT NULL,            -- profile | comment | pin
+    target_id INTEGER NOT NULL,
+    reason TEXT,
+    status TEXT NOT NULL DEFAULT 'open',  -- open | reviewed | actioned
+    created_at TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS blocks (
+    blocker_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    blocked_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    created_at TEXT NOT NULL,
+    UNIQUE (blocker_id, blocked_id)
+);
+CREATE TABLE IF NOT EXISTS password_reset_requests (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    email TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'queued', -- queued | sent | done
+    created_at TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS social_meta (
+    key TEXT PRIMARY KEY,
+    value TEXT
+);
 """
 
 
@@ -256,4 +330,8 @@ def init_db(db_path: Path) -> None:
         for col, ddl in (("path", "TEXT"), ("seconds", "INTEGER"), ("sid", "TEXT")):
             if col not in ecols:
                 conn.execute(f"ALTER TABLE engagement_events ADD COLUMN {col} {ddl}")
+        # HauntMap Social (Phase 1): a pin's owner once a haunter claims
+        # it. NULL until claimed; profile "My haunts" reads this column.
+        if "owner_user_id" not in cols:
+            conn.execute("ALTER TABLE entries ADD COLUMN owner_user_id INTEGER")
         conn.commit()

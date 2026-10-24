@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+{% from "_pin_card.html" import pin_card %}
+{% block title %}{% if not_found %}No such haunter{% else %}{{ display_name }} (@{{ user.handle }}){% endif %} · {{ site_name }}{% endblock %}
+{% block content %}
+{% if not_found %}
+<section class="soc-auth">
+  <h1>&#x1F47B; Nobody home</h1>
+  <p class="soc-lede">There's no HauntMap member at <strong>@{{ handle }}</strong> — yet.
+     Feeling brave? <a href="/signup">Claim the name</a> before someone else does.</p>
+</section>
+{% else %}
+<article class="soc-profile">
+  <div class="soc-banner" style="background: {{ banner_gradient }}">
+    <span class="soc-banner-moons" aria-hidden="true">&#x1F383; &#x1F987; &#x1F47B;</span>
+  </div>
+  <header class="soc-head">
+    <div class="soc-avatar" style="background: {{ avatar.bg }}">
+      {% if avatar.emoji %}<span>{{ avatar.emoji }}</span>{% else %}<span>{{ avatar.initial }}</span>{% endif %}
+    </div>
+    <div class="soc-id">
+      <h1>{{ display_name }}</h1>
+      <p class="soc-handle">@{{ user.handle }}{% if profile.town %} &middot; &#x1F4CD; {{ profile.town }}{% endif %}</p>
+      <p class="soc-since">Haunting since {{ member_since }}</p>
+    </div>
+    <div class="soc-actions">
+      {% if is_owner %}
+      <a class="btn btn-small" href="/profile/edit">&#x270F;&#xFE0F; Edit profile</a>
+      <form method="post" action="/logout"><button class="btn btn-small" type="submit">Sign out</button></form>
+      {% elif member %}
+        {% if viewer_blocked %}
+        <form method="post" action="/@{{ user.handle }}/unblock"><button class="btn btn-small" type="submit">Unblock</button></form>
+        {% else %}
+        <form method="post" action="/@{{ user.handle }}/block"><button class="btn btn-small" type="submit">Block</button></form>
+        {% endif %}
+        <form method="post" action="/@{{ user.handle }}/report"><button class="btn btn-small" type="submit">Report</button></form>
+      {% endif %}
+    </div>
+  </header>
+
+  {% if reported %}<p class="soc-ok">Thanks — reported. A human will take a look.</p>{% endif %}
+  {% if profile.bio %}<p class="soc-bio">{{ profile.bio }}</p>{% endif %}
+
+  {% if embed %}
+  <section class="soc-music">
+    <h2>&#x1F3B6; On repeat</h2>
+    <iframe src="{{ embed.src }}" width="100%" height="{{ embed.height }}" frameborder="0"
+            loading="lazy" allow="encrypted-media; fullscreen; picture-in-picture"
+            allowfullscreen title="{{ display_name }}'s music"></iframe>
+  </section>
+  {% endif %}
+
+  <section class="soc-haunts">
+    <h2>&#x1F3E0; My haunts</h2>
+    {% if haunts %}
+    <div class="soc-haunt-grid">
+      {% for e in haunts %}{{ pin_card(e) }}{% endfor %}
+    </div>
+    {% else %}
+    <div class="soc-empty">
+      {% if is_owner %}
+      <p>No haunts linked to your page yet. If your displays are already on the
+         map, claiming them puts them right here — claims open soon. Decorating
+         this year? <a href="/upload">Add your haunt</a> and it'll join the map.</p>
+      {% else %}
+      <p>{{ display_name }} hasn't linked any haunts yet — when their displays
+         join the map, they'll live right here.</p>
+      {% endif %}
+    </div>
+    {% endif %}
+  </section>
+
+  <section class="soc-wall">
+    <h2>&#x1F4AC; The wall</h2>
+    {% if wall_error %}<p class="soc-error">{{ wall_error }}</p>{% endif %}
+    {% if member and not viewer_is_blocked %}
+    <form class="form soc-wall-form" method="post" action="/@{{ user.handle }}/wall">
+      <label class="soc-sr" for="walltext">Leave a comment</label>
+      <textarea id="walltext" name="text" rows="2" maxlength="500" required
+                placeholder="{% if is_owner %}Say something to your visitors…{% else %}Leave a note for {{ display_name }}…{% endif %}"></textarea>
+      <button class="btn btn-small" type="submit">Post to the wall</button>
+    </form>
+    {% elif member and viewer_is_blocked %}
+    <p class="soc-note">You can't comment on this profile.</p>
+    {% else %}
+    <p class="soc-note"><a href="/login?next=/@{{ user.handle }}">Sign in</a> to leave a comment —
+       or <a href="/signup">join HauntMap</a> and get your own wall.</p>
+    {% endif %}
+
+    {% if comments %}
+    <ul class="soc-comments">
+      {% for c in comments %}
+      <li class="soc-comment">
+        <div class="soc-avatar soc-avatar-sm" style="background: {{ c.author_avatar_view.bg }}">
+          {% if c.author_avatar_view.emoji %}<span>{{ c.author_avatar_view.emoji }}</span>{% else %}<span>{{ c.author_avatar_view.initial }}</span>{% endif %}
+        </div>
+        <div class="soc-comment-body">
+          <p class="soc-comment-meta">
+            <a href="/@{{ c.author_handle }}">{{ c.author_label }}</a>
+            <span class="soc-comment-handle">@{{ c.author_handle }}</span>
+            <time>{{ c.created_at[:10] }}</time>
+          </p>
+          <p class="soc-comment-text">{{ c.text }}</p>
+          <p class="soc-comment-tools">
+            {% if member and (is_owner or member.id == c.author_user_id) %}
+            <form method="post" action="/wall/{{ c.id }}/delete"><button type="submit" class="soc-tool">Delete</button></form>
+            {% endif %}
+            {% if member and member.id != c.author_user_id %}
+            <form method="post" action="/wall/{{ c.id }}/report"><button type="submit" class="soc-tool">Report</button></form>
+            {% endif %}
+          </p>
+        </div>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p class="soc-note">No comments yet — be the first to say boo. &#x1F47B;</p>
+    {% endif %}
+  </section>
+</article>
+{% endif %}
+{% endblock %}

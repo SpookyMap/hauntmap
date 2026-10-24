@@ -6430,3 +6430,751 @@ def admin_sponsor_delete(sponsor_id: int, request: Request):
         (UPLOAD_DIR / row["logo_path"]).unlink(missing_ok=True)
     return RedirectResponse("/admin/sponsors", status_code=303)
 
+
+
+# =============================================================== HauntMap Social
+# Phase 1, step 1 (STAGED — plan: files/hauntmap-social-plan-2026-10-24.md).
+# Open member sign-ups + public profiles at /@handle. Browsing the map
+# stays account-free; accounts are only for joining. Sessions are
+# DATABASE-backed (table `sessions`, sha256 token hashes) — deliberately
+# NOT the admin's in-memory pattern, which wipes on every deploy.
+MEMBER_COOKIE = "hm_member"
+MEMBER_SESSION_DAYS = 30
+PBKDF2_ITERATIONS = 600_000
+SOCIAL_AGE_MIN = 13  # plan §7 recommended default — staged ON, Dan to rule
+CREATOR_HOLD_DAYS = 30  # plan §7 recommended default — staged ON
+
+HANDLE_RE = re.compile(r"^[a-z0-9_]{3,20}$")
+RESERVED_HANDLES = {
+    "admin", "hauntmap", "support", "help", "official", "staff", "team",
+    "moderator", "mod", "system", "root", "api", "login", "logout",
+    "signup", "register", "settings", "profile", "edit", "about", "terms",
+    "privacy", "events", "map", "watch", "tour", "tours", "nearby",
+    "games", "music", "movies", "markets", "leaderboard", "passport",
+    "daily", "towns", "advertise", "upload", "diy", "fanart", "fan-art",
+    "jollymap", "gethauntmap", "haunt", "halloween", "christmas",
+}
+
+# Preset spooky avatars (step 1: no photo uploads). Key -> (emoji, tile bg).
+AVATAR_PRESETS = {
+    "pumpkin": ("🎃", "#3a1c66"),
+    "ghost": ("👻", "#241243"),
+    "skull": ("💀", "#1c1c26"),
+    "bat": ("🦇", "#150826"),
+    "witch": ("🧙", "#0d2818"),
+    "vampire": ("🧛", "#2b0a12"),
+    "spider": ("🕷️", "#101018"),
+    "blackcat": ("🐈\u200d⬛", "#1a1030"),
+    "owl": ("🦉", "#20140a"),
+    "moon": ("🌙", "#0a1030"),
+    "candy": ("🍬", "#30102a"),
+    "zombie": ("🧟", "#12260d"),
+}
+# Preset profile banners (CSS gradients — curated, the MySpace flavor
+# without raw CSS). Key -> gradient.
+BANNER_PRESETS = {
+    "midnight": "linear-gradient(120deg,#150826,#3a1c66 55%,#6d28a8)",
+    "pumpkin": "linear-gradient(120deg,#2b1200,#8a3c00 55%,#ff7b1c)",
+    "blood": "linear-gradient(120deg,#1c0208,#5c0a18 55%,#a1121f)",
+    "slime": "linear-gradient(120deg,#0c2405,#2d5a12 55%,#6abe30)",
+    "graveyard": "linear-gradient(120deg,#0d0d12,#26262e 55%,#4a4a55)",
+    "candy": "linear-gradient(120deg,#2b0a24,#7a1c5e 55%,#ff5da2)",
+}
+DEFAULT_BANNER = "midnight"
+
+# Simple in-app throttle for auth endpoints: key -> [unix timestamps].
+_auth_throttle: dict[str, list[float]] = {}
+
+
+def _throttle_hit(key: str, limit: int, window_s: int) -> bool:
+    """Record one attempt; True when the caller is OVER the limit."""
+    now = time.time()
+    hits = [t for t in _auth_throttle.get(key, []) if now - t < window_s]
+    hits.append(now)
+    _auth_throttle[key] = hits
+    return len(hits) > limit
+
+
+def _client_ip(request: Request) -> str:
+    fwd = request.headers.get("x-forwarded-for", "")
+    if fwd:
+        return fwd.split(",")[0].strip()
+    return request.client.host if request.client else "unknown"
+
+
+def _hash_password(password: str, salt_hex: str | None = None) -> tuple[str, str]:
+    salt = bytes.fromhex(salt_hex) if salt_hex else secrets.token_bytes(16)
+    digest = hashlib.pbkdf2_hmac(
+        "sha256", password.encode("utf-8"), salt, PBKDF2_ITERATIONS)
+    return digest.hex(), salt.hex()
+
+
+def _check_password(password: str, hash_hex: str, salt_hex: str) -> bool:
+    digest, _ = _hash_password(password, salt_hex)
+    return hmac.compare_digest(digest, hash_hex)
+
+
+def _start_member_session(response: Response, user_id: int) -> None:
+    token = secrets.token_urlsafe(32)
+    token_hash = hashlib.sha256(token.encode()).hexdigest()
+    now = datetime.now(timezone.utc)
+    with get_conn(DB_PATH) as conn:
+        conn.execute(
+            "INSERT INTO sessions (token_hash, user_id, created_at, expires_at) "
+            "VALUES (?, ?, ?, ?)",
+            (token_hash, user_id, now.isoformat(),
+             (now + timedelta(days=MEMBER_SESSION_DAYS)).isoformat()))
+        conn.commit()
+    response.set_cookie(MEMBER_COOKIE, token, max_age=MEMBER_SESSION_DAYS * 24 * 3600,
+                        httponly=True, samesite="lax")
+
+
+def current_member(request: Request) -> dict | None:
+    """The logged-in member for this request, or None. Suspended accounts
+    read as logged out."""
+    token = request.cookies.get(MEMBER_COOKIE)
+    if not token:
+        return None
+    token_hash = hashlib.sha256(token.encode()).hexdigest()
+    now = datetime.now(timezone.utc).isoformat()
+    with get_conn(DB_PATH) as conn:
+        row = conn.execute(
+            "SELECT u.* FROM sessions s JOIN users u ON u.id = s.user_id "
+            "WHERE s.token_hash = ? AND s.expires_at > ?",
+            (token_hash, now)).fetchone()
+    if row is None or row["status"] != "active":
+        return None
+    return dict(row)
+
+
+def _social_meta_get(key: str) -> str | None:
+    with get_conn(DB_PATH) as conn:
+        row = conn.execute(
+            "SELECT value FROM social_meta WHERE key = ?", (key,)).fetchone()
+    return row["value"] if row else None
+
+
+def _social_meta_set(key: str, value: str) -> None:
+    with get_conn(DB_PATH) as conn:
+        conn.execute(
+            "INSERT INTO social_meta (key, value) VALUES (?, ?) "
+            "ON CONFLICT(key) DO UPDATE SET value = excluded.value",
+            (key, value))
+        conn.commit()
+
+
+def _creator_hold_until() -> datetime:
+    """Creator-handle holds run CREATOR_HOLD_DAYS from the first time the
+    social schema wakes up (i.e. launch); the date is pinned in
+    social_meta on first use so deploys don't extend it."""
+    raw = _social_meta_get("creator_hold_until")
+    if raw:
+        try:
+            return datetime.fromisoformat(raw)
+        except ValueError:
+            pass
+    until = datetime.now(timezone.utc) + timedelta(days=CREATOR_HOLD_DAYS)
+    _social_meta_set("creator_hold_until", until.isoformat())
+    return until
+
+
+def _normalize_handle_candidate(name: str) -> str:
+    """Turn a credited creator display_name into its handle-shaped form:
+    'lilroamingexplorers (TikTok)' -> 'lilroamingexplorers',
+    '@laurschor on TikTok' -> 'laurschor', 'Ro Roaming (TikTok)' ->
+    'roroaming'."""
+    s = (name or "").strip().lower()
+    s = re.sub(r"\s*\(tiktok\)\s*$", "", s)
+    s = re.sub(r"\s+on tiktok\s*$", "", s)
+    s = s.lstrip("@").strip()
+    s = re.sub(r"[^a-z0-9_]", "", s)
+    return s
+
+
+_creator_holds_cache: tuple[float, set[str]] = (0.0, set())
+
+
+def _creator_hold_handles() -> set[str]:
+    """Handles matching creators already credited on the map (from the
+    entries table's display_name values), cached for an hour."""
+    global _creator_holds_cache
+    ts, cached = _creator_holds_cache
+    if time.time() - ts < 3600 and cached:
+        return cached
+    holds: set[str] = set()
+    try:
+        with get_conn(DB_PATH) as conn:
+            rows = conn.execute(
+                "SELECT DISTINCT display_name FROM entries "
+                "WHERE display_name IS NOT NULL AND display_name != ''").fetchall()
+        for r in rows:
+            cand = _normalize_handle_candidate(r["display_name"])
+            if HANDLE_RE.match(cand) and cand not in RESERVED_HANDLES:
+                holds.add(cand)
+    except Exception:
+        pass  # holds are a courtesy layer; never break signup over them
+    _creator_holds_cache = (time.time(), holds)
+    return holds
+
+
+def _handle_held(handle: str) -> bool:
+    if datetime.now(timezone.utc) >= _creator_hold_until():
+        return False
+    return handle in _creator_hold_handles()
+
+
+def _avatar_view(choice: str | None, display_name: str | None, handle: str) -> dict:
+    if choice in AVATAR_PRESETS:
+        emoji, bg = AVATAR_PRESETS[choice]
+        return {"emoji": emoji, "bg": bg, "initial": ""}
+    initial = (display_name or handle or "?").strip()[:1].upper() or "?"
+    return {"emoji": "", "bg": "#3a1c66", "initial": initial}
+
+
+def _music_embed(url: str | None) -> dict | None:
+    """Convert a member's Spotify / SoundCloud / YouTube URL into an embed.
+    Embeds ONLY — the platforms hold the files and the licenses (plan §2
+    Phase 3). Returns None for anything unrecognized or off-host."""
+    if not url:
+        return None
+    try:
+        u = urllib.parse.urlparse(url.strip())
+    except ValueError:
+        return None
+    host = (u.hostname or "").lower()
+    if host == "open.spotify.com":
+        m = re.match(r"^/(track|album|playlist|episode|show)/([A-Za-z0-9]+)", u.path)
+        if m:
+            kind, sid = m.group(1), m.group(2)
+            return {"kind": "spotify",
+                    "src": f"https://open.spotify.com/embed/{kind}/{sid}",
+                    "height": 152 if kind in ("track", "episode") else 352}
+        return None
+    if host in ("www.youtube.com", "youtube.com", "m.youtube.com"):
+        vid = urllib.parse.parse_qs(u.query).get("v", [None])[0]
+        if not vid:
+            m = re.match(r"^/(?:shorts|embed)/([\w-]{6,})", u.path)
+            vid = m.group(1) if m else None
+        if vid and re.fullmatch(r"[\w-]{6,}", vid):
+            return {"kind": "youtube",
+                    "src": f"https://www.youtube.com/embed/{vid}", "height": 315}
+        return None
+    if host == "youtu.be":
+        vid = u.path.strip("/").split("/")[0]
+        if re.fullmatch(r"[\w-]{6,}", vid or ""):
+            return {"kind": "youtube",
+                    "src": f"https://www.youtube.com/embed/{vid}", "height": 315}
+        return None
+    if host in ("soundcloud.com", "www.soundcloud.com"):
+        if u.path and u.path != "/":
+            src = ("https://w.soundcloud.com/player/?url="
+                   + urllib.parse.quote(url.strip(), safe="")
+                   + "&color=%23ff6a00&auto_play=false&hide_related=true"
+                     "&show_comments=false&show_user=true")
+            return {"kind": "soundcloud", "src": src, "height": 166}
+        return None
+    return None
+
+
+def _contains_link(text: str) -> bool:
+    return bool(re.search(r"https?://|www\.", text or "", re.IGNORECASE))
+
+
+def _account_age_days(user: dict) -> int:
+    try:
+        created = datetime.fromisoformat(str(user["created_at"]).replace("Z", "+00:00"))
+        if created.tzinfo is None:
+            created = created.replace(tzinfo=timezone.utc)
+        return (datetime.now(timezone.utc) - created).days
+    except (ValueError, KeyError):
+        return 9999
+
+
+def _member_since_label(created_at: str | None) -> str:
+    try:
+        d = datetime.fromisoformat(str(created_at).replace("Z", "+00:00"))
+        return d.strftime("%B %Y")
+    except (ValueError, TypeError):
+        return ""
+
+
+def _safe_next(next_url: str | None) -> str | None:
+    if next_url and next_url.startswith("/") and not next_url.startswith("//"):
+        return next_url
+    return None
+
+
+# ---------------------------------------------------------------- signup/login
+
+@app.get("/signup", response_class=HTMLResponse)
+def signup_form(request: Request):
+    member = current_member(request)
+    if member:
+        return RedirectResponse(f"/@{member['handle']}", status_code=303)
+    return templates.TemplateResponse(request, "signup.html",
+                                      {"request": request, "error": None,
+                                       "values": {}})
+
+
+@app.post("/signup", response_class=HTMLResponse)
+def signup_submit(request: Request,
+                  email: str = Form(""), handle: str = Form(""),
+                  password: str = Form(""), dob: str = Form(""),
+                  agree_terms: str = Form("")):
+    ip = _client_ip(request)
+    values = {"email": email.strip(), "handle": handle.strip().lower(), "dob": dob}
+
+    def fail(msg: str, status: int = 400):
+        return templates.TemplateResponse(
+            request, "signup.html",
+            {"request": request, "error": msg, "values": values},
+            status_code=status)
+
+    if _throttle_hit(f"signup:{ip}", 5, 3600):
+        return fail("Too many sign-ups from this connection — try again in a bit.", 429)
+    email_n = email.strip().lower()
+    handle_n = handle.strip().lower()
+    if not re.fullmatch(r"[^@\s]+@[^@\s]+\.[^@\s]+", email_n):
+        return fail("That email doesn't look right — check it and try again.")
+    if not HANDLE_RE.match(handle_n):
+        return fail("Handles are 3–20 characters: lowercase letters, numbers, "
+                    "and underscores only.")
+    if handle_n in RESERVED_HANDLES:
+        return fail("That name is reserved — pick another handle.")
+    if len(password) < 8:
+        return fail("Passwords need at least 8 characters.")
+    if agree_terms not in ("yes", "on", "true"):
+        return fail("Please agree to the Terms and Privacy Policy to join.")
+    try:
+        dob_d = datetime.strptime(dob, "%Y-%m-%d").date()
+    except ValueError:
+        return fail("Enter your date of birth — we use it only for the age check.")
+    today = datetime.now(timezone.utc).date()
+    age = today.year - dob_d.year - ((today.month, today.day) < (dob_d.month, dob_d.day))
+    if age < SOCIAL_AGE_MIN:
+        return fail("Sorry — you need to be 13 or older to join HauntMap.")
+    if age > 120:
+        return fail("That date of birth doesn't look right — check it and try again.")
+    with get_conn(DB_PATH) as conn:
+        if conn.execute("SELECT 1 FROM users WHERE email = ?", (email_n,)).fetchone():
+            return fail("That email already has an account — try signing in.")
+        if conn.execute("SELECT 1 FROM users WHERE handle = ?", (handle_n,)).fetchone():
+            return fail("That handle is taken — pick another.")
+    if _handle_held(handle_n):
+        return fail(
+            "That name is reserved for its haunter — it's the name of a "
+            "creator already credited on the map, held for them to claim. "
+            "If that's you, hang tight: claiming opens soon, and we'll "
+            "verify it's really you. Pick a different handle for now, or "
+            "check back when claims open.")
+    pw_hash, pw_salt = _hash_password(password)
+    now = datetime.now(timezone.utc).isoformat()
+    with get_conn(DB_PATH) as conn:
+        cur = conn.execute(
+            "INSERT INTO users (email, password_hash, password_salt, handle, "
+            "dob, created_at) VALUES (?, ?, ?, ?, ?, ?)",
+            (email_n, pw_hash, pw_salt, handle_n, dob, now))
+        user_id = cur.lastrowid
+        conn.execute(
+            "INSERT INTO profiles (user_id, display_name, updated_at) "
+            "VALUES (?, ?, ?)", (user_id, handle_n, now))
+        conn.commit()
+    resp = RedirectResponse(f"/@{handle_n}", status_code=303)
+    _start_member_session(resp, user_id)
+    return resp
+
+
+@app.get("/login", response_class=HTMLResponse)
+def login_form(request: Request, next: str = ""):
+    member = current_member(request)
+    if member:
+        return RedirectResponse(_safe_next(next) or f"/@{member['handle']}",
+                                status_code=303)
+    return templates.TemplateResponse(request, "login.html",
+                                      {"request": request, "error": None,
+                                       "next": _safe_next(next) or "", "email": ""})
+
+
+@app.post("/login", response_class=HTMLResponse)
+def login_submit(request: Request, email: str = Form(""),
+                 password: str = Form(""), next: str = Form("")):
+    ip = _client_ip(request)
+    if _throttle_hit(f"login:{ip}", 10, 900):
+        return templates.TemplateResponse(
+            request, "login.html",
+            {"request": request, "next": _safe_next(next) or "", "email": email,
+             "error": "Too many tries — wait a few minutes and try again."},
+            status_code=429)
+    email_n = email.strip().lower()
+    with get_conn(DB_PATH) as conn:
+        row = conn.execute("SELECT * FROM users WHERE email = ?",
+                           (email_n,)).fetchone()
+    ok = row is not None and row["status"] == "active" and _check_password(
+        password, row["password_hash"], row["password_salt"])
+    if not ok:
+        return templates.TemplateResponse(
+            request, "login.html",
+            {"request": request, "next": _safe_next(next) or "", "email": email,
+             "error": "Email or password doesn't match — try again."},
+            status_code=401)
+    resp = RedirectResponse(_safe_next(next) or f"/@{row['handle']}", status_code=303)
+    _start_member_session(resp, row["id"])
+    return resp
+
+
+@app.get("/logout")
+@app.post("/logout")
+def logout(request: Request):
+    token = request.cookies.get(MEMBER_COOKIE)
+    if token:
+        token_hash = hashlib.sha256(token.encode()).hexdigest()
+        with get_conn(DB_PATH) as conn:
+            conn.execute("DELETE FROM sessions WHERE token_hash = ?", (token_hash,))
+            conn.commit()
+    resp = RedirectResponse("/", status_code=303)
+    resp.delete_cookie(MEMBER_COOKIE)
+    return resp
+
+
+# ------------------------------------------- password reset (admin-queue path)
+# There is NO email-sending code on the site yet. Until Dan creates the
+# gethauntmap Gmail app password (plan §3), reset requests land in the
+# password_reset_requests table — the admin queue — and get handled by
+# hand. Nothing here pretends to send an email.
+
+@app.get("/forgot-password", response_class=HTMLResponse)
+def forgot_form(request: Request):
+    return templates.TemplateResponse(request, "forgot_password.html",
+                                      {"request": request, "sent": False})
+
+
+@app.post("/forgot-password", response_class=HTMLResponse)
+def forgot_submit(request: Request, email: str = Form("")):
+    email_n = email.strip().lower()
+    if re.fullmatch(r"[^@\s]+@[^@\s]+\.[^@\s]+", email_n or ""):
+        with get_conn(DB_PATH) as conn:
+            conn.execute(
+                "INSERT INTO password_reset_requests (email, created_at) "
+                "VALUES (?, ?)", (email_n, datetime.now(timezone.utc).isoformat()))
+            conn.commit()
+    # Same message either way — never leak whether an account exists.
+    return templates.TemplateResponse(request, "forgot_password.html",
+                                      {"request": request, "sent": True})
+
+
+# ------------------------------------------------------------- legal (drafts)
+
+@app.get("/terms", response_class=HTMLResponse)
+def terms_page(request: Request):
+    return templates.TemplateResponse(request, "terms.html", {"request": request})
+
+
+@app.get("/privacy", response_class=HTMLResponse)
+def privacy_page(request: Request):
+    return templates.TemplateResponse(request, "privacy.html", {"request": request})
+
+
+# ------------------------------------------------------------------- profiles
+
+def _profile_context(request: Request, handle: str, member: dict | None,
+                     wall_error: str | None = None) -> dict | None:
+    """Everything profile.html needs, or None when the handle is unknown."""
+    with get_conn(DB_PATH) as conn:
+        urow = conn.execute("SELECT * FROM users WHERE handle = ?",
+                            (handle,)).fetchone()
+        if urow is None:
+            return None
+        user = dict(urow)
+        prow = conn.execute("SELECT * FROM profiles WHERE user_id = ?",
+                            (user["id"],)).fetchone()
+        profile = dict(prow) if prow else {"user_id": user["id"],
+                                           "display_name": user["handle"],
+                                           "bio": None, "town": None,
+                                           "avatar_choice": None,
+                                           "banner_choice": None,
+                                           "music_embed_url": None,
+                                           "website_url": None}
+        haunts = [row_to_dict(r) for r in conn.execute(
+            "SELECT * FROM entries WHERE owner_user_id = ? AND hidden = 0 "
+            "ORDER BY created_at DESC", (user["id"],)).fetchall()]
+        comments = []
+        for r in conn.execute(
+                "SELECT w.*, a.handle AS author_handle, "
+                "p.display_name AS author_name, p.avatar_choice AS author_avatar "
+                "FROM wall_comments w JOIN users a ON a.id = w.author_user_id "
+                "LEFT JOIN profiles p ON p.user_id = a.id "
+                "WHERE w.profile_user_id = ? AND w.hidden = 0 "
+                "ORDER BY w.created_at ASC", (user["id"],)).fetchall():
+            c = dict(r)
+            c["author_avatar_view"] = _avatar_view(
+                c.get("author_avatar"), c.get("author_name"), c["author_handle"])
+            c["author_label"] = c.get("author_name") or c["author_handle"]
+            comments.append(c)
+        viewer_blocked = viewer_is_blocked = False
+        if member and member["id"] != user["id"]:
+            viewer_blocked = conn.execute(
+                "SELECT 1 FROM blocks WHERE blocker_id = ? AND blocked_id = ?",
+                (member["id"], user["id"])).fetchone() is not None
+            viewer_is_blocked = conn.execute(
+                "SELECT 1 FROM blocks WHERE blocker_id = ? AND blocked_id = ?",
+                (user["id"], member["id"])).fetchone() is not None
+    display = profile.get("display_name") or user["handle"]
+    return {
+        "request": request,
+        "member": member,
+        "user": user,
+        "profile": profile,
+        "display_name": display,
+        "avatar": _avatar_view(profile.get("avatar_choice"), display, user["handle"]),
+        "banner_gradient": BANNER_PRESETS.get(profile.get("banner_choice") or "",
+                                              BANNER_PRESETS[DEFAULT_BANNER]),
+        "member_since": _member_since_label(user["created_at"]),
+        "embed": _music_embed(profile.get("music_embed_url")),
+        "haunts": haunts,
+        "comments": comments,
+        "is_owner": bool(member and member["id"] == user["id"]),
+        "viewer_blocked": viewer_blocked,
+        "viewer_is_blocked": viewer_is_blocked,
+        "wall_error": wall_error,
+        "reported": request.query_params.get("reported") == "1",
+        "not_found": False,
+    }
+
+
+@app.get("/@{handle}", response_class=HTMLResponse)
+def profile_page(request: Request, handle: str):
+    handle_n = handle.strip().lower()
+    if handle_n != handle:
+        return RedirectResponse(f"/@{handle_n}", status_code=302)
+    member = current_member(request)
+    ctx = _profile_context(request, handle_n, member)
+    if ctx is None:
+        return templates.TemplateResponse(
+            request, "profile.html",
+            {"request": request, "not_found": True, "member": member,
+             "handle": handle_n}, status_code=404)
+    return templates.TemplateResponse(request, "profile.html", ctx)
+
+
+@app.post("/@{handle}/wall", response_class=HTMLResponse)
+def wall_post(request: Request, handle: str, text: str = Form("")):
+    handle_n = handle.strip().lower()
+    member = current_member(request)
+    if not member:
+        return RedirectResponse(f"/login?next=/@{handle_n}", status_code=303)
+
+    def fail(msg: str):
+        ctx = _profile_context(request, handle_n, member, wall_error=msg)
+        if ctx is None:
+            raise HTTPException(404, "No such profile.")
+        return templates.TemplateResponse(request, "profile.html", ctx,
+                                          status_code=400)
+
+    with get_conn(DB_PATH) as conn:
+        owner = conn.execute("SELECT * FROM users WHERE handle = ?",
+                             (handle_n,)).fetchone()
+        if owner is None:
+            raise HTTPException(404, "No such profile.")
+        blocked = conn.execute(
+            "SELECT 1 FROM blocks WHERE (blocker_id = ? AND blocked_id = ?) "
+            "OR (blocker_id = ? AND blocked_id = ?)",
+            (owner["id"], member["id"], member["id"], owner["id"])).fetchone()
+        recent = conn.execute(
+            "SELECT COUNT(*) AS n FROM wall_comments WHERE author_user_id = ? "
+            "AND created_at > ?",
+            (member["id"], (datetime.now(timezone.utc)
+                             - timedelta(hours=1)).isoformat())).fetchone()["n"]
+    body = text.strip()
+    if blocked:
+        return fail("You can't comment on this profile.")
+    if not body:
+        return fail("Write something first.")
+    if len(body) > 500:
+        return fail("Comments cap at 500 characters.")
+    if recent >= 10:
+        return fail("Whoa — 10 comments an hour is the cap. Take a breather.")
+    if _account_age_days(member) < 7 and _contains_link(body):
+        return fail("New accounts can't post links in comments for the "
+                    "first 7 days — them's the anti-spam rules.")
+    with get_conn(DB_PATH) as conn:
+        conn.execute(
+            "INSERT INTO wall_comments (profile_user_id, author_user_id, text, "
+            "created_at) VALUES (?, ?, ?, ?)",
+            (owner["id"], member["id"], body,
+             datetime.now(timezone.utc).isoformat()))
+        conn.commit()
+    return RedirectResponse(f"/@{handle_n}", status_code=303)
+
+
+@app.post("/@{handle}/report")
+def profile_report(request: Request, handle: str, reason: str = Form("")):
+    member = current_member(request)
+    handle_n = handle.strip().lower()
+    if not member:
+        return RedirectResponse(f"/login?next=/@{handle_n}", status_code=303)
+    with get_conn(DB_PATH) as conn:
+        owner = conn.execute("SELECT id FROM users WHERE handle = ?",
+                             (handle_n,)).fetchone()
+        if owner:
+            conn.execute(
+                "INSERT INTO reports (reporter_user_id, target_type, target_id, "
+                "reason, created_at) VALUES (?, 'profile', ?, ?, ?)",
+                (member["id"], owner["id"], reason.strip()[:500] or None,
+                 datetime.now(timezone.utc).isoformat()))
+            conn.commit()
+    return RedirectResponse(f"/@{handle_n}?reported=1", status_code=303)
+
+
+@app.post("/@{handle}/block")
+def profile_block(request: Request, handle: str):
+    member = current_member(request)
+    handle_n = handle.strip().lower()
+    if not member:
+        return RedirectResponse(f"/login?next=/@{handle_n}", status_code=303)
+    with get_conn(DB_PATH) as conn:
+        owner = conn.execute("SELECT id FROM users WHERE handle = ?",
+                             (handle_n,)).fetchone()
+        if owner and owner["id"] != member["id"]:
+            conn.execute(
+                "INSERT OR IGNORE INTO blocks (blocker_id, blocked_id, created_at) "
+                "VALUES (?, ?, ?)",
+                (member["id"], owner["id"], datetime.now(timezone.utc).isoformat()))
+            conn.commit()
+    return RedirectResponse(f"/@{handle_n}", status_code=303)
+
+
+@app.post("/@{handle}/unblock")
+def profile_unblock(request: Request, handle: str):
+    member = current_member(request)
+    handle_n = handle.strip().lower()
+    if not member:
+        return RedirectResponse(f"/login?next=/@{handle_n}", status_code=303)
+    with get_conn(DB_PATH) as conn:
+        owner = conn.execute("SELECT id FROM users WHERE handle = ?",
+                             (handle_n,)).fetchone()
+        if owner:
+            conn.execute(
+                "DELETE FROM blocks WHERE blocker_id = ? AND blocked_id = ?",
+                (member["id"], owner["id"]))
+            conn.commit()
+    return RedirectResponse(f"/@{handle_n}", status_code=303)
+
+
+@app.post("/wall/{comment_id}/delete")
+def wall_delete(request: Request, comment_id: int):
+    member = current_member(request)
+    if not member:
+        return RedirectResponse("/login", status_code=303)
+    with get_conn(DB_PATH) as conn:
+        row = conn.execute("SELECT * FROM wall_comments WHERE id = ?",
+                           (comment_id,)).fetchone()
+        if row is None:
+            raise HTTPException(404, "No such comment.")
+        # The wall's owner controls their wall; the author can retract too.
+        if member["id"] not in (row["profile_user_id"], row["author_user_id"]):
+            raise HTTPException(403, "Not your wall.")
+        conn.execute("UPDATE wall_comments SET hidden = 1 WHERE id = ?",
+                     (comment_id,))
+        conn.commit()
+        owner = conn.execute("SELECT handle FROM users WHERE id = ?",
+                             (row["profile_user_id"],)).fetchone()
+    return RedirectResponse(f"/@{owner['handle']}", status_code=303)
+
+
+@app.post("/wall/{comment_id}/report")
+def wall_report(request: Request, comment_id: int, reason: str = Form("")):
+    member = current_member(request)
+    if not member:
+        return RedirectResponse("/login", status_code=303)
+    with get_conn(DB_PATH) as conn:
+        row = conn.execute("SELECT * FROM wall_comments WHERE id = ?",
+                           (comment_id,)).fetchone()
+        if row is None:
+            raise HTTPException(404, "No such comment.")
+        conn.execute(
+            "INSERT INTO reports (reporter_user_id, target_type, target_id, "
+            "reason, created_at) VALUES (?, 'comment', ?, ?, ?)",
+            (member["id"], comment_id, reason.strip()[:500] or None,
+             datetime.now(timezone.utc).isoformat()))
+        conn.commit()
+        owner = conn.execute("SELECT handle FROM users WHERE id = ?",
+                             (row["profile_user_id"],)).fetchone()
+    return RedirectResponse(f"/@{owner['handle']}?reported=1", status_code=303)
+
+
+# --------------------------------------------------------------- edit profile
+
+@app.get("/profile/edit", response_class=HTMLResponse)
+def profile_edit_form(request: Request):
+    member = current_member(request)
+    if not member:
+        return RedirectResponse("/login?next=/profile/edit", status_code=303)
+    with get_conn(DB_PATH) as conn:
+        prow = conn.execute("SELECT * FROM profiles WHERE user_id = ?",
+                            (member["id"],)).fetchone()
+    return templates.TemplateResponse(
+        request, "profile_edit.html",
+        {"request": request, "member": member,
+         "profile": dict(prow) if prow else {},
+         "avatars": AVATAR_PRESETS, "banners": BANNER_PRESETS,
+         "error": None})
+
+
+@app.post("/profile/edit", response_class=HTMLResponse)
+def profile_edit_submit(request: Request,
+                        display_name: str = Form(""), bio: str = Form(""),
+                        town: str = Form(""), avatar_choice: str = Form(""),
+                        banner_choice: str = Form(""),
+                        music_embed_url: str = Form("")):
+    member = current_member(request)
+    if not member:
+        return RedirectResponse("/login?next=/profile/edit", status_code=303)
+    values = {"display_name": display_name.strip(), "bio": bio.strip(),
+              "town": town.strip(), "avatar_choice": avatar_choice,
+              "banner_choice": banner_choice,
+              "music_embed_url": music_embed_url.strip()}
+
+    def fail(msg: str):
+        return templates.TemplateResponse(
+            request, "profile_edit.html",
+            {"request": request, "member": member, "profile": values,
+             "avatars": AVATAR_PRESETS, "banners": BANNER_PRESETS,
+             "error": msg}, status_code=400)
+
+    if len(values["display_name"]) > 60:
+        return fail("Display names cap at 60 characters.")
+    if len(values["bio"]) > 500:
+        return fail("Bios cap at 500 characters.")
+    if len(values["town"]) > 80:
+        return fail("Town caps at 80 characters.")
+    if avatar_choice and avatar_choice not in AVATAR_PRESETS:
+        return fail("Pick an avatar from the set.")
+    if banner_choice and banner_choice not in BANNER_PRESETS:
+        return fail("Pick a banner from the set.")
+    music = values["music_embed_url"]
+    if music and _music_embed(music) is None:
+        return fail("That link can't be embedded — use a Spotify, SoundCloud, "
+                    "or YouTube link.")
+    # Plan §4's new-account link ban covers bio + comments. The music slot
+    # is exempt by design: its URL is host-allowlisted to Spotify /
+    # SoundCloud / YouTube embeds above, so it can't carry spam links.
+    if _account_age_days(member) < 7 and _contains_link(values["bio"]):
+        return fail("New accounts can't put links in their bio for the "
+                    "first 7 days — anti-spam rules.")
+    with get_conn(DB_PATH) as conn:
+        conn.execute(
+            "INSERT INTO profiles (user_id, display_name, bio, town, "
+            "avatar_choice, banner_choice, music_embed_url, updated_at) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?) "
+            "ON CONFLICT(user_id) DO UPDATE SET display_name = excluded.display_name, "
+            "bio = excluded.bio, town = excluded.town, "
+            "avatar_choice = excluded.avatar_choice, "
+            "banner_choice = excluded.banner_choice, "
+            "music_embed_url = excluded.music_embed_url, "
+            "updated_at = excluded.updated_at",
+            (member["id"], values["display_name"] or member["handle"],
+             values["bio"] or None, values["town"] or None,
+             avatar_choice or None, banner_choice or None, music or None,
+             datetime.now(timezone.utc).isoformat()))
+        conn.commit()
+    return RedirectResponse(f"/@{member['handle']}", status_code=303)
