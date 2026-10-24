@@ -6,7 +6,78 @@
 <p class="lede">Halloween flea markets, oddities expos, witchy night markets and pop-up shops &mdash; where costumes, d&eacute;cor, antiques and curiosities are hiding before the big night. Soonest first.</p>
 <p class="music-crosslink">&#x1F3AA; Looking for parties and haunted events instead? <a href="/events">All Events &amp; Parties &rarr;</a></p>
 
+{# Location controls (Dan, Oct 24): City/State dropdown of every town
+   that has markets + a "Markets near me" button mirroring Events Near
+   Me — the saved town (localStorage hm_town), browser geolocation
+   (?lat=&lng=, the hmNearMe pattern), the Cloudflare headers the
+   homepage Near You module reads, and the town chooser below as the
+   fallback. Located state names the anchor area and offers a one-tap
+   reset to all markets. #}
+<div class="ev-near-bar">
+  {% if near_active %}
+  <span class="ev-near-on">&#x1F4CD; Near <strong>{{ near_label }}</strong></span>
+  <a class="ev-near-reset" href="/markets">&#x2715; Show all markets</a>
+  {% elif town %}
+  <span class="ev-near-on">&#x1F4CD; <strong>{{ town }}</strong></span>
+  <a class="ev-near-reset" href="/markets">&#x2715; Show all markets</a>
+  {% else %}
+  <form method="get" action="/markets" class="mk-town-form">
+    <select name="town" aria-label="Choose a city and state">
+      <option value="">&#x1F5FA;&#xFE0F; All locations</option>
+      {% for o in town_options %}
+      <option value="{{ o.value }}">{{ o.value }} ({{ o.count }})</option>
+      {% endfor %}
+    </select>
+    <button type="submit" class="btn">Show</button>
+  </form>
+  <button type="button" class="btn ev-near-btn" onclick="hmMarketsNearMe(this)">&#x1F4CD; Markets near me</button>
+  {% endif %}
+</div>
+{% if near_prompt %}
+<div class="ev-near-chooser">
+  {% if near_nomap_name %}
+  <p class="ev-near-chooser-head">&#x1F47B; No markets mapped near {{ near_nomap_name }} yet &mdash; pick a town to browse around instead:</p>
+  {% else %}
+  <p class="ev-near-chooser-head">&#x1F4CD; We couldn&rsquo;t pinpoint you &mdash; pick your town:</p>
+  {% endif %}
+  <div class="ev-near-chooser-row">
+    <select id="mk-near-town" aria-label="Pick your town">
+      <option value="">Choose a town&hellip;</option>
+      {% for o in town_options %}
+      <option value="{{ o.value }}">{{ o.value }} ({{ o.count }})</option>
+      {% endfor %}
+    </select>
+    <button type="button" class="btn" onclick="hmMarketsNearGo()">Show markets</button>
+  </div>
+</div>
+{% endif %}
+<script>
+function hmMarketsNearMe(btn) {
+  var saved = '';
+  try { saved = localStorage.getItem('hm_town') || ''; } catch (e) {}
+  if (saved) { location.href = '/markets?near=1&area=' + encodeURIComponent(saved); return; }
+  if (!navigator.geolocation) { location.href = '/markets?near=1'; return; }
+  btn.textContent = 'Locating\u2026';
+  navigator.geolocation.getCurrentPosition(function (pos) {
+    location.href = '/markets?near=1&lat=' + pos.coords.latitude.toFixed(5) + '&lng=' + pos.coords.longitude.toFixed(5);
+  }, function () { location.href = '/markets?near=1'; });
+}
+function hmMarketsNearGo() {
+  var sel = document.getElementById('mk-near-town');
+  var v = sel && sel.value;
+  if (!v) { if (sel) sel.focus(); return; }
+  try { localStorage.setItem('hm_town', v); } catch (e) {}
+  location.href = '/markets?near=1&area=' + encodeURIComponent(v);
+}
+</script>
+
+{% if near_active %}
+<p class="ev-count">{{ entries|length }} market{{ 's' if entries|length != 1 }} near {{ near_label }} &middot; <a href="/markets">show all {{ total }} markets</a></p>
+{% elif town %}
+<p class="ev-count">{{ entries|length }} market{{ 's' if entries|length != 1 }} in {{ town }} &middot; <a href="/markets">show all {{ total }} markets</a></p>
+{% else %}
 <p class="ev-count">{{ total }} market{{ 's' if total != 1 }} on the map</p>
+{% endif %}
 
 {% if entries %}
 <div class="grid">
@@ -39,13 +110,43 @@
 {% else %}
 <div class="empty">
   <p class="empty-emoji">&#x1F6D2;</p>
+  {% if near_prompt %}
+  <p>No markets mapped near you yet &mdash; pick a town above, or browse them all.</p>
+  <p><a class="btn" href="/markets">Show all markets</a></p>
+  {% elif town or near_active %}
+  <p>No markets there right now &mdash; try another town, or browse them all.</p>
+  <p><a class="btn" href="/markets">Show all markets</a></p>
+  {% else %}
   <p>No markets on the map yet &mdash; check back as the season builds.</p>
   <p><a class="btn" href="/events">Browse all events</a></p>
+  {% endif %}
 </div>
 {% endif %}
 <style>
 .ev-chips { display: flex; flex-wrap: wrap; gap: 0.3rem; margin: 0.15rem 0 0.3rem; }
 .ev-chip { display: inline-block; padding: 0.1rem 0.5rem; border-radius: 999px; background: #241a44; border: 1px solid #372b5e; color: #ffd98a; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.03em; }
 .ev-count { margin: 0.4rem 0 0.8rem; color: #cfc4ee; }
+.ev-count a { color: #ff7518; font-weight: 700; white-space: nowrap; }
+/* Location bar (Dan, Oct 24): same classes/CSS as the /events near bar
+   so both pages read as one pattern. The town form sits beside the
+   Near button on laptop and stacks full-width above it on phone. */
+.ev-near-bar { display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: center; margin: 0.9rem 0 0.2rem; }
+.ev-near-btn { font-size: 1.02rem; padding: 0.65rem 1.3rem; }
+.ev-near-on { display: inline-block; padding: 0.45rem 0.8rem; border-radius: 999px; background: #241a44; border: 1px solid #ff7518; color: #f3eefc; font-size: 0.95rem; font-weight: 600; }
+.ev-near-on strong { color: #ffd98a; }
+.ev-near-reset { display: inline-block; padding: 0.45rem 0.8rem; border-radius: 999px; background: transparent; border: 1px solid #6b4fae; color: #e8ddff; font-size: 0.88rem; font-weight: 700; text-decoration: none; white-space: nowrap; }
+.ev-near-reset:hover { background: #241a44; }
+.ev-near-chooser { margin: 0.7rem 0 0.2rem; padding: 0.8rem 0.9rem; border-radius: 12px; background: #1d1438; border: 1px solid #372b5e; }
+.ev-near-chooser-head { margin: 0 0 0.55rem; color: #f3eefc; font-weight: 600; }
+.ev-near-chooser-row { display: flex; flex-wrap: wrap; gap: 0.6rem; }
+.ev-near-chooser select { flex: 1 1 220px; padding: 0.55rem 0.6rem; border-radius: 10px; background: #241a44; border: 1px solid #372b5e; color: #f3eefc; font: inherit; font-size: 0.95rem; }
+.mk-town-form { display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: center; flex: 1 1 320px; max-width: 480px; margin: 0; }
+.mk-town-form select { flex: 1 1 200px; padding: 0.6rem 0.6rem; border-radius: 10px; background: #1d1438; border: 1px solid #372b5e; color: #f3eefc; font: inherit; font-size: 0.98rem; min-height: 48px; }
+@media (max-width: 760px) {
+  .ev-near-btn { flex: 1 1 100%; min-height: 48px; font-size: 1.08rem; }
+  .ev-near-on { flex: 1 1 auto; text-align: center; }
+  .mk-town-form { flex: 1 1 100%; max-width: none; }
+  .mk-town-form select { flex: 1 1 auto; }
+}
 </style>
 {% endblock %}

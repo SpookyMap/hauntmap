@@ -533,15 +533,22 @@ def _visitor_geo(request: Request) -> dict | None:
     return {"city": city, "state": state, "lat": lat, "lng": lng}
 
 
-def _town_inventory(conn, category: str = "halloween") -> list[dict]:
+def _town_inventory(conn, category: str = "halloween",
+                    ev_type: str = "") -> list[dict]:
     """Every visible town in a category as {label, city, state, count,
     clat, clng} — the label/city/state come from the same extract_*
     helpers that build card town_labels, and the centroid is the mean of
-    the town's pin coordinates (all halloween pins carry coords today)."""
+    the town's pin coordinates (all halloween pins carry coords today).
+    ev_type narrows the inventory to one event type (the /markets
+    near-me resolution runs over Market entries only)."""
     inv: dict[str, dict] = {}
-    for r in conn.execute(
-            "SELECT town, lat, lng FROM entries "
-            "WHERE hidden = 0 AND category = ?", (category,)).fetchall():
+    query = ("SELECT town, lat, lng FROM entries "
+             "WHERE hidden = 0 AND category = ?")
+    params: list = [category]
+    if ev_type:
+        query += " AND ev_type = ?"
+        params.append(ev_type)
+    for r in conn.execute(query, params).fetchall():
         label = extract_city_state(r["town"] or "")
         if not label:
             continue
@@ -2421,16 +2428,81 @@ def events_page(request: Request, type: str = "", genre: str = "",
 
 
 @app.get("/markets", response_class=HTMLResponse)
-def markets_page(request: Request):
+def markets_page(request: Request, town: str = "", near: str = "",
+                 area: str = "", lat: str = "", lng: str = ""):
     # Flea Markets & Pop-Ups (Dan, Oct 23): every event pin faceted
     # ev_type='Market' on one page, soonest first. Event dates live in
     # the titles, so ordering reuses parse_event_dates (the same parser
     # behind the /events ?on= view); undated titles sort last, by votes.
     # The set is small (dozens), so no cap is needed.
+    # Location controls (Dan, Oct 24): a City/State dropdown of every
+    # town that actually has markets (?town=, validated against the
+    # derived 'City, ST' labels, the same extract_city_state labels the
+    # cards show) plus a "Markets near me" button that mirrors Events
+    # Near Me exactly — ?near=1 with ?area= (saved town / chooser pick),
+    # ?lat=&lng= (browser geolocation) or bare (Cloudflare headers via
+    # _visitor_geo), resolved by _resolve_visitor_area over the MARKETS
+    # town inventory: exact town (+ neighbours within 75 mi), nearest
+    # towns within 100 mi of the point, else the visitor's state, with
+    # the town chooser as the fallback when nothing resolves.
     with get_conn(DB_PATH) as conn:
         entries = [row_to_dict(r) for r in conn.execute(
             "SELECT * FROM entries WHERE hidden = 0 AND category = 'events' "
             "AND ev_type = 'Market'").fetchall()]
+        inventory = _town_inventory(conn, "events", "Market")
+    total = len(entries)
+    town_options = [{"value": t["label"], "count": t["count"]}
+                    for t in sorted(inventory, key=lambda t: t["label"])]
+    town = town.strip()
+    if town not in {t["label"] for t in inventory}:
+        town = ""
+    near_active = False
+    near_label = ""
+    near_prompt = False
+    near_nomap_name = ""
+    if near:
+        geo = None
+        try:
+            flat, flng = float(lat), float(lng)
+            if -90 <= flat <= 90 and -180 <= flng <= 180:
+                geo = {"city": "", "state": "",
+                       "lat": flat, "lng": flng}
+        except (TypeError, ValueError):
+            geo = None
+        if geo is None and area.strip():
+            acity = extract_city(area)
+            if acity:
+                geo = {"city": acity,
+                       "state": extract_state(area),
+                       "lat": None, "lng": None}
+        if geo is None:
+            geo = _visitor_geo(request)
+        resolved = (_resolve_visitor_area(inventory, geo) if geo else None)
+        if resolved and resolved["mode"] in ("exact", "near", "state") \
+                and resolved["area_labels"]:
+            keep = resolved["area_labels"]
+            near_entries = [e for e in entries
+                            if extract_city_state(e["town"] or "") in keep]
+            if near_entries:
+                entries = near_entries
+                near_active = True
+                if resolved["mode"] == "state":
+                    near_label = resolved["area_name"]
+                elif resolved["chips"]:
+                    near_label = resolved["chips"][0]["label"]
+                else:
+                    near_label = resolved["area_name"]
+        if not near_active:
+            # Asked for near but nothing resolved (no signal at all, or
+            # a known area with zero mapped markets): the template
+            # opens the town chooser instead of silently showing the
+            # whole country.
+            near_prompt = True
+            if resolved and resolved["mode"] == "nomap":
+                near_nomap_name = resolved["area_name"]
+    elif town:
+        entries = [e for e in entries
+                   if extract_city_state(e["town"] or "") == town]
 
     def _soonest(e):
         span = parse_event_dates(e["title"])
@@ -2441,7 +2513,10 @@ def markets_page(request: Request):
     entries.sort(key=_soonest)
     voted = {k[6:] for k in request.cookies if k.startswith("voted_")}
     return templates.TemplateResponse(request, "markets.html",
-        {"request": request, "entries": entries, "total": len(entries),
+        {"request": request, "entries": entries, "total": total,
+         "town_options": town_options, "town": town,
+         "near_active": near_active, "near_label": near_label,
+         "near_prompt": near_prompt, "near_nomap_name": near_nomap_name,
          "voted": voted})
 
 
