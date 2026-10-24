@@ -573,18 +573,18 @@ function hmFullHomepage() {
 {% endif %}
 
 <div class="cat-tabs-main">
-  <a href="/?cat=halloween{% if sort != 'top' %}&sort={{ sort }}{% endif %}{% if town %}&town={{ town }}{% endif %}{% if video %}&video=1{% endif %}" class="cat-btn-main {% if cat == 'halloween' %}active{% endif %}">&#x1F383; Haunt Map</a>
-  <a href="/?cat=christmas{% if sort != 'top' %}&sort={{ sort }}{% endif %}{% if town %}&town={{ town }}{% endif %}{% if video %}&video=1{% endif %}" class="cat-btn-main {% if cat == 'christmas' %}active{% endif %}">&#x1F384; Jolly Map</a>
-  <a href="/?cat=haunted_houses{% if sort != 'top' %}&sort={{ sort }}{% endif %}{% if town %}&town={{ town }}{% endif %}{% if video %}&video=1{% endif %}" class="cat-btn-main {% if cat == 'haunted_houses' %}active{% endif %}">&#x1F3DA;&#xFE0F; Haunted Houses</a>
-  <a href="/?cat=events{% if sort != 'top' %}&sort={{ sort }}{% endif %}{% if town %}&town={{ town }}{% endif %}{% if video %}&video=1{% endif %}" class="cat-btn-main {% if cat == 'events' %}active{% endif %}">&#x1F3AA; Events</a>
-  <a href="/?cat=halloween_stores{% if sort != 'top' %}&sort={{ sort }}{% endif %}{% if town %}&town={{ town }}{% endif %}{% if video %}&video=1{% endif %}" class="cat-btn-main {% if cat == 'halloween_stores' %}active{% endif %}">&#x1F47B; Halloween Stores</a>
+  <a href="/?cat=halloween{% if sort != 'new' %}&sort={{ sort }}{% endif %}{% if town %}&town={{ town }}{% endif %}{% if video %}&video=1{% endif %}" class="cat-btn-main {% if cat == 'halloween' %}active{% endif %}">&#x1F383; Haunt Map</a>
+  <a href="/?cat=christmas{% if sort != 'new' %}&sort={{ sort }}{% endif %}{% if town %}&town={{ town }}{% endif %}{% if video %}&video=1{% endif %}" class="cat-btn-main {% if cat == 'christmas' %}active{% endif %}">&#x1F384; Jolly Map</a>
+  <a href="/?cat=haunted_houses{% if sort != 'new' %}&sort={{ sort }}{% endif %}{% if town %}&town={{ town }}{% endif %}{% if video %}&video=1{% endif %}" class="cat-btn-main {% if cat == 'haunted_houses' %}active{% endif %}">&#x1F3DA;&#xFE0F; Haunted Houses</a>
+  <a href="/?cat=events{% if sort != 'new' %}&sort={{ sort }}{% endif %}{% if town %}&town={{ town }}{% endif %}{% if video %}&video=1{% endif %}" class="cat-btn-main {% if cat == 'events' %}active{% endif %}">&#x1F3AA; Events</a>
+  <a href="/?cat=halloween_stores{% if sort != 'new' %}&sort={{ sort }}{% endif %}{% if town %}&town={{ town }}{% endif %}{% if video %}&video=1{% endif %}" class="cat-btn-main {% if cat == 'halloween_stores' %}active{% endif %}">&#x1F47B; Halloween Stores</a>
   <a href="/games" class="cat-btn-main">&#x1F3AE; Games</a>
-  <a href="/?cat=live{% if sort != 'top' %}&sort={{ sort }}{% endif %}{% if town %}&town={{ town }}{% endif %}{% if video %}&video=1{% endif %}" class="cat-btn-main {% if cat == 'live' %}active{% endif %}">&#x1F534; Live</a>
+  <a href="/?cat=live{% if sort != 'new' %}&sort={{ sort }}{% endif %}{% if town %}&town={{ town }}{% endif %}{% if video %}&video=1{% endif %}" class="cat-btn-main {% if cat == 'live' %}active{% endif %}">&#x1F534; Live</a>
 </div>
 <div class="cat-tabs-sub">
   <span class="cat-sub-label">Tour fuel:</span>
   {% for c in ['coffee', 'restaurants', 'shops', 'parks'] %}
-  <a href="/?cat={{ c }}{% if sort != 'top' %}&sort={{ sort }}{% endif %}{% if town %}&town={{ town }}{% endif %}{% if video %}&video=1{% endif %}" class="cat-btn-sub {% if cat == c %}active{% endif %}">{{ cat_emoji[c] }} {{ cat_labels[c] }}</a>
+  <a href="/?cat={{ c }}{% if sort != 'new' %}&sort={{ sort }}{% endif %}{% if town %}&town={{ town }}{% endif %}{% if video %}&video=1{% endif %}" class="cat-btn-sub {% if cat == c %}active{% endif %}">{{ cat_emoji[c] }} {{ cat_labels[c] }}</a>
   {% endfor %}
 </div>
 <div class="feed-controls">
@@ -655,7 +655,7 @@ function hmFullHomepage() {
       <option value="multi-house" {% if tag == 'multi-house' %}selected{% endif %}>Multi-house</option>
       <option value="ticketed" {% if tag == 'ticketed' %}selected{% endif %}>Ticketed admission</option>
     </select>
-    <a href="/?cat={{ cat }}{% if sort != 'top' %}&sort={{ sort }}{% endif %}{% if town %}&town={{ town }}{% endif %}{% if state %}&state={{ state }}{% endif %}{% if region %}&region={{ region }}{% endif %}{% if scare %}&scare={{ scare }}{% endif %}{% if tag %}&tag={{ tag }}{% endif %}{% if not video %}&video=1{% endif %}" class="filter-chip {% if video %}active{% endif %}">&#x1F3AC; Has video</a>
+    <a href="/?cat={{ cat }}{% if sort != 'new' %}&sort={{ sort }}{% endif %}{% if town %}&town={{ town }}{% endif %}{% if state %}&state={{ state }}{% endif %}{% if region %}&region={{ region }}{% endif %}{% if scare %}&scare={{ scare }}{% endif %}{% if tag %}&tag={{ tag }}{% endif %}{% if not video %}&video=1{% endif %}" class="filter-chip {% if video %}active{% endif %}">&#x1F3AC; Has video</a>
     <a href="/watch" class="filter-chip">&#x1F3AC; Watch feed</a>
     </div>
   </form>

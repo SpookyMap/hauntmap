@@ -635,7 +635,12 @@ def _fetch_area_feed(cat: str, area_labels: set, scare: str, tag: str,
     rows.sort(key=lambda e: e.get("created_at") or "", reverse=True)
     if sort == "top":
         rows.sort(key=lambda e: -(e.get("votes") or 0))
-    rows.sort(key=lambda e: 0 if _feed_has_video(e) else 1)
+        rows.sort(key=lambda e: 0 if _feed_has_video(e) else 1)
+    else:
+        # Default (newest) view: hand-picked pins lead the area block,
+        # newest hand-picked first — the same feed-order rule as the
+        # main feed (Dan, Oct 23).
+        rows.sort(key=lambda e: 0 if e.get("is_handpicked") else 1)
     return rows
 
 
@@ -1560,11 +1565,14 @@ LONG_ISLAND_TERMS = ["wantagh", "bellmore", "merrick", "levittown", "east meadow
 
 
 @app.get("/", response_class=HTMLResponse)
-def home(request: Request, sort: str = "top", town: str = "", town_search: str = "",
+def home(request: Request, sort: str = "new", town: str = "", town_search: str = "",
          state: str = "", region: str = "", cat: str = "halloween", scare: str = "", tag: str = "",
          video: str = ""):
     cat = cat if cat in CATEGORIES else "halloween"
-    sort = sort if sort in ("top", "new") else "top"
+    # Feed-order rule (Dan, Oct 23): the default view is newest-first,
+    # with Dan's hand-picked pins boosted to the very top. "Top" stays
+    # available as an explicit sort choice only.
+    sort = sort if sort in ("top", "new") else "new"
     # text search takes priority over dropdown
     town = town_search.strip() or town
     state = state.strip().upper()
@@ -1634,13 +1642,19 @@ def home(request: Request, sort: str = "top", town: str = "", town_search: str =
     # Video-first ranking (engagement, Oct 22): pins with footage — a TikTok
     # URL or an uploaded video file, the same predicate as the "Has video"
     # filter above — sort ahead of photo-only pins; the chosen sort stays as
-    # the stable secondary order within each group.
+    # the stable secondary order within each group. Applies to the explicit
+    # "Top" sort only: the default (newest) view follows Dan's Oct 23
+    # feed-order rule — hand-picked pins first (newest hand-picked first),
+    # then every other pin newest-first, with no video-first reshuffle.
     video_first = (
         "CASE WHEN ((tiktok_url IS NOT NULL AND TRIM(tiktok_url) != '')"
         " OR LOWER(media_path) LIKE '%.mp4'"
         " OR LOWER(media_path) LIKE '%.webm'"
         " OR LOWER(media_path) LIKE '%.mov') THEN 0 ELSE 1 END")
-    query += f" ORDER BY {video_first}, {order} LIMIT 100"
+    if sort == "top":
+        query += f" ORDER BY {video_first}, {order} LIMIT 100"
+    else:
+        query += " ORDER BY is_handpicked DESC, created_at DESC, id DESC LIMIT 100"
     with get_conn(DB_PATH) as conn:
         entries = [row_to_dict(r) for r in conn.execute(query, params).fetchall()]
         _attach_views(conn, entries)  # Item 7: feed cards show view counts
@@ -2051,16 +2065,19 @@ RESTAURHAUNT_CATS = ("restaurants", "coffee", "shops")
 
 
 @app.get("/restaurhaunts", response_class=HTMLResponse)
-def restaurhaunts(request: Request, sort: str = "top", f: str = "all",
+def restaurhaunts(request: Request, sort: str = "new", f: str = "all",
                   town_search: str = ""):
     # Combined "Restaurhaunts & Cafes" listing (Dan, Oct 22): one mixed
     # feed over the existing restaurants + coffee + shops categories
     # (bars live in restaurants). Category keys are unchanged — only the
     # display word became "restaurhaunts". Each card carries its own
     # category chip so the mix stays legible.
-    sort = sort if sort in ("top", "new") else "top"
+    # Feed-order rule (Dan, Oct 23): default sort is newest (hand-picked
+    # first, then newest-first); "Top" is an explicit choice only.
+    sort = sort if sort in ("top", "new") else "new"
     f = f if f in ("all",) + RESTAURHAUNT_CATS else "all"
-    order = "votes DESC, created_at DESC" if sort == "top" else "created_at DESC"
+    order = ("votes DESC, created_at DESC" if sort == "top"
+             else "is_handpicked DESC, created_at DESC, id DESC")
     query = ("SELECT * FROM entries WHERE hidden = 0 "
              "AND category IN ('restaurants', 'coffee', 'shops')")
     params: list = []
@@ -2095,9 +2112,11 @@ def upload_form(request: Request):
 
 @app.get("/nearby", response_class=HTMLResponse)
 def nearby(request: Request, q: str = "", miles: float = 10, cat: str = "halloween",
-           sort: str = "top", lat: str = "", lng: str = ""):
+           sort: str = "new", lat: str = "", lng: str = ""):
     cat = cat if cat in CATEGORIES else "halloween"
-    sort = sort if sort in ("top", "new") else "top"
+    # Default sort is newest per Dan's Oct 23 feed-order rule (it is the
+    # within-distance tiebreak here; distance always stays primary).
+    sort = sort if sort in ("top", "new") else "new"
     try:
         miles = max(1, min(float(miles), 500))
     except (TypeError, ValueError):
@@ -2127,10 +2146,16 @@ def nearby(request: Request, q: str = "", miles: float = 10, cat: str = "hallowe
             d["distance"] = haversine_miles(clat, clng, r["lat"], r["lng"])
             if d["distance"] <= miles:
                 entries.append(d)
-        order = "votes DESC, created_at DESC" if sort == "top" else "created_at DESC"
-        # sort by distance first, then the chosen order
-        entries.sort(key=lambda e: (e["distance"],
-                                    -e["votes"] if sort == "top" else e["created_at"]))
+        # Sort by distance first, then the chosen order as tiebreak
+        # (stable sorts, applied in reverse priority order). Newest —
+        # the default — means hand-picked first, then newest-first,
+        # matching the site's feed-order rule (Dan, Oct 23).
+        entries.sort(key=lambda e: e.get("created_at") or "", reverse=True)
+        if sort == "top":
+            entries.sort(key=lambda e: -(e.get("votes") or 0))
+        else:
+            entries.sort(key=lambda e: 0 if e.get("is_handpicked") else 1)
+        entries.sort(key=lambda e: e["distance"])
     voted = {k[6:] for k in request.cookies if k.startswith("voted_")}
     return templates.TemplateResponse(request, "nearby.html",
         {"request": request, "entries": entries, "q": q, "miles": miles,
@@ -2806,9 +2831,11 @@ def watch_page(request: Request):
 
     Retention Wave 2, Items 2 + 7 (Dan, Oct 23): /watch is the TikTok
     landing page, so it follows the site's location-first rule. The
-    server renders the pool MOST-VIEWED first (all-time detail-page
-    views, the Trending measure — that is also the final order when
-    the visitor's town is unknown). When the visitor's town IS known
+    server pool follows Dan's Oct 23 feed-order rule: Dan's
+    hand-picked footage pins first (newest hand-picked first), then
+    the newest footage pins, capped at 60 — that server order is also
+    the final order when the visitor's town is unknown. (This
+    supersedes the earlier most-viewed pool.) When the visitor's town IS known
     (localStorage 'hm_town' — the server never sees it), watch.html
     re-orders client-side from the payload below: most-viewed footage
     within VIDEO_CHAIN_RADIUS_MI of the visitor first, nearest to the
@@ -2828,7 +2855,8 @@ def watch_page(request: Request):
             " OR LOWER(e.media_path) LIKE '%.mp4'"
             " OR LOWER(e.media_path) LIKE '%.webm'"
             " OR LOWER(e.media_path) LIKE '%.mov')"
-            " ORDER BY _views DESC, e.votes DESC, e.id LIMIT 60").fetchall()
+            " ORDER BY e.is_handpicked DESC, e.created_at DESC, e.id DESC "
+            "LIMIT 60").fetchall()
     entries = [row_to_dict(r) for r in rows]
     # Town centers for the client-side visitor anchoring, in the same
     # [label, city, state, centroid lat, centroid lng, pin count]
@@ -4244,11 +4272,11 @@ def town_page(request: Request, slug: str):
     with get_conn(DB_PATH) as conn:
         rows = [row_to_dict(r) for r in conn.execute(
             "SELECT * FROM entries WHERE hidden = 0 AND category = 'halloween' "
-            "ORDER BY votes DESC, created_at DESC").fetchall()]
+            # Feed-order rule (Dan, Oct 23): hand-picked pins first
+            # (newest hand-picked first), then newest-first — the town
+            # page has no sort control, so this IS its default view.
+            "ORDER BY is_handpicked DESC, created_at DESC, id DESC").fetchall()]
     entries = [e for e in rows if e["town_label"] == label]
-    # Video-first ranking (engagement, Oct 22): stable sort — footage pins
-    # ahead of photo-only pins, votes/newest order kept within each group.
-    entries.sort(key=lambda e: 0 if _entry_has_video(e) else 1)
     # Item 7: town-page cards show all-time view counts (one grouped query).
     with get_conn(DB_PATH) as conn:
         _attach_views(conn, entries)

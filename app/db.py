@@ -18,6 +18,43 @@ from pathlib import Path
 #   5175 IL Oak Lawn · 4370 CO Denver
 FEATURED_ENTRY_IDS = (5541, 5542, 5551, 5584, 5587, 5175, 4370)
 
+# Hand-picked pins (Dan, Oct 23): pins Dan personally sent in chat or
+# curated for posting. These lead every feed view — hand-picked first
+# (newest hand-picked first), then all other pins newest-first — per
+# Dan's feed-order rule. The list is code-owned and enforced by
+# init_db on every boot, so the flagged set is exactly these pins and
+# survives deploys/restarts (same mechanism as the Top 10 editor's
+# picks). To extend: append the new pin ids here and deploy — the
+# posting flows record Dan's sends, this list is the durable marker.
+# Provenance of the initial set (all Oct 23, 2026):
+#   * posting-log entries carrying a dan_* source marker
+#     (dan_feed_add / dan_top10_feed / dan_tour_feed / dan_creator_feed
+#     / dan_toks): 5065, 5105, 5540, 5541, 5542, 5548, 5552-5563,
+#     5595-5618
+#   * pins posted from links Dan sent in chat on Oct 23 whose log
+#     entries carry no source marker (Naperville / Whittier / Mission
+#     Viejo / UES tour runs and the 35-link batch): 5543-5547, 5549,
+#     5550, 5551, 5564-5570, 5571-5593
+#   * already-live pins whose displays Dan sent links for on Oct 23
+#     (incl. his Top 10 Illinois / Colorado picks and tour stops that
+#     were already posted): 805, 930, 936, 4370, 4372-4377, 4384,
+#     4395, 4465, 4546, 4548, 4550, 4557-4562, 4594, 4595, 4681,
+#     4925, 5175, 5308
+# Dan's sends from Oct 15-22 predate source marking in the posting log
+# and are NOT in this set — the log cannot identify them reliably.
+HANDPICKED_ENTRY_IDS = (
+    805, 930, 936, 4370, 4372, 4373, 4374, 4375, 4376, 4377, 4384,
+    4395, 4465, 4546, 4548, 4550, 4557, 4558, 4559, 4560, 4561, 4562,
+    4594, 4595, 4681, 4925, 5065, 5105, 5175, 5308, 5540, 5541, 5542,
+    5543, 5544, 5545, 5546, 5547, 5548, 5549, 5550, 5551, 5552, 5553,
+    5554, 5555, 5556, 5557, 5558, 5559, 5560, 5561, 5562, 5563, 5564,
+    5565, 5566, 5567, 5568, 5569, 5570, 5571, 5572, 5573, 5574, 5575,
+    5576, 5577, 5578, 5579, 5580, 5581, 5582, 5583, 5584, 5585, 5586,
+    5587, 5588, 5589, 5590, 5591, 5592, 5593, 5595, 5596, 5597, 5598,
+    5599, 5600, 5601, 5602, 5603, 5604, 5605, 5606, 5607, 5608, 5609,
+    5610, 5611, 5612, 5613, 5614, 5615, 5616, 5617, 5618,
+)
+
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS comments (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -48,7 +85,7 @@ CREATE TABLE IF NOT EXISTS entries (
     hidden INTEGER NOT NULL DEFAULT 0,    -- 1 hides it from public pages (admin action)
     is_sample INTEGER NOT NULL DEFAULT 0, -- 1 for seeded demo entries
     is_featured INTEGER NOT NULL DEFAULT 0, -- 1 for editor's-pick pins (Dan's hand-picked Top 10 placements)
-    -- Future "food & drink" section (post-Halloween). V1 UI stays Halloween-only;
+    is_handpicked INTEGER NOT NULL DEFAULT 0, -- 1 for Dan's hand-picked pins (feed boost, see HANDPICKED_ENTRY_IDS)    -- Future "food & drink" section (post-Halloween). V1 UI stays Halloween-only;
     -- these columns let the food section ship without a schema rebuild.
     category TEXT NOT NULL DEFAULT 'halloween', -- 'halloween' | 'food'
     food_subcategory TEXT,                -- e.g. 'coffee', 'pizza', 'croissant'
@@ -184,6 +221,26 @@ def init_db(db_path: Path) -> None:
             "UPDATE entries SET is_featured = 0 "
             f"WHERE is_featured != 0 AND id NOT IN ({_ph})",
             FEATURED_ENTRY_IDS,
+        )
+        if "is_handpicked" not in cols:
+            # Hand-picked feed boost (Dan, Oct 23): pins Dan personally
+            # sent/curated lead every feed. Ranking data is never
+            # altered — the flag only affects default list placement.
+            conn.execute(
+                "ALTER TABLE entries ADD COLUMN is_handpicked INTEGER NOT NULL DEFAULT 0"
+            )
+        # Enforce the code-owned hand-picked set (HANDPICKED_ENTRY_IDS):
+        # exactly those pins flagged, every other pin unflagged. Runs
+        # on every init (idempotent) so the set survives deploys.
+        _hp = ",".join("?" * len(HANDPICKED_ENTRY_IDS))
+        conn.execute(
+            f"UPDATE entries SET is_handpicked = 1 WHERE id IN ({_hp})",
+            HANDPICKED_ENTRY_IDS,
+        )
+        conn.execute(
+            "UPDATE entries SET is_handpicked = 0 "
+            f"WHERE is_handpicked != 0 AND id NOT IN ({_hp})",
+            HANDPICKED_ENTRY_IDS,
         )
         # Events facets (Dan, Oct 22): event type / music genre / venue
         # style powering the /events filter dropdowns. NULL = untagged;

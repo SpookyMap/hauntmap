@@ -6,19 +6,19 @@
 
 <div class="rh-controls">
   <div class="rh-chips">
-    <a href="/restaurhaunts?f=all{% if sort != 'top' %}&sort={{ sort }}{% endif %}{% if town_search %}&town_search={{ town_search }}{% endif %}" class="filter-chip {% if f == 'all' %}active{% endif %}">All ({{ total }})</a>
+    <a href="/restaurhaunts?f=all{% if sort != 'new' %}&sort={{ sort }}{% endif %}{% if town_search %}&town_search={{ town_search }}{% endif %}" class="filter-chip {% if f == 'all' %}active{% endif %}">All ({{ total }})</a>
     {% for c in ['restaurants', 'coffee', 'shops'] %}
-    <a href="/restaurhaunts?f={{ c }}{% if sort != 'top' %}&sort={{ sort }}{% endif %}{% if town_search %}&town_search={{ town_search }}{% endif %}" class="filter-chip {% if f == c %}active{% endif %}">{{ cat_emoji[c] }} {{ cat_labels[c] }} ({{ counts[c] }})</a>
+    <a href="/restaurhaunts?f={{ c }}{% if sort != 'new' %}&sort={{ sort }}{% endif %}{% if town_search %}&town_search={{ town_search }}{% endif %}" class="filter-chip {% if f == c %}active{% endif %}">{{ cat_emoji[c] }} {{ cat_labels[c] }} ({{ counts[c] }})</a>
     {% endfor %}
   </div>
   <div class="sort-toggle">
-    <a href="/restaurhaunts?f={{ f }}{% if town_search %}&town_search={{ town_search }}{% endif %}" class="{% if sort == 'top' %}active{% endif %}">Top</a>
+    <a href="/restaurhaunts?f={{ f }}&sort=top{% if town_search %}&town_search={{ town_search }}{% endif %}" class="{% if sort == 'top' %}active{% endif %}">Top</a>
     <a href="/restaurhaunts?f={{ f }}&sort=new{% if town_search %}&town_search={{ town_search }}{% endif %}" class="{% if sort == 'new' %}active{% endif %}">Newest</a>
   </div>
 </div>
 <form method="get" action="/restaurhaunts" class="rh-search">
   <input type="hidden" name="f" value="{{ f }}">
-  {% if sort != 'top' %}<input type="hidden" name="sort" value="{{ sort }}">{% endif %}
+  {% if sort != 'new' %}<input type="hidden" name="sort" value="{{ sort }}">{% endif %}
   <input type="text" name="town_search" value="{{ town_search }}" placeholder="&#x1F50D; Search towns..." class="town-search-inline">
 </form>
 
