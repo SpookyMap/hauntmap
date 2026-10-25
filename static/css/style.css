@@ -4367,3 +4367,48 @@ a.soc-top8-card:hover { border-color: var(--accent2); }
   color: #8fd8ff;
   text-shadow: 0 0 14px rgba(87, 168, 255, 0.50), 0 0 36px rgba(87, 168, 255, 0.28), 0 2px 0 rgba(0, 0, 0, 0.45);
 }
+
+/* ============ z135: EATER EVERYWHERE THE BRAND APPEARS (Dan, Oct 25) ============
+   Dan: "fix the HauntSocial font anywhere on the page with the new font."
+   z134 put Eater on the band wordmark + /hauntsocial h1; this pass wraps
+   EVERY remaining HauntSocial brand word in a .hs-brand span and sets it
+   in the same Eater face, so the social network's identity reads in Eater
+   site-wide:
+     - header JOIN bar (.nav-join-brand inside the Nosifer label; "Join"
+       stays Nosifer and the tagline stays bold game sans — the pairing
+       z133 measured to fit; only the HAUNTSOCIAL word changes face)
+     - band + /hauntsocial Join CTAs (the brand word inside the Nosifer
+       "Join HauntSocial — claim your handle" button)
+     - the .soc-kicker brand line on /signup, /login, /hauntsocial and
+       profile pages (the kicker IS the brand word on those pages)
+     - the /signup h1 brand word
+     - "What is HauntSocial?" + "Join HauntSocial" text links
+   Deliberately NOT Eater: body copy and prose mentions of the network,
+   taglines ("The First Halloween Social Network"), form labels, member
+   handles, and <title> tags — readability surfaces stay in their faces.
+   Eater is all-drip display: spans get text-transform:none (brand
+   camel-case, same as the z134 wordmark) and drip room in line-height. */
+.hs-brand {
+  font-family: "Eater", cursive;
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0.01em;
+}
+/* Header JOIN bar — the brand word inside the measured Nosifer label.
+   Sized a hair under the label so the full line keeps z133's fit. */
+.header-nav a.nav-join .nav-join-brand {
+  font-size: 0.96em;
+  line-height: 1.3;
+}
+/* Page kickers that are the brand word itself: the kicker's game sans
+   runs 0.72rem letterspaced; Eater needs more presence + drip room. */
+.soc-kicker .hs-brand {
+  font-size: 1.5em;
+  letter-spacing: 0.03em;
+  line-height: 1.3;
+}
+/* Join CTAs: brand word at the button's own size (Nosifer 0.8rem);
+   Eater's advance is close to Nosifer's, the button fit is unchanged. */
+.social-promo-btn .hs-brand { line-height: 1.3; }
+/* /signup h1: brand word inherits the h1 size; drips need the room. */
+.soc-auth h1 .hs-brand { line-height: 1.25; }

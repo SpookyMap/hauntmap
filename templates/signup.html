@@ -2,14 +2,14 @@
 {% block title %}Join HauntSocial · {{ site_name }}{% endblock %}
 {% block content %}
 <section class="soc-auth">
-  <p class="soc-kicker">HauntSocial</p>
-  <h1>&#x1F383; Join HauntSocial</h1>
+  <p class="soc-kicker"><span class="hs-brand">HauntSocial</span></p>
+  <h1>&#x1F383; Join <span class="hs-brand">HauntSocial</span></h1>
   <p class="soc-lede">HauntSocial is HauntMap's social network — get your own
      page at <strong>gethauntmap.com/@yourname</strong>: your haunts, your
      anthem, your wall. Free, and the map stays open to everyone either way.</p>
   <p class="soc-sub">The social network for Halloween lovers — your own page,
      your anthem, your Top 8. Free to join.
-     <a href="/hauntsocial">What is HauntSocial?</a></p>
+     <a href="/hauntsocial">What is <span class="hs-brand">HauntSocial</span>?</a></p>
   {% if error %}<p class="soc-error">{{ error }}</p>{% endif %}
   <form class="form soc-form" method="post" action="/signup">
     <label>Email <span class="req">*</span>

@@ -2,7 +2,7 @@
 {% block title %}What is HauntSocial? · {{ site_name }}{% endblock %}
 {% block content %}
 <section class="hs-about">
-  <p class="soc-kicker">HauntSocial</p>
+  <p class="soc-kicker"><span class="hs-brand">HauntSocial</span></p>
   <h1>What is <span class="hs-wordmark-inline">HauntSocial</span>?</h1>
   <img class="hs-about-frank" src="/static/img/frank_host_art.webp" alt="Frank, the HauntSocial host">
   <p>HauntSocial is the social network for people who live for Halloween — and it lives right here on HauntMap.</p>
@@ -21,7 +21,7 @@
     <a class="social-promo-btn" href="/@{{ request.state.member.handle }}">Go to your page</a>
     <span class="social-promo-alt">Signed in as @{{ request.state.member.handle }}</span>
     {% else %}
-    <a class="social-promo-btn" href="/signup">Join HauntSocial — claim your handle</a>
+    <a class="social-promo-btn" href="/signup">Join <span class="hs-brand">HauntSocial</span> — claim your handle</a>
     <a class="social-promo-alt" href="/login">Already a member? Sign in</a>
     {% endif %}
   </div>

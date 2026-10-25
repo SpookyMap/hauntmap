@@ -10,7 +10,7 @@
 </section>
 {% else %}
 <article class="soc-profile{{ theme.class }}"{% if theme.style %} style="{{ theme.style }}"{% endif %} data-theme="{{ theme.key }}">
-  <p class="soc-kicker soc-profile-kicker">&#x1F47B; HauntSocial</p>
+  <p class="soc-kicker soc-profile-kicker">&#x1F47B; <span class="hs-brand">HauntSocial</span></p>
   <div class="soc-banner" style="background: {{ banner_gradient }}">
     <span class="soc-banner-moons" aria-hidden="true">&#x1F383; &#x1F987; &#x1F47B;</span>
   </div>
@@ -114,7 +114,7 @@
     <p class="soc-note">You can't comment on this profile.</p>
     {% else %}
     <p class="soc-note"><a href="/login?next=/@{{ user.handle }}">Sign in</a> to leave a treat —
-       or <a href="/signup">join HauntSocial</a> and get your own wall.</p>
+       or <a href="/signup">join <span class="hs-brand">HauntSocial</span></a> and get your own wall.</p>
     {% endif %}
 
     {% if comments %}
