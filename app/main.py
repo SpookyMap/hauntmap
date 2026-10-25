@@ -4897,7 +4897,7 @@ def town_page(request: Request, slug: str):
 def sitemap():
     base = "https://gethauntmap.com"
     urls = ["/", "/map", "/nearby", "/tour", "/diy", "/diy-costumes", "/games", "/leaderboard", "/leaderboard/states", "/leaderboard/top-100",
-            "/towns", "/passport", "/daily", "/advertise", "/media-kit", "/about", "/costume-contest", "/trivia", "/haunt-or-not", "/fan-art",
+            "/towns", "/passport", "/daily", "/advertise", "/media-kit", "/about", "/hauntsocial", "/costume-contest", "/trivia", "/haunt-or-not", "/fan-art",
             "/restaurhaunts"]
     for t in _towns_with_counts():
         urls.append(f"/towns/{t['slug']}")
@@ -7197,6 +7197,15 @@ def terms_page(request: Request):
 @app.get("/privacy", response_class=HTMLResponse)
 def privacy_page(request: Request):
     return templates.TemplateResponse(request, "privacy.html", {"request": request})
+
+
+# ------------------------------------------------------- hauntsocial explainer
+
+@app.get("/hauntsocial", response_class=HTMLResponse)
+def hauntsocial_page(request: Request):
+    # Dan's approved explainer copy (Oct 25) — what HauntSocial is,
+    # linked from the promo band and /signup.
+    return templates.TemplateResponse(request, "hauntsocial.html", {"request": request})
 
 
 # ------------------------------------------------------------------- profiles

@@ -488,6 +488,37 @@ function hmFullHomepage() {
   <span class="tt-follow-vert-handle">@GetHauntmap</span>
 </a>
 
+{# Social promo (Dan, Oct 25): sits INSIDE .hero-split as grid area
+   "social" — above the sponsor billboard on phone and laptop (Dan's
+   order). Ghost + headline share one row; the explainer subline and
+   the /hauntsocial link ride with the block. Anonymous visitors get
+   the join pitch; a logged-in member gets a link to their own page
+   instead — no join pitch to a member. #}
+<section class="social-promo" aria-label="Join the HauntMap social network">
+  <div class="social-promo-top">
+    <img class="social-promo-ghost" src="/static/img/hauntmap_ghost.webp" alt="" aria-hidden="true">
+    <div class="social-promo-head">
+      <p class="social-promo-kicker">HauntSocial</p>
+      <h2 class="social-promo-title">The First Halloween Social Network</h2>
+    </div>
+  </div>
+  <p class="social-promo-sub">The social network for Halloween lovers — your own page, your anthem, your Top 8. Free to join.</p>
+  <p class="social-promo-line">Claim your @handle, build your haunter profile, show off your haunt, and follow the haunters behind the displays you love.</p>
+  {% if request.state.member %}
+  <div class="social-promo-cta">
+    <a class="social-promo-btn" href="/@{{ request.state.member.handle }}">Go to your page</a>
+    <span class="social-promo-alt">Signed in as @{{ request.state.member.handle }}</span>
+    <a class="social-promo-what" href="/hauntsocial">What is HauntSocial?</a>
+  </div>
+  {% else %}
+  <div class="social-promo-cta">
+    <a class="social-promo-btn" href="/signup">Join HauntSocial — claim your handle</a>
+    <a class="social-promo-alt" href="/login">Already a member? Sign in</a>
+    <a class="social-promo-what" href="/hauntsocial">What is HauntSocial?</a>
+  </div>
+  {% endif %}
+</section>
+
 {% if sponsors %}
 <div class="sponsor-section">
   <h2>&#x2B50; Featured Sponsors</h2>
@@ -512,29 +543,6 @@ function hmFullHomepage() {
 
 {% include "_town_request.html" %}
 </div>
-
-{# Social promo (Dan, Oct 25 — STAGED): directly under the hero block.
-   Anonymous visitors get the join pitch; a logged-in member gets a
-   link to their own page instead — no join pitch to a member. #}
-<section class="social-promo" aria-label="Join the HauntMap social network">
-  <img class="social-promo-ghost" src="/static/img/hauntmap_ghost.webp" alt="" aria-hidden="true">
-  <div class="social-promo-body">
-    <p class="social-promo-kicker">HauntSocial</p>
-    <h2 class="social-promo-title">The First Halloween Social Network</h2>
-    <p class="social-promo-line">Claim your @handle, build your haunter profile, show off your haunt, and follow the haunters behind the displays you love.</p>
-  </div>
-  {% if request.state.member %}
-  <div class="social-promo-cta">
-    <a class="social-promo-btn" href="/@{{ request.state.member.handle }}">Go to your page</a>
-    <span class="social-promo-alt">Signed in as @{{ request.state.member.handle }}</span>
-  </div>
-  {% else %}
-  <div class="social-promo-cta">
-    <a class="social-promo-btn" href="/signup">Join HauntSocial — claim your handle</a>
-    <a class="social-promo-alt" href="/login">Already a member? Sign in</a>
-  </div>
-  {% endif %}
-</section>
 
 {% if tstrip %}
 {# Item 5 "Tonight" strip: directly above Tonight's Display band, so

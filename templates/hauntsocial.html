@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}What is HauntSocial? · {{ site_name }}{% endblock %}
+{% block content %}
+<section class="hs-about">
+  <p class="soc-kicker">HauntSocial</p>
+  <h1>What is HauntSocial?</h1>
+  <img class="hs-about-frank" src="/static/img/frank_host_art.webp" alt="Frank, the HauntSocial host">
+  <p>HauntSocial is the social network for people who live for Halloween — and it lives right here on HauntMap.</p>
+  <p>Claim your handle and you get your own page to show off your haunt, your costume, and your horror obsession:</p>
+  <ul class="hs-about-list">
+    <li>🎃 <strong>Your page</strong> — gethauntmap.com/@yourname</li>
+    <li>🎵 <strong>Your anthem</strong> — the song that defines you, right on your profile</li>
+    <li>👻 <strong>Your Top 8</strong> — your favorite haunts and horror films</li>
+    <li>🍬 <strong>Treats</strong> — leave comments and stickers on your friends' walls</li>
+    <li>🎨 <strong>Your theme</strong> — dress your page up your way</li>
+  </ul>
+  <p>Frank, our Frankenstein host, is everyone's first friend — he'll be waiting on your wall when you arrive.</p>
+  <p>It's free. And HauntMap stays wide open: you never need an account to find haunts, build tours, or browse events. HauntSocial is just where the haunters hang out.</p>
+  <div class="hs-about-cta">
+    {% if request.state.member %}
+    <a class="social-promo-btn" href="/@{{ request.state.member.handle }}">Go to your page</a>
+    <span class="social-promo-alt">Signed in as @{{ request.state.member.handle }}</span>
+    {% else %}
+    <a class="social-promo-btn" href="/signup">Join HauntSocial — claim your handle</a>
+    <a class="social-promo-alt" href="/login">Already a member? Sign in</a>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

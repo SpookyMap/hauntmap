@@ -1514,7 +1514,7 @@ a.game-card:hover { border-color: #ff7518; transform: translateY(-2px); }
 .hero-split {
   display: grid;
   grid-template-columns: 1fr;
-  grid-template-areas: "headline" "vtstrip" "video" "top10home" "strip" "sponsor";
+  grid-template-areas: "headline" "vtstrip" "video" "top10home" "strip" "social" "sponsor";
   gap: 0.9rem;
   margin: 0.4rem 0;
 }
@@ -1538,7 +1538,7 @@ a.game-card:hover { border-color: #ff7518; transform: translateY(-2px); }
 @media (min-width: 1000px) {
   .hero-split {
     grid-template-columns: 252px minmax(0, 1fr) 56px;
-    grid-template-areas: "video headline strip" "sponsor headline strip";
+    grid-template-areas: "social social social" "video headline strip" "sponsor headline strip";
     gap: 0.9rem 1.1rem;
     width: min(1060px, calc(100vw - 2rem));
     position: relative; left: 50%; transform: translateX(-50%);
@@ -1675,7 +1675,7 @@ a.game-card:hover { border-color: #ff7518; transform: translateY(-2px); }
 /* Town-request form inside the hero grid: its own area under the sponsor
    billboard in the left column (last in the stacked order on phone).
    strip-fit: "vtstrip" (phone VT/TV twin) joins right after "headline". */
-.hero-split { grid-template-areas: "headline" "vtstrip" "video" "top10home" "strip" "sponsor" "townreq"; }
+.hero-split { grid-template-areas: "headline" "vtstrip" "video" "top10home" "strip" "social" "sponsor" "townreq"; }
 .hero-split .town-request {
   grid-area: townreq; margin: 0; max-width: none; width: 100%;
   box-sizing: border-box; text-align: left;
@@ -1689,7 +1689,7 @@ a.game-card:hover { border-color: #ff7518; transform: translateY(-2px); }
     position: relative; left: 50%; transform: translateX(-50%);
   }
   .hero-split {
-    grid-template-areas: "video headline strip" "sponsor headline strip" "townreq headline strip";
+    grid-template-areas: "social social social" "video headline strip" "sponsor headline strip" "townreq headline strip";
   }
   /* Restyle the form to the 252px column: one field per row, tighter type */
   .hero-split .town-request { padding: 0.85rem 0.75rem 0.9rem; }
@@ -2243,7 +2243,7 @@ body.has-tourbar.has-radio { padding-bottom: 124px; }
   .site-header.v2 .header-nav a.navbtn[href="/diy-costumes"] span { font-size: 0.36rem; }
 }
 @media (max-width: 760px) {
-  .hero-split { grid-template-areas: "headline" "vtstrip" "video" "top10home" "strip" "sponsor" "townreq"; }
+  .hero-split { grid-template-areas: "headline" "vtstrip" "video" "top10home" "strip" "social" "sponsor" "townreq"; }
 }
 
 /* ============ z65: PHONE NAV — TWO ROWS OF FIVE (Dan, Oct 22; supersedes the z64 single row) ====
@@ -3394,7 +3394,7 @@ body.hm-returning .hm-slimbar { display: flex; }
 }
 @media (min-width: 1000px) and (max-width: 1199px) {
   .hero-split {
-    grid-template-areas: "video video video" "sponsor headline strip" "townreq headline strip";
+    grid-template-areas: "social social social" "video video video" "sponsor headline strip" "townreq headline strip";
   }
   .hero-split .tt-featured { gap: 1.1rem; }
   .hero-split .tt-featured .tt-facade { height: 400px; }
@@ -4219,4 +4219,51 @@ a.soc-top8-card:hover { border-color: var(--accent2); }
 .social-promo-btn[href="/signup"] { font-size: 1.05rem; padding: 0.7rem 1.3rem; white-space: normal; max-width: 21rem; }
 @media (max-width: 760px) {
   .social-promo-btn[href="/signup"] { font-size: 0.95rem; padding: 0.65rem 1.1rem; max-width: none; }
+}
+
+/* ============ z132: HAUNTSOCIAL EXPLAINER + BAND RESTACK (Dan, Oct 25) ============
+   (1) The promo band moves INSIDE .hero-split as grid area "social",
+   above the sponsor billboard in every .hero-split area list (stacked
+   lists: right before "sponsor"; 3-column lists: a full-width top
+   row) — Dan: "put the Halloween social network block above the
+   sponsor." No rail/hero block is hidden or removed.
+   (2) Inside the band, ghost + headline share ONE row (ghost left,
+   headline vertically centered against it) on phone and laptop —
+   Dan: "put the First Halloween Social Network text next to the
+   ghost picture in the block." The HauntSocial kicker rides atop the
+   headline column. Under the row: Dan's approved explainer subline,
+   the standing claim line, and the CTA stack (z128 drip button
+   untouched) ending in a "What is HauntSocial?" link to /hauntsocial.
+   (3) The same approved copy lands on /signup (.soc-sub) and on the
+   new /hauntsocial explainer page (.hs-about). */
+.hero-split > .social-promo { grid-area: social; margin: 0; min-width: 0; }
+.social-promo { flex-direction: column; align-items: stretch; gap: 0.65rem; }
+.social-promo-top { display: flex; align-items: center; gap: 0.9rem; min-width: 0; }
+.social-promo-head { flex: 1 1 auto; min-width: 0; }
+.social-promo-ghost { height: 76px; }
+.social-promo-sub { margin: 0; color: #eaf6ff; font-weight: 700; line-height: 1.45; }
+.social-promo-cta { align-items: stretch; flex: none; }
+.social-promo-what { color: #a9cdf5; font-size: 0.85rem; }
+.social-promo-what:hover { color: #8fd8ff; }
+@media (min-width: 761px) {
+  .social-promo-ghost { height: 88px; }
+  .social-promo-cta { align-items: flex-start; text-align: left; }
+}
+@media (max-width: 760px) {
+  .social-promo-ghost { height: 62px; }
+}
+.soc-sub { color: var(--ink); margin: 0.2rem 0 0; }
+.hs-about { max-width: 620px; margin: 0 auto; }
+.hs-about-frank { float: right; width: 190px; max-width: 44%; height: auto;
+  margin: 0.15rem 0 0.7rem 1rem; border-radius: 14px;
+  border: 1px solid rgba(143, 216, 255, 0.45);
+  box-shadow: 0 0 22px rgba(87, 168, 255, 0.30); }
+.hs-about-list { list-style: none; margin: 0.7rem 0 1rem; padding: 0;
+  display: grid; gap: 0.5rem; }
+.hs-about-cta { clear: both; display: flex; flex-direction: column;
+  align-items: flex-start; gap: 0.45rem; margin-top: 1.25rem; }
+@media (max-width: 560px) {
+  .hs-about-frank { float: none; display: block; margin: 0 auto 0.9rem;
+    width: 170px; max-width: 70%; }
+  .hs-about-cta { align-items: stretch; text-align: center; }
 }
