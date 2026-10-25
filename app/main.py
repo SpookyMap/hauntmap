@@ -114,6 +114,12 @@ CARD_THUMB_DIR.mkdir(parents=True, exist_ok=True)
 def _startup() -> None:
     init_db(DB_PATH)
     _start_analytics_writer()
+    # Fortification pass 2: prebuild the core hot aggregates, then let
+    # the background refresher own their rebuilds (see the hot-cache
+    # block). Warm failures never break boot — the cold-start fallback
+    # in _ttl_cached builds on first request instead.
+    _warm_hot_caches()
+    _start_hot_refresher()
     try:
         _hauntsocial_boot()
     except Exception:
@@ -123,6 +129,9 @@ def _startup() -> None:
 
 @app.on_event("shutdown")
 def _shutdown() -> None:
+    # Stop the hot-cache refresher (daemon thread; the stop event is
+    # enough — no join, it never holds request state).
+    _hot_stop.set()
     # Drain the analytics queue so a graceful deploy/restart loses no
     # page-view counts (the writer flushes what remains, then exits).
     _analytics_stop.set()
@@ -335,23 +344,35 @@ async def _member_context(request: Request, call_next):
 
 @app.middleware("http")
 async def _cache_headers(request: Request, call_next):
-    """Cache lifetimes for file responses (stability plan, Oct 24).
+    """Cache lifetimes for file responses (stability plan, Oct 24;
+    fortification pass 2, Oct 25).
     /media/ filenames are uuid4 hex on EVERY write path (public upload,
     admin media replace, costume / fan-art uploads, sponsor logos), and
     a replace mints a NEW name instead of overwriting — a media URL's
     bytes never change, so it earns a year + immutable.
-    /static/ gets the same year WITHOUT immutable: the CSS/JS references
-    are version-bumped per ship (?v=...z113), but header art is
-    referenced unversioned and HAS been swapped in place before
-    (header_frank2.webp exists because the frank art was replaced) —
-    immutable would pin superseded art in returning browsers for a
-    year. HTML is untouched and stays fresh, as before."""
+    /static/ gets the same year; immutable ONLY when the URL carries
+    the per-ship ?v= version stamp — a versioned URL's bytes can never
+    change without the URL changing too. Unversioned /static/ keeps the
+    plain year WITHOUT immutable: header art is referenced unversioned
+    and HAS been swapped in place before (header_frank2.webp exists
+    because the frank art was replaced) — immutable would pin
+    superseded art in returning browsers for a year.
+    Only 200s are stamped: a year-long header on a 404 would pin the
+    absence — a /media/thumbs/card/ variant requested before its file
+    is generated must be retryable once the file exists. HTML is
+    untouched and stays fresh, as before."""
     response = await call_next(request)
+    if response.status_code != 200:
+        return response
     path = request.url.path
     if path.startswith("/media/"):
         response.headers["Cache-Control"] = "public, max-age=31536000, immutable"
     elif path.startswith("/static/"):
-        response.headers["Cache-Control"] = "public, max-age=31536000"
+        if "v" in request.query_params:
+            response.headers["Cache-Control"] = \
+                "public, max-age=31536000, immutable"
+        else:
+            response.headers["Cache-Control"] = "public, max-age=31536000"
     return response
 
 
@@ -570,35 +591,134 @@ _VIEWS_GROUP_SQL = (
 # change slowly (view counts, town counts, eligibility), so they are
 # now built at most once per TTL window and shared read-only; callers
 # that annotate rows get shallow copies. Freshness impact is the same
-# class the page cache already accepts (counts up to a minute stale).
-_HOT_TTL = float(os.environ.get("HAUNTMAP_HOT_CACHE_TTL", "60"))
+# class the page cache already accepts (counts a minute or two stale).
+#
+# Fortification pass 2 (Oct 25): rebuilds no longer ride on visitor
+# requests at all in steady state. Every builder registers itself in
+# _HOT_BUILDERS, and a daemon refresher thread rebuilds each live
+# aggregate just BEFORE its TTL expires, so a request only ever reads
+# the latest snapshot. A request still builds synchronously in exactly
+# two cases: cold start (no snapshot yet — the fallback that keeps the
+# first request after a restart correct) and a snapshot grown older
+# than 10x TTL, which can only happen if the refresher thread is dead
+# or starved — rebuilding then is the self-healing choice. Between
+# expiry and the refresher's next pass a request serves the current
+# snapshot rather than queueing a rebuild onto the render path: under
+# CPU overload (the wedge scenario) that trade is the whole point.
+# Builders must be connection-free (open their own get_conn) and must
+# capture nothing request-specific beyond what the cache key names —
+# the refresher replays them on its own thread at any time.
+_HOT_TTL = float(os.environ.get("HAUNTMAP_HOT_CACHE_TTL", "120"))
+_HOT_REFRESH_SECONDS = float(os.environ.get("HAUNTMAP_HOT_REFRESH_SECONDS", "30"))
 _TTL_CACHE: dict = {}
-_TTL_CACHE_LOCK = threading.Lock()
+# RLock, not Lock: builders may compose other cached helpers (e.g.
+# _trending's build reads _views_by_id), and a nested _ttl_cached on
+# the same thread must not self-deadlock in the cold-build path.
+_TTL_CACHE_LOCK = threading.RLock()
+_HOT_BUILDERS: dict = {}
+_hot_stop = threading.Event()
+_hot_thread: threading.Thread | None = None
 
 
 def _ttl_cached(key: str, build):
-    """Return the cached value for key, building it at most once per
-    _HOT_TTL seconds. Double-checked locking keeps a burst of renders
-    from stampeding the rebuild; builders run on the caller's own
-    connection/thread, exactly as the uncached code did."""
+    """Return the shared snapshot for key, at most _HOT_TTL seconds
+    old in steady state. See the block comment above for the exact
+    contract (background refresh, serve-snapshot, cold-start and
+    dead-refresher synchronous fallbacks)."""
+    _HOT_BUILDERS[key] = build
     now = time.monotonic()
     hit = _TTL_CACHE.get(key)
-    if hit and hit[0] > now:
-        return hit[1]
+    if hit is not None:
+        hit[2] = now
+        if hit[0] > now:
+            return hit[1]
+        if now - (hit[0] - _HOT_TTL) < _HOT_TTL * 10:
+            return hit[1]
     with _TTL_CACHE_LOCK:
         hit = _TTL_CACHE.get(key)
-        if hit and hit[0] > time.monotonic():
+        if hit is not None and hit[0] > time.monotonic():
             return hit[1]
         value = build()
-        _TTL_CACHE[key] = (time.monotonic() + _HOT_TTL, value)
+        now = time.monotonic()
+        _TTL_CACHE[key] = [now + _HOT_TTL, value, now]
         return value
 
 
-def _views_by_id(conn) -> dict:
+def _hot_refresh_pass() -> None:
+    """One refresher sweep: rebuild every live aggregate that is
+    within one refresh interval of expiring; drop aggregates nobody
+    has read in over two TTL windows (their next reader rebuilds
+    synchronously, and the refresher stops paying for cold data)."""
+    now = time.monotonic()
+    for key, build in list(_HOT_BUILDERS.items()):
+        hit = _TTL_CACHE.get(key)
+        if hit is None:
+            continue
+        if now - hit[2] > 2 * _HOT_TTL + _HOT_REFRESH_SECONDS:
+            with _TTL_CACHE_LOCK:
+                _TTL_CACHE.pop(key, None)
+            _HOT_BUILDERS.pop(key, None)
+            continue
+        if hit[0] - now > _HOT_REFRESH_SECONDS:
+            continue
+        try:
+            value = build()
+        except Exception:
+            logger.exception("hot-cache refresh failed for %s", key)
+            continue
+        with _TTL_CACHE_LOCK:
+            cur = _TTL_CACHE.get(key)
+            last_access = cur[2] if cur is not None else now
+            _TTL_CACHE[key] = [time.monotonic() + _HOT_TTL, value,
+                               last_access]
+
+
+def _hot_refresher() -> None:
+    while not _hot_stop.is_set():
+        try:
+            _hot_refresh_pass()
+        except Exception:
+            logger.exception("hot-cache refresh pass failed")
+        _hot_stop.wait(_HOT_REFRESH_SECONDS)
+
+
+def _start_hot_refresher() -> None:
+    global _hot_thread
+    if _hot_thread is None or not _hot_thread.is_alive():
+        _hot_stop.clear()
+        _hot_thread = threading.Thread(
+            target=_hot_refresher, name="hot-cache-refresher", daemon=True)
+        _hot_thread.start()
+
+
+def _warm_hot_caches() -> None:
+    """Prebuild the core aggregates at boot (called from _startup,
+    after init_db): the homepage + pin-page set whose rebuild cost
+    caused the wedge, so the first visitor request after a restart
+    reads snapshots instead of paying a cold build. A failure here
+    must never break boot — the cold-start fallback in _ttl_cached
+    covers anything left unbuilt."""
+    try:
+        with get_conn(DB_PATH) as conn:
+            _views_by_id(conn)
+            _category_rows("halloween")
+            _town_inventory(conn, "halloween")
+            _tonight_pool(conn, "halloween")
+            _tonight_pool(conn, None)
+            _trending()
+    except Exception:
+        logger.exception("hot-cache warm failed; cold-start fallback "
+                         "will build on first request")
+
+
+def _views_by_id(conn=None) -> dict:
     """All-time /d/{id} view counts by entry id. Callers only READ the
-    dict (.get), so the shared cached instance is safe."""
+    dict (.get), so the shared cached instance is safe. The builder
+    opens its own connection (the background refresher replays it);
+    the conn argument is kept for call-site compatibility and ignored."""
     def build():
-        return {r["eid"]: r["views"] for r in conn.execute(_VIEWS_GROUP_SQL)}
+        with get_conn(DB_PATH) as c:
+            return {r["eid"]: r["views"] for r in c.execute(_VIEWS_GROUP_SQL)}
     return _ttl_cached("views_by_id", build)
 
 
@@ -643,22 +763,32 @@ def get_entry(entry_id: int) -> dict | None:
     return row_to_dict(row) if row else None
 
 
-def category_peers(entry: dict) -> list[dict]:
-    """All other visible entries in the entry's category (row dicts).
-    The category-wide row set is TTL-cached (wedge fix, Oct 25):
-    callers annotate the dicts they get (distance, _views), so each
-    call returns shallow copies — the cached base rows are never
-    mutated. A pin posted seconds ago can take up to _HOT_TTL seconds
-    to appear in other pins' rails; its own page is unaffected."""
+def _category_rows(category: str) -> list[dict]:
+    """Every visible entry row in a category, as row dicts — the
+    shared base set behind category_peers, _entries_with_views, the
+    town page, /map, /nearby and the geo area feed (fortification
+    pass 2, Oct 25). Building it costs a full category scan plus a
+    row_to_dict (with a filesystem stat) per row, so it is TTL-cached
+    and background-refreshed like the other hot aggregates; callers
+    get shallow copies — the cached base rows are never mutated. A
+    pin posted seconds ago can take up to _HOT_TTL seconds to appear
+    in these derived views; its own page is unaffected."""
     def build():
         with get_conn(DB_PATH) as conn:
             rows = conn.execute(
                 "SELECT * FROM entries WHERE hidden = 0 AND category = ?",
-                (entry["category"],),
+                (category,),
             ).fetchall()
         return [row_to_dict(r) for r in rows]
-    base = _ttl_cached(f"peers:{entry['category']}", build)
-    return [dict(p) for p in base if p["id"] != entry["id"]]
+    base = _ttl_cached(f"rows:{category}", build)
+    return [dict(p) for p in base]
+
+
+def category_peers(entry: dict) -> list[dict]:
+    """All other visible entries in the entry's category (row dicts),
+    from the shared _category_rows snapshot."""
+    return [p for p in _category_rows(entry["category"])
+            if p["id"] != entry["id"]]
 
 
 def nearest_pins(entry: dict, limit: int = 6) -> list[dict]:
@@ -795,15 +925,18 @@ def _town_inventory_uncached(conn, category: str = "halloween",
     return out
 
 
-def _town_inventory(conn, category: str = "halloween",
+def _town_inventory(conn=None, category: str = "halloween",
                     ev_type: str = "") -> list[dict]:
     """TTL-cached wrapper (wedge fix, Oct 25): the inventory rescans
     and re-aggregates every entry in the category; town counts and
     centroids change slowly, so builds are shared for _HOT_TTL
-    seconds. Callers get shallow copies of the town dicts."""
-    base = _ttl_cached(
-        f"towninv:{category}:{ev_type}",
-        lambda: _town_inventory_uncached(conn, category, ev_type))
+    seconds and background-refreshed (pass 2). Callers get shallow
+    copies of the town dicts. The conn argument is kept for call-site
+    compatibility; the builder opens its own connection."""
+    def build():
+        with get_conn(DB_PATH) as c:
+            return _town_inventory_uncached(c, category, ev_type)
+    base = _ttl_cached(f"towninv:{category}:{ev_type}", build)
     return [dict(t) for t in base]
 
 
@@ -959,24 +1092,27 @@ def _fetch_area_feed(cat: str, area_labels: set, scare: str, tag: str,
     the default feed with near-area pins (Item 1) — the caller merges
     these ahead of the regular feed and de-dupes, so the feed is never
     emptied, only re-led."""
-    query = "SELECT * FROM entries WHERE hidden = 0 AND category = ?"
-    params: list = [cat]
+    # Fortification pass 2: rows come from the shared _category_rows
+    # snapshot instead of a per-render full category scan + row_to_dict
+    # pass; the feed's scare/tag/video filters are applied as Python
+    # predicates that mirror the old SQL exactly (the tag LIKE was a
+    # wrapped-substring match over a fixed, wildcard-free tag list;
+    # the video LIKEs were suffix matches on the lowered path).
+    rows = _category_rows(cat)
     if scare in ("family", "spooky", "creepy", "terrifying", "extreme"):
-        query += " AND scare_level = ?"
-        params.append(scare)
+        rows = [e for e in rows if e["scare_level"] == scare]
     if tag in ("animatronics", "inflatables", "handmade", "walkthrough",
                "projector", "lights", "music", "street-wide", "multi-house",
                "ticketed", "2025", "market", "oddities", "witchy", "craft",
                "flea", "free", "flagship", "21+"):
-        query += " AND (',' || COALESCE(tags,'') || ',') LIKE ?"
-        params.append(f"%,{tag},%")
+        rows = [e for e in rows
+                if f",{tag}," in "," + (e["tags"] or "") + ","]
     if video.strip() == "1":
-        query += (" AND ((tiktok_url IS NOT NULL AND TRIM(tiktok_url) != '')"
-                  " OR LOWER(media_path) LIKE '%.mp4'"
-                  " OR LOWER(media_path) LIKE '%.webm'"
-                  " OR LOWER(media_path) LIKE '%.mov')")
+        rows = [e for e in rows
+                if (e["tiktok_url"] or "").strip()
+                or (e["media_path"] or "").lower().endswith(
+                    (".mp4", ".webm", ".mov"))]
     with get_conn(DB_PATH) as conn:
-        rows = [row_to_dict(r) for r in conn.execute(query, params).fetchall()]
         _attach_views(conn, rows)  # Item 7: area-led feed cards carry counts
     rows = [e for e in rows if e["town_label"] in area_labels]
     rows.sort(key=lambda e: e.get("created_at") or "", reverse=True)
@@ -1257,30 +1393,44 @@ def _ev_sort_day(entries: list, sort: str) -> list:
 
 def _events_on_count(conn, town_label: str, on_date) -> int:
     """Parsed events covering `on_date` whose town_label (the same
-    extract_city_state label every card shows) equals `town_label`."""
-    n = 0
-    for r in conn.execute(
-            "SELECT title, town FROM entries "
-            "WHERE hidden = 0 AND category = 'events'").fetchall():
-        label = extract_city_state(r["town"] or "") or r["town"] or ""
-        if label == town_label and event_on_date(r["title"], on_date):
-            n += 1
-    return n
+    extract_city_state label every card shows) equals `town_label`.
+    Reads the TTL-cached by-town map (fortification pass 2); the
+    empty-label case keeps the original direct scan so its semantics
+    are byte-identical (the by-town map skips unparseable towns)."""
+    if not town_label:
+        n = 0
+        for r in conn.execute(
+                "SELECT title, town FROM entries "
+                "WHERE hidden = 0 AND category = 'events'").fetchall():
+            label = extract_city_state(r["town"] or "") or r["town"] or ""
+            if label == town_label and event_on_date(r["title"], on_date):
+                n += 1
+        return n
+    return _events_on_by_town(conn, on_date).get(town_label, 0)
 
 
-def _events_on_by_town(conn, on_date) -> dict:
+def _events_on_by_town(conn=None, on_date=None) -> dict:
     """{town_label: count} of parsed events covering `on_date`, in one
     pass over the events category (the same labels _events_on_count
-    matches against)."""
-    counts: dict[str, int] = {}
-    for r in conn.execute(
-            "SELECT title, town FROM entries "
-            "WHERE hidden = 0 AND category = 'events'").fetchall():
-        if event_on_date(r["title"], on_date):
-            label = extract_city_state(r["town"] or "") or r["town"] or ""
-            if label:
-                counts[label] = counts.get(label, 0) + 1
-    return counts
+    matches against). TTL-cached per date (fortification pass 2):
+    building it parses every event title's date span, and the Tonight
+    strip paths asked for it — directly or via _next_events_day's
+    14-day scan — on homepage and town renders. The date is part of
+    the cache key, so the ET-midnight rollover is automatic. Callers
+    only read the dict, so the shared instance is safe."""
+    def build():
+        counts: dict[str, int] = {}
+        with get_conn(DB_PATH) as c:
+            rows = c.execute(
+                "SELECT title, town FROM entries "
+                "WHERE hidden = 0 AND category = 'events'").fetchall()
+        for r in rows:
+            if event_on_date(r["title"], on_date):
+                label = extract_city_state(r["town"] or "") or r["town"] or ""
+                if label:
+                    counts[label] = counts.get(label, 0) + 1
+        return counts
+    return _ttl_cached(f"evon:{on_date.isoformat()}", build)
 
 
 def _next_events_day(conn, town_label: str, today, horizon: int = 14):
@@ -1608,35 +1758,44 @@ def extract_city_state(town: str) -> str:
 
 
 def states(category: str = "halloween") -> list[str]:
-    with get_conn(DB_PATH) as conn:
-        rows = conn.execute(
-            "SELECT DISTINCT town FROM entries "
-            "WHERE hidden = 0 AND category = ?",
-            (category,),
-        ).fetchall()
-    seen: dict[str, None] = {}
-    for r in rows:
-        st = extract_state(r["town"])
-        if st and st not in seen:
-            seen[st] = None
-    return sorted(seen)
+    """State codes present in a category. TTL-cached (fortification
+    pass 2): it DISTINCT-scans every town string in the category and
+    runs on the homepage's render path."""
+    def build():
+        with get_conn(DB_PATH) as conn:
+            rows = conn.execute(
+                "SELECT DISTINCT town FROM entries "
+                "WHERE hidden = 0 AND category = ?",
+                (category,),
+            ).fetchall()
+        seen: dict[str, None] = {}
+        for r in rows:
+            st = extract_state(r["town"])
+            if st and st not in seen:
+                seen[st] = None
+        return sorted(seen)
+    return list(_ttl_cached(f"states:{category}", build))
 
 
 def towns(category: str = "halloween", state: str = "") -> list[str]:
-    with get_conn(DB_PATH) as conn:
-        rows = conn.execute(
-            "SELECT DISTINCT town FROM entries "
-            "WHERE hidden = 0 AND category = ? ORDER BY town",
-            (category,),
-        ).fetchall()
-    seen: dict[str, None] = {}
-    for r in rows:
-        if state and extract_state(r["town"]) != state.upper():
-            continue
-        city_state = extract_city_state(r["town"])
-        if city_state and city_state not in seen:
-            seen[city_state] = None
-    return sorted(seen)
+    """'City, ST' labels present in a category (optionally one state).
+    TTL-cached like states() above — same scan, same render paths."""
+    def build():
+        with get_conn(DB_PATH) as conn:
+            rows = conn.execute(
+                "SELECT DISTINCT town FROM entries "
+                "WHERE hidden = 0 AND category = ? ORDER BY town",
+                (category,),
+            ).fetchall()
+        seen: dict[str, None] = {}
+        for r in rows:
+            if state and extract_state(r["town"]) != state.upper():
+                continue
+            city_state = extract_city_state(r["town"])
+            if city_state and city_state not in seen:
+                seen[city_state] = None
+        return sorted(seen)
+    return list(_ttl_cached(f"towns:{category}:{state}", build))
 
 
 US_STATE_NAMES = {
@@ -1925,18 +2084,21 @@ def _tonight_pool_uncached(conn, category: str | None) -> list[dict]:
             if d["id"] not in DUEL_EXCLUDE_IDS]
 
 
-def _tonight_pool(conn, category: str | None) -> list[dict]:
+def _tonight_pool(conn=None, category: str | None = None) -> list[dict]:
     """TTL-cached wrapper (wedge fix, Oct 25): building the pool runs
     an entries scan plus the page_views GROUP BY as a subquery plus a
     row_to_dict (with a filesystem stat) per eligible pin — and the
     homepage builds it on every render, twice over (Tonight's pick +
     Daily Fright). The pool's membership and view counts are shared
-    for _HOT_TTL seconds; the per-load random pick is unaffected
-    (picks are taken from the pool fresh each load, as before).
-    Callers get shallow copies."""
-    base = _ttl_cached(
-        f"tonight:{category}",
-        lambda: _tonight_pool_uncached(conn, category))
+    for _HOT_TTL seconds and background-refreshed (pass 2); the
+    per-load random pick is unaffected (picks are taken from the pool
+    fresh each load, as before). Callers get shallow copies. The conn
+    argument is kept for call-site compatibility; the builder opens
+    its own connection."""
+    def build():
+        with get_conn(DB_PATH) as c:
+            return _tonight_pool_uncached(c, category)
+    base = _ttl_cached(f"tonight:{category}", build)
     return [dict(d) for d in base]
 
 
@@ -1995,6 +2157,40 @@ def _daily_display(conn, et_date) -> dict | None:
     pick.pop("_views", None)
     pick.pop("_has_video", None)
     return pick
+
+
+def _trending() -> list[dict]:
+    """Homepage Trending strip: the 5 most-viewed media-carrying pins
+    site-wide (detail-page views DESC, votes DESC, id — the ranking
+    the old inline LEFT JOIN in home() produced), zero-view pins
+    excluded. TTL-cached + background-refreshed (fortification
+    pass 2): the old query re-ran the page_views GROUP BY plus a
+    media-entries scan on EVERY homepage render. Callers get copies."""
+    def build():
+        with get_conn(DB_PATH) as conn:
+            rows = [row_to_dict(r) for r in conn.execute(
+                "SELECT * FROM entries WHERE hidden = 0 "
+                "AND media_path IS NOT NULL AND TRIM(media_path) != ''"
+            ).fetchall()]
+        views = _views_by_id()
+        for d in rows:
+            d["_views"] = views.get(d["id"], 0)
+        rows.sort(key=lambda d: (-d["_views"], -(d["votes"] or 0), d["id"]))
+        return [d for d in rows[:5] if d["_views"] > 0]
+    return [dict(d) for d in _ttl_cached("trending", build)]
+
+
+def _category_counts() -> dict:
+    """Visible-entry count per category ({category: n}). TTL-cached +
+    background-refreshed (fortification pass 2): /restaurhaunts and
+    /media-kit both GROUP BY'd the whole entries table per render for
+    numbers that move only when a pin is posted."""
+    def build():
+        with get_conn(DB_PATH) as conn:
+            return {r["category"]: r["n"] for r in conn.execute(
+                "SELECT category, COUNT(*) AS n FROM entries "
+                "WHERE hidden = 0 GROUP BY category").fetchall()}
+    return dict(_ttl_cached("catcounts", build))
 
 
 # Region term lists for the homepage feed filters (boston/dc-area metros,
@@ -2217,16 +2413,10 @@ def home(request: Request, sort: str = "new", town: str = "", town_search: str =
     # overall when geo is unknown or an explicit location filter is in
     # the URL), Trending = top pins by detail-page views.
     with get_conn(DB_PATH) as conn:
-        trows = conn.execute(
-            "SELECT e.*, COALESCE(v.views, 0) AS _views FROM entries e "
-            "LEFT JOIN (SELECT CAST(substr(path, 4) AS INTEGER) AS eid, "
-            "                  COUNT(*) AS views FROM page_views "
-            "                  WHERE path LIKE '/d/%' GROUP BY eid) v "
-            "  ON v.eid = e.id "
-            "WHERE e.hidden = 0 AND e.media_path IS NOT NULL "
-            "  AND TRIM(e.media_path) != '' "
-            "ORDER BY _views DESC, e.votes DESC, e.id LIMIT 5").fetchall()
-        trending = [row_to_dict(r) for r in trows if r["_views"] > 0]
+        # Trending comes from the TTL-cached _trending() snapshot
+        # (fortification pass 2) — it used to re-run the page_views
+        # GROUP BY inline here on every homepage render.
+        trending = _trending()
         # Near-you towns now come from the Item 1 resolution (geo-aware
         # when Cloudflare headers are present, biggest-site-wide when
         # not) computed above; the counts are the same live halloween
@@ -2424,6 +2614,68 @@ def home(request: Request, sort: str = "new", town: str = "", town_search: str =
     return response
 
 
+def _events_filter_data() -> dict:
+    """The /events filter sidebar's data bundle: location maps (state /
+    town counts + the raw town strings behind each derived label),
+    region counts, facet counts and the total — all computed over
+    EVERY visible event, independent of the current filter selection.
+    TTL-cached + background-refreshed (fortification pass 2): building
+    it ran four GROUP BY passes over the events category on every
+    /events render. Callers get copies of every mutable member."""
+    def build():
+        state_counts: dict[str, int] = {}
+        town_counts: dict[str, int] = {}
+        town_state: dict[str, str] = {}
+        raw_by_state: dict[str, list] = {}
+        raw_by_town: dict[str, list] = {}
+        town_groups: list = []
+        with get_conn(DB_PATH) as conn:
+            for r in conn.execute(
+                    "SELECT town, COUNT(*) AS n FROM entries "
+                    "WHERE hidden = 0 AND category = 'events' GROUP BY town").fetchall():
+                raw = r["town"] or ""
+                town_groups.append((raw, r["n"]))
+                st = extract_state(raw)
+                label = extract_city_state(raw)
+                if st:
+                    state_counts[st] = state_counts.get(st, 0) + r["n"]
+                    raw_by_state.setdefault(st, []).append(raw)
+                if label:
+                    town_counts[label] = town_counts.get(label, 0) + r["n"]
+                    raw_by_town.setdefault(label, []).append(raw)
+                    if st:
+                        town_state[label] = st
+            counts: dict[str, dict[str, int]] = {}
+            for key, col, _values, _labels in EVENT_FACETS:
+                counts[key] = {r[col]: r["n"] for r in conn.execute(
+                    f"SELECT {col}, COUNT(*) AS n FROM entries "
+                    f"WHERE hidden = 0 AND category = 'events' AND {col} IS NOT NULL "
+                    f"GROUP BY {col}").fetchall()}
+            total = conn.execute(
+                "SELECT COUNT(*) AS n FROM entries "
+                "WHERE hidden = 0 AND category = 'events'").fetchone()["n"]
+        region_counts = {
+            slug: sum(n for raw, n in town_groups
+                      if any(t in raw.lower()
+                             for t in _region_terms(slug)))
+            for slug, _label in REGION_TABS}
+        return {"state_counts": state_counts, "town_counts": town_counts,
+                "town_state": town_state, "raw_by_state": raw_by_state,
+                "raw_by_town": raw_by_town, "town_groups": town_groups,
+                "region_counts": region_counts, "counts": counts,
+                "total": total}
+    b = _ttl_cached("evfilter", build)
+    return {"state_counts": dict(b["state_counts"]),
+            "town_counts": dict(b["town_counts"]),
+            "town_state": dict(b["town_state"]),
+            "raw_by_state": {k: list(v) for k, v in b["raw_by_state"].items()},
+            "raw_by_town": {k: list(v) for k, v in b["raw_by_town"].items()},
+            "town_groups": list(b["town_groups"]),
+            "region_counts": dict(b["region_counts"]),
+            "counts": {k: dict(v) for k, v in b["counts"].items()},
+            "total": b["total"]}
+
+
 @app.get("/events", response_class=HTMLResponse)
 def events_page(request: Request, type: str = "", genre: str = "",
                 venue: str = "", sort: str = "top",
@@ -2481,30 +2733,16 @@ def events_page(request: Request, type: str = "", genre: str = "",
         if selected[key]:
             query += f" AND {col} = ?"
             params.append(selected[key])
+    # Filter sidebar data (location maps, region + facet counts,
+    # total) from the TTL-cached bundle — see _events_filter_data.
+    _fd = _events_filter_data()
+    state_counts = _fd["state_counts"]
+    town_counts = _fd["town_counts"]
+    town_state = _fd["town_state"]
+    raw_by_state = _fd["raw_by_state"]
+    raw_by_town = _fd["raw_by_town"]
+    town_groups = _fd["town_groups"]
     with get_conn(DB_PATH) as conn:
-        # Location maps over every visible event: derived state / city
-        # label -> event count + the raw town strings that produce it.
-        state_counts: dict[str, int] = {}
-        town_counts: dict[str, int] = {}
-        town_state: dict[str, str] = {}
-        raw_by_state: dict[str, list] = {}
-        raw_by_town: dict[str, list] = {}
-        town_groups: list = []
-        for r in conn.execute(
-                "SELECT town, COUNT(*) AS n FROM entries "
-                "WHERE hidden = 0 AND category = 'events' GROUP BY town").fetchall():
-            raw = r["town"] or ""
-            town_groups.append((raw, r["n"]))
-            st = extract_state(raw)
-            label = extract_city_state(raw)
-            if st:
-                state_counts[st] = state_counts.get(st, 0) + r["n"]
-                raw_by_state.setdefault(st, []).append(raw)
-            if label:
-                town_counts[label] = town_counts.get(label, 0) + r["n"]
-                raw_by_town.setdefault(label, []).append(raw)
-                if st:
-                    town_state[label] = st
         state = state.strip().upper()
         if state not in state_counts:
             state = ""
@@ -2521,12 +2759,9 @@ def events_page(request: Request, type: str = "", genre: str = "",
             params += raws
         # Region counts over every visible event, in the curated
         # REGION_TABS order; matching is the place-tabs predicate — a
-        # term appearing anywhere in the raw town string.
-        region_counts = {
-            slug: sum(n for raw, n in town_groups
-                      if any(t in raw.lower()
-                             for t in _region_terms(slug)))
-            for slug, _label in REGION_TABS}
+        # term appearing anywhere in the raw town string. Precomputed
+        # in the cached filter bundle (fortification pass 2).
+        region_counts = _fd["region_counts"]
         if region:
             raws = [raw for raw, _n in town_groups
                     if any(t in raw.lower() for t in region_terms)]
@@ -2607,15 +2842,10 @@ def events_page(request: Request, type: str = "", genre: str = "",
         # its single day at 100 cards, as before.
         query += f" ORDER BY {video_first}, {order}"
         entries = [row_to_dict(r) for r in conn.execute(query, params).fetchall()]
-        counts: dict[str, dict[str, int]] = {}
-        for key, col, _values, _labels in EVENT_FACETS:
-            counts[key] = {r[col]: r["n"] for r in conn.execute(
-                f"SELECT {col}, COUNT(*) AS n FROM entries "
-                f"WHERE hidden = 0 AND category = 'events' AND {col} IS NOT NULL "
-                f"GROUP BY {col}").fetchall()}
-        total = conn.execute(
-            "SELECT COUNT(*) AS n FROM entries "
-            "WHERE hidden = 0 AND category = 'events'").fetchone()["n"]
+        # Facet counts + total are filter-independent: from the cached
+        # bundle (fortification pass 2).
+        counts = _fd["counts"]
+        total = _fd["total"]
     voted = {k[6:] for k in request.cookies if k.startswith("voted_")}
     facets = []
     for key, _col, values, labels in EVENT_FACETS:
@@ -2842,12 +3072,10 @@ def restaurhaunts(request: Request, sort: str = "new", f: str = "all",
     query += f" ORDER BY {order} LIMIT 100"
     with get_conn(DB_PATH) as conn:
         entries = [row_to_dict(r) for r in conn.execute(query, params).fetchall()]
-        counts = {c: 0 for c in RESTAURHAUNT_CATS}
-        for r in conn.execute(
-                "SELECT category, COUNT(*) AS n FROM entries "
-                "WHERE hidden = 0 AND category IN ('restaurants', 'coffee', 'shops') "
-                "GROUP BY category").fetchall():
-            counts[r["category"]] = r["n"]
+    # Category tab counts from the shared TTL cache (fortification
+    # pass 2) instead of a per-render GROUP BY over entries.
+    all_counts = _category_counts()
+    counts = {c: all_counts.get(c, 0) for c in RESTAURHAUNT_CATS}
     voted = {k[6:] for k in request.cookies if k.startswith("voted_")}
     return templates.TemplateResponse(request, "restaurhaunts.html",
         {"request": request, "entries": entries, "sort": sort, "f": f,
@@ -2887,14 +3115,14 @@ def nearby(request: Request, q: str = "", miles: float = 10, cat: str = "hallowe
         if center is None:
             err = f"Couldn't find '{q.strip()}'. Try a town or city name."
     if center is not None:
-        with get_conn(DB_PATH) as conn:
-            rows = conn.execute(
-                "SELECT * FROM entries WHERE hidden = 0 AND category = ? "
-                "AND lat IS NOT NULL AND lng IS NOT NULL", [cat]).fetchall()
+        # Rows from the shared _category_rows snapshot (fortification
+        # pass 2) instead of a per-render scan + row_to_dict pass; the
+        # distance annotation lands on the per-request copies.
         clat, clng = center
-        for r in rows:
-            d = row_to_dict(r)
-            d["distance"] = haversine_miles(clat, clng, r["lat"], r["lng"])
+        for d in _category_rows(cat):
+            if d["lat"] is None or d["lng"] is None:
+                continue
+            d["distance"] = haversine_miles(clat, clng, d["lat"], d["lng"])
             if d["distance"] <= miles:
                 entries.append(d)
         # Sort by distance first, then the chosen order as tiebreak
@@ -2922,11 +3150,10 @@ def nearby(request: Request, q: str = "", miles: float = 10, cat: str = "hallowe
 def map_view(request: Request, cat: str = "halloween"):
     """Full-screen map with all haunt pins, Google Maps-style browsing."""
     cat = cat if cat in CATEGORIES else "halloween"
-    with get_conn(DB_PATH) as conn:
-        rows = conn.execute(
-            "SELECT * FROM entries WHERE hidden = 0 AND category = ? "
-            "AND lat IS NOT NULL AND lng IS NOT NULL", [cat]).fetchall()
-    pins = [row_to_dict(r) for r in rows]
+    # Rows from the shared _category_rows snapshot (fortification
+    # pass 2) instead of a per-render scan + row_to_dict pass.
+    pins = [e for e in _category_rows(cat)
+            if e["lat"] is not None and e["lng"] is not None]
     return templates.TemplateResponse(request, "map.html",
         {"request": request, "pins": pins, "cat": cat,
          "cat_labels": CAT_LABELS, "cat_emoji": CAT_EMOJI},
@@ -3596,14 +3823,10 @@ def watch_page(request: Request):
     visitor breaking ties, the rest in server order behind — the same
     anchoring detail_chain's video chain uses. This supersedes the
     Oct 21 per-visit shuffle. Every slide also carries _views for
-    Item 7's count chips (one grouped LEFT JOIN, as in Trending)."""
+    Item 7's count chips (from the cached views snapshot)."""
     with get_conn(DB_PATH) as conn:
         rows = conn.execute(
-            "SELECT e.*, COALESCE(v.views, 0) AS _views FROM entries e "
-            "LEFT JOIN (SELECT CAST(substr(path, 4) AS INTEGER) AS eid, "
-            "                  COUNT(*) AS views FROM page_views "
-            "                  WHERE path LIKE '/d/%' GROUP BY eid) v "
-            "  ON v.eid = e.id "
+            "SELECT e.* FROM entries e "
             "WHERE e.hidden = 0 AND ("
             "(e.tiktok_url IS NOT NULL AND e.tiktok_url LIKE '%/video/%')"
             " OR LOWER(e.media_path) LIKE '%.mp4'"
@@ -3611,7 +3834,14 @@ def watch_page(request: Request):
             " OR LOWER(e.media_path) LIKE '%.mov')"
             " ORDER BY e.is_handpicked DESC, e.created_at DESC, e.id DESC "
             "LIMIT 60").fetchall()
-    entries = [row_to_dict(r) for r in rows]
+    # _views from the TTL-cached views snapshot (fortification pass 2)
+    # instead of a per-render page_views GROUP BY join.
+    views = _views_by_id()
+    entries = []
+    for r in rows:
+        d = row_to_dict(r)
+        d["_views"] = views.get(d["id"], 0)
+        entries.append(d)
     # Town centers for the client-side visitor anchoring, in the same
     # [label, city, state, centroid lat, centroid lng, pin count]
     # shape detail.html's video-chain re-pick consumes — computed from
@@ -3649,11 +3879,7 @@ def _vt_video_pool(conn) -> list[dict]:
     votes are near-zero on video pins, views are what actually rank them.
     A display listed twice (same title + town) appears once."""
     rows = conn.execute(
-        """SELECT e.*, COALESCE(v.views, 0) AS _views FROM entries e
-           LEFT JOIN (SELECT CAST(substr(path, 4) AS INTEGER) AS eid,
-                             COUNT(*) AS views
-                      FROM page_views WHERE path LIKE '/d/%' GROUP BY eid) v
-             ON v.eid = e.id
+        """SELECT e.* FROM entries e
            WHERE e.hidden = 0
              AND ((e.tiktok_url IS NOT NULL AND e.tiktok_url LIKE '%/video/%')
                   OR LOWER(e.media_path) LIKE '%.mp4'
@@ -3663,9 +3889,13 @@ def _vt_video_pool(conn) -> list[dict]:
              AND e.lat IS NOT NULL AND e.lng IS NOT NULL
              AND NOT (',' || COALESCE(e.tags, '') || ',') LIKE '%,2025,%'
            ORDER BY e.id""").fetchall()
+    # _views from the TTL-cached views snapshot (fortification pass 2)
+    # instead of a per-render page_views GROUP BY join.
+    views = _views_by_id(conn)
     out, seen_keys = [], set()
     for r in rows:
         d = row_to_dict(r)
+        d["_views"] = views.get(d["id"], 0)
         key = ((d.get("title") or "").strip().lower(), d["town_label"])
         if key in seen_keys:
             continue
@@ -4251,19 +4481,15 @@ def detail(request: Request, entry_id: int):
     # so the page can show "You've seen X of Y displays in [Town]" (the
     # seen-set itself lives in the visitor's localStorage — no accounts).
     entry_label = extract_city_state(entry["town"] or "") or entry["town"] or ""
+    # Town rail rows from the shared cached snapshots (fortification
+    # pass 2): _entries_with_views composes the cached category row set
+    # with the cached _views_by_id — the same row dicts (incl. _views)
+    # the per-render GROUP BY join used to produce here.
     with get_conn(DB_PATH) as conn:
-        town_rows = conn.execute(
-            "SELECT e.*, COALESCE(v.views, 0) AS _views FROM entries e "
-            "LEFT JOIN (SELECT CAST(substr(path, 4) AS INTEGER) AS eid, "
-            "                  COUNT(*) AS views FROM page_views "
-            "                  WHERE path LIKE '/d/%' GROUP BY eid) v "
-            "  ON v.eid = e.id "
-            "WHERE e.category = ? AND e.hidden = 0",
-            (entry["category"],)).fetchall()
+        town_rows = _entries_with_views(conn, entry["category"])
     town_pin_ids = []
     town_haunts = []
-    for r in town_rows:
-        p = row_to_dict(r)
+    for p in town_rows:
         if (extract_city_state(p["town"] or "") or p["town"] or "") != entry_label:
             continue
         town_pin_ids.append(p["id"])
@@ -4755,16 +4981,18 @@ def _entries_with_views(conn, cat: str) -> list[dict]:
     """Every visible entry in a category with its detail-page view count
     attached as _views — the ranking currency Top Haunts has used since
     Dan's Oct 23 change (detail-page views, same LEFT JOIN as the
-    original leaderboard query and the homepage Trending strip)."""
-    return [row_to_dict(r) for r in conn.execute(
-        "SELECT e.*, COALESCE(v.views, 0) AS _views FROM entries e "
-        "LEFT JOIN (SELECT CAST(substr(path, 4) AS INTEGER) AS eid, "
-        "                  COUNT(*) AS views FROM page_views "
-        "                  WHERE path LIKE '/d/%' GROUP BY eid) v "
-        "  ON v.eid = e.id "
-        "WHERE e.hidden = 0 AND e.category = ?",
-        (cat,),
-    ).fetchall()]
+    original leaderboard query and the homepage Trending strip).
+    Fortification pass 2: composed from the two TTL-cached snapshots
+    (_category_rows + _views_by_id) instead of re-running the GROUP BY
+    join and a full category scan on every call — the leaderboards,
+    the state-Top-10 pages, the homepage hero block and the pin-page
+    town rail all read through here. The conn argument is kept for
+    call-site compatibility and ignored."""
+    views = _views_by_id(conn)
+    rows = _category_rows(cat)
+    for d in rows:
+        d["_views"] = views.get(d["id"], 0)
+    return rows
 
 
 def _rank_with_featured(entries: list[dict], limit: int) -> list[dict]:
@@ -4796,14 +5024,22 @@ def leaderboard(request: Request, cat: str = "halloween"):
         # _rank_with_featured, so a flagged editor's pick is guaranteed
         # a slot here too (⭐ Featured marker; counts untouched).
         top = _rank_with_featured(_entries_with_views(conn, cat), 15)
+        # Per-town Top 3 from the cached category snapshot
+        # (fortification pass 2): the old loop ran one SQL query per
+        # town label (~1,400 labels) on every render. The match stays
+        # on the RAW town column against the derived label — preserved
+        # exactly, quirk included (towns stored as full addresses match
+        # no label and render an empty per-town list, as before); the
+        # sort mirrors votes DESC, created_at DESC over rowid-ordered
+        # rows (Python's sort is stable, like SQLite's sorter).
+        base_rows = _category_rows(cat)
         per_town = []
         for t in towns(cat):
-            rows = conn.execute(
-                "SELECT * FROM entries WHERE hidden = 0 AND category = ? "
-                "AND town = ? ORDER BY votes DESC, created_at DESC LIMIT 3",
-                (cat, t),
-            ).fetchall()
-            per_town.append({"town": t, "entries": [row_to_dict(r) for r in rows]})
+            cands = [d for d in base_rows if d["town"] == t]
+            cands.sort(key=lambda d: (d["votes"] or 0, d["created_at"] or ""),
+                       reverse=True)
+            per_town.append({"town": t,
+                             "entries": [dict(d) for d in cands[:3]]})
     return templates.TemplateResponse(request, "leaderboard.html",
         {"request": request, "top": top, "per_town": per_town,
          "cat": cat, "cat_labels": CAT_LABELS, "cat_emoji": CAT_EMOJI}
@@ -4905,7 +5141,7 @@ def leaderboard_top100(request: Request, cat: str = "halloween"):
 # Non-halloween pins (events, stores, …) are not part of the town feed
 # and do not count toward a town — documented in item4 NOTES.
 
-def _passport_towns(conn) -> list[dict]:
+def _passport_towns(conn=None) -> list[dict]:
     """[{town, town_label, total, url, slug, ids}] for the passport.
 
     `ids` rides along beyond the spec'd fields: the progress itself is
@@ -4913,34 +5149,40 @@ def _passport_towns(conn) -> list[dict]:
     list of pin ids, so the client needs each town's id list to count
     how many of them were seen. `town` and `town_label` are both the
     canonical extract_city_state label (the key the town feed groups
-    by, and the label every card displays)."""
-    grouped: dict[str, list[int]] = {}
-    for r in conn.execute(
-            "SELECT id, town FROM entries "
-            "WHERE hidden = 0 AND category = 'halloween' ORDER BY id").fetchall():
-        label = extract_city_state(r["town"] or "")
-        if not label:
-            continue
-        grouped.setdefault(label, []).append(r["id"])
-    out = []
-    for label in sorted(grouped):
-        slug = _town_slug(label)
-        out.append({"town": label, "town_label": label,
-                    "total": len(grouped[label]),
-                    "url": f"/towns/{slug}", "slug": slug,
-                    "ids": grouped[label]})
-    return out
+    by, and the label every card displays). TTL-cached +
+    background-refreshed (fortification pass 2); callers get copies.
+    The conn argument is kept for call-site compatibility."""
+    def build():
+        grouped: dict[str, list[int]] = {}
+        with get_conn(DB_PATH) as c:
+            rows = c.execute(
+                "SELECT id, town FROM entries "
+                "WHERE hidden = 0 AND category = 'halloween' ORDER BY id").fetchall()
+        for r in rows:
+            label = extract_city_state(r["town"] or "")
+            if not label:
+                continue
+            grouped.setdefault(label, []).append(r["id"])
+        out = []
+        for label in sorted(grouped):
+            slug = _town_slug(label)
+            out.append({"town": label, "town_label": label,
+                        "total": len(grouped[label]),
+                        "url": f"/towns/{slug}", "slug": slug,
+                        "ids": grouped[label]})
+        return out
+    base = _ttl_cached("passport:towns", build)
+    return [{**t, "ids": list(t["ids"])} for t in base]
 
 
 @app.get("/api/passport-data")
 def api_passport_data():
     """Per-town passport denominators + pin ids, as one JSON list.
-    Computed per request (a single grouped scan of ~2k halloween rows
-    at snapshot scale — cheap); Cache-Control lets browsers / the CDN
-    reuse it briefly instead of recomputing on every homepage load,
-    since the homepage chip fetches it too."""
-    with get_conn(DB_PATH) as conn:
-        data = _passport_towns(conn)
+    TTL-cached server-side (fortification pass 2) on top of the
+    Cache-Control below, which lets browsers / the CDN reuse it
+    briefly instead of recomputing on every homepage load, since the
+    homepage chip fetches it too."""
+    data = _passport_towns()
     resp = JSONResponse(data)
     resp.headers["Cache-Control"] = "public, max-age=300"
     return resp
@@ -4961,20 +5203,27 @@ def _town_slug(label: str) -> str:
 
 
 def _towns_with_counts(category: str = "halloween") -> list[dict]:
-    with get_conn(DB_PATH) as conn:
-        rows = conn.execute(
-            "SELECT town FROM entries WHERE hidden = 0 AND category = ?",
-            (category,),
-        ).fetchall()
-    counts: dict[str, int] = {}
-    for r in rows:
-        label = extract_city_state(r["town"] or "")
-        if label:
-            counts[label] = counts.get(label, 0) + 1
-    return sorted(
-        ({"label": l, "slug": _town_slug(l), "count": c} for l, c in counts.items()),
-        key=lambda x: x["label"],
-    )
+    """[{label, slug, count}] per town in a category. TTL-cached +
+    background-refreshed (fortification pass 2): it full-scans the
+    category's town strings and feeds /towns and the homepage's
+    place-tabs counter."""
+    def build():
+        with get_conn(DB_PATH) as conn:
+            rows = conn.execute(
+                "SELECT town FROM entries WHERE hidden = 0 AND category = ?",
+                (category,),
+            ).fetchall()
+        counts: dict[str, int] = {}
+        for r in rows:
+            label = extract_city_state(r["town"] or "")
+            if label:
+                counts[label] = counts.get(label, 0) + 1
+        return sorted(
+            ({"label": l, "slug": _town_slug(l), "count": c}
+             for l, c in counts.items()),
+            key=lambda x: x["label"],
+        )
+    return [dict(t) for t in _ttl_cached(f"towncounts:{category}", build)]
 
 
 @app.get("/towns", response_class=HTMLResponse)
@@ -5004,13 +5253,17 @@ def town_page(request: Request, slug: str):
             break
     if label is None:
         return RedirectResponse("/towns", status_code=303)
-    with get_conn(DB_PATH) as conn:
-        rows = [row_to_dict(r) for r in conn.execute(
-            "SELECT * FROM entries WHERE hidden = 0 AND category = 'halloween' "
-            # Feed-order rule (Dan, Oct 23): hand-picked pins first
-            # (newest hand-picked first), then newest-first — the town
-            # page has no sort control, so this IS its default view.
-            "ORDER BY is_handpicked DESC, created_at DESC, id DESC").fetchall()]
+    # Rows from the shared _category_rows snapshot (fortification
+    # pass 2) instead of a per-render full-category scan + row_to_dict
+    # pass. The feed order (Dan, Oct 23: hand-picked pins first —
+    # newest hand-picked first — then newest-first; the town page has
+    # no sort control, so this IS its default view) is the old SQL
+    # ORDER BY applied as a Python sort over the snapshot rows before
+    # the town filter, exactly as the SQL ordered-then-filtered.
+    rows = _category_rows("halloween")
+    rows.sort(key=lambda e: (e["is_handpicked"] or 0,
+                             e["created_at"] or "", e["id"]),
+              reverse=True)
     entries = [e for e in rows if e["town_label"] == label]
     # Item 7: town-page cards show all-time view counts (one grouped query).
     with get_conn(DB_PATH) as conn:
@@ -5773,6 +6026,49 @@ def movies_page(request: Request):
     )
 
 
+def _mk_visitors(today_d) -> dict:
+    """Media-kit visitor counts: distinct session ids today / last 7
+    days. TTL-cached per UTC date (fortification pass 2): each count
+    was a COUNT(DISTINCT sid) scan over the whole page_views table
+    (the substr() date filter defeats the date index) on every
+    /media-kit render."""
+    def build():
+        week_start_d = today_d - timedelta(days=6)
+        with get_conn(DB_PATH) as conn:
+            today = conn.execute(
+                "SELECT COUNT(DISTINCT sid) FROM page_views WHERE substr(viewed_at, 1, 10) = ?",
+                (today_d.isoformat(),)).fetchone()[0]
+            week = conn.execute(
+                "SELECT COUNT(DISTINCT sid) FROM page_views WHERE substr(viewed_at, 1, 10) >= ?",
+                (week_start_d.isoformat(),)).fetchone()[0]
+        return {"today": today, "week": week}
+    return dict(_ttl_cached(f"mkvis:{today_d.isoformat()}", build))
+
+
+def _mk_geo() -> dict:
+    """Media-kit geographic spread: distinct town labels + states
+    across ALL categories. TTL-cached (fortification pass 2) — it was
+    a DISTINCT scan of every entry's town per render."""
+    def build():
+        with get_conn(DB_PATH) as conn:
+            town_rows = conn.execute(
+                "SELECT DISTINCT town FROM entries WHERE hidden = 0").fetchall()
+        labels: set[str] = set()
+        state_set: set[str] = set()
+        for r in town_rows:
+            label = extract_city_state(r["town"] or "")
+            if label:
+                labels.add(label)
+            st = extract_state(r["town"] or "")
+            if st:
+                state_set.add(st)
+        return {"town_count": len(labels), "states": sorted(state_set),
+                "state_count": len(state_set - {"DC"}),
+                "has_dc": "DC" in state_set}
+    b = _ttl_cached("mkgeo", build)
+    return {**b, "states": list(b["states"])}
+
+
 @app.get("/media-kit", response_class=HTMLResponse)
 def media_kit(request: Request):
     now = datetime.now(timezone.utc)
@@ -5791,38 +6087,27 @@ def media_kit(request: Request):
         "states": [],
         "games": MEDIA_KIT_GAMES,
     }
-    with get_conn(DB_PATH) as conn:
-        try:
-            kit["visitors_today"] = conn.execute(
-                "SELECT COUNT(DISTINCT sid) FROM page_views WHERE substr(viewed_at, 1, 10) = ?",
-                (today_d.isoformat(),)).fetchone()[0]
-            kit["visitors_week"] = conn.execute(
-                "SELECT COUNT(DISTINCT sid) FROM page_views WHERE substr(viewed_at, 1, 10) >= ?",
-                (week_start_d.isoformat(),)).fetchone()[0]
-        except Exception:
-            pass
-        counts = {r[0]: r[1] for r in conn.execute(
-            "SELECT category, COUNT(*) FROM entries WHERE hidden = 0 GROUP BY category").fetchall()}
-        kit["total_pins"] = sum(counts.values())
-        kit["categories"] = [
-            {"label": label, "count": counts[key]}
-            for key, label in MEDIA_KIT_CATEGORY_LABELS if counts.get(key)
-        ]
-        town_rows = conn.execute(
-            "SELECT DISTINCT town FROM entries WHERE hidden = 0").fetchall()
-    labels: set[str] = set()
-    state_set: set[str] = set()
-    for r in town_rows:
-        label = extract_city_state(r["town"] or "")
-        if label:
-            labels.add(label)
-        st = extract_state(r["town"] or "")
-        if st:
-            state_set.add(st)
-    kit["town_count"] = len(labels)
-    kit["states"] = sorted(state_set)
-    kit["state_count"] = len(state_set - {"DC"})
-    kit["has_dc"] = "DC" in state_set
+    # Fortification pass 2: every aggregate below is TTL-cached (see
+    # _mk_visitors / _mk_geo / _category_counts) — this sponsor-facing
+    # page re-scanned page_views twice and entries twice per render
+    # for numbers where ≤2-minute staleness is invisible.
+    try:
+        vis = _mk_visitors(today_d)
+        kit["visitors_today"] = vis["today"]
+        kit["visitors_week"] = vis["week"]
+    except Exception:
+        pass
+    counts = _category_counts()
+    kit["total_pins"] = sum(counts.values())
+    kit["categories"] = [
+        {"label": label, "count": counts[key]}
+        for key, label in MEDIA_KIT_CATEGORY_LABELS if counts.get(key)
+    ]
+    geo = _mk_geo()
+    kit["town_count"] = geo["town_count"]
+    kit["states"] = geo["states"]
+    kit["state_count"] = geo["state_count"]
+    kit["has_dc"] = geo["has_dc"]
     return templates.TemplateResponse(
         request, "media_kit.html", {"kit": kit, "site_name": SITE_NAME},
     )
