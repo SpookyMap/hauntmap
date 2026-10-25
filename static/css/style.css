@@ -3808,3 +3808,14 @@ hr { border-color: rgba(143, 216, 255, 0.40); box-shadow: 0 0 10px rgba(143, 216
   letter-spacing: 0.01em;
   text-shadow: 0 2px 0 rgba(43, 18, 4, 0.45), 0 4px 12px rgba(0, 0, 0, 0.45);
 }
+/* "Tour fuel:" chips label on the homepage — same blood-drip Nosifer
+   treatment, tuned down to the small label's size (Dan, Oct 24). */
+.cat-sub-label.tour-fuel-label-drip {
+  font-family: "Nosifer", "Creepster", cursive;
+  font-weight: 400;
+  color: #e01e26;
+  font-size: 0.72rem;
+  line-height: 1.6;
+  letter-spacing: 0.01em;
+  text-shadow: 0 2px 0 rgba(43, 18, 4, 0.45), 0 4px 12px rgba(0, 0, 0, 0.45);
+}

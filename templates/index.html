@@ -623,7 +623,7 @@ function hmFullHomepage() {
   <a href="/?cat=live{% if sort != 'new' %}&sort={{ sort }}{% endif %}{% if town %}&town={{ town }}{% endif %}{% if video %}&video=1{% endif %}" class="cat-btn-main {% if cat == 'live' %}active{% endif %}">&#x1F534; Live</a>
 </div>
 <div class="cat-tabs-sub">
-  <span class="cat-sub-label">Tour fuel:</span>
+  <span class="cat-sub-label tour-fuel-label-drip">Tour fuel:</span>
   {% for c in ['coffee', 'restaurants', 'shops', 'parks'] %}
   <a href="/?cat={{ c }}{% if sort != 'new' %}&sort={{ sort }}{% endif %}{% if town %}&town={{ town }}{% endif %}{% if video %}&video=1{% endif %}" class="cat-btn-sub {% if cat == c %}active{% endif %}">{{ cat_emoji[c] }} {{ cat_labels[c] }}</a>
   {% endfor %}
