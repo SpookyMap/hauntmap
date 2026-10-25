@@ -188,6 +188,51 @@ async def _healthz():
     return {"status": "ok"}
 
 
+# ------------------------------------------------------- load shedding
+# Wedge guardrail (Oct 25 incident): when more page renders are in
+# flight than the single worker can chew through, extra page requests
+# used to queue silently behind the threadpool until every route timed
+# out (20+ minutes, healthz fine, nothing self-recovered). Now, past
+# the render-slot limit, a page GET gets an immediate branded 503 with
+# Retry-After instead of a queue slot: a brief "busy" page for a few
+# visitors beats a total outage for everyone, in-flight renders finish
+# at full speed instead of 40-way time-sliced, and the slots free up
+# in seconds. /healthz, /api, /media, /static and /admin are NEVER
+# shed — health checks, beacons, assets and Dan's admin access keep
+# working at full saturation. Defined BEFORE the page-cache middleware
+# so it runs INSIDE it: a cache HIT (a ~2ms dict lookup) never needs a
+# render slot, only an actual render does.
+_MAX_PAGE_RENDERS = int(os.environ.get("HAUNTMAP_MAX_PAGE_RENDERS", "24"))
+_RENDER_SLOTS = threading.Semaphore(_MAX_PAGE_RENDERS)
+_SHED_TOTAL = 0
+_SHED_LAST_LOG = 0.0
+_SHED_EXEMPT_PREFIXES = ("/healthz", "/api", "/media", "/static",
+                         "/admin", "/favicon")
+
+
+@app.middleware("http")
+async def _shed_load(request: Request, call_next):
+    global _SHED_TOTAL, _SHED_LAST_LOG
+    if (request.method != "GET"
+            or request.url.path.startswith(_SHED_EXEMPT_PREFIXES)):
+        return await call_next(request)
+    if not _RENDER_SLOTS.acquire(blocking=False):
+        _SHED_TOTAL += 1
+        now = time.monotonic()
+        if now - _SHED_LAST_LOG > 30:
+            _SHED_LAST_LOG = now
+            logger.warning(
+                "load shed: page render slots full (%d); %d requests "
+                "shed so far this process", _MAX_PAGE_RENDERS, _SHED_TOTAL)
+        return HTMLResponse(_MAINTENANCE_HTML, status_code=503,
+                            headers={"Retry-After": "5",
+                                     "Cache-Control": "no-store"})
+    try:
+        return await call_next(request)
+    finally:
+        _RENDER_SLOTS.release()
+
+
 # ------------------------------------------------------------ perf: page cache
 # In-app short-TTL cache for the two heaviest ANONYMOUS page renders
 # (stability plan, Oct 24). The homepage and the events index run the
@@ -511,8 +556,50 @@ _VIEWS_GROUP_SQL = (
     "FROM page_views WHERE path LIKE '/d/%' GROUP BY eid")
 
 
+# ------------------------------------------------- hot-path TTL caches
+# Wedge fix (Oct 25 incident, 13:30-13:52 ET): page renders were so
+# CPU-heavy on the single worker (~0.5-0.9s each for / and /d/*) that a
+# concurrency surge filled all 40 threadpool threads with renders;
+# queued renders then starved every page route for 20+ minutes while
+# the async /healthz kept answering. Root amplifier: several helpers
+# rebuilt site-wide aggregates from scratch on EVERY render — a full
+# GROUP BY scan of page_views (163k rows and growing), the Tonight's
+# pool (entries scan + the same GROUP BY as a subquery + a row_to_dict
+# and a filesystem stat per eligible pin), the per-category peer list
+# (~5,800 row dicts + stats), and the town inventory. Those aggregates
+# change slowly (view counts, town counts, eligibility), so they are
+# now built at most once per TTL window and shared read-only; callers
+# that annotate rows get shallow copies. Freshness impact is the same
+# class the page cache already accepts (counts up to a minute stale).
+_HOT_TTL = float(os.environ.get("HAUNTMAP_HOT_CACHE_TTL", "60"))
+_TTL_CACHE: dict = {}
+_TTL_CACHE_LOCK = threading.Lock()
+
+
+def _ttl_cached(key: str, build):
+    """Return the cached value for key, building it at most once per
+    _HOT_TTL seconds. Double-checked locking keeps a burst of renders
+    from stampeding the rebuild; builders run on the caller's own
+    connection/thread, exactly as the uncached code did."""
+    now = time.monotonic()
+    hit = _TTL_CACHE.get(key)
+    if hit and hit[0] > now:
+        return hit[1]
+    with _TTL_CACHE_LOCK:
+        hit = _TTL_CACHE.get(key)
+        if hit and hit[0] > time.monotonic():
+            return hit[1]
+        value = build()
+        _TTL_CACHE[key] = (time.monotonic() + _HOT_TTL, value)
+        return value
+
+
 def _views_by_id(conn) -> dict:
-    return {r["eid"]: r["views"] for r in conn.execute(_VIEWS_GROUP_SQL)}
+    """All-time /d/{id} view counts by entry id. Callers only READ the
+    dict (.get), so the shared cached instance is safe."""
+    def build():
+        return {r["eid"]: r["views"] for r in conn.execute(_VIEWS_GROUP_SQL)}
+    return _ttl_cached("views_by_id", build)
 
 
 def _attach_views(conn, entries: list) -> list:
@@ -557,13 +644,21 @@ def get_entry(entry_id: int) -> dict | None:
 
 
 def category_peers(entry: dict) -> list[dict]:
-    """All other visible entries in the entry's category (row dicts)."""
-    with get_conn(DB_PATH) as conn:
-        rows = conn.execute(
-            "SELECT * FROM entries WHERE hidden = 0 AND category = ? AND id != ?",
-            (entry["category"], entry["id"]),
-        ).fetchall()
-    return [row_to_dict(r) for r in rows]
+    """All other visible entries in the entry's category (row dicts).
+    The category-wide row set is TTL-cached (wedge fix, Oct 25):
+    callers annotate the dicts they get (distance, _views), so each
+    call returns shallow copies — the cached base rows are never
+    mutated. A pin posted seconds ago can take up to _HOT_TTL seconds
+    to appear in other pins' rails; its own page is unaffected."""
+    def build():
+        with get_conn(DB_PATH) as conn:
+            rows = conn.execute(
+                "SELECT * FROM entries WHERE hidden = 0 AND category = ?",
+                (entry["category"],),
+            ).fetchall()
+        return [row_to_dict(r) for r in rows]
+    base = _ttl_cached(f"peers:{entry['category']}", build)
+    return [dict(p) for p in base if p["id"] != entry["id"]]
 
 
 def nearest_pins(entry: dict, limit: int = 6) -> list[dict]:
@@ -664,8 +759,8 @@ def _visitor_geo(request: Request) -> dict | None:
     return {"city": city, "state": state, "lat": lat, "lng": lng}
 
 
-def _town_inventory(conn, category: str = "halloween",
-                    ev_type: str = "") -> list[dict]:
+def _town_inventory_uncached(conn, category: str = "halloween",
+                             ev_type: str = "") -> list[dict]:
     """Every visible town in a category as {label, city, state, count,
     clat, clng} — the label/city/state come from the same extract_*
     helpers that build card town_labels, and the centroid is the mean of
@@ -698,6 +793,18 @@ def _town_inventory(conn, category: str = "halloween",
         del t["_lats"], t["_lngs"]
         out.append(t)
     return out
+
+
+def _town_inventory(conn, category: str = "halloween",
+                    ev_type: str = "") -> list[dict]:
+    """TTL-cached wrapper (wedge fix, Oct 25): the inventory rescans
+    and re-aggregates every entry in the category; town counts and
+    centroids change slowly, so builds are shared for _HOT_TTL
+    seconds. Callers get shallow copies of the town dicts."""
+    base = _ttl_cached(
+        f"towninv:{category}:{ev_type}",
+        lambda: _town_inventory_uncached(conn, category, ev_type))
+    return [dict(t) for t in base]
 
 
 def _resolve_visitor_area(inventory: list[dict], geo: dict | None) -> dict:
@@ -1317,17 +1424,28 @@ def detail_chain(entry: dict) -> dict:
         # (reciprocal nearest) — the step a chain-walker came from. Bounded
         # to the 40 closest candidates so the check stays cheap.
         if coord:
-            everyone = coord + [entry]
+            # Wedge fix (Oct 25): same result, early exit. The entry is
+            # cand's nearest neighbour iff NO other pin is at least as
+            # close to cand as the entry is (a tie goes to the other
+            # pin, exactly as the old full argmin scan resolved it —
+            # the entry was scanned last and only a strictly smaller
+            # distance replaced the incumbent). The old code ran the
+            # full ~5,800-pin haversine scan for each of the 40
+            # candidates (~230k haversines per pin-page render); most
+            # candidates are now disqualified by one of their first
+            # neighbours.
             for cand in coord[:40]:
-                best_id, best_d = None, None
-                for q in everyone:
+                d_entry = haversine_miles(cand["lat"], cand["lng"],
+                                          entry["lat"], entry["lng"])
+                beaten = False
+                for q in coord:
                     if q["id"] == cand["id"]:
                         continue
-                    d = haversine_miles(cand["lat"], cand["lng"],
-                                        q["lat"], q["lng"])
-                    if best_d is None or d < best_d:
-                        best_d, best_id = d, q["id"]
-                if best_id == entry["id"]:
+                    if haversine_miles(cand["lat"], cand["lng"],
+                                       q["lat"], q["lng"]) <= d_entry:
+                        beaten = True
+                        break
+                if not beaten:
                     out["prev_pin"] = cand
                     break
     # Retention Wave 1, Item 3 (video chain): when THIS pin has footage,
@@ -1781,7 +1899,7 @@ def make_video_poster(src: Path, dest_name: str) -> str | None:
 
 # ---------------------------------------------------------------- public pages
 
-def _tonight_pool(conn, category: str | None) -> list[dict]:
+def _tonight_pool_uncached(conn, category: str | None) -> list[dict]:
     """Eligible Tonight's Display pins: real media only (an uploaded photo,
     or a TikTok / uploaded video that has a thumbnail), never DUEL-excluded
     pins (stock photos, 2025 entries), never 2025-tagged. Each dict carries
@@ -1805,6 +1923,21 @@ def _tonight_pool(conn, category: str | None) -> list[dict]:
             ORDER BY e.id""", params).fetchall()
     return [d for d in (row_to_dict(r) for r in rows)
             if d["id"] not in DUEL_EXCLUDE_IDS]
+
+
+def _tonight_pool(conn, category: str | None) -> list[dict]:
+    """TTL-cached wrapper (wedge fix, Oct 25): building the pool runs
+    an entries scan plus the page_views GROUP BY as a subquery plus a
+    row_to_dict (with a filesystem stat) per eligible pin — and the
+    homepage builds it on every render, twice over (Tonight's pick +
+    Daily Fright). The pool's membership and view counts are shared
+    for _HOT_TTL seconds; the per-load random pick is unaffected
+    (picks are taken from the pool fresh each load, as before).
+    Callers get shallow copies."""
+    base = _ttl_cached(
+        f"tonight:{category}",
+        lambda: _tonight_pool_uncached(conn, category))
+    return [dict(d) for d in base]
 
 
 def _tonight_quality_pool(conn) -> list[dict]:
