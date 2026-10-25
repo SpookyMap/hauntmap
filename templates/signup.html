@@ -18,10 +18,10 @@
     </label>
     <label>Your @handle <span class="req">*</span>
       <input type="text" name="handle" required autocomplete="username"
-             value="{{ values.handle or '' }}" placeholder="e.g. spooky_sam"
-             pattern="[a-z0-9_]{3,20}">
-      <small>3–20 characters: lowercase letters, numbers, underscores. This is
-        your page address — pick the name you want to be known by.</small>
+             value="{{ values.handle or '' }}" placeholder="e.g. spooky_sam">
+      <small>3–20 characters: letters, numbers, underscores. This is your page
+        address, so it ends up lowercase — capitals are converted automatically.
+        Pick the name you want to be known by.</small>
     </label>
     <label>Password <span class="req">*</span>
       <input type="password" name="password" required minlength="8"
