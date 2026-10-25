@@ -3750,3 +3750,36 @@ hr { border-color: rgba(143, 216, 255, 0.40); box-shadow: 0 0 10px rgba(143, 216
    the new ghost (hauntmap_ghost_watermark.webp, 512px derivative of
    Dan's ghost cutout) at the same 120vmin / 0.29 opacity presence —
    superseding the z117 note that left the watermark untouched. */
+
+/* ============ z118 ADDENDUM (Dan, Oct 24, same ship) ============
+   (1) /movies Screening Room chips — neat grid: was flex-wrap with
+   content-width chips wrapping raggedly (2 uneven / 1 / 1 on phone).
+   Now a strict grid: one even row of four equal chips on laptop, a
+   2x2 grid on phone — equal columns, even gaps both ways, labels
+   centered fully inside their bubbles, carrying the theme's blue
+   chip glow (same shadow as the GLOW MAX chips). */
+.movies-subnav { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.6rem; }
+.movies-subnav a { display: flex; align-items: center; justify-content: center; text-align: center; box-shadow: 0 0 14px rgba(87, 168, 255, 0.30), inset 0 0 10px rgba(87, 168, 255, 0.14); }
+@media (max-width: 760px) {
+  .movies-subnav { grid-template-columns: repeat(2, 1fr); gap: 0.55rem; }
+}
+/* (2) Sponsor billboard — orange -> theme blue (Dan: "change that
+   sponsor orange to closer to blue we have themed"; supersedes the
+   Oct 21 Pumpkin Orange spec at his direction). Same billboard —
+   thick black frame, black Apple-style type, Something Wicked cover
+   center, same size/placement — only the field changes:
+   section #ff7518 -> azure radial #8FD8FF -> #57A8FF; cards #ff9a44
+   -> #8FD8FF (the glow core); the orange-tuned dark-brown text tones
+   (#402e00 / #4a3400) -> black so the black-type spec stays crisp
+   (black on #57A8FF ~8:1, on #8FD8FF ~11:1). */
+.sponsor-section { background: radial-gradient(130% 150% at 50% 0%, #8FD8FF 0%, #57A8FF 65%); }
+.sponsor-card { background: #8FD8FF; border-color: rgba(0, 0, 0, 0.25); }
+.sponsor-card.tier-title { background: #8FD8FF; }
+.sponsor-sub { color: #111111; }
+.sponsor-tier { color: #111111; }
+/* (3) Virtual Tour button — orange -> theme blue (Dan: "it sticks out
+   too much"). Its fill was var(--accent) = #ff7b1c orange; now the
+   same azure family as the billboard above, keeping its filled
+   primary-action prominence, label and icon treatment, plus a blue
+   glow to match the theme. */
+.vt-tv-strip .vt-btn { background: linear-gradient(180deg, #8FD8FF, #57A8FF); box-shadow: 0 0 18px rgba(87, 168, 255, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.35); }
