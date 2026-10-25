@@ -3639,3 +3639,30 @@ body.hm-returning .hm-slimbar { display: flex; }
   .hero-split .top10-home.top10-home--cta .states-cta-img { width: 34px; height: 34px; }
 }
 
+/* ============ z117: NEW LOGO LOCKUP LIVE (Dan, Oct 24) ============
+   Dan's new logo goes live in the header's far-left brand slot: the
+   ghost-map lockup (ghost + HAUNTMAP wordmark under it, transparent,
+   tall 1111x1626 aspect) replaces the old circular badge. The old
+   rules forced a square box with border-radius:50% + object-fit:
+   cover, which would crop the lockup's ghost head and wordmark — so
+   the box becomes height-driven: the SAME heights the badge rendered
+   at (113px desktop / 86px phone / 95px landscape-slim), width auto
+   by aspect (~77px desktop / ~59px phone), no radius, no crop.
+   Header heights are unchanged at every breakpoint, so the <=15%
+   viewport discipline measured at z115/z116 holds exactly. The
+   final block reasserts 113px for short-wide desktop windows,
+   mirroring the z72 guard so that fix is not regressed. The scroll
+   mini-bar swaps to the ghost cutout alone (no wordmark at 28px),
+   shown whole (contain, no circle clip). The body::before watermark
+   and the maintenance page keep the old badge art — untouched. */
+.header-band .brand-logo { width: auto; max-width: none; max-height: none; height: 113px; border-radius: 0; object-fit: contain; }
+.mini-bar img { object-fit: contain; border-radius: 0; }
+@media (max-width: 760px) {
+  .header-band .brand-logo { height: 86px; }
+}
+@media (orientation: landscape) and (max-height: 500px) {
+  .header-band .brand-logo { height: 95px; }
+}
+@media (min-width: 1024px) and (orientation: landscape) and (max-height: 500px) {
+  .header-band .brand-logo { height: 113px; }
+}
