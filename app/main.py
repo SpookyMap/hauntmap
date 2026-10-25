@@ -846,6 +846,17 @@ def nearest_pins(entry: dict, limit: int = 6) -> list[dict]:
 # page falls back to the plain geographic chain.
 VIDEO_CHAIN_RADIUS_MI = 100.0
 
+# Dan (Oct 25): "Near must mean visitable." The pin-page rails that
+# select candidates by distance from the current pin — More near here,
+# More haunts near this one (same pool), the More videos near here
+# strip, and the /api/explore tail — take candidates ONLY within this
+# cap. No radius expansion to fill slots: a sparse area shows a
+# shorter rail, or none, and a rail's printed "within X mi" (the
+# farthest card actually shown) can never exceed the cap. The video
+# chain's own next-pick radius above is deliberately NOT this cap —
+# the sticky Next bar chains exactly as before.
+NEAR_RAIL_CAP_MI = 50.0
+
 
 def has_footage(entry: dict) -> bool:
     """Footage predicate for the video chain (Item 3 spec): a TikTok
@@ -1604,7 +1615,12 @@ def detail_chain(entry: dict) -> dict:
             p["distance"] = haversine_miles(
                 entry["lat"], entry["lng"], p["lat"], p["lng"])
         coord.sort(key=lambda p: (p["distance"], p["id"]))
-        out["more_near"] = coord[:6]
+        # Near-rail cap (Dan, Oct 25): only visitable candidates —
+        # within NEAR_RAIL_CAP_MI — however few that leaves. The full
+        # `coord` list still drives the next/prev chain below, which
+        # is geographic by design and unchanged.
+        out["more_near"] = [p for p in coord
+                            if p["distance"] <= NEAR_RAIL_CAP_MI][:6]
         out["next_pin"] = coord[0] if coord else None
         # Prev = the closest pin whose OWN nearest neighbour is this pin
         # (reciprocal nearest) — the step a chain-walker came from. Bounded
@@ -1649,7 +1665,10 @@ def detail_chain(entry: dict) -> dict:
         # `coord` is already distance-sorted and carries `distance`.
         vids = [p for p in coord
                 if has_footage(p) and p["distance"] <= VIDEO_CHAIN_RADIUS_MI]
-        out["more_videos"] = vids[:6]
+        # The strip itself obeys the near-rail cap (Dan, Oct 25) even
+        # though the chain pick below keeps the wider video radius.
+        out["more_videos"] = [p for p in vids
+                              if p["distance"] <= NEAR_RAIL_CAP_MI][:6]
         # Dan (Oct 23, later the same day): "Play the most viewed
         # first" — and it should be based on the USER's location, like
         # everything else on the site. The pick is now the MOST-VIEWED
@@ -2375,8 +2394,8 @@ def home(request: Request, sort: str = "new", town: str = "", town_search: str =
             "SELECT * FROM sponsors WHERE is_active = 1 ORDER BY "
             "CASE tier WHEN 'title' THEN 0 WHEN 'premium' THEN 1 ELSE 2 END, created_at").fetchall()]
         ticker_rows = conn.execute(
-            "SELECT id, title, town, category, ev_type FROM entries "
-            "WHERE hidden = 0 ORDER BY id DESC LIMIT 12").fetchall()
+            "SELECT id, title, town, category, ev_type, lat, lng FROM entries "
+            "WHERE hidden = 0 ORDER BY id DESC LIMIT 60").fetchall()
     # Just-added ticker / update bar (Dan, Oct 23; announcement Dan,
     # Oct 25): the site's newest additions across every category,
     # newest first — pins, events and markets alike, each with a type
@@ -2385,6 +2404,37 @@ def home(request: Request, sort: str = "new", town: str = "", town_search: str =
     # LEADS with Dan's pinned announcement for the Oct 25 national
     # events batch (116 new events across every major city), which
     # carries its own href to /events instead of a pin page.
+    # Location-first ordering (Dan, Oct 25): "the new sites on the new
+    # button should be relevant to the user's location and local
+    # enough to visit." When the visitor's area is known (the same
+    # Cloudflare-header geo the feed lead uses), the crawl leads with
+    # adds near the visitor — within NEAR_RAIL_CAP_MI of their point,
+    # or in their city — then adds from their state, then the newest
+    # overall as filler, newest-first inside each bucket, so the bar
+    # never empties. WHICH categories appear is unchanged (still every
+    # category); with no geo signal this is exactly the old behaviour:
+    # the newest 12, site-wide.
+    if geo:
+        vlat, vlng = geo.get("lat"), geo.get("lng")
+        vstate = (geo.get("state") or "").upper()
+        vcity = (geo.get("city") or "").strip().lower()
+
+        def _ticker_bucket(r):
+            if vlat is not None and vlng is not None \
+                    and r["lat"] is not None and r["lng"] is not None \
+                    and haversine_miles(vlat, vlng, r["lat"], r["lng"]) \
+                    <= NEAR_RAIL_CAP_MI:
+                return 0
+            if vcity and extract_city(r["town"] or "").lower() == vcity \
+                    and (not vstate
+                         or extract_state(r["town"] or "") in ("", vstate)):
+                return 0
+            if vstate and extract_state(r["town"] or "") == vstate:
+                return 1
+            return 2
+
+        ticker_rows = sorted(ticker_rows, key=_ticker_bucket)
+    ticker_rows = ticker_rows[:12]
     ticker_items = []
     for r in ticker_rows:
         if r["ev_type"] == "Market":
@@ -4535,6 +4585,11 @@ def api_explore(request: Request, from_id: int, exclude: str = ""):
         p["distance"] = haversine_miles(entry["lat"], entry["lng"],
                                         p["lat"], p["lng"])
     peers.sort(key=lambda p: (p["distance"], p["id"]))
+    # Near-rail cap (Dan, Oct 25): the tail serves only visitable
+    # pins — when the within-cap pool runs out the endpoint reports
+    # done and the section's own copy takes over ("You've seen
+    # everything near here — the map has the rest of the country").
+    peers = [p for p in peers if p["distance"] <= NEAR_RAIL_CAP_MI]
     batch = peers[:EXPLORE_BATCH]
     if not batch:
         return JSONResponse(empty)
