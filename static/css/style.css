@@ -4321,28 +4321,20 @@ a.soc-top8-card:hover { border-color: var(--accent2); }
   .site-header.v2 .header-nav a.nav-join { grid-column: 1 / -1; }
 }
 
-/* ============ PREVIEW ONLY — HauntSocial wordmark font options (Oct 25) ============
-   Dan asked to make the HauntSocial window POP with a social-brand-energy
-   Halloween display font. THREE candidate faces, switched by an hs-opt-1/2/3
-   class on <html> (preview harness only). All faces SELF-HOSTED under
-   static/fonts/ (site standard — no hotlinking). The band's wordmark is
-   the h2 .social-promo-wordmark ("HauntSocial" as a logo line, azure
-   #8FD8FF glyphs + layered blue glow per the Logo-Game theme; red stays
-   reserved for the header hook words). The /hauntsocial h1 gets the same
-   face on its "HauntSocial" span. Nothing else in the band changes:
-   layout, kicker line, subline, claim line, drip CTA, ghost, and the
-   band's seat above the sponsor billboard are all exactly as live.
-   Base (no hs-opt class) = Option 1 so a plain load shows a candidate. */
+/* ============ z134: HAUNTSOCIAL WORDMARK IN EATER (Dan's pick, Oct 25) ============
+   The HauntSocial band gets a logo line: the h2 .social-promo-wordmark
+   ("HauntSocial" in Eater — the wide goo-drip Halloween display face Dan
+   chose from the three-option preview over Creepster and Pirata One),
+   azure #8FD8FF glyphs + layered blue glow per the Logo-Game theme; red
+   stays reserved for the header hook words. "The First Halloween Social
+   Network" sits in the kicker slot above it. The /hauntsocial h1 gets the
+   same face on its "HauntSocial" span. Faces SELF-HOSTED under
+   static/fonts/ (site standard — no hotlinking). Nothing else in the band
+   changes: layout, subline, claim line, drip CTA, ghost, and the band's
+   seat above the sponsor billboard are all exactly as before. */
 @font-face {
   font-family: "Creepster";
   src: url("/static/fonts/Creepster.ttf") format("truetype");
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
-@font-face {
-  font-family: "Pirata One";
-  src: url("/static/fonts/PirataOne.ttf") format("truetype");
   font-weight: 400;
   font-style: normal;
   font-display: swap;
@@ -4354,40 +4346,24 @@ a.soc-top8-card:hover { border-color: var(--accent2); }
   font-style: normal;
   font-display: swap;
 }
-/* Band wordmark — Option 1 (base): Creepster */
+/* Band wordmark — Eater (wide goo-drip, runs smaller, drips need line room) */
 .social-promo-title.social-promo-wordmark {
-  font-family: "Creepster", cursive;
+  font-family: "Eater", cursive;
   font-weight: 400;
-  font-size: clamp(2rem, 8vw, 2.9rem);
-  line-height: 1.08;
+  font-size: clamp(1.75rem, 7vw, 2.5rem);
+  line-height: 1.28;
   text-transform: none;
-  letter-spacing: 0.015em;
+  letter-spacing: 0.01em;
   white-space: nowrap;
   color: #8fd8ff;
   text-shadow: 0 0 16px rgba(87, 168, 255, 0.55), 0 0 44px rgba(87, 168, 255, 0.30), 0 2px 0 rgba(0, 0, 0, 0.5);
 }
-/* Band wordmark — Option 2: Pirata One (narrow blackletter, runs bigger) */
-html.hs-opt-2 .social-promo-title.social-promo-wordmark {
-  font-family: "Pirata One", serif;
-  font-size: clamp(2.3rem, 9vw, 3.4rem);
-  line-height: 1.12;
-  letter-spacing: 0.02em;
-}
-/* Band wordmark — Option 3: Eater (wide goo-drip, runs smaller, drips need line room) */
-html.hs-opt-3 .social-promo-title.social-promo-wordmark {
-  font-family: "Eater", cursive;
-  font-size: clamp(1.75rem, 7vw, 2.5rem);
-  line-height: 1.28;
-  letter-spacing: 0.01em;
-}
 /* /hauntsocial headline — same face on the "HauntSocial" span */
 .hs-wordmark-inline {
-  font-family: "Creepster", cursive;
+  font-family: "Eater", cursive;
   text-transform: none;
-  font-size: 1.1em;
+  font-size: 1.0em;
   white-space: nowrap;
   color: #8fd8ff;
   text-shadow: 0 0 14px rgba(87, 168, 255, 0.50), 0 0 36px rgba(87, 168, 255, 0.28), 0 2px 0 rgba(0, 0, 0, 0.45);
 }
-html.hs-opt-2 .hs-wordmark-inline { font-family: "Pirata One", serif; font-size: 1.24em; }
-html.hs-opt-3 .hs-wordmark-inline { font-family: "Eater", cursive; font-size: 1.0em; }
