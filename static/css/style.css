@@ -3966,7 +3966,6 @@ html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
   font-size: 0.95rem; line-height: 1.1; white-space: nowrap; align-self: center;
   color: #0a1e24; background: linear-gradient(180deg, #8fd8ff, #57a8ff);
   border: 2px solid #8fd8ff; border-radius: 999px; padding: 0.52rem 1.2rem;
-  box-shadow: 0 0 18px rgba(87, 168, 255, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.45);
   max-width: 12rem;
 }
 .header-nav a.nav-join:hover { color: #0a1e24; filter: brightness(1.08); }
@@ -4434,3 +4433,21 @@ a.soc-top8-card:hover { border-color: var(--accent2); }
 /* Keep exploring tail. */
 .explore-section #btn-explore { margin-top: 0.4rem; }
 .explore-section #explore-rail:empty { display: none; }
+
+/* ============ z137: JOIN BAR — FLAT + "JOIN" IN EATER (Dan, Oct 25) ============
+   Dan: "get rid of the background shadow behind the join hauntsocial
+   and make the font for join the same as our new HauntSocial font."
+   (1) The header JOIN bar (.header-nav a.nav-join) is FLAT now: its
+   box-shadow (azure glow + inset highlight, from the z125 base rule)
+   is deleted from that rule above. Only the bar's own shadow goes —
+   discs, cards and the homepage band CTA keep theirs.
+   (2) The word "Join" in the bar label moves from Nosifer to Eater,
+   the same face as the HauntSocial word beside it (new .nav-join-first
+   .hs-brand span in base.html). Navy #0F2E54 is inherited from the
+   label, sizes/layout unchanged; the tagline stays bold game sans;
+   the member-state @handle bar is untouched. Sized/leading matched
+   to .nav-join-brand so the two Eater words sit as one line. */
+.header-nav a.nav-join .nav-join-first {
+  font-size: 0.96em;
+  line-height: 1.3;
+}
