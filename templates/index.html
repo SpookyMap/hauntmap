@@ -472,6 +472,28 @@ function hmFullHomepage() {
 {% include "_town_request.html" %}
 </div>
 
+{# Social promo (Dan, Oct 25 — STAGED): directly under the hero block.
+   Anonymous visitors get the join pitch; a logged-in member gets a
+   link to their own page instead — no join pitch to a member. #}
+<section class="social-promo" aria-label="Join the HauntMap social network">
+  <img class="social-promo-ghost" src="/static/img/hauntmap_ghost.webp" alt="" aria-hidden="true">
+  <div class="social-promo-body">
+    <h2 class="social-promo-title">The First Halloween Social Network</h2>
+    <p class="social-promo-line">Claim your @handle, build your haunter profile, show off your haunt, and follow the haunters behind the displays you love.</p>
+  </div>
+  {% if request.state.member %}
+  <div class="social-promo-cta">
+    <a class="social-promo-btn" href="/@{{ request.state.member.handle }}">Go to your page</a>
+    <span class="social-promo-alt">Signed in as @{{ request.state.member.handle }}</span>
+  </div>
+  {% else %}
+  <div class="social-promo-cta">
+    <a class="social-promo-btn" href="/signup">Join free — claim your handle</a>
+    <a class="social-promo-alt" href="/login">Already a member? Sign in</a>
+  </div>
+  {% endif %}
+</section>
+
 {% if tstrip %}
 {# Item 5 "Tonight" strip: directly above Tonight's Display band, so
    the countdown + on-tonight counts sit adjacent to the band on every

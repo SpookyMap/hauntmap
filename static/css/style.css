@@ -3952,3 +3952,58 @@ html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
   .soc-actions { padding-top: 0.4rem; }
   .soc-banner { height: 92px; }
 }
+
+/* ============ z125: SOCIAL JOIN — NAV PILL + HOMEPAGE PROMO (Dan, Oct 25 — STAGED) ============
+   Two capture spots for the social network that went live in z124:
+   (1) a JOIN pill at the far right of header nav row two, after
+   About Us — deliberately NOT a .navbtn icon disc: a filled azure
+   pill in the game font, the one action in the row. For a logged-in
+   member it becomes their @handle, linking to their profile.
+   (2) a promo band on the homepage directly under the hero block.
+   Blue-glow game styling per the z118 theme (#57A8FF / #8FD8FF). */
+.header-nav a.nav-join {
+  font-family: var(--font-game); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 800;
+  font-size: 0.95rem; line-height: 1.1; white-space: nowrap; align-self: center;
+  color: #0a1e24; background: linear-gradient(180deg, #8fd8ff, #57a8ff);
+  border: 2px solid #8fd8ff; border-radius: 999px; padding: 0.52rem 1.2rem;
+  box-shadow: 0 0 18px rgba(87, 168, 255, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.45);
+  max-width: 12rem;
+}
+.header-nav a.nav-join:hover { color: #0a1e24; filter: brightness(1.08); }
+.header-nav a.nav-join .nav-join-label { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@media (max-width: 760px) {
+  .header-nav a.nav-join { font-size: 0.8rem; padding: 0.42rem 0.85rem; max-width: 9.5rem; }
+}
+@media (orientation: landscape) and (max-height: 500px) {
+  .header-nav a.nav-join { font-size: 0.78rem; padding: 0.3rem 0.7rem; }
+}
+
+.social-promo {
+  display: flex; align-items: center; gap: 1rem;
+  margin: 1rem 0; padding: 0.9rem 1.1rem;
+  background: linear-gradient(165deg, rgba(64, 47, 84, 0.42), rgba(16, 37, 45, 0.58));
+  border: 1px solid rgba(143, 216, 255, 0.50); border-radius: 14px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(249, 229, 194, 0.10), inset 0 0 18px rgba(87, 168, 255, 0.07), 0 0 22px rgba(87, 168, 255, 0.20);
+}
+.social-promo-ghost { height: 64px; width: auto; flex: 0 0 auto; filter: drop-shadow(0 0 10px rgba(143, 216, 255, 0.6)); }
+.social-promo-body { flex: 1 1 auto; min-width: 0; }
+.social-promo-title { margin: 0 0 0.25rem; font-size: 1.3rem; color: #8fd8ff; text-shadow: 0 0 14px rgba(143, 216, 255, 0.45), 0 2px 0 rgba(0, 0, 0, 0.5); }
+.social-promo-line { margin: 0; color: #cfe7fb; line-height: 1.45; }
+.social-promo-cta { display: flex; flex-direction: column; align-items: stretch; gap: 0.4rem; flex: 0 0 auto; text-align: center; }
+.social-promo-btn {
+  font-family: var(--font-game); text-transform: uppercase; letter-spacing: 0.05em; font-weight: 800;
+  color: #0a1e24; text-decoration: none; white-space: nowrap;
+  background: linear-gradient(180deg, #8fd8ff, #57a8ff);
+  border: 2px solid #8fd8ff; border-radius: 999px; padding: 0.6rem 1.15rem;
+  box-shadow: 0 0 18px rgba(87, 168, 255, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.45);
+}
+.social-promo-btn:hover { color: #0a1e24; filter: brightness(1.08); }
+.social-promo-alt { color: #a9cdf5; font-size: 0.85rem; }
+a.social-promo-alt:hover { color: #8fd8ff; }
+@media (max-width: 760px) {
+  .social-promo { flex-wrap: wrap; gap: 0.7rem; padding: 0.85rem 0.9rem; }
+  .social-promo-ghost { height: 52px; }
+  .social-promo-title { font-size: 1.12rem; }
+  .social-promo-cta { flex: 1 1 100%; }
+  .social-promo-btn { white-space: normal; }
+}

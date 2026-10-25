@@ -249,6 +249,24 @@ async def _page_cache(request: Request, call_next):
 
 
 @app.middleware("http")
+async def _member_context(request: Request, call_next):
+    """Expose the logged-in member to base.html so the header nav can
+    turn its JOIN button into the member's @handle link (z125). Only
+    requests carrying the member cookie pay the session lookup;
+    everyone else renders the anonymous JOIN. Safe against the page
+    cache above: its admission rule rejects any request with cookies
+    beyond hm_sid, so member-rendered HTML is never stored or served
+    to another visitor."""
+    request.state.member = None
+    if MEMBER_COOKIE in request.cookies:
+        try:
+            request.state.member = current_member(request)
+        except Exception:
+            request.state.member = None
+    return await call_next(request)
+
+
+@app.middleware("http")
 async def _cache_headers(request: Request, call_next):
     """Cache lifetimes for file responses (stability plan, Oct 24).
     /media/ filenames are uuid4 hex on EVERY write path (public upload,
