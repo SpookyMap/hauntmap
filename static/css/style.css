@@ -4007,3 +4007,10 @@ a.social-promo-alt:hover { color: #8fd8ff; }
   .social-promo-cta { flex: 1 1 100%; }
   .social-promo-btn { white-space: normal; }
 }
+
+/* ============ z126: ORANGE OUTLINE RING ON HEADER NAV DISCS (Dan, Oct 25) ============
+   Blue discs stay (nav2_* art). Dan wanted the orange back as an OUTLINE RING only:
+   a box-shadow ring sits outside the disc, follows the 50% radius, and cannot
+   shift layout or change disc sizes at any width. */
+.header-nav a.navbtn img,
+.site-header.v2 .header-nav a.navbtn img { box-shadow: 0 0 0 2px #ff7518; }
