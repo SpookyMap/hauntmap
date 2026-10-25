@@ -3819,3 +3819,61 @@ hr { border-color: rgba(143, 216, 255, 0.40); box-shadow: 0 0 10px rgba(143, 216
   letter-spacing: 0.01em;
   text-shadow: 0 2px 0 rgba(43, 18, 4, 0.45), 0 4px 12px rgba(0, 0, 0, 0.45);
 }
+
+/* ============ z122: PHONE BUBBLE-STRIP FIT + PAGE CENTERING (Dan, Oct 24) ============
+   Dan, from his phone: "The H is covered in all the bubbles Virtual
+   Tour through Top 100 Nationwide" — the circles overlap, Top 100 is
+   cut off at the right edge, the whole page sits shifted left, and
+   the slimbar's "SEE FULL HOMEPAGE" flies off the right edge.
+   DIAGNOSIS (measured, not guessed): the strip's labels are set in
+   --font-game at 0.46rem, sized for Noto Sans Display — but that
+   face is never loaded (the Google Fonts link in base.html omits
+   it), so phones fall back to a wide system face, and iOS text
+   autosizing inflates the micro-type further. "NATIONWIDE" measures
+   ~51px against a ~45px bubble content box at 390px (worse at 360):
+   every label spills out of its bubble, disappears under the
+   neighbouring bubble's background (grid items paint in order), and
+   the last bubble's spill becomes scrollable overflow — the document
+   grows wider than the viewport, so the page renders shifted left.
+   The slimbar fails the same way: its nowrap Passport + "See full
+   homepage" group (~430px inflated) is one unshrinkable flex item,
+   wider than the bar, so the button leaves the screen.
+   FIX:
+   1) text-size-adjust: 100% — iOS stops inflating the small print.
+   2) Phone strip: the 7-across grid becomes two neat wrapped rows
+      (4 + 3, second row centred), same uniform bubble size, labels
+      a readable 0.52rem — every label now fits inside its bubble
+      with room to spare at 360/390/430 in any font the phone
+      actually has. Laptop top strip is unchanged (one row).
+   3) Virtual Tour gains the 2px border ring every other bubble
+      already had (its azure gradient fill stays — z118).
+   4) Slimbar containment + placement (Dan, precise): the Passport
+      group becomes a left-aligned column — "SEE FULL HOMEPAGE"
+      always sits on its OWN line UNDER the Passport line, inside
+      the bar (never trailing the Passport line, never off-screen),
+      with a real tap target; and no single segment may exceed the
+      bar — long segments ellipsize instead of blowing out the page. */
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+.vt-tv-strip .vt-btn { border: 2px solid #57a8ff; }
+.vt-tv-strip .vt-label { letter-spacing: 0.01em; }
+@media (min-width: 761px) {
+  /* Same fit problem in miniature on the laptop row: "NATIONWIDE"
+     + icon measured ~5px proud of the pill on both sides; a 0.07rem
+     trim puts every laptop label back inside its bubble. */
+  .vt-tv-strip-top a { font-size: 0.68rem; }
+}
+.hm-slim-group { flex-direction: column; align-items: flex-start; white-space: normal; row-gap: 0.1rem; }
+.hm-slimbar > *, .hm-slim-group > * { min-width: 0; }
+.hm-slimbar-link, .hm-slimbar-welcome { max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+.hm-slimbar .hm-full-btn { padding: 0.3rem 0.3rem; margin: 0; text-align: left; }
+@media (max-width: 760px) {
+  .hero-split .vt-tv-strip-phone {
+    display: flex; flex-wrap: wrap; justify-content: center;
+    gap: 0.35rem;
+  }
+  .vt-tv-strip-phone a {
+    flex: 0 1 calc((100% - 3 * 0.35rem) / 4);
+    padding: 0.42rem 0.1rem; font-size: 0.52rem; line-height: 1.18;
+  }
+  .vt-tv-strip-phone .vt-ic { font-size: 1rem; }
+}
