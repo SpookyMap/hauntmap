@@ -3784,14 +3784,15 @@ hr { border-color: rgba(143, 216, 255, 0.40); box-shadow: 0 0 10px rgba(143, 216
    glow to match the theme. */
 .vt-tv-strip .vt-btn { background: linear-gradient(180deg, #8FD8FF, #57A8FF); box-shadow: 0 0 18px rgba(87, 168, 255, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.35); }
 
-/* ============ TOUR FUEL BLOOD-DRIP HEADING (Dan, Oct 24) ============
-   The homeowner ladder's "Tour Fuel Listing" card heading gets the
-   blood-drippy Nosifer face in site red — Dan: "add the blood drippy
-   font for Tour Fuel". Nosifer is SELF-HOSTED (static/fonts/Nosifer.ttf,
-   from the Google Fonts repo) — this @font-face shadows the Google
-   Fonts stylesheet copy for this family. ONLY this heading changes:
-   Town Featured / Sitewide Featured and the business ladder keep
-   their current type. */
+/* ============ DRIP HEADINGS — BLUE NOSIFER (Dan, Oct 24) ============
+   ALL /advertise package card headings (business + homeowner ladders)
+   and the homepage "Tour fuel:" chips label get the drippy Nosifer
+   face in the theme's azure blue — Dan: "all drippy, but blue instead
+   of red". Nosifer is SELF-HOSTED (static/fonts/Nosifer.ttf, from the
+   Google Fonts repo) — this @font-face shadows the Google Fonts
+   stylesheet copy for this family. Blue treatment: azure #57A8FF
+   glyphs, deep-blue drip shadow (#0F2E54 family), a soft azure glow
+   so the headings sit in the same blue world as the site theme. */
 @font-face {
   font-family: "Nosifer";
   src: url("/static/fonts/Nosifer.ttf") format("truetype");
@@ -3799,25 +3800,25 @@ hr { border-color: rgba(143, 216, 255, 0.40); box-shadow: 0 0 10px rgba(143, 216
   font-style: normal;
   font-display: swap;
 }
-.adv-pack h3.tour-fuel-drip {
+.adv-pack h3.pack-drip {
   font-family: "Nosifer", "Creepster", cursive;
   font-weight: 400;
-  color: #e01e26;
+  color: #57a8ff;
   font-size: 1rem;
   line-height: 1.6;
   letter-spacing: 0.01em;
-  text-shadow: 0 2px 0 rgba(43, 18, 4, 0.45), 0 4px 12px rgba(0, 0, 0, 0.45);
+  text-shadow: 0 2px 0 rgba(15, 46, 84, 0.55), 0 4px 12px rgba(0, 0, 0, 0.45), 0 0 14px rgba(87, 168, 255, 0.35);
 }
-/* "Tour fuel:" chips label on the homepage — same blood-drip Nosifer
+/* "Tour fuel:" chips label on the homepage — same blue-drip Nosifer
    treatment, tuned down to the small label's size (Dan, Oct 24). */
 .cat-sub-label.tour-fuel-label-drip {
   font-family: "Nosifer", "Creepster", cursive;
   font-weight: 400;
-  color: #e01e26;
+  color: #57a8ff;
   font-size: 0.72rem;
   line-height: 1.6;
   letter-spacing: 0.01em;
-  text-shadow: 0 2px 0 rgba(43, 18, 4, 0.45), 0 4px 12px rgba(0, 0, 0, 0.45);
+  text-shadow: 0 2px 0 rgba(15, 46, 84, 0.55), 0 4px 12px rgba(0, 0, 0, 0.45), 0 0 10px rgba(87, 168, 255, 0.35);
 }
 
 /* ============ z122: PHONE BUBBLE-STRIP FIT + PAGE CENTERING (Dan, Oct 24) ============
