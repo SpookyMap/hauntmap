@@ -44,6 +44,47 @@ function hmFullHomepage() {
   <a class="markets-btn" href="/markets"><span class="vt-ic">&#x1F6D2;</span><span class="vt-label"><span class="vt-l1">Flea</span> <span class="vt-l2">Markets</span> <span class="vt-l3">&amp; Pop-Ups</span></span></a>
   <a class="top100-btn" href="/leaderboard/top-100"><span class="vt-ic">&#x1F3C6;</span><span class="vt-label"><span class="vt-l1">Top 100</span> <span class="vt-l2">Nationwide</span></span></a>
 </div>
+{# Just-added ticker / update bar (Dan Oct 23; live Oct 25, leading with
+   Dan's pinned NEW EVENTS announcement): stock-board crawl of the
+   newest additions site-wide, directly under the VT/TV strip and
+   above the hero headline. Two identical groups make the -50% loop
+   seamless; the inline script sizes the duration from the content
+   width so the crawl speed (px/sec) is constant whatever the items
+   are. Items normally link to their pin (/d/{id}); the pinned
+   announcement item carries its own href (/events) and keeps its
+   exact casing via .nt-announce. #}
+{% if ticker_items %}
+<div class="news-ticker" aria-label="Just added to HauntMap">
+  <span class="nt-chip">&#x1F195; Just Added</span>
+  <div class="nt-viewport">
+    <div class="nt-track">
+      {% for _copy in range(2) %}
+      <div class="nt-group"{% if _copy %} aria-hidden="true"{% endif %}>{% for t in ticker_items %}<a class="nt-item{% if t.announce %} nt-announce{% endif %}" href="{% if t.href %}{{ t.href }}{% else %}/d/{{ t.id }}{% endif %}"{% if _copy %} tabindex="-1"{% endif %}><span class="nt-emoji">{{ t.emoji }}</span> {{ t.title }}{% if t.town %} <span class="nt-town">&middot; {{ t.town }}</span>{% endif %}</a><span class="nt-sep">&#x2726;</span>{% endfor %}</div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+<script>
+(function () {
+  var ticker = document.querySelector(".news-ticker");
+  if (!ticker) return;
+  var track = ticker.querySelector(".nt-track");
+  var SPEED = 60; // px per second — constant crawl, stock-board style
+  function sizeTicker() {
+    var half = track.scrollWidth / 2;
+    if (half > 0) track.style.animationDuration = (half / SPEED) + "s";
+  }
+  sizeTicker();
+  window.addEventListener("resize", sizeTicker);
+  // Tap on the bar (not a link) toggles the pause on touch devices;
+  // hover / keyboard focus pause it via CSS.
+  ticker.addEventListener("click", function (e) {
+    if (e.target.closest("a")) return;
+    ticker.classList.toggle("nt-paused");
+  });
+})();
+</script>
+{% endif %}
 {# Welcome-back slimbar sits UNDER the VT/TV strip (Dan, Oct 23).
    Events segment (Dan, Oct 23): server-rendered from slim_events,
    which the homepage route builds out of the SAME Tonight-strip

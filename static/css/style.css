@@ -4145,3 +4145,57 @@ a.soc-top8-card:hover { border-color: var(--accent2); }
 .soc-theme-slime { background: linear-gradient(120deg, #0c2405, #6abe30); }
 .soc-theme-bloodmoon { background: linear-gradient(120deg, #1c0208, #e0313c); }
 .soc-theme-graveyard { background: linear-gradient(120deg, #0d0d12, #9a8cff); }
+
+/* ============ z130: UPDATE BAR LIVE + NEW EVENTS ANNOUNCEMENT (Dan, Oct 25) ============
+   The just-added ticker (staged Oct 23) goes live: a stock-board crawl
+   of the newest additions, one slim bar between the VT/TV strip and
+   the hero. The top strip's 0.9rem bottom gap is split around the bar
+   (0.45 + 0.45), so the only added vertical space is the bar itself
+   (32px). Motion is a continuous LINEAR right-to-left crawl — no
+   easing, no fades — over two identical groups; the inline script sets
+   the duration from the content width so the speed stays a constant
+   ~60px/sec. The crawl leads with Dan's pinned announcement ("NEW
+   EVENTS posted in every city!" -> /events): .nt-announce keeps its
+   exact casing (no board uppercase) in accent orange so it reads as
+   an announcement, not another listing. */
+.vt-tv-strip.vt-tv-strip-top { margin-bottom: 0.45rem; }
+.news-ticker {
+  position: relative; height: 32px; margin: 0 0 0.45rem;
+  background: linear-gradient(90deg, #1d1038, #120b24);
+  border: 1px solid #3a2566; border-radius: 10px; overflow: hidden;
+}
+.nt-chip {
+  position: absolute; left: 0; top: 0; bottom: 0; z-index: 2;
+  display: flex; align-items: center; gap: 0.3rem; padding: 0 0.65rem;
+  background: var(--accent); color: #1a0f00;
+  font-size: 0.72rem; font-weight: 800; letter-spacing: 0.06em;
+  text-transform: uppercase; white-space: nowrap;
+  box-shadow: 10px 0 14px -4px rgba(10, 4, 24, 0.9);
+}
+.nt-viewport { position: absolute; inset: 0; overflow: hidden; }
+.nt-track {
+  display: flex; width: max-content; height: 100%; align-items: center;
+  will-change: transform;
+  animation: nt-crawl 45s linear infinite;
+}
+.nt-group { display: flex; align-items: center; flex: none; }
+.nt-item {
+  color: var(--ink); text-decoration: none; white-space: nowrap;
+  font-size: 0.8rem; font-weight: 700; letter-spacing: 0.045em;
+  text-transform: uppercase;
+}
+.nt-item:hover { color: #ffd9a8; }
+.nt-announce { text-transform: none; color: var(--accent); font-weight: 800; }
+.nt-town { color: var(--muted); font-weight: 600; }
+.nt-sep { color: var(--accent); margin: 0 0.7rem; font-size: 0.7rem; flex: none; }
+@keyframes nt-crawl { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+.news-ticker:hover .nt-track,
+.news-ticker:active .nt-track,
+.news-ticker:focus-within .nt-track,
+.news-ticker.nt-paused .nt-track { animation-play-state: paused; }
+@media (prefers-reduced-motion: reduce) {
+  .nt-track { animation: none; }
+  .nt-viewport { overflow-x: auto; scrollbar-width: none; }
+  .nt-viewport::-webkit-scrollbar { display: none; }
+  .nt-group + .nt-group { display: none; }
+}

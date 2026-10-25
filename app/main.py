@@ -2006,6 +2006,33 @@ def home(request: Request, sort: str = "new", town: str = "", town_search: str =
         sponsors = [dict(r) for r in conn.execute(
             "SELECT * FROM sponsors WHERE is_active = 1 ORDER BY "
             "CASE tier WHEN 'title' THEN 0 WHEN 'premium' THEN 1 ELSE 2 END, created_at").fetchall()]
+        ticker_rows = conn.execute(
+            "SELECT id, title, town, category, ev_type FROM entries "
+            "WHERE hidden = 0 ORDER BY id DESC LIMIT 12").fetchall()
+    # Just-added ticker / update bar (Dan, Oct 23; announcement Dan,
+    # Oct 25): the site's newest additions across every category,
+    # newest first — pins, events and markets alike, each with a type
+    # emoji (markets = cart, events = ghost, the rest = the pumpkin)
+    # and the derived 'City, ST' label used on every card. The crawl
+    # LEADS with Dan's pinned announcement for the Oct 25 national
+    # events batch (116 new events across every major city), which
+    # carries its own href to /events instead of a pin page.
+    ticker_items = []
+    for r in ticker_rows:
+        if r["ev_type"] == "Market":
+            t_emoji = "\U0001F6D2"
+        elif r["category"] == "events":
+            t_emoji = "\U0001F47B"
+        else:
+            t_emoji = "\U0001F383"
+        ticker_items.append({"id": r["id"], "emoji": t_emoji,
+                             "title": (r["title"] or "").strip(),
+                             "town": extract_city_state(r["town"] or "")})
+    if ticker_items:
+        ticker_items.insert(0, {"id": 0, "href": "/events", "announce": True,
+                                "emoji": "\U0001F3AA",
+                                "title": "NEW EVENTS posted in every city!",
+                                "town": ""})
     # Item 1: resolve the visitor's area once — it drives both the
     # Near-you module (below) and the feed lead. With geo=None this is
     # exactly today's biggest-towns-site-wide behaviour.
@@ -2253,6 +2280,7 @@ def home(request: Request, sort: str = "new", town: str = "", town_search: str =
                           if t["clat"] is not None
                           and t["clng"] is not None],
          "sponsors": sponsors,
+         "ticker_items": ticker_items,
          "bottom_tabs": _place_tabs(cat, state, region, sort, scare, tag,
                                     "1" if video.strip() == "1" else ""),
          "tier_labels": {"featured": "Featured Sponsor", "premium": "Premium Sponsor", "title": "Title Sponsor"}},
