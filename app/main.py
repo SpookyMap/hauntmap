@@ -10,6 +10,7 @@ import hashlib
 import hmac
 import logging
 import os
+import queue
 import re
 import requests
 import secrets
@@ -17,6 +18,7 @@ import shutil
 import sqlite3
 import subprocess
 import tempfile
+import threading
 import uuid
 import zipfile
 import math
@@ -33,6 +35,7 @@ from fastapi import BackgroundTasks, FastAPI, Form, HTTPException, Request, Uplo
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse, Response, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from starlette.concurrency import run_in_threadpool
 from starlette.middleware.gzip import GZipMiddleware
 from PIL import Image, ImageOps, UnidentifiedImageError
 
@@ -110,6 +113,16 @@ CARD_THUMB_DIR.mkdir(parents=True, exist_ok=True)
 @app.on_event("startup")
 def _startup() -> None:
     init_db(DB_PATH)
+    _start_analytics_writer()
+
+
+@app.on_event("shutdown")
+def _shutdown() -> None:
+    # Drain the analytics queue so a graceful deploy/restart loses no
+    # page-view counts (the writer flushes what remains, then exits).
+    _analytics_stop.set()
+    if _analytics_thread is not None:
+        _analytics_thread.join(timeout=10)
 
 
 app.mount("/media", StaticFiles(directory=str(UPLOAD_DIR)), name="media")
@@ -160,9 +173,13 @@ async def _http_error(request: Request, exc: HTTPException):
 
 
 @app.get("/healthz")
-def _healthz():
+async def _healthz():
     """Render health-check target: DB-independent, 200 whenever the process
-    is up, so a deploy only takes traffic once the new instance serves."""
+    is up, so a deploy only takes traffic once the new instance serves.
+    Async on purpose (blip hardening, Oct 25): the answer is a constant
+    built in memory on the event loop — it must never queue behind the
+    thread pool or a database lock, which is how a busy-but-alive
+    instance used to fail its health checks and get restarted."""
     return {"status": "ok"}
 
 
@@ -288,9 +305,125 @@ async def _cache_headers(request: Request, call_next):
     return response
 
 
+# ------------------------------------------------------- analytics writer
+# Batched background writer for analytics rows (blip hardening, Oct 25).
+# Diagnosis (Oct 24 outage): _track_page_view used to run a synchronous
+# CREATE TABLE + ALTER attempts + INSERT + COMMIT on the event loop for
+# EVERY page view, and the engagement loggers did the same per event.
+# Under a traffic burst those writes serialized on the loop and on the
+# SQLite write lock until health checks timed out and Render restarted
+# the instance into a 502 cycle. Now the request path only enqueues an
+# in-memory tuple (microseconds, never blocks); ONE daemon thread owns
+# the analytics connection and flushes batches about once a second.
+# Counts stay exact — batching delays a row by ~a second, and the
+# shutdown hook drains the queue, so a graceful deploy loses nothing.
+_ANALYTICS_FLUSH_SECONDS = 1.0
+_ANALYTICS_BATCH_MAX = 500
+_analytics_q: "queue.SimpleQueue[tuple]" = queue.SimpleQueue()
+_analytics_stop = threading.Event()
+_analytics_thread: threading.Thread | None = None
+
+
+def _analytics_write_batch(conn, batch: list) -> None:
+    pv = [r[1:] for r in batch if r[0] == "pv"]
+    if pv:
+        conn.executemany(
+            "INSERT INTO page_views (path, viewed_at, referrer, device, sid) "
+            "VALUES (?, ?, ?, ?, ?)", pv)
+    engaged = [r[1:] for r in batch if r[0] == "engaged"]
+    if engaged:
+        conn.executemany(
+            "INSERT INTO engagement_events (created_at, event, path, seconds, sid) "
+            "VALUES (?, ?, ?, ?, ?)",
+            [(c, ENGAGED_EVENT, p, s, sid) for (c, s, p, sid) in engaged])
+    engs = [r[1:] for r in batch if r[0] == "eng"]
+    if engs:
+        # Town is derived from the entry, as the old inline logger did —
+        # resolved here, once per distinct entry in the batch.
+        towns: dict = {}
+        for _, _, entry_id in engs:
+            if entry_id and entry_id not in towns:
+                row = conn.execute(
+                    "SELECT town FROM entries WHERE id = ?", (entry_id,)).fetchone()
+                towns[entry_id] = (
+                    extract_city_state(row["town"] or "") or row["town"]) if row else None
+        conn.executemany(
+            "INSERT INTO engagement_events (created_at, event, entry_id, town) "
+            "VALUES (?, ?, ?, ?)",
+            [(c, ev, eid, towns.get(eid)) for (c, ev, eid) in engs])
+    conn.commit()
+
+
+def _analytics_writer() -> None:
+    conn = None
+    while True:
+        try:
+            first = _analytics_q.get(timeout=_ANALYTICS_FLUSH_SECONDS)
+        except queue.Empty:
+            if _analytics_stop.is_set():
+                break  # queue drained and shutdown requested
+            continue
+        batch = [first]
+        while len(batch) < _ANALYTICS_BATCH_MAX:
+            try:
+                batch.append(_analytics_q.get_nowait())
+            except queue.Empty:
+                break
+        try:
+            if conn is None:
+                conn = get_conn(DB_PATH)
+            _analytics_write_batch(conn, batch)
+        except Exception:
+            # Transient failure (e.g. lock contention beyond the busy
+            # timeout): keep the rows — requeue and retry next flush
+            # rather than dropping sponsor-facing counts.
+            logger.exception("analytics flush failed; requeueing %d rows", len(batch))
+            try:
+                if conn is not None:
+                    conn.close()
+            except Exception:
+                pass
+            conn = None
+            for item in batch:
+                _analytics_q.put(item)
+            time.sleep(1.0)
+    if conn is not None:
+        try:
+            conn.close()
+        except Exception:
+            pass
+
+
+def _start_analytics_writer() -> None:
+    global _analytics_thread
+    if _analytics_thread is None or not _analytics_thread.is_alive():
+        _analytics_stop.clear()
+        _analytics_thread = threading.Thread(
+            target=_analytics_writer, name="analytics-writer", daemon=True)
+        _analytics_thread.start()
+
+
+def _device_bucket(ua: str) -> str:
+    """Simple device detection from user agent (unchanged buckets)."""
+    ua_lower = ua.lower()
+    if "iphone" in ua_lower or "ipad" in ua_lower:
+        return "iOS"
+    if "android" in ua_lower:
+        return "Android"
+    if "windows" in ua_lower:
+        return "Windows"
+    if "macintosh" in ua_lower or "mac os" in ua_lower:
+        return "Mac"
+    if "linux" in ua_lower:
+        return "Linux"
+    return "Other"
+
+
 @app.middleware("http")
 async def _track_page_view(request: Request, call_next):
-    """Log page views for the admin traffic dashboard. Skips static/media/admin, logged-in admin visits, and Jarvis's own verification checks."""
+    """Log page views for the admin traffic dashboard. Skips static/media/admin, logged-in admin visits, and Jarvis's own verification checks.
+    The row is enqueued for the batched analytics writer — this
+    middleware never touches the database (blip hardening, Oct 25)."""
     response = await call_next(request)
     try:
         if request.method == "GET" and response.status_code == 200:
@@ -298,43 +431,18 @@ async def _track_page_view(request: Request, call_next):
             if not path.startswith(("/media", "/static", "/admin", "/favicon")):
                 if request.cookies.get(ADMIN_COOKIE) not in admin_sessions and \
                    "HauntMap-Verify" not in request.headers.get("user-agent", ""):
-                    with get_conn(DB_PATH) as conn:
-                        conn.execute(
-                            "CREATE TABLE IF NOT EXISTS page_views (id INTEGER PRIMARY KEY, path TEXT, viewed_at TEXT, referrer TEXT)"
-                        )
-                        for col in ("referrer", "device", "sid"):
-                            try:
-                                conn.execute(f"ALTER TABLE page_views ADD COLUMN {col} TEXT")
-                            except Exception:
-                                pass  # column already exists
-                        referrer = request.headers.get("referer", "")[:500]
-                        ua = request.headers.get("user-agent", "")[:500]
-                        # Simple device detection from user agent
-                        ua_lower = ua.lower()
-                        if "iphone" in ua_lower or "ipad" in ua_lower:
-                            device = "iOS"
-                        elif "android" in ua_lower:
-                            device = "Android"
-                        elif "windows" in ua_lower:
-                            device = "Windows"
-                        elif "macintosh" in ua_lower or "mac os" in ua_lower:
-                            device = "Mac"
-                        elif "linux" in ua_lower:
-                            device = "Linux"
-                        else:
-                            device = "Other"
-                        sid = request.cookies.get("hm_sid")
-                        new_sid = not sid
-                        if new_sid:
-                            sid = secrets.token_hex(16)
-                        conn.execute(
-                            "INSERT INTO page_views (path, viewed_at, referrer, device, sid) VALUES (?, ?, ?, ?, ?)",
-                            (path, datetime.now(timezone.utc).isoformat(), referrer, device, sid),
-                        )
-                        conn.commit()
-                        if new_sid:
-                            response.set_cookie("hm_sid", sid, max_age=30 * 24 * 3600,
-                                                httponly=True, samesite="lax")
+                    referrer = request.headers.get("referer", "")[:500]
+                    ua = request.headers.get("user-agent", "")[:500]
+                    sid = request.cookies.get("hm_sid")
+                    new_sid = not sid
+                    if new_sid:
+                        sid = secrets.token_hex(16)
+                    _analytics_q.put((
+                        "pv", path, datetime.now(timezone.utc).isoformat(),
+                        referrer, _device_bucket(ua), sid))
+                    if new_sid:
+                        response.set_cookie("hm_sid", sid, max_age=30 * 24 * 3600,
+                                            httponly=True, samesite="lax")
     except Exception:
         pass  # never break a page load for analytics
     return response
@@ -3735,68 +3843,76 @@ async def upload_submit(
     entry_id = None
     has_media = media and media.filename
     if not error:
-        media_rel = None
-        thumb_rel = None
-        media_type = None
-        if has_media:
-            ext = safe_ext(media.filename)
-            try:
-                if ext in PHOTO_EXTS:
-                    tmp = save_upload(media, MAX_PHOTO_BYTES)
-                    try:
-                        with Image.open(tmp) as im:
-                            im.verify()
-                    except (UnidentifiedImageError, OSError):
-                        tmp.unlink(missing_ok=True)
-                        raise ValueError("That file isn't a readable image.")
-                    name = uuid.uuid4().hex
-                    media_rel = f"{name}{ext}"
-                    shutil.move(tmp, UPLOAD_DIR / media_rel)
-                    try:
-                        thumb_rel = make_thumb(UPLOAD_DIR / media_rel, name)
-                    except (OSError, UnidentifiedImageError):
-                        (UPLOAD_DIR / media_rel).unlink(missing_ok=True)
-                        raise ValueError("Couldn't process that image.")
-                    media_type = "photo"
-                elif ext in VIDEO_EXTS:
-                    tmp = save_upload(media, MAX_VIDEO_BYTES)
-                    head = tmp.read_bytes()[:32]
-                    if b"ftyp" not in head:
-                        tmp.unlink(missing_ok=True)
-                        raise ValueError("That file doesn't look like an MP4 video.")
-                    name = uuid.uuid4().hex
-                    media_rel = f"{name}{ext}"
-                    shutil.move(tmp, UPLOAD_DIR / media_rel)
-                    thumb_rel = make_video_poster(UPLOAD_DIR / media_rel, name)
-                    media_type = "video"
-                else:
-                    raise ValueError("Photos must be JPG/PNG/WebP (10 MB max); video must be MP4 (100 MB max).")
-            except ValueError as e:
-                error = str(e)
-
-    if not error:
-        now = datetime.now(timezone.utc).isoformat()
-        with get_conn(DB_PATH) as conn:
-            for col, ddl in (("uploader_email", "TEXT"),
-                             ("notify_votes", "INTEGER DEFAULT 0")):
+        # Media processing (PIL decode, EXIF transpose, thumbnailing, an
+        # ffmpeg poster frame that can take seconds) and the insert run
+        # in the thread pool, never on the event loop (blip hardening,
+        # Oct 25) — code below is the original flow, moved verbatim.
+        def _store() -> tuple[int | None, str | None]:
+            media_rel = None
+            thumb_rel = None
+            media_type = None
+            if has_media:
+                ext = safe_ext(media.filename)
                 try:
-                    conn.execute(f"ALTER TABLE entries ADD COLUMN {col} {ddl}")
-                except Exception:
-                    pass  # column already exists
-            cur = conn.execute(
-                """INSERT INTO entries
-                   (title, town, display_name, media_path, thumb_path, media_type,
-                    lat, lng, votes, flagged, hidden, is_sample, category, created_at,
-                    scare_level, tags, tiktok_url, uploader_email, notify_votes,
-                    address, description)
-                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, 0, 0, 0, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
-                (title, town, display_name or None, media_rel or "", thumb_rel,
-                 media_type or "none", lat_f, lng_f, category, now, scare_level, tags,
-                 tiktok_url or None, uploader_email or None, notify_votes,
-                 address or None, description or None),
-            )
-            entry_id = cur.lastrowid
-            conn.commit()
+                    if ext in PHOTO_EXTS:
+                        tmp = save_upload(media, MAX_PHOTO_BYTES)
+                        try:
+                            with Image.open(tmp) as im:
+                                im.verify()
+                        except (UnidentifiedImageError, OSError):
+                            tmp.unlink(missing_ok=True)
+                            raise ValueError("That file isn't a readable image.")
+                        name = uuid.uuid4().hex
+                        media_rel = f"{name}{ext}"
+                        shutil.move(tmp, UPLOAD_DIR / media_rel)
+                        try:
+                            thumb_rel = make_thumb(UPLOAD_DIR / media_rel, name)
+                        except (OSError, UnidentifiedImageError):
+                            (UPLOAD_DIR / media_rel).unlink(missing_ok=True)
+                            raise ValueError("Couldn't process that image.")
+                        media_type = "photo"
+                    elif ext in VIDEO_EXTS:
+                        tmp = save_upload(media, MAX_VIDEO_BYTES)
+                        head = tmp.read_bytes()[:32]
+                        if b"ftyp" not in head:
+                            tmp.unlink(missing_ok=True)
+                            raise ValueError("That file doesn't look like an MP4 video.")
+                        name = uuid.uuid4().hex
+                        media_rel = f"{name}{ext}"
+                        shutil.move(tmp, UPLOAD_DIR / media_rel)
+                        thumb_rel = make_video_poster(UPLOAD_DIR / media_rel, name)
+                        media_type = "video"
+                    else:
+                        raise ValueError("Photos must be JPG/PNG/WebP (10 MB max); video must be MP4 (100 MB max).")
+                except ValueError as e:
+                    return None, str(e)
+            now = datetime.now(timezone.utc).isoformat()
+            with get_conn(DB_PATH) as conn:
+                for col, ddl in (("uploader_email", "TEXT"),
+                                 ("notify_votes", "INTEGER DEFAULT 0")):
+                    try:
+                        conn.execute(f"ALTER TABLE entries ADD COLUMN {col} {ddl}")
+                    except Exception:
+                        pass  # column already exists
+                cur = conn.execute(
+                    """INSERT INTO entries
+                       (title, town, display_name, media_path, thumb_path, media_type,
+                        lat, lng, votes, flagged, hidden, is_sample, category, created_at,
+                        scare_level, tags, tiktok_url, uploader_email, notify_votes,
+                        address, description)
+                       VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, 0, 0, 0, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                    (title, town, display_name or None, media_rel or "", thumb_rel,
+                     media_type or "none", lat_f, lng_f, category, now, scare_level, tags,
+                     tiktok_url or None, uploader_email or None, notify_votes,
+                     address or None, description or None),
+                )
+                new_id = cur.lastrowid
+                conn.commit()
+            return new_id, None
+
+        entry_id, store_error = await run_in_threadpool(_store)
+        if store_error:
+            error = store_error
 
     if error:
         return templates.TemplateResponse(request, "upload.html", {"request": request, "error": error}, status_code=400
@@ -3834,55 +3950,28 @@ ENGAGEMENT_EVENTS_ALL = TRACK_EVENTS + ("vote", "unvote", "scare", "tip")
 
 
 def _log_engagement(event: str, entry_id: int | None = None) -> None:
-    """Insert one engagement row. Town is derived server-side from the
-    entry (its extract_city_state label). Fire-and-forget: analytics must
-    never break the interaction that produced the event."""
+    """Record one engagement row. Town is derived server-side from the
+    entry (its extract_city_state label) by the analytics writer at
+    flush time. Fire-and-forget: analytics must never break the
+    interaction that produced the event. Enqueue only — the request
+    path never touches the DB inline (blip hardening, Oct 25)."""
     try:
-        town = None
-        if entry_id:
-            with get_conn(DB_PATH) as conn:
-                row = conn.execute(
-                    "SELECT town FROM entries WHERE id = ?", (entry_id,)).fetchone()
-            if row:
-                town = extract_city_state(row["town"] or "") or row["town"]
-        with get_conn(DB_PATH) as conn:
-            conn.execute(ENGAGEMENT_TABLE_SQL)
-            conn.execute(
-                "INSERT INTO engagement_events (created_at, event, entry_id, town) "
-                "VALUES (?, ?, ?, ?)",
-                (datetime.now(timezone.utc).isoformat(), event, entry_id, town))
-            conn.commit()
+        _analytics_q.put(("eng", datetime.now(timezone.utc).isoformat(), event, entry_id))
     except Exception:
         pass
 
 
-def _ensure_engagement_columns(conn) -> None:
-    """PRAGMA-checked ALTERs adding the Item 6 columns (path / seconds /
-    sid) to engagement_events on DBs created before they existed — same
-    migration style as the fan_art / entries column additions."""
-    cols = {r["name"] for r in conn.execute("PRAGMA table_info(engagement_events)")}
-    for col, ddl in (("path", "TEXT"), ("seconds", "INTEGER"), ("sid", "TEXT")):
-        if col not in cols:
-            conn.execute(f"ALTER TABLE engagement_events ADD COLUMN {col} {ddl}")
-
-
 def _log_engaged(seconds: int, path: str, sid: str | None) -> None:
-    """Insert one engaged-time beacon row: `seconds` of INCREMENTAL engaged
+    """Record one engaged-time beacon row: `seconds` of INCREMENTAL engaged
     time (client sends deltas, never cumulative totals) spent on `path`.
     Real time-on-page per page/session is SUM(seconds) over these rows —
     e.g. SELECT path, SUM(seconds) FROM engagement_events
     WHERE event='engaged' GROUP BY path. Fire-and-forget like
-    _log_engagement: analytics must never break a page."""
+    _log_engagement: analytics must never break a page. Enqueue only
+    (blip hardening, Oct 25)."""
     try:
-        with get_conn(DB_PATH) as conn:
-            conn.execute(ENGAGEMENT_TABLE_SQL)
-            _ensure_engagement_columns(conn)
-            conn.execute(
-                "INSERT INTO engagement_events (created_at, event, path, seconds, sid) "
-                "VALUES (?, ?, ?, ?, ?)",
-                (datetime.now(timezone.utc).isoformat(), ENGAGED_EVENT,
-                 path, seconds, sid))
-            conn.commit()
+        _analytics_q.put(("engaged", datetime.now(timezone.utc).isoformat(),
+                          seconds, path, sid))
     except Exception:
         pass
 
@@ -5622,32 +5711,38 @@ async def costume_upload(
     ext = safe_ext(media.filename or "")
     if ext not in PHOTO_EXTS:
         return RedirectResponse("/costume-contest?error=Please+choose+a+photo+(JPG,+PNG+or+WebP).", status_code=303)
-    try:
-        tmp = save_upload(media, MAX_PHOTO_BYTES)
+
+    # Image decode + thumbnail and the insert run in the thread pool,
+    # never on the event loop (blip hardening, Oct 25) — original flow.
+    def _store() -> RedirectResponse:
         try:
-            with Image.open(tmp) as im:
-                im.verify()
-        except (UnidentifiedImageError, OSError):
-            tmp.unlink(missing_ok=True)
-            return RedirectResponse("/costume-contest?error=That+file+isn%27t+a+readable+image.", status_code=303)
-        name = uuid.uuid4().hex
-        media_rel = f"{name}{ext}"
-        shutil.move(tmp, UPLOAD_DIR / media_rel)
-        try:
-            thumb_rel = make_thumb(UPLOAD_DIR / media_rel, name)
-        except (OSError, UnidentifiedImageError):
-            (UPLOAD_DIR / media_rel).unlink(missing_ok=True)
-            return RedirectResponse("/costume-contest?error=Couldn%27t+process+that+image.", status_code=303)
-    except ValueError:
-        return RedirectResponse("/costume-contest?error=That+photo+is+too+large+(10+MB+max).", status_code=303)
-    with get_conn(DB_PATH) as conn:
-        conn.execute(COSTUME_SQL)
-        conn.execute(
-            "INSERT INTO costume_entries (display_name, title, media_path, thumb_path, votes, hidden, created_at) VALUES (?, ?, ?, ?, 0, 0, ?)",
-            ((display_name or "").strip()[:60] or None, title.strip()[:120], media_rel, thumb_rel,
-             datetime.now(timezone.utc).isoformat()),
-        )
-    return RedirectResponse("/costume-contest", status_code=303)
+            tmp = save_upload(media, MAX_PHOTO_BYTES)
+            try:
+                with Image.open(tmp) as im:
+                    im.verify()
+            except (UnidentifiedImageError, OSError):
+                tmp.unlink(missing_ok=True)
+                return RedirectResponse("/costume-contest?error=That+file+isn%27t+a+readable+image.", status_code=303)
+            name = uuid.uuid4().hex
+            media_rel = f"{name}{ext}"
+            shutil.move(tmp, UPLOAD_DIR / media_rel)
+            try:
+                thumb_rel = make_thumb(UPLOAD_DIR / media_rel, name)
+            except (OSError, UnidentifiedImageError):
+                (UPLOAD_DIR / media_rel).unlink(missing_ok=True)
+                return RedirectResponse("/costume-contest?error=Couldn%27t+process+that+image.", status_code=303)
+        except ValueError:
+            return RedirectResponse("/costume-contest?error=That+photo+is+too+large+(10+MB+max).", status_code=303)
+        with get_conn(DB_PATH) as conn:
+            conn.execute(COSTUME_SQL)
+            conn.execute(
+                "INSERT INTO costume_entries (display_name, title, media_path, thumb_path, votes, hidden, created_at) VALUES (?, ?, ?, ?, 0, 0, ?)",
+                ((display_name or "").strip()[:60] or None, title.strip()[:120], media_rel, thumb_rel,
+                 datetime.now(timezone.utc).isoformat()),
+            )
+        return RedirectResponse("/costume-contest", status_code=303)
+
+    return await run_in_threadpool(_store)
 
 
 @app.post("/costume-contest/{cid}/vote")
@@ -5768,39 +5863,45 @@ async def fanart_upload(
     ext = safe_ext(media.filename or "")
     if ext not in PHOTO_EXTS:
         return RedirectResponse("/fan-art?error=Please+choose+an+image+(JPG,+PNG+or+WebP).", status_code=303)
-    try:
-        tmp = save_upload(media, MAX_PHOTO_BYTES)
-        try:
-            with Image.open(tmp) as im:
-                im.verify()
-        except (UnidentifiedImageError, OSError):
-            tmp.unlink(missing_ok=True)
-            return RedirectResponse("/fan-art?error=That+file+isn%27t+a+readable+image.", status_code=303)
-        name = uuid.uuid4().hex
-        media_rel = f"{name}{ext}"
-        shutil.move(tmp, UPLOAD_DIR / media_rel)
-        try:
-            thumb_rel = make_thumb(UPLOAD_DIR / media_rel, name)
-        except (OSError, UnidentifiedImageError):
-            (UPLOAD_DIR / media_rel).unlink(missing_ok=True)
-            return RedirectResponse("/fan-art?error=Couldn%27t+process+that+image.", status_code=303)
-    except ValueError:
-        return RedirectResponse("/fan-art?error=That+image+is+too+large+(10+MB+max).", status_code=303)
     src = (source_url or "").strip()[:300]
     if not (src.startswith("https://") or src.startswith("http://")):
         src = None
-    with get_conn(DB_PATH) as conn:
-        conn.execute(FANART_SQL)
-        _ensure_fanart_cols(conn)
-        conn.execute(
-            "INSERT INTO fan_art (title, artist, town, media_path, thumb_path, votes, approved, created_at, source_url) "
-            "VALUES (?, ?, ?, ?, ?, 0, 0, ?, ?)",
-            (title.strip()[:120], (artist or "").strip()[:60] or None,
-             (town or "").strip()[:80] or None, media_rel, thumb_rel,
-             datetime.now(timezone.utc).isoformat(), src),
-        )
-    # Submissions stay PENDING (approved = 0) until Dan approves in admin.
-    return RedirectResponse("/fan-art?submitted=1", status_code=303)
+
+    # Image decode + thumbnail and the insert run in the thread pool,
+    # never on the event loop (blip hardening, Oct 25) — original flow.
+    def _store() -> RedirectResponse:
+        try:
+            tmp = save_upload(media, MAX_PHOTO_BYTES)
+            try:
+                with Image.open(tmp) as im:
+                    im.verify()
+            except (UnidentifiedImageError, OSError):
+                tmp.unlink(missing_ok=True)
+                return RedirectResponse("/fan-art?error=That+file+isn%27t+a+readable+image.", status_code=303)
+            name = uuid.uuid4().hex
+            media_rel = f"{name}{ext}"
+            shutil.move(tmp, UPLOAD_DIR / media_rel)
+            try:
+                thumb_rel = make_thumb(UPLOAD_DIR / media_rel, name)
+            except (OSError, UnidentifiedImageError):
+                (UPLOAD_DIR / media_rel).unlink(missing_ok=True)
+                return RedirectResponse("/fan-art?error=Couldn%27t+process+that+image.", status_code=303)
+        except ValueError:
+            return RedirectResponse("/fan-art?error=That+image+is+too+large+(10+MB+max).", status_code=303)
+        with get_conn(DB_PATH) as conn:
+            conn.execute(FANART_SQL)
+            _ensure_fanart_cols(conn)
+            conn.execute(
+                "INSERT INTO fan_art (title, artist, town, media_path, thumb_path, votes, approved, created_at, source_url) "
+                "VALUES (?, ?, ?, ?, ?, 0, 0, ?, ?)",
+                (title.strip()[:120], (artist or "").strip()[:60] or None,
+                 (town or "").strip()[:80] or None, media_rel, thumb_rel,
+                 datetime.now(timezone.utc).isoformat(), src),
+            )
+        # Submissions stay PENDING (approved = 0) until Dan approves in admin.
+        return RedirectResponse("/fan-art?submitted=1", status_code=303)
+
+    return await run_in_threadpool(_store)
 
 
 @app.post("/fan-art/{fid}/vote")
@@ -5920,7 +6021,7 @@ def admin_stats(request: Request):
             "ELSE device END AS dev, COUNT(*) AS views FROM page_views "
             "GROUP BY dev ORDER BY views DESC").fetchall()
         # --- engagement events (Wave 2, Item 2): last 7 days ---
-        conn.execute(ENGAGEMENT_TABLE_SQL)
+        # (engagement_events is created by init_db at startup — no DDL here.)
         eng_counts = {ev: 0 for ev in ENGAGEMENT_EVENTS_ALL}
         for r in conn.execute(
                 "SELECT event, COUNT(*) AS n FROM engagement_events "
@@ -6064,6 +6165,15 @@ def _backup_zip_chunks():
     256 KB chunks, so even a large video never lands in RAM whole.
     """
     sink = _ZipStreamSink()
+    # WAL mode (blip hardening, Oct 25): recently committed rows live in
+    # the hauntmap.db-wal sidecar until a checkpoint folds them into the
+    # main file. Checkpoint first, or the raw file copy below would
+    # silently miss the newest data.
+    try:
+        with get_conn(DB_PATH) as conn:
+            conn.execute("PRAGMA wal_checkpoint(TRUNCATE)")
+    except Exception:
+        pass  # backup proceeds with whatever is already in the main file
     files = []
     if DB_PATH.exists():
         files.append((DB_PATH, "hauntmap.db"))
@@ -6329,25 +6439,31 @@ async def admin_media(entry_id: int, request: Request, media: UploadFile = File(
     ext = safe_ext(media.filename)
     if ext not in PHOTO_EXTS:
         return JSONResponse({"error": "Photos only (JPG/PNG/WebP)"}, status_code=400)
-    tmp = save_upload(media, MAX_PHOTO_BYTES)
-    try:
-        with Image.open(tmp) as im:
-            im.verify()
-    except (UnidentifiedImageError, OSError):
-        tmp.unlink(missing_ok=True)
-        return JSONResponse({"error": "Not a readable image"}, status_code=400)
-    name = uuid.uuid4().hex
-    media_rel = f"{name}{ext}"
-    shutil.move(tmp, UPLOAD_DIR / media_rel)
-    try:
-        thumb_rel = make_thumb(UPLOAD_DIR / media_rel, name)
-    except (OSError, UnidentifiedImageError):
-        thumb_rel = media_rel
-    with get_conn(DB_PATH) as conn:
-        conn.execute("UPDATE entries SET media_path = ?, thumb_path = ?, media_type = 'photo' WHERE id = ?",
-                     (media_rel, thumb_rel, entry_id))
-        conn.commit()
-    return JSONResponse({"ok": True, "id": entry_id})
+
+    # Image decode + thumbnail and the update run in the thread pool,
+    # never on the event loop (blip hardening, Oct 25) — original flow.
+    def _store() -> JSONResponse:
+        tmp = save_upload(media, MAX_PHOTO_BYTES)
+        try:
+            with Image.open(tmp) as im:
+                im.verify()
+        except (UnidentifiedImageError, OSError):
+            tmp.unlink(missing_ok=True)
+            return JSONResponse({"error": "Not a readable image"}, status_code=400)
+        name = uuid.uuid4().hex
+        media_rel = f"{name}{ext}"
+        shutil.move(tmp, UPLOAD_DIR / media_rel)
+        try:
+            thumb_rel = make_thumb(UPLOAD_DIR / media_rel, name)
+        except (OSError, UnidentifiedImageError):
+            thumb_rel = media_rel
+        with get_conn(DB_PATH) as conn:
+            conn.execute("UPDATE entries SET media_path = ?, thumb_path = ?, media_type = 'photo' WHERE id = ?",
+                         (media_rel, thumb_rel, entry_id))
+            conn.commit()
+        return JSONResponse({"ok": True, "id": entry_id})
+
+    return await run_in_threadpool(_store)
 
 
 # ---------------------------------------------------------------- sponsors
@@ -6404,18 +6520,25 @@ async def admin_sponsor_add(request: Request,
         ext = safe_ext(logo.filename)
         if ext not in PHOTO_EXTS:
             raise HTTPException(400, "Logo must be JPG, PNG, or WebP")
-        tmp = save_upload(logo, MAX_PHOTO_BYTES)
-        try:
-            with Image.open(tmp) as im:
-                im.verify()
-        except (UnidentifiedImageError, OSError):
-            tmp.unlink(missing_ok=True)
-            raise HTTPException(400, "Not a readable image")
-        sponsor_dir = UPLOAD_DIR / "sponsors"
-        sponsor_dir.mkdir(exist_ok=True)
-        logo_path = f"sponsors/{uuid.uuid4().hex}{ext}"
-        shutil.move(tmp, UPLOAD_DIR / logo_path)
-        _normalize_orientation(UPLOAD_DIR / logo_path)
+
+        # Logo decode + orientation fix run in the thread pool, never on
+        # the event loop (blip hardening, Oct 25) — original flow.
+        def _process_logo() -> str:
+            tmp = save_upload(logo, MAX_PHOTO_BYTES)
+            try:
+                with Image.open(tmp) as im:
+                    im.verify()
+            except (UnidentifiedImageError, OSError):
+                tmp.unlink(missing_ok=True)
+                raise HTTPException(400, "Not a readable image")
+            sponsor_dir = UPLOAD_DIR / "sponsors"
+            sponsor_dir.mkdir(exist_ok=True)
+            path = f"sponsors/{uuid.uuid4().hex}{ext}"
+            shutil.move(tmp, UPLOAD_DIR / path)
+            _normalize_orientation(UPLOAD_DIR / path)
+            return path
+
+        logo_path = await run_in_threadpool(_process_logo)
     now = datetime.now(timezone.utc).isoformat()
     with get_conn(DB_PATH) as conn:
         conn.execute(

@@ -19,5 +19,11 @@ ENV DATA_DIR=/srv/data UPLOAD_DIR=/srv/uploads
 
 EXPOSE 8000
 
-# Single worker: SQLite does not like concurrent writers.
+# Single worker ON PURPOSE (reaffirmed in the Oct 25 blip hardening):
+# WAL + busy_timeout made SQLite safe for this process's own threads,
+# but the app keeps per-process state — admin sessions, the HTML page
+# cache, the analytics writer queue — that a second worker process
+# would silently split, and Render runs one instance on one persistent
+# disk. The Oct 24 stalls were event-loop blocking (now removed), not
+# process count. Revisit only if that state moves out of process.
 CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000} --workers 1"]

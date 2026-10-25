@@ -103,7 +103,10 @@ CREATE INDEX IF NOT EXISTS idx_entries_votes ON entries(votes DESC);
 CREATE TABLE IF NOT EXISTS page_views (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     path TEXT NOT NULL,                   -- URL path visited, e.g. "/" or "/d/5"
-    viewed_at TEXT NOT NULL               -- UTC ISO timestamp
+    viewed_at TEXT NOT NULL,              -- UTC ISO timestamp
+    referrer TEXT,                        -- Referer header (admin traffic stats)
+    device TEXT,                          -- coarse UA bucket: iOS/Android/Windows/Mac/Linux/Other
+    sid TEXT                              -- anonymous hm_sid session cookie id
 );
 CREATE INDEX IF NOT EXISTS idx_page_views_date ON page_views(viewed_at);
 CREATE TABLE IF NOT EXISTS sponsors (
@@ -243,8 +246,17 @@ CREATE TABLE IF NOT EXISTS social_meta (
 
 
 def get_conn(db_path: Path) -> sqlite3.Connection:
-    conn = sqlite3.connect(str(db_path))
+    conn = sqlite3.connect(str(db_path), timeout=5.0)
     conn.row_factory = sqlite3.Row
+    # WAL + busy timeout (blip hardening, Oct 25): in WAL mode readers
+    # never block the single writer and the writer never blocks readers;
+    # a write that still finds the database contended waits up to 5s for
+    # the lock instead of failing with "database is locked" — the failure
+    # mode behind the Oct 24 stall/restart cycle. WAL is persistent on
+    # the database file once set, so the per-connection pragma is a
+    # no-op reaffirm after the first connection.
+    conn.execute("PRAGMA journal_mode=WAL")
+    conn.execute("PRAGMA busy_timeout=5000")
     return conn
 
 
@@ -330,6 +342,16 @@ def init_db(db_path: Path) -> None:
         for col, ddl in (("path", "TEXT"), ("seconds", "INTEGER"), ("sid", "TEXT")):
             if col not in ecols:
                 conn.execute(f"ALTER TABLE engagement_events ADD COLUMN {col} {ddl}")
+        # Page-view analytics columns (blip hardening, Oct 25): referrer /
+        # device / sid used to be added by per-request CREATE/ALTER
+        # statements inside the tracking middleware — synchronous DDL on
+        # the event loop for every page view, a root cause of the Oct 24
+        # stalls. They are ensured HERE, at startup, instead; the request
+        # path never runs DDL.
+        pvcols = {r["name"] for r in conn.execute("PRAGMA table_info(page_views)").fetchall()}
+        for col in ("referrer", "device", "sid"):
+            if col not in pvcols:
+                conn.execute(f"ALTER TABLE page_views ADD COLUMN {col} TEXT")
         # HauntMap Social (Phase 1): a pin's owner once a haunter claims
         # it. NULL until claimed; profile "My haunts" reads this column.
         if "owner_user_id" not in cols:
