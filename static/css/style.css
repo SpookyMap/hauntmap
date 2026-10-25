@@ -4451,3 +4451,25 @@ a.soc-top8-card:hover { border-color: var(--accent2); }
   font-size: 0.96em;
   line-height: 1.3;
 }
+
+/* ============ z138: HAUNTSOCIAL PHOTO UPLOADS (Dan, Oct 25) ============
+   "We should be able to upload our profile picture into HauntSocial
+   and add photos as well." The uploaded picture renders through the
+   existing .soc-avatar-img (round, object-fit cover); these rules add
+   only the public Photos grid and the edit-page manager boxes. */
+.soc-photo-grid { display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(132px, 1fr));
+  gap: 0.6rem; }
+.soc-photo-grid img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover;
+  border-radius: var(--radius); display: block; }
+.soc-upload-box { margin-top: 1.6rem; background: var(--card);
+  border-radius: var(--radius); padding: 1rem; }
+.soc-upload-head { margin: 0 0 0.7rem; font-size: 1.1rem; }
+.soc-upload-current { display: flex; gap: 0.9rem; align-items: center;
+  margin-bottom: 0.9rem; }
+.soc-upload-current p { margin: 0 0 0.5rem; }
+.soc-upload-current form { margin: 0; }
+.soc-upload-box .form { margin-top: 0.4rem; }
+.soc-photo-manage .soc-photo-item { margin: 0; }
+.soc-photo-manage .soc-photo-item form { margin-top: 0.25rem;
+  text-align: right; }

@@ -192,6 +192,7 @@ CREATE TABLE IF NOT EXISTS profiles (
     bio TEXT,
     town TEXT,
     avatar_choice TEXT,                   -- preset key, NULL = initial tile
+    avatar_path TEXT,                     -- uploaded profile picture (rel path under uploads/); beats avatar_choice
     banner_choice TEXT,                   -- preset key, NULL = default banner
     theme TEXT,                           -- HauntSocial preset theme key
     music_embed_url TEXT,                 -- member-supplied Spotify/SC/YT URL
@@ -231,6 +232,17 @@ CREATE TABLE IF NOT EXISTS profile_top8 (
     film_title TEXT,
     PRIMARY KEY (user_id, slot)
 );
+-- HauntSocial photo uploads (Dan, Oct 25): a member's own photos on
+-- their profile page. Files live under uploads/photos/ + uploads/thumbs/;
+-- the uploaded profile picture itself is profiles.avatar_path.
+CREATE TABLE IF NOT EXISTS profile_photos (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    path TEXT NOT NULL,                   -- rel path under uploads/ (photos/…)
+    thumb_path TEXT,                      -- rel thumb path under uploads/ (thumbs/…)
+    created_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_profile_photos_user ON profile_photos(user_id, id);
 CREATE TABLE IF NOT EXISTS reports (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     reporter_user_id INTEGER REFERENCES users(id),
@@ -380,6 +392,8 @@ def init_db(db_path: Path) -> None:
         pcols = {r["name"] for r in conn.execute("PRAGMA table_info(profiles)").fetchall()}
         if pcols and "theme" not in pcols:
             conn.execute("ALTER TABLE profiles ADD COLUMN theme TEXT")
+        if pcols and "avatar_path" not in pcols:
+            conn.execute("ALTER TABLE profiles ADD COLUMN avatar_path TEXT")
         wcols = {r["name"] for r in conn.execute("PRAGMA table_info(wall_comments)").fetchall()}
         if wcols and "sticker" not in wcols:
             conn.execute("ALTER TABLE wall_comments ADD COLUMN sticker TEXT")

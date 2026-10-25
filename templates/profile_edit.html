@@ -27,6 +27,7 @@
           <span class="soc-avatar soc-avatar-sm" style="background:{{ bg }}"><span>{{ emoji }}</span></span> {{ key|title }}</label>
         {% endfor %}
       </span>
+      <small>Got your own photo? Upload it below — an uploaded picture replaces these presets everywhere.</small>
     </label>
     <label>Banner
       <span class="soc-picker">
@@ -81,6 +82,53 @@
     </div>
     <button class="btn btn-big" type="submit">Save profile</button>
   </form>
+  <div class="soc-upload-box" id="profile-picture">
+    <h2 class="soc-upload-head">&#x1F4F8; Your profile picture</h2>
+    {% if profile.avatar_path %}
+    <div class="soc-upload-current">
+      <span class="soc-avatar" style="background:#241243"><img class="soc-avatar-img" src="/media/{{ profile.avatar_path }}" alt=""></span>
+      <div>
+        <p>This uploaded photo is your profile picture — it shows everywhere
+           your avatar appears and beats the presets above.</p>
+        <form method="post" action="/profile/avatar/remove"><button class="btn btn-small" type="submit">Remove photo</button></form>
+      </div>
+    </div>
+    {% endif %}
+    <form class="form" method="post" action="/profile/avatar" enctype="multipart/form-data">
+      <label>{% if profile.avatar_path %}Replace it with a new photo{% else %}Upload your own photo{% endif %}
+        <input type="file" name="avatar" accept="image/jpeg,image/png,image/webp" required>
+      </label>
+      <button class="btn btn-small" type="submit">Upload profile picture</button>
+      <small>JPG, PNG, or WebP, 10 MB max. It's cropped square and shown
+        round; sideways photos are turned right side up automatically.</small>
+    </form>
+  </div>
+  <div class="soc-upload-box" id="photos">
+    <h2 class="soc-upload-head">&#x1F5BC;&#xFE0F; Your photos <span class="opt">({{ photos|length }} of {{ photo_max }})</span></h2>
+    {% if photos %}
+    <div class="soc-photo-grid soc-photo-manage">
+      {% for p in photos %}
+      <figure class="soc-photo-item">
+        <img src="/media/{{ p.thumb_path or p.path }}" alt="" loading="lazy">
+        <form method="post" action="/profile/photos/{{ p.id }}/delete"><button class="soc-tool" type="submit">Delete</button></form>
+      </figure>
+      {% endfor %}
+    </div>
+    {% else %}
+    <p class="soc-note">No photos yet — add your favorites below and they'll show on your page for every visitor.</p>
+    {% endif %}
+    {% if photos|length < photo_max %}
+    <form class="form" method="post" action="/profile/photos" enctype="multipart/form-data">
+      <label>Add a photo
+        <input type="file" name="photo" accept="image/jpeg,image/png,image/webp" required>
+      </label>
+      <button class="btn btn-small" type="submit">Add photo</button>
+      <small>JPG, PNG, or WebP, 10 MB max. Sideways photos are turned right side up automatically.</small>
+    </form>
+    {% else %}
+    <p class="soc-note">You're at the {{ photo_max }}-photo max — delete one to add another.</p>
+    {% endif %}
+  </div>
   <script>
   (function () {
     function wireRow(row) {

@@ -73,6 +73,17 @@
   </section>
   {% endif %}
 
+  {% if photos %}
+  <section class="soc-photos">
+    <h2>&#x1F4F8; Photos</h2>
+    <div class="soc-photo-grid">
+      {% for p in photos %}
+      <a href="/media/{{ p.path }}"><img src="/media/{{ p.thumb_path or p.path }}" alt="" loading="lazy"></a>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
   <section class="soc-haunts">
     <h2>&#x1F3E0; My haunts</h2>
     {% if haunts %}

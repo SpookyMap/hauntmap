@@ -7503,7 +7503,13 @@ def _handle_held(handle: str) -> bool:
     return handle in _creator_hold_handles()
 
 
-def _avatar_view(choice: str | None, display_name: str | None, handle: str) -> dict:
+def _avatar_view(choice: str | None, display_name: str | None, handle: str,
+                 avatar_path: str | None = None) -> dict:
+    if avatar_path:
+        # An uploaded profile picture beats every preset (Dan, Oct 25).
+        # Frank never has one — his row carries only the art choice below.
+        return {"emoji": "", "bg": "#241243", "initial": "",
+                "img": f"/media/{avatar_path}"}
     if choice == FRANK_AVATAR_CHOICE:
         # The host's avatar is the head/face crop of Dan's new Frank art.
         return {"emoji": "", "bg": "#12260d", "initial": "", "img": FRANK_AVATAR_ART}
@@ -7815,16 +7821,21 @@ def _profile_context(request: Request, handle: str, member: dict | None,
         comments = []
         for r in conn.execute(
                 "SELECT w.*, a.handle AS author_handle, "
-                "p.display_name AS author_name, p.avatar_choice AS author_avatar "
+                "p.display_name AS author_name, p.avatar_choice AS author_avatar, "
+                "p.avatar_path AS author_avatar_path "
                 "FROM wall_comments w JOIN users a ON a.id = w.author_user_id "
                 "LEFT JOIN profiles p ON p.user_id = a.id "
                 "WHERE w.profile_user_id = ? AND w.hidden = 0 "
                 "ORDER BY w.created_at ASC", (user["id"],)).fetchall():
             c = dict(r)
             c["author_avatar_view"] = _avatar_view(
-                c.get("author_avatar"), c.get("author_name"), c["author_handle"])
+                c.get("author_avatar"), c.get("author_name"), c["author_handle"],
+                c.get("author_avatar_path"))
             c["author_label"] = c.get("author_name") or c["author_handle"]
             comments.append(c)
+        photos = [dict(r) for r in conn.execute(
+            "SELECT id, path, thumb_path FROM profile_photos "
+            "WHERE user_id = ? ORDER BY id ASC", (user["id"],)).fetchall()]
         viewer_blocked = viewer_is_blocked = False
         if member and member["id"] != user["id"]:
             viewer_blocked = conn.execute(
@@ -7846,13 +7857,15 @@ def _profile_context(request: Request, handle: str, member: dict | None,
         "user": user,
         "profile": profile,
         "display_name": display,
-        "avatar": _avatar_view(profile.get("avatar_choice"), display, user["handle"]),
+        "avatar": _avatar_view(profile.get("avatar_choice"), display, user["handle"],
+                               profile.get("avatar_path")),
         "banner_gradient": banner,
         "theme": _theme_view(profile.get("theme")),
         "top8": top8,
         "treat_stickers": TREAT_STICKERS,
         "member_since": _member_since_label(user["created_at"]),
         "embed": _music_embed(profile.get("music_embed_url")),
+        "photos": photos,
         "haunts": haunts,
         "comments": comments,
         "is_owner": bool(member and member["id"] == user["id"]),
@@ -8055,11 +8068,16 @@ def _top8_edit_slots(user_id: int) -> list[dict]:
 
 def _edit_context(request: Request, member: dict, profile: dict,
                   error: str | None) -> dict:
+    with get_conn(DB_PATH) as conn:
+        photos = [dict(r) for r in conn.execute(
+            "SELECT id, path, thumb_path FROM profile_photos "
+            "WHERE user_id = ? ORDER BY id ASC", (member["id"],)).fetchall()]
     return {"request": request, "member": member, "profile": profile,
             "avatars": AVATAR_PRESETS, "banners": BANNER_PRESETS,
             "themes": PROFILE_THEMES, "default_theme": DEFAULT_THEME,
             "top8_slots": _top8_edit_slots(member["id"]),
             "films": _film_catalog_titles(),
+            "photos": photos, "photo_max": PROFILE_PHOTO_MAX,
             "error": error}
 
 
@@ -8191,3 +8209,201 @@ async def profile_edit_submit(request: Request,
              for slot, kind, entry_id, film in top8_rows])
         conn.commit()
     return RedirectResponse(f"/@{member['handle']}", status_code=303)
+
+
+# ------------------------------------------- HauntSocial photo uploads
+# Dan (Oct 25): "We should be able to upload our profile picture into
+# HauntSocial and add photos as well." Both flows REUSE the pin-photo
+# machinery above (save_upload's size cap, PHOTO_EXTS, PIL verify,
+# make_thumb's EXIF-upright + metadata-strip pipeline) and run in the
+# thread pool, never on the event loop (blip hardening). An uploaded
+# profile picture beats the preset avatars everywhere the avatar
+# renders (see _avatar_view); profile photos cap at PROFILE_PHOTO_MAX.
+
+PROFILE_PHOTO_MAX = 12
+AVATAR_MAX_EDGE = 512
+
+
+def _profile_row(user_id: int) -> dict:
+    with get_conn(DB_PATH) as conn:
+        prow = conn.execute("SELECT * FROM profiles WHERE user_id = ?",
+                            (user_id,)).fetchone()
+    return dict(prow) if prow else {}
+
+
+def _edit_fail(request: Request, member: dict, msg: str):
+    return templates.TemplateResponse(
+        request, "profile_edit.html",
+        _edit_context(request, member, _profile_row(member["id"]), msg),
+        status_code=400)
+
+
+def _process_avatar(tmp: Path) -> str:
+    """Validate + normalize an uploaded profile picture: real image
+    bytes (PIL verify), EXIF physically transposed so it displays right
+    side up everywhere, metadata stripped on save, center-cropped
+    square at AVATAR_MAX_EDGE. Returns the rel path under UPLOAD_DIR.
+    Raises ValueError on anything unreadable."""
+    name = uuid.uuid4().hex
+    rel = f"avatars/{name}.jpg"
+    dest = UPLOAD_DIR / rel
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        with Image.open(tmp) as im:
+            im.verify()
+        with Image.open(tmp) as im:
+            im = ImageOps.exif_transpose(im).convert("RGB")
+            w, h = im.size
+            side = min(w, h)
+            x, y = (w - side) // 2, (h - side) // 2
+            im = im.crop((x, y, x + side, y + side))
+            if side > AVATAR_MAX_EDGE:
+                im = im.resize((AVATAR_MAX_EDGE, AVATAR_MAX_EDGE),
+                               Image.LANCZOS)
+            _save_pixels(im, dest, "JPEG")
+    except (UnidentifiedImageError, OSError):
+        dest.unlink(missing_ok=True)
+        raise ValueError("That file isn't a readable image.")
+    return rel
+
+
+def _store_profile_photo(media: UploadFile, user_id: int) -> str | None:
+    """One profile-photo upload, pin-flow style: size cap, extension +
+    real-bytes validation, random name, make_thumb (which physically
+    uprights the stored original per EXIF and strips the flag).
+    Returns an error string, or None on success."""
+    ext = safe_ext(media.filename)
+    if ext not in PHOTO_EXTS:
+        return "Photos must be JPG, PNG, or WebP (10 MB max)."
+    with get_conn(DB_PATH) as conn:
+        count = conn.execute(
+            "SELECT COUNT(*) AS n FROM profile_photos WHERE user_id = ?",
+            (user_id,)).fetchone()["n"]
+    if count >= PROFILE_PHOTO_MAX:
+        return (f"Profiles hold at most {PROFILE_PHOTO_MAX} photos — "
+                "delete one to add another.")
+    try:
+        tmp = save_upload(media, MAX_PHOTO_BYTES)
+        try:
+            with Image.open(tmp) as im:
+                im.verify()
+        except (UnidentifiedImageError, OSError):
+            tmp.unlink(missing_ok=True)
+            raise ValueError("That file isn't a readable image.")
+        name = uuid.uuid4().hex
+        rel = f"photos/{name}{ext}"
+        dest = UPLOAD_DIR / rel
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        shutil.move(tmp, dest)
+        try:
+            thumb_rel = make_thumb(dest, name)
+        except (OSError, UnidentifiedImageError):
+            dest.unlink(missing_ok=True)
+            raise ValueError("Couldn't process that image.")
+    except ValueError as e:
+        return str(e)
+    with get_conn(DB_PATH) as conn:
+        conn.execute(
+            "INSERT INTO profile_photos (user_id, path, thumb_path, "
+            "created_at) VALUES (?, ?, ?, ?)",
+            (user_id, rel, thumb_rel,
+             datetime.now(timezone.utc).isoformat()))
+        conn.commit()
+    return None
+
+
+@app.post("/profile/avatar", response_class=HTMLResponse)
+async def profile_avatar_upload(request: Request,
+                                avatar: UploadFile = File(None)):
+    member = current_member(request)
+    if not member:
+        return RedirectResponse("/login?next=/profile/edit", status_code=303)
+    if not avatar or not avatar.filename:
+        return _edit_fail(request, member, "Pick a photo to upload first.")
+    if safe_ext(avatar.filename) not in PHOTO_EXTS:
+        return _edit_fail(request, member,
+                          "Profile pictures must be JPG, PNG, or WebP "
+                          "(10 MB max).")
+
+    def _store() -> str | None:
+        try:
+            tmp = save_upload(avatar, MAX_PHOTO_BYTES)
+            try:
+                rel = _process_avatar(tmp)
+            finally:
+                tmp.unlink(missing_ok=True)
+        except ValueError as e:
+            return str(e)
+        with get_conn(DB_PATH) as conn:
+            old = conn.execute(
+                "SELECT avatar_path FROM profiles WHERE user_id = ?",
+                (member["id"],)).fetchone()
+            conn.execute(
+                "INSERT INTO profiles (user_id, avatar_path, updated_at) "
+                "VALUES (?, ?, ?) ON CONFLICT(user_id) DO UPDATE SET "
+                "avatar_path = excluded.avatar_path, "
+                "updated_at = excluded.updated_at",
+                (member["id"], rel,
+                 datetime.now(timezone.utc).isoformat()))
+            conn.commit()
+        if old and old["avatar_path"] and old["avatar_path"] != rel:
+            (UPLOAD_DIR / old["avatar_path"]).unlink(missing_ok=True)
+        return None
+
+    error = await run_in_threadpool(_store)
+    if error:
+        return _edit_fail(request, member, error)
+    return RedirectResponse("/profile/edit", status_code=303)
+
+
+@app.post("/profile/avatar/remove")
+def profile_avatar_remove(request: Request):
+    member = current_member(request)
+    if not member:
+        return RedirectResponse("/login?next=/profile/edit", status_code=303)
+    with get_conn(DB_PATH) as conn:
+        row = conn.execute(
+            "SELECT avatar_path FROM profiles WHERE user_id = ?",
+            (member["id"],)).fetchone()
+        conn.execute(
+            "UPDATE profiles SET avatar_path = NULL, updated_at = ? "
+            "WHERE user_id = ?",
+            (datetime.now(timezone.utc).isoformat(), member["id"]))
+        conn.commit()
+    if row and row["avatar_path"]:
+        (UPLOAD_DIR / row["avatar_path"]).unlink(missing_ok=True)
+    return RedirectResponse("/profile/edit", status_code=303)
+
+
+@app.post("/profile/photos", response_class=HTMLResponse)
+async def profile_photo_upload(request: Request,
+                               photo: UploadFile = File(None)):
+    member = current_member(request)
+    if not member:
+        return RedirectResponse("/login?next=/profile/edit", status_code=303)
+    if not photo or not photo.filename:
+        return _edit_fail(request, member, "Pick a photo to upload first.")
+    error = await run_in_threadpool(_store_profile_photo, photo, member["id"])
+    if error:
+        return _edit_fail(request, member, error)
+    return RedirectResponse("/profile/edit#photos", status_code=303)
+
+
+@app.post("/profile/photos/{photo_id}/delete")
+def profile_photo_delete(request: Request, photo_id: int):
+    member = current_member(request)
+    if not member:
+        return RedirectResponse("/login?next=/profile/edit", status_code=303)
+    with get_conn(DB_PATH) as conn:
+        row = conn.execute(
+            "SELECT path, thumb_path FROM profile_photos "
+            "WHERE id = ? AND user_id = ?", (photo_id, member["id"])).fetchone()
+        if row:
+            conn.execute("DELETE FROM profile_photos WHERE id = ?",
+                         (photo_id,))
+            conn.commit()
+    if row:
+        (UPLOAD_DIR / row["path"]).unlink(missing_ok=True)
+        if row["thumb_path"]:
+            (UPLOAD_DIR / row["thumb_path"]).unlink(missing_ok=True)
+    return RedirectResponse("/profile/edit#photos", status_code=303)
