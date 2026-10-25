@@ -17,7 +17,9 @@ from pathlib import Path
 #   5584 CA Santa Fe Springs · 5587 OR Happy Valley
 #   5175 IL Oak Lawn · 4370 CO Denver
 #   5653 NJ Park Ridge · 5654 NJ Fair Lawn · 5655 NJ Cherry Hill (Oct 24 Top 10 NJ batch)
-FEATURED_ENTRY_IDS = (5541, 5542, 5551, 5584, 5587, 5175, 4370, 5653, 5654, 5655)
+#   5766 NJ Point Pleasant (Oct 25: Dan's showcase — the site's #1 pin
+#   by interactions; also hand-picked below so it tops the homepage feed)
+FEATURED_ENTRY_IDS = (5541, 5542, 5551, 5584, 5587, 5175, 4370, 5653, 5654, 5655, 5766)
 
 # Hand-picked pins (Dan, Oct 23): pins Dan personally sent in chat or
 # curated for posting. These lead every feed view — hand-picked first
@@ -43,6 +45,10 @@ FEATURED_ENTRY_IDS = (5541, 5542, 5551, 5584, 5587, 5175, 4370, 5653, 5654, 5655
 #     4925, 5175, 5308
 # Dan's sends from Oct 15-22 predate source marking in the posting log
 # and are NOT in this set — the log cannot identify them reliably.
+# Oct 25 addition: 5766 (Point Pleasant NJ) — Dan's explicit showcase
+# pick ("give the top pin some love"): the site's #1 pin by
+# interactions. As the newest hand-picked pin it leads the homepage
+# feed as the first card for every visitor.
 HANDPICKED_ENTRY_IDS = (
     805, 930, 936, 4370, 4372, 4373, 4374, 4375, 4376, 4377, 4384,
     4395, 4465, 4546, 4548, 4550, 4557, 4558, 4559, 4560, 4561, 4562,
@@ -53,7 +59,7 @@ HANDPICKED_ENTRY_IDS = (
     5576, 5577, 5578, 5579, 5580, 5581, 5582, 5583, 5584, 5585, 5586,
     5587, 5588, 5589, 5590, 5591, 5592, 5593, 5595, 5596, 5597, 5598,
     5599, 5600, 5601, 5602, 5603, 5604, 5605, 5606, 5607, 5608, 5609,
-    5610, 5611, 5612, 5613, 5614, 5615, 5616, 5617, 5618,
+    5610, 5611, 5612, 5613, 5614, 5615, 5616, 5617, 5618, 5766,
 )
 
 SCHEMA = """
