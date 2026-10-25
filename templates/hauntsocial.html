@@ -21,7 +21,7 @@
     <a class="social-promo-btn" href="/@{{ request.state.member.handle }}">Go to your page</a>
     <span class="social-promo-alt">Signed in as @{{ request.state.member.handle }}</span>
     {% else %}
-    <a class="social-promo-btn" href="/signup">Join <span class="hs-brand">HauntSocial</span></a>
+    <a class="social-promo-btn" href="/signup"><span class="hs-brand promo-join-first">Join</span> <span class="hs-brand">HauntSocial</span></a>
     <a class="social-promo-alt" href="/login">Already a member? Sign in</a>
     {% endif %}
   </div>

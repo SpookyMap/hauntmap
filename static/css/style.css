@@ -4473,3 +4473,34 @@ a.soc-top8-card:hover { border-color: var(--accent2); }
 .soc-photo-manage .soc-photo-item { margin: 0; }
 .soc-photo-manage .soc-photo-item form { margin-top: 0.25rem;
   text-align: right; }
+
+/* ============ z139: BAND JOIN BUTTON — "JOIN" IN EATER TOO (Dan, Oct 25) ============
+   Dan, from his phone screenshot of the homepage band: "Let's make the
+   'Join' on the join HauntSocial button the same font here." The band
+   CTA (.social-promo-btn href=/signup) set "HauntSocial" in Eater
+   (.hs-brand) but left "Join" in the button's Nosifer drip face, so
+   the two words visibly mismatched. Same treatment as the z137 header
+   JOIN bar: "Join" now wears its own .hs-brand span (.promo-join-first)
+   in templates/index.html + templates/hauntsocial.html. The brand word
+   beside it sits at the button's own size (see the z135 note on
+   .social-promo-btn .hs-brand), so "Join" matches it at 1em — no size
+   shrink — with the same drip-room line-height. Button size, padding,
+   colors and glow unchanged; the member-state "Go to your page"
+   variant and every other button's drip font are untouched. */
+.social-promo-btn .promo-join-first {
+  font-size: 1em;
+  line-height: 1.3;
+}
+
+/* ============ z139 (2): BILLBOARD HEADING — DROP SHADOW GONE (Dan, Oct 25) ============
+   Dan, zoomed screenshot of the homepage sponsor billboard: remove
+   the drop shadow behind the "⭐ FEATURED SPONSORS" heading text.
+   That heading is .sponsor-section h2; its own rules set color/size/
+   spacing but never a shadow — the echo is the site-wide h2 glow
+   (gold halos + a 0 2px 0 black offset) landing on black billboard
+   type. Scoped off here ONLY: the heading's text, color, size and
+   letter-spacing stay, the billboard panel (frame + box-shadow) is
+   untouched, and every other h2 keeps the theme glow. The card's
+   inner .sponsor-tier tag ("FEATURED SPONSOR") is a separate rule
+   that never carried a text-shadow — unchanged. */
+.sponsor-section h2 { text-shadow: none; }
