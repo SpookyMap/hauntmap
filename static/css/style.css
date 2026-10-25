@@ -4071,3 +4071,77 @@ a.social-promo-alt:hover { color: #8fd8ff; }
 @media (max-width: 760px) {
   .social-promo-btn[href="/signup"] { font-size: 0.72rem; }
 }
+/* ============ z129: HAUNTSOCIAL PHASE A (Dan, Oct 25 — STAGED) ============
+   The social network gets its name (HauntSocial) and the MySpace-success
+   lessons: mascot host Frank, wall treats, profile anthem, Top 8 THINGS,
+   and SAFE preset profile themes (CSS variables only, profile page only).
+   Scoped .soc-* / .social-promo-* like everything social before it. */
+.soc-kicker { font-family: var(--font-game); text-transform: uppercase;
+  letter-spacing: 0.35em; font-size: 0.72rem; font-weight: 800;
+  color: var(--accent2); margin: 0 0 0.35rem; }
+.soc-profile-kicker { padding: 0.2rem 0.2rem 0.55rem; }
+.soc-official { display: inline-block; background: linear-gradient(180deg, #8fd8ff, #57a8ff);
+  color: #0a1e24; border-radius: 999px; padding: 0.05rem 0.55rem;
+  font-size: 0.72rem; font-weight: 800; vertical-align: middle; }
+.soc-avatar-img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+.soc-themed { border-radius: 18px; padding: 0.65rem 0.65rem 1rem; }
+
+/* Promo band brand kicker (above the standing approved headline). */
+.social-promo-kicker { font-family: var(--font-game); text-transform: uppercase;
+  letter-spacing: 0.35em; font-size: 0.7rem; font-weight: 800;
+  color: #8fd8ff; opacity: 0.9; margin: 0 0 0.15rem; }
+
+/* Wall treats: one sticker per comment, chosen from the fixed set. */
+.soc-treats { display: flex; flex-wrap: wrap; align-items: center;
+  gap: 0.35rem; margin: 0 0 0.55rem; }
+.soc-treats-label { color: var(--muted); font-size: 0.85rem; margin-right: 0.15rem; }
+.soc-treat { display: inline-flex !important; margin: 0 !important; cursor: pointer;
+  font-weight: 400 !important; }
+.soc-treat input { position: absolute; opacity: 0; pointer-events: none; }
+.soc-treat span { display: inline-flex; align-items: center; justify-content: center;
+  min-width: 2rem; height: 2rem; padding: 0 0.4rem; border-radius: 999px;
+  background: var(--bg2); border: 1px solid #33254f; font-size: 1.05rem; }
+.soc-treat input:checked + span { border-color: var(--accent2);
+  box-shadow: 0 0 10px rgba(87, 168, 255, 0.55); }
+.soc-treat input:focus-visible + span { outline: 2px solid var(--accent2); }
+.soc-treat span { font-size: 1.05rem; }
+.soc-treat:first-of-type span { font-size: 0.8rem; }
+.soc-treat-gift { font-size: 1.25rem; vertical-align: -0.15em; }
+
+/* My Top 8 (things) — profile grid + edit rows. */
+.soc-top8-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.6rem; }
+.soc-top8-card { display: flex; flex-direction: column; gap: 0.15rem;
+  background: var(--card); border: 1px solid #33254f; border-radius: var(--radius);
+  padding: 0.55rem; color: var(--ink); text-decoration: none; min-width: 0; }
+a.soc-top8-card:hover { border-color: var(--accent2); }
+.soc-top8-card img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover;
+  border-radius: 8px; }
+.soc-top8-fallback { font-size: 1.7rem; line-height: 1.2; }
+.soc-top8-title { font-weight: 700; font-size: 0.86rem; overflow-wrap: anywhere; }
+.soc-top8-sub { color: var(--muted); font-size: 0.75rem; overflow-wrap: anywhere; }
+@media (max-width: 560px) { .soc-top8-grid { grid-template-columns: repeat(2, 1fr); } }
+.soc-top8-edit { margin-top: 1rem; }
+.soc-top8-edit-head { font-weight: 700; margin: 0 0 0.5rem; }
+.soc-top8-row { display: flex; flex-wrap: wrap; align-items: flex-start;
+  gap: 0.45rem; margin-bottom: 0.5rem; }
+.soc-top8-num { flex: 0 0 1.4rem; height: 2.2rem; display: inline-flex;
+  align-items: center; justify-content: center; font-weight: 800;
+  color: var(--accent2); }
+.soc-top8-row select, .soc-top8-row input[type="text"] {
+  background: var(--bg2); border: 1px solid #33254f; color: var(--ink);
+  border-radius: 10px; padding: 0.55rem; font-size: 0.95rem; font-family: inherit; }
+.top8-haunt-fields, .top8-film-fields { flex: 1 1 220px; min-width: 0; position: relative; }
+.top8-haunt-fields input[type="text"], .top8-film-fields input[type="text"] { width: 100%; }
+.top8-results { display: flex; flex-direction: column; gap: 0.25rem; margin-top: 0.3rem; }
+.top8-hit { text-align: left; background: var(--card); color: var(--ink);
+  border: 1px solid var(--accent2); border-radius: 8px; padding: 0.4rem 0.6rem;
+  cursor: pointer; font-size: 0.88rem; }
+.top8-none { color: var(--muted); font-size: 0.85rem; }
+
+/* Theme picker chips in /profile/edit (one per preset). */
+.soc-theme-chip { width: 44px; height: 22px; border-radius: 6px; display: inline-block; }
+.soc-theme-midnight { background: linear-gradient(120deg, #0e1b21, #57a8ff); }
+.soc-theme-pumpkin { background: linear-gradient(120deg, #2b1200, #ff7518); }
+.soc-theme-slime { background: linear-gradient(120deg, #0c2405, #6abe30); }
+.soc-theme-bloodmoon { background: linear-gradient(120deg, #1c0208, #e0313c); }
+.soc-theme-graveyard { background: linear-gradient(120deg, #0d0d12, #9a8cff); }

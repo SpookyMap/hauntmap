@@ -1,25 +1,26 @@
 {% extends "base.html" %}
 {% from "_pin_card.html" import pin_card %}
-{% block title %}{% if not_found %}No such haunter{% else %}{{ display_name }} (@{{ user.handle }}){% endif %} · {{ site_name }}{% endblock %}
+{% block title %}{% if not_found %}No such haunter{% else %}{{ display_name }} (@{{ user.handle }}){% endif %} · HauntSocial{% endblock %}
 {% block content %}
 {% if not_found %}
 <section class="soc-auth">
   <h1>&#x1F47B; Nobody home</h1>
-  <p class="soc-lede">There's no HauntMap member at <strong>@{{ handle }}</strong> — yet.
+  <p class="soc-lede">There's no HauntSocial member at <strong>@{{ handle }}</strong> — yet.
      Feeling brave? <a href="/signup">Claim the name</a> before someone else does.</p>
 </section>
 {% else %}
-<article class="soc-profile">
+<article class="soc-profile{{ theme.class }}"{% if theme.style %} style="{{ theme.style }}"{% endif %} data-theme="{{ theme.key }}">
+  <p class="soc-kicker soc-profile-kicker">&#x1F47B; HauntSocial</p>
   <div class="soc-banner" style="background: {{ banner_gradient }}">
     <span class="soc-banner-moons" aria-hidden="true">&#x1F383; &#x1F987; &#x1F47B;</span>
   </div>
   <header class="soc-head">
     <div class="soc-avatar" style="background: {{ avatar.bg }}">
-      {% if avatar.emoji %}<span>{{ avatar.emoji }}</span>{% else %}<span>{{ avatar.initial }}</span>{% endif %}
+      {% if avatar.img %}<img class="soc-avatar-img" src="{{ avatar.img }}" alt="">{% elif avatar.emoji %}<span>{{ avatar.emoji }}</span>{% else %}<span>{{ avatar.initial }}</span>{% endif %}
     </div>
     <div class="soc-id">
       <h1>{{ display_name }}</h1>
-      <p class="soc-handle">@{{ user.handle }}{% if profile.town %} &middot; &#x1F4CD; {{ profile.town }}{% endif %}</p>
+      <p class="soc-handle">@{{ user.handle }}{% if user.is_official %} <span class="soc-official">&#x2B50; Official host</span>{% endif %}{% if profile.town %} &middot; &#x1F4CD; {{ profile.town }}{% endif %}</p>
       <p class="soc-since">Haunting since {{ member_since }}</p>
     </div>
     <div class="soc-actions">
@@ -42,10 +43,33 @@
 
   {% if embed %}
   <section class="soc-music">
-    <h2>&#x1F3B6; On repeat</h2>
+    <h2>&#x1F3B5; My Anthem</h2>
     <iframe src="{{ embed.src }}" width="100%" height="{{ embed.height }}" frameborder="0"
             loading="lazy" allow="encrypted-media; fullscreen; picture-in-picture"
-            allowfullscreen title="{{ display_name }}'s music"></iframe>
+            allowfullscreen title="{{ display_name }}'s anthem"></iframe>
+  </section>
+  {% endif %}
+
+  {% if top8 %}
+  <section class="soc-top8">
+    <h2>&#x2B50; My Top 8</h2>
+    <div class="soc-top8-grid">
+      {% for t in top8 %}
+      {% if t.kind == 'haunt' %}
+      <a class="soc-top8-card" href="/d/{{ t.entry_id }}">
+        {% if t.thumb_url %}<img src="{{ t.thumb_url }}" alt="" loading="lazy">{% else %}<span class="soc-top8-fallback" aria-hidden="true">&#x1F383;</span>{% endif %}
+        <span class="soc-top8-title">{{ t.entry_title }}</span>
+        <span class="soc-top8-sub">{{ t.entry_town }}</span>
+      </a>
+      {% else %}
+      <div class="soc-top8-card soc-top8-film">
+        <span class="soc-top8-fallback" aria-hidden="true">&#x1F3AC;</span>
+        <span class="soc-top8-title">{{ t.film_title }}</span>
+        <span class="soc-top8-sub">Favorite film</span>
+      </div>
+      {% endif %}
+      {% endfor %}
+    </div>
   </section>
   {% endif %}
 
@@ -74,16 +98,23 @@
     {% if wall_error %}<p class="soc-error">{{ wall_error }}</p>{% endif %}
     {% if member and not viewer_is_blocked %}
     <form class="form soc-wall-form" method="post" action="/@{{ user.handle }}/wall">
-      <label class="soc-sr" for="walltext">Leave a comment</label>
+      <label class="soc-sr" for="walltext">Leave a treat</label>
       <textarea id="walltext" name="text" rows="2" maxlength="500" required
-                placeholder="{% if is_owner %}Say something to your visitors…{% else %}Leave a note for {{ display_name }}…{% endif %}"></textarea>
+                placeholder="{% if is_owner %}Say something to your visitors…{% else %}Leave a treat for @{{ user.handle }}…{% endif %}"></textarea>
+      <div class="soc-treats">
+        <span class="soc-treats-label">Add a treat:</span>
+        <label class="soc-treat"><input type="radio" name="sticker" value="" checked><span>None</span></label>
+        {% for s in treat_stickers %}
+        <label class="soc-treat"><input type="radio" name="sticker" value="{{ s }}"><span>{{ s }}</span></label>
+        {% endfor %}
+      </div>
       <button class="btn btn-small" type="submit">Post to the wall</button>
     </form>
     {% elif member and viewer_is_blocked %}
     <p class="soc-note">You can't comment on this profile.</p>
     {% else %}
-    <p class="soc-note"><a href="/login?next=/@{{ user.handle }}">Sign in</a> to leave a comment —
-       or <a href="/signup">join HauntMap</a> and get your own wall.</p>
+    <p class="soc-note"><a href="/login?next=/@{{ user.handle }}">Sign in</a> to leave a treat —
+       or <a href="/signup">join HauntSocial</a> and get your own wall.</p>
     {% endif %}
 
     {% if comments %}
@@ -91,7 +122,7 @@
       {% for c in comments %}
       <li class="soc-comment">
         <div class="soc-avatar soc-avatar-sm" style="background: {{ c.author_avatar_view.bg }}">
-          {% if c.author_avatar_view.emoji %}<span>{{ c.author_avatar_view.emoji }}</span>{% else %}<span>{{ c.author_avatar_view.initial }}</span>{% endif %}
+          {% if c.author_avatar_view.img %}<img class="soc-avatar-img" src="{{ c.author_avatar_view.img }}" alt="">{% elif c.author_avatar_view.emoji %}<span>{{ c.author_avatar_view.emoji }}</span>{% else %}<span>{{ c.author_avatar_view.initial }}</span>{% endif %}
         </div>
         <div class="soc-comment-body">
           <p class="soc-comment-meta">
@@ -99,7 +130,7 @@
             <span class="soc-comment-handle">@{{ c.author_handle }}</span>
             <time>{{ c.created_at[:10] }}</time>
           </p>
-          <p class="soc-comment-text">{{ c.text }}</p>
+          <p class="soc-comment-text">{% if c.sticker %}<span class="soc-treat-gift" aria-label="treat">{{ c.sticker }}</span> {% endif %}{{ c.text }}</p>
           <p class="soc-comment-tools">
             {% if member and (is_owner or member.id == c.author_user_id) %}
             <form method="post" action="/wall/{{ c.id }}/delete"><button type="submit" class="soc-tool">Delete</button></form>

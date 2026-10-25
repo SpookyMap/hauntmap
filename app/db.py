@@ -180,6 +180,7 @@ CREATE TABLE IF NOT EXISTS users (
     handle TEXT NOT NULL UNIQUE,          -- lowercase, 3-20 chars [a-z0-9_]
     dob TEXT,                             -- ISO date, age gate at signup
     is_admin INTEGER NOT NULL DEFAULT 0,
+    is_official INTEGER NOT NULL DEFAULT 0, -- 1 = official host (Frank)
     status TEXT NOT NULL DEFAULT 'active', -- active | suspended
     created_at TEXT NOT NULL
 );
@@ -191,6 +192,7 @@ CREATE TABLE IF NOT EXISTS profiles (
     town TEXT,
     avatar_choice TEXT,                   -- preset key, NULL = initial tile
     banner_choice TEXT,                   -- preset key, NULL = default banner
+    theme TEXT,                           -- HauntSocial preset theme key
     music_embed_url TEXT,                 -- member-supplied Spotify/SC/YT URL
     website_url TEXT,
     updated_at TEXT
@@ -213,10 +215,21 @@ CREATE TABLE IF NOT EXISTS wall_comments (
     profile_user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     author_user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     text TEXT NOT NULL,
+    sticker TEXT,                         -- HauntSocial treat sticker (emoji)
     hidden INTEGER NOT NULL DEFAULT 0,
     created_at TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_wall_profile ON wall_comments(profile_user_id, created_at);
+-- HauntSocial Phase A: "My Top 8" — THINGS, never people (research
+-- guardrail): each slot is a HauntMap pin or a favorite horror film.
+CREATE TABLE IF NOT EXISTS profile_top8 (
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    slot INTEGER NOT NULL,                -- 1..8, display order
+    kind TEXT NOT NULL,                   -- 'haunt' | 'film'
+    entry_id INTEGER REFERENCES entries(id) ON DELETE CASCADE,
+    film_title TEXT,
+    PRIMARY KEY (user_id, slot)
+);
 CREATE TABLE IF NOT EXISTS reports (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     reporter_user_id INTEGER REFERENCES users(id),
@@ -356,4 +369,16 @@ def init_db(db_path: Path) -> None:
         # it. NULL until claimed; profile "My haunts" reads this column.
         if "owner_user_id" not in cols:
             conn.execute("ALTER TABLE entries ADD COLUMN owner_user_id INTEGER")
+        # HauntSocial Phase A: official-host flag, profile themes,
+        # wall treat stickers — for DBs created before they existed.
+        ucols = {r["name"] for r in conn.execute("PRAGMA table_info(users)").fetchall()}
+        if ucols and "is_official" not in ucols:
+            conn.execute(
+                "ALTER TABLE users ADD COLUMN is_official INTEGER NOT NULL DEFAULT 0")
+        pcols = {r["name"] for r in conn.execute("PRAGMA table_info(profiles)").fetchall()}
+        if pcols and "theme" not in pcols:
+            conn.execute("ALTER TABLE profiles ADD COLUMN theme TEXT")
+        wcols = {r["name"] for r in conn.execute("PRAGMA table_info(wall_comments)").fetchall()}
+        if wcols and "sticker" not in wcols:
+            conn.execute("ALTER TABLE wall_comments ADD COLUMN sticker TEXT")
         conn.commit()

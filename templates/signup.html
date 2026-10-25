@@ -1,11 +1,12 @@
 {% extends "base.html" %}
-{% block title %}Join HauntMap · {{ site_name }}{% endblock %}
+{% block title %}Join HauntSocial · {{ site_name }}{% endblock %}
 {% block content %}
 <section class="soc-auth">
-  <h1>&#x1F383; Join HauntMap</h1>
-  <p class="soc-lede">Get your own page at <strong>gethauntmap.com/@yourname</strong> —
-     your haunts, your music, your wall. Free, and the map stays open to
-     everyone either way.</p>
+  <p class="soc-kicker">HauntSocial</p>
+  <h1>&#x1F383; Join HauntSocial</h1>
+  <p class="soc-lede">HauntSocial is HauntMap's social network — get your own
+     page at <strong>gethauntmap.com/@yourname</strong>: your haunts, your
+     anthem, your wall. Free, and the map stays open to everyone either way.</p>
   {% if error %}<p class="soc-error">{{ error }}</p>{% endif %}
   <form class="form soc-form" method="post" action="/signup">
     <label>Email <span class="req">*</span>

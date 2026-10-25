@@ -36,15 +36,96 @@
         {% endfor %}
       </span>
     </label>
-    <label>Music embed <span class="opt">(Spotify, SoundCloud, or YouTube link)</span>
+    <label>Profile theme
+      <span class="soc-picker">
+        {% for key, t in themes.items() %}
+        <label class="soc-pick"><input type="radio" name="theme" value="{{ key }}" {% if (profile.theme or default_theme) == key %}checked{% endif %}>
+          <span class="soc-theme-chip soc-theme-{{ key }}"></span> {{ t.label }}</label>
+        {% endfor %}
+      </span>
+      <small>Restyles your profile page only — your colors, your corner of HauntSocial.</small>
+    </label>
+    <label>My Anthem <span class="opt">(Spotify, SoundCloud, or YouTube link)</span>
       <input type="url" name="music_embed_url"
              value="{{ profile.music_embed_url or '' }}"
              placeholder="https://open.spotify.com/track/…">
-      <small>Your profile song, the MySpace way — paste a track, album, or
-        playlist link and it plays right on your page.</small>
+      <small>One song that says who you are — your profile anthem, the
+        MySpace way. It plays on click, never autoplay.</small>
     </label>
+    <div class="soc-top8-edit">
+      <p class="soc-top8-edit-head">&#x2B50; My Top 8 <span class="opt">(things, not people — your favorite haunts &amp; films)</span></p>
+      {% for s in top8_slots %}
+      <div class="soc-top8-row" data-slot="{{ s.slot }}">
+        <span class="soc-top8-num">{{ s.slot }}</span>
+        <select name="top8_kind_{{ s.slot }}" class="top8-kind" aria-label="Top 8 slot {{ s.slot }} type">
+          <option value="" {% if not s.kind %}selected{% endif %}>— None —</option>
+          <option value="haunt" {% if s.kind == 'haunt' %}selected{% endif %}>&#x1F383; A haunt</option>
+          <option value="film" {% if s.kind == 'film' %}selected{% endif %}>&#x1F3AC; A film</option>
+        </select>
+        <span class="top8-haunt-fields">
+          <input type="text" class="top8-search" placeholder="Search haunts by name or town…"
+                 value="{{ s.entry_label }}" autocomplete="off" aria-label="Search haunts">
+          <input type="hidden" name="top8_entry_{{ s.slot }}" value="{{ s.entry_id or '' }}">
+          <span class="top8-results"></span>
+        </span>
+        <span class="top8-film-fields">
+          <input type="text" name="top8_film_{{ s.slot }}" list="film-catalog" maxlength="120"
+                 placeholder="Film title — pick from the catalog or type your own"
+                 value="{{ s.film_title }}" aria-label="Film title">
+        </span>
+      </div>
+      {% endfor %}
+      <datalist id="film-catalog">
+        {% for f in films %}<option value="{{ f }}">{% endfor %}
+      </datalist>
+    </div>
     <button class="btn btn-big" type="submit">Save profile</button>
   </form>
+  <script>
+  (function () {
+    function wireRow(row) {
+      var kind = row.querySelector('.top8-kind');
+      var hauntF = row.querySelector('.top8-haunt-fields');
+      var filmF = row.querySelector('.top8-film-fields');
+      var search = row.querySelector('.top8-search');
+      var hidden = row.querySelector('input[type="hidden"]');
+      var results = row.querySelector('.top8-results');
+      function sync() {
+        hauntF.style.display = kind.value === 'haunt' ? '' : 'none';
+        filmF.style.display = kind.value === 'film' ? '' : 'none';
+      }
+      kind.addEventListener('change', sync); sync();
+      var timer = null;
+      search.addEventListener('input', function () {
+        hidden.value = '';
+        clearTimeout(timer);
+        var q = search.value.trim();
+        if (q.length < 2) { results.innerHTML = ''; return; }
+        timer = setTimeout(function () {
+          fetch('/api/pins/search?q=' + encodeURIComponent(q))
+            .then(function (r) { return r.json(); })
+            .then(function (pins) {
+              results.innerHTML = '';
+              pins.forEach(function (p) {
+                var b = document.createElement('button');
+                b.type = 'button'; b.className = 'top8-hit';
+                b.textContent = p.title + ' — ' + (p.town || '');
+                b.addEventListener('click', function () {
+                  hidden.value = p.id;
+                  search.value = p.title + ' — ' + (p.town || '');
+                  results.innerHTML = '';
+                });
+                results.appendChild(b);
+              });
+              if (!pins.length) results.innerHTML = '<span class="top8-none">No haunts match — try the town name.</span>';
+            })
+            .catch(function () { results.innerHTML = ''; });
+        }, 250);
+      });
+    }
+    document.querySelectorAll('.soc-top8-row').forEach(wireRow);
+  })();
+  </script>
   <p class="soc-alt"><a href="/@{{ member.handle }}">View my page</a></p>
 </section>
 {% endblock %}

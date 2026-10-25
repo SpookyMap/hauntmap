@@ -114,6 +114,11 @@ CARD_THUMB_DIR.mkdir(parents=True, exist_ok=True)
 def _startup() -> None:
     init_db(DB_PATH)
     _start_analytics_writer()
+    try:
+        _hauntsocial_boot()
+    except Exception:
+        # The mascot host is a courtesy layer — never break boot over it.
+        logger.exception("HauntSocial boot (Frank ensure/backfill) failed")
 
 
 @app.on_event("shutdown")
@@ -6590,6 +6595,7 @@ RESERVED_HANDLES = {
     "admin", "hauntmap", "support", "help", "official", "staff", "team",
     "moderator", "mod", "system", "root", "api", "login", "logout",
     "signup", "register", "settings", "profile", "edit", "about", "terms",
+    "frank",
     "privacy", "events", "map", "watch", "tour", "tours", "nearby",
     "games", "music", "movies", "markets", "leaderboard", "passport",
     "daily", "towns", "advertise", "upload", "diy", "fanart", "fan-art",
@@ -6622,6 +6628,150 @@ BANNER_PRESETS = {
     "candy": "linear-gradient(120deg,#2b0a24,#7a1c5e 55%,#ff5da2)",
 }
 DEFAULT_BANNER = "midnight"
+
+# ------------------------------------------------------- HauntSocial Phase A
+# Dan (Oct 25): the social network is named HauntSocial, and the
+# MySpace-success lessons (research brief, 2026-10-25) land here:
+# a mascot host (our "Tom"), the wall as currency (treats), one profile
+# anthem, a Top 8 of THINGS (never people), and SAFE preset themes —
+# customization via variables only, no member CSS/JS, ever.
+# Phase B (bulletins, founding-creator seeding, member directory,
+# Haunt of the Day, member data export) is a later build.
+
+# Treat stickers a wall comment can carry — exactly ONE per comment.
+TREAT_STICKERS = ["🎃", "👻", "🍬", "🦇", "🕷️", "💀"]
+
+# Preset profile themes, applied as CSS-variable overrides on the
+# member's own profile page only. "midnight" is the standing look.
+PROFILE_THEMES = {
+    "midnight": {"label": "Midnight", "vars": {}, "panel": ""},
+    "pumpkin": {"label": "Pumpkin",
+                "vars": {"--accent": "#ff7518", "--accent2": "#ffab5e",
+                         "--card": "#2a1708", "--bg2": "#1c0f04"},
+                "panel": "radial-gradient(120% 90% at 50% 0%, "
+                         "rgba(255,117,24,.16), transparent 62%)"},
+    "slime": {"label": "Slime",
+              "vars": {"--accent": "#6abe30", "--accent2": "#a5e075",
+                       "--card": "#12240c", "--bg2": "#0a1706"},
+              "panel": "radial-gradient(120% 90% at 50% 0%, "
+                       "rgba(106,190,48,.15), transparent 62%)"},
+    "bloodmoon": {"label": "Blood Moon",
+                  "vars": {"--accent": "#e0313c", "--accent2": "#ff8a7a",
+                           "--card": "#2a0a10", "--bg2": "#190509"},
+                  "panel": "radial-gradient(120% 90% at 50% 0%, "
+                           "rgba(224,49,60,.16), transparent 62%)"},
+    "graveyard": {"label": "Graveyard",
+                  "vars": {"--accent": "#9a8cff", "--accent2": "#c9c2ff",
+                           "--card": "#1e1e28", "--bg2": "#12121a"},
+                  "panel": "radial-gradient(120% 90% at 50% 0%, "
+                           "rgba(154,140,255,.14), transparent 62%)"},
+}
+DEFAULT_THEME = "midnight"
+
+# Frank — the official HauntSocial host (the MySpace "Tom" lesson:
+# nobody lands in an empty room). A normal member row flagged
+# is_official; no admin powers, no special routes.
+FRANK_HANDLE = "frank"
+FRANK_EMAIL = "frank@gethauntmap.com"
+FRANK_ART = "/static/img/frank_host_art.webp"  # Dan's new header Frank (full art, banner)
+FRANK_AVATAR_ART = "/static/img/frank_avatar.webp"  # head/face crop of the same art
+FRANK_AVATAR_CHOICE = "frank_art"
+FRANK_BANNER_CHOICE = "frank_art"
+FRANK_BIO = ("Your HauntSocial host — I haunt every profile so nobody's "
+             "wall is ever empty. Leave treats, show me your haunt, and "
+             "make yourself at home. 🎃")
+# "Monster Mash" — Bobby "Boris" Pickett (official lyric video,
+# Radial by The Orchard). The ID was oEmbed-verified for the /music
+# page on 2026-10-23; the anthem slot's validator accepts it.
+FRANK_ANTHEM_URL = "https://www.youtube.com/watch?v=NF69rFld9zQ"
+FRANK_WELCOME = ("Welcome to HauntSocial 🎃 I'm Frank, your host — I follow "
+                 "every new haunter so this place never feels empty. Set "
+                 "your anthem, pick your Top 8, and leave a treat on my "
+                 "wall anytime. Happy haunting!")
+
+
+def _theme_view(theme_key: str | None) -> dict:
+    """Inline style + class for a profile article under a preset theme.
+    Midnight returns empty strings so today's look stays pixel-exact."""
+    key = theme_key if theme_key in PROFILE_THEMES else DEFAULT_THEME
+    theme = PROFILE_THEMES[key]
+    if key == DEFAULT_THEME:
+        return {"key": key, "style": "", "class": ""}
+    decls = "; ".join(f"{k}: {v}" for k, v in theme["vars"].items())
+    if theme["panel"]:
+        decls += f"; background: {theme['panel']}"
+    return {"key": key, "style": decls, "class": " soc-themed"}
+
+
+def _ensure_frank(conn) -> int | None:
+    """Frank's user id, creating him on first need. Returns None when
+    the handle is held by a non-official account — never hijack it."""
+    row = conn.execute("SELECT id, is_official FROM users WHERE handle = ?",
+                       (FRANK_HANDLE,)).fetchone()
+    if row:
+        return row["id"] if row["is_official"] else None
+    if conn.execute("SELECT 1 FROM users WHERE email = ?",
+                    (FRANK_EMAIL,)).fetchone():
+        return None
+    pw_hash, pw_salt = _hash_password(secrets.token_urlsafe(32))
+    now = datetime.now(timezone.utc).isoformat()
+    cur = conn.execute(
+        "INSERT INTO users (email, password_hash, password_salt, handle, "
+        "is_official, created_at) VALUES (?, ?, ?, ?, 1, ?)",
+        (FRANK_EMAIL, pw_hash, pw_salt, FRANK_HANDLE, now))
+    frank_id = cur.lastrowid
+    conn.execute(
+        "INSERT INTO profiles (user_id, display_name, bio, town, "
+        "avatar_choice, banner_choice, theme, music_embed_url, updated_at) "
+        "VALUES (?, 'Frank', ?, 'HauntSocial HQ', ?, ?, 'graveyard', ?, ?)",
+        (frank_id, FRANK_BIO, FRANK_AVATAR_CHOICE, FRANK_BANNER_CHOICE,
+         FRANK_ANTHEM_URL, now))
+    return frank_id
+
+
+def _frank_follow_and_welcome(conn, new_user_id: int) -> None:
+    """New-signup mechanics: the member auto-follows Frank, and Frank
+    leaves the welcome treat on THEIR wall (their first wall comment)."""
+    frank_id = _ensure_frank(conn)
+    if not frank_id or frank_id == new_user_id:
+        return
+    now = datetime.now(timezone.utc).isoformat()
+    conn.execute(
+        "INSERT OR IGNORE INTO follows (follower_id, followee_id, "
+        "created_at) VALUES (?, ?, ?)", (new_user_id, frank_id, now))
+    conn.execute(
+        "INSERT INTO wall_comments (profile_user_id, author_user_id, "
+        "text, sticker, created_at) VALUES (?, ?, ?, ?, ?)",
+        (new_user_id, frank_id, FRANK_WELCOME, "🎃", now))
+
+
+def _hauntsocial_boot() -> None:
+    """Startup: Frank exists, and every existing member follows him —
+    the backfill for members who joined before he did. Follows only:
+    no wall spam for existing members."""
+    with get_conn(DB_PATH) as conn:
+        frank_id = _ensure_frank(conn)
+        if frank_id:
+            now = datetime.now(timezone.utc).isoformat()
+            conn.execute(
+                "INSERT OR IGNORE INTO follows (follower_id, followee_id, "
+                "created_at) SELECT id, ?, ? FROM users WHERE id != ?",
+                (frank_id, now, frank_id))
+        conn.commit()
+
+
+def _film_catalog_titles() -> list[str]:
+    """Every film title in the site's /movies catalog (deduped) — the
+    Top 8 film picker offers these first; free text is also allowed."""
+    titles, seen = [], set()
+    for lst in (MOVIE_NEW, MOVIE_CLASSICS, MOVIE_DEEP_CUTS, MOVIE_FREE_FULL):
+        for m in lst:
+            t = (m.get("title") or "").strip()
+            if t and t.lower() not in seen:
+                seen.add(t.lower())
+                titles.append(t)
+    return sorted(titles, key=str.lower)
+
 
 # Simple in-app throttle for auth endpoints: key -> [unix timestamps].
 _auth_throttle: dict[str, list[float]] = {}
@@ -6765,6 +6915,9 @@ def _handle_held(handle: str) -> bool:
 
 
 def _avatar_view(choice: str | None, display_name: str | None, handle: str) -> dict:
+    if choice == FRANK_AVATAR_CHOICE:
+        # The host's avatar is the head/face crop of Dan's new Frank art.
+        return {"emoji": "", "bg": "#12260d", "initial": "", "img": FRANK_AVATAR_ART}
     if choice in AVATAR_PRESETS:
         emoji, bg = AVATAR_PRESETS[choice]
         return {"emoji": emoji, "bg": bg, "initial": ""}
@@ -6893,7 +7046,7 @@ def signup_submit(request: Request,
     today = datetime.now(timezone.utc).date()
     age = today.year - dob_d.year - ((today.month, today.day) < (dob_d.month, dob_d.day))
     if age < SOCIAL_AGE_MIN:
-        return fail("Sorry — you need to be 13 or older to join HauntMap.")
+        return fail("Sorry — you need to be 13 or older to join HauntSocial.")
     if age > 120:
         return fail("That date of birth doesn't look right — check it and try again.")
     with get_conn(DB_PATH) as conn:
@@ -6919,6 +7072,9 @@ def signup_submit(request: Request,
         conn.execute(
             "INSERT INTO profiles (user_id, display_name, updated_at) "
             "VALUES (?, ?, ?)", (user_id, handle_n, now))
+        # HauntSocial: auto-follow the host + his welcome treat lands on
+        # the new member's wall in the same transaction.
+        _frank_follow_and_welcome(conn, user_id)
         conn.commit()
     resp = RedirectResponse(f"/@{handle_n}", status_code=303)
     _start_member_session(resp, user_id)
@@ -7038,6 +7194,26 @@ def _profile_context(request: Request, handle: str, member: dict | None,
         haunts = [row_to_dict(r) for r in conn.execute(
             "SELECT * FROM entries WHERE owner_user_id = ? AND hidden = 0 "
             "ORDER BY created_at DESC", (user["id"],)).fetchall()]
+        # My Top 8 (things, not people): haunt slots join their pin so
+        # the card renders live data; a hidden/deleted pin drops out.
+        top8 = []
+        for r in conn.execute(
+                "SELECT t.slot, t.kind, t.film_title, e.id AS entry_id, "
+                "e.title AS entry_title, e.town AS entry_town, "
+                "e.thumb_path AS entry_thumb, e.media_path AS entry_media "
+                "FROM profile_top8 t "
+                "LEFT JOIN entries e ON e.id = t.entry_id AND e.hidden = 0 "
+                "WHERE t.user_id = ? ORDER BY t.slot",
+                (user["id"],)).fetchall():
+            item = dict(r)
+            if item["kind"] == "haunt" and item["entry_id"]:
+                item["thumb_url"] = (
+                    f"/media/{item['entry_thumb']}" if item["entry_thumb"]
+                    else (f"/media/{item['entry_media']}"
+                          if item["entry_media"] else ""))
+                top8.append(item)
+            elif item["kind"] == "film" and item["film_title"]:
+                top8.append(item)
         comments = []
         for r in conn.execute(
                 "SELECT w.*, a.handle AS author_handle, "
@@ -7060,6 +7236,12 @@ def _profile_context(request: Request, handle: str, member: dict | None,
                 "SELECT 1 FROM blocks WHERE blocker_id = ? AND blocked_id = ?",
                 (user["id"], member["id"])).fetchone() is not None
     display = profile.get("display_name") or user["handle"]
+    banner = BANNER_PRESETS.get(profile.get("banner_choice") or "",
+                                 BANNER_PRESETS[DEFAULT_BANNER])
+    if profile.get("banner_choice") == FRANK_BANNER_CHOICE:
+        # The host's banner is the site's Frank header art under a scrim.
+        banner = ("linear-gradient(rgba(13,10,24,.22), rgba(13,10,24,.68)), "
+                  f"url('{FRANK_ART}') center 28%/cover")
     return {
         "request": request,
         "member": member,
@@ -7067,8 +7249,10 @@ def _profile_context(request: Request, handle: str, member: dict | None,
         "profile": profile,
         "display_name": display,
         "avatar": _avatar_view(profile.get("avatar_choice"), display, user["handle"]),
-        "banner_gradient": BANNER_PRESETS.get(profile.get("banner_choice") or "",
-                                              BANNER_PRESETS[DEFAULT_BANNER]),
+        "banner_gradient": banner,
+        "theme": _theme_view(profile.get("theme")),
+        "top8": top8,
+        "treat_stickers": TREAT_STICKERS,
         "member_since": _member_since_label(user["created_at"]),
         "embed": _music_embed(profile.get("music_embed_url")),
         "haunts": haunts,
@@ -7098,7 +7282,8 @@ def profile_page(request: Request, handle: str):
 
 
 @app.post("/@{handle}/wall", response_class=HTMLResponse)
-def wall_post(request: Request, handle: str, text: str = Form("")):
+def wall_post(request: Request, handle: str, text: str = Form(""),
+              sticker: str = Form("")):
     handle_n = handle.strip().lower()
     member = current_member(request)
     if not member:
@@ -7126,6 +7311,8 @@ def wall_post(request: Request, handle: str, text: str = Form("")):
             (member["id"], (datetime.now(timezone.utc)
                              - timedelta(hours=1)).isoformat())).fetchone()["n"]
     body = text.strip()
+    # One treat sticker per comment, from the fixed set only.
+    treat = sticker if sticker in TREAT_STICKERS else None
     if blocked:
         return fail("You can't comment on this profile.")
     if not body:
@@ -7140,8 +7327,8 @@ def wall_post(request: Request, handle: str, text: str = Form("")):
     with get_conn(DB_PATH) as conn:
         conn.execute(
             "INSERT INTO wall_comments (profile_user_id, author_user_id, text, "
-            "created_at) VALUES (?, ?, ?, ?)",
-            (owner["id"], member["id"], body,
+            "sticker, created_at) VALUES (?, ?, ?, ?, ?)",
+            (owner["id"], member["id"], body, treat,
              datetime.now(timezone.utc).isoformat()))
         conn.commit()
     return RedirectResponse(f"/@{handle_n}", status_code=303)
@@ -7245,6 +7432,39 @@ def wall_report(request: Request, comment_id: int, reason: str = Form("")):
 
 # --------------------------------------------------------------- edit profile
 
+def _top8_edit_slots(user_id: int) -> list[dict]:
+    """The 8 Top-8 slots as the edit form needs them (saved values only;
+    a slot is {'slot', 'kind', 'entry_id', 'entry_label', 'film_title'})."""
+    slots = [{"slot": i, "kind": "", "entry_id": None,
+              "entry_label": "", "film_title": ""} for i in range(1, 9)]
+    with get_conn(DB_PATH) as conn:
+        for r in conn.execute(
+                "SELECT t.slot, t.kind, t.entry_id, t.film_title, "
+                "e.title AS entry_title, e.town AS entry_town "
+                "FROM profile_top8 t "
+                "LEFT JOIN entries e ON e.id = t.entry_id "
+                "WHERE t.user_id = ? ORDER BY t.slot", (user_id,)).fetchall():
+            s = slots[r["slot"] - 1]
+            s["kind"] = r["kind"]
+            if r["kind"] == "haunt" and r["entry_id"]:
+                s["entry_id"] = r["entry_id"]
+                s["entry_label"] = (f"{r['entry_title']} — {r['entry_town']}"
+                                    if r["entry_title"] else "")
+            elif r["kind"] == "film":
+                s["film_title"] = r["film_title"] or ""
+    return slots
+
+
+def _edit_context(request: Request, member: dict, profile: dict,
+                  error: str | None) -> dict:
+    return {"request": request, "member": member, "profile": profile,
+            "avatars": AVATAR_PRESETS, "banners": BANNER_PRESETS,
+            "themes": PROFILE_THEMES, "default_theme": DEFAULT_THEME,
+            "top8_slots": _top8_edit_slots(member["id"]),
+            "films": _film_catalog_titles(),
+            "error": error}
+
+
 @app.get("/profile/edit", response_class=HTMLResponse)
 def profile_edit_form(request: Request):
     member = current_member(request)
@@ -7255,32 +7475,47 @@ def profile_edit_form(request: Request):
                             (member["id"],)).fetchone()
     return templates.TemplateResponse(
         request, "profile_edit.html",
-        {"request": request, "member": member,
-         "profile": dict(prow) if prow else {},
-         "avatars": AVATAR_PRESETS, "banners": BANNER_PRESETS,
-         "error": None})
+        _edit_context(request, member, dict(prow) if prow else {}, None))
+
+
+@app.get("/api/pins/search")
+def pin_search(request: Request, q: str = ""):
+    """Live-pin search for the Top 8 picker. Members only — it's an
+    editing tool, not a public API."""
+    member = current_member(request)
+    if not member:
+        raise HTTPException(401, "Sign in first.")
+    q = q.strip()
+    if len(q) < 2:
+        return JSONResponse([])
+    like = f"%{q}%"
+    with get_conn(DB_PATH) as conn:
+        rows = conn.execute(
+            "SELECT id, title, town FROM entries WHERE hidden = 0 "
+            "AND (title LIKE ? OR town LIKE ?) "
+            "ORDER BY votes DESC, id DESC LIMIT 8", (like, like)).fetchall()
+    return JSONResponse([{"id": r["id"], "title": r["title"],
+                          "town": r["town"]} for r in rows])
 
 
 @app.post("/profile/edit", response_class=HTMLResponse)
-def profile_edit_submit(request: Request,
-                        display_name: str = Form(""), bio: str = Form(""),
-                        town: str = Form(""), avatar_choice: str = Form(""),
-                        banner_choice: str = Form(""),
-                        music_embed_url: str = Form("")):
+async def profile_edit_submit(request: Request,
+                              display_name: str = Form(""), bio: str = Form(""),
+                              town: str = Form(""), avatar_choice: str = Form(""),
+                              banner_choice: str = Form(""), theme: str = Form(""),
+                              music_embed_url: str = Form("")):
     member = current_member(request)
     if not member:
         return RedirectResponse("/login?next=/profile/edit", status_code=303)
     values = {"display_name": display_name.strip(), "bio": bio.strip(),
               "town": town.strip(), "avatar_choice": avatar_choice,
-              "banner_choice": banner_choice,
+              "banner_choice": banner_choice, "theme": theme,
               "music_embed_url": music_embed_url.strip()}
 
     def fail(msg: str):
         return templates.TemplateResponse(
             request, "profile_edit.html",
-            {"request": request, "member": member, "profile": values,
-             "avatars": AVATAR_PRESETS, "banners": BANNER_PRESETS,
-             "error": msg}, status_code=400)
+            _edit_context(request, member, values, msg), status_code=400)
 
     if len(values["display_name"]) > 60:
         return fail("Display names cap at 60 characters.")
@@ -7292,6 +7527,8 @@ def profile_edit_submit(request: Request,
         return fail("Pick an avatar from the set.")
     if banner_choice and banner_choice not in BANNER_PRESETS:
         return fail("Pick a banner from the set.")
+    if theme and theme not in PROFILE_THEMES:
+        return fail("Pick a theme from the set.")
     music = values["music_embed_url"]
     if music and _music_embed(music) is None:
         return fail("That link can't be embedded — use a Spotify, SoundCloud, "
@@ -7302,20 +7539,57 @@ def profile_edit_submit(request: Request,
     if _account_age_days(member) < 7 and _contains_link(values["bio"]):
         return fail("New accounts can't put links in their bio for the "
                     "first 7 days — anti-spam rules.")
+    # My Top 8: 8 slots of things. Haunt slots must name a live pin;
+    # film slots are catalog-or-free-text titles.
+    form = await request.form()
+    top8_rows = []
+    for i in range(1, 9):
+        kind = (form.get(f"top8_kind_{i}") or "").strip()
+        if kind == "haunt":
+            try:
+                entry_id = int(form.get(f"top8_entry_{i}") or "")
+            except ValueError:
+                return fail(f"Top 8 slot {i}: search and pick a haunt "
+                            "from the list.")
+            with get_conn(DB_PATH) as conn:
+                ok = conn.execute(
+                    "SELECT 1 FROM entries WHERE id = ? AND hidden = 0",
+                    (entry_id,)).fetchone()
+            if not ok:
+                return fail(f"Top 8 slot {i}: that haunt isn't on the "
+                            "map anymore — pick another.")
+            top8_rows.append((i, "haunt", entry_id, None))
+        elif kind == "film":
+            title = (form.get(f"top8_film_{i}") or "").strip()
+            if not title:
+                return fail(f"Top 8 slot {i}: name the film, or set the "
+                            "slot to None.")
+            if len(title) > 120:
+                return fail(f"Top 8 slot {i}: film titles cap at 120 "
+                            "characters.")
+            top8_rows.append((i, "film", None, title))
     with get_conn(DB_PATH) as conn:
         conn.execute(
             "INSERT INTO profiles (user_id, display_name, bio, town, "
-            "avatar_choice, banner_choice, music_embed_url, updated_at) "
-            "VALUES (?, ?, ?, ?, ?, ?, ?, ?) "
+            "avatar_choice, banner_choice, theme, music_embed_url, updated_at) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) "
             "ON CONFLICT(user_id) DO UPDATE SET display_name = excluded.display_name, "
             "bio = excluded.bio, town = excluded.town, "
             "avatar_choice = excluded.avatar_choice, "
             "banner_choice = excluded.banner_choice, "
+            "theme = excluded.theme, "
             "music_embed_url = excluded.music_embed_url, "
             "updated_at = excluded.updated_at",
             (member["id"], values["display_name"] or member["handle"],
              values["bio"] or None, values["town"] or None,
-             avatar_choice or None, banner_choice or None, music or None,
-             datetime.now(timezone.utc).isoformat()))
+             avatar_choice or None, banner_choice or None, theme or None,
+             music or None, datetime.now(timezone.utc).isoformat()))
+        conn.execute("DELETE FROM profile_top8 WHERE user_id = ?",
+                     (member["id"],))
+        conn.executemany(
+            "INSERT INTO profile_top8 (user_id, slot, kind, entry_id, "
+            "film_title) VALUES (?, ?, ?, ?, ?)",
+            [(member["id"], slot, kind, entry_id, film)
+             for slot, kind, entry_id, film in top8_rows])
         conn.commit()
     return RedirectResponse(f"/@{member['handle']}", status_code=303)
