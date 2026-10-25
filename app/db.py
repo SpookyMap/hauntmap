@@ -16,7 +16,7 @@ from pathlib import Path
 #   5541 NC Wake Forest · 5542 SC Mauldin · 5551 CA Mission Viejo
 #   5584 CA Santa Fe Springs · 5587 OR Happy Valley
 #   5175 IL Oak Lawn · 4370 CO Denver
-FEATURED_ENTRY_IDS = (5541, 5542, 5551, 5584, 5587, 5175, 4370)
+FEATURED_ENTRY_IDS = (5541, 5542, 5551, 5584, 5587, 5175, 4370, 5653)
 
 # Hand-picked pins (Dan, Oct 23): pins Dan personally sent in chat or
 # curated for posting. These lead every feed view — hand-picked first
