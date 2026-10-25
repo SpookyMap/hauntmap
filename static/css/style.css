@@ -4014,3 +4014,13 @@ a.social-promo-alt:hover { color: #8fd8ff; }
    shift layout or change disc sizes at any width. */
 .header-nav a.navbtn img,
 .site-header.v2 .header-nav a.navbtn img { box-shadow: 0 0 0 2px #ff7518; }
+
+/* ============ z127: JOIN PILL SAYS "JOIN HAUNTSOCIAL" (Dan, Oct 25) ============
+   The pill label grew from "Join" to "Join HauntSocial" (Dan named the social
+   network). Widen the pill's max-width so the longer label never ellipsizes;
+   the pill sits on its own wrapped line on phone, so the extra width is safe.
+   Nothing else changes: same href, same member-state @handle behavior. */
+.header-nav a.nav-join { max-width: 16rem; }
+@media (max-width: 760px) {
+  .header-nav a.nav-join { max-width: 13rem; }
+}
