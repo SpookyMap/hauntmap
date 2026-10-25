@@ -153,7 +153,8 @@ CREATE TABLE IF NOT EXISTS engagement_events (
     town TEXT,                             -- pin's town label, derived server-side from entry_id
     path TEXT,                             -- 'engaged' rows only: page path the time was spent on
     seconds INTEGER,                       -- 'engaged' rows only: incremental engaged seconds (clamped server-side)
-    sid TEXT                               -- 'engaged' rows only: visitor's hm_sid cookie (same id page_views stores)
+    sid TEXT,                              -- 'engaged' rows only: visitor's hm_sid cookie (same id page_views stores)
+    source TEXT                            -- 'rail_click' rows only (Rail Boost, Oct 25): which rail the click came from (footage | town | near | near-here | like-this | explore); NULL on older rows and all other events
 );
 CREATE INDEX IF NOT EXISTS idx_engagement_created_event ON engagement_events(created_at, event);
 CREATE INDEX IF NOT EXISTS idx_engagement_entry ON engagement_events(entry_id);
@@ -352,7 +353,8 @@ def init_db(db_path: Path) -> None:
         # engagement_events (path / seconds / sid) for DBs created before
         # the beacon existed. main.py also ensures these lazily on insert.
         ecols = {r["name"] for r in conn.execute("PRAGMA table_info(engagement_events)").fetchall()}
-        for col, ddl in (("path", "TEXT"), ("seconds", "INTEGER"), ("sid", "TEXT")):
+        for col, ddl in (("path", "TEXT"), ("seconds", "INTEGER"), ("sid", "TEXT"),
+                         ("source", "TEXT")):
             if col not in ecols:
                 conn.execute(f"ALTER TABLE engagement_events ADD COLUMN {col} {ddl}")
         # Page-view analytics columns (blip hardening, Oct 25): referrer /

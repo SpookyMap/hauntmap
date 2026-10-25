@@ -4220,7 +4220,6 @@ a.soc-top8-card:hover { border-color: var(--accent2); }
 @media (max-width: 760px) {
   .social-promo-btn[href="/signup"] { font-size: 0.95rem; padding: 0.65rem 1.1rem; max-width: none; }
 }
-
 /* ============ z132: HAUNTSOCIAL EXPLAINER + BAND RESTACK (Dan, Oct 25) ============
    (1) The promo band moves INSIDE .hero-split as grid area "social",
    above the sponsor billboard in every .hero-split area list (stacked
@@ -4412,3 +4411,26 @@ a.soc-top8-card:hover { border-color: var(--accent2); }
 .social-promo-btn .hs-brand { line-height: 1.3; }
 /* /signup h1: brand word inherits the h1 size; drips need the room. */
 .soc-auth h1 .hs-brand { line-height: 1.25; }
+/* ============ z136: RAIL BOOST PHASE 1 (Dan, Oct 25) ============
+   Pin-page discovery upgrades aimed at the rail_click metric: earned
+   card badges, view counts on all rail cards, per-rail attribution
+   (no styles), the moved-up "More near here" rail, rail-end tour adds,
+   the Keep exploring tail, and an unmistakable in-tour card state. */
+/* One badge per card, top-right of the media (the Sample badge owns
+   top-left). Colors from the logo palette; glyph stays crisp. */
+.card-badge { position: absolute; top: 8px; right: 8px; z-index: 2;
+  font-size: 0.68rem; font-weight: 800; letter-spacing: 0.03em;
+  padding: 0.16rem 0.55rem; border-radius: 999px; color: #0b151a;
+  box-shadow: 0 0 10px rgba(87, 168, 255, 0.45); pointer-events: none; }
+.cb-star { background: #e6b16d; }
+.cb-hot { background: #eb7a2c; color: #fff7ea; }
+.cb-new { background: #57a8ff; color: #08131f; }
+/* Baymard addendum: a collected pin inside a rail must read at a
+   glance — brighter ring + glow on top of the existing green state. */
+.rail .tour-add-btn.in-tour { box-shadow: 0 0 0 2px #2f8f4a, 0 0 12px rgba(47, 143, 74, 0.55); }
+/* Rail-end bulk add sits under its rail, clear of the cards. */
+.rail-add-all { margin-top: 0.55rem; }
+.engage-next .rail-add-all { margin-top: 0.7rem; margin-right: 0.5rem; }
+/* Keep exploring tail. */
+.explore-section #btn-explore { margin-top: 0.4rem; }
+.explore-section #explore-rail:empty { display: none; }

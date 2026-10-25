@@ -412,16 +412,16 @@ def _analytics_write_batch(conn, batch: list) -> None:
         # Town is derived from the entry, as the old inline logger did —
         # resolved here, once per distinct entry in the batch.
         towns: dict = {}
-        for _, _, entry_id in engs:
+        for _, _, entry_id, _src in engs:
             if entry_id and entry_id not in towns:
                 row = conn.execute(
                     "SELECT town FROM entries WHERE id = ?", (entry_id,)).fetchone()
                 towns[entry_id] = (
                     extract_city_state(row["town"] or "") or row["town"]) if row else None
         conn.executemany(
-            "INSERT INTO engagement_events (created_at, event, entry_id, town) "
-            "VALUES (?, ?, ?, ?)",
-            [(c, ev, eid, towns.get(eid)) for (c, ev, eid) in engs])
+            "INSERT INTO engagement_events (created_at, event, entry_id, town, source) "
+            "VALUES (?, ?, ?, ?, ?)",
+            [(c, ev, eid, towns.get(eid), src) for (c, ev, eid, src) in engs])
     conn.commit()
 
 
@@ -731,6 +731,37 @@ def _attach_views(conn, entries: list) -> list:
     for e in entries:
         e["_views"] = views.get(e["id"], 0)
     return entries
+
+
+# Rail Boost (Oct 25): one badge per rail card, priority ⭐ > 🔥 > NEW.
+# ⭐ = Dan's featured/Top-10 picks (the is_featured column FEATURED_
+# ENTRY_IDS enforces); 🔥 = the site's most-viewed pins — top 50 by
+# all-time detail-page views with a 10-view floor so a young site never
+# badges near-zero pins; NEW = posted within the last 7 days (row_to_
+# dict's is_new). The badge rides on the pin dict as ``_badge`` and
+# _pin_card.html renders it on rail cards only.
+_HOT_BADGE_TOP_N = 50
+_HOT_BADGE_MIN_VIEWS = 10
+
+
+def _hot_view_ids(views: dict) -> set:
+    ranked = sorted((v for v in views.values() if v > 0), reverse=True)
+    if not ranked:
+        return set()
+    cutoff = max(ranked[min(len(ranked), _HOT_BADGE_TOP_N) - 1],
+                 _HOT_BADGE_MIN_VIEWS)
+    return {eid for eid, v in views.items() if v >= cutoff}
+
+
+def _apply_card_badge(p: dict, hot_ids: set) -> None:
+    if p.get("is_featured"):
+        p["_badge"] = "star"
+    elif p.get("id") in hot_ids:
+        p["_badge"] = "hot"
+    elif p.get("is_new"):
+        p["_badge"] = "new"
+    else:
+        p["_badge"] = None
 
 
 def haversine_miles(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
@@ -1559,6 +1590,11 @@ def detail_chain(entry: dict) -> dict:
         _chain_views = _views_by_id(conn)
     for p in peers:
         p["_views"] = _chain_views.get(p["id"], 0)
+    # Rail Boost: badge every peer once, here — all rails below (and the
+    # sticky-bar / Next targets) read the same dicts.
+    _hot_ids = _hot_view_ids(_chain_views)
+    for p in peers:
+        _apply_card_badge(p, _hot_ids)
     out = {"next_pin": None, "prev_pin": None, "more_near": [], "more_like": []}
     coord: list[dict] = []
     if entry.get("lat") is not None and entry.get("lng") is not None:
@@ -1650,6 +1686,9 @@ def detail_chain(entry: dict) -> dict:
              "town_label": p.get("town_label") or "",
              "lat": p["lat"], "lng": p["lng"],
              "thumb_url": p.get("thumb_url") or "",
+             # Rail Boost: distance from THIS pin, so the client-side
+             # re-pick can keep the sticky bar's distance honest.
+             "dist": p.get("distance"),
              "views": views_by_id.get(p["id"], 0)}
             for p in peers
             if has_footage(p) and p.get("lat") is not None
@@ -4327,7 +4366,7 @@ ENGAGEMENT_TABLE_SQL = (
     "CREATE TABLE IF NOT EXISTS engagement_events "
     "(id INTEGER PRIMARY KEY AUTOINCREMENT, created_at TEXT NOT NULL, "
     "event TEXT NOT NULL, entry_id INTEGER, town TEXT, path TEXT, "
-    "seconds INTEGER, sid TEXT)"
+    "seconds INTEGER, sid TEXT, source TEXT)"
 )
 # Whitelist for POST /api/track — anything else is a silent no-op.
 TRACK_EVENTS = ("video_play", "tour_add", "next_bar_click", "rail_click")
@@ -4343,16 +4382,33 @@ ENGAGED_EVENT = "engaged"
 ENGAGED_MAX_SECONDS = 60
 # Full taxonomy shown on the admin stats page (client + server events).
 ENGAGEMENT_EVENTS_ALL = TRACK_EVENTS + ("vote", "unvote", "scare", "tip")
+# Rail Boost (Oct 25): per-rail attribution for rail_click. The pin-page
+# click handler in base.html reads the clicked card's rail container
+# (data-rail attribute in detail.html) and sends it as `source`; only
+# these values are stored — anything else is dropped to NULL so the
+# stats breakdown can never be polluted by client garbage.
+RAIL_SOURCES = ("footage", "town", "near", "near-here", "like-this", "explore")
+# Rail impression beacons (Rail Boost research addendum, Oct 25): one
+# row per rail per page view, fired client-side when a rail is >=50%
+# visible — the denominator for honest per-rail CTR on the stats page.
+# Deliberately NOT in TRACK_EVENTS / ENGAGEMENT_EVENTS_ALL (same
+# discipline as 'engaged'): impressions are not pin interactions, and
+# counting them as such would inflate the interactions/pin-visit ratio.
+RAIL_IMPRESSION_EVENT = "rail_impression"
 
 
-def _log_engagement(event: str, entry_id: int | None = None) -> None:
+def _log_engagement(event: str, entry_id: int | None = None,
+                    source: str | None = None) -> None:
     """Record one engagement row. Town is derived server-side from the
     entry (its extract_city_state label) by the analytics writer at
-    flush time. Fire-and-forget: analytics must never break the
-    interaction that produced the event. Enqueue only — the request
-    path never touches the DB inline (blip hardening, Oct 25)."""
+    flush time. `source` is the Rail Boost rail name for rail_click
+    rows, NULL for everything else. Fire-and-forget: analytics must
+    never break the interaction that produced the event. Enqueue only
+    — the request path never touches the DB inline (blip hardening,
+    Oct 25)."""
     try:
-        _analytics_q.put(("eng", datetime.now(timezone.utc).isoformat(), event, entry_id))
+        _analytics_q.put(("eng", datetime.now(timezone.utc).isoformat(),
+                          event, entry_id, source))
     except Exception:
         pass
 
@@ -4422,16 +4478,76 @@ async def api_track(request: Request):
             path = path.split("?")[0].split("#")[0][:500]
             if seconds > 0 and path.startswith("/"):
                 _log_engaged(seconds, path, request.cookies.get("hm_sid"))
+        elif event == RAIL_IMPRESSION_EVENT:
+            # {event:'rail_impression', source:<rail>} — whitelisted rail
+            # names only; no entry_id (the impression belongs to the
+            # rail on whatever pin page rendered it, not to a pin).
+            raw_src = str(data.get("source") or "")
+            if raw_src in RAIL_SOURCES:
+                _log_engagement(RAIL_IMPRESSION_EVENT, None, raw_src)
         elif event in TRACK_EVENTS:
             entry_id = data.get("entry_id")
             try:
                 entry_id = int(entry_id) if entry_id is not None else None
             except (TypeError, ValueError):
                 entry_id = None
-            _log_engagement(event, entry_id)
+            # Rail Boost: per-rail attribution rides along on rail_click
+            # only, whitelisted — an unknown or absent source stores NULL
+            # (the pre-Rail-Boost rows read the same way on the stats page).
+            source = None
+            if event == "rail_click":
+                raw_src = str(data.get("source") or "")
+                if raw_src in RAIL_SOURCES:
+                    source = raw_src
+            _log_engagement(event, entry_id, source)
     except Exception:
         pass
     return Response(status_code=204)
+
+
+# ------------------------------------------------------- keep exploring
+# Rail Boost (Oct 25), Item 6: the pin page's endless tail. The client
+# sends the ids already on the page (every rail + previous batches) and
+# gets the next batch of same-category pins nearest THIS pin, rendered
+# server-side through the same _pin_card macro the rails use — so an
+# explore card is pixel-identical to a rail card, and its clicks track
+# as rail_click (source=explore) via the base.html handler. Button-
+# driven on the client (no auto-scroll): each click is one batch.
+EXPLORE_BATCH = 8
+
+
+@app.get("/api/explore")
+def api_explore(request: Request, from_id: int, exclude: str = ""):
+    entry = get_entry(from_id)
+    empty = {"html": "", "ids": [], "done": True}
+    if (not entry or entry.get("hidden") or entry.get("lat") is None
+            or entry.get("lng") is None):
+        return JSONResponse(empty)
+    seen = {from_id}
+    for tok in (exclude or "").split(",")[:800]:
+        tok = tok.strip()
+        if tok.isdigit():
+            seen.add(int(tok))
+    peers = [p for p in category_peers(entry)
+             if p["id"] not in seen
+             and p.get("lat") is not None and p.get("lng") is not None]
+    for p in peers:
+        p["distance"] = haversine_miles(entry["lat"], entry["lng"],
+                                        p["lat"], p["lng"])
+    peers.sort(key=lambda p: (p["distance"], p["id"]))
+    batch = peers[:EXPLORE_BATCH]
+    if not batch:
+        return JSONResponse(empty)
+    with get_conn(DB_PATH) as conn:
+        views = _views_by_id(conn)
+    hot_ids = _hot_view_ids(views)
+    for p in batch:
+        p["_views"] = views.get(p["id"], 0)
+        _apply_card_badge(p, hot_ids)
+    card_tpl = templates.env.get_template("_pin_card.html")
+    html = "".join(str(card_tpl.module.pin_card(p, True)) for p in batch)
+    return JSONResponse({"html": html, "ids": [p["id"] for p in batch],
+                         "done": len(batch) < EXPLORE_BATCH})
 
 
 @app.get("/d/{entry_id}", response_class=HTMLResponse)
@@ -4495,6 +4611,16 @@ def detail(request: Request, entry_id: int):
         town_pin_ids.append(p["id"])
         if p["id"] != entry_id:
             town_haunts.append(p)
+    # Rail Boost: town-rail cards carry the distance from this pin (when
+    # both have coordinates) and the shared card badge, like every rail.
+    with get_conn(DB_PATH) as conn:
+        _town_hot = _hot_view_ids(_views_by_id(conn))
+    for p in town_haunts:
+        if (entry.get("lat") is not None and entry.get("lng") is not None
+                and p.get("lat") is not None and p.get("lng") is not None):
+            p["distance"] = haversine_miles(entry["lat"], entry["lng"],
+                                            p["lat"], p["lng"])
+        _apply_card_badge(p, _town_hot)
     # Second-click recirculation rail: same town, real thumbnails first,
     # then most-viewed, then most-voted. Excludes the pin itself.
     town_haunts.sort(key=lambda p: (0 if p.get("thumb_url") else 1,
@@ -6491,8 +6617,25 @@ def admin_stats(request: Request):
             "WHERE g.entry_id IS NOT NULL "
             "AND g.created_at >= datetime('now', '-7 days') "
             "GROUP BY g.entry_id ORDER BY n DESC, g.entry_id ASC LIMIT 5").fetchall()
+        # --- Rail Boost (Oct 25): per-rail clicks vs impressions —
+        # CTR per rail SEEN (impression = rail >=50% visible once per
+        # page view), not per page view. rail_click rows from before
+        # per-rail attribution carry source NULL -> '(unattributed)'.
+        rail_rows = conn.execute(
+            "SELECT COALESCE(source, '(unattributed)') AS src, "
+            "SUM(CASE WHEN event = 'rail_click' THEN 1 ELSE 0 END) AS clicks, "
+            "SUM(CASE WHEN event = 'rail_impression' THEN 1 ELSE 0 END) AS imps "
+            "FROM engagement_events "
+            "WHERE event IN ('rail_click', 'rail_impression') "
+            "AND created_at >= datetime('now', '-7 days') "
+            "GROUP BY src ORDER BY clicks DESC, imps DESC").fetchall()
+        eng_rail_sources = [
+            {"src": r["src"], "clicks": r["clicks"], "imps": r["imps"],
+             "ctr": (r["clicks"] / r["imps"]) if r["imps"] else None}
+            for r in rail_rows]
         engagement = {
             "counts": [(ev, eng_counts[ev]) for ev in ENGAGEMENT_EVENTS_ALL],
+            "rail_sources": eng_rail_sources,
             "total": sum(eng_counts.values()),
             "with_pin": eng_with_pin,
             "pin_views": pin_views_week,

@@ -6,8 +6,16 @@
    _views > 0; a zero-view video shows nothing, never "0 views". A card
    "carries video" the way has_footage() decides: an uploaded video
    file (media_type == 'video') or a TikTok /video/ URL. Photo cards
-   keep their existing stat line only. #}
-{% macro pin_card(e) %}
+   keep their existing stat line only.
+   Rail Boost (Oct 25): pin-page rail cards pass boost=true — the view
+   count then shows on EVERY card with _views > 0 ("views attract
+   views" extended beyond video cards, rail scope only — the Watch
+   feed keeps the Item 7 rule), plus ONE earned badge when the server
+   annotated _badge (⭐ featured > 🔥 most-viewed > NEW, priority set
+   in _apply_card_badge). Every card — rail or not — already carries
+   the one-tap + Tour button with its ✓ In tour state (base.html
+   hmTourSync); boost mode only restyles that state brighter. #}
+{% macro pin_card(e, boost=false) %}
 <a class="card rail-card" href="/d/{{ e.id }}">
   <div class="card-media">
     {% if e.media_path %}
@@ -23,12 +31,13 @@
     <div class="card-media-empty">{% if e.category == 'events' %}&#x1F4C5;{% else %}&#x1F383;{% endif %}</div>
     {% endif %}
     {% if e.is_sample %}<span class="sample-badge">Sample</span>{% endif %}
+    {% if boost and e._badge is defined and e._badge %}<span class="card-badge cb-{{ e._badge }}">{% if e._badge == 'star' %}&#x2B50; Featured{% elif e._badge == 'hot' %}&#x1F525; Most viewed{% else %}NEW{% endif %}</span>{% endif %}
   </div>
   <div class="card-body">
     <h3>{{ e.title }}</h3>
     <p class="meta">{{ e.town_label }}{% if e.distance is defined and e.distance is not none %} &middot; {{ "%.1f"|format(e.distance) }} mi{% endif %}</p>
     {% if e.votes %}<p class="votes">&#x1F383; {{ e.votes }} vote{{ 's' if e.votes != 1 }}</p>{% endif %}
-    {% if (e.media_type == 'video' or (e.tiktok_url and '/video/' in e.tiktok_url)) and e._views %}<p class="views-line">&#x1F441;&#xFE0F; {{ e._views }} view{{ 's' if e._views != 1 }}</p>{% endif %}
+    {% if (boost or e.media_type == 'video' or (e.tiktok_url and '/video/' in e.tiktok_url)) and e._views %}<p class="views-line">&#x1F441;&#xFE0F; {{ e._views }} view{{ 's' if e._views != 1 }}</p>{% endif %}
     <span class="tour-add-btn" role="button" tabindex="0" data-tour-btn data-id="{{ e.id }}" data-title="{{ e.title }}" data-town="{{ e.town }}" data-lat="{{ e.lat if e.lat is not none else '' }}" data-lng="{{ e.lng if e.lng is not none else '' }}" data-thumb="{{ e.thumb_url }}">+ Tour</span>
   </div>
 </a>

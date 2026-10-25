@@ -79,6 +79,16 @@
   {% endfor %}
 </table>
 <p style="color:#888;font-size:0.85em;">Interactions / pin visit = engagement events tied to a pin ({{ engagement.with_pin }}) &divide; pin page views ({{ engagement.pin_views }}) in the same 7 days. Client events (video_play, tour_add, next_bar_click, rail_click) arrive via beacon; vote / unvote / scare / tip are logged server-side.</p>
+{% if engagement.rail_sources %}
+<h4 style="margin-bottom:8px;">&#x1F6E4;&#xFE0F; Rail clicks by rail <span style="font-size:0.8em;color:#888;">(last 7 days — CTR = clicks &divide; times the rail was actually seen, &ge;50% on screen)</span></h4>
+<table style="width:100%;border-collapse:collapse;margin-bottom:8px;">
+  <tr><th style="text-align:left;padding:8px;">Rail</th><th style="text-align:right;padding:8px;">Seen</th><th style="text-align:right;padding:8px;">Clicks</th><th style="text-align:right;padding:8px;">CTR</th></tr>
+  {% for r in engagement.rail_sources %}
+  <tr><td style="padding:8px;">{{ r.src }}</td><td style="text-align:right;padding:8px;">{{ r.imps }}</td><td style="text-align:right;padding:8px;">{{ r.clicks }}</td><td style="text-align:right;padding:8px;">{% if r.ctr is not none %}{{ "%.1f"|format(r.ctr * 100) }}%{% else %}&mdash;{% endif %}</td></tr>
+  {% endfor %}
+</table>
+<p style="color:#888;font-size:0.85em;">Per-rail attribution + rail impressions started with the Rail Boost deploy (Oct 25) — clicks from before it read as (unattributed) and have no &ldquo;seen&rdquo; count. rail_impression rows are excluded from the interaction totals above on purpose: they measure exposure, not interaction.</p>
+{% endif %}
 {% if engagement.top_pins %}
 <h4 style="margin-bottom:8px;">Top pins by interactions</h4>
 <table style="width:100%;border-collapse:collapse;margin-bottom:24px;">

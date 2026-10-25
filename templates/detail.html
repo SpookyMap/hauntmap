@@ -65,10 +65,25 @@
      player, so a video visitor's next tap is another video — before the
      title/meta block and everything that follows it. #}
   <section class="more-videos" aria-label="More videos near here">
-    <h2>&#x1F3AC; More videos near here</h2>
-    <div class="rail">
-      {% for p in more_videos %}{{ pin_card(p) }}{% endfor %}
+    <h2>&#x1F3AC; More videos near here{% if more_videos %} &middot; within {{ "%.1f"|format(more_videos|map(attribute='distance')|max) }} mi{% endif %}</h2>
+    <div class="rail" data-rail="footage">
+      {% for p in more_videos %}{{ pin_card(p, true) }}{% endfor %}
     </div>
+  </section>
+  {% endif %}
+  {% if more_near %}
+  {# Rail Boost (Oct 25), Item 4: "More near here" MOVED here from below
+     the map — proximity first, directly under the footage rail and above
+     the town rail, so the discovery chain starts with what's closest.
+     Same pins, same order (nearest first); nothing was removed from
+     the page, this section just lives higher now. Item 5: the rail-end
+     bulk add turns this discovery into a tour in one tap. #}
+  <section class="rail-section rail-boost-near">
+    <h2>&#x1F4CD; More near here &middot; within {{ "%.1f"|format(more_near|map(attribute='distance')|max) }} mi</h2>
+    <div class="rail" data-rail="near-here">
+      {% for p in more_near %}{{ pin_card(p, true) }}{% endfor %}
+    </div>
+    <button type="button" class="btn rail-add-all" data-add-rail>&#x1F9ED; + Add these to my tour</button>
   </section>
   {% endif %}
   <h1>{{ entry.title }}</h1>
@@ -152,9 +167,12 @@
 
   {% if town_haunts %}
   <section class="town-rail">
-    <h2>&#x1F383; More haunts in {{ entry.town_label }}</h2>
-    <div class="rail">
-      {% for p in town_haunts %}{{ pin_card(p) }}{% endfor %}
+    {# Utility title (Rail Boost research addendum): when the town holds
+       more than this rail shows, say so — the count is the town's real
+       pin total (town_pin_ids includes this pin, hence the -1). #}
+    <h2>&#x1F383; More haunts in {{ entry.town_label }}{% if town_pin_ids|length - 1 > town_haunts|length %} &middot; {{ town_pin_ids|length - 1 }} in town{% endif %}</h2>
+    <div class="rail" data-rail="town">
+      {% for p in town_haunts %}{{ pin_card(p, true) }}{% endfor %}
     </div>
   </section>
   {% endif %}
@@ -182,10 +200,13 @@
 
   {% if more_haunts %}
   <section class="engage-next">
-    <h2>&#x1F383; More haunts near this one</h2>
-    <div class="rail">
-      {% for p in more_haunts %}{{ pin_card(p) }}{% endfor %}
+    <h2>&#x1F383; More haunts near this one &middot; within {{ "%.1f"|format(more_haunts|map(attribute='distance')|max) }} mi</h2>
+    <div class="rail" data-rail="near">
+      {% for p in more_haunts %}{{ pin_card(p, true) }}{% endfor %}
     </div>
+    {# Rail Boost, Item 5: one tap adds this whole rail to the tour —
+       the bulk version of each card's own + Tour button. #}
+    <button type="button" class="btn rail-add-all" data-add-rail>&#x1F9ED; + Add these to my tour</button>
     <button class="btn btn-big btn-tour-build" id="btn-build-tour">&#x1F9ED; Build a tour with this house</button>
     <p class="tour-build-note">Adds this haunt to your tour and opens the tour builder — drop in the neighbours above and share the whole route.</p>
   </section>
@@ -345,20 +366,11 @@
   </script>
   {% endif %}
 
-  {% if more_near %}
-  <section class="rail-section">
-    <h2>&#x1F4CD; More near here</h2>
-    <div class="rail">
-      {% for p in more_near %}{{ pin_card(p) }}{% endfor %}
-    </div>
-  </section>
-  {% endif %}
-
   {% if more_like %}
   <section class="rail-section">
     <h2>&#x1F47B; More like this</h2>
-    <div class="rail">
-      {% for p in more_like %}{{ pin_card(p) }}{% endfor %}
+    <div class="rail" data-rail="like-this">
+      {% for p in more_like %}{{ pin_card(p, true) }}{% endfor %}
     </div>
   </section>
   {% endif %}
@@ -373,6 +385,62 @@
     {% if prev_pin %}<a class="btn" href="/d/{{ prev_pin.id }}">&larr; Previous haunt</a>{% else %}<span></span>{% endif %}
     {% if next_geo_pin %}<a class="btn" href="/d/{{ next_geo_pin.id }}">Next haunt &rarr;</a>{% endif %}
   </nav>
+  {% endif %}
+
+  {% if entry.lat is not none and entry.lng is not none %}
+  {# Rail Boost, Item 6: the endless tail. After the last rail, discovery
+     no longer dead-ends: each "More haunts" tap pulls the next batch of
+     nearest pins (server-ordered by distance, pins already on this page
+     excluded client-side) into an explore rail. Button-driven on
+     purpose — no auto-scroll fetching. Explore cards are ordinary rail
+     cards, so clicks track as rail_click with source=explore, and the
+     rail impression arms once the first batch lands. #}
+  <section class="rail-section explore-section">
+    <h2>&#x1F9ED; Keep exploring &middot; nearest first</h2>
+    <div class="rail" data-rail="explore" id="explore-rail"></div>
+    <button type="button" class="btn btn-big" id="btn-explore">More haunts &darr;</button>
+    <p class="muted" id="explore-done" hidden>You've seen everything near here &#x1F383; — the map has the rest of the country.</p>
+  </section>
+  <script>
+  (function () {
+    var btn = document.getElementById('btn-explore');
+    var rail = document.getElementById('explore-rail');
+    if (!btn || !rail) return;
+    var seen = {};
+    seen[{{ entry.id }}] = 1;
+    document.querySelectorAll('a.card[href^="/d/"]').forEach(function (a) {
+      var m = (a.getAttribute('href') || '').match(/\/d\/(\d+)/);
+      if (m) seen[Number(m[1])] = 1;
+    });
+    var loading = false;
+    btn.addEventListener('click', function () {
+      if (loading) return;
+      loading = true;
+      btn.disabled = true;
+      fetch('/api/explore?from_id={{ entry.id }}&exclude=' + encodeURIComponent(Object.keys(seen).join(',')),
+            { headers: { 'Accept': 'application/json' } })
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+          (data.ids || []).forEach(function (id) { seen[id] = 1; });
+          if (data.html) {
+            var tmp = document.createElement('div');
+            tmp.innerHTML = data.html;
+            while (tmp.firstChild) rail.appendChild(tmp.firstChild);
+            if (window.hmTourSync) hmTourSync();
+            if (window.hmRailImpression) hmRailImpression(rail);
+          }
+          loading = false;
+          btn.disabled = false;
+          if (data.done || !(data.ids || []).length) {
+            btn.hidden = true;
+            var d = document.getElementById('explore-done');
+            if (d) d.hidden = false;
+          }
+        })
+        .catch(function () { loading = false; btn.disabled = false; });
+    });
+  })();
+  </script>
   {% endif %}
 
   <div class="detail-foot">
@@ -390,9 +458,12 @@
 
 {% if next_pin %}
 <a class="next-haunt-bar" href="/d/{{ next_pin.id }}" aria-label="Next haunt: {{ next_pin.title }}">
-  {% if next_is_video and next_pin.thumb_url %}<img class="nhb-thumb" src="{{ next_pin.thumb_url }}" alt="" loading="lazy">{% endif %}
+  {# Rail Boost, Item 3: the bar now ALWAYS carries the target's
+     thumbnail (was video-next only) and its distance from this pin —
+     "Next: {title} · 0.4 mi" at a glance, before the tap. #}
+  {% if next_pin.thumb_url %}<img class="nhb-thumb" src="{{ next_pin.thumb_url }}" alt="" loading="lazy">{% endif %}
   <span class="nhb-label">{% if next_is_video %}&#x25B6; Play next haunt &rarr;{% else %}Next haunt &rarr;{% endif %}</span>
-  <span class="nhb-title">{{ next_pin.title }} &middot; {{ next_pin.town_label }}</span>
+  <span class="nhb-title">{{ next_pin.title }}{% if next_pin.distance is defined and next_pin.distance is not none %} &middot; {{ "%.1f"|format(next_pin.distance) }} mi{% endif %} &middot; {{ next_pin.town_label }}</span>
 </a>
 {% endif %}
 
@@ -462,7 +533,9 @@
       bar.href = href;
       bar.setAttribute('aria-label', 'Next haunt: ' + pin.title);
       var ttl = bar.querySelector('.nhb-title');
-      if (ttl) ttl.textContent = pin.title + ' \u00B7 ' + pin.town_label;
+      if (ttl) ttl.textContent = pin.title +
+        (pin.dist !== null && pin.dist !== undefined ? ' \u00B7 ' + pin.dist.toFixed(1) + ' mi' : '') +
+        ' \u00B7 ' + pin.town_label;
       var img = bar.querySelector('.nhb-thumb');
       if (img && pin.thumb_url) img.src = pin.thumb_url;
     }
@@ -605,6 +678,45 @@
     }).catch(function () {
       f.submit();  // silent degradation to the classic full-page POST
     });
+  });
+})();
+</script>
+
+<script>
+// Rail Boost, Item 5: the rail-end "+ Add these to my tour" bulk add.
+// Reads the pins straight off the rail's own cards (each card's + Tour
+// button already carries id/title/town/lat/lng/thumb), adds the ones
+// not already in the tour (cap 8, mappable pins only), and fires
+// tour_add per added pin — the same event + localStorage store
+// (haunt_tour + hmTourSync) the single-card buttons use.
+(function () {
+  document.addEventListener('click', function (ev) {
+    var b = ev.target.closest && ev.target.closest('[data-add-rail]');
+    if (!b) return;
+    var section = b.closest('section');
+    if (!section || !window.hmTourGet) return;
+    var tour = hmTourGet();
+    var added = 0;
+    section.querySelectorAll('.rail [data-tour-btn]').forEach(function (tb) {
+      if (added >= 8) return;
+      var id = Number(tb.getAttribute('data-id'));
+      if (!id || tour.some(function (e) { return e.id === id; })) return;
+      var lat = parseFloat(tb.getAttribute('data-lat'));
+      var lng = parseFloat(tb.getAttribute('data-lng'));
+      if (!lat || !lng) return;
+      tour.push({ id: id, title: tb.getAttribute('data-title') || '',
+                  town: tb.getAttribute('data-town') || '',
+                  lat: lat, lng: lng, thumb: tb.getAttribute('data-thumb') || '' });
+      if (window.hmTrack) hmTrack('tour_add', id);
+      added++;
+    });
+    if (added) {
+      hmTourSet(tour);
+      b.textContent = '✓ Added ' + added + ' stop' + (added === 1 ? '' : 's') + ' to your tour';
+    } else {
+      b.textContent = '✓ These are already in your tour';
+    }
+    b.disabled = true;
   });
 })();
 </script>

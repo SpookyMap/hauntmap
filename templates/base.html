@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Creepster&family=Fredoka:wght@500;600;700&family=Inter:wght@500;600;700;800;900&family=Nosifer&family=Rubik+Wet+Paint&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/static/css/style.css?v=20261025z135">
+<link rel="stylesheet" href="/static/css/style.css?v=20261025z136">
 {% block head %}{% endblock %}
 </head>
 <body>
@@ -405,10 +405,14 @@ function hmNearMe() {
 // to POST /api/track. sendBeacon survives page navigation (next-bar and
 // rail clicks leave the page); fetch+keepalive is the fallback. Any
 // failure is swallowed — tracking must never break a page.
-function hmTrack(event, entryId) {
+function hmTrack(event, entryId, src) {
   try {
     var payload = JSON.stringify({ event: event,
-      entry_id: (entryId === null || entryId === undefined || isNaN(entryId)) ? null : Number(entryId) });
+      entry_id: (entryId === null || entryId === undefined || isNaN(entryId)) ? null : Number(entryId),
+      // Rail Boost: `source` names the rail a rail_click / rail_
+      // impression came from (server whitelists it); undefined for
+      // every other event, and JSON.stringify drops undefined keys.
+      source: (src === undefined || src === null) ? undefined : String(src) });
     if (navigator.sendBeacon) {
       var blob = new Blob([payload], { type: 'text/plain' });
       if (navigator.sendBeacon('/api/track', blob)) return;
@@ -430,14 +434,48 @@ document.addEventListener('click', function (ev) {
   }
   // Rail clicks: pin cards inside .rail rails, on pin pages only. Tour
   // buttons inside a card are their own event (tour_add) — excluded here.
+  // Rail Boost: the rail container's data-rail name rides along as the
+  // event source, so stats can attribute every click to its rail.
   if (!/^\/d\/\d+/.test(location.pathname)) return;
   if (t.closest('[data-tour-btn]')) return;
   var card = t.closest('a.card');
-  if (card && card.closest('.rail')) {
-    var cm = (card.getAttribute('href') || '').match(/\/d\/(\d+)/);
-    if (cm) hmTrack('rail_click', Number(cm[1]));
+  if (card) {
+    var railEl = card.closest('.rail');
+    if (railEl) {
+      var cm = (card.getAttribute('href') || '').match(/\/d\/(\d+)/);
+      if (cm) hmTrack('rail_click', Number(cm[1]), railEl.getAttribute('data-rail') || null);
+    }
   }
 });
+// Rail impressions (Rail Boost research addendum): one beacon per rail
+// per page view, fired when the rail is >=50% visible — the honest
+// denominator for per-rail CTR (a rail nobody scrolled to was never
+// really offered). Pin pages only, matching the rail_click scope. A
+// rail with no cards yet (the Keep exploring tail before its first
+// batch) does not count — the page arms it via hmRailImpression once
+// cards land. Fires at most once per element.
+var _hmRailImpSeen = ('WeakSet' in window) ? new WeakSet() : null;
+function hmRailImpression(el) {
+  if (!el || !('IntersectionObserver' in window)) return;
+  // An empty rail has shown nothing — don't arm it. The Keep exploring
+  // tail calls back in once its first batch of cards has landed.
+  if (!el.querySelector('a.card')) return;
+  if (_hmRailImpSeen ? _hmRailImpSeen.has(el) : el.dataset.impArmed) return;
+  if (_hmRailImpSeen) _hmRailImpSeen.add(el); else el.dataset.impArmed = '1';
+  var io = new IntersectionObserver(function (entries) {
+    for (var i = 0; i < entries.length; i++) {
+      if (entries[i].isIntersecting) {
+        hmTrack('rail_impression', null, el.getAttribute('data-rail') || null);
+        io.disconnect();
+        return;
+      }
+    }
+  }, { threshold: 0.5 });
+  io.observe(el);
+}
+if (/^\/d\/\d+/.test(location.pathname)) {
+  document.querySelectorAll('.rail[data-rail]').forEach(hmRailImpression);
+}
 </script>
 <script>
 // Rail scale-box fitter (z97): keeps a 325px-stage TikTok embed
@@ -580,7 +618,10 @@ function hmTourSync() {
   document.querySelectorAll('[data-tour-btn]').forEach(function (b) {
     var inT = tour.some(function (e) { return e.id === Number(b.getAttribute('data-id')); });
     b.classList.toggle('in-tour', inT);
-    if (!b.dataset.flash) b.textContent = inT ? '\u2713 In tour' : '+ Tour';
+    // Rail Boost (Baymard addendum): an already-collected pin must be
+    // unmistakable in rails - inside a .rail the state spells it out
+    // as "\u2713 In your tour"; elsewhere the compact label stands.
+    if (!b.dataset.flash) b.textContent = inT ? (b.closest('.rail') ? '\u2713 In your tour' : '\u2713 In tour') : '+ Tour';
   });
 }
 function hmTourBtnActivate(b) {
