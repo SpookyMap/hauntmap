@@ -51,7 +51,7 @@
 <div class="adv-packages">
   {% for p in packages %}
   <article class="adv-pack">
-    <h3>{{ p.name }}</h3>
+    <h3{% if p.id == "tour_fuel" %} class="tour-fuel-drip"{% endif %}>{{ p.name }}</h3>
     <p class="adv-price">${{ p.price }} <span>one season</span></p>
     <p class="adv-price-both">or ${{ p.price_both }} for both seasons</p>
     <p class="adv-blurb">{{ p.blurb }}</p>

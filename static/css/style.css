@@ -3783,3 +3783,28 @@ hr { border-color: rgba(143, 216, 255, 0.40); box-shadow: 0 0 10px rgba(143, 216
    primary-action prominence, label and icon treatment, plus a blue
    glow to match the theme. */
 .vt-tv-strip .vt-btn { background: linear-gradient(180deg, #8FD8FF, #57A8FF); box-shadow: 0 0 18px rgba(87, 168, 255, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.35); }
+
+/* ============ TOUR FUEL BLOOD-DRIP HEADING (Dan, Oct 24) ============
+   The homeowner ladder's "Tour Fuel Listing" card heading gets the
+   blood-drippy Nosifer face in site red — Dan: "add the blood drippy
+   font for Tour Fuel". Nosifer is SELF-HOSTED (static/fonts/Nosifer.ttf,
+   from the Google Fonts repo) — this @font-face shadows the Google
+   Fonts stylesheet copy for this family. ONLY this heading changes:
+   Town Featured / Sitewide Featured and the business ladder keep
+   their current type. */
+@font-face {
+  font-family: "Nosifer";
+  src: url("/static/fonts/Nosifer.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+.adv-pack h3.tour-fuel-drip {
+  font-family: "Nosifer", "Creepster", cursive;
+  font-weight: 400;
+  color: #e01e26;
+  font-size: 1rem;
+  line-height: 1.6;
+  letter-spacing: 0.01em;
+  text-shadow: 0 2px 0 rgba(43, 18, 4, 0.45), 0 4px 12px rgba(0, 0, 0, 0.45);
+}
