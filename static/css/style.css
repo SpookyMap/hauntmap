@@ -1,12 +1,12 @@
 /* HauntMap v1 — mobile-first, tasteful Halloween theme */
 :root {
-  --bg: #14101d;
-  --bg2: #1d1530;
-  --card: #241b3a;
-  --ink: #f3ecff;
-  --muted: #b9a8d6;
+  --bg: #05080a;
+  --bg2: #0e1b21;
+  --card: #16232b;
+  --ink: #f9e5c2;
+  --muted: #94a6c0;
   --accent: #ff7b1c;
-  --accent2: #b266ff;
+  --accent2: #57a8ff;
   --danger: #e5484d;
   --radius: 14px;
 }
@@ -14,7 +14,7 @@
 body {
   margin: 0;
   overflow-x: clip;
-  background: radial-gradient(1200px 600px at 50% -10%, #2b1c4d 0%, var(--bg) 60%) fixed, var(--bg);
+  background: radial-gradient(1200px 600px at 50% -10%, #0f2e54 0%, var(--bg) 60%) fixed, var(--bg);
   color: var(--ink);
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   line-height: 1.5;
@@ -27,7 +27,7 @@ body::before {
   transform: translate(-50%, -50%);
   width: 120vmin;
   height: 120vmin;
-  background: url('/static/img/hauntmap_logo.jpg') center/contain no-repeat;
+  background: url('/static/img/hauntmap_ghost_watermark.webp') center/contain no-repeat;
   opacity: 0.29;
   pointer-events: none;
   z-index: -1;
@@ -40,9 +40,9 @@ a { color: var(--accent); }
   padding: 0.15rem 1rem;
   /* Fully opaque: the header is sticky, so a translucent background lets
      scrolled page content bleed through and collide with the logo/nav. */
-  background: #14101d;
+  background: #05080a;
   box-shadow: 0 2px 14px rgba(0, 0, 0, 0.45);
-  border-bottom: 1px solid #33254f;
+  border-bottom: 1px solid #274860;
   position: sticky; top: 0; z-index: 10;
   min-height: unset;
   line-height: 1.2;
@@ -86,27 +86,27 @@ a { color: var(--accent); }
 .search-inline { flex: 1; margin: 0; }
 .town-search-inline {
   width: 100%; box-sizing: border-box;
-  background: var(--bg2); color: var(--ink); border: 1px solid #33254f;
+  background: var(--bg2); color: var(--ink); border: 1px solid #274860;
   border-radius: 999px; padding: 0.45rem 0.9rem; font-size: 0.9rem;
 }
 .town-search-inline::placeholder { color: var(--muted); }
 .cat-tabs { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.5rem; margin-bottom: 0.9rem; }
-.cat-tabs a { flex: 0 1 160px; text-align: center; padding: 0.6rem; border-radius: 12px; background: var(--bg2); color: var(--muted); text-decoration: none; font-weight: 700; font-size: 1rem; border: 1px solid #33254f; }
+.cat-tabs a { flex: 0 1 160px; text-align: center; padding: 0.6rem; border-radius: 12px; background: var(--bg2); color: var(--muted); text-decoration: none; font-weight: 700; font-size: 1rem; border: 1px solid #274860; }
 .cat-tabs a.active { background: var(--accent); color: #1a0f00; border-color: var(--accent); }
 .sort-toggle { display: flex; background: var(--bg2); border-radius: 999px; padding: 3px; flex-shrink: 0; }
 .sort-toggle a { padding: 0.4rem 0.9rem; border-radius: 999px; color: var(--muted); text-decoration: none; font-size: 0.85rem; white-space: nowrap; }
 .sort-toggle a.active { background: var(--accent); color: #1a0f00; font-weight: 700; }
 .town-filter select {
-  background: var(--bg2); color: var(--ink); border: 1px solid #33254f;
+  background: var(--bg2); color: var(--ink); border: 1px solid #274860;
   border-radius: 10px; padding: 0.5rem; font-size: 0.95rem; max-width: 45vw;
 }
 .nearby-form { display: flex; gap: 0.5rem; margin-bottom: 1rem; flex-wrap: wrap; }
 .nearby-form input[type="text"] {
   flex: 1; min-width: 140px; background: var(--bg2); color: var(--ink);
-  border: 1px solid #33254f; border-radius: 10px; padding: 0.55rem 0.7rem; font-size: 0.95rem;
+  border: 1px solid #274860; border-radius: 10px; padding: 0.55rem 0.7rem; font-size: 0.95rem;
 }
 .nearby-form select {
-  background: var(--bg2); color: var(--ink); border: 1px solid #33254f;
+  background: var(--bg2); color: var(--ink); border: 1px solid #274860;
   border-radius: 10px; padding: 0.5rem; font-size: 0.95rem;
 }
 .nearby-count { color: var(--muted); margin: 0.5rem 0 1rem; }
@@ -114,33 +114,33 @@ a { color: var(--accent); }
 .tag-checks label { display: flex; align-items: center; gap: 0.3rem; font-weight: normal; font-size: 0.9rem; }
 .town-filter { display: flex; flex-direction: column; gap: 0.5rem; margin: 0; }
 .town-search {
-  background: var(--bg2); color: var(--ink); border: 1px solid #33254f;
+  background: var(--bg2); color: var(--ink); border: 1px solid #274860;
   border-radius: 10px; padding: 0.5rem 0.7rem; font-size: 0.95rem; width: 130px;
 }
 .town-search-full { width: 100%; box-sizing: border-box; }
 .filter-row { display: flex; gap: 0.4rem; flex-wrap: wrap; justify-content: center; padding-bottom: 0.2rem; }
 .filter-row select {
-  background: var(--bg2); color: var(--ink); border: 1px solid #33254f;
+  background: var(--bg2); color: var(--ink); border: 1px solid #274860;
   border-radius: 999px; padding: 0.4rem 0.8rem; font-size: 0.85rem; flex: 1 1 160px; min-width: 0;
 }
 .filter-row .town-search { flex: 1 1 160px; min-width: 0; width: auto; }
 .filter-chip {
-  background: var(--bg2); color: var(--muted); border: 1px solid #33254f;
+  background: var(--bg2); color: var(--muted); border: 1px solid #274860;
   border-radius: 999px; padding: 0.4rem 0.8rem; font-size: 0.85rem;
   text-decoration: none; text-align: center; flex: 0 1 160px; min-width: 0;
   white-space: nowrap;
 }
-.filter-chip.active { color: var(--ink); border-color: var(--accent); background: #1a1030; }
+.filter-chip.active { color: var(--ink); border-color: var(--accent); background: #101e24; }
 .book-banner {
   margin-top: 1rem; display: flex; justify-content: center;
 }
 .book-link {
   display: flex; align-items: center; gap: 0.6rem;
-  background: var(--bg2); border: 1px solid #33254f; border-radius: 10px;
+  background: var(--bg2); border: 1px solid #274860; border-radius: 10px;
   padding: 0.5rem 0.8rem; text-decoration: none; color: var(--ink);
   max-width: 280px;
 }
-.book-link:hover { border-color: #5a3d8a; }
+.book-link:hover { border-color: #4f94c4; }
 .book-cover-img {
   width: 28px; height: auto; border-radius: 3px; flex-shrink: 0;
 }
@@ -153,37 +153,37 @@ a { color: var(--accent); }
 .book-btn { display: inline-block; text-decoration: none; }
 
 .newsletter-box {
-  background: var(--bg2); border: 1px solid #33254f; border-radius: 12px;
+  background: var(--bg2); border: 1px solid #274860; border-radius: 12px;
   padding: 1.2rem; margin-top: 2rem; text-align: center;
 }
 .newsletter-box h3 { margin: 0 0 0.3rem; }
 .newsletter-box p { color: var(--muted); margin: 0 0 0.8rem; font-size: 0.9rem; }
 .newsletter-form { display: flex; gap: 0.4rem; justify-content: center; flex-wrap: wrap; }
 .newsletter-form input {
-  background: var(--bg); color: var(--ink); border: 1px solid #33254f;
+  background: var(--bg); color: var(--ink); border: 1px solid #274860;
   border-radius: 10px; padding: 0.5rem 0.7rem; font-size: 0.95rem;
 }
 .newsletter-success { color: #7ee787; font-weight: 700; }
 .newsletter-error { color: #ff7b72; font-size: 0.85rem; }
 
 .signup-strip {
-  background: linear-gradient(135deg, #241640 0%, #311d55 100%);
-  border: 1px solid #4a2d7a; border-radius: 12px;
+  background: linear-gradient(135deg, #182630 0%, #33284e 100%);
+  border: 1px solid #402f54; border-radius: 12px;
   padding: 0.5rem 0.75rem; margin: 0.6rem auto; text-align: center;
   max-width: 480px;
 }
-.signup-strip h3 { margin: 0 0 0.2rem; font-size: 0.9rem; color: #FFF8E7; }
-.signup-strip p { color: #c9bce8; margin: 0 0 0.4rem; font-size: 0.78rem; line-height: 1.35; }
+.signup-strip h3 { margin: 0 0 0.2rem; font-size: 0.9rem; color: #f9e5c2; }
+.signup-strip p { color: #a9cdf5; margin: 0 0 0.4rem; font-size: 0.78rem; line-height: 1.35; }
 .signup-strip .newsletter-form input { background: rgba(0,0,0,0.25); }
 .signup-strip-slim { padding: 0.8rem 1rem; margin: 1rem 0; }
 
 .footer-social { margin-top: 0.6rem; }
 .social-btn {
   display: inline-block; padding: 0.45rem 0.9rem; border-radius: 999px;
-  background: rgba(255,255,255,0.05); border: 1px solid #4a2d7a;
+  background: rgba(255,255,255,0.05); border: 1px solid #402f54;
   color: var(--ink); text-decoration: none; font-size: 0.88rem; font-weight: 600;
 }
-.social-btn:hover { border-color: #7b4fc4; }
+.social-btn:hover { border-color: #57a8ff; }
 .tiktok-strip { text-align: center; margin: 1.75rem 0; display: flex; justify-content: center; }
 .tiktok-follow { display: inline-flex; flex-direction: column; align-items: center; gap: 0.35rem; color: #fff; font-weight: 800; font-size: 1.3rem; text-decoration: none; }
 .tiktok-follow img { width: 30px; height: 30px; }
@@ -191,14 +191,14 @@ a { color: var(--accent); }
 .tiktok-follow:hover { opacity: 0.85; }
 
 /* ---- DIY page ---- */
-.diy-section-title { color: #FFF8E7; margin: 2.4rem 0 0.2rem; }
+.diy-section-title { color: #f9e5c2; margin: 2.4rem 0 0.2rem; }
 .diy-section-title a { color: #ff7518; }
-.diy-section-sub { color: #c9bce8; margin: 0 0 0.4rem; }
+.diy-section-sub { color: #a9cdf5; margin: 0 0 0.4rem; }
 .diy-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 1.2rem; margin-top: 1rem; }
-.diy-card { background: rgba(255,255,255,0.03); border: 1px solid #33254f; border-radius: 12px; padding: 1rem; }
-.diy-card h3 { margin: 0 0 0.2rem; color: #FFF8E7; }
+.diy-card { background: rgba(255,255,255,0.03); border: 1px solid #274860; border-radius: 12px; padding: 1rem; }
+.diy-card h3 { margin: 0 0 0.2rem; color: #f9e5c2; }
 .diy-creator { color: #ff7518; font-weight: 600; margin: 0 0 0.4rem; font-size: 0.9rem; }
-.diy-blurb { color: #c9bce8; font-size: 0.92rem; line-height: 1.45; margin: 0 0 0.6rem; }
+.diy-blurb { color: #a9cdf5; font-size: 0.92rem; line-height: 1.45; margin: 0 0 0.6rem; }
 .diy-embed { display: flex; justify-content: center; }
 .diy-embed iframe { width: 100%; max-width: 340px; height: 600px; border: 0; border-radius: 10px; background: #000; }
 .diy-watch { text-align: center; margin: 0.5rem 0 0; font-size: 0.9rem; }
@@ -211,15 +211,15 @@ a { color: var(--accent); }
    anchor is a styled, tappable fallback link straight to the pin. */
 .pin-slot { display: flex; justify-content: center; margin: 0 0 0.35rem; min-height: 84px; }
 .pin-slot > span, .pin-slot iframe { max-width: 100%; }
-.pin-fallback { display: block; border: 1px dashed rgba(201,167,255,0.55); border-radius: 8px; padding: 1.1rem 0.8rem; color: #c9a7ff; font-size: 0.9rem; font-weight: 600; text-align: center; line-height: 1.45; }
+.pin-fallback { display: block; border: 1px dashed rgba(143,216,255,0.55); border-radius: 8px; padding: 1.1rem 0.8rem; color: #8fd8ff; font-size: 0.9rem; font-weight: 600; text-align: center; line-height: 1.45; }
 .pin-embed-link { text-decoration: none; }
 .pin-embed-link:hover .pin-fallback { border-color: #ff7518; color: #ffb27a; }
-.costume-media-note { color: #9d8fc7; font-size: 0.78rem; text-align: center; margin: 0 0 0.55rem; }
+.costume-media-note { color: #a9cdf5; font-size: 0.78rem; text-align: center; margin: 0 0 0.55rem; }
 .costume-card .yt-facade { margin: 0 0 0.35rem; }
 .costume-meta { margin: 0 0 0.45rem; }
 .costume-chip { display: inline-block; background: rgba(255,117,24,0.14); border: 1px solid rgba(255,117,24,0.45); color: #ffb27a; border-radius: 999px; padding: 0.08rem 0.55rem; font-size: 0.78rem; font-weight: 600; margin-right: 0.3rem; }
 .costume-materials { color: #e6defa; font-size: 0.88rem; line-height: 1.45; margin: 0 0 0.5rem; }
-.costume-credits { margin: 2.2rem 0 0.5rem; padding: 0.9rem 1rem; border: 1px dashed #33254f; border-radius: 12px; color: #c9bce8; font-size: 0.9rem; line-height: 1.5; }
+.costume-credits { margin: 2.2rem 0 0.5rem; padding: 0.9rem 1rem; border: 1px dashed #274860; border-radius: 12px; color: #a9cdf5; font-size: 0.9rem; line-height: 1.5; }
 .costume-credits a { color: #ff7518; }
 .costume-crosslink { margin-top: 1.6rem; }
 
@@ -239,7 +239,7 @@ a { color: var(--accent); }
   font-size: 0.85rem; transition: border-color .15s ease;
   max-width: 100%;
 }
-.sponsor-card:hover { border-color: #7b4fc4; }
+.sponsor-card:hover { border-color: #57a8ff; }
 .sponsor-logo {
   width: 48px !important; height: 72px !important;
   max-width: 48px !important; max-height: 72px !important;
@@ -250,13 +250,13 @@ a { color: var(--accent); }
 .sponsor-text { color: var(--muted); font-size: 0.85rem; }
 .sponsor-tier {
   font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em;
-  color: #c9a86a; font-weight: 700;
+  color: #e6b16d; font-weight: 700;
 }
-.sponsor-card.tier-title { flex: 0 1 660px; margin: 0 auto; flex-direction: column; text-align: center; gap: 1.1rem; padding: 2.6rem 2rem; border-color: #c9a86a; border-width: 2px; box-sizing: border-box; justify-content: center; }
+.sponsor-card.tier-title { flex: 0 1 660px; margin: 0 auto; flex-direction: column; text-align: center; gap: 1.1rem; padding: 2.6rem 2rem; border-color: #e6b16d; border-width: 2px; box-sizing: border-box; justify-content: center; }
 .sponsor-card.tier-title .sponsor-logo { width: 300px !important; height: 300px !important; max-width: 300px !important; max-height: 300px !important; }
 .sponsor-card.tier-title .sponsor-name { font-size: 2.6rem; }
 .sponsor-card.tier-title .sponsor-text { font-size: 1.35rem; }
-.sponsor-card.tier-premium { border-color: #7b4fc4; }
+.sponsor-card.tier-premium { border-color: #57a8ff; }
 .sponsor-cta { margin: 1rem 0 0; font-size: 0.9rem; color: var(--muted); }
 .sponsor-cta a { color: var(--accent); }
 
@@ -268,7 +268,7 @@ a { color: var(--accent); }
 }
 .sponsor-admin-info { display: flex; flex-direction: column; gap: 0.1rem; min-width: 0; flex: 1; }
 
-.tips-section { margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid #33254f; }
+.tips-section { margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid #274860; }
 .tips-section h3 { margin: 0 0 1rem; }
 .tips-list { display: flex; flex-direction: column; gap: 0.8rem; margin-bottom: 1.2rem; }
 .tip { background: var(--bg2); border-radius: 10px; padding: 0.8rem 1rem; }
@@ -276,7 +276,7 @@ a { color: var(--accent); }
 .tip p { margin: 0; }
 .tip-form { display: flex; flex-direction: column; gap: 0.5rem; }
 .tip-form input, .tip-form textarea {
-  background: var(--bg2); color: var(--ink); border: 1px solid #33254f;
+  background: var(--bg2); color: var(--ink); border: 1px solid #274860;
   border-radius: 10px; padding: 0.6rem 0.8rem; font-size: 0.95rem; font-family: inherit;
 }
 .tip-form button { align-self: flex-start; }
@@ -288,15 +288,15 @@ a { color: var(--accent); }
   background: var(--bg2); color: var(--ink); text-decoration: none;
   font-weight: 600; font-size: 0.95rem; border: 2px solid transparent;
 }
-.state-btn.active { border-color: var(--accent); background: #1a1030; }
-.state-btn .state-count { background: #241a44; color: #ffd98a; border-radius: 999px; padding: 0.02rem 0.5rem; font-size: 0.8em; font-weight: 700; margin-left: 0.3rem; white-space: nowrap; }
+.state-btn.active { border-color: var(--accent); background: #101e24; }
+.state-btn .state-count { background: #14222b; color: #ffd98a; border-radius: 999px; padding: 0.02rem 0.5rem; font-size: 0.8em; font-weight: 700; margin-left: 0.3rem; white-space: nowrap; }
 /* "Browse by town" link under the homepage state buttons (Dan Oct 23):
    /towns had no path from the homepage nav — this centered pill is it. */
 .browse-towns-row { display: flex; justify-content: center; margin: 0.25rem 0 1.25rem; }
 .browse-towns-link {
   display: inline-flex; align-items: center; justify-content: center;
   min-height: 44px; padding: 0.55rem 1.4rem; border-radius: 999px;
-  background: var(--bg2); color: var(--muted); border: 1px solid #33254f;
+  background: var(--bg2); color: var(--muted); border: 1px solid #274860;
   font-weight: 600; font-size: 1rem; text-decoration: none;
 }
 .browse-towns-link:hover, .browse-towns-link:focus { color: var(--accent); border-color: var(--accent); }
@@ -305,13 +305,13 @@ a { color: var(--accent); }
   background: var(--bg2); color: var(--ink); text-decoration: none;
   font-weight: 700; font-size: 1.05rem; border: 2px solid transparent;
 }
-.cat-btn-main.active { border-color: var(--accent); background: #1a1030; }
+.cat-btn-main.active { border-color: var(--accent); background: #101e24; }
 .cat-tabs-sub { display: flex; gap: 0.35rem; align-items: stretch; flex-wrap: wrap; justify-content: center; margin-bottom: 0.8rem; padding-bottom: 0.2rem; }
 .cat-sub-label { font-size: 0.8rem; color: var(--muted); flex: 0 0 auto; align-self: center; }
 .cat-btn-sub {
   padding: 0.3rem 0.7rem; border-radius: 20px; font-size: 0.8rem; flex: 0 1 160px; text-align: center;
   background: var(--bg2); color: var(--muted); text-decoration: none;
-  border: 1px solid #33254f;
+  border: 1px solid #274860;
   display: flex; align-items: center; justify-content: center; white-space: nowrap;
 }
 .cat-btn-sub.active { color: var(--ink); border-color: var(--accent); }
@@ -355,10 +355,10 @@ a { color: var(--accent); }
 }
 .card {
   background: var(--card); border-radius: var(--radius); overflow: hidden;
-  text-decoration: none; color: var(--ink); border: 1px solid #33254f;
+  text-decoration: none; color: var(--ink); border: 1px solid #274860;
   display: block;
 }
-.card-media { position: relative; aspect-ratio: 4/3; background: #0d0916; }
+.card-media { position: relative; aspect-ratio: 4/3; background: #05080a; }
 .card-media-empty { height: 100%; display: flex; align-items: center; justify-content: center; font-size: 3rem; }
 .card-media img, .card-media video { width: 100%; height: 100%; object-fit: cover; display: block; }
 .play-badge {
@@ -368,7 +368,7 @@ a { color: var(--accent); }
 }
 .sample-badge {
   position: absolute; top: 8px; left: 8px; background: var(--accent2);
-  color: #160a28; font-size: 0.72rem; font-weight: 800; padding: 0.15rem 0.55rem;
+  color: #0b151a; font-size: 0.72rem; font-weight: 800; padding: 0.15rem 0.55rem;
   border-radius: 999px; text-transform: uppercase; letter-spacing: 0.04em;
 }
 .card-body { padding: 0.7rem 0.85rem; }
@@ -384,30 +384,30 @@ a { color: var(--accent); }
 .form input[type="text"], .form input[type="password"], .form input[type="file"],
 .form input[type="url"], .form select {
   display: block; width: 100%; margin-top: 0.35rem;
-  background: var(--bg2); border: 1px solid #33254f; color: var(--ink);
+  background: var(--bg2); border: 1px solid #274860; color: var(--ink);
   border-radius: 10px; padding: 0.65rem; font-size: 1rem;
 }
 .form small { color: var(--muted); font-weight: 400; }
 .req { color: var(--accent); } .opt { color: var(--muted); font-weight: 400; }
 .btn {
   display: inline-block; background: var(--bg2); color: var(--ink);
-  border: 1px solid #443366; border-radius: 999px; padding: 0.55rem 1.2rem;
+  border: 1px solid #402f54; border-radius: 999px; padding: 0.55rem 1.2rem;
   font-size: 1rem; text-decoration: none; cursor: pointer;
 }
 .btn-big { background: var(--accent); color: #1a0f00; font-weight: 800; border: none; width: 100%; padding: 0.85rem; font-size: 1.1rem; }
-.btn-voted { background: #2c2145; color: var(--muted); cursor: default; }
+.btn-voted { background: #1d2b33; color: var(--muted); cursor: default; }
 .btn-small { padding: 0.3rem 0.8rem; font-size: 0.85rem; }
 .btn-danger { background: var(--danger); border-color: var(--danger); color: #fff; }
 .alert { background: #3d1620; border: 1px solid var(--danger); border-radius: 10px; padding: 0.8rem; margin-bottom: 1rem; }
 .lede { color: var(--muted); }
-#map { height: 260px; border-radius: var(--radius); margin-bottom: 1rem; border: 1px solid #33254f; z-index: 0; }
-.detail-map { height: 220px; border-radius: var(--radius); margin: 1rem 0; border: 1px solid #33254f; z-index: 0; }
+#map { height: 260px; border-radius: var(--radius); margin-bottom: 1rem; border: 1px solid #274860; z-index: 0; }
+.detail-map { height: 220px; border-radius: var(--radius); margin: 1rem 0; border: 1px solid #274860; z-index: 0; }
 
 /* detail */
-.detail-media { border-radius: var(--radius); overflow: hidden; position: relative; background: #0d0916; }
+.detail-media { border-radius: var(--radius); overflow: hidden; position: relative; background: #05080a; }
 /* TikTok facade (detail + watch): pin thumbnail + play button until tapped */
 .tt-facade { position: relative; cursor: pointer; }
-.tt-facade-blank { height: 340px; display: flex; align-items: center; justify-content: center; font-size: 4rem; background: radial-gradient(600px 300px at 50% 0%, #2b1c4d 0%, #0d0916 70%); }
+.tt-facade-blank { height: 340px; display: flex; align-items: center; justify-content: center; font-size: 4rem; background: radial-gradient(600px 300px at 50% 0%, #0f2e54 0%, #05080a 70%); }
 .tt-play {
   position: absolute; inset: 0; margin: auto; width: 74px; height: 74px;
   background: rgba(0,0,0,0.62); border: 2px solid rgba(255,255,255,0.85); border-radius: 50%;
@@ -429,19 +429,19 @@ a { color: var(--accent); }
 .chain-nav { display: flex; justify-content: space-between; gap: 0.7rem; margin: 1.2rem 0 0.4rem; }
 /* Engagement next-steps (staged Oct 22): prominent neighbour block + tour
    builder CTA, Haunt or Not card, town-request capture */
-.engage-next { margin: 1.3rem 0 0.4rem; padding: 1rem; background: linear-gradient(160deg, #241a44, #17122b); border: 1px solid #4a2d7a; border-radius: 14px; }
+.engage-next { margin: 1.3rem 0 0.4rem; padding: 1rem; background: linear-gradient(160deg, #14222b, #0e1a20); border: 1px solid #402f54; border-radius: 14px; }
 .engage-next h2 { font-size: 1.2rem; margin: 0 0 0.7rem; }
 .btn-tour-build { margin-top: 0.7rem; cursor: pointer; }
-.tour-build-note { color: #c9bce8; font-size: 0.82rem; text-align: center; margin: 0.45rem 0 0; }
-.hon-card { display: flex; gap: 0.9rem; align-items: center; margin: 1.2rem 0; padding: 0.9rem 1rem; background: linear-gradient(135deg, #241640, #311d55); border: 1px solid #4a2d7a; border-radius: 14px; }
+.tour-build-note { color: #a9cdf5; font-size: 0.82rem; text-align: center; margin: 0.45rem 0 0; }
+.hon-card { display: flex; gap: 0.9rem; align-items: center; margin: 1.2rem 0; padding: 0.9rem 1rem; background: linear-gradient(135deg, #182630, #33284e); border: 1px solid #402f54; border-radius: 14px; }
 .hon-card img { width: 96px; height: 96px; object-fit: cover; border-radius: 10px; flex: 0 0 auto; }
 .hon-body h2 { font-size: 1.15rem; margin: 0 0 0.3rem; }
-.hon-body p { color: #c9bce8; font-size: 0.88rem; line-height: 1.4; margin: 0 0 0.6rem; }
+.hon-body p { color: #a9cdf5; font-size: 0.88rem; line-height: 1.4; margin: 0 0 0.6rem; }
 .town-request { max-width: 560px; margin: 1.2rem auto; text-align: left; padding: 1rem 1.1rem; }
 .town-request h3 { font-size: 1.15rem; text-align: center; }
 .town-request p { font-size: 0.9rem; text-align: center; }
 .town-request-form { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-top: 0.6rem; }
-.town-request-form input { background: rgba(0,0,0,0.25); border: 1px solid #4a2d7a; border-radius: 8px; padding: 0.55rem 0.7rem; color: #e8e6e3; width: 100%; box-sizing: border-box; }
+.town-request-form input { background: rgba(0,0,0,0.25); border: 1px solid #402f54; border-radius: 8px; padding: 0.55rem 0.7rem; color: #e8e6e3; width: 100%; box-sizing: border-box; }
 .town-request-form input[name="email"] { grid-column: 1 / -1; }
 .town-request-form .btn { grid-column: 1 / -1; }
 .hp-field { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
@@ -452,12 +452,12 @@ a { color: var(--accent); }
 .text-alerts p { font-size: 0.9rem; text-align: center; }
 .text-alerts-form { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-top: 0.6rem; align-items: center; }
 .text-alerts-form input[type="tel"] { grid-column: 1 / -1; }
-.text-alerts-form input, .text-alerts-form select { background: rgba(0,0,0,0.25); border: 1px solid #4a2d7a; border-radius: 8px; padding: 0.55rem 0.7rem; color: #e8e6e3; width: 100%; box-sizing: border-box; }
+.text-alerts-form input, .text-alerts-form select { background: rgba(0,0,0,0.25); border: 1px solid #402f54; border-radius: 8px; padding: 0.55rem 0.7rem; color: #e8e6e3; width: 100%; box-sizing: border-box; }
 .text-alerts-form .btn { grid-column: 1 / -1; }
-.text-alerts-form .ta-radius { color: #c9bce8; font-size: 0.82rem; display: flex; flex-direction: column; gap: 0.25rem; }
+.text-alerts-form .ta-radius { color: #a9cdf5; font-size: 0.82rem; display: flex; flex-direction: column; gap: 0.25rem; }
 .text-alerts-form .ta-check { display: flex; gap: 0.4rem; align-items: center; color: #e8e6e3; font-size: 0.9rem; }
 .text-alerts-form .ta-check input { width: auto; }
-.text-alerts .ta-consent { font-size: 0.72rem; color: #9d8fc7; margin-top: 0.6rem; line-height: 1.4; }
+.text-alerts .ta-consent { font-size: 0.72rem; color: #a9cdf5; margin-top: 0.6rem; line-height: 1.4; }
 @media (max-width: 560px) {
   .text-alerts-form { grid-template-columns: 1fr; }
 }
@@ -471,16 +471,16 @@ a { color: var(--accent); }
 .watch-sub { color: var(--muted); }
 .watch-feed { display: grid; gap: 1.1rem; }
 .watch-slide {
-  background: var(--card); border: 1px solid #33254f; border-radius: var(--radius);
+  background: var(--card); border: 1px solid #274860; border-radius: var(--radius);
   overflow: hidden; scroll-snap-align: start;
 }
-.watch-slide .tt-facade img { width: 100%; display: block; max-height: 62vh; object-fit: contain; background: #0d0916; }
-.watch-slide video { width: 100%; display: block; max-height: 62vh; background: #0d0916; }
+.watch-slide .tt-facade img { width: 100%; display: block; max-height: 62vh; object-fit: contain; background: #05080a; }
+.watch-slide video { width: 100%; display: block; max-height: 62vh; background: #05080a; }
 .watch-meta { padding: 0.7rem 0.9rem 0.95rem; }
 .watch-meta h2 { font-size: 1.05rem; margin: 0 0 0.25rem; }
 .watch-meta h2 a { color: var(--ink); text-decoration: none; }
 .watch-actions { margin: 0.55rem 0 0; }
-.detail-media img, .detail-media video { width: 100%; display: block; max-height: 70vh; object-fit: contain; background: #0d0916; }
+.detail-media img, .detail-media video { width: 100%; display: block; max-height: 70vh; object-fit: contain; background: #05080a; }
 .votes-big { font-size: 1.3rem; font-weight: 800; color: var(--accent); }
 .detail-actions { margin: 1rem 0; }
 .detail-foot { display: flex; gap: 1rem; align-items: center; margin-top: 1.25rem; flex-wrap: wrap; }
@@ -493,10 +493,10 @@ a { color: var(--accent); }
 .leader-list { list-style: none; padding: 0; margin: 0 0 2rem; display: grid; gap: 0.7rem; }
 .leader-list li a {
   display: flex; gap: 0.8rem; align-items: center; background: var(--card);
-  border: 1px solid #33254f; border-radius: var(--radius); padding: 0.6rem;
+  border: 1px solid #274860; border-radius: var(--radius); padding: 0.6rem;
   text-decoration: none; color: var(--ink);
 }
-.leader-list img, .leader-list video { width: 84px; height: 64px; object-fit: cover; border-radius: 8px; flex-shrink: 0; background: #0d0916; }
+.leader-list img, .leader-list video { width: 84px; height: 64px; object-fit: cover; border-radius: 8px; flex-shrink: 0; background: #05080a; }
 .leader-info { display: flex; flex-direction: column; gap: 0.1rem; }
 .leader-info strong { font-size: 0.98rem; }
 
@@ -508,7 +508,7 @@ a { color: var(--accent); }
 }
 .states-cta { margin: 0 0 2rem; }
 .states-cta a {
-  display: block; background: var(--card); border: 1px solid #33254f;
+  display: block; background: var(--card); border: 1px solid #274860;
   border-radius: var(--radius); padding: 0.9rem 1rem; color: var(--ink);
   text-decoration: none;
 }
@@ -527,17 +527,17 @@ a { color: var(--accent); }
    a below-band twin on phone; generic states-cta when state unknown. */
 .top10-home {
   margin: 1.2rem 0 0.4rem; padding: 1rem;
-  background: linear-gradient(160deg, #241a44, #17122b);
-  border: 1px solid #4a2d7a; border-radius: 14px;
+  background: linear-gradient(160deg, #14222b, #0e1a20);
+  border: 1px solid #402f54; border-radius: 14px;
 }
 .top10-home h2 { font-size: 1.25rem; margin: 0 0 0.3rem; }
-.top10-home-sub { color: #c9bce8; margin: 0 0 0.7rem; }
+.top10-home-sub { color: #a9cdf5; margin: 0 0 0.7rem; }
 .top10-home .states-cta { margin: 0; }
 .top10-home-list { list-style: none; margin: 0 0 0.6rem; padding: 0; display: grid; gap: 0.35rem; }
 .top10-home-list a {
   display: flex; align-items: center; gap: 0.55rem;
   color: var(--ink); text-decoration: none;
-  background: rgba(255, 255, 255, 0.04); border: 1px solid #33254f;
+  background: rgba(255, 255, 255, 0.04); border: 1px solid #274860;
   border-radius: 10px; padding: 0.45rem 0.6rem;
 }
 .top10-home-list a:hover { border-color: var(--accent); }
@@ -565,7 +565,7 @@ a { color: var(--accent); }
 /* admin */
 .admin-list { display: grid; gap: 0.6rem; margin-bottom: 2rem; }
 .admin-row {
-  background: var(--card); border: 1px solid #33254f; border-radius: 10px;
+  background: var(--card); border: 1px solid #274860; border-radius: 10px;
   padding: 0.7rem 0.9rem; display: flex; flex-direction: column; gap: 0.4rem;
 }
 .admin-row a { color: var(--ink); }
@@ -690,7 +690,7 @@ h1 { font-size: 1.6rem; } h2 { font-size: 1.2rem; color: var(--accent2); margin-
   font-size: clamp(1.02rem, 1.8vw, 1.4rem);
   font-weight: 700;
   font-style: italic;
-  color: #FFF8E7;
+  color: #f9e5c2;
   margin: 0 0 1rem;
   text-align: left;
   line-height: 1.28;
@@ -744,14 +744,14 @@ h1 { font-size: 1.6rem; } h2 { font-size: 1.2rem; color: var(--accent2); margin-
 .duel-card { background: #161c24; border: 2px solid #2a3442; border-radius: 12px; padding: 0; cursor: pointer; color: #e8e6e3; display: flex; flex-direction: column; overflow: hidden; text-align: left; transition: border-color .15s, transform .15s; }
 .duel-card:hover { border-color: #ff7518; transform: translateY(-2px); }
 .duel-card img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; display: block; background: #000; }
-.duel-card.duel-win { border-color: #7ee081; box-shadow: 0 0 18px rgba(126,224,129,.35); }
+.duel-card.duel-win { border-color: #8fd8ff; box-shadow: 0 0 18px rgba(126,184,255,.35); }
 .duel-title { font-weight: 800; font-size: 1.05rem; padding: 0.6rem 0.8rem 0.1rem; }
 .duel-town { color: #9a97a3; padding: 0 0.8rem 0.7rem; font-size: 0.9rem; }
 .duel-vs { align-self: center; font-weight: 900; font-size: 1.4rem; color: #ff7518; background: #161c24; border: 2px solid #ff7518; border-radius: 50%; width: 52px; height: 52px; display: flex; align-items: center; justify-content: center; }
 .duel-hint { text-align: center; color: #9a97a3; font-size: 0.9rem; }
 .duel-leaders li { margin: 0.4rem 0; }
 .duel-leader-town { color: #9a97a3; }
-.duel-leader-stat { color: #7ee081; font-weight: 700; margin-left: 0.4rem; }
+.duel-leader-stat { color: #8fd8ff; font-weight: 700; margin-left: 0.4rem; }
 .duel-empty { color: #9a97a3; }
 @media (max-width: 640px) {
   .duel-vs { width: 40px; height: 40px; font-size: 1.05rem; }
@@ -765,9 +765,9 @@ h1 { font-size: 1.6rem; } h2 { font-size: 1.2rem; color: var(--accent2); margin-
 .scare-row form { margin: 0; }
 .scare-btn { background: #1d2632; color: #e8e6e3; border: 1px solid #2a3442; border-radius: 999px; padding: 0.35rem 0.8rem; cursor: pointer; font-size: 0.92rem; min-width: 158px; text-align: left; }
 .scare-btn:hover { border-color: #ff7518; }
-.scare-btn.scare-picked { border-color: #7ee081; background: rgba(126,224,129,.12); font-weight: 700; }
+.scare-btn.scare-picked { border-color: #8fd8ff; background: rgba(126,184,255,.12); font-weight: 700; }
 .scare-bar { flex: 1; height: 10px; background: #0b0f14; border-radius: 999px; overflow: hidden; }
-.scare-fill { height: 100%; background: linear-gradient(90deg, #7ee081, #ffb02e, #ff5252); border-radius: 999px; }
+.scare-fill { height: 100%; background: linear-gradient(90deg, #8fd8ff, #ffb02e, #ff5252); border-radius: 999px; }
 .scare-n { min-width: 2ch; text-align: right; color: #9a97a3; font-size: 0.9rem; }
 .scare-total { color: #9a97a3; font-size: 0.9rem; margin: 0.6rem 0 0; }
 @media (max-width: 640px) { .scare-btn { min-width: 128px; font-size: 0.85rem; } }
@@ -790,11 +790,11 @@ a.game-card:hover { border-color: #ff7518; transform: translateY(-2px); }
 .trivia-options { display: grid; gap: 0.6rem; }
 .trivia-opt { background: #1d2632; color: #e8e6e3; border: 1px solid #2a3442; border-radius: 10px; padding: 0.8rem 1rem; font-size: 1.05rem; text-align: left; cursor: pointer; }
 .trivia-opt:hover:not(:disabled) { border-color: #ff7518; }
-.trivia-opt.trivia-right { border-color: #7ee081; background: rgba(126,224,129,.15); font-weight: 700; }
+.trivia-opt.trivia-right { border-color: #8fd8ff; background: rgba(126,184,255,.15); font-weight: 700; }
 .trivia-opt.trivia-wrong { border-color: #ff5252; background: rgba(255,82,82,.12); }
 .trivia-done { text-align: center; max-width: 640px; margin: 1rem auto; background: #161c24; border: 1px solid #2a3442; border-radius: 12px; padding: 1.6rem 1.3rem; }
 .trivia-score { font-size: 2rem; font-weight: 900; margin: 0 0 0.4rem; }
-.trivia-verdict { font-size: 1.15rem; color: #ffb066; margin: 0 0 1.1rem; }
+.trivia-verdict { font-size: 1.15rem; color: #f19d45; margin: 0 0 1.1rem; }
 .trivia-again { color: #9a97a3; }
 .trivia-streak { color: #ff7518; font-weight: 800; font-size: 1.1rem; }
 
@@ -806,15 +806,15 @@ a.game-card:hover { border-color: #ff7518; transform: translateY(-2px); }
 .header-nav a:hover { color: #ff7518; }
 
 /* Fun spooky picture at the right end of the purple header */
-.header-spooky { height: 118px; width: 168px; object-fit: cover; border-radius: 12px; border: 2px solid #c9a86a; align-self: center; flex: 0 0 auto; }
+.header-spooky { height: 118px; width: 168px; object-fit: cover; border-radius: 12px; border: 2px solid #e6b16d; align-self: center; flex: 0 0 auto; }
 @media (max-width: 700px) { .header-spooky { display: none; } }
 
 /* (The old .mobile-search block is gone — Oct 23: it merged with
    the locate panel into the combined .hm-find block under the hero
    headline; its simple-bar styles live on as .hm-find-form below.) */
-.town-search { padding: 0.45rem 0.6rem; border-radius: 8px; border: 1px solid #372b5e; background: #17122b; color: #e8e6e3; font-size: 0.95rem; min-width: 170px; }
+.town-search { padding: 0.45rem 0.6rem; border-radius: 8px; border: 1px solid #402f54; background: #0e1a20; color: #e8e6e3; font-size: 0.95rem; min-width: 170px; }
 .votes-new { color: #ffd98a; font-weight: 700; }
-.votes-first { color: #9a8fb8; font-style: italic; }
+.votes-first { color: #94a6c0; font-style: italic; }
 @media (max-width: 760px) {
   .hero-intro h1.hero-title { font-size: 1.2rem; margin-bottom: 0.4rem; }
   /* Span the header's full content width: in the column header layout the
@@ -825,13 +825,13 @@ a.game-card:hover { border-color: #ff7518; transform: translateY(-2px); }
 }
 
 /* Moment-of-interest email prompt */
-#hm-prompt { position: fixed; left: 50%; transform: translateX(-50%); bottom: 1rem; z-index: 2000; width: min(430px, calc(100vw - 2rem)); background: linear-gradient(160deg, #241a44, #17122b); border: 2px solid #c9a86a; border-radius: 14px; padding: 1rem 1.1rem 0.9rem; box-shadow: 0 12px 40px rgba(0,0,0,0.55); }
-#hm-prompt .hm-prompt-text { margin: 0 1.4rem 0.6rem 0; font-weight: 700; color: #FFF8E7; line-height: 1.4; }
+#hm-prompt { position: fixed; left: 50%; transform: translateX(-50%); bottom: 1rem; z-index: 2000; width: min(430px, calc(100vw - 2rem)); background: linear-gradient(160deg, #14222b, #0e1a20); border: 2px solid #e6b16d; border-radius: 14px; padding: 1rem 1.1rem 0.9rem; box-shadow: 0 12px 40px rgba(0,0,0,0.55); }
+#hm-prompt .hm-prompt-text { margin: 0 1.4rem 0.6rem 0; font-weight: 700; color: #f9e5c2; line-height: 1.4; }
 #hm-prompt .hm-prompt-form { display: flex; gap: 0.5rem; }
-#hm-prompt .hm-prompt-form input { flex: 1; padding: 0.55rem 0.7rem; border-radius: 8px; border: 1px solid #372b5e; background: #0d0a1a; color: #e8e6e3; }
+#hm-prompt .hm-prompt-form input { flex: 1; padding: 0.55rem 0.7rem; border-radius: 8px; border: 1px solid #402f54; background: #0d0a1a; color: #e8e6e3; }
 #hm-prompt .hm-prompt-form button { background: #ff7518; color: #14101f; font-weight: 800; border: none; border-radius: 8px; padding: 0.55rem 0.9rem; cursor: pointer; }
-#hm-prompt .hm-prompt-x { position: absolute; top: 0.35rem; right: 0.55rem; background: none; border: none; color: #9a8fb8; font-size: 1.25rem; cursor: pointer; }
-#hm-prompt .hm-prompt-done { color: #7ee081; font-weight: 700; margin: 0.2rem 0; }
+#hm-prompt .hm-prompt-x { position: absolute; top: 0.35rem; right: 0.55rem; background: none; border: none; color: #94a6c0; font-size: 1.25rem; cursor: pointer; }
+#hm-prompt .hm-prompt-done { color: #8fd8ff; font-weight: 700; margin: 0.2rem 0; }
 
 /* Add Yours invite popup (Dan, Oct 24 — STAGED for preview). Centered
    card on laptop, bottom sheet on phone. z-index 1500 sits BELOW
@@ -841,16 +841,16 @@ a.game-card:hover { border-color: #ff7518; transform: translateY(-2px); }
 #hm-addyours[hidden] { display: none; }
 .hm-addyours-backdrop { position: absolute; inset: 0; background: rgba(8, 4, 18, 0.68); opacity: 0; transition: opacity 0.22s ease; }
 #hm-addyours.open .hm-addyours-backdrop { opacity: 1; }
-.hm-addyours-card { position: relative; width: min(440px, 100%); background: linear-gradient(160deg, #2c1a56, #17122b); border: 2px solid #ff7518; border-radius: 18px; padding: 1.7rem 1.5rem 1.25rem; text-align: center; box-shadow: 0 18px 50px rgba(0, 0, 0, 0.6); opacity: 0; transform: translateY(14px) scale(0.98); transition: opacity 0.22s ease, transform 0.22s ease; }
+.hm-addyours-card { position: relative; width: min(440px, 100%); background: linear-gradient(160deg, #402f54, #0e1a20); border: 2px solid #ff7518; border-radius: 18px; padding: 1.7rem 1.5rem 1.25rem; text-align: center; box-shadow: 0 18px 50px rgba(0, 0, 0, 0.6); opacity: 0; transform: translateY(14px) scale(0.98); transition: opacity 0.22s ease, transform 0.22s ease; }
 #hm-addyours.open .hm-addyours-card { opacity: 1; transform: none; }
-.hm-addyours-x { position: absolute; top: 0.3rem; right: 0.45rem; width: 2.4rem; height: 2.4rem; background: none; border: none; color: #9a8fb8; font-size: 1.5rem; line-height: 1; cursor: pointer; }
-.hm-addyours-x:hover, .hm-addyours-x:focus-visible { color: #FFF8E7; }
-.hm-addyours-title { font-family: "Creepster", cursive; font-weight: 400; font-size: 1.95rem; letter-spacing: 0.02em; line-height: 1.15; color: #FFF8E7; margin: 0 1.4rem 0.55rem; }
+.hm-addyours-x { position: absolute; top: 0.3rem; right: 0.45rem; width: 2.4rem; height: 2.4rem; background: none; border: none; color: #94a6c0; font-size: 1.5rem; line-height: 1; cursor: pointer; }
+.hm-addyours-x:hover, .hm-addyours-x:focus-visible { color: #f9e5c2; }
+.hm-addyours-title { font-family: "Creepster", cursive; font-weight: 400; font-size: 1.95rem; letter-spacing: 0.02em; line-height: 1.15; color: #f9e5c2; margin: 0 1.4rem 0.55rem; }
 .hm-addyours-text { color: var(--muted); margin: 0 0 1.15rem; line-height: 1.45; }
-.hm-addyours-cta { display: block; background: #ff7518; color: #1a1038; font-weight: 800; font-size: 1.05rem; padding: 0.8rem 1rem; border-radius: 10px; text-decoration: none; }
+.hm-addyours-cta { display: block; background: #ff7518; color: #0a1e24; font-weight: 800; font-size: 1.05rem; padding: 0.8rem 1rem; border-radius: 10px; text-decoration: none; }
 .hm-addyours-cta:hover, .hm-addyours-cta:focus-visible { background: #ff8c3a; }
-.hm-addyours-later { display: block; margin: 0.65rem auto 0; padding: 0.35rem 0.8rem; background: none; border: none; color: #9a8fb8; font-size: 0.92rem; cursor: pointer; text-decoration: underline; }
-.hm-addyours-later:hover, .hm-addyours-later:focus-visible { color: #FFF8E7; }
+.hm-addyours-later { display: block; margin: 0.65rem auto 0; padding: 0.35rem 0.8rem; background: none; border: none; color: #94a6c0; font-size: 0.92rem; cursor: pointer; text-decoration: underline; }
+.hm-addyours-later:hover, .hm-addyours-later:focus-visible { color: #f9e5c2; }
 @media (max-width: 760px) {
   #hm-addyours { align-items: flex-end; padding: 0; }
   .hm-addyours-card { width: 100%; border-radius: 18px 18px 0 0; border-bottom: none; padding: 1.5rem 1.2rem calc(1.15rem + env(safe-area-inset-bottom)); transform: translateY(26px); }
@@ -866,11 +866,11 @@ a.game-card:hover { border-color: #ff7518; transform: translateY(-2px); }
 .tiktok-promo .tiktok-follow { margin-top: 0.4rem; }
 .tiktok-follow-big { font-size: 1.55rem; }
 .tiktok-follow-big img { width: 46px; height: 46px; }
-.tiktok-line { color: #c9bce8; font-size: 0.95rem; margin: 0.55rem 0 0.2rem; }
+.tiktok-line { color: #a9cdf5; font-size: 0.95rem; margin: 0.55rem 0 0.2rem; }
 
 /* ---- Collection loop: "You've seen X of Y in [Town]" ---- */
 .seen-strip { margin: 0.7rem 0; }
-.seen-text { color: #c9bce8; font-size: 0.85rem; margin: 0 0 0.3rem; }
+.seen-text { color: #a9cdf5; font-size: 0.85rem; margin: 0 0 0.3rem; }
 .seen-bar { height: 6px; background: rgba(255,255,255,0.12); border-radius: 3px; overflow: hidden; max-width: 340px; }
 .seen-fill { height: 100%; background: #ff7518; border-radius: 3px; }
 
@@ -884,12 +884,12 @@ a.game-card:hover { border-color: #ff7518; transform: translateY(-2px); }
 }
 
 /* ---- Tonight's Display (homepage daily hook) ---- */
-.tonight-card { display: flex; gap: 0.9rem; align-items: center; background: linear-gradient(160deg, #241a44, #17122b); border: 2px solid #c9a86a; border-radius: 14px; padding: 0.7rem 0.9rem; margin: 1rem 0; text-decoration: none; }
+.tonight-card { display: flex; gap: 0.9rem; align-items: center; background: linear-gradient(160deg, #14222b, #0e1a20); border: 2px solid #e6b16d; border-radius: 14px; padding: 0.7rem 0.9rem; margin: 1rem 0; text-decoration: none; }
 .tonight-card img { width: 92px; height: 92px; object-fit: cover; border-radius: 10px; flex: 0 0 auto; }
 .tonight-body { display: flex; flex-direction: column; gap: 0.15rem; }
 .tonight-kicker { color: #ff7518; font-weight: 800; font-size: 0.8rem; letter-spacing: 0.03em; text-transform: uppercase; }
-.tonight-title { color: #FFF8E7; font-weight: 800; font-size: 1.15rem; line-height: 1.25; }
-.tonight-meta { color: #c9bce8; font-size: 0.85rem; }
+.tonight-title { color: #f9e5c2; font-weight: 800; font-size: 1.15rem; line-height: 1.25; }
+.tonight-meta { color: #a9cdf5; font-size: 0.85rem; }
 
 /* (The in-hero compact Tonight's card rules that lived here were retired
    in z43 when Tonight's Display moved back out of the hero panel into its
@@ -921,7 +921,7 @@ a.game-card:hover { border-color: #ff7518; transform: translateY(-2px); }
 
 /* Creepy hero backdrop + visible intro on all screens (Dan, Oct 21) */
 .hero-intro {
-  background: linear-gradient(rgba(9, 5, 17, 0.66), rgba(9, 5, 17, 0.86)), url('/static/img/hero_creepy2.jpg') center 38% / cover no-repeat;
+  background: linear-gradient(rgba(5, 8, 10, 0.66), rgba(5, 8, 10, 0.86)), url('/static/img/hero_creepy2.jpg') center 38% / cover no-repeat;
   border: 1px solid rgba(255, 117, 24, 0.25);
   border-radius: 18px;
   max-width: 780px;
@@ -945,12 +945,12 @@ a.game-card:hover { border-color: #ff7518; transform: translateY(-2px); }
    fading to near-solid so paragraphs stay readable; the old cover+heavy
    overlay buried the scene on tall phone cards. */
 .hero-intro {
-  background: linear-gradient(rgba(9, 5, 17, 0.42), rgba(9, 5, 17, 0.94) 62%), url('/static/img/hero_creepy2.jpg') center top / 100% auto no-repeat, #0b0614;
+  background: linear-gradient(rgba(5, 8, 10, 0.42), rgba(5, 8, 10, 0.94) 62%), url('/static/img/hero_creepy2.jpg') center top / 100% auto no-repeat, #0b0614;
 }
 
 /* Hero backdrop: image repeats behind ALL paragraphs, whole block (Dan, Oct 21) */
 .hero-intro {
-  background: linear-gradient(rgba(9, 5, 17, 0.60), rgba(9, 5, 17, 0.74)), url('/static/img/hero_creepy2.jpg') center top / 100% auto repeat-y, #0b0614;
+  background: linear-gradient(rgba(5, 8, 10, 0.60), rgba(5, 8, 10, 0.74)), url('/static/img/hero_creepy2.jpg') center top / 100% auto repeat-y, #0b0614;
 }
 
 /* Landscape phones: no ghost photo in the header (Dan, Oct 21) */
@@ -960,7 +960,7 @@ a.game-card:hover { border-color: #ff7518; transform: translateY(-2px); }
 
 /* Hero backdrop: four unique scenes stacked behind the four paragraphs (Dan, Oct 21) */
 .hero-intro {
-  background: linear-gradient(rgba(9, 5, 17, 0.60), rgba(9, 5, 17, 0.74)), url('/static/img/hero_backdrop_tall.webp') center top / 100% 100% no-repeat, #0b0614;
+  background: linear-gradient(rgba(5, 8, 10, 0.60), rgba(5, 8, 10, 0.74)), url('/static/img/hero_backdrop_tall.webp') center top / 100% 100% no-repeat, #0b0614;
 }
 
 /* Header hook: Fredoka (Dan, Oct 21 — Apple stack read as a plain Shaker
@@ -1042,14 +1042,14 @@ a.game-card:hover { border-color: #ff7518; transform: translateY(-2px); }
   color: #e01e26;
   letter-spacing: 0.01em;
   line-height: 1.35;
-  text-shadow: 0 3px 0 rgba(74, 0, 0, 0.55), 0 6px 18px rgba(0, 0, 0, 0.6);
+  text-shadow: 0 3px 0 rgba(43, 18, 4, 0.55), 0 6px 18px rgba(0, 0, 0, 0.6);
 }
 .header-tagline {
   font-family: "Nosifer", "Creepster", cursive;
   font-weight: 400;
   color: #e01e26;
   letter-spacing: 0.02em;
-  text-shadow: 0 3px 0 rgba(74, 0, 0, 0.55), 0 6px 18px rgba(0, 0, 0, 0.6);
+  text-shadow: 0 3px 0 rgba(43, 18, 4, 0.55), 0 6px 18px rgba(0, 0, 0, 0.6);
 }
 
 /* Header type sized down so the whole header banner fits up top (Dan, Oct 21) */
@@ -1098,7 +1098,7 @@ a.game-card:hover { border-color: #ff7518; transform: translateY(-2px); }
 
 /* Header hook color: Bone Cream (Dan, Oct 21 — same Creepster slime font) */
 .header-hook {
-  color: #f5efe0;
+  color: #efe3cc;
   text-shadow: 0 3px 0 rgba(0, 0, 0, 0.45), 0 6px 18px rgba(0, 0, 0, 0.6);
 }
 
@@ -1177,27 +1177,27 @@ a.game-card:hover { border-color: #ff7518; transform: translateY(-2px); }
 
 /* Header goes LIGHT: lavender band (Dan, Oct 21). Hook + nav labels flip
    to deep purple for contrast; red tagline unchanged. */
-.site-header { background: linear-gradient(180deg, #f0eaff 0%, #e3d9ff 100%); }
-.header-hook { color: #2a1352; text-shadow: none; }
-.site-header .navbtn span { color: #2a1352; }
+.site-header { background: linear-gradient(180deg, #f0eaff 0%, #e4f5e9 100%); }
+.header-hook { color: #33284e; text-shadow: none; }
+.site-header .navbtn span { color: #33284e; }
 
 /* Revert the lavender band (Dan clarified: he meant FONT colors).
    Dark header restored; hook = bone cream, nav labels = lavender,
    tagline stays blood red. */
-.site-header { background: linear-gradient(180deg, #1e1038, #14092b); }
-.header-hook { color: #f5efe0; text-shadow: 0 3px 0 rgba(0, 0, 0, 0.45), 0 6px 18px rgba(0, 0, 0, 0.6); }
-.site-header .navbtn span { color: #cdbcf5; }
+.site-header { background: linear-gradient(180deg, #0a1e24, #0a1418); }
+.header-hook { color: #efe3cc; text-shadow: 0 3px 0 rgba(0, 0, 0, 0.45), 0 6px 18px rgba(0, 0, 0, 0.6); }
+.site-header .navbtn span { color: #cdeedd; }
 
 /* Hero title off orange (Dan): bone cream + lavender */
-.hero-intro h1.hero-title { color: #f5efe0; }
-.hero-title-alt { color: #c9a7ff; }
+.hero-intro h1.hero-title { color: #efe3cc; }
+.hero-title-alt { color: #8fd8ff; }
 
 /* Hook two-tone (Dan): closing line in lavender, rest bone cream */
-.hook-line.alt { color: #c9a7ff; }
+.hook-line.alt { color: #8fd8ff; }
 
 /* Hook split flipped (Dan): lavender leads, bone cream closes */
-.header-hook { color: #c9a7ff; }
-.hook-line.alt { color: #f5efe0; }
+.header-hook { color: #8fd8ff; }
+.hook-line.alt { color: #efe3cc; }
 
 /* DESKTOP HEADER RESTORE (Dan): small and clean like before — compact logo,
    no ghosts/wolf/Frank clutter, tight rows. Phone untouched. */
@@ -1217,8 +1217,8 @@ a.game-card:hover { border-color: #ff7518; transform: translateY(-2px); }
 
 /* FORCED hook colors (Dan): the .hook-line spans carry their own color rule
    (var(--accent) orange) that beat every parent color all day — set them directly. */
-.hook-line { color: #c9a7ff; font-size: inherit; }
-.hook-line.alt { color: #f5efe0; }
+.hook-line { color: #8fd8ff; font-size: inherit; }
+.hook-line.alt { color: #efe3cc; }
 
 /* Header larger + spanning (Dan), closer in red */
 .hook-line.alt { color: #e01e26; }
@@ -1242,12 +1242,12 @@ a.game-card:hover { border-color: #ff7518; transform: translateY(-2px); }
 .header-tagline { font-family: "Creepster", cursive; letter-spacing: 0.02em; }
 
 /* Tagline three-color rhythm like the header (Dan): lavender / bone cream / red */
-.header-tagline .tag-a { color: #c9a7ff; }
-.header-tagline .tag-b { color: #f5efe0; }
+.header-tagline .tag-a { color: #8fd8ff; }
+.header-tagline .tag-b { color: #efe3cc; }
 .header-tagline .tag-c { color: #e01e26; }
 
 /* "THE" matches "NEW HAUNTS DAILY!!!" lavender (Dan) */
-.header-tagline .tag-b { color: #c9a7ff; }
+.header-tagline .tag-b { color: #8fd8ff; }
 /* Phone: wolf stays glued to "BUILD YOUR NIGHT." on the same line (Dan screenshot) */
 @media (max-width: 760px) {
   .hook-line.alt { white-space: nowrap; }
@@ -1262,8 +1262,8 @@ a.game-card:hover { border-color: #ff7518; transform: translateY(-2px); }
 /* Homepage featured TikTok (Dan): the 40-hours brand video above the follow strip */
 .tt-featured { width: min(300px, 84vw, calc(56svh * 0.5625)); margin: 1.4rem auto 0.2rem; }
 .tt-featured .tt-facade + .tt-facade { margin-top: 0.9rem; }
-.tt-featured-title { text-align: center; font-family: "Creepster", cursive; font-weight: 400; color: #f5efe0; letter-spacing: 0.03em; margin: 0 0 0.6rem; }
-.tt-featured .tt-facade { border-radius: 14px; overflow: hidden; border: 2px solid #3a2566; }
+.tt-featured-title { text-align: center; font-family: "Creepster", cursive; font-weight: 400; color: #efe3cc; letter-spacing: 0.03em; margin: 0 0 0.6rem; }
+.tt-featured .tt-facade { border-radius: 14px; overflow: hidden; border: 2px solid #402f54; }
 .tt-featured .tt-facade img { width: 100%; aspect-ratio: 9 / 16; object-fit: cover; display: block; }
 .tt-featured .tt-play { width: 64px; height: 64px; font-size: 1.45rem; }
 
@@ -1375,10 +1375,10 @@ a.game-card:hover { border-color: #ff7518; transform: translateY(-2px); }
 }
 
 /* Slim scroll mini-bar: appears only after the header scrolls away. */
-.mini-bar { position: fixed; top: 0; left: 0; right: 0; z-index: 80; height: 44px; display: flex; align-items: center; gap: 0.7rem; padding: 0 0.9rem; background: linear-gradient(180deg, #1e1038, #14092b); border-bottom: 1px solid #33254f; box-shadow: 0 2px 12px rgba(0, 0, 0, 0.45); transform: translateY(-110%); transition: transform 0.18s ease; }
+.mini-bar { position: fixed; top: 0; left: 0; right: 0; z-index: 80; height: 44px; display: flex; align-items: center; gap: 0.7rem; padding: 0 0.9rem; background: linear-gradient(180deg, #0a1e24, #0a1418); border-bottom: 1px solid #274860; box-shadow: 0 2px 12px rgba(0, 0, 0, 0.45); transform: translateY(-110%); transition: transform 0.18s ease; }
 .mini-bar.show { transform: translateY(0); }
 .mini-bar img { height: 28px; width: 28px; border-radius: 50%; object-fit: cover; display: block; }
-.mini-bar a { color: #cdbcf5; font-weight: 700; font-size: 0.8rem; text-decoration: none; white-space: nowrap; }
+.mini-bar a { color: #cdeedd; font-weight: 700; font-size: 0.8rem; text-decoration: none; white-space: nowrap; }
 .mini-bar a:hover { color: #ff7518; }
 .mini-bar .mini-links { margin-left: auto; display: flex; gap: 0.95rem; align-items: center; }
 
@@ -1468,8 +1468,8 @@ a.game-card:hover { border-color: #ff7518; transform: translateY(-2px); }
    scoped to a .header-tagline ancestor, so they are re-declared here
    for the spans' new home inside .header-hook. Buttons row unchanged.
    z46 (Dan, Oct 22): "The" (.tag-b) goes red too — the whole closer
-   "The Haunt Starts Here" is now red #e01e26. */
-.header-band .header-hook .tag-a { color: #c9a7ff; }
+   "The Haunt Starts Here" is now red #eb7a2c. */
+.header-band .header-hook .tag-a { color: #8fd8ff; }
 .header-band .header-hook .tag-b { color: #e01e26; }
 .header-band .header-hook .tag-c { color: #e01e26; }
 .header-band .header-hook { white-space: nowrap; }
@@ -1526,8 +1526,8 @@ a.game-card:hover { border-color: #ff7518; transform: translateY(-2px); }
 /* TikTok-follow banner: full-width horizontal button when stacked */
 .tt-follow-vert {
   display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 0.6rem;
-  background: linear-gradient(160deg, #241a44, #0d0a1a);
-  border: 2px solid #3a2566; border-radius: 12px;
+  background: linear-gradient(160deg, #14222b, #0d0a1a);
+  border: 2px solid #402f54; border-radius: 12px;
   color: #fff; font-weight: 800; font-size: 1rem; text-decoration: none;
   padding: 0.6rem 0.9rem;
 }
@@ -1661,7 +1661,7 @@ a.game-card:hover { border-color: #ff7518; transform: translateY(-2px); }
 .tonight-band .tonight-kicker { font-size: 0.85rem; }
 .tonight-cta {
   margin-left: auto; flex: 0 0 auto; align-self: center;
-  color: #17122b; background: #ff7518; font-weight: 800; font-size: 0.9rem;
+  color: #0e1a20; background: #ff7518; font-weight: 800; font-size: 0.9rem;
   padding: 0.55rem 0.9rem; border-radius: 999px; white-space: nowrap;
 }
 .tonight-band .tonight-card:hover .tonight-cta { background: #ffa25e; }
@@ -1823,7 +1823,7 @@ a.game-card:hover { border-color: #ff7518; transform: translateY(-2px); }
       re-declared below bit-identical to z49 (line 2 hidden, line 1
       at 0.78rem) so this section can't disturb it.
    2) "HALLOWEEN" TURNS RED: the word gets its own .hw-red span with
-      its own color rule, red #e01e26 like the other red segments.
+      its own color rule, red #eb7a2c like the other red segments.
       The rest of line 1 stays lavender; "Build Your Night." stays red.
    3) EVENTS & PARTIES — LETTERS ONLY: the artwork swaps to
       events-btn-4-borderless.gif (variant 3's color-chase letters,
@@ -1848,7 +1848,7 @@ a.game-card:hover { border-color: #ff7518; transform: translateY(-2px); }
    x0.805). Phone scales proportionally (same cqw rules); the
    landscape slim row is re-declared bit-identical again (line 2
    hidden, line 1 0.78rem). And in line 1 the word "map" joins
-   "Halloween" in red #e01e26 (same .hw-red span) — line 1's red
+   "Halloween" in red #eb7a2c (same .hw-red span) — line 1's red
    runs are now "Halloween", "map" and "Build Your Night."; every
    other word keeps its current color. */
 .header-band .header-hook .hook-l1 { font-size: clamp(0.45rem, 2.70cqw, 3.43rem); }
@@ -1968,12 +1968,12 @@ a.game-card:hover { border-color: #ff7518; transform: translateY(-2px); }
     display: flex; align-items: center; gap: 0.6rem;
     position: fixed; left: 0; right: 0; bottom: 0; z-index: 55;
     padding: 0.75rem 1rem calc(0.75rem + env(safe-area-inset-bottom));
-    background: linear-gradient(160deg, #2c1a56, #1a1038);
+    background: linear-gradient(160deg, #402f54, #0a1e24);
     border-top: 2px solid #ff7518; color: #fff; text-decoration: none;
     box-shadow: 0 -4px 18px rgba(0,0,0,0.45);
   }
   body.has-tourbar .next-haunt-bar { bottom: 61px; }
-  .next-haunt-bar .nhb-label { font-weight: 800; color: #ffb066; white-space: nowrap; }
+  .next-haunt-bar .nhb-label { font-weight: 800; color: #f19d45; white-space: nowrap; }
   .next-haunt-bar .nhb-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.92rem; }
   .detail:has(.next-haunt-bar) { padding-bottom: 60px; }
   body.has-tourbar .detail:has(.next-haunt-bar) { padding-bottom: 122px; }
@@ -2014,13 +2014,13 @@ a.game-card:hover { border-color: #ff7518; transform: translateY(-2px); }
    already shows the count); body.has-tourbar reserves scroll room so
    page footers never hide behind it, and the email prompt stacks
    above it instead of covering it. */
-.tour-add-btn { display: inline-block; margin-top: 0.45rem; padding: 0.34rem 0.75rem; border-radius: 999px; background: #3a2566; border: 1px solid #6b4fae; color: #ffd9a0; font-weight: 700; font-size: 0.82rem; cursor: pointer; }
-.tour-add-btn:hover, .tour-add-btn:focus-visible { background: #4a2d7a; outline: none; }
+.tour-add-btn { display: inline-block; margin-top: 0.45rem; padding: 0.34rem 0.75rem; border-radius: 999px; background: #402f54; border: 1px solid #57a8ff; color: #ffd9a0; font-weight: 700; font-size: 0.82rem; cursor: pointer; }
+.tour-add-btn:hover, .tour-add-btn:focus-visible { background: #402f54; outline: none; }
 .tour-add-btn.in-tour { background: #1e5c2e; border-color: #2f8f4a; color: #c9f5d2; }
-#hm-tourbar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 56; display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 0.65rem 1rem calc(0.65rem + env(safe-area-inset-bottom)); background: linear-gradient(160deg, #2c1a56, #1a1038); border-top: 2px solid #ff7518; color: #fff; box-shadow: 0 -4px 18px rgba(0,0,0,0.45); }
+#hm-tourbar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 56; display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 0.65rem 1rem calc(0.65rem + env(safe-area-inset-bottom)); background: linear-gradient(160deg, #402f54, #0a1e24); border-top: 2px solid #ff7518; color: #fff; box-shadow: 0 -4px 18px rgba(0,0,0,0.45); }
 #hm-tourbar[hidden] { display: none; }
 #hm-tourbar .tb-label { font-size: 0.95rem; }
-#hm-tourbar .tb-build { background: #ff7518; color: #1a1038; font-weight: 800; padding: 0.45rem 0.95rem; border-radius: 999px; text-decoration: none; white-space: nowrap; }
+#hm-tourbar .tb-build { background: #ff7518; color: #0a1e24; font-weight: 800; padding: 0.45rem 0.95rem; border-radius: 999px; text-decoration: none; white-space: nowrap; }
 body.has-tourbar { padding-bottom: 60px; }
 body.has-tourbar #hm-prompt { bottom: 4.4rem; }
 
@@ -2030,33 +2030,33 @@ body.has-tourbar #hm-prompt { bottom: 4.4rem; }
    actions) and a "Trending today" rail ranked by live detail-page
    view counts with the numbers shown. Added modules only; the hero,
    Tonight's band and search are untouched. */
-.near-you { margin: 1.2rem 0 0.4rem; padding: 1rem; background: linear-gradient(160deg, #241a44, #17122b); border: 1px solid #4a2d7a; border-radius: 14px; }
+.near-you { margin: 1.2rem 0 0.4rem; padding: 1rem; background: linear-gradient(160deg, #14222b, #0e1a20); border: 1px solid #402f54; border-radius: 14px; }
 .near-you h2 { font-size: 1.25rem; margin: 0 0 0.3rem; }
-.near-you-sub { color: #c9bce8; margin: 0 0 0.7rem; }
+.near-you-sub { color: #a9cdf5; margin: 0 0 0.7rem; }
 .near-you-mine { margin: 0 0 0.7rem; font-weight: 700; }
 .town-chips { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.8rem; }
-.town-chip { display: inline-flex; align-items: center; gap: 0.45rem; padding: 0.45rem 0.8rem; border-radius: 999px; background: #3a2566; border: 1px solid #6b4fae; color: #fff; text-decoration: none; font-weight: 700; font-size: 0.9rem; }
-.town-chip:hover { background: #4a2d7a; }
-.town-chip .chip-n { color: #ffb066; font-size: 0.8rem; font-weight: 800; }
+.town-chip { display: inline-flex; align-items: center; gap: 0.45rem; padding: 0.45rem 0.8rem; border-radius: 999px; background: #402f54; border: 1px solid #57a8ff; color: #fff; text-decoration: none; font-weight: 700; font-size: 0.9rem; }
+.town-chip:hover { background: #402f54; }
+.town-chip .chip-n { color: #f19d45; font-size: 0.8rem; font-weight: 800; }
 .near-you-actions { display: flex; flex-wrap: wrap; gap: 0.6rem; }
-.btn-ghost { background: transparent; border: 1px solid #6b4fae; color: #e8ddff; }
+.btn-ghost { background: transparent; border: 1px solid #57a8ff; color: #e8ddff; }
 
 /* Retention Wave 1, Item 1 (Oct 23): the Near-you module gets a heading
    row with a visible "Change area" affordance (links into the existing
    /nearby town search — no new header/nav controls). */
 .near-you-head { display: flex; align-items: baseline; justify-content: space-between; gap: 0.6rem; }
 .near-you-head h2 { margin-bottom: 0.3rem; }
-.near-you-change { font-size: 0.82rem; font-weight: 700; color: #ffb066; white-space: nowrap; }
+.near-you-change { font-size: 0.82rem; font-weight: 700; color: #f19d45; white-space: nowrap; }
 .trending { margin: 1.2rem 0 0.2rem; }
 .trending h2 { font-size: 1.25rem; margin: 0 0 0.6rem; }
 .trending .card-media { position: relative; }
-.rank-badge { position: absolute; top: 0.5rem; left: 0.5rem; background: #ff7518; color: #1a1038; font-weight: 900; font-size: 0.85rem; padding: 0.15rem 0.5rem; border-radius: 999px; }
-.views-line { color: #ffb066; font-weight: 700; font-size: 0.85rem; margin: 0.25rem 0 0; }
+.rank-badge { position: absolute; top: 0.5rem; left: 0.5rem; background: #ff7518; color: #0a1e24; font-weight: 900; font-size: 0.85rem; padding: 0.15rem 0.5rem; border-radius: 999px; }
+.views-line { color: #f19d45; font-weight: 700; font-size: 0.85rem; margin: 0.25rem 0 0; }
 
 /* /music page (Dan Oct 22) — playlists, classic videos, artist cards */
 .music-h2 { font-size: 1.45rem; margin: 1.8rem 0 0.4rem; }
 .music-spotify-grid { display: grid; grid-template-columns: 1fr; gap: 1rem; margin: 0.8rem 0 0.4rem; }
-.music-embed { margin: 0; background: var(--card); border: 1px solid #33254f; border-radius: var(--radius); padding: 0.6rem; }
+.music-embed { margin: 0; background: var(--card); border: 1px solid #274860; border-radius: var(--radius); padding: 0.6rem; }
 .music-embed iframe { display: block; border-radius: 10px; }
 .music-embed figcaption { color: var(--muted); font-size: 0.92rem; margin-top: 0.55rem; }
 .music-embed figcaption strong { color: var(--ink); }
@@ -2067,21 +2067,21 @@ body.has-tourbar #hm-prompt { bottom: 4.4rem; }
 .yt-feature { margin: 0.8rem 0 0.4rem; }
 .yt-grid { display: grid; grid-template-columns: 1fr; gap: 0.9rem; margin-top: 0.9rem; }
 @media (min-width: 620px) { .yt-grid { grid-template-columns: 1fr 1fr; } }
-.yt-facade { position: relative; display: block; width: 100%; aspect-ratio: 16 / 9; padding: 0; border: 1px solid #33254f; border-radius: var(--radius); overflow: hidden; background: #000; cursor: pointer; }
+.yt-facade { position: relative; display: block; width: 100%; aspect-ratio: 16 / 9; padding: 0; border: 1px solid #274860; border-radius: var(--radius); overflow: hidden; background: #000; cursor: pointer; }
 .yt-facade img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .yt-play { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 62px; height: 62px; border-radius: 50%; background: rgba(255, 117, 24, 0.92); color: #1a0f00; font-size: 1.5rem; line-height: 62px; text-align: center; padding-left: 4px; box-shadow: 0 4px 18px rgba(0, 0, 0, 0.55); }
 .yt-facade:hover .yt-play, .yt-facade:focus-visible .yt-play { background: #ff8c42; }
-.yt-frame { width: 100%; aspect-ratio: 16 / 9; border: 1px solid #33254f; border-radius: var(--radius); display: block; background: #000; }
+.yt-frame { width: 100%; aspect-ratio: 16 / 9; border: 1px solid #274860; border-radius: var(--radius); display: block; background: #000; }
 .yt-cap { color: var(--muted); font-size: 0.9rem; margin: 0.4rem 0 0; }
 .yt-meta { color: var(--muted); font-size: 0.82rem; margin: 0.15rem 0 0; opacity: 0.85; }
 .music-cards { display: grid; grid-template-columns: 1fr; gap: 1rem; margin: 0.8rem 0 0.4rem; }
 @media (min-width: 620px) { .music-cards { grid-template-columns: 1fr 1fr; } }
-.music-card { background: var(--card); border: 1px solid #33254f; border-radius: var(--radius); padding: 0.9rem; }
+.music-card { background: var(--card); border: 1px solid #274860; border-radius: var(--radius); padding: 0.9rem; }
 .music-card-art { width: 100%; aspect-ratio: 1 / 1; object-fit: cover; border-radius: 10px; display: block; }
 .music-card h3 { margin: 0.7rem 0 0.3rem; font-size: 1.2rem; }
 .music-claim { color: var(--muted); margin: 0 0 0.8rem; }
 .music-btns { display: flex; flex-direction: column; gap: 0.5rem; }
-.mbtn { display: block; text-align: center; text-decoration: none; font-weight: 700; padding: 0.55rem 0.8rem; border-radius: 999px; border: 1px solid #33254f; background: var(--bg2); color: var(--ink); }
+.mbtn { display: block; text-align: center; text-decoration: none; font-weight: 700; padding: 0.55rem 0.8rem; border-radius: 999px; border: 1px solid #274860; background: var(--bg2); color: var(--ink); }
 .mbtn-spotify { background: #1db954; border-color: #1db954; color: #052a12; }
 .mbtn-yt { background: var(--danger); border-color: var(--danger); color: #fff; }
 .mbtn-pin { background: var(--accent); border-color: var(--accent); color: #1a0f00; }
@@ -2091,13 +2091,13 @@ body.has-tourbar #hm-prompt { bottom: 4.4rem; }
 /* /movies page (Dan Oct 23) — the screening room: trailer shelves reusing
    the /music facade grid, plus a cross-link card at the foot of /music. */
 .movies-subnav { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 1rem 0 0.2rem; }
-.movies-subnav a { text-decoration: none; font-weight: 700; padding: 0.45rem 0.85rem; border-radius: 999px; border: 1px solid #33254f; background: var(--card); color: var(--ink); }
+.movies-subnav a { text-decoration: none; font-weight: 700; padding: 0.45rem 0.85rem; border-radius: 999px; border: 1px solid #274860; background: var(--card); color: var(--ink); }
 .movies-subnav a:hover { border-color: var(--accent); }
 .movie-title { margin: 0.55rem 0 0.1rem; font-size: 1.12rem; }
 .movie-year { color: var(--muted); font-weight: 400; }
-.movie-meta { color: #ffb066; font-weight: 700; font-size: 0.9rem; margin: 0.15rem 0 0; }
+.movie-meta { color: #f19d45; font-weight: 700; font-size: 0.9rem; margin: 0.15rem 0 0; }
 .movie-blurb { color: var(--muted); margin: 0.3rem 0 0; }
-.movies-cta { background: var(--card); border: 1px solid #33254f; border-radius: var(--radius); padding: 0.85rem 1rem; }
+.movies-cta { background: var(--card); border: 1px solid #274860; border-radius: var(--radius); padding: 0.85rem 1rem; }
 .music-crosslink { color: var(--muted); margin: 0.2rem 0 0.8rem; }
 /* Halloween Radio (Spotify) — Dan, Oct 22, z61: a slim chip fixed at
    the bottom-left of every page; expanding it lazy-loads the Spotify
@@ -2115,32 +2115,32 @@ body.has-nextbar #hm-radio { bottom: calc(61px + 0.75rem); }
 body.has-tourbar.has-nextbar #hm-radio { bottom: calc(122px + 0.75rem); }
 body.has-radio { padding-bottom: 64px; }
 body.has-tourbar.has-radio { padding-bottom: 124px; }
-.hmr-chip { display: flex; align-items: center; gap: 0.35rem; background: linear-gradient(160deg, #2c1a56, #1a1038); border: 2px solid #ff7518; border-radius: 999px; padding: 0.3rem 0.45rem 0.3rem 0.3rem; box-shadow: 0 6px 22px rgba(0,0,0,0.5); }
+.hmr-chip { display: flex; align-items: center; gap: 0.35rem; background: linear-gradient(160deg, #402f54, #0a1e24); border: 2px solid #ff7518; border-radius: 999px; padding: 0.3rem 0.45rem 0.3rem 0.3rem; box-shadow: 0 6px 22px rgba(0,0,0,0.5); }
 .hmr-chip[hidden], .hmr-panel[hidden], .hmr-tab[hidden] { display: none; }
 .hmr-main { display: flex; align-items: center; gap: 0.5rem; background: none; border: none; color: #fff; font: inherit; font-weight: 800; font-size: 0.95rem; cursor: pointer; padding: 0.3rem 0.35rem; }
 .hmr-main .hmr-play { color: #ff7518; font-size: 0.85rem; }
-.hmr-x { background: none; border: none; color: #b9a8d6; font-size: 1.15rem; line-height: 1; cursor: pointer; padding: 0.25rem 0.4rem; }
+.hmr-x { background: none; border: none; color: #94a6c0; font-size: 1.15rem; line-height: 1; cursor: pointer; padding: 0.25rem 0.4rem; }
 .hmr-x:hover { color: #fff; }
-.hmr-tab { width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(160deg, #2c1a56, #1a1038); border: 2px solid #ff7518; color: #fff; font-size: 1.1rem; cursor: pointer; box-shadow: 0 6px 22px rgba(0,0,0,0.5); }
-.hmr-panel { width: min(400px, calc(100vw - 1.5rem)); background: linear-gradient(160deg, #2c1a56, #1a1038); border: 2px solid #ff7518; border-radius: 16px; padding: 0.8rem; box-shadow: 0 12px 40px rgba(0,0,0,0.55); color: #fff; }
+.hmr-tab { width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(160deg, #402f54, #0a1e24); border: 2px solid #ff7518; color: #fff; font-size: 1.1rem; cursor: pointer; box-shadow: 0 6px 22px rgba(0,0,0,0.5); }
+.hmr-panel { width: min(400px, calc(100vw - 1.5rem)); background: linear-gradient(160deg, #402f54, #0a1e24); border: 2px solid #ff7518; border-radius: 16px; padding: 0.8rem; box-shadow: 0 12px 40px rgba(0,0,0,0.55); color: #fff; }
 .hmr-head { display: flex; align-items: center; justify-content: space-between; gap: 0.6rem; }
 .hmr-title { font-weight: 900; font-size: 1.02rem; }
 .hmr-head-btns { display: flex; gap: 0.25rem; }
-.hmr-head-btns button { background: #3a2566; border: 1px solid #6b4fae; color: #e8ddff; width: 30px; height: 30px; border-radius: 9px; font-size: 1.05rem; line-height: 1; cursor: pointer; }
+.hmr-head-btns button { background: #402f54; border: 1px solid #57a8ff; color: #e8ddff; width: 30px; height: 30px; border-radius: 9px; font-size: 1.05rem; line-height: 1; cursor: pointer; }
 .hmr-picks { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.65rem; }
-.hmr-pick { padding: 0.34rem 0.75rem; border-radius: 999px; background: #3a2566; border: 1px solid #6b4fae; color: #ffd9a0; font-weight: 700; font-size: 0.82rem; cursor: pointer; }
-.hmr-pick:hover, .hmr-pick:focus-visible { background: #4a2d7a; outline: none; }
-.hmr-pick.active { background: #ff7518; border-color: #ff7518; color: #1a1038; }
+.hmr-pick { padding: 0.34rem 0.75rem; border-radius: 999px; background: #402f54; border: 1px solid #57a8ff; color: #ffd9a0; font-weight: 700; font-size: 0.82rem; cursor: pointer; }
+.hmr-pick:hover, .hmr-pick:focus-visible { background: #402f54; outline: none; }
+.hmr-pick.active { background: #ff7518; border-color: #ff7518; color: #0a1e24; }
 .hmr-pick[hidden] { display: none; }
 .hmr-frame { margin-top: 0.65rem; min-height: 152px; }
 .hmr-frame iframe { display: block; width: 100%; height: 152px; border: 0; border-radius: 12px; background: #191919; }
 .hmr-custom { margin-top: 0.7rem; }
-.hmr-custom label { display: block; font-size: 0.83rem; font-weight: 700; color: #c9bce8; margin-bottom: 0.35rem; }
+.hmr-custom label { display: block; font-size: 0.83rem; font-weight: 700; color: #a9cdf5; margin-bottom: 0.35rem; }
 .hmr-custom-row { display: flex; gap: 0.5rem; }
-.hmr-custom-row input { flex: 1; min-width: 0; padding: 0.55rem 0.7rem; border-radius: 8px; border: 1px solid #372b5e; background: #0d0a1a; color: #e8e6e3; font: inherit; font-size: 0.88rem; }
-.hmr-custom-row button { background: #ff7518; color: #1a1038; font-weight: 800; border: none; border-radius: 8px; padding: 0.55rem 0.9rem; cursor: pointer; white-space: nowrap; }
+.hmr-custom-row input { flex: 1; min-width: 0; padding: 0.55rem 0.7rem; border-radius: 8px; border: 1px solid #402f54; background: #0d0a1a; color: #e8e6e3; font: inherit; font-size: 0.88rem; }
+.hmr-custom-row button { background: #ff7518; color: #0a1e24; font-weight: 800; border: none; border-radius: 8px; padding: 0.55rem 0.9rem; cursor: pointer; white-space: nowrap; }
 .hmr-err { color: #ff9a9e; font-size: 0.82rem; margin: 0.45rem 0 0; }
-.hmr-note { color: #b9a8d6; font-size: 0.78rem; margin: 0.65rem 0 0; line-height: 1.45; }
+.hmr-note { color: #94a6c0; font-size: 0.78rem; margin: 0.65rem 0 0; line-height: 1.45; }
 .hmr-reset-row { margin: 0.45rem 0 0; }
 .hmr-reset { background: none; border: none; padding: 0; color: #ff7518; font: inherit; font-size: 0.83rem; font-weight: 700; cursor: pointer; text-decoration: underline; }
 
@@ -2151,22 +2151,22 @@ body.has-tourbar.has-radio { padding-bottom: 124px; }
    stack above the bottom bars never pushes off-screen. */
 .hmr-panel { max-height: min(84vh, 780px); overflow-y: auto; }
 .hmr-mix[hidden] { display: none; }
-.hmr-mix { margin-top: 0.7rem; border-top: 1px solid #4a2d7a; padding-top: 0.7rem; }
+.hmr-mix { margin-top: 0.7rem; border-top: 1px solid #402f54; padding-top: 0.7rem; }
 .hmr-mix-now { display: flex; align-items: center; gap: 0.5rem; }
-.hmr-mix-now > button { background: #3a2566; border: 1px solid #6b4fae; color: #e8ddff; border-radius: 9px; height: 34px; padding: 0 0.6rem; cursor: pointer; font-size: 0.95rem; }
-.hmr-mix-now .hmr-playmix { flex: 1; background: #ff7518; border-color: #ff7518; color: #1a1038; font-weight: 800; }
+.hmr-mix-now > button { background: #402f54; border: 1px solid #57a8ff; color: #e8ddff; border-radius: 9px; height: 34px; padding: 0 0.6rem; cursor: pointer; font-size: 0.95rem; }
+.hmr-mix-now .hmr-playmix { flex: 1; background: #ff7518; border-color: #ff7518; color: #0a1e24; font-weight: 800; }
 .hmr-mix-cur { color: #ffd9a0; font-size: 0.85rem; font-weight: 700; margin: 0.55rem 0 0.3rem; }
 .hmr-mix-list { list-style: none; margin: 0.3rem 0 0; padding: 0; max-height: 148px; overflow-y: auto; }
 .hmr-mix-list li { display: flex; align-items: center; gap: 0.3rem; padding: 0.28rem 0.3rem; border-radius: 8px; }
-.hmr-mix-list li.current { background: #3a2566; }
+.hmr-mix-list li.current { background: #402f54; }
 .hmr-mix-list .hmr-mix-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.86rem; }
-.hmr-mix-list button { background: none; border: 1px solid #6b4fae; color: #e8ddff; border-radius: 7px; min-width: 26px; height: 24px; cursor: pointer; font-size: 0.78rem; line-height: 1; }
-.hmr-mix-hint { color: #c9bce8; font-size: 0.83rem; font-weight: 700; margin: 0.7rem 0 0.35rem; }
+.hmr-mix-list button { background: none; border: 1px solid #57a8ff; color: #e8ddff; border-radius: 7px; min-width: 26px; height: 24px; cursor: pointer; font-size: 0.78rem; line-height: 1; }
+.hmr-mix-hint { color: #a9cdf5; font-size: 0.83rem; font-weight: 700; margin: 0.7rem 0 0.35rem; }
 .hmr-catalog { list-style: none; margin: 0; padding: 0; max-height: 208px; overflow-y: auto; }
-.hmr-catalog li { display: flex; align-items: center; gap: 0.5rem; padding: 0.3rem 0.3rem; border-bottom: 1px solid #2c1a56; }
+.hmr-catalog li { display: flex; align-items: center; gap: 0.5rem; padding: 0.3rem 0.3rem; border-bottom: 1px solid #402f54; }
 .hmr-catalog li.hmr-cat-head { display: block; padding: 0.5rem 0.3rem 0.25rem; border-bottom: none; color: #ff7518; font-weight: 800; font-size: 0.82rem; letter-spacing: 0.04em; text-transform: uppercase; }
 .hmr-catalog .hmr-cat-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.86rem; }
-.hmr-catalog button { background: #3a2566; border: 1px solid #6b4fae; color: #ffd9a0; font-weight: 700; font-size: 0.8rem; border-radius: 999px; padding: 0.28rem 0.7rem; cursor: pointer; white-space: nowrap; }
+.hmr-catalog button { background: #402f54; border: 1px solid #57a8ff; color: #ffd9a0; font-weight: 700; font-size: 0.8rem; border-radius: 999px; padding: 0.28rem 0.7rem; cursor: pointer; white-space: nowrap; }
 .hmr-catalog button.added { background: #1e5c2e; border-color: #2f8f4a; color: #c9f5d2; cursor: default; }
 .hmr-music-row { margin: 0.55rem 0 0; }
 .hmr-music-link { color: #ff7518; font-weight: 800; font-size: 0.92rem; text-decoration: none; }
@@ -2339,7 +2339,7 @@ body.has-tourbar.has-radio { padding-bottom: 124px; }
       left column (the column spans both button rows; GIF + text are
       centred as one unit). .events-daily is display:none globally,
       so it exists ONLY in phone portrait — never duplicated on
-      desktop, never in landscape. Lavender #c9a7ff (its hook color),
+      desktop, never in landscape. Lavender #8fd8ff (its hook color),
       Creepster (the header display font), two balanced lines
       ("NEW HAUNTS" / "DAILY!!!"). Its max-width stays under the
       GIF's width (120px at 390 class, 110px at 360 class) so the
@@ -2348,7 +2348,7 @@ body.has-tourbar.has-radio { padding-bottom: 124px; }
       .tag-c) goes lavender, only "HERE" (.tag-d, split out of the
       old .tag-c in base.html) stays red. Desktop keeps the whole
       closer red: the global .tag-d rule below paints it the same
-      #e01e26 as .tag-c, and only the phone query recolors b/c.
+      #eb7a2c as .tag-c, and only the phone query recolors b/c.
    4) LAPTOP/DESKTOP ONLY: Frankenstein grows 50% — 62px -> 93px
       height (the min-width:761px rule near z58 set 62px). Phone
       (48px) and landscape (53px) rules are elsewhere and untouched.
@@ -2365,27 +2365,27 @@ body.has-tourbar.has-radio { padding-bottom: 124px; }
 @media (max-width: 760px) and (orientation: portrait) {
   .header-band .header-hook .hook-l2 .tag-a { display: none; }
   .header-band .header-hook .hook-l2 { margin-top: 0.30em; }
-  .header-band .header-hook .tag-b { color: #c9a7ff; }
-  .header-band .header-hook .tag-c { color: #c9a7ff; }
+  .header-band .header-hook .tag-b { color: #8fd8ff; }
+  .header-band .header-hook .tag-c { color: #8fd8ff; }
   .header-band .header-hook .tag-d { color: #e01e26; }
   .site-header.v2 .header-nav a.events-link {
     display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px;
   }
   .site-header.v2 .header-nav a.events-link .events-daily {
-    display: block; font-family: "Creepster", cursive; color: #c9a7ff;
+    display: block; font-family: "Creepster", cursive; color: #8fd8ff;
     font-size: 0.95rem; line-height: 1.12; text-align: center; letter-spacing: 0.02em;
     max-width: 112px; text-wrap: balance;
   }
   /* z75: PHONE ONLY — split the column copy: "NEW HAUNTS" goes red
-     #e01e26, "DAILY!!!" stays lavender #c9a7ff (Dan, Oct 22 20:45).
+     #eb7a2c, "DAILY!!!" stays lavender #8fd8ff (Dan, Oct 22 20:45).
      Colours live on the two spans (.nh-red / .nh-daily in base.html),
      per the standing hook-colour rule. Scoped to this phone-portrait
      query, so the desktop .tag-a (all-red since z72) and the closer
      below (.events-closer: lavender / HERE red) are untouched. This
      supersedes the z72 banner's aside that .events-daily "stays
      lavender" — only its first two words change. */
-  .site-header.v2 .header-nav a.events-link .events-daily .nh-red { color: #e01e26; }
-  .site-header.v2 .header-nav a.events-link .events-daily .nh-daily { color: #c9a7ff; }
+  .site-header.v2 .header-nav a.events-link .events-daily .nh-red { color: #eb7a2c; }
+  .site-header.v2 .header-nav a.events-link .events-daily .nh-daily { color: #8fd8ff; }
 }
 @media (max-width: 380px) and (orientation: portrait) {
   .site-header.v2 .header-nav a.events-link .events-daily { font-size: 0.86rem; max-width: 102px; }
@@ -2425,7 +2425,7 @@ body.has-tourbar.has-radio { padding-bottom: 124px; }
      over the hero photo. */
   .hero-stack .near-you.hero-copy { margin: 0; }
   .hero-stack .top10-home.hero-copy {
-    margin: 0; background: rgba(13, 8, 26, 0.72);
+    margin: 0; background: rgba(5, 8, 10, 0.72);
   }
   .hero-stack .top10-home h2 { font-size: 0.95rem; margin-bottom: 0.2rem; }
   .hero-stack .top10-home-sub { font-size: 0.76rem; margin-bottom: 0.4rem; }
@@ -2433,7 +2433,7 @@ body.has-tourbar.has-radio { padding-bottom: 124px; }
   .hero-stack .top10-home-more { font-size: 0.85rem; }
   .hero-stack .trending.hero-copy {
     margin: 0; padding: 1rem;
-    background: rgba(13, 8, 26, 0.72);
+    background: rgba(5, 8, 10, 0.72);
     border: 1px solid rgba(255, 117, 24, 0.25); border-radius: 14px;
   }
   .hero-stack .text-alerts { margin: 0 auto; width: 100%; }
@@ -2470,8 +2470,8 @@ body.has-tourbar.has-radio { padding-bottom: 124px; }
    red). Desktop and landscape never render the column copy and keep
    the closer in the top hook, all red, exactly as before. */
 .events-closer { display: none; }
-.events-closer .ec-a { color: #c9a7ff; }
-.events-closer .ec-b { color: #e01e26; }
+.events-closer .ec-a { color: #8fd8ff; }
+.events-closer .ec-b { color: #eb7a2c; }
 
 @media (max-width: 760px) and (orientation: portrait) {
   .header-band .header-hook .hook-l2 { display: none; }
@@ -2499,18 +2499,18 @@ body.has-tourbar.has-radio { padding-bottom: 124px; }
 /* ============ z70: DESKTOP CLOSER SPLIT + LAVENDER PILL (Dan, Oct 22) ====
    (1) The desktop top-hook closer gets the phone's split treatment
    (superseding Dan's Oct 22 13:59 all-red-desktop rule): "THE HAUNT
-   STARTS" (.tag-b + .tag-c) goes lavender #c9a7ff — the site's
+   STARTS" (.tag-b + .tag-c) goes lavender #8fd8ff — the site's
    lavender, same value as NEW HAUNTS DAILY!!! — and only "HERE"
-   (.tag-d) stays red #e01e26. Scoped to the desktop band with the
+   (.tag-d) stays red #eb7a2c. Scoped to the desktop band with the
    usual min-height guard, so phone and landscape computed styles are
    untouched (phone's closer already carries this split in its new
    nav-column home). (2) The hero search pill's background switches
-   from bone cream #f5efe0 to the same lavender — edited in place in
+   from bone cream #efe3cc to the same lavender — edited in place in
    the z67 block above; dark segment text and the orange Search
    button are unchanged and stay legible on it. */
 @media (min-width: 761px) and (min-height: 501px) {
-  .header-band .header-hook .tag-b { color: #c9a7ff; }
-  .header-band .header-hook .tag-c { color: #c9a7ff; }
+  .header-band .header-hook .tag-b { color: #8fd8ff; }
+  .header-band .header-hook .tag-c { color: #8fd8ff; }
 }
 
 /* ============ z71: COMPACT HERO SUB-BLOCKS (Dan, Oct 22) ============
@@ -2594,8 +2594,8 @@ body.has-tourbar.has-radio { padding-bottom: 124px; }
   .header-band .header-hook .hook-l1 { font-size: clamp(0.45rem, 2.70cqw, 3.43rem); }
   .header-band .header-hook .hook-l2 { display: block; font-size: clamp(0.64rem, 4.95cqw, 5.96rem); }
   .header-band .header-hook .tag-a { color: #e01e26; }
-  .header-band .header-hook .tag-b { color: #c9a7ff; }
-  .header-band .header-hook .tag-c { color: #c9a7ff; }
+  .header-band .header-hook .tag-b { color: #8fd8ff; }
+  .header-band .header-hook .tag-c { color: #8fd8ff; }
 }
 
 /* ============ z74: /events TEXT-ALERTS COMPACT (Dan, Oct 22) =======
@@ -2660,16 +2660,16 @@ body.has-tourbar.has-radio { padding-bottom: 124px; }
 .tonight-strip {
   display: flex; flex-wrap: wrap; align-items: center;
   gap: 0.35rem 1.1rem;
-  background: linear-gradient(135deg, #241640 0%, #311d55 100%);
-  border: 1px solid #4a2d7a; border-radius: 12px;
+  background: linear-gradient(135deg, #182630 0%, #33284e 100%);
+  border: 1px solid #402f54; border-radius: 12px;
   padding: 0.55rem 0.95rem; margin: 0.9rem 0;
   font-size: 0.93rem; line-height: 1.35;
 }
-.tonight-strip .ts-count { color: #FFF8E7; font-weight: 800; white-space: nowrap; }
+.tonight-strip .ts-count { color: #f9e5c2; font-weight: 800; white-space: nowrap; }
 .tonight-strip a.ts-link { color: #f3eefc; text-decoration: none; white-space: nowrap; }
 .tonight-strip a.ts-link:hover { text-decoration: underline; }
 .tonight-strip .ts-n { color: #ff7518; }
-.tonight-strip .ts-note { color: #9d8fc7; font-size: 0.78rem; }
+.tonight-strip .ts-note { color: #a9cdf5; font-size: 0.78rem; }
 @media (min-width: 1000px) {
   /* Homepage only (the partial adds .ts-wide there): align with the
      Tonight's Display band's edge-to-edge breakout. */
@@ -2701,7 +2701,7 @@ body.has-tourbar.has-radio { padding-bottom: 124px; }
 .pin-alerts .text-alerts p { text-align: left; }
 .pin-alerts .text-alerts .newsletter-success { text-align: left; }
 .pin-alerts .text-alerts.ta-highlight {
-  border-color: #c9a86a;
+  border-color: #e6b16d;
   box-shadow: 0 0 0 3px rgba(255, 117, 24, 0.28), 0 6px 22px rgba(0, 0, 0, 0.35);
 }
 @media (max-width: 760px) {
@@ -2719,16 +2719,16 @@ body.has-tourbar.has-radio { padding-bottom: 124px; }
    a gold "Town conquered" completion state worth screenshotting),
    and the passport link inside the pin page's seen-strip. Existing
    language only: the signup panels' purple gradient, Tonight's gold
-   (#c9a86a), the orange progress fill the seen-strip already uses. */
+   (#e6b16d), the orange progress fill the seen-strip already uses. */
 .passport-chip {
   display: inline-block; margin: 0.15rem 0 0.6rem;
-  background: linear-gradient(135deg, #241640 0%, #311d55 100%);
-  border: 1px solid #4a2d7a; border-radius: 999px;
+  background: linear-gradient(135deg, #182630 0%, #33284e 100%);
+  border: 1px solid #402f54; border-radius: 999px;
   padding: 0.42rem 0.9rem; color: #f3eefc; text-decoration: none;
   font-size: 0.9rem; font-weight: 700;
 }
 .passport-chip[hidden] { display: none; }
-.passport-chip:hover { border-color: #c9a86a; text-decoration: underline; }
+.passport-chip:hover { border-color: #e6b16d; text-decoration: underline; }
 .seen-passport { margin: 0.35rem 0 0; font-size: 0.85rem; }
 .seen-passport a { color: #ff7518; font-weight: 700; text-decoration: none; }
 .seen-passport a:hover { text-decoration: underline; }
@@ -2736,42 +2736,42 @@ body.has-tourbar.has-radio { padding-bottom: 124px; }
 .passport-stats[hidden] { display: none; }
 .pstat {
   flex: 1 1 100px; text-align: center;
-  background: linear-gradient(160deg, #241a44, #17122b);
-  border: 1px solid #4a2d7a; border-radius: 14px; padding: 0.8rem 0.5rem;
+  background: linear-gradient(160deg, #14222b, #0e1a20);
+  border: 1px solid #402f54; border-radius: 14px; padding: 0.8rem 0.5rem;
 }
-.pstat-n { display: block; font-size: 1.7rem; font-weight: 900; color: #FFF8E7; line-height: 1.1; }
-.pstat-l { display: block; font-size: 0.8rem; color: #c9bce8; margin-top: 0.15rem; }
+.pstat-n { display: block; font-size: 1.7rem; font-weight: 900; color: #f9e5c2; line-height: 1.1; }
+.pstat-l { display: block; font-size: 0.8rem; color: #a9cdf5; margin-top: 0.15rem; }
 .passport-empty {
-  background: linear-gradient(135deg, #241640 0%, #311d55 100%);
-  border: 1px solid #4a2d7a; border-radius: 14px;
+  background: linear-gradient(135deg, #182630 0%, #33284e 100%);
+  border: 1px solid #402f54; border-radius: 14px;
   padding: 1rem 1.1rem; margin: 1rem 0;
 }
 .passport-empty[hidden] { display: none; }
-.passport-empty-line { color: #FFF8E7; font-weight: 700; margin: 0 0 0.4rem; }
-.passport-empty-sub { color: #c9bce8; margin: 0 0 0.5rem; font-size: 0.92rem; }
-.passport-loading { color: #c9bce8; }
+.passport-empty-line { color: #f9e5c2; font-weight: 700; margin: 0 0 0.4rem; }
+.passport-empty-sub { color: #a9cdf5; margin: 0 0 0.5rem; font-size: 0.92rem; }
+.passport-loading { color: #a9cdf5; }
 .passport-loading[hidden] { display: none; }
 .passport-rows { margin: 0.6rem 0 1.2rem; }
 .prow {
-  background: linear-gradient(160deg, #241a44, #17122b);
-  border: 1px solid #4a2d7a; border-radius: 12px;
+  background: linear-gradient(160deg, #14222b, #0e1a20);
+  border: 1px solid #402f54; border-radius: 12px;
   padding: 0.65rem 0.9rem; margin: 0 0 0.55rem;
 }
 .prow-head { display: flex; justify-content: space-between; align-items: baseline; gap: 0.8rem; }
-.prow-town { color: #FFF8E7; font-weight: 800; }
-.prow-count { color: #c9bce8; font-size: 0.85rem; white-space: nowrap; }
+.prow-town { color: #f9e5c2; font-weight: 800; }
+.prow-count { color: #a9cdf5; font-size: 0.85rem; white-space: nowrap; }
 .prow-bar { max-width: none; margin: 0.45rem 0 0.4rem; }
 .prow-link { color: #ff7518; font-weight: 700; font-size: 0.88rem; text-decoration: none; }
 .prow-link:hover { text-decoration: underline; }
 /* Completion state: gold frame + warm gradient + trophy (set in the
    row's town name by the renderer) — built to be screenshotted. */
 .prow-done {
-  border: 2px solid #c9a86a;
-  background: linear-gradient(160deg, #3a2a10, #241a44);
+  border: 2px solid #e6b16d;
+  background: linear-gradient(160deg, #3a2a10, #14222b);
   box-shadow: 0 0 0 3px rgba(201, 168, 106, 0.22), 0 6px 22px rgba(0, 0, 0, 0.35);
 }
-.prow-done .prow-count { color: #c9a86a; font-weight: 800; }
-.prow-done .prow-link { color: #c9a86a; }
+.prow-done .prow-count { color: #e6b16d; font-weight: 800; }
+.prow-done .prow-link { color: #e6b16d; }
 
 /* ============ Wave 4, Item 6: Daily Fright =======================
    The canonical daily drop: a homepage band in the Tonight cluster
@@ -2780,8 +2780,8 @@ body.has-tourbar.has-radio { padding-bottom: 124px; }
    Tonight modules: purple gradient panels, gold frame on the big
    display card (the shared .tonight-card), orange accents. */
 .daily-band {
-  background: linear-gradient(135deg, #241640 0%, #311d55 100%);
-  border: 1px solid #4a2d7a; border-radius: 12px;
+  background: linear-gradient(135deg, #182630 0%, #33284e 100%);
+  border: 1px solid #402f54; border-radius: 12px;
   padding: 0.6rem 0.95rem; margin: 0.15rem 0 0.6rem;
 }
 @media (min-width: 1000px) {
@@ -2793,7 +2793,7 @@ body.has-tourbar.has-radio { padding-bottom: 124px; }
   }
 }
 .daily-band-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.3rem 1rem; }
-.daily-band-title { color: #FFF8E7; font-weight: 800; text-decoration: none; font-size: 1rem; }
+.daily-band-title { color: #f9e5c2; font-weight: 800; text-decoration: none; font-size: 1rem; }
 .daily-band-title:hover { text-decoration: underline; }
 .daily-band .fright-streak-flame { color: #ff7518; font-weight: 800; font-size: 0.9rem; }
 .daily-band-links { display: flex; flex-wrap: wrap; gap: 0.3rem 1.1rem; margin-top: 0.3rem; }
@@ -2814,13 +2814,13 @@ body.has-tourbar.has-radio { padding-bottom: 124px; }
 .daily-grid { display: flex; flex-wrap: wrap; gap: 0.8rem; margin: 0.4rem 0 1rem; }
 .daily-drop-card {
   flex: 1 1 260px;
-  background: linear-gradient(160deg, #241a44, #17122b);
-  border: 1px solid #4a2d7a; border-radius: 14px; padding: 0.9rem 1rem;
+  background: linear-gradient(160deg, #14222b, #0e1a20);
+  border: 1px solid #402f54; border-radius: 14px; padding: 0.9rem 1rem;
 }
-.daily-drop-card h2 { margin: 0 0 0.4rem; font-size: 1.15rem; color: #FFF8E7; }
-.daily-drop-card p { color: #c9bce8; margin: 0 0 0.6rem; }
-.daily-drop-card .daily-trivia-q { color: #FFF8E7; font-weight: 700; font-size: 1.02rem; }
-.daily-foot { color: #9d8fc7; font-size: 0.9rem; }
+.daily-drop-card h2 { margin: 0 0 0.4rem; font-size: 1.15rem; color: #f9e5c2; }
+.daily-drop-card p { color: #a9cdf5; margin: 0 0 0.6rem; }
+.daily-drop-card .daily-trivia-q { color: #f9e5c2; font-weight: 700; font-size: 1.02rem; }
+.daily-foot { color: #a9cdf5; font-size: 0.9rem; }
 
 /* Item 10 — lazy map placeholder (detail pages). The placeholder sits in
    the exact .detail-map box (height from .detail-map), so the real
@@ -2829,16 +2829,16 @@ body.has-tourbar.has-radio { padding-bottom: 124px; }
 .hm-map-lazy { position: relative; overflow: hidden; background: #14102a; }
 .hm-map-ph { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.35rem; text-align: center; padding: 1rem; }
 .hm-map-ph-pin { font-size: 1.8rem; }
-.hm-map-ph-text { color: #c9bce8; font-size: 0.95rem; }
+.hm-map-ph-text { color: #a9cdf5; font-size: 0.95rem; }
 .hm-map-ph-link { color: #ffa25e; font-weight: 700; text-decoration: none; }
 .hm-map-ph-link:hover { text-decoration: underline; }
-.hm-map-lazy.hm-map-ready { background: #0d0916; }
+.hm-map-lazy.hm-map-ready { background: #05080a; }
 
 /* VT/TV slim strip (Dan Oct 23): replaces the two big stacked hero pills
    (~125px of full-width hero space) with one thin two-up row under the
    header nav, homepage only — about a quarter of the old footprint.
    Brand treatment kept: VT = accent orange / dark text (ex .btn-big),
-   TV = purple gradient + #b266ff border / white text (ex inline pill). */
+   TV = purple gradient + #57a8ff border / white text (ex inline pill). */
 .vt-tv-strip { display: flex; gap: 0.4rem; margin: 0 0 0.9rem; }
 .vt-tv-strip a {
   flex: 1 1 0; min-width: 0; box-sizing: border-box; display: flex; align-items: center; justify-content: center;
@@ -2847,8 +2847,8 @@ body.has-tourbar.has-radio { padding-bottom: 124px; }
   text-decoration: none; text-align: center; white-space: nowrap;
 }
 .vt-tv-strip .vt-btn { background: var(--accent); color: #1a0f00; }
-.vt-tv-strip .tv-btn { background: linear-gradient(90deg, #2b1650, #4a1570); border: 2px solid #b266ff; color: #fff; }
-.vt-tv-strip .music-btn { background: #150826; border: 2px solid var(--accent); color: #ffd9a8; }
+.vt-tv-strip .tv-btn { background: linear-gradient(90deg, #33284e, #402f54); border: 2px solid #57a8ff; color: #fff; }
+.vt-tv-strip .music-btn { background: #0a1216; border: 2px solid var(--accent); color: #ffd9a8; }
 .vt-tv-strip .movies-btn { background: #0d0205; border: 2px solid #c1122f; color: #ffe9d6; }
 .vt-tv-strip .art-btn { background: #14091f; border: 2px solid #ff5da2; color: #ffd9ec; }
 /* 7-across fit (Dan, Oct 23): Art button added after HauntMap Movies —
@@ -2975,7 +2975,7 @@ body.has-tourbar.has-radio { padding-bottom: 124px; }
 .fright-chip-row { margin: 0.35rem 0 0.1rem; }
 .fright-chip {
   display: inline-block; padding: 0.34rem 0.8rem; border-radius: 999px;
-  background: rgba(255, 117, 24, 0.12); border: 1px solid #6b4fae;
+  background: rgba(255, 117, 24, 0.12); border: 1px solid #57a8ff;
   color: #ff7518; font-weight: 800; font-size: 0.85rem; text-decoration: none;
 }
 .fright-chip:hover, .fright-chip:focus-visible { background: rgba(255, 117, 24, 0.22); outline: none; }
@@ -2986,22 +2986,22 @@ body.has-tourbar.has-radio { padding-bottom: 124px; }
   width: min(430px, calc(100vw - 2rem));
   transform: translate(-50%, calc(100% + 2rem));
   transition: transform 0.35s ease;
-  background: linear-gradient(160deg, #241a44, #17122b);
-  border: 2px solid #4a2d7a; border-radius: 14px;
+  background: linear-gradient(160deg, #14222b, #0e1a20);
+  border: 2px solid #402f54; border-radius: 14px;
   padding: 1rem 1.1rem 0.9rem; box-shadow: 0 12px 40px rgba(0,0,0,0.55);
 }
 #hm-capture.hm-capture-in { transform: translate(-50%, 0); }
 #hm-capture[hidden] { display: none; }
 body.has-tourbar #hm-capture { bottom: 4.4rem; }
-#hm-capture h3 { margin: 0 1.4rem 0.2rem 0; font-size: 1.05rem; color: #FFF8E7; }
-#hm-capture p { color: #c9bce8; margin: 0 0 0.4rem; font-size: 0.85rem; line-height: 1.35; }
+#hm-capture h3 { margin: 0 1.4rem 0.2rem 0; font-size: 1.05rem; color: #f9e5c2; }
+#hm-capture p { color: #a9cdf5; margin: 0 0 0.4rem; font-size: 0.85rem; line-height: 1.35; }
 #hm-capture .hm-capture-x {
   position: absolute; top: 0.35rem; right: 0.55rem; background: none; border: none;
-  color: #9a8fb8; font-size: 1.4rem; line-height: 1; cursor: pointer; padding: 0.3rem;
+  color: #94a6c0; font-size: 1.4rem; line-height: 1; cursor: pointer; padding: 0.3rem;
 }
 #hm-capture .text-alerts-form { margin-top: 0.5rem; }
 #hm-capture .hm-capture-done { color: #7ee787; font-weight: 700; margin: 0.4rem 0; }
-#hm-capture .ta-consent { font-size: 0.72rem; color: #9d8fc7; margin-top: 0.6rem; line-height: 1.4; }
+#hm-capture .ta-consent { font-size: 0.72rem; color: #a9cdf5; margin-top: 0.6rem; line-height: 1.4; }
 
 /* ============ Retention Wave 2, Items 1 + 4 (homepage only) ========
    Item 1 (REVISED Oct 23, Dan): the one-tap locate prompt no longer
@@ -3024,7 +3024,7 @@ body.has-tourbar #hm-capture { bottom: 4.4rem; }
    untouched. */
 .hm-find {
   margin: 0; padding: 0.85rem 1rem;
-  background: linear-gradient(160deg, #241a44, #17122b);
+  background: linear-gradient(160deg, #14222b, #0e1a20);
   /* Black border (Dan, Oct 23) — the old locate panel's orange is gone. */
   border: 1px solid #000; border-radius: 14px;
 }
@@ -3032,8 +3032,8 @@ body.has-tourbar #hm-capture { bottom: 4.4rem; }
 /* The hero's ORIGINAL simple search bar, values unchanged from the
    old .mobile-search-form: black input, Search button beside it. */
 .hm-find-form { display: flex; gap: 0.5rem; margin: 0 0 0.6rem; }
-.hm-find-form input { flex: 1; min-width: 0; padding: 0.7rem 0.8rem; border-radius: 10px; border: 1px solid #4a4266; background: #000; color: #f5f2ec; font-size: 1rem; }
-.hm-find-form input::placeholder { color: #9a93ad; }
+.hm-find-form input { flex: 1; min-width: 0; padding: 0.7rem 0.8rem; border-radius: 10px; border: 1px solid #274860; background: #000; color: #f5f2ec; font-size: 1rem; }
+.hm-find-form input::placeholder { color: #94a6c0; }
 /* Side-by-side (Dan, Oct 23): the two actions share ONE row, half
    width each, smaller than the old stacked full-width pills, so the
    block is shorter. "Choose my town instead" may wrap to two lines
@@ -3044,7 +3044,7 @@ body.has-tourbar #hm-capture { bottom: 4.4rem; }
   display: flex; align-items: center; justify-content: center; text-align: center;
   font-size: 0.88rem; line-height: 1.15; padding: 0.45rem 0.4rem;
 }
-.hm-find-msg { margin: 0.6rem 0 0; color: #ffb066; font-weight: 600; }
+.hm-find-msg { margin: 0.6rem 0 0; color: #f19d45; font-weight: 600; }
 .hm-find-msg[hidden] { display: none; }
 .hm-find-msg a { color: #ffd9a0; }
 @media (min-width: 761px) {
@@ -3062,8 +3062,8 @@ body.has-tourbar #hm-capture { bottom: 4.4rem; }
   display: none;
   flex-wrap: wrap; align-items: center; gap: 0.05rem 0.4rem;
   margin: 0.4rem 0 0.15rem; padding: 0.22rem 0.5rem;
-  background: linear-gradient(135deg, #241640 0%, #311d55 100%);
-  border: 1px solid #4a2d7a; border-radius: 12px;
+  background: linear-gradient(135deg, #182630 0%, #33284e 100%);
+  border: 1px solid #402f54; border-radius: 12px;
   font-size: 0.78rem; line-height: 1.3;
 }
 /* "See full homepage" rides inline, glued to the Passport segment
@@ -3072,16 +3072,16 @@ body.has-tourbar #hm-capture { bottom: 4.4rem; }
    fullest state (streak + Passport) takes two lines, with only the
    Daily Fright segment wrapping ahead of the Passport line. */
 .hm-slim-group { display: inline-flex; align-items: center; gap: 0.4rem; white-space: nowrap; }
-.hm-slimbar .hm-full-btn::before { content: "\00B7"; margin-right: 0.4rem; color: #9a8fb8; }
+.hm-slimbar .hm-full-btn::before { content: "\00B7"; margin-right: 0.4rem; color: #94a6c0; }
 body.hm-returning .hm-slimbar { display: flex; }
-.hm-slimbar-welcome { font-weight: 800; color: #FFF8E7; white-space: nowrap; }
+.hm-slimbar-welcome { font-weight: 800; color: #f9e5c2; white-space: nowrap; }
 .hm-slimbar-link { color: #f3eefc; text-decoration: none; font-weight: 600; white-space: nowrap; }
 .hm-slimbar-link:hover { text-decoration: underline; }
 .hm-slimbar-link[hidden] { display: none; }
-.hm-slimbar-link::before { content: "\00B7"; margin-right: 0.45rem; color: #9a8fb8; }
+.hm-slimbar-link::before { content: "\00B7"; margin-right: 0.45rem; color: #94a6c0; }
 .hm-slimbar .hm-full-btn {
   padding: 0; background: none; border: 0; cursor: pointer;
-  color: #c9a7ff; font: inherit; font-weight: 600; white-space: nowrap;
+  color: #8fd8ff; font: inherit; font-weight: 600; white-space: nowrap;
 }
 .hm-slimbar .hm-full-btn:hover { text-decoration: underline; }
 
@@ -3111,93 +3111,93 @@ body.hm-returning .hm-slimbar { display: flex; }
 .bk-hero { text-align: center; padding: 1.5rem 0 0.5rem; }
 .bk-hero h1 { font-family: 'Creepster', cursive; font-size: 3rem; color: var(--accent); letter-spacing: 2px; margin: 0.25rem 0; }
 .bk-presented { color: var(--muted); font-size: 0.9rem; }
-.bk-presented-slot { border: 1px dashed #6b549e; border-radius: 6px; padding: 0.05rem 0.45rem; color: #c9a7ff; }
+.bk-presented-slot { border: 1px dashed #6b549e; border-radius: 6px; padding: 0.05rem 0.45rem; color: #8fd8ff; }
 .bk-sub { max-width: 640px; margin: 0.25rem auto 0.75rem; color: var(--ink); }
-.bk-countdown { display: inline-flex; gap: 0.6rem; align-items: baseline; background: var(--bg2); border: 1px solid #33254f; border-radius: 999px; padding: 0.45rem 1.1rem; }
-.bk-countdown-label { color: #c9a7ff; font-weight: 700; font-size: 0.9rem; }
+.bk-countdown { display: inline-flex; gap: 0.6rem; align-items: baseline; background: var(--bg2); border: 1px solid #274860; border-radius: 999px; padding: 0.45rem 1.1rem; }
+.bk-countdown-label { color: #8fd8ff; font-weight: 700; font-size: 0.9rem; }
 .bk-countdown-time { font-weight: 900; font-size: 1.15rem; color: var(--accent); font-variant-numeric: tabular-nums; }
 .bk-total { color: var(--muted); margin-top: 0.6rem; }
 .bk-window { color: var(--muted); margin-top: -0.4rem; }
 .bk-matchups { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1rem; }
-.bk-matchup { background: var(--bg2); border: 1px solid #33254f; border-radius: 14px; padding: 0.9rem; }
+.bk-matchup { background: var(--bg2); border: 1px solid #274860; border-radius: 14px; padding: 0.9rem; }
 .bk-matchup-head { display: flex; justify-content: space-between; align-items: center; color: var(--muted); font-size: 0.85rem; font-weight: 700; margin-bottom: 0.6rem; }
-.bk-share { background: none; border: 1px solid #33254f; color: #c9a7ff; border-radius: 999px; padding: 0.2rem 0.7rem; cursor: pointer; font-weight: 700; }
+.bk-share { background: none; border: 1px solid #274860; color: #8fd8ff; border-radius: 999px; padding: 0.2rem 0.7rem; cursor: pointer; font-weight: 700; }
 .bk-side { display: flex; gap: 0.7rem; }
 .bk-side img { width: 104px; height: 78px; object-fit: cover; border-radius: 10px; flex-shrink: 0; }
 .bk-side-body { flex: 1; min-width: 0; }
 .bk-side-title { font-weight: 800; margin: 0; }
 .bk-side-title a { color: var(--ink); text-decoration: none; }
 .bk-seed { background: var(--accent); color: #1a0f00; border-radius: 6px; padding: 0.02rem 0.4rem; font-size: 0.85rem; }
-.bk-vid { color: #c9a7ff; font-size: 0.8rem; font-weight: 700; }
+.bk-vid { color: #8fd8ff; font-size: 0.8rem; font-weight: 700; }
 .bk-side-meta { color: var(--muted); font-size: 0.85rem; margin: 0.15rem 0 0.4rem; }
 .bk-vs { text-align: center; font-family: 'Creepster', cursive; color: var(--accent); font-size: 1.3rem; padding: 0.25rem 0; }
-.bk-bar { position: relative; background: #14101d; border-radius: 999px; height: 22px; overflow: hidden; margin-bottom: 0.45rem; }
-.bk-bar-fill { position: absolute; inset: 0 auto 0 0; background: linear-gradient(90deg, #b266ff, #ff7b1c); }
+.bk-bar { position: relative; background: #05080a; border-radius: 999px; height: 22px; overflow: hidden; margin-bottom: 0.45rem; }
+.bk-bar-fill { position: absolute; inset: 0 auto 0 0; background: linear-gradient(90deg, #57a8ff, #ff7b1c); }
 .bk-bar-label { position: relative; font-size: 0.78rem; font-weight: 800; padding-left: 0.6rem; line-height: 22px; color: #fff; text-shadow: 0 1px 2px #000; }
 .bk-vote-btn { background: var(--accent); color: #1a0f00; border: none; font-weight: 900; border-radius: 999px; padding: 0.4rem 1.2rem; cursor: pointer; }
 .bk-vote-btn[disabled] { opacity: 0.65; cursor: default; }
 .bk-voted { background: #2e7d32; color: #fff; }
-.bk-advances { color: #ffb74d; font-weight: 900; margin: 0.2rem 0 0; }
-.bk-side-win .bk-side-title a { color: #ffb74d; }
+.bk-advances { color: #f19d45; font-weight: 900; margin: 0.2rem 0 0; }
+.bk-side-win .bk-side-title a { color: #f19d45; }
 .bk-tbd { color: var(--muted); font-style: italic; }
-.bk-resolve { margin-top: 0.6rem; background: #33254f; color: #fff; border: none; border-radius: 8px; padding: 0.35rem 0.8rem; cursor: pointer; }
+.bk-resolve { margin-top: 0.6rem; background: #274860; color: #fff; border: none; border-radius: 8px; padding: 0.35rem 0.8rem; cursor: pointer; }
 .bk-tree-cols { display: flex; gap: 0.8rem; overflow-x: auto; padding-bottom: 0.5rem; }
 .bk-tree-col { min-width: 200px; flex: 1; }
 .bk-tree-col h3 { color: var(--accent); margin-bottom: 0.1rem; }
 .bk-tree-window { color: var(--muted); font-size: 0.8rem; margin-top: 0; }
-.bk-tree-row { background: var(--bg2); border: 1px solid #33254f; border-radius: 10px; padding: 0.5rem 0.6rem; margin-bottom: 0.5rem; display: flex; flex-direction: column; gap: 0.15rem; }
+.bk-tree-row { background: var(--bg2); border: 1px solid #274860; border-radius: 10px; padding: 0.5rem 0.6rem; margin-bottom: 0.5rem; display: flex; flex-direction: column; gap: 0.15rem; }
 .bk-tree-mid { font-size: 0.7rem; color: var(--muted); font-weight: 800; }
 .bk-tree-side { font-size: 0.88rem; font-weight: 600; }
-.bk-tree-win { color: #ffb74d; font-weight: 900; }
+.bk-tree-win { color: #f19d45; font-weight: 900; }
 .bk-tree-score { font-size: 0.78rem; color: var(--muted); }
 .bk-predict-intro, .bk-contenders-intro { max-width: 720px; color: var(--ink); }
 .bk-thanks { background: #1e3320; border: 1px solid #2e7d32; border-radius: 10px; padding: 0.6rem 0.9rem; }
-.bk-my-picks { background: var(--bg2); border: 1px solid #33254f; border-radius: 12px; padding: 0.8rem 1rem; margin-bottom: 1rem; }
+.bk-my-picks { background: var(--bg2); border: 1px solid #274860; border-radius: 12px; padding: 0.8rem 1rem; margin-bottom: 1rem; }
 .bk-form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; margin-bottom: 0.8rem; }
 .bk-form-row label { display: flex; flex-direction: column; gap: 0.3rem; font-weight: 700; }
-.bk-form-row input { background: var(--bg2); border: 1px solid #33254f; border-radius: 10px; color: var(--ink); padding: 0.55rem 0.7rem; }
+.bk-form-row input { background: var(--bg2); border: 1px solid #274860; border-radius: 10px; color: var(--ink); padding: 0.55rem 0.7rem; }
 .bk-optional { color: var(--muted); font-weight: 500; font-size: 0.82rem; }
 .bk-form-rounds { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 0.8rem; }
-.bk-form-round { border: 1px solid #33254f; border-radius: 12px; padding: 0.7rem 0.9rem; }
+.bk-form-round { border: 1px solid #274860; border-radius: 12px; padding: 0.7rem 0.9rem; }
 .bk-form-round legend { color: var(--accent); font-weight: 800; padding: 0 0.4rem; }
 .bk-pick { margin-bottom: 0.6rem; }
 .bk-pick-label { font-size: 0.75rem; font-weight: 800; color: var(--muted); display: block; margin-bottom: 0.25rem; }
-.bk-pick-opt { display: block; background: var(--bg2); border: 1px solid #33254f; border-radius: 8px; padding: 0.4rem 0.6rem; margin-bottom: 0.3rem; cursor: pointer; font-weight: 600; }
+.bk-pick-opt { display: block; background: var(--bg2); border: 1px solid #274860; border-radius: 8px; padding: 0.4rem 0.6rem; margin-bottom: 0.3rem; cursor: pointer; font-weight: 600; }
 .bk-pick-opt em { color: var(--muted); font-style: normal; font-size: 0.85rem; }
-.bk-pick select { width: 100%; background: var(--bg2); color: var(--ink); border: 1px solid #33254f; border-radius: 8px; padding: 0.5rem; }
+.bk-pick select { width: 100%; background: var(--bg2); color: var(--ink); border: 1px solid #274860; border-radius: 8px; padding: 0.5rem; }
 .bk-submit { background: var(--accent); color: #1a0f00; border: none; font-weight: 900; font-size: 1.05rem; border-radius: 999px; padding: 0.7rem 1.8rem; cursor: pointer; margin-top: 0.9rem; }
 .bk-fineprint { color: var(--muted); font-size: 0.85rem; max-width: 640px; }
 .bk-board { margin-top: 1.4rem; }
 .bk-board-count { color: var(--muted); font-size: 0.9rem; font-weight: 600; }
 .bk-board-list { list-style: none; padding: 0; }
-.bk-board-list li { display: flex; gap: 0.8rem; align-items: baseline; background: var(--bg2); border: 1px solid #33254f; border-radius: 10px; padding: 0.5rem 0.9rem; margin-bottom: 0.4rem; }
+.bk-board-list li { display: flex; gap: 0.8rem; align-items: baseline; background: var(--bg2); border: 1px solid #274860; border-radius: 10px; padding: 0.5rem 0.9rem; margin-bottom: 0.4rem; }
 .bk-board-handle { font-weight: 900; }
 .bk-board-champ { color: var(--muted); flex: 1; }
 .bk-board-out { color: #e57373; }
 .bk-board-score { font-weight: 900; color: var(--accent); }
 .bk-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 1rem; }
-.bk-card { background: var(--bg2); border: 1px solid #33254f; border-radius: 14px; overflow: hidden; }
+.bk-card { background: var(--bg2); border: 1px solid #274860; border-radius: 14px; overflow: hidden; }
 .bk-card img { width: 100%; height: 170px; object-fit: cover; display: block; }
 .bk-card-body { padding: 0.7rem 0.9rem 0.9rem; }
 .bk-card-title { font-weight: 800; margin: 0; }
 .bk-card-title a { color: var(--ink); text-decoration: none; }
 .bk-card-meta { color: var(--muted); font-size: 0.88rem; margin: 0.2rem 0; }
-.bk-card-note { color: #c9a7ff; font-size: 0.85rem; margin: 0.3rem 0; }
-.bk-champion-card { display: flex; gap: 1rem; background: linear-gradient(135deg, #2b1c4d, #1d1530); border: 2px solid #ffb74d; border-radius: 16px; padding: 1rem; text-decoration: none; }
+.bk-card-note { color: #8fd8ff; font-size: 0.85rem; margin: 0.3rem 0; }
+.bk-champion-card { display: flex; gap: 1rem; background: linear-gradient(135deg, #0f2e54, #0e1b21); border: 2px solid #f19d45; border-radius: 16px; padding: 1rem; text-decoration: none; }
 .bk-champion-card img { width: 220px; height: 165px; object-fit: cover; border-radius: 12px; }
-.bk-champion-kicker { text-align: center; font-family: 'Creepster', cursive; font-size: 1.8rem; color: #ffb74d; letter-spacing: 1px; margin-bottom: 0.5rem; }
+.bk-champion-kicker { text-align: center; font-family: 'Creepster', cursive; font-size: 1.8rem; color: #f19d45; letter-spacing: 1px; margin-bottom: 0.5rem; }
 .bk-champion-body { display: flex; flex-direction: column; gap: 0.3rem; }
 .bk-champion-title { font-size: 1.6rem; font-weight: 900; color: #fff; }
-.bk-champion-meta { color: #c9a7ff; font-weight: 700; }
+.bk-champion-meta { color: #8fd8ff; font-weight: 700; }
 .bk-champion-prize { color: var(--muted); }
 .bk-home-band { margin: 1rem 0; }
-.bk-home-card { display: flex; align-items: center; gap: 1rem; background: linear-gradient(135deg, #2b1c4d, #1d1530); border: 2px solid var(--accent); border-radius: 16px; padding: 1rem 1.2rem; text-decoration: none; }
+.bk-home-card { display: flex; align-items: center; gap: 1rem; background: linear-gradient(135deg, #0f2e54, #0e1b21); border: 2px solid var(--accent); border-radius: 16px; padding: 1rem 1.2rem; text-decoration: none; }
 .bk-home-emoji { font-size: 2.4rem; }
 .bk-home-body { flex: 1; display: flex; flex-direction: column; }
 .bk-home-title { font-weight: 900; font-size: 1.25rem; color: #fff; }
-.bk-home-meta { color: #c9a7ff; }
-.bk-home-champ .tonight-card { border: 2px solid #ffb74d; }
-.bk-ribbon { display: block; background: linear-gradient(90deg, #ff7518, #b266ff); color: #14091f; font-weight: 900; border-radius: 10px; padding: 0.55rem 0.9rem; text-decoration: none; margin: 0.6rem 0; }
+.bk-home-meta { color: #8fd8ff; }
+.bk-home-champ .tonight-card { border: 2px solid #f19d45; }
+.bk-ribbon { display: block; background: linear-gradient(90deg, #ff7518, #57a8ff); color: #14091f; font-weight: 900; border-radius: 10px; padding: 0.55rem 0.9rem; text-decoration: none; margin: 0.6rem 0; }
 @media (max-width: 640px) {
   .bk-hero h1 { font-size: 2.2rem; }
   .bk-form-row { grid-template-columns: 1fr; }
@@ -3639,6 +3639,79 @@ body.hm-returning .hm-slimbar { display: flex; }
   .hero-split .top10-home.top10-home--cta .states-cta-img { width: 34px; height: 34px; }
 }
 
+
+/* ============ VARIANT D — LOGO-GAME (Dan, Oct 24): logo-sampled palette, modern game-HUD feel, game type + colored fonts. Preview only. ============ */
+:root { --font-game: "Noto Sans Display", "Arial Narrow", system-ui, sans-serif; }
+.site-header {
+  background: linear-gradient(180deg, rgba(10, 30, 36, 0.94), rgba(5, 8, 10, 0.97));
+  border-bottom: 1px solid rgba(143, 216, 255, 0.55);
+  box-shadow: 0 2px 18px rgba(0, 0, 0, 0.6), 0 1px 16px rgba(87, 168, 255, 0.28);
+  backdrop-filter: blur(6px);
+}
+.mini-bar { background: linear-gradient(180deg, rgba(10, 30, 36, 0.96), rgba(5, 8, 10, 0.98)); border-bottom: 1px solid rgba(143, 216, 255, 0.5); box-shadow: 0 2px 14px rgba(0,0,0,0.55), 0 1px 12px rgba(87,168,255,0.22); }
+.hero-title { text-shadow: 0 0 26px rgba(87, 168, 255, 0.5), 0 2px 0 rgba(0, 0, 0, 0.65), 0 0 60px rgba(87, 168, 255, 0.25); }
+h2, h3 { font-family: var(--font-game); text-transform: uppercase; letter-spacing: 0.05em; font-weight: 900; }
+h2 { color: #e6b16d; text-shadow: 0 0 16px rgba(230, 177, 109, 0.35), 0 2px 0 rgba(0,0,0,0.5); }
+.card, .tonight-card, .bk-home-card, .sponsor-card, .hm-prompt, .engage-next, .hon-card {
+  background: linear-gradient(165deg, rgba(64, 47, 84, 0.42), rgba(16, 37, 45, 0.58));
+  border: 1px solid rgba(143, 216, 255, 0.30);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(249, 229, 194, 0.08), 0 0 16px rgba(87, 168, 255, 0.10);
+  backdrop-filter: blur(5px);
+}
+.card-body h3, .bk-home-title { color: #f9e5c2; }
+.meta, .views-line, .tonight-meta { color: #a9cdf5; }
+a { color: #8fd8ff; }
+.btn, .mbtn, .cat-btn-main, .cat-btn-sub, .filter-chip, .state-btn, .tonight-cta, .tour-add-btn, .hm-full-btn {
+  font-family: var(--font-game); text-transform: uppercase; letter-spacing: 0.055em; font-weight: 800;
+  border: 1px solid rgba(143, 216, 255, 0.42);
+  box-shadow: 0 0 12px rgba(87, 168, 255, 0.16), inset 0 1px 0 rgba(249, 229, 194, 0.09);
+}
+.filter-chip.active, .state-btn.active, .cat-btn-main.active, .cat-btn-sub.active {
+  border-color: #8fd8ff; color: #8fd8ff;
+  box-shadow: 0 0 14px rgba(143, 216, 255, 0.35), inset 0 0 12px rgba(87, 168, 255, 0.15);
+}
+.tonight-kicker, .passport-chip { color: #8fd8ff; font-family: var(--font-game); text-transform: uppercase; letter-spacing: 0.07em; text-shadow: 0 0 12px rgba(143, 216, 255, 0.4); }
+.header-nav a, .hm-slimbar-link { font-family: var(--font-game); text-transform: uppercase; letter-spacing: 0.05em; font-weight: 800; }
+.vt-label { font-family: var(--font-game); text-transform: uppercase; letter-spacing: 0.04em; font-weight: 800; color: #f9e5c2; }
+input, select, textarea { background: rgba(16, 37, 45, 0.62); border: 1px solid rgba(143, 216, 255, 0.30); color: #f9e5c2; }
+.hm-addyours-cta, .btn-primary { background: linear-gradient(180deg, #eb7a2c, #cf5f1a); box-shadow: 0 0 18px rgba(235, 122, 44, 0.40), inset 0 1px 0 rgba(249, 229, 194, 0.35); border: 1px solid rgba(249, 229, 194, 0.4); }
+
+/* ============ VARIANT D — GLOW MAX (Dan, Oct 24: "Let's make it all glow") ============ */
+body {
+  background:
+    radial-gradient(900px 480px at 50% 14%, rgba(87, 168, 255, 0.20), rgba(87, 168, 255, 0) 62%),
+    radial-gradient(1200px 620px at 50% -10%, #14406e 0%, var(--bg) 62%) fixed,
+    var(--bg);
+}
+.site-header {
+  border-bottom: 1px solid rgba(143, 216, 255, 0.85);
+  box-shadow: 0 2px 20px rgba(0, 0, 0, 0.6), 0 1px 22px rgba(143, 216, 255, 0.35), 0 0 44px rgba(87, 168, 255, 0.22);
+}
+.header-nav a img, .vt-ic img { filter: drop-shadow(0 0 6px rgba(143, 216, 255, 0.55)); }
+.hero-split, .hero-intro { box-shadow: 0 0 48px rgba(87, 168, 255, 0.28), 0 0 120px rgba(87, 168, 255, 0.12), inset 0 1px 0 rgba(249, 229, 194, 0.10); border: 1px solid rgba(143, 216, 255, 0.35); }
+.card, .tonight-card, .bk-home-card, .sponsor-card, .hm-prompt, .engage-next, .hon-card {
+  border: 1px solid rgba(143, 216, 255, 0.50);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(249, 229, 194, 0.10), inset 0 0 18px rgba(87, 168, 255, 0.07), 0 0 22px rgba(87, 168, 255, 0.20);
+}
+.tonight-band, .bk-home-band {
+  border: 1px solid rgba(143, 216, 255, 0.45);
+  box-shadow: 0 0 34px rgba(87, 168, 255, 0.22), inset 0 -2px 0 rgba(143, 216, 255, 0.55), inset 0 1px 0 rgba(249, 229, 194, 0.08);
+}
+h2 { text-shadow: 0 0 6px rgba(230, 177, 109, 0.55), 0 0 20px rgba(230, 177, 109, 0.40), 0 0 38px rgba(230, 177, 109, 0.22), 0 2px 0 rgba(0, 0, 0, 0.5); }
+.hero-title { text-shadow: 0 0 10px rgba(143, 216, 255, 0.45), 0 0 30px rgba(87, 168, 255, 0.55), 0 0 70px rgba(87, 168, 255, 0.35), 0 2px 0 rgba(0, 0, 0, 0.65); }
+.btn, .mbtn, .cat-btn-main, .cat-btn-sub, .filter-chip, .state-btn, .tonight-cta, .tour-add-btn, .hm-full-btn {
+  box-shadow: 0 0 16px rgba(143, 216, 255, 0.30), inset 0 0 10px rgba(143, 216, 255, 0.12), inset 0 1px 0 rgba(249, 229, 194, 0.10);
+  text-shadow: 0 0 9px rgba(143, 216, 255, 0.35);
+}
+.town-chip {
+  border-color: rgba(143, 216, 255, 0.65);
+  box-shadow: 0 0 14px rgba(87, 168, 255, 0.30), inset 0 0 10px rgba(87, 168, 255, 0.14);
+}
+.vt-tv-strip a { box-shadow: 0 0 18px rgba(143, 216, 255, 0.22), inset 0 0 12px rgba(143, 216, 255, 0.08); filter: brightness(1.07); }
+input, select, textarea { box-shadow: 0 0 0 1px rgba(143, 216, 255, 0.22), 0 0 16px rgba(87, 168, 255, 0.16); }
+.play-badge, .tt-play { filter: drop-shadow(0 0 12px rgba(143, 216, 255, 0.65)); }
+.hm-addyours-cta, .btn-primary { box-shadow: 0 0 24px rgba(235, 122, 44, 0.50), inset 0 1px 0 rgba(249, 229, 194, 0.4); }
+hr { border-color: rgba(143, 216, 255, 0.40); box-shadow: 0 0 10px rgba(143, 216, 255, 0.30); }
 /* ============ z117: NEW LOGO LOCKUP LIVE (Dan, Oct 24) ============
    Dan's new logo goes live in the header's far-left brand slot: the
    ghost-map lockup (ghost + HAUNTMAP wordmark under it, transparent,
@@ -3666,3 +3739,14 @@ body.hm-returning .hm-slimbar { display: flex; }
 @media (min-width: 1024px) and (orientation: landscape) and (max-height: 500px) {
   .header-band .brand-logo { height: 113px; }
 }
+
+/* ============ z118: BLUE-GLOW THEME LIVE + NEW-LOGO WATERMARK (Dan, Oct 24) ============
+   The logo-game theme (variant E) ships: every surface keyed to the new
+   logo's palette with the BLUE glow family (#57A8FF accent / #8FD8FF glow
+   core) Dan picked over the logo's teal-green, game-UI type, hook red
+   #E01E26 kept as the standing exception. The z117 logo block above is
+   unchanged and still governs header logo sizing. The body::before
+   background watermark swaps from the old badge (hauntmap_logo.jpg) to
+   the new ghost (hauntmap_ghost_watermark.webp, 512px derivative of
+   Dan's ghost cutout) at the same 120vmin / 0.29 opacity presence —
+   superseding the z117 note that left the watermark untouched. */
