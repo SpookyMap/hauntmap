@@ -7278,6 +7278,20 @@ FRANK_WELCOME = ("Welcome to HauntSocial 🎃 I'm Frank, your host — I follow 
                  "your anthem, pick your Top 8, and leave a treat on my "
                  "wall anytime. Happy haunting!")
 
+# @gethauntmap — the official brand account (Plan B, Dan Oct 25): a
+# separate, login-able account alongside Dan's personal @dan. Created
+# by the app exactly like Frank, except its password comes from the
+# HAUNTSOCIAL_BRAND_PASSWORD env var (Dan sets it in Render), because
+# no self-serve change-password exists anywhere in the app — see
+# _ensure_gethauntmap. The handle is in RESERVED_HANDLES, so no member
+# can ever hold it.
+BRAND_HANDLE = "gethauntmap"
+BRAND_EMAIL = "gethauntmap+social@gmail.com"  # Dan's pick (plus-address)
+BRAND_BIO = ("The official HauntMap account — the Halloween map that "
+             "builds your fright night for you. New haunts daily. 🎃")
+BRAND_AVATAR_CHOICE = "ghost"     # AVATAR_PRESETS key (👻) — the brand mark
+BRAND_BANNER_CHOICE = "midnight"  # BANNER_PRESETS key; matches the theme
+
 
 def _theme_view(theme_key: str | None) -> dict:
     """Inline style + class for a profile article under a preset theme.
@@ -7318,6 +7332,60 @@ def _ensure_frank(conn) -> int | None:
     return frank_id
 
 
+def _ensure_gethauntmap(conn) -> int | None:
+    """The official @gethauntmap brand account's user id, creating it
+    on first need. Mirrors _ensure_frank, with one difference: this
+    account must be log-in-able, and there is NO self-serve
+    change-password anywhere in the app — so while the
+    HAUNTSOCIAL_BRAND_PASSWORD env var is set, it IS this account's
+    password: the stored hash is synced to it on every boot. Var absent
+    at creation -> random token (Frank-style); login then stays
+    deferred until Dan sets the var and the service restarts.
+    Returns None when the handle is held by a non-official account or
+    the email by a different account — never hijack either (same guard
+    as Frank). No welcome treat, no follow inserts: the boot backfill
+    in _hauntsocial_boot makes this account follow Frank like everyone
+    else, and Frank stays the only auto-follow for new signups."""
+    row = conn.execute("SELECT id, is_official FROM users WHERE handle = ?",
+                       (BRAND_HANDLE,)).fetchone()
+    if row and not row["is_official"]:
+        return None
+    if row:
+        brand_id = row["id"]
+        brand_pw = os.environ.get("HAUNTSOCIAL_BRAND_PASSWORD")
+        if brand_pw:
+            acct = conn.execute(
+                "SELECT password_hash, password_salt FROM users "
+                "WHERE id = ?", (brand_id,)).fetchone()
+            if acct and not _check_password(
+                    brand_pw, acct["password_hash"], acct["password_salt"]):
+                pw_hash, pw_salt = _hash_password(brand_pw)
+                conn.execute(
+                    "UPDATE users SET password_hash = ?, "
+                    "password_salt = ? WHERE id = ?",
+                    (pw_hash, pw_salt, brand_id))
+        return brand_id
+    if conn.execute("SELECT 1 FROM users WHERE email = ?",
+                    (BRAND_EMAIL,)).fetchone():
+        return None
+    brand_pw = os.environ.get("HAUNTSOCIAL_BRAND_PASSWORD") or \
+        secrets.token_urlsafe(32)
+    pw_hash, pw_salt = _hash_password(brand_pw)
+    now = datetime.now(timezone.utc).isoformat()
+    cur = conn.execute(
+        "INSERT INTO users (email, password_hash, password_salt, handle, "
+        "is_official, created_at) VALUES (?, ?, ?, ?, 1, ?)",
+        (BRAND_EMAIL, pw_hash, pw_salt, BRAND_HANDLE, now))
+    brand_id = cur.lastrowid
+    conn.execute(
+        "INSERT INTO profiles (user_id, display_name, bio, town, "
+        "avatar_choice, banner_choice, theme, updated_at) "
+        "VALUES (?, 'HauntMap', ?, 'HauntSocial HQ', ?, ?, 'midnight', ?)",
+        (brand_id, BRAND_BIO, BRAND_AVATAR_CHOICE, BRAND_BANNER_CHOICE,
+         now))
+    return brand_id
+
+
 def _frank_follow_and_welcome(conn, new_user_id: int) -> None:
     """New-signup mechanics: the member auto-follows Frank, and Frank
     leaves the welcome treat on THEIR wall (their first wall comment)."""
@@ -7340,6 +7408,7 @@ def _hauntsocial_boot() -> None:
     no wall spam for existing members."""
     with get_conn(DB_PATH) as conn:
         frank_id = _ensure_frank(conn)
+        _ensure_gethauntmap(conn)
         if frank_id:
             now = datetime.now(timezone.utc).isoformat()
             conn.execute(
