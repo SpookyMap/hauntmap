@@ -747,7 +747,7 @@ h1 { font-size: 1.6rem; } h2 { font-size: 1.2rem; color: var(--accent2); margin-
 .duel-card.duel-win { border-color: #8fd8ff; box-shadow: 0 0 18px rgba(126,184,255,.35); }
 .duel-title { font-weight: 800; font-size: 1.05rem; padding: 0.6rem 0.8rem 0.1rem; }
 .duel-town { color: #9a97a3; padding: 0 0.8rem 0.7rem; font-size: 0.9rem; }
-.duel-vs { align-self: center; font-weight: 900; font-size: 1.4rem; color: #ff7518; background: #161c24; border: 2px solid #ff7518; border-radius: 50%; width: 52px; height: 52px; display: flex; align-items: center; justify-content: center; }
+.duel-vs { align-self: center; font-weight: 900; font-size: 1.4rem; color: #8fd8ff; background: #161c24; border: 2px solid #57a8ff; border-radius: 50%; width: 52px; height: 52px; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 14px rgba(87, 168, 255, 0.45); }
 .duel-hint { text-align: center; color: #9a97a3; font-size: 0.9rem; }
 .duel-leaders li { margin: 0.4rem 0; }
 .duel-leader-town { color: #9a97a3; }
@@ -2069,7 +2069,7 @@ body.has-tourbar #hm-prompt { bottom: 4.4rem; }
 @media (min-width: 620px) { .yt-grid { grid-template-columns: 1fr 1fr; } }
 .yt-facade { position: relative; display: block; width: 100%; aspect-ratio: 16 / 9; padding: 0; border: 1px solid #274860; border-radius: var(--radius); overflow: hidden; background: #000; cursor: pointer; }
 .yt-facade img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.yt-play { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 62px; height: 62px; border-radius: 50%; background: rgba(255, 117, 24, 0.92); color: #1a0f00; font-size: 1.5rem; line-height: 62px; text-align: center; padding-left: 4px; box-shadow: 0 4px 18px rgba(0, 0, 0, 0.55); }
+.yt-play { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 62px; height: 62px; border-radius: 50%; background: rgba(87, 168, 255, 0.92); color: #1a0f00; font-size: 1.5rem; line-height: 62px; text-align: center; padding-left: 4px; box-shadow: 0 4px 18px rgba(0, 0, 0, 0.55), 0 0 22px rgba(87, 168, 255, 0.55); }
 .yt-facade:hover .yt-play, .yt-facade:focus-visible .yt-play { background: #ff8c42; }
 .yt-frame { width: 100%; aspect-ratio: 16 / 9; border: 1px solid #274860; border-radius: var(--radius); display: block; background: #000; }
 .yt-cap { color: var(--muted); font-size: 0.9rem; margin: 0.4rem 0 0; }
@@ -2121,7 +2121,7 @@ body.has-tourbar.has-radio { padding-bottom: 124px; }
 .hmr-main .hmr-play { color: #ff7518; font-size: 0.85rem; }
 .hmr-x { background: none; border: none; color: #94a6c0; font-size: 1.15rem; line-height: 1; cursor: pointer; padding: 0.25rem 0.4rem; }
 .hmr-x:hover { color: #fff; }
-.hmr-tab { width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(160deg, #402f54, #0a1e24); border: 2px solid #ff7518; color: #fff; font-size: 1.1rem; cursor: pointer; box-shadow: 0 6px 22px rgba(0,0,0,0.5); }
+.hmr-tab { width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(160deg, #402f54, #0a1e24); border: 2px solid #57a8ff; color: #fff; font-size: 1.1rem; cursor: pointer; box-shadow: 0 6px 22px rgba(0,0,0,0.5), 0 0 16px rgba(87, 168, 255, 0.55); }
 .hmr-panel { width: min(400px, calc(100vw - 1.5rem)); background: linear-gradient(160deg, #402f54, #0a1e24); border: 2px solid #ff7518; border-radius: 16px; padding: 0.8rem; box-shadow: 0 12px 40px rgba(0,0,0,0.55); color: #fff; }
 .hmr-head { display: flex; align-items: center; justify-content: space-between; gap: 0.6rem; }
 .hmr-title { font-weight: 900; font-size: 1.02rem; }
