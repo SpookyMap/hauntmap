@@ -4024,3 +4024,50 @@ a.social-promo-alt:hover { color: #8fd8ff; }
 @media (max-width: 760px) {
   .header-nav a.nav-join { max-width: 13rem; }
 }
+
+/* ============ z128: JOIN BUTTONS IN THE DRIP FONT (Dan, Oct 25) ============
+   Dan: "Let's use the drippy font for join social button." Both join
+   buttons get Nosifer (self-hosted, same face as .pack-drip):
+   (1) NAV PILL — the pill stays azure-filled, so the label goes deep
+   navy #0F2E54 (the pack-drip shadow color) with a dark drip shadow;
+   the pill's own azure glow is unchanged. Scoped to the anonymous
+   pill only: a member's @handle pill keeps the game font.
+   (2) PROMO BAND CTA — the full .pack-drip treatment (azure #57A8FF
+   glyphs, deep-blue drip shadow, azure glow), so the CTA needs the
+   dark fill those headings sit on; scoped via [href="/signup"] so a
+   member's "Go to your page" button is untouched.
+   Nosifer is WIDE: sizes are tuned down and the label gets breathing
+   room (line-height + a touch of padding) so the drips never clip
+   against the label span's overflow:hidden. */
+.header-nav a.nav-join:not(.nav-join-member) .nav-join-label {
+  font-family: "Nosifer", "Creepster", cursive;
+  font-weight: 400;
+  color: #0f2e54;
+  font-size: 0.74rem;
+  letter-spacing: 0.02em;
+  line-height: 1.55;
+  padding: 0.06rem 0.1rem 0.14rem;
+  text-shadow: 0 2px 0 rgba(10, 30, 36, 0.30), 0 0 9px rgba(255, 255, 255, 0.28);
+}
+@media (max-width: 760px) {
+  .header-nav a.nav-join:not(.nav-join-member) .nav-join-label { font-size: 0.64rem; }
+}
+@media (orientation: landscape) and (max-height: 500px) {
+  .header-nav a.nav-join:not(.nav-join-member) .nav-join-label { font-size: 0.62rem; }
+}
+.social-promo-btn[href="/signup"] {
+  font-family: "Nosifer", "Creepster", cursive;
+  font-weight: 400;
+  color: #57a8ff;
+  font-size: 0.8rem;
+  letter-spacing: 0.02em;
+  line-height: 1.55;
+  background: linear-gradient(180deg, #14304f, #0f2e54);
+  border-color: #57a8ff;
+  box-shadow: 0 0 18px rgba(87, 168, 255, 0.55), inset 0 1px 0 rgba(143, 216, 255, 0.30);
+  text-shadow: 0 2px 0 rgba(15, 46, 84, 0.55), 0 4px 12px rgba(0, 0, 0, 0.45), 0 0 14px rgba(87, 168, 255, 0.35);
+}
+.social-promo-btn[href="/signup"]:hover { color: #57a8ff; filter: brightness(1.18); }
+@media (max-width: 760px) {
+  .social-promo-btn[href="/signup"] { font-size: 0.72rem; }
+}
