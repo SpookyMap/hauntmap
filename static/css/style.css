@@ -4198,4 +4198,25 @@ a.soc-top8-card:hover { border-color: var(--accent2); }
   .nt-viewport { overflow-x: auto; scrollbar-width: none; }
   .nt-viewport::-webkit-scrollbar { display: none; }
   .nt-group + .nt-group { display: none; }
+
+}
+
+/* ============ z131: BAND CTA LETTERS BIGGER (Dan, Oct 25) ============
+   Dan: "Make the Join HauntSocial letters bigger on the join button
+   on home page." Scoped to the homepage promo band CTA only: the
+   z128 drip button (dark navy fill, azure Nosifer glyphs, azure
+   glow) grows from 0.8rem to 1.05rem on desktop and 0.72rem to
+   0.95rem on phone. At 1.05rem single-line the button would take
+   536px of the band's 688px and crush the band text into a ~31px
+   column, so on desktop the button now wraps to two lines inside
+   a 21rem cap (white-space: normal, the phone treatment): letters
+   at full size, band text column ends up WIDER than the z128
+   baseline (231px vs 151px). On phone the label wraps the same
+   way (z125) with the cap lifted so the button spans its row.
+   Padding gets a small bump so the bigger glyphs and their drips
+   keep breathing room. Nav pill and the member-state "Go to your
+   page" button are untouched. */
+.social-promo-btn[href="/signup"] { font-size: 1.05rem; padding: 0.7rem 1.3rem; white-space: normal; max-width: 21rem; }
+@media (max-width: 760px) {
+  .social-promo-btn[href="/signup"] { font-size: 0.95rem; padding: 0.65rem 1.1rem; max-width: none; }
 }
