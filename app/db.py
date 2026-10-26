@@ -19,7 +19,12 @@ from pathlib import Path
 #   5653 NJ Park Ridge · 5654 NJ Fair Lawn · 5655 NJ Cherry Hill (Oct 24 Top 10 NJ batch)
 #   5766 NJ Point Pleasant (Oct 25: Dan's showcase — the site's #1 pin
 #   by interactions; also hand-picked below so it tops the homepage feed)
-FEATURED_ENTRY_IDS = (5541, 5542, 5551, 5584, 5587, 5175, 4370, 5653, 5654, 5655, 5766)
+#   5572 NY Brooklyn (Oct 26: Dan's Top 10 NY pick — the Bay Ridge
+#   holiday house, 635 79th St, from the @dj.darth.vader video; that
+#   video was last-season footage of this already-posted display, so
+#   the ⭐ lands on this existing pin and its embed stays untouched.
+#   Featured only — this change does not touch the hand-picked list.)
+FEATURED_ENTRY_IDS = (5541, 5542, 5551, 5584, 5587, 5175, 4370, 5653, 5654, 5655, 5766, 5572)
 
 # Hand-picked pins (Dan, Oct 23): pins Dan personally sent in chat or
 # curated for posting. These lead every feed view — hand-picked first
