@@ -1,4 +1,7 @@
 {% extends "base.html" %}
+{% block head %}
+<script src="/static/js/portal_games.js?v=20261026z143" defer></script>
+{% endblock %}
 {% block content %}
 <div class="hero-intro">
   <h1>&#x1F3AE; HauntMap Games</h1>
@@ -49,4 +52,31 @@
     <span class="game-play">Browse the gallery &rarr;</span>
   </a>
 </div>
+
+{# PORTAL CATALOG (Dan, Oct 26) — GameDistribution partner games under
+   their publisher embed program. Click-to-load facades only: cover
+   art + Play; portal_games.js swaps in the iframe on tap, one game at
+   a time. Ghost Maze above stays the featured hero — this section is
+   the "more games" shelf below it. #}
+<div class="hero-intro portal-head">
+  <h2>&#x1F383; More Games &mdash; the Halloween Arcade</h2>
+  <p>Free-to-play favorites from our game partners. Tap a cover and the game loads right here &mdash; no downloads, no leaving the haunt.</p>
+</div>
+
+<div class="portal-grid">
+  {% for g in portal_games %}
+  <div class="portal-card" data-game-id="{{ g.id }}" data-game-title="{{ g.title }}">
+    <div class="portal-frame" style="--pw: {{ g.w }}; --ph: {{ g.h }};">
+      <button class="portal-facade" type="button" aria-label="Play {{ g.title }}">
+        <img src="https://img.gamedistribution.com/{{ g.id }}-{{ g.get('img', '512x384') }}.jpeg" alt="{{ g.title }} cover art" loading="lazy">
+        <span class="portal-playbtn" aria-hidden="true">&#x25B6;</span>
+      </button>
+    </div>
+    <h3>{{ g.title }}</h3>
+    <p>{{ g.blurb }}</p>
+    <span class="portal-tag">{{ g.tag }}</span>
+  </div>
+  {% endfor %}
+</div>
+<p class="portal-note">Partner games are hosted by GameDistribution and the ads inside them are theirs &mdash; everything above this shelf (Ghost Maze included) is 100% HauntMap.</p>
 {% endblock %}
