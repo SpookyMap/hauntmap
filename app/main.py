@@ -6432,6 +6432,53 @@ MUSIC_EDM_CHANNELS = [
               "Radio, its long-running weekly show.",
      "meta": "Revealed Radio 100 · 56:20"},
 ]
+# Hip Hop Stations (Dan, Oct 26): hip hop's home bases, directly under
+# the EDM Channels on /music, same card pattern. Every ID verified via
+# YouTube oEmbed on 2026-10-26 (title + author match, embeddable,
+# thumbnail 200). Lofi Girl's pick is her genuine 24/7 radio — its
+# watch page confirmed isLiveNow at verification time. The Jazz Hop
+# Café is a net radio station + label; its card is the Café's one-hour
+# Halloween lofi session. The rest are each institution's defining
+# session: Sway's 5 Fingers of Death, On The Radar's Drake & Central
+# Cee freestyle, XXL's 2016 Freshman Cypher, Mass Appeal's Rhythm
+# Roulette. Chillhop Music was dropped: its 24/7 radio streams check
+# out dead today (ended recordings, an "offline" placeholder, a 404) —
+# no playable live stream to point at.
+MUSIC_HIPHOP_STATIONS = [
+    {"name": "Lofi Girl", "id": "jfKfPfyJRdk",
+     "title": "lofi hip hop radio 📚 beats to relax/study to",
+     "blurb": "The stream that never sleeps — the lofi girl studies "
+              "on and the beats roll around the clock.",
+     "meta": "🔴 LIVE · 24/7 lofi hip hop radio"},
+    {"name": "The Jazz Hop Café", "id": "0u6KjmyGzO8",
+     "title": "Cabin in the Woods 🏚️ Halloween Lofi Vibes",
+     "blurb": "A net radio station and record label brewing jazz-hop "
+              "— this session was poured for Halloween: a cabin in "
+              "the woods, lofi on the turntable.",
+     "meta": "Halloween lofi session · 1:00:00"},
+    {"name": "Sway's Universe", "id": "AHwZBYCwxPY",
+     "title": "Tory Lanez Kills The 5 Fingers of Death (9 Minute "
+              "Freestyle) | Sway's Universe",
+     "blurb": "Sway in the Morning's proving ground — nine straight "
+              "minutes of Tory Lanez over five beats, no safety net.",
+     "meta": "5 Fingers of Death · 11:47"},
+    {"name": "On The Radar Radio", "id": "cfX1QlfxTBI",
+     "title": "The Drake & Central Cee \"On The Radar\" Freestyle",
+     "blurb": "The freestyle platform of the moment — Drake and "
+              "Central Cee trading bars in the OTR studio.",
+     "meta": "Drake & Central Cee freestyle · 4:54"},
+    {"name": "XXL", "id": "U_IbIMUbh-k",
+     "title": "Kodak Black, 21 Savage, Lil Uzi Vert, Lil Yachty & "
+              "Denzel Curry 2016 XXL Freshman Cypher",
+     "blurb": "The cypher that launched a generation — the 2016 "
+              "Freshman class, one four-minute pass, no edits.",
+     "meta": "2016 Freshman Cypher · 4:13"},
+    {"name": "Mass Appeal", "id": "R4uZ8S8HBKg",
+     "title": "Rhythm Roulette: Havoc | Mass Appeal",
+     "blurb": "Nas's label's beat-making ritual — Havoc of Mobb Deep "
+              "draws three records blind and builds a beat from them.",
+     "meta": "Rhythm Roulette · Havoc · 7:01"},
+]
 # Top-of-page featured set (Dan, Oct 23): his friends' ZombieSquad mix on
 # the Dead On Pictures channel, featured at the top of /music by request.
 # Verified via yt-dlp 2026-10-23: public, playable_in_embed, maxres thumb.
@@ -6664,6 +6711,7 @@ def music_page(request: Request):
         {"site_name": SITE_NAME, "playlists": MUSIC_SPOTIFY_PLAYLISTS,
          "radio_stations": MUSIC_RADIO_IHEART,
          "edm_channels": MUSIC_EDM_CHANNELS,
+         "hiphop_stations": MUSIC_HIPHOP_STATIONS,
          "yt_spotlight": MUSIC_SPOTLIGHT,
          "yt_featured": MUSIC_YOUTUBE_FEATURED, "yt_grid": MUSIC_YOUTUBE_GRID,
          "yt_performances": MUSIC_PERFORMANCES, "yt_dj_sets": MUSIC_DJ_SETS,
