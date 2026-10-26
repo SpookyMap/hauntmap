@@ -5476,3 +5476,27 @@ main.wrap:has(> .vt-tv-strip-bottom) { padding-bottom: 0; }
   }
 }
 
+/* ============ z165: JOIN PILL REMOVED ON DESKTOP (Dan, Oct 26) ============
+   Dan: "get rid of the HauntSocial button on laptop view." The JOIN
+   HAUNTSOCIAL pill under the Events & Parties GIF leaves the DESKTOP
+   layout entirely — display:none in the desktop band only, the same
+   (min-width: 761px) and (min-height: 501px) band the header has
+   used for its desktop seat since z150/z151. That band is exactly
+   the complement of the two layouts that keep the pill: phone
+   portrait (max-width: 760px — the two-row pill Dan just iterated
+   through z162–z164 renders there untouched) and compact landscape
+   (max-height: 500px — the slim GIF+pill row, also untouched).
+   Only the logged-out Join state is hidden (:not(.nav-join-member)):
+   the member @handle pill is the other state of the same seat and
+   stays exactly as it is on desktop. The seat collapses on its own —
+   the pill is a flex child of .header-events-col, so with it out of
+   flow the column is just the Events & Parties GIF; no gap, no hole,
+   and nothing else in the header moves (the nav row's height is set
+   by the nav discs, not the column). CSS-only; the anchor stays in
+   base.html for the bands that still show it. */
+@media (min-width: 761px) and (min-height: 501px) {
+  .site-header.v2 .header-nav .header-events-col a.nav-join:not(.nav-join-member) {
+    display: none;
+  }
+}
+
