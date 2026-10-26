@@ -351,9 +351,31 @@ function hmFrightTouch() {
 </script>
 <main class="wrap">
   {% block content %}{% endblock %}
+  {# bubbles-bottom (Dan, Oct 26): the bubble strip repeats at the
+     bottom of EVERY page, just above the footer — Music and every
+     other bubble reachable after a full scroll, not only at the top
+     of the homepage. Same buttons, same classes/order as the hero
+     copy; the .vt-tv-strip-bottom rules (style.css) seat it at both
+     widths (phone reuses the phone twin's wrap fit, labels inside
+     bubbles). Plain links only — no ids, no JS hooks. Seated inside
+     <main> as its last child so it inherits the exact homepage
+     geometry, and the body.has-radio bottom padding (radio bar
+     clearance) applies sitewide exactly as it did on the homepage.
+     Admin keeps its own chrome — no strip there. #}
+  {% if not request.url.path.startswith('/admin') %}
+  <div class="vt-tv-strip vt-tv-strip-bottom">
+    <a class="vt-btn" href="/virtual-tour"><span class="vt-ic">&#x25B6;&#xFE0F;</span><span class="vt-label"><span class="vt-l1">Virtual</span> <span class="vt-l2">Tour</span></span></a>
+    <a class="tv-btn" href="/virtual-tour?mode=tv"><span class="vt-ic">&#x1F4FA;</span><span class="vt-label"><span class="vt-l1">HauntMap</span> <span class="vt-l2">TV</span></span></a>
+    <a class="music-btn" href="/music"><span class="vt-ic">&#x1F3B5;</span><span class="vt-label"><span class="vt-l1">HauntMap</span> <span class="vt-l2">Music</span></span></a>
+    <a class="movies-btn" href="/movies"><span class="vt-ic">&#x1F3AC;</span><span class="vt-label"><span class="vt-l1">HauntMap</span> <span class="vt-l2">Movies</span></span></a>
+    <a class="art-btn" href="/fan-art"><span class="vt-ic">&#x1F3A8;</span><span class="vt-label"><span class="vt-l1">HauntMap</span> <span class="vt-l2">Art</span></span></a>
+    <a class="markets-btn" href="/markets"><span class="vt-ic">&#x1F6D2;</span><span class="vt-label"><span class="vt-l1">Flea</span> <span class="vt-l2">Markets</span> <span class="vt-l3">&amp; Pop-Ups</span></span></a>
+    <a class="top100-btn" href="/leaderboard/top-100"><span class="vt-ic">&#x1F3C6;</span><span class="vt-label"><span class="vt-l1">Top 100</span> <span class="vt-l2">Nationwide</span></span></a>
+  </div>
+  {% endif %}
 </main>
 <footer class="site-footer">
-  <p>{{ site_name }} &middot; show off your Halloween decorations &middot; be kind, keep it spooky<br><a href="mailto:gethauntmap@gmail.com">gethauntmap@gmail.com</a> &middot; <a href="/towns">Browse towns</a> &middot; <a href="/diy-costumes">DIY Costumes</a> &middot; <a href="/advertise">Advertise</a> &middot; <a href="/media-kit">Media kit</a> &middot; <a href="/music">Halloween Music</a> &middot; <a href="/movies">Halloween Movies</a> &middot; <a href="/about">About Us</a></p>
+  <p>{{ site_name }} &middot; show off your Halloween decorations &middot; be kind, keep it spooky<br><a href="mailto:gethauntmap@gmail.com">gethauntmap@gmail.com</a> &middot; <a href="/towns">Browse towns</a> &middot; <a href="/diy-costumes">DIY Costumes</a> &middot; <a href="/advertise">Advertise</a> &middot; <a href="/media-kit">Media kit</a> &middot; <a href="/about">About Us</a></p>
   <p class="footer-social"><a href="https://www.tiktok.com/@gethauntmap" target="_blank" rel="noopener" class="social-btn tiktok-btn">&#x1F3B5; Follow us on TikTok @GetHauntmap</a></p>
 </footer>
 <script>
