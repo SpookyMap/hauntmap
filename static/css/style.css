@@ -1712,7 +1712,7 @@ a.game-card:hover { border-color: #ff7518; transform: translateY(-2px); }
     position: relative; left: 50%; transform: translateX(-50%);
   }
   .hero-split {
-    grid-template-areas: "social social social" "video headline strip" "sponsor headline strip" "townreq headline strip";
+    grid-template-areas: "social social social" "video headline strip" "sponsor headline strip" "advstrip headline strip" "townreq headline strip";
   }
   /* Restyle the form to the 252px column: one field per row, tighter type */
   .hero-split .town-request { padding: 0.85rem 0.75rem 0.9rem; }
@@ -3463,7 +3463,7 @@ body.hm-returning .hm-slimbar { display: flex; }
 }
 @media (min-width: 1000px) and (max-width: 1199px) {
   .hero-split {
-    grid-template-areas: "social social social" "video video video" "sponsor headline strip" "townreq headline strip";
+    grid-template-areas: "social social social" "video video video" "sponsor headline strip" "advstrip headline strip" "townreq headline strip";
   }
   .hero-split .tt-featured { gap: 1.1rem; }
   .hero-split .tt-featured .tt-facade { height: 400px; }
@@ -5267,4 +5267,78 @@ main.wrap:has(> .vt-tv-strip-bottom) { padding-bottom: 0; }
    rebased onto z152; renumbered z151 -> z156 at ship time (z153-z155 were taken by the bottom-strip, hook-colors and join-pill ships ahead of it in the Oct 26 retry queue).) */
 @media (min-width: 1000px) {
   .vt-tv-strip.vt-tv-strip-top { width: calc(100vw - 2rem); }
+}
+
+/* ============ z161: SPONSOR-VISIBILITY STRIP (Dan, Oct 26) ============
+   Dan approved the strip + the ROTATING version ("rotate both
+   lines"). The leak: /advertise — the page every sponsor pitch
+   points at, both price ladders + live Stripe checkout — got 103
+   views against the homepage's 76,561 (0.13%, Dan's Oct 26 stats).
+   Well-placed homepage offers do get clicked (near-here rail CTR
+   20.9%), so the fix is placement: ONE slim azure strip, sibling
+   to the Join pill family (same #8FD8FF -> #57A8FF gradient, dark
+   #0A1E24 type, blue glow), NOT a new design language and NOT a
+   second billboard.
+   Seats (twin copies, exactly one per viewport — the hero-module
+   pattern): the RAIL copy is a .hero-split child in the new grid
+   area "advstrip" directly under the sponsor billboard in the
+   desktop left rail (both desktop area maps gained the row; the
+   sponsor row stays row 3, so z152's pin is re-stated below with
+   the extra auto row); the PHONE copy sits directly under the
+   below-band Tonight's Display card and shows at <=999px (at
+   761-999 it lands under the hero panel that carries Tonight's
+   in-panel copy — still exactly one strip per viewport).
+   Rotation: pure-CSS crossfade, 12s cycle, each line ~6s with a
+   ~1.2s blend; hover / keyboard focus / touch-hold pause it (the
+   hold class is toggled by the small inline script beside the
+   phone copy in index.html); prefers-reduced-motion parks it on
+   the business line. NO layout shift: an in-flow, visibility-
+   hidden .adv-sizer copy of the taller business line pins the
+   strip's height at every width, and both rotating lines are
+   absolutely inset to the same content box. The whole strip is
+   ONE <a href="/advertise"> in both states. Copy figures are the
+   verified sponsor-send floors (200,000+ total views Oct 26 —
+   Dan's admin showed 206,175 the same day); never inflated. */
+.adv-strip {
+  --adv-py: 0.55rem; --adv-px: 0.7rem;
+  position: relative; display: block; box-sizing: border-box;
+  overflow: hidden; text-decoration: none; text-align: center;
+  background: linear-gradient(180deg, #8fd8ff, #57a8ff);
+  border: 2px solid #8fd8ff; border-radius: 12px;
+  color: #0a1e24; font-weight: 600; line-height: 1.35;
+  padding: var(--adv-py) var(--adv-px);
+  box-shadow: 0 0 18px rgba(87, 168, 255, 0.35), 0 6px 18px rgba(0, 0, 0, 0.35);
+}
+.adv-strip:hover { filter: brightness(1.06); }
+.adv-strip .adv-sizer { display: block; visibility: hidden; }
+.adv-strip .adv-line {
+  position: absolute; inset: var(--adv-py) var(--adv-px);
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; animation: advRotate 12s ease-in-out infinite;
+}
+.adv-strip .adv-line-b { animation-delay: 6s; }
+/* The line's mixed inline content rides in ONE .adv-in flex item —
+   unwrapped, the <strong> and the text node become separate flex
+   items and the bold lead collapses into a one-word-wide column. */
+.adv-strip .adv-in { display: block; text-align: center; }
+@keyframes advRotate {
+  0% { opacity: 0; } 5% { opacity: 1; } 45% { opacity: 1; }
+  55% { opacity: 0; } 100% { opacity: 0; }
+}
+.adv-strip:hover .adv-line,
+.adv-strip:focus-visible .adv-line,
+.adv-strip.adv-paused .adv-line { animation-play-state: paused; }
+@media (prefers-reduced-motion: reduce) {
+  .adv-strip .adv-line { animation: none; }
+  .adv-strip .adv-line-a { opacity: 1; }
+  .adv-strip .adv-line-b { opacity: 0; }
+}
+/* Rail copy: desktop only, in the grid's advstrip area. */
+.hero-split .adv-strip-rail { grid-area: advstrip; display: none; font-size: 0.82rem; }
+/* Phone copy: under Tonight's Display, hidden once the rail exists. */
+.adv-strip-phone { margin: 0.9rem 0 0; font-size: 0.88rem; }
+@media (min-width: 1000px) {
+  .hero-split { grid-template-rows: auto auto 376.63px auto auto; }
+  .hero-split .adv-strip-rail { display: block; }
+  .adv-strip-phone { display: none; }
 }

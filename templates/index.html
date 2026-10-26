@@ -541,6 +541,24 @@ function hmFullHomepage() {
 </div>
 {% endif %}
 
+{# z161 (Dan, Oct 26): sponsor-visibility
+   strip, RAIL copy. /advertise was getting 0.13% of homepage views
+   (103 vs 76,561 in Dan's Oct 26 stats), so this slim azure band —
+   sibling to the Join pill, NOT a second billboard — sits directly
+   under the sponsor billboard in the desktop left rail (grid area
+   "advstrip", style.css z161) and rotates the business line with
+   the homeowner line. The PHONE copy sits under Tonight's Display
+   below (same twin-copy pattern as the hero modules; exactly one
+   copy shows per viewport). One link to /advertise in both states;
+   the in-flow .adv-sizer copy of the taller (business) line pins
+   the height so rotation never shifts layout. Figures are the
+   verified sponsor-send floors (200,000+ total views, Oct 26). #}
+<a class="adv-strip adv-strip-rail" href="/advertise" aria-label="Advertise on HauntMap — your haunt here, seen by 200,000+ Halloween visitors. Founding-Sponsor rates from $49.">
+  <span class="adv-sizer" aria-hidden="true"><strong>Your haunt here</strong> &mdash; seen by 200,000+ Halloween visitors. Featured from $250, through Halloween + Jolly Map through Christmas.</span>
+  <span class="adv-line adv-line-a" aria-hidden="true"><span class="adv-in"><strong>Your haunt here</strong> &mdash; seen by 200,000+ Halloween visitors. Featured from $250, through Halloween + Jolly Map through Christmas.</span></span>
+  <span class="adv-line adv-line-b" aria-hidden="true"><span class="adv-in">Run a home haunt? <strong>Founding-Sponsor rates from $49.</strong></span></span>
+</a>
+
 {% include "_town_request.html" %}
 </div>
 
@@ -564,6 +582,27 @@ function hmFullHomepage() {
   </a>
 </section>
 {% endif %}
+
+{# z161 (Dan, Oct 26): sponsor-visibility
+   strip, PHONE copy — directly under the Tonight's Display card
+   (rail copy + full notes in .hero-split above). #}
+<a class="adv-strip adv-strip-phone" href="/advertise" aria-label="Advertise on HauntMap — your haunt here, seen by 200,000+ Halloween visitors. Founding-Sponsor rates from $49.">
+  <span class="adv-sizer" aria-hidden="true"><strong>Your haunt here</strong> &mdash; seen by 200,000+ Halloween visitors. Featured from $250, through Halloween + Jolly Map through Christmas.</span>
+  <span class="adv-line adv-line-a" aria-hidden="true"><span class="adv-in"><strong>Your haunt here</strong> &mdash; seen by 200,000+ Halloween visitors. Featured from $250, through Halloween + Jolly Map through Christmas.</span></span>
+  <span class="adv-line adv-line-b" aria-hidden="true"><span class="adv-in">Run a home haunt? <strong>Founding-Sponsor rates from $49.</strong></span></span>
+</a>
+<script>
+(function () {
+  // Hold-to-pause for touch: a finger resting on the strip freezes
+  // the rotation (hover/focus pause is pure CSS in style.css z161).
+  document.querySelectorAll('.adv-strip').forEach(function (s) {
+    s.addEventListener('touchstart', function () { s.classList.add('adv-paused'); }, { passive: true });
+    s.addEventListener('touchend', function () {
+      setTimeout(function () { s.classList.remove('adv-paused'); }, 2500);
+    }, { passive: true });
+  });
+})();
+</script>
 
 {# Wave 4, Item 6: Daily Fright band — directly under Tonight's Display
    (Item 5's dated strip sits above Tonight's), above the passport
