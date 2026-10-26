@@ -5151,3 +5151,30 @@ a.game-card-featured:hover { border-color: #ff7b1c; }
 @media (min-width: 1000px) {
   .hero-split { grid-template-rows: auto auto 376.63px auto; }
 }
+
+/* ============ z153: BOTTOM STRIP — EVEN AIR ABOVE AND BELOW (Dan, Oct 26) ============
+   Dan, from his /events laptop photo: "Again even spacing from
+   bottom links and last event blocks for the Virtual Tour through
+   Top 100 Nationwide buttons." The sitewide bottom strip (last
+   child of <main>, just above the footer) hugged the content above
+   it — measured 17.6px from the last block (20px on the homepage)
+   — while the visible air between the strip and the footer's text
+   block (tagline + menu links + TikTok button) measured 69.6px:
+   the strip's 8px bottom margin + <main>'s 16px bottom padding +
+   the footer's own 32px top padding and ~13.6px first-paragraph
+   margin. All that slack pooled BELOW the strip, leaving a big
+   empty illustrated gap over the footer. Same remedy as the
+   sponsor fix (z149): the strip now sits centered in the total
+   air around it — its top margin takes the full below-chain
+   value (2.85rem = 45.6px) and the two container contributions
+   under it (its own bottom margin, <main>'s bottom padding) go
+   to zero, so the visible gaps land equal: last block -> strip ==
+   strip -> footer text, on every page and at every width (the
+   homepage reads ~2.4px wider above, from its own last row's
+   margin — page content spacing is untouched). Footer internals
+   are untouched; <main>'s padding is zeroed ONLY on pages that
+   carry the strip (:has), so admin (no strip) keeps its 1rem.
+   The strip's geometry (z147 breakout width, slim bubbles,
+   centered as a unit) is unchanged — vertical margins only. */
+.vt-tv-strip-bottom { margin: 2.85rem 0 0; }
+main.wrap:has(> .vt-tv-strip-bottom) { padding-bottom: 0; }
