@@ -4939,7 +4939,8 @@ a.game-card-featured:hover { border-color: #ff7b1c; }
   .hero-split .town-request { align-self: start; }
 }
 
-/* ============ z149: SPONSOR RAIL MARGINS (Dan, Oct 26) ============
+/* ============ z149: SPONSOR RAIL MARGINS (Dan, Oct 26) =====}
+
    "Nice clean formatting for the sponsor — equal margins from
    videos above and below." In the desktop hero grid the sponsor
    sits in its own left-rail row between the video row and the
@@ -4961,4 +4962,94 @@ a.game-card-featured:hover { border-color: #ff7b1c; }
    is not in this block and renders exactly as before. */
 @media (min-width: 1000px) {
   .hero-split .sponsor-section { align-self: center; justify-self: center; }
+}
+
+/* ============ z150: JOIN BUTTON SITS UNDER THE EVENTS GIF (Dan, Oct 26) ============
+   Dan: "put the HauntSocial button under Events & Parties and make it
+   fit nicely underneath." The JOIN HAUNTSOCIAL pill (a member's
+   @handle pill takes the same seat) leaves its centered own-row spot
+   (z133's full-width line, z147's fit-content pill) and moves into a
+   new left header column (.header-events-col in base.html): the
+   Events & Parties GIF on top, the pill directly beneath it, the two
+   composed as one block at the head of the nav row.
+   FIT: the column's width is the GIF's width (183px at 1440, 167px
+   at 1100, 120px on phone); the pill stretches to exactly that width
+   and its label restacks — "Join HauntSocial" (Eater words, as
+   before) on its own line, the "- The First Halloween Social
+   Network" tagline as a smaller block line under it — so the full
+   text survives the narrow seat with nothing ellipsized. The z147
+   ::after line-break that forced the pill's old row is retired, so
+   the desktop header keeps its height (the column is no taller than
+   the two rows it replaces). Phone portrait: the column takes the
+   Events artwork's old grid seat (col 1, rows 1-2) and the grid
+   loses the pill's full-width bottom row. Compact landscape keeps
+   its slim single row: GIF and pill ride side by side there. */
+/* --- the column itself --- */
+/* width: min-content makes the GIF the column's width driver: the
+   pill's longest line (the tagline) can wrap, so its min-content is
+   just its longest word — narrower than the GIF at every size — and
+   the pill then stretches to the GIF's exact width. */
+.header-events-col {
+  display: flex; flex-direction: column; align-items: stretch;
+  gap: 0.38rem; flex: 0 0 auto; min-width: 0; width: min-content;
+}
+/* --- the pill in its new seat (both states) --- */
+.site-header.v2 .header-nav .header-events-col a.nav-join {
+  flex: 0 0 auto; order: 0; align-self: stretch;
+  width: 100%; max-width: none; margin: 0;
+  padding: 0.34rem 0.55rem; text-align: center;
+}
+/* --- member pill: the @handle scales to the narrow seat (6.4% of
+   the pill's width, capped at its usual size) so a typical handle
+   shows in full instead of ellipsizing --- */
+.header-events-col a.nav-join-member .nav-join-label { font-size: min(0.99rem, 6.4cqw); }
+/* --- label restacks inside the narrow pill --- */
+.header-events-col a.nav-join .nav-join-label { white-space: normal; }
+.header-events-col a.nav-join .nav-join-tag {
+  display: block; margin-top: 0.1rem;
+  font-size: 0.60rem; letter-spacing: 0.02em; line-height: 1.2;
+}
+@media (min-width: 761px) and (min-height: 501px) {
+  /* Retire z147's forced line break: the pill no longer needs its
+     own row, and the empty line would pad the header. */
+  .site-header.v2 .header-nav::after { content: none; }
+  /* One-line tagline, sized to the pill: the pill is a container
+     and the tag runs at 4.3% of its width (measured: the line is
+     202px at 9.6px type, so 4.3cqw lands it just inside the pill's
+     content box at both 183px and 167px column widths) — the pill
+     stays one brand line + one caption line, ~46px tall, and the
+     header keeps its height. */
+  .site-header.v2 .header-nav .header-events-col a.nav-join {
+    container-type: inline-size; padding: 0.3rem 0.4rem;
+  }
+  .header-events-col a.nav-join .nav-join-tag {
+    font-size: 4.3cqw; letter-spacing: 0.01em; white-space: nowrap;
+  }
+}
+/* --- phone portrait: the column takes the artwork's grid seat --- */
+@media (max-width: 760px) and (orientation: portrait) {
+  .site-header.v2 .header-nav .header-events-col {
+    grid-row: 1 / span 2; grid-column: 1; align-self: center;
+    width: 120px; gap: 0.35rem;
+  }
+  .site-header.v2 .header-nav .header-events-col a.nav-join { padding: 0.3rem 0.4rem; container-type: inline-size; }
+  .header-events-col a.nav-join .nav-join-tag { font-size: 0.52rem; }
+}
+@media (max-width: 380px) and (orientation: portrait) {
+  .site-header.v2 .header-nav .header-events-col { width: 110px; }
+}
+@media (min-width: 560px) and (max-width: 760px) and (orientation: portrait) {
+  .site-header.v2 .header-nav .header-events-col { width: 140px; }
+}
+/* --- compact landscape: slim row preserved, pill beside the GIF --- */
+@media (orientation: landscape) and (max-height: 500px) {
+  .header-events-col { flex-direction: row; align-items: center; gap: 0.5rem; width: auto; }
+  .site-header.v2 .header-nav .header-events-col a.nav-join { width: auto; }
+  .header-events-col a.nav-join .nav-join-label { white-space: nowrap; }
+  .header-events-col a.nav-join .nav-join-tag {
+    display: inline; margin-top: 0; font-size: 1.05em; letter-spacing: 0.04em;
+  }
+  /* No size container in this layout, so the handle takes a fixed
+     size that fits its content-width pill. */
+  .header-events-col a.nav-join-member .nav-join-label { font-size: 0.58rem; }
 }
