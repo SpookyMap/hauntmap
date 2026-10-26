@@ -4938,3 +4938,27 @@ a.game-card-featured:hover { border-color: #ff7b1c; }
   /* (7) Town-request card: no grid-row stretch. */
   .hero-split .town-request { align-self: start; }
 }
+
+/* ============ z149: SPONSOR RAIL MARGINS (Dan, Oct 26) ============
+   "Nice clean formatting for the sponsor — equal margins from
+   videos above and below." In the desktop hero grid the sponsor
+   sits in its own left-rail row between the video row and the
+   town-request row, but the headline spanning those rows makes
+   the sponsor's row taller than the panel (z147 made the panel
+   hug its content at the row's TOP), so all the row's slack
+   pooled UNDER the panel: measured 14.4px above (the plain row
+   gap) vs 59.3px below at 1440/1280 — and 14.4 vs 460.9 at 1100,
+   where the headline runs taller beside the rail. Centering the
+   panel in its row splits that slack evenly, so the visible gap
+   above the sponsor (video bottom -> sponsor top) EQUALS the gap
+   below it (sponsor bottom -> town card top) at every desktop
+   width by construction: gap = row gap + slack/2 on both sides.
+   Horizontally the z147 shrink left the 200px panel hugging the
+   column's left edge with all 52px of dead space on its right;
+   centered, the column's slack splits 26/26. Panel size, content,
+   azure styling and links are untouched (z147 stands); the video
+   card and town card keep their own alignment; phone (<1000px)
+   is not in this block and renders exactly as before. */
+@media (min-width: 1000px) {
+  .hero-split .sponsor-section { align-self: center; justify-self: center; }
+}
