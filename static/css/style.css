@@ -5383,3 +5383,42 @@ main.wrap:has(> .vt-tv-strip-bottom) { padding-bottom: 0; }
 @media (max-width: 380px) and (orientation: portrait) {
   .site-header.v2 .header-nav .header-events-col a.nav-join { width: 100%; }
 }
+
+/* ============ z163: PHONE JOIN PILL — SMALLER AND SLIMMER AGAIN (Dan, Oct 26) ============
+   Dan, replying to the z162 pill (108 x 33.8 at 390): "Haunt social
+   button smaller — and slimmer." Third pass, PHONE PORTRAIT ONLY,
+   same band, later in the file so the rules win on order.
+   (1) Width: 90% -> 80% of the events column (96px at the 120px
+       column, ~12px daylight a side, still centered under the GIF).
+   (2) Height: vertical padding 0.35rem -> 0.24rem, and the label's
+       line box tightened to line-height 1.3 (its computed 14.4px
+       box inflated the pill well past the ~10px of glyph ink).
+   (3) The narrower seat starves the one-line label, so the label
+       steps 0.58rem -> 0.55rem with letter-spacing -0.02em: the two
+       Eater words (91.5px of text at z162) shrink to 80.1px and
+       sit fully inside the ~88px content box. Measured on the rig
+       (Chromium, local tree): 390 pill 108 x 33.75 -> 96 x 28.27,
+       header 243.0 -> 237.6; label scroll size == client size at
+       390 / 430 / 360 (no horizontal or vertical clipping; glyph
+       ink ~10px inside the 11.4px line box), zero page overflow,
+       and the laptop pill (183.3 x 39.5) + header (218.4) are
+       pixel-identical to z162.
+   At <=380 the column is only 110px and 80% would starve the label,
+   so the pill keeps the column's full width there (the height and
+   label trims still apply) — same adaptation as z162.
+   The member @handle pill shares the pill rule and gets the same
+   trim; its own cqw label sizing is untouched. Azure gradient,
+   blue glow, caption drop, GIF -> pill gap, discs, hook and
+   everything else untouched; laptop + compact landscape are
+   outside this band entirely. */
+@media (max-width: 760px) and (orientation: portrait) {
+  .site-header.v2 .header-nav .header-events-col a.nav-join {
+    padding: 0.24rem 0.12rem; width: 80%; align-self: center;
+  }
+  .site-header.v2 .header-nav .header-events-col a.nav-join:not(.nav-join-member) .nav-join-label {
+    font-size: 0.55rem; line-height: 1.3; letter-spacing: -0.02em;
+  }
+}
+@media (max-width: 380px) and (orientation: portrait) {
+  .site-header.v2 .header-nav .header-events-col a.nav-join { width: 100%; }
+}
