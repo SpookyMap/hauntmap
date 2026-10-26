@@ -4790,3 +4790,151 @@ a.game-card-featured:hover { border-color: #ff7b1c; }
     inset 0 0 16px rgba(87, 168, 255, 0.28),
     0 0 26px rgba(87, 168, 255, 0.60);
 }
+
+/* ============ z147: LAPTOP HOMEPAGE PASS (Dan, Oct 26) ============
+   Seven fixes from Dan's laptop photos of the homepage, all scoped
+   to laptop/desktop widths (>=761px / >=1000px) — phone rendering
+   is untouched:
+   (1) HAUNTSOCIAL BAND CENTERED: the .social-promo panel was already
+   centered on the page, but its content group (ghost + wordmark row,
+   explainer lines, CTA stack) hugged the left edge. On desktop the
+   band now composes as a centered unit: the top row shrinks to its
+   content and centers, the copy lines center, and the CTA stack
+   centers — which also sizes the JOIN HAUNTSOCIAL button to its
+   content (the z131 cap) instead of the row.
+   (2) HUB BUBBLE STRIPS SPREAD OUT + SLEEKER (upgraded by Dan's
+   second photo, Oct 26): the top strip was confined to the 720px
+   text column while the hero composition below it spans 1060px,
+   so the 7 maze bubbles bunched in the middle; the BOTTOM strip
+   sat in the same narrow column, tighter still (92.8px bubbles),
+   and in Dan's sidebar-narrowed Safari window it ran off the left
+   edge, clipping "Virtual Tour". At >=1000px (the same breakpoint
+   where .hero-split breaks out) BOTH strips take the hero's exact
+   breakout — width min(1060px, 100vw - 2rem), centered as a unit
+   with equal outer margins — the base flex:1 1 0 spreads the
+   bubbles evenly with a uniform 0.6rem gap, and the bubbles go
+   sleeker (~54px -> ~43px: smaller label type/leading, slimmer
+   padding, icons scale with the type). Nothing can clip: the
+   strip is viewport-capped and the bubbles shrink. Maze styling,
+   pellets, labels, order and links untouched; the phone twin
+   keeps its current seat and sizes.
+   (3) JOIN BAR SIZED TO CONTENT: the header JOIN HAUNTSOCIAL bar
+   (z133's full-width line) is "way too long" on laptop. It keeps its
+   own row (flex-basis 100% still forces the wrap) but is capped at
+   fit-content and centered with auto margins — a proper pill. The
+   compact landscape header (height <=500px, in-row pill) and phone
+   are unchanged. The member @handle pill takes the same sizing so
+   the header reads consistently in both states.
+   (4) SPONSOR BILLBOARD SHRUNK (left rail, >=1000px): the azure
+   panel rode the full 252px column at ~399px tall. It now hugs a
+   200px width at the column's left edge, stops stretching to its
+   grid row (align-self: start — the empty azure under the card is
+   gone), and tightens inside: smaller cover (72x108 -> 40x60),
+   slimmer padding/type. Same azure panel, black frame/type, cover
+   and links — roughly a quarter less width, a fifth less height,
+   ~40% less footprint. The video above it keeps the full column.
+   (5) "TOP 10 BY STATE" HEADING FITS: z113's fixed per-band ladder
+   (4.6rem at 761-1199px) was tuned for a full-width bar; inside the
+   hero column the bar is ~606px at a 1024px window and the nowrap
+   Creepster label (684px) ran off its right edge — "TOP 10 BY
+   STAT…". The label now sizes in container-query units against the
+   block itself (8.6cqw, capped at the old 3.9rem), so it fills the
+   bar at 1440 and still fits at 1024. The personalized h2 variant
+   (0.95rem, wraps) never overflowed and is untouched.
+   (6) NEAR YOU CHIPS SPREAD OUT (hero copy): the town chips sat at
+   their natural widths bunched left, ~85px of dead box on the
+   right of every row. Chips now flex-grow to fill each row edge to
+   edge (uniform 0.45rem gaps, labels centered) and get beefier:
+   padding 0.22/0.5rem -> 0.42/0.7rem, type 0.76rem -> 0.85rem.
+   Labels, counts, links and the box's other copy are untouched;
+   the phone copy (.near-you:not(.hero-copy)) keeps its grid.
+   (7) TOWN-REQUEST CARD HUGS ITS FORM (left rail, >=1000px): the
+   "Get your town on the map" panel stretched to its grid row —
+   821px tall for 366px of form, a long empty tail below the
+   button. align-self: start ends the panel shortly after the
+   button with its normal padding; fields, copy and button are
+   unchanged and the rail below moves up naturally. */
+@media (min-width: 761px) {
+  .social-promo { align-items: center; text-align: center; }
+  .social-promo-cta { align-items: center; text-align: center; }
+}
+@media (min-width: 761px) and (min-height: 501px) {
+  /* Force the pill onto its own line at EVERY desktop width: capping
+     the pill at fit-content also shrinks its hypothetical flex size,
+     so on wide screens it would otherwise slip back into the discs
+     row (right-aligned, not centered). A zero-height full-basis
+     ::after ordered just before it guarantees the line break; the
+     extra line's row-gap cost is paid back on the pill itself (see
+     below), so the header's height is unchanged. */
+  .site-header.v2 .header-nav::after {
+    content: ""; order: 1; flex: 0 0 100%; height: 0;
+  }
+  /* The extra (empty) line costs one 12px row-gap; the pill's -12px
+     top margin pays it back, so the pill sits exactly where the old
+     full-width bar sat and the header's height is unchanged. */
+  .header-nav a.nav-join { order: 2; max-width: fit-content; margin-inline: auto; margin-top: -12px; }
+}
+@media (min-width: 1000px) {
+  /* (2) Both laptop strips take the hero's exact breakout: the
+     strip is a viewport-centered unit (equal outer margins at every
+     width), its width can never exceed the viewport minus 1rem a
+     side, and flex:1 1 0 + min-width:0 bubbles shrink before
+     anything can clip — at ~1100 (Safari sidebar) as at 1920. */
+  .vt-tv-strip.vt-tv-strip-top,
+  .vt-tv-strip.vt-tv-strip-bottom {
+    width: min(1060px, calc(100vw - 2rem));
+    position: relative; left: 50%; transform: translateX(-50%);
+    gap: 0.6rem;
+  }
+  /* (2b) SLEEKER BUBBLES (Dan, Oct 26, second photo): the maze
+     bubbles read chunky/tall at 53.7px. On laptop the label type
+     steps down (0.68rem -> 0.63rem, line-height 1.25 -> 1.12 — the
+     icon inherits the link size, so it scales with the text) and
+     the vertical padding slims (0.28rem -> 0.16rem): ~43px tall.
+     Maze walls, pellets (50%-positioned, height-safe), fills,
+     labels, order and links untouched; the phone twin and the
+     <=999px seats keep the current profile. */
+  .vt-tv-strip.vt-tv-strip-top a,
+  .vt-tv-strip.vt-tv-strip-bottom a {
+    font-size: 0.63rem; line-height: 1.12;
+    padding: 0.16rem 0.2rem;
+  }
+}
+@media (min-width: 761px) {
+  /* (5) Top 10 by State: label sized to its own block via cqw. */
+  .top10-home.top10-home--cta { container-type: inline-size; }
+  .top10-home.top10-home--cta .states-cta a strong {
+    font-size: clamp(2rem, 8.6cqw, 3.9rem);
+    letter-spacing: 0.22em;
+    min-width: 0;
+  }
+  /* (6) Near You chips: fill every row, beefier (hero copy only). */
+  .hero-stack .town-chips { gap: 0.45rem; }
+  .hero-stack .town-chip {
+    flex: 1 1 auto; justify-content: center;
+    padding: 0.42rem 0.7rem; font-size: 0.85rem;
+  }
+  .hero-stack .town-chip .chip-n { font-size: 0.78rem; }
+}
+@media (min-width: 1000px) {
+  /* (4) Sponsor billboard: smaller footprint, hugs its content.
+     The narrower panel makes copy wrap taller, so type also gets
+     tighter line-heights to keep the height win (measured locally:
+     252x399 -> 200x~311, logo 72x108 -> 40x60). */
+  .hero-split .sponsor-section {
+    width: 200px; justify-self: start; align-self: start;
+    padding: 0.5rem 0.45rem;
+  }
+  .hero-split .sponsor-section h2 { font-size: 0.82rem; letter-spacing: 0.06em; }
+  .hero-split .sponsor-sub { font-size: 0.85rem; line-height: 1.3; margin: 0.15rem 0 0.4rem; }
+  .hero-split .sponsor-section .sponsor-card { padding: 0.4rem; gap: 0.32rem; }
+  .hero-split .sponsor-section .sponsor-logo {
+    width: 40px !important; height: 60px !important;
+    max-width: 40px !important; max-height: 60px !important;
+  }
+  .hero-split .sponsor-section .sponsor-name { font-size: 0.9rem; line-height: 1.25; }
+  .hero-split .sponsor-section .sponsor-text { font-size: 0.8rem; line-height: 1.3; }
+  .hero-split .sponsor-cta { margin-top: 0.4rem; font-size: 0.8rem; line-height: 1.35; }
+  /* (7) Town-request card: no grid-row stretch. */
+  .hero-split .town-request { align-self: start; }
+}
