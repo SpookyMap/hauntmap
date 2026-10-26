@@ -6077,6 +6077,44 @@ MUSIC_SPOTIFY_PLAYLISTS = [
      "blurb": "Dark synth and horror-score energy for the drive between "
               "haunts."},
 ]
+# Live radio for /music (Dan, Oct 26): iHeartRadio's official embed
+# player — the ?embed=true&keyid=EditorialPlayer iframe iHeart itself
+# ships in its station pages' oEmbed markup ("Embed widget"); the
+# station pages send no frame-blocking headers. Every slug below was
+# test-rendered in that embed on 2026-10-26 and showed live now-playing
+# data — never add a station here without the same check. Halloween
+# first, then the big New York iHeart flagships. Radio Garden refuses
+# embedding in-app ("Embedding Not Allowed", verified 2026-10-26), so
+# it rides as a link-out card in the template instead.
+MUSIC_RADIO_IHEART = [
+    {"slug": "halloween-radio-7001", "name": "Halloween Radio",
+     "format": "Halloween Hits · Commercial-Free", "halloween": True,
+     "lead": True,
+     "blurb": "iHeart's Halloween flagship — Thriller, Ghostbusters, "
+              "Monster Mash and the rest of the canon, no commercials."},
+    {"slug": "haunted-house-radio-9163", "name": "Haunted House Radio",
+     "format": "Spooky Halloween Sounds in 3D", "halloween": True,
+     "blurb": "Pure atmosphere — eerie soundscapes for the porch "
+              "speaker. Point it at the sidewalk and the display "
+              "comes alive."},
+    {"slug": "trick-or-treat-radio-11287", "name": "Trick or Treat Radio",
+     "format": "Kids' Halloween Music · Commercial-Free",
+     "halloween": True,
+     "blurb": "The family lane — sing-along Halloween hits for the "
+              "littlest goblins."},
+    {"slug": "z100-1469", "name": "Z100",
+     "format": "New York's #1 Hit Music Station",
+     "blurb": "Today's biggest pop, live from New York."},
+    {"slug": "1035-ktu-1473", "name": "103.5 KTU",
+     "format": "The Beat of New York",
+     "blurb": "Dance, throwbacks and party starters — the KTU sound."},
+    {"slug": "q1043-1465", "name": "Q104.3",
+     "format": "New York's Rock Station",
+     "blurb": "Classic rock that really rocks, all day."},
+    {"slug": "1067-lite-fm-1477", "name": "106.7 Lite FM",
+     "format": "New York's Best Variety",
+     "blurb": "The softer side of the dial — workday variety."},
+]
 # Top-of-page featured set (Dan, Oct 23): his friends' ZombieSquad mix on
 # the Dead On Pictures channel, featured at the top of /music by request.
 # Verified via yt-dlp 2026-10-23: public, playable_in_embed, maxres thumb.
@@ -6307,6 +6345,7 @@ def music_page(request: Request):
     return templates.TemplateResponse(
         request, "music.html",
         {"site_name": SITE_NAME, "playlists": MUSIC_SPOTIFY_PLAYLISTS,
+         "radio_stations": MUSIC_RADIO_IHEART,
          "yt_spotlight": MUSIC_SPOTLIGHT,
          "yt_featured": MUSIC_YOUTUBE_FEATURED, "yt_grid": MUSIC_YOUTUBE_GRID,
          "yt_performances": MUSIC_PERFORMANCES, "yt_dj_sets": MUSIC_DJ_SETS,

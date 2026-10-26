@@ -27,6 +27,34 @@
   {% endfor %}
 </div>
 
+<h2 class="music-h2" id="radio">&#x1F4FB; Live Radio</h2>
+<p>Real radio, live on the page. iHeartRadio's Halloween stations lead the dial &mdash; the classics, the haunted-house atmosphere, the family mix &mdash; with New York's biggest stations below for every other night of the year. Tap a station and the official iHeartRadio player loads right here.</p>
+<div class="radio-grid">
+  {% for s in radio_stations %}
+  <figure class="music-embed radio-card{% if s.lead %} radio-lead{% endif %}">
+    <button type="button" class="ihr-facade" data-ihr="{{ s.slug }}" aria-label="Play {{ s.name }} live on iHeartRadio">
+      <span class="ihr-play" aria-hidden="true">&#9654;</span>
+      <span class="ihr-info">
+        <span class="ihr-name">{{ s.name }}</span>
+        <span class="ihr-sub">{{ s.format }}</span>
+      </span>
+      {% if s.halloween %}<span class="ihr-tag">&#x1F383; Halloween</span>{% endif %}
+    </button>
+    <figcaption><strong>{{ s.name }}</strong> &mdash; {{ s.blurb }} <a href="https://www.iheart.com/live/{{ s.slug }}/" target="_blank" rel="noopener">Open in iHeartRadio &nearr;</a></figcaption>
+  </figure>
+  {% endfor %}
+  <figure class="music-embed radio-card radio-garden">
+    <div class="rg-face" aria-hidden="true">
+      <span class="rg-globe">&#x1F310;</span>
+      <span class="ihr-info">
+        <span class="ihr-name">Radio Garden</span>
+        <span class="ihr-sub">Live radio from everywhere on Earth</span>
+      </span>
+    </div>
+    <figcaption><strong>Radio Garden</strong> &mdash; spin the globe, drop into a city, and hear what's on the radio there right now: thousands of live stations, worldwide. Radio Garden won't embed, so it opens in a new tab. <a href="https://radio.garden/" target="_blank" rel="noopener">Open Radio Garden &nearr;</a></figcaption>
+  </figure>
+</div>
+
 <h2 class="music-h2">&#x1F4FA; Halloween Classics on YouTube</h2>
 <p>Tap any cover to play the official video right here.</p>
 <div class="yt-feature">
@@ -145,6 +173,21 @@ document.addEventListener('click', function (ev) {
   f.setAttribute('allow', 'autoplay; encrypted-media; picture-in-picture');
   f.setAttribute('allowfullscreen', '');
   f.setAttribute('title', b.getAttribute('aria-label') || 'YouTube video');
+  b.replaceWith(f);
+});
+
+// iHeartRadio click-to-load facades (same philosophy): the official
+// iHeart embed player only loads when a visitor taps a station — no
+// third-party requests before the tap.
+document.addEventListener('click', function (ev) {
+  var b = ev.target.closest && ev.target.closest('.ihr-facade');
+  if (!b || b.dataset.loaded) return;
+  b.dataset.loaded = '1';
+  var f = document.createElement('iframe');
+  f.className = 'ihr-frame';
+  f.src = 'https://www.iheart.com/live/' + b.getAttribute('data-ihr') + '/?embed=true&keyid=EditorialPlayer';
+  f.setAttribute('allow', 'autoplay');
+  f.setAttribute('title', b.getAttribute('aria-label') || 'iHeartRadio player');
   b.replaceWith(f);
 });
 </script>

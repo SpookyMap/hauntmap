@@ -2088,6 +2088,27 @@ body.has-tourbar #hm-prompt { bottom: 4.4rem; }
 .music-xref { color: var(--muted); margin-top: 0.9rem; }
 .music-events-cta { margin-top: 1.6rem; font-weight: 700; }
 
+/* /music live radio (Dan, Oct 26): iHeartRadio click-to-load facades
+   (official embed loads only on tap — zero third-party weight before)
+   + the Radio Garden link-out card (Radio Garden blocks embedding). */
+.radio-grid { display: grid; grid-template-columns: 1fr; gap: 1rem; margin: 0.8rem 0 0.4rem; }
+@media (min-width: 620px) {
+  .radio-grid { grid-template-columns: 1fr 1fr; }
+  .radio-grid .radio-lead { grid-column: 1 / -1; }
+}
+.ihr-facade { display: flex; align-items: center; gap: 0.8rem; width: 100%; text-align: left; padding: 0.85rem 0.9rem; border: 1px solid #274860; border-radius: 10px; background: linear-gradient(160deg, rgba(87, 168, 255, 0.16), rgba(87, 168, 255, 0.03) 55%), #0b141a; color: var(--ink); cursor: pointer; font: inherit; }
+.ihr-facade:hover, .ihr-facade:focus-visible { border-color: var(--accent2); box-shadow: 0 0 16px rgba(87, 168, 255, 0.45); }
+.ihr-play { flex: 0 0 auto; width: 46px; height: 46px; border-radius: 50%; background: var(--accent2); color: #06121f; font-size: 1.15rem; display: flex; align-items: center; justify-content: center; padding-left: 3px; box-shadow: 0 0 14px rgba(87, 168, 255, 0.55); }
+.radio-lead .ihr-play { width: 54px; height: 54px; font-size: 1.35rem; }
+.ihr-info { display: flex; flex-direction: column; gap: 0.12rem; min-width: 0; }
+.ihr-name { font-weight: 800; font-size: 1.08rem; line-height: 1.15; }
+.radio-lead .ihr-name { font-size: 1.3rem; }
+.ihr-sub { color: var(--muted); font-size: 0.85rem; }
+.ihr-tag { margin-left: auto; flex: 0 0 auto; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.04em; color: #ffb066; border: 1px solid rgba(255, 123, 28, 0.55); border-radius: 999px; padding: 0.18rem 0.55rem; background: rgba(255, 123, 28, 0.12); }
+.ihr-frame { display: block; width: 100%; height: 300px; border: 0; border-radius: 10px; background: #fff; }
+.rg-face { display: flex; align-items: center; gap: 0.8rem; padding: 0.85rem 0.9rem; border: 1px dashed #2e4a66; border-radius: 10px; background: radial-gradient(120px 60px at 18% 50%, rgba(87, 168, 255, 0.25), transparent 70%), #0b141a; }
+.rg-globe { font-size: 2rem; line-height: 1; filter: drop-shadow(0 0 10px rgba(87, 168, 255, 0.8)); }
+
 /* /movies page (Dan Oct 23) — the screening room: trailer shelves reusing
    the /music facade grid, plus a cross-link card at the foot of /music. */
 .movies-subnav { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 1rem 0 0.2rem; }
