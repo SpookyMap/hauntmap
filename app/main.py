@@ -413,8 +413,9 @@ def _analytics_write_batch(conn, batch: list) -> None:
     pv = [r[1:] for r in batch if r[0] == "pv"]
     if pv:
         conn.executemany(
-            "INSERT INTO page_views (path, viewed_at, referrer, device, sid) "
-            "VALUES (?, ?, ?, ?, ?)", pv)
+            "INSERT INTO page_views (path, viewed_at, referrer, device, sid, "
+            "country, region, city) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?)", pv)
     engaged = [r[1:] for r in batch if r[0] == "engaged"]
     if engaged:
         conn.executemany(
@@ -505,6 +506,36 @@ def _device_bucket(ua: str) -> str:
     return "Other"
 
 
+# Date the page_views geo columns started collecting (ship date of the
+# geography panel) — the /admin stats page prints it so the breakdown
+# is never mistaken for all-time coverage.
+_GEO_COLLECTING_SINCE = "Oct 26, 2026"
+
+
+def _pv_geo(request: Request) -> tuple:
+    """Visitor geography for one page view, read straight off the
+    request's Cloudflare headers (Dan, Oct 26 — powers the /admin
+    'Visitors by geography' panel). cf-ipcountry rides every
+    Cloudflare-proxied request; cf-ipregion / cf-ipregion-code /
+    cf-ipcity arrive only once the zone's 'Add visitor location
+    headers' managed transform is on (Dan's dashboard toggle). Absent
+    or garbled = None — store only what the headers actually gave,
+    never finer. US regions resolve to the state code the town data
+    uses (via _state_code_from_region); other regions keep
+    Cloudflare's region name verbatim."""
+    h = request.headers
+    country = (h.get("cf-ipcountry") or "").strip().upper()[:8] or None
+    region_raw = (h.get("cf-ipregion") or "").strip()[:120]
+    region = None
+    if region_raw:
+        region = region_raw
+        if country == "US":
+            region = _state_code_from_region(
+                region_raw, h.get("cf-ipregion-code") or "") or region_raw
+    city = (h.get("cf-ipcity") or "").strip()[:120] or None
+    return country, region, city
+
+
 @app.middleware("http")
 async def _track_page_view(request: Request, call_next):
     """Log page views for the admin traffic dashboard. Skips static/media/admin, logged-in admin visits, and Jarvis's own verification checks.
@@ -523,9 +554,11 @@ async def _track_page_view(request: Request, call_next):
                     new_sid = not sid
                     if new_sid:
                         sid = secrets.token_hex(16)
+                    country, region, city = _pv_geo(request)
                     _analytics_q.put((
                         "pv", path, datetime.now(timezone.utc).isoformat(),
-                        referrer, _device_bucket(ua), sid))
+                        referrer, _device_bucket(ua), sid,
+                        country, region, city))
                     if new_sid:
                         response.set_cookie("hm_sid", sid, max_age=30 * 24 * 3600,
                                             httponly=True, samesite="lax")
@@ -1867,6 +1900,27 @@ def towns(category: str = "halloween", state: str = "") -> list[str]:
         return sorted(seen)
     return list(_ttl_cached(f"towns:{category}:{state}", build))
 
+
+# Display names for the /admin geography panel: Cloudflare's
+# cf-ipcountry is a bare ISO code. Common codes get a friendly name;
+# anything unlisted renders as its code (never a guessed name).
+# 'XX' is Cloudflare's own "country unknown" value.
+_COUNTRY_NAMES = {
+    "US": "United States", "CA": "Canada", "MX": "Mexico", "GB": "United Kingdom",
+    "IE": "Ireland", "DE": "Germany", "FR": "France", "ES": "Spain",
+    "IT": "Italy", "NL": "Netherlands", "BE": "Belgium", "CH": "Switzerland",
+    "AT": "Austria", "SE": "Sweden", "NO": "Norway", "DK": "Denmark",
+    "FI": "Finland", "PL": "Poland", "PT": "Portugal", "GR": "Greece",
+    "CZ": "Czechia", "HU": "Hungary", "RO": "Romania", "UA": "Ukraine",
+    "RU": "Russia", "TR": "Türkiye", "IL": "Israel", "AE": "UAE",
+    "SA": "Saudi Arabia", "IN": "India", "PK": "Pakistan", "BD": "Bangladesh",
+    "CN": "China", "JP": "Japan", "KR": "South Korea", "TW": "Taiwan",
+    "HK": "Hong Kong", "SG": "Singapore", "MY": "Malaysia", "TH": "Thailand",
+    "VN": "Vietnam", "PH": "Philippines", "ID": "Indonesia", "AU": "Australia",
+    "NZ": "New Zealand", "BR": "Brazil", "AR": "Argentina", "CL": "Chile",
+    "CO": "Colombia", "PE": "Peru", "ZA": "South Africa", "NG": "Nigeria",
+    "EG": "Egypt", "KE": "Kenya", "PR": "Puerto Rico", "XX": "Unknown",
+}
 
 US_STATE_NAMES = {
     "NJ": "New Jersey", "NY": "New York", "PA": "Pennsylvania", "MD": "Maryland",
@@ -7571,6 +7625,51 @@ def admin_stats(request: Request):
             "SELECT CASE WHEN device = '' OR device IS NULL THEN 'Unknown' "
             "ELSE device END AS dev, COUNT(*) AS views FROM page_views "
             "GROUP BY dev ORDER BY views DESC").fetchall()
+        # --- visitors by geography (Dan, Oct 26): where the audience
+        # actually is. Counted BOTH ways and labelled on the page:
+        # visitors = COUNT(DISTINCT sid) (one person counts once per
+        # place), views = raw page views, matching the panels above.
+        # Geo columns exist only on views recorded since
+        # _GEO_COLLECTING_SINCE — every query below filters to rows
+        # that carry a value, so nothing here implies older coverage.
+        # Region/city rows exist only once Cloudflare's visitor-
+        # location transform is on, so those tables render only when
+        # they have rows (the template carries the note otherwise).
+        geo = {"countries": [], "states": [], "cities": []}
+        for r in conn.execute(
+                "SELECT country, COUNT(DISTINCT sid) AS visitors, "
+                "COUNT(*) AS views FROM page_views "
+                "WHERE country IS NOT NULL AND country != '' "
+                "GROUP BY country ORDER BY visitors DESC, views DESC "
+                "LIMIT 20"):
+            geo["countries"].append({
+                "code": r["country"],
+                "label": _COUNTRY_NAMES.get(r["country"], r["country"]),
+                "visitors": r["visitors"], "views": r["views"]})
+        for r in conn.execute(
+                "SELECT region, COUNT(DISTINCT sid) AS visitors, "
+                "COUNT(*) AS views FROM page_views "
+                "WHERE country = 'US' AND region IS NOT NULL AND region != '' "
+                "GROUP BY region ORDER BY visitors DESC, views DESC "
+                "LIMIT 20"):
+            name = US_STATE_NAMES.get(r["region"])
+            geo["states"].append({
+                "label": f"{name} ({r['region']})" if name else r["region"],
+                "visitors": r["visitors"], "views": r["views"]})
+        for r in conn.execute(
+                "SELECT city, region, country, COUNT(DISTINCT sid) AS visitors, "
+                "COUNT(*) AS views FROM page_views "
+                "WHERE city IS NOT NULL AND city != '' "
+                "GROUP BY city, region, country "
+                "ORDER BY visitors DESC, views DESC LIMIT 20"):
+            label = r["city"]
+            if r["region"]:
+                label += f", {r['region']}"
+            if r["country"] and r["country"] != "US":
+                label += f" ({r['country']})"
+            geo["cities"].append({
+                "label": label,
+                "visitors": r["visitors"], "views": r["views"]})
         # --- engagement events (Wave 2, Item 2): last 7 days ---
         # (engagement_events is created by init_db at startup — no DDL here.)
         eng_counts = {ev: 0 for ev in ENGAGEMENT_EVENTS_ALL}
@@ -7664,6 +7763,7 @@ def admin_stats(request: Request):
          "by_day": by_day, "top_pages": top_pages,
          "top_referrers": top_referrers, "by_device": by_device,
          "duration": duration, "engagement": engagement,
+         "geo": geo, "geo_since": _GEO_COLLECTING_SINCE,
          "page_time": _page_time_stats()})
 
 

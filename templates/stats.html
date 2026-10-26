@@ -139,10 +139,45 @@
 </table>
 
 <h3>By device</h3>
-<table style="width:100%;border-collapse:collapse;">
+<table style="width:100%;border-collapse:collapse;margin-bottom:24px;">
   <tr><th style="text-align:left;padding:8px;">Device</th><th style="text-align:right;padding:8px;">Views</th></tr>
   {% for row in by_device %}
   <tr><td style="padding:8px;">{{ row["dev"] }}</td><td style="text-align:right;padding:8px;">{{ row["views"] }}</td></tr>
   {% endfor %}
 </table>
+
+<h3>🌍 Visitors by geography <span style="font-size:0.75em;color:#888;">(collecting since {{ geo_since }})</span></h3>
+<p style="color:#888;font-size:0.85em;">Where visitors are, from Cloudflare&rsquo;s location headers on each page view. <strong>Visitors</strong> counts each person once per place (distinct visitor ids); <strong>Views</strong> is raw page views, like the tables above. Location is recorded only on views since {{ geo_since }} &mdash; older views carry no geography, so this is not all-time coverage.</p>
+{% if geo.countries %}
+<h4 style="margin-bottom:8px;">Top countries</h4>
+<table style="width:100%;border-collapse:collapse;margin-bottom:24px;">
+  <tr><th style="text-align:left;padding:8px;">Country</th><th style="text-align:right;padding:8px;">Visitors</th><th style="text-align:right;padding:8px;">Views</th></tr>
+  {% for row in geo.countries %}
+  <tr><td style="padding:8px;">{{ row.label }} <span style="color:#888;">({{ row.code }})</span></td><td style="text-align:right;padding:8px;">{{ row.visitors }}</td><td style="text-align:right;padding:8px;">{{ row.views }}</td></tr>
+  {% endfor %}
+</table>
+{% else %}
+<p style="color:#888;">No location data yet &mdash; countries start appearing here with the next visits.</p>
+{% endif %}
+{% if geo.states %}
+<h4 style="margin-bottom:8px;">Top US states</h4>
+<table style="width:100%;border-collapse:collapse;margin-bottom:24px;">
+  <tr><th style="text-align:left;padding:8px;">State</th><th style="text-align:right;padding:8px;">Visitors</th><th style="text-align:right;padding:8px;">Views</th></tr>
+  {% for row in geo.states %}
+  <tr><td style="padding:8px;">{{ row.label }}</td><td style="text-align:right;padding:8px;">{{ row.visitors }}</td><td style="text-align:right;padding:8px;">{{ row.views }}</td></tr>
+  {% endfor %}
+</table>
+{% endif %}
+{% if geo.cities %}
+<h4 style="margin-bottom:8px;">Top cities</h4>
+<table style="width:100%;border-collapse:collapse;margin-bottom:24px;">
+  <tr><th style="text-align:left;padding:8px;">City</th><th style="text-align:right;padding:8px;">Visitors</th><th style="text-align:right;padding:8px;">Views</th></tr>
+  {% for row in geo.cities %}
+  <tr><td style="padding:8px;">{{ row.label }}</td><td style="text-align:right;padding:8px;">{{ row.visitors }}</td><td style="text-align:right;padding:8px;">{{ row.views }}</td></tr>
+  {% endfor %}
+</table>
+{% endif %}
+{% if geo.countries and not (geo.states or geo.cities) %}
+<p style="color:#888;font-size:0.85em;margin-bottom:24px;">Country is flowing. State &amp; city tables appear once region data arrives &mdash; that detail needs Cloudflare&rsquo;s &ldquo;Add visitor location headers&rdquo; transform switched on for the zone (dashboard setting).</p>
+{% endif %}
 {% endblock %}

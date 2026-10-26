@@ -123,7 +123,10 @@ CREATE TABLE IF NOT EXISTS page_views (
     viewed_at TEXT NOT NULL,              -- UTC ISO timestamp
     referrer TEXT,                        -- Referer header (admin traffic stats)
     device TEXT,                          -- coarse UA bucket: iOS/Android/Windows/Mac/Linux/Other
-    sid TEXT                              -- anonymous hm_sid session cookie id
+    sid TEXT,                             -- anonymous hm_sid session cookie id
+    country TEXT,                         -- Cloudflare cf-ipcountry (Oct 26 geo stats); NULL on older rows
+    region TEXT,                          -- cf-ipregion: US state code when resolvable, else CF's region name
+    city TEXT                             -- cf-ipcity (needs CF's visitor-location transform); NULL when absent
 );
 CREATE INDEX IF NOT EXISTS idx_page_views_date ON page_views(viewed_at);
 CREATE TABLE IF NOT EXISTS sponsors (
@@ -439,6 +442,19 @@ def init_db(db_path: Path) -> None:
         for col in ("referrer", "device", "sid"):
             if col not in pvcols:
                 conn.execute(f"ALTER TABLE page_views ADD COLUMN {col} TEXT")
+        # Visitor geography (Dan, Oct 26): country / region / city from
+        # Cloudflare's headers, captured per page view for the /admin
+        # "Visitors by geography" panel. Same startup-ensure pattern —
+        # the request path never runs DDL. Older rows stay NULL (no
+        # backfill is possible); the index is created HERE, after the
+        # columns exist, never in SCHEMA (an index on a not-yet-added
+        # column would fail init on existing DBs).
+        for col in ("country", "region", "city"):
+            if col not in pvcols:
+                conn.execute(f"ALTER TABLE page_views ADD COLUMN {col} TEXT")
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_page_views_country "
+            "ON page_views(country)")
         # HauntMap Social (Phase 1): a pin's owner once a haunter claims
         # it. NULL until claimed; profile "My haunts" reads this column.
         if "owner_user_id" not in cols:
