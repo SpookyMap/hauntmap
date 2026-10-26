@@ -57,6 +57,85 @@
       <small>One song that says who you are — your profile anthem, the
         MySpace way. It plays on click, never autoplay.</small>
     </label>
+    <div class="soc-gtk-edit">
+      <p class="soc-gtk-edit-head">&#x1F383; Get to know me <span class="opt">(all optional — each one shows on your page only if you fill it in)</span></p>
+      <label>Favorite Halloween joke <span class="opt">(140 max)</span>
+        <input type="text" name="fav_joke" maxlength="140"
+               value="{{ profile.fav_joke or '' }}" placeholder="The one that kills every year">
+      </label>
+      <label>Costume this year?
+        <span class="soc-picker">
+          <label class="soc-pick"><input type="radio" name="costume_pick" value="" {% if not profile.costume_pick %}checked{% endif %}> Not saying</label>
+          {% for key, label in gtk_costume_picks.items() %}
+          <label class="soc-pick"><input type="radio" name="costume_pick" value="{{ key }}" {% if profile.costume_pick == key %}checked{% endif %}> {{ label }}</label>
+          {% endfor %}
+        </span>
+      </label>
+      <label>Dressing up as <span class="opt">(if you are)</span>
+        <input type="text" name="costume_as" maxlength="80"
+               value="{{ profile.costume_as or '' }}" placeholder="e.g. A very committed scarecrow">
+      </label>
+      <label>Best Halloween memory <span class="opt">(500 max)</span>
+        <textarea name="best_memory" rows="3" maxlength="500"
+                  placeholder="The night, the house, the scare you'll never forget.">{{ profile.best_memory or '' }}</textarea>
+      </label>
+      <label>My scare tolerance
+        <span class="soc-picker">
+          <label class="soc-pick"><input type="radio" name="scare_tolerance" value="" {% if not profile.scare_tolerance %}checked{% endif %}> Not saying</label>
+          {% for key, (emoji, label) in gtk_scare_meta.items() %}
+          <label class="soc-pick"><input type="radio" name="scare_tolerance" value="{{ key }}" {% if profile.scare_tolerance == key %}checked{% endif %}> {{ emoji }} {{ label }}</label>
+          {% endfor %}
+        </span>
+      </label>
+      <label>What kind of haunter are you?
+        <span class="soc-picker">
+          <label class="soc-pick"><input type="radio" name="haunter_kind" value="" {% if not profile.haunter_kind %}checked{% endif %}> Not saying</label>
+          {% for key, (emoji, label) in gtk_haunter_kinds.items() %}
+          <label class="soc-pick"><input type="radio" name="haunter_kind" value="{{ key }}" {% if profile.haunter_kind == key %}checked{% endif %}> {{ emoji }} {{ label }}</label>
+          {% endfor %}
+        </span>
+      </label>
+      <label>Favorite candy <span class="opt">(60 max)</span>
+        <input type="text" name="candy_fav" maxlength="60"
+               value="{{ profile.candy_fav or '' }}" placeholder="e.g. Full-size anything">
+      </label>
+      <label>Candy you'd trade away <span class="opt">(60 max)</span>
+        <input type="text" name="candy_trade" maxlength="60"
+               value="{{ profile.candy_trade or '' }}" placeholder="e.g. Raisins. Always raisins.">
+      </label>
+      <label>First horror movie you ever saw <span class="opt">(120 max)</span>
+        <input type="text" name="first_horror" maxlength="120"
+               value="{{ profile.first_horror or '' }}" placeholder="The one that started it all">
+      </label>
+      <label>Monster alter ego
+        <span class="soc-picker">
+          <label class="soc-pick"><input type="radio" name="monster_ego" value="" {% if not profile.monster_ego %}checked{% endif %}> Not saying</label>
+          {% for key, (emoji, label) in gtk_monsters.items() %}
+          <label class="soc-pick"><input type="radio" name="monster_ego" value="{{ key }}" {% if profile.monster_ego == key %}checked{% endif %}> {{ emoji }} {{ label }}</label>
+          {% endfor %}
+        </span>
+      </label>
+      <label>My haunt this year — name <span class="opt">(decorators: links to your pin if you've claimed one)</span>
+        <input type="text" name="haunt_name" maxlength="80"
+               value="{{ profile.haunt_name or '' }}" placeholder="e.g. Nightmare on Maple Street">
+      </label>
+      <label>My haunt this year — theme <span class="opt">(80 max)</span>
+        <input type="text" name="haunt_theme" maxlength="80"
+               value="{{ profile.haunt_theme or '' }}" placeholder="e.g. Haunted carnival gone wrong">
+      </label>
+      <label>Spooky season starts
+        <span class="soc-picker">
+          <label class="soc-pick"><input type="radio" name="season_start" value="" {% if not profile.season_start %}checked{% endif %}> Not saying</label>
+          {% for key, label in gtk_season_picks.items() %}
+          <label class="soc-pick"><input type="radio" name="season_start" value="{{ key }}" {% if profile.season_start == key %}checked{% endif %}> {{ label }}</label>
+          {% endfor %}
+        </span>
+      </label>
+      <label>Favorite Halloween song <span class="opt">(120 max — captions your Anthem if you set one)</span>
+        <input type="text" name="fav_song" maxlength="120"
+               value="{{ profile.fav_song or '' }}" placeholder="e.g. This Is Halloween">
+      </label>
+    </div>
     <div class="soc-top8-edit">
       <p class="soc-top8-edit-head">&#x2B50; My Top 8 <span class="opt">(things, not people — your favorite haunts &amp; films)</span></p>
       {% for s in top8_slots %}

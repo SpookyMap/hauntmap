@@ -7433,6 +7433,119 @@ PROFILE_THEMES = {
 }
 DEFAULT_THEME = "midnight"
 
+# "Get to know me" bundle (Dan, Oct 25): optional profile fields that
+# give members something to talk about. Picks store keys; labels and
+# emoji live here so the edit pickers and the profile badges can never
+# drift apart. Scare tolerance reuses the Scare-O-Meter's own scale
+# (SCARE_LEVELS + the labels/emoji the detail-page widget shows).
+GTK_SCARE_META = {
+    "family": ("😊", "Family-friendly"),
+    "spooky": ("👻", "Spooky"),
+    "creepy": ("🧛", "Creepy"),
+    "terrifying": ("😱", "Terrifying"),
+    "extreme": ("💀", "Extreme"),
+}
+GTK_COSTUME_PICKS = {
+    "yes": "Dressing up",
+    "no": "Sitting out",
+    "undecided": "Undecided",
+}
+GTK_HAUNTER_KINDS = {
+    "decorator": ("🎃", "Decorator"),
+    "scare_actor": ("👹", "Scare actor"),
+    "haunt_chaser": ("🗺️", "Haunt chaser"),
+    "party_host": ("🥳", "Party host"),
+    "candy_pro": ("🍬", "Candy pro"),
+}
+GTK_MONSTERS = {
+    "vampire": ("🧛", "Vampire"),
+    "ghost": ("👻", "Ghost"),
+    "werewolf": ("🐺", "Werewolf"),
+    "witch": ("🧙", "Witch"),
+    "zombie": ("🧟", "Zombie"),
+    "skeleton": ("💀", "Skeleton"),
+    "demon": ("😈", "Demon"),
+}
+GTK_SEASON_PICKS = {
+    "sep1": "September 1",
+    "oct1": "October 1",
+    "yearround": "Year-round 🎃",
+}
+# Char caps for the bundle's free-text fields (form key == column).
+GTK_TEXT_CAPS = {
+    "fav_joke": 140, "costume_as": 80, "best_memory": 500,
+    "candy_fav": 60, "candy_trade": 60, "first_horror": 120,
+    "haunt_name": 80, "haunt_theme": 80, "fav_song": 120,
+}
+GTK_PICK_KEYS = {
+    "costume_pick": GTK_COSTUME_PICKS,
+    "scare_tolerance": GTK_SCARE_META,
+    "haunter_kind": GTK_HAUNTER_KINDS,
+    "monster_ego": GTK_MONSTERS,
+    "season_start": GTK_SEASON_PICKS,
+}
+GTK_COLUMNS = tuple(GTK_TEXT_CAPS) + tuple(GTK_PICK_KEYS)
+
+
+def _gtk_view(profile: dict, has_anthem: bool,
+              primary_haunt_id: int | None) -> dict | None:
+    """"Get to know me" as profile.html renders it, or None when the
+    member has set nothing (the section then doesn't render at all, so
+    an unset profile is byte-identical to before the bundle)."""
+    g = profile.get
+    badges = []
+    if g("haunter_kind") in GTK_HAUNTER_KINDS:
+        emoji, label = GTK_HAUNTER_KINDS[g("haunter_kind")]
+        badges.append(f"{emoji} {label}")
+    if g("monster_ego") in GTK_MONSTERS:
+        emoji, label = GTK_MONSTERS[g("monster_ego")]
+        badges.append(f"{emoji} {label}")
+    if g("scare_tolerance") in GTK_SCARE_META:
+        emoji, label = GTK_SCARE_META[g("scare_tolerance")]
+        badges.append(f"Scare tolerance: {emoji} {label}")
+    costume_line = None
+    if g("costume_pick") == "yes":
+        costume_line = "🎭 Dressing up"
+        if g("costume_as"):
+            costume_line += f" as {g('costume_as')}"
+        costume_line += " this year"
+    elif g("costume_pick") == "no":
+        costume_line = "🎭 Sitting out the costume this year"
+    elif g("costume_pick") == "undecided":
+        costume_line = "🎭 Costume this year: still deciding"
+    candy_line = None
+    if g("candy_fav") or g("candy_trade"):
+        parts = []
+        if g("candy_fav"):
+            parts.append(f"Loves {g('candy_fav')}")
+        if g("candy_trade"):
+            parts.append(f"Trades away {g('candy_trade')}")
+        candy_line = "🍬 " + " · ".join(parts)
+    rows = []
+    if g("fav_joke"):
+        rows.append(("Favorite Halloween joke", g("fav_joke"), None))
+    if g("first_horror"):
+        rows.append(("First horror movie I ever saw",
+                     g("first_horror"), None))
+    if g("haunt_name"):
+        haunt_text = g("haunt_name")
+        if g("haunt_theme"):
+            haunt_text += f" — {g('haunt_theme')}"
+        rows.append(("My haunt this year", haunt_text,
+                     f"/d/{primary_haunt_id}" if primary_haunt_id else None))
+    if g("season_start") in GTK_SEASON_PICKS:
+        rows.append(("Spooky season starts",
+                     GTK_SEASON_PICKS[g("season_start")], None))
+    if g("fav_song") and not has_anthem:
+        # With an anthem the song captions the player instead (profile.html).
+        rows.append(("Favorite Halloween song", g("fav_song"), None))
+    memory = g("best_memory") or None
+    if not (badges or costume_line or candy_line or rows or memory):
+        return None
+    return {"badges": badges, "costume_line": costume_line,
+            "candy_line": candy_line, "rows": rows, "memory": memory}
+
+
 # Frank — the official HauntSocial host (the MySpace "Tom" lesson:
 # nobody lands in an empty room). A normal member row flagged
 # is_official; no admin powers, no special routes.
@@ -8090,6 +8203,9 @@ def _profile_context(request: Request, handle: str, member: dict | None,
                 "SELECT 1 FROM blocks WHERE blocker_id = ? AND blocked_id = ?",
                 (user["id"], member["id"])).fetchone() is not None
     display = profile.get("display_name") or user["handle"]
+    embed = _music_embed(profile.get("music_embed_url"))
+    gtk = _gtk_view(profile, bool(embed),
+                    haunts[0]["id"] if haunts else None)
     banner = BANNER_PRESETS.get(profile.get("banner_choice") or "",
                                  BANNER_PRESETS[DEFAULT_BANNER])
     if profile.get("banner_choice") == FRANK_BANNER_CHOICE:
@@ -8109,7 +8225,8 @@ def _profile_context(request: Request, handle: str, member: dict | None,
         "top8": top8,
         "treat_stickers": TREAT_STICKERS,
         "member_since": _member_since_label(user["created_at"]),
-        "embed": _music_embed(profile.get("music_embed_url")),
+        "embed": embed,
+        "gtk": gtk,
         "photos": photos,
         "haunts": haunts,
         "comments": comments,
@@ -8323,6 +8440,11 @@ def _edit_context(request: Request, member: dict, profile: dict,
             "top8_slots": _top8_edit_slots(member["id"]),
             "films": _film_catalog_titles(),
             "photos": photos, "photo_max": PROFILE_PHOTO_MAX,
+            "gtk_costume_picks": GTK_COSTUME_PICKS,
+            "gtk_scare_meta": GTK_SCARE_META,
+            "gtk_haunter_kinds": GTK_HAUNTER_KINDS,
+            "gtk_monsters": GTK_MONSTERS,
+            "gtk_season_picks": GTK_SEASON_PICKS,
             "error": error}
 
 
@@ -8365,7 +8487,21 @@ async def profile_edit_submit(request: Request,
                               town: str = Form(""), current_city: str = Form(""),
                               avatar_choice: str = Form(""),
                               banner_choice: str = Form(""), theme: str = Form(""),
-                              music_embed_url: str = Form("")):
+                              music_embed_url: str = Form(""),
+                              fav_joke: str = Form(""),
+                              costume_pick: str = Form(""),
+                              costume_as: str = Form(""),
+                              best_memory: str = Form(""),
+                              scare_tolerance: str = Form(""),
+                              haunter_kind: str = Form(""),
+                              candy_fav: str = Form(""),
+                              candy_trade: str = Form(""),
+                              first_horror: str = Form(""),
+                              monster_ego: str = Form(""),
+                              haunt_name: str = Form(""),
+                              haunt_theme: str = Form(""),
+                              season_start: str = Form(""),
+                              fav_song: str = Form("")):
     member = current_member(request)
     if not member:
         return RedirectResponse("/login?next=/profile/edit", status_code=303)
@@ -8373,7 +8509,20 @@ async def profile_edit_submit(request: Request,
               "town": town.strip(), "current_city": current_city.strip(),
               "avatar_choice": avatar_choice,
               "banner_choice": banner_choice, "theme": theme,
-              "music_embed_url": music_embed_url.strip()}
+              "music_embed_url": music_embed_url.strip(),
+              "fav_joke": fav_joke.strip(),
+              "costume_pick": costume_pick, "costume_as": costume_as.strip(),
+              "best_memory": best_memory.strip(),
+              "scare_tolerance": scare_tolerance,
+              "haunter_kind": haunter_kind,
+              "candy_fav": candy_fav.strip(),
+              "candy_trade": candy_trade.strip(),
+              "first_horror": first_horror.strip(),
+              "monster_ego": monster_ego,
+              "haunt_name": haunt_name.strip(),
+              "haunt_theme": haunt_theme.strip(),
+              "season_start": season_start,
+              "fav_song": fav_song.strip()}
 
     def fail(msg: str):
         return templates.TemplateResponse(
@@ -8394,6 +8543,25 @@ async def profile_edit_submit(request: Request,
         return fail("Pick a banner from the set.")
     if theme and theme not in PROFILE_THEMES:
         return fail("Pick a theme from the set.")
+    # "Get to know me" bundle: free texts cap like town/bio do; picks
+    # must come from the preset sets (or stay blank).
+    gtk_cap_msgs = {
+        "fav_joke": "Favorite jokes cap at 140 characters.",
+        "costume_as": "Costumes cap at 80 characters.",
+        "best_memory": "Best memories cap at 500 characters.",
+        "candy_fav": "Favorite candy caps at 60 characters.",
+        "candy_trade": "Trade-away candy caps at 60 characters.",
+        "first_horror": "First horror movies cap at 120 characters.",
+        "haunt_name": "Haunt names cap at 80 characters.",
+        "haunt_theme": "Haunt themes cap at 80 characters.",
+        "fav_song": "Favorite songs cap at 120 characters.",
+    }
+    for gtk_key, gtk_cap in GTK_TEXT_CAPS.items():
+        if len(values[gtk_key]) > gtk_cap:
+            return fail(gtk_cap_msgs[gtk_key])
+    for gtk_key, gtk_set in GTK_PICK_KEYS.items():
+        if values[gtk_key] and values[gtk_key] not in gtk_set:
+            return fail("Pick from the set, or leave it blank.")
     music = values["music_embed_url"]
     if music and _music_embed(music) is None:
         return fail("That link can't be embedded — use a Spotify, SoundCloud, "
@@ -8433,12 +8601,16 @@ async def profile_edit_submit(request: Request,
                 return fail(f"Top 8 slot {i}: film titles cap at 120 "
                             "characters.")
             top8_rows.append((i, "film", None, title))
+    gtk_cols = ", ".join(GTK_COLUMNS)
+    gtk_marks = ", ".join("?" for _ in GTK_COLUMNS)
+    gtk_sets = ", ".join(f"{c} = excluded.{c}" for c in GTK_COLUMNS)
+    gtk_params = tuple(values[c] or None for c in GTK_COLUMNS)
     with get_conn(DB_PATH) as conn:
         conn.execute(
             "INSERT INTO profiles (user_id, display_name, bio, town, "
             "current_city, avatar_choice, banner_choice, theme, "
-            "music_embed_url, updated_at) "
-            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) "
+            f"music_embed_url, {gtk_cols}, updated_at) "
+            f"VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, {gtk_marks}, ?) "
             "ON CONFLICT(user_id) DO UPDATE SET display_name = excluded.display_name, "
             "bio = excluded.bio, town = excluded.town, "
             "current_city = excluded.current_city, "
@@ -8446,12 +8618,14 @@ async def profile_edit_submit(request: Request,
             "banner_choice = excluded.banner_choice, "
             "theme = excluded.theme, "
             "music_embed_url = excluded.music_embed_url, "
+            f"{gtk_sets}, "
             "updated_at = excluded.updated_at",
             (member["id"], values["display_name"] or member["handle"],
              values["bio"] or None, values["town"] or None,
              values["current_city"] or None,
              avatar_choice or None, banner_choice or None, theme or None,
-             music or None, datetime.now(timezone.utc).isoformat()))
+             music or None) + gtk_params +
+            (datetime.now(timezone.utc).isoformat(),))
         conn.execute("DELETE FROM profile_top8 WHERE user_id = ?",
                      (member["id"],))
         conn.executemany(

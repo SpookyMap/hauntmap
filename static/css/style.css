@@ -4504,3 +4504,46 @@ a.soc-top8-card:hover { border-color: var(--accent2); }
    inner .sponsor-tier tag ("FEATURED SPONSOR") is a separate rule
    that never carried a text-shadow — unchanged. */
 .sponsor-section h2 { text-shadow: none; }
+
+/* ============ z140: "GET TO KNOW ME" PROFILE BUNDLE (Dan, Oct 25) ====
+   Dan's picks from the fun-fields menu (items 1–11 + 13, not #12):
+   optional HauntSocial profile fields, edited on /profile/edit under
+   a "Get to know me" heading and rendered as ONE section on the
+   profile — badge row for the picks (haunter kind / monster ego /
+   scare tolerance), labeled rows for the short texts, a quote block
+   for the best Halloween memory, and the favorite song captioning
+   the Anthem player. The section exists only when something is set,
+   so an untouched profile renders exactly as before. Passport
+   stamps (#11) are NOT here: passport progress is device-local
+   localStorage (hm_seen) with no account tie-in — see the ship
+   report for the account-linking work it needs. All colors ride the
+   theme variables, like every .soc-* block before it. */
+.soc-anthem-song { color: var(--muted); margin: 0.45rem 0 0;
+  font-size: 0.92rem; }
+.soc-gtk-badges { display: flex; flex-wrap: wrap; gap: 0.45rem;
+  margin: 0 0 0.55rem; }
+.soc-badge { display: inline-flex; align-items: center; gap: 0.3rem;
+  background: var(--bg2); border: 1px solid #33254f; border-radius: 999px;
+  padding: 0.32rem 0.75rem; font-weight: 600; font-size: 0.9rem; }
+.soc-gtk-line { margin: 0.3rem 0; font-weight: 600; }
+.soc-gtk-rows { margin: 0.6rem 0 0; }
+.soc-gtk-row { display: flex; gap: 0.7rem; padding: 0.3rem 0;
+  border-top: 1px dashed #33254f; }
+.soc-gtk-row dt { flex: 0 0 11.5rem; color: var(--muted);
+  font-size: 0.88rem; font-weight: 600; }
+.soc-gtk-row dd { margin: 0; flex: 1; min-width: 0;
+  overflow-wrap: anywhere; }
+.soc-gtk-row dd a { color: var(--accent2); font-weight: 700; }
+@media (max-width: 560px) {
+  .soc-gtk-row { flex-direction: column; gap: 0.1rem; }
+  .soc-gtk-row dt { flex: none; }
+}
+.soc-gtk-memory { margin: 0.8rem 0 0; background: var(--card);
+  border: 1px solid #33254f; border-left: 4px solid var(--accent);
+  border-radius: var(--radius); padding: 0.75rem 0.95rem; }
+.soc-gtk-memory p { margin: 0; font-style: italic; white-space: pre-wrap;
+  overflow-wrap: anywhere; }
+.soc-gtk-memory footer { margin-top: 0.45rem; color: var(--muted);
+  font-size: 0.85rem; font-style: normal; }
+.soc-gtk-edit { margin-top: 1rem; }
+.soc-gtk-edit-head { font-weight: 700; margin: 0 0 0.5rem; }

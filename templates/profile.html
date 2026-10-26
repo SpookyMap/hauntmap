@@ -47,6 +47,31 @@
     <iframe src="{{ embed.src }}" width="100%" height="{{ embed.height }}" frameborder="0"
             loading="lazy" allow="encrypted-media; fullscreen; picture-in-picture"
             allowfullscreen title="{{ display_name }}'s anthem"></iframe>
+    {% if profile.fav_song %}<p class="soc-anthem-song">&#x1F3B5; Favorite Halloween song: {{ profile.fav_song }}</p>{% endif %}
+  </section>
+  {% endif %}
+
+  {% if gtk %}
+  <section class="soc-gtk">
+    <h2>&#x1F383; Get to know me</h2>
+    {% if gtk.badges %}
+    <p class="soc-gtk-badges">{% for b in gtk.badges %}<span class="soc-badge">{{ b }}</span>{% endfor %}</p>
+    {% endif %}
+    {% if gtk.costume_line %}<p class="soc-gtk-line">{{ gtk.costume_line }}</p>{% endif %}
+    {% if gtk.candy_line %}<p class="soc-gtk-line">{{ gtk.candy_line }}</p>{% endif %}
+    {% if gtk.rows %}
+    <dl class="soc-gtk-rows">
+      {% for label, text, url in gtk.rows %}
+      <div class="soc-gtk-row"><dt>{{ label }}</dt><dd>{% if url %}<a href="{{ url }}">{{ text }}</a>{% else %}{{ text }}{% endif %}</dd></div>
+      {% endfor %}
+    </dl>
+    {% endif %}
+    {% if gtk.memory %}
+    <blockquote class="soc-gtk-memory">
+      <p>{{ gtk.memory }}</p>
+      <footer>— Best Halloween memory</footer>
+    </blockquote>
+    {% endif %}
   </section>
   {% endif %}
 

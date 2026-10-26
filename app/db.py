@@ -205,6 +205,23 @@ CREATE TABLE IF NOT EXISTS profiles (
     theme TEXT,                           -- HauntSocial preset theme key
     music_embed_url TEXT,                 -- member-supplied Spotify/SC/YT URL
     website_url TEXT,
+    -- "Get to know me" bundle (Dan, Oct 25): all optional, edit-page
+    -- only, rendered on the profile only when set. Picks store keys
+    -- validated against the GTK_* dicts in app/main.py.
+    fav_joke TEXT,                        -- favorite Halloween joke (140)
+    costume_pick TEXT,                    -- yes | no | undecided
+    costume_as TEXT,                      -- dressing up as… (80)
+    best_memory TEXT,                     -- best Halloween memory (500)
+    scare_tolerance TEXT,                 -- a SCARE_LEVELS key
+    haunter_kind TEXT,                    -- decorator | scare_actor | …
+    candy_fav TEXT,                       -- favorite candy (60)
+    candy_trade TEXT,                     -- candy they'd trade away (60)
+    first_horror TEXT,                    -- first horror movie seen (120)
+    monster_ego TEXT,                      -- vampire | ghost | werewolf | …
+    haunt_name TEXT,                      -- my haunt this year: name (80)
+    haunt_theme TEXT,                     -- my haunt this year: theme (80)
+    season_start TEXT,                    -- sep1 | oct1 | yearround
+    fav_song TEXT,                        -- favorite Halloween song (120)
     updated_at TEXT
 );
 CREATE TABLE IF NOT EXISTS sessions (
@@ -404,6 +421,15 @@ def init_db(db_path: Path) -> None:
             conn.execute("ALTER TABLE profiles ADD COLUMN avatar_path TEXT")
         if pcols and "current_city" not in pcols:
             conn.execute("ALTER TABLE profiles ADD COLUMN current_city TEXT")
+        # "Get to know me" bundle columns (Dan, Oct 25) — same pattern.
+        for gtk_col in ("fav_joke", "costume_pick", "costume_as",
+                        "best_memory", "scare_tolerance", "haunter_kind",
+                        "candy_fav", "candy_trade", "first_horror",
+                        "monster_ego", "haunt_name", "haunt_theme",
+                        "season_start", "fav_song"):
+            if pcols and gtk_col not in pcols:
+                conn.execute(
+                    f"ALTER TABLE profiles ADD COLUMN {gtk_col} TEXT")
         wcols = {r["name"] for r in conn.execute("PRAGMA table_info(wall_comments)").fetchall()}
         if wcols and "sticker" not in wcols:
             conn.execute("ALTER TABLE wall_comments ADD COLUMN sticker TEXT")
