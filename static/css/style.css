@@ -5178,3 +5178,30 @@ a.game-card-featured:hover { border-color: #ff7b1c; }
    centered as a unit) is unchanged — vertical margins only. */
 .vt-tv-strip-bottom { margin: 2.85rem 0 0; }
 main.wrap:has(> .vt-tv-strip-bottom) { padding-bottom: 0; }
+
+/* ============ z154: HOOK RED WORDS -> EVENTS & PARTIES LETTER COLORS (Dan, Oct 26) ============
+   Dan: "use the color letters from Events & Parties to jazz up the top
+   header hook — instead of red letters let's use alternating colors to
+   match the colors in 'Events & Parties' — for the red letters on the
+   header only."
+   Palette sampled programmatically from the header artwork itself
+   (static/img/events-btn-4-borderless.gif): k-means over the letter
+   pixels of frames 0-2 (alpha>160, value>60; shading/shadow clusters
+   dropped) resolves to exactly three letter families — lavender
+   #C9A7FC (largest cluster), red #E01E26, orange #FC7518 — listed here
+   in order of first appearance across "EVENTS & PARTIES" (frame 0:
+   E lavender, V red, & orange). Every glyph of the hook's old red runs
+   — Halloween, map, Build Your Night (incl. its .hook-dot period) and
+   the whole THE HAUNT STARTS HERE closer — is now wrapped in .ep1 /
+   .ep2 / .ep3 letter spans cycling lavender -> red -> orange
+   continuously across the hook, each word inside an .epw nowrap wrapper
+   so line-breaking behaves exactly as the old single-span words did.
+   Direct rules on the letter spans supersede the per-band .hw-red /
+   .tag-b / .tag-c / .tag-d colors they used to inherit (incl. the phone
+   band's lavender closer split). Untouched: the cream words, the
+   lavender NEW HAUNTS DAILY!!! (.tag-a), wording, sizes, fonts, and
+   everything outside the header hook. */
+.header-band .header-hook .epw { white-space: nowrap; }
+.header-band .header-hook .ep1 { color: #c9a7fc; }
+.header-band .header-hook .ep2 { color: #e01e26; }
+.header-band .header-hook .ep3 { color: #fc7518; }
