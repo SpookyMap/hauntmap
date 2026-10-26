@@ -87,6 +87,32 @@
 .art-feature .tiktok-embed { margin: 0 auto; }
 .art-feature-caption { margin: 0.65rem 0 0.25rem; }
 .art-feature-desc { margin: 0; font-size: 0.9rem; opacity: 0.85; }
+/* Fan-art gallery layout (STAGED fix, not shipped): these .contest-* rules
+   exist ONLY inside costume_contest.html's page-local <style>, so /fan-art
+   rendered with NO grid/card/img sizing at all — images at natural size.
+   Mirrors the costume page's tokens; the img rule differs on purpose:
+   a capped CONTAIN stage (whole artwork visible, never cropped — Dan's
+   Oct 22 call) instead of the costume page's 220px cover crop. */
+.contest-wrap { max-width: 900px; margin: 0 auto; padding: 0.5rem; }
+.contest-title { text-align: center; margin: 0.6rem 0 0.4rem; }
+.contest-sub { text-align: center; color: #c9bce8; max-width: 640px; margin: 0 auto 1.2rem; line-height: 1.5; }
+.contest-error { background: #4a1520; color: #ffb3c1; padding: 0.6rem 0.9rem; border-radius: 8px; text-align: center; }
+.contest-form { background: #17122b; border: 1px solid #372b5e; border-radius: 12px; padding: 1rem 1.2rem; max-width: 480px; margin: 0 auto 1.6rem; display: grid; gap: 0.7rem; }
+.contest-form h2 { margin: 0; font-size: 1.1rem; }
+.contest-form label { display: grid; gap: 0.3rem; font-size: 0.9rem; color: #c9bce8; }
+.contest-form input { padding: 0.5rem 0.6rem; border-radius: 8px; border: 1px solid #372b5e; background: #0d0a1a; color: #e8e6e3; }
+.contest-gallery-title { text-align: center; }
+.contest-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 0.9rem; }
+.contest-card { background: #17122b; border: 1px solid #372b5e; border-radius: 12px; overflow: hidden; }
+.contest-card img { width: 100%; height: 340px; object-fit: contain; background: #0d0a1a; display: block; }
+.contest-card-body { padding: 0.6rem 0.7rem 0.8rem; display: grid; gap: 0.3rem; }
+.contest-by { color: #9a8fb8; font-size: 0.85rem; }
+.contest-vote { background: #241a44; color: #e8e6e3; border: 1px solid #4a3a85; border-radius: 999px; padding: 0.4rem 0.7rem; cursor: pointer; font-weight: 700; }
+.contest-vote.voted { background: #7a1f3d; border-color: #ff5c8a; }
+.contest-empty { text-align: center; color: #9a8fb8; }
+@media (max-width: 560px) {
+  .contest-card img { height: 300px; }
+}
 </style>
 <script>
 document.querySelectorAll('.fanart-vote').forEach(function (btn) {
