@@ -5,7 +5,16 @@
 <h1>&#x1F383; Halloween Music</h1>
 <p class="lede">The soundtrack of fright night. Press play on the playlists while you build your tour, watch the classic videos, and meet the artists who own the season.</p>
 
-<h2 class="music-h2">&#x2B50; Featured Set</h2>
+<nav class="movies-subnav" aria-label="Music sections">
+  <a href="#featured">&#x2B50; Featured Set</a>
+  <a href="#spotify">&#x1F3A7; Spotify Playlists</a>
+  <a href="#radio">&#x1F4FB; Live Radio</a>
+  <a href="#classics">&#x1F4FA; Classic Videos</a>
+  <a href="#performances">&#x1F3A4; Performances</a>
+  <a href="#icons">&#x1F451; Icons &amp; Pop</a>
+</nav>
+
+<h2 class="music-h2" id="featured">&#x2B50; Featured Set</h2>
 <p>A full-length EDM, dance &amp; house session from our friends at {{ yt_spotlight.channel }} — the ZombieSquad mix, over two hours of it. Tap the cover to play.</p>
 <div class="yt-feature">
   <button type="button" class="yt-facade" data-yt="{{ yt_spotlight.id }}" aria-label="Play {{ yt_spotlight.title }}">
@@ -16,7 +25,7 @@
   <p class="yt-meta">{{ yt_spotlight.meta }}</p>
 </div>
 
-<h2 class="music-h2">&#x1F3A7; Listen on Spotify</h2>
+<h2 class="music-h2" id="spotify">&#x1F3A7; Listen on Spotify</h2>
 <p>Three Halloween playlists, ready to go. Logged out, Spotify plays previews — sign in inside a player for the full tracks.</p>
 <div class="music-spotify-grid">
   {% for p in playlists %}
@@ -55,7 +64,7 @@
   </figure>
 </div>
 
-<h2 class="music-h2">&#x1F4FA; Halloween Classics on YouTube</h2>
+<h2 class="music-h2" id="classics">&#x1F4FA; Halloween Classics on YouTube</h2>
 <p>Tap any cover to play the official video right here.</p>
 <div class="yt-feature">
   <button type="button" class="yt-facade" data-yt="{{ yt_featured.id }}" aria-label="Play {{ yt_featured.title }}">
