@@ -5053,3 +5053,72 @@ a.game-card-featured:hover { border-color: #ff7b1c; }
      size that fits its content-width pill. */
   .header-events-col a.nav-join-member .nav-join-label { font-size: 0.58rem; }
 }
+
+/* ============ z151: HEADER TIGHTENING + BIGGER NAV DISCS (Dan, Oct 26) ============
+   Four asks from Dan's laptop photo of the z150 header:
+   (1) Tighten the header margins again — top/bottom padding trimmed
+       and the band→nav gap closed, so the header hugs its content.
+   (2) The JOIN HAUNTSOCIAL pill under the Events GIF goes a little
+       smaller (~13%: padding, label, caption; the member @handle
+       scales the same way). Its width still matches the GIF exactly —
+       the z150 composed column is untouched; only the pill's height
+       and type shrink, and the GIF→pill gap tightens with it.
+   (3) The blue border line under the block moves UP: the shorter
+       column (smaller pill + tighter gap) plus the trimmed bottom
+       padding put the line right under the content, and the bigger
+       discs fill most of the row's old dead air beneath them.
+   (4) The ten main nav discs + labels scale ×1.3: laptop 28px art /
+       0.72rem labels → 36px / 0.93rem; the 1000–1199 band's 27px /
+       0.70rem pair → 35px / 0.91rem; 761–999's 26px / 0.67rem pair →
+       34px / 0.87rem. Phone portrait discs already fill their grid
+       columns edge-to-edge (z133: width 100%, max 46px) — the largest
+       that fit with no scroll — so the phone takes the tightening and
+       the smaller pill and keeps its max-fit discs. Compact landscape
+       keeps its slim row: pill padding only. */
+/* --- (2) the column gap + pill padding in the seat (all contexts) --- */
+.header-events-col { gap: 0.30rem; }
+.site-header.v2 .header-nav .header-events-col a.nav-join { padding: 0.28rem 0.48rem; }
+/* --- (2) member @handle scales with the pill (cqw of the pill) --- */
+.header-events-col a.nav-join-member .nav-join-label { font-size: min(0.99rem, 5.6cqw); }
+@media (orientation: landscape) and (max-height: 500px) {
+  /* No size container in the slim row (z150): keep the handle on a
+     fixed size there, scaled down with the rest of the pill. */
+  .header-events-col a.nav-join-member .nav-join-label { font-size: 0.51rem; }
+}
+@media (min-width: 761px) and (min-height: 501px) {
+  /* (1)+(3) tighter shell: less padding, no dead gap above the nav */
+  .site-header.v2 { padding-top: 0.16rem; padding-bottom: 0.10rem; }
+  .site-header.v2 .header-nav { margin-top: 0; padding-top: 0; }
+  /* (4) discs ×1.3 — laptop band */
+  .site-header.v2 .header-nav a.navbtn { font-size: 0.93rem; gap: 0.25rem; }
+  .site-header.v2 .header-nav a.navbtn span { font-size: 0.93rem; }
+  .site-header.v2 .header-nav a.navbtn img { width: 36px; height: 36px; }
+  /* (2) smaller pill: tighter padding, label + caption scaled down */
+  .site-header.v2 .header-nav .header-events-col a.nav-join { padding: 0.24rem 0.35rem; }
+  .header-events-col a.nav-join:not(.nav-join-member) .nav-join-label { font-size: 0.585rem; }
+  .header-events-col a.nav-join .nav-join-tag { font-size: 3.75cqw; }
+}
+@media (min-width: 1000px) and (max-width: 1199px) and (min-height: 501px) {
+  /* (4) the sidebar-narrowed band scales its own 27px / 0.70rem pair */
+  .site-header.v2 .header-nav a.navbtn { font-size: 0.91rem; }
+  .site-header.v2 .header-nav a.navbtn span { font-size: 0.91rem; }
+  .site-header.v2 .header-nav a.navbtn img { width: 35px; height: 35px; }
+}
+@media (min-width: 761px) and (max-width: 999px) and (min-height: 501px) {
+  .site-header.v2 .header-nav a.navbtn { font-size: 0.87rem; }
+  .site-header.v2 .header-nav a.navbtn span { font-size: 0.87rem; }
+  .site-header.v2 .header-nav a.navbtn img { width: 34px; height: 34px; }
+}
+/* --- phone portrait: tightening + smaller pill; discs stay max-fit --- */
+@media (max-width: 760px) and (orientation: portrait) {
+  .site-header.v2 { padding-top: 0.19rem; padding-bottom: 0.14rem; }
+  .site-header.v2 .header-nav { margin-top: 0; padding-top: 0; }
+  .site-header.v2 .header-nav .header-events-col { gap: 0.28rem; }
+  .site-header.v2 .header-nav .header-events-col a.nav-join { padding: 0.24rem 0.35rem; }
+  /* The anon label keeps z133's 0.58rem on phone: its Eater brand
+     words fall apart below ~8.9px in Chromium rasterization
+     (measured: 0.51rem and 0.55rem labels both render sliced glyphs;
+     0.58rem is clean). The phone pill still shrinks ~10% overall
+     via the tighter padding above + the smaller caption here. */
+  .header-events-col a.nav-join .nav-join-tag { font-size: 0.46rem; }
+}
