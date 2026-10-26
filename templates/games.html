@@ -1,22 +1,63 @@
 {% extends "base.html" %}
 {% block head %}
 <script src="/static/js/portal_games.js?v=20261026z145" defer></script>
+<style>
+/* /games section-nav buttons (Dan, Oct 26): the two full-width banner
+   panels (HauntMap Games / The Halloween Arcade) become one compact
+   pair of side-by-side buttons that jump to their sections. Page-scoped
+   on purpose — do not move to style.css. */
+html { scroll-behavior: smooth; }
+.games-sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+.games-nav { display: flex; gap: 0.7rem; margin: 0.4rem 0 1.4rem; }
+.games-nav-btn { flex: 1 1 0; min-width: 0; display: flex; align-items: center; gap: 0.6rem; padding: 0.6rem 0.8rem; border-radius: 999px; text-decoration: none; background: linear-gradient(180deg, #10222e, #0a161d); border: 1.5px solid var(--accent2); color: var(--ink); box-shadow: 0 0 10px rgba(87, 168, 255, 0.35), inset 0 0 8px rgba(87, 168, 255, 0.12); transition: transform .15s, box-shadow .15s; }
+.games-nav-btn:hover { transform: translateY(-1px); box-shadow: 0 0 16px rgba(87, 168, 255, 0.55), inset 0 0 8px rgba(87, 168, 255, 0.18); }
+.games-nav-btn--arcade { border-color: var(--accent); box-shadow: 0 0 10px rgba(255, 123, 28, 0.35), inset 0 0 8px rgba(255, 123, 28, 0.12); }
+.games-nav-btn--arcade:hover { box-shadow: 0 0 16px rgba(255, 123, 28, 0.55), inset 0 0 8px rgba(255, 123, 28, 0.18); }
+.gnb-icon { font-size: 1.35rem; line-height: 1; flex: 0 0 auto; }
+.gnb-text { display: flex; flex-direction: column; min-width: 0; }
+.gnb-label { font-weight: 800; font-size: 0.98rem; line-height: 1.2; color: var(--ink); }
+.gnb-sub { font-size: 0.74rem; line-height: 1.25; color: var(--muted); }
+.games-sec { scroll-margin-top: 76px; }
+.games-sec-head { font-size: 1.3rem; margin: 1.4rem 0 0.2rem; color: var(--ink); }
+@media (max-width: 520px) {
+  .games-nav { gap: 0.5rem; }
+  .games-nav-btn { padding: 0.55rem 0.6rem; gap: 0.45rem; }
+  .gnb-icon { font-size: 1.15rem; }
+  .gnb-label { font-size: 0.86rem; }
+  .gnb-sub { font-size: 0.68rem; }
+}
+</style>
 {% endblock %}
 {% block content %}
-<div class="hero-intro">
-  <h1>&#x1F3AE; HauntMap Games</h1>
-  <p>Play with the haunts. Vote, rate, and crown the best Halloween displays anywhere.</p>
+<h1 class="games-sr-only">HauntMap Games</h1>
+
+{# SECTION NAV (Dan, Oct 26) — two compact buttons side by side replace
+   the old full-width banner panels. Each jumps to its section below:
+   the partner arcade shelf (first on the page, per Dan's order) and
+   HauntMap's own games under it. #}
+<div class="games-nav">
+  <a class="games-nav-btn" href="#hauntmap-games">
+    <span class="gnb-icon" aria-hidden="true">&#x1F3AE;</span>
+    <span class="gnb-text">
+      <span class="gnb-label">HauntMap Games</span>
+      <span class="gnb-sub">Ghost Maze &amp; our own games</span>
+    </span>
+  </a>
+  <a class="games-nav-btn games-nav-btn--arcade" href="#halloween-arcade">
+    <span class="gnb-icon" aria-hidden="true">&#x1F383;</span>
+    <span class="gnb-text">
+      <span class="gnb-label">The Halloween Arcade</span>
+      <span class="gnb-sub">Free partner games &mdash; tap &amp; play</span>
+    </span>
+  </a>
 </div>
 
 {# PORTAL CATALOG (Dan, Oct 26) — GameDistribution partner games under
    their publisher embed program. Click-to-load facades only: cover
    art + Play; portal_games.js swaps in the iframe on tap, one game at
-   a time. Ghost Maze above stays the featured hero — this section is
-   the "more games" shelf below it. #}
-<div class="hero-intro portal-head">
-  <h2>&#x1F383; The Halloween Arcade</h2>
-  <p>Free-to-play favorites from our game partners. Tap a cover and the game loads right here &mdash; no downloads, no leaving the haunt.</p>
-</div>
+   a time. Dan's order: this shelf leads /games, Ghost Maze below it. #}
+<section class="games-sec" id="halloween-arcade">
+<h2 class="games-sec-head">&#x1F383; The Halloween Arcade</h2>
 
 <div class="portal-grid">
   {% for g in portal_games %}
@@ -34,6 +75,10 @@
   {% endfor %}
 </div>
 <p class="portal-note">Partner games are hosted by GameDistribution and the ads inside them are theirs &mdash; everything else on this page (Ghost Maze included) is 100% HauntMap.</p>
+</section>
+
+<section class="games-sec" id="hauntmap-games">
+<h2 class="games-sec-head">&#x1F3AE; HauntMap Games</h2>
 
 <div class="games-grid">
   <a class="game-card game-card-featured" href="/games/ghost-maze">
@@ -79,5 +124,6 @@
     <span class="game-play">Browse the gallery &rarr;</span>
   </a>
 </div>
+</section>
 
 {% endblock %}
