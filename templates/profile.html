@@ -75,6 +75,18 @@
   </section>
   {% endif %}
 
+  {% if passport %}
+  <section class="soc-passport">
+    <h2>&#x1F6C2; Haunt Passport</h2>
+    <p class="soc-passport-total">{{ passport.total }} haunt{{ '' if passport.total == 1 else 's' }} stamped</p>
+    <ul class="soc-passport-list">
+      {% for s in passport.recent %}
+      <li><a href="/d/{{ s.entry_id }}">{{ s.title }}</a>{% if s.town %} <span class="soc-passport-town">{{ s.town }}</span>{% endif %}</li>
+      {% endfor %}
+    </ul>
+  </section>
+  {% endif %}
+
   {% if top8 %}
   <section class="soc-top8">
     <h2>&#x2B50; My Top 8</h2>

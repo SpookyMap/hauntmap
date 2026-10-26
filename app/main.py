@@ -5379,6 +5379,101 @@ def api_passport_data():
     return resp
 
 
+# ------------------------------------------------- Passport → account (#11)
+#
+# The passport above is deliberately account-free: hm_seen never
+# leaves the visitor's device. HauntSocial profiles, though, want the
+# collection as social proof (Dan's pick #11, Oct 25) — and a member's
+# stamps can only be real if the account actually holds them. So a
+# SIGNED-IN member's browser union-merges its device set into
+# passport_stamps via the endpoint below (see the member-only script
+# in base.html). Anonymous traffic is untouched: no endpoint call, no
+# rows, no behavior change.
+
+# One sync payload's cap. The client itself keeps at most 3000 ids in
+# hm_seen (base.html), so a longer list is never legitimate.
+PASSPORT_SYNC_MAX = 3000
+# Stamps shown on the profile block (the total counts all of them).
+PASSPORT_PROFILE_RECENT = 6
+
+
+@app.post("/api/passport/sync")
+async def api_passport_sync(request: Request):
+    """Union-merge a member's device passport set into their account.
+
+    Body: {ids: [...]} — the client's current hm_seen list. Ids are
+    de-duped, capped at PASSPORT_SYNC_MAX, and validated against
+    `entries` in ONE query (bogus ids drop out); the merge itself is a
+    single executemany of INSERT OR IGNORE in one transaction — never
+    a delete, so devices union instead of overwriting each other.
+    Requires a member session: anonymous callers get a 401 and nothing
+    is written. Returns {ok, added, total} for the account."""
+    member = current_member(request)
+    if member is None:
+        return JSONResponse(
+            {"error": "Sign in to sync your passport."}, status_code=401)
+    try:
+        data = await request.json()
+    except Exception:
+        data = {}
+    raw = data.get("ids") if isinstance(data, dict) else None
+    ids: list[int] = []
+    seen_ids: set[int] = set()
+    for x in raw or []:
+        try:
+            i = int(x)
+        except (TypeError, ValueError):
+            continue
+        if i > 0 and i not in seen_ids:
+            seen_ids.add(i)
+            ids.append(i)
+    ids = ids[:PASSPORT_SYNC_MAX]
+    now = datetime.now(timezone.utc).isoformat()
+    with get_conn(DB_PATH) as conn:
+        before = conn.execute(
+            "SELECT COUNT(*) AS n FROM passport_stamps WHERE user_id = ?",
+            (member["id"],)).fetchone()["n"]
+        if ids:
+            ph = ",".join("?" * len(ids))
+            valid = {r["id"] for r in conn.execute(
+                f"SELECT id FROM entries WHERE id IN ({ph})", ids)}
+            rows = [(member["id"], i, now) for i in ids if i in valid]
+            if rows:
+                conn.executemany(
+                    "INSERT OR IGNORE INTO passport_stamps "
+                    "(user_id, entry_id, stamped_at) VALUES (?, ?, ?)",
+                    rows)
+                conn.commit()
+        total = conn.execute(
+            "SELECT COUNT(*) AS n FROM passport_stamps WHERE user_id = ?",
+            (member["id"],)).fetchone()["n"]
+    return JSONResponse({"ok": True, "added": total - before, "total": total})
+
+
+def _passport_stamps_view(conn, user_id: int) -> dict | None:
+    """Profile Haunt Passport block data for a member: total stamp
+    count + the most recent few (title/town for the link list), or
+    None when the member has no visible stamps (block hidden). Only
+    visible pins count — a stamp on a since-hidden pin is not social
+    proof and must not leak the pin's title."""
+    rows = conn.execute(
+        "SELECT s.entry_id, e.title, e.town FROM passport_stamps s "
+        "JOIN entries e ON e.id = s.entry_id "
+        "WHERE s.user_id = ? AND e.hidden = 0 "
+        "ORDER BY s.stamped_at DESC, s.entry_id DESC LIMIT ?",
+        (user_id, PASSPORT_PROFILE_RECENT)).fetchall()
+    if not rows:
+        return None
+    total = conn.execute(
+        "SELECT COUNT(*) AS n FROM passport_stamps s "
+        "JOIN entries e ON e.id = s.entry_id "
+        "WHERE s.user_id = ? AND e.hidden = 0",
+        (user_id,)).fetchone()["n"]
+    return {"total": total,
+            "recent": [{"entry_id": r["entry_id"], "title": r["title"],
+                        "town": r["town"]} for r in rows]}
+
+
 @app.get("/passport", response_class=HTMLResponse)
 def passport_page(request: Request):
     """Haunt Passport page. The shell is server-rendered; the progress
@@ -8194,6 +8289,9 @@ def _profile_context(request: Request, handle: str, member: dict | None,
         photos = [dict(r) for r in conn.execute(
             "SELECT id, path, thumb_path FROM profile_photos "
             "WHERE user_id = ? ORDER BY id ASC", (user["id"],)).fetchall()]
+        # Haunt Passport block (#11): the profile OWNER's synced
+        # stamps — public social proof, whoever is viewing.
+        passport_block = _passport_stamps_view(conn, user["id"])
         viewer_blocked = viewer_is_blocked = False
         if member and member["id"] != user["id"]:
             viewer_blocked = conn.execute(
@@ -8227,6 +8325,7 @@ def _profile_context(request: Request, handle: str, member: dict | None,
         "member_since": _member_since_label(user["created_at"]),
         "embed": embed,
         "gtk": gtk,
+        "passport": passport_block,
         "photos": photos,
         "haunts": haunts,
         "comments": comments,

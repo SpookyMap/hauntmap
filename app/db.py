@@ -268,6 +268,20 @@ CREATE TABLE IF NOT EXISTS profile_photos (
     created_at TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_profile_photos_user ON profile_photos(user_id, id);
+-- HauntSocial passport stamps (#11, Dan, Oct 25): the per-user mirror
+-- of the device-local hm_seen set (templates/base.html). Rows are
+-- written ONLY by the authenticated union merge in
+-- POST /api/passport/sync; anonymous passport progress never leaves
+-- the visitor's device and never reaches this table. One row per
+-- (member, pin): re-syncing is a no-op, and a second device ADDS to
+-- the same collection instead of overwriting the first one's.
+CREATE TABLE IF NOT EXISTS passport_stamps (
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    entry_id INTEGER NOT NULL REFERENCES entries(id) ON DELETE CASCADE,
+    stamped_at TEXT NOT NULL,
+    PRIMARY KEY (user_id, entry_id)
+);
+CREATE INDEX IF NOT EXISTS idx_passport_stamps_user ON passport_stamps(user_id, stamped_at);
 CREATE TABLE IF NOT EXISTS reports (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     reporter_user_id INTEGER REFERENCES users(id),

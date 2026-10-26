@@ -4547,3 +4547,19 @@ a.soc-top8-card:hover { border-color: var(--accent2); }
   font-size: 0.85rem; font-style: normal; }
 .soc-gtk-edit { margin-top: 1rem; }
 .soc-gtk-edit-head { font-weight: 700; margin: 0 0 0.5rem; }
+
+/* ============ z141: HAUNT PASSPORT ON PROFILES (#11, Dan, Oct 25) ====
+   The account half of the passport: a signed-in member's device set
+   (hm_seen) union-merges into passport_stamps via POST
+   /api/passport/sync, and the profile renders the collection as
+   social proof — a total plus the most recent stamps, each linked to
+   its pin. The block renders only when the member has stamps, so an
+   unstamped profile is unchanged. Anonymous passport progress stays
+   device-local and never appears here. Rides the theme variables
+   like every .soc-* block before it. */
+.soc-passport-total { font-weight: 700; margin: 0 0 0.4rem; }
+.soc-passport-list { list-style: none; margin: 0; padding: 0; }
+.soc-passport-list li { padding: 0.3rem 0;
+  border-top: 1px dashed #33254f; overflow-wrap: anywhere; }
+.soc-passport-list a { color: var(--accent2); font-weight: 700; }
+.soc-passport-town { color: var(--muted); font-size: 0.85rem; }

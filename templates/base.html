@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Creepster&family=Fredoka:wght@500;600;700&family=Inter:wght@500;600;700;800;900&family=Nosifer&family=Rubik+Wet+Paint&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/static/css/style.css?v=20261025z140">
+<link rel="stylesheet" href="/static/css/style.css?v=20261025z141">
 {% block head %}{% endblock %}
 </head>
 <body>
@@ -152,6 +152,10 @@ function hmMarkSeen(id) {
       if (seen.length > 3000) seen = seen.slice(seen.length - 3000);
       hmSeenSet(seen);
       hmSeenMirrorWrite(seen);
+      // #11: if this browser is a signed-in member's, their account
+      // sync (defined in the member-only block below) wants the grown
+      // set. Anonymous visitors never define it — a no-op for them.
+      if (window.hmPassportSync) { try { window.hmPassportSync(); } catch (e) {} }
     }
   } catch (e) {}
 }
@@ -201,6 +205,57 @@ function hmPassportSummary(data) {
   return { pins: pins, started: started, conquered: conquered, rows: rows };
 }
 </script>
+{% if request.state.member %}
+<script>
+// --- #11: passport → account sync (MEMBERS ONLY) ---------------------
+// This whole block renders only when the request carries a member
+// session (see the _member_context middleware), so anonymous pages
+// contain no sync call at all and the anonymous passport stays
+// device-local, exactly as designed. For a signed-in member, the
+// device set (hm_seen) is union-merged into their account's
+// passport_stamps (POST /api/passport/sync) so their profile can show
+// a Haunt Passport block — and so a second device ADDS to the same
+// collection instead of starting over. Fire-and-forget: sendBeacon
+// first, fetch-keepalive fallback, silent on failure (the next load
+// retries). Cheap: a sessionStorage marker keyed to the set's shape
+// (count + last id, the two things hmMarkSeen growth changes) skips
+// re-posting an unchanged set all session; the marker is written only
+// after a confirmed send, so a failed sync retries on the next load.
+window.hmPassportSync = function () {
+  try {
+    var ids = hmSeenList().filter(function (n) { return Number.isFinite(n); });
+    var key = ids.length + ':' + (ids.length ? ids[ids.length - 1] : 0);
+    try { if (sessionStorage.getItem('hm_pp_synced') === key) return; } catch (e) {}
+    var body = JSON.stringify({ ids: ids });
+    var mark = function () {
+      try { sessionStorage.setItem('hm_pp_synced', key); } catch (e) {}
+    };
+    if (navigator.sendBeacon) {
+      try {
+        if (navigator.sendBeacon('/api/passport/sync',
+              new Blob([body], { type: 'application/json' }))) {
+          mark();
+          return;
+        }
+      } catch (e) {}
+    }
+    fetch('/api/passport/sync', {
+      method: 'POST', keepalive: true,
+      headers: { 'Content-Type': 'application/json' }, body: body
+    }).then(function (r) { if (r.ok) mark(); }).catch(function () {});
+  } catch (e) {}
+};
+// On load, sync whatever this device already collected (retroactive:
+// a member's pre-signup passport history joins their account here).
+// Deferred to DOMContentLoaded so pin pages' inline hmMarkSeen calls
+// from this same parse are already in the set.
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', window.hmPassportSync);
+} else {
+  window.hmPassportSync();
+}
+</script>
+{% endif %}
 <script>
 // --- Item 6: Daily Fright streak-lite (cookies, forgiving) ----------
 // Cookies: hm_fright_streak (int), hm_fright_last (last ET date the
