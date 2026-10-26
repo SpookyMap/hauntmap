@@ -3,7 +3,7 @@
 {% block content %}
 <div class="hero-intro">
   <h1>&#x2702;&#xFE0F; DIY Halloween Costumes</h1>
-  <p>Make your own costume this year. Every card below is our quick take on a tutorial we love — and the photo on each card is the <strong>creator's own</strong>, streamed in through Pinterest or YouTube's official embeds, so what you see is the real finished costume. Tap any photo to visit the creator, and follow the link on each card for the full step-by-step.</p>
+  <p>Make your own costume this year. Every card below is our quick take on a tutorial we love — and the photo on each card is the <strong>creator's own</strong>, streamed in through Pinterest, YouTube or TikTok's official embeds, so what you see is the real finished costume. Tap any photo to visit the creator, and follow the link on each card for the full step-by-step.</p>
   <p>Short on time? Jump to <a href="#last-minute">Last-Minute &amp; No-Sew</a>. Want to browse thousands more? <a href="https://www.pinterest.com/search/pins/?q=diy%20halloween%20costume" target="_blank" rel="noopener">Search DIY costumes on Pinterest &#x2197;</a></p>
   <p>More of a decorator? Our <a href="/diy">DIY Decorations</a> page has the prop builds. Showing off a finished costume instead? Enter the <a href="/costume-contest">Costume Contest</a>.</p>
 </div>
@@ -26,6 +26,11 @@
       <span class="yt-play" aria-hidden="true">&#9654;</span>
     </button>
     <p class="costume-media-note">&#x1F4F7; Video by {{ c.source }}, via YouTube — tap to play</p>
+    {% elif c.tt %}
+    <div class="diy-embed">
+      <iframe src="https://www.tiktok.com/embed/v2/{{ c.tt }}" allowfullscreen scrolling="no" allow="encrypted-media; picture-in-picture" loading="lazy" title="{{ c.name }}"></iframe>
+    </div>
+    <p class="costume-media-note">&#x1F4F7; Video by {{ c.source }}, shown via TikTok&rsquo;s official embed</p>
     {% endif %}
     <h3>{{ c.name }}</h3>
     <p class="diy-creator">For: {{ c.who }}</p>
@@ -39,7 +44,7 @@
 {% endfor %}
 
 <div class="costume-credits">
-  <p>Every idea above is credited to its creator. The photos and videos are the creators&rsquo; own, shown through Pinterest and YouTube&rsquo;s official embeds — we never copy or re-host their pictures, and the full instructions live on their sites. Are you one of the creators and want a card changed or removed? Just say the word. Found a costume tutorial we should feature? <a href="/upload">Tell us about it</a>.</p>
+  <p>Every idea above is credited to its creator. The photos and videos are the creators&rsquo; own, shown through Pinterest, YouTube and TikTok&rsquo;s official embeds — we never copy or re-host their pictures, and the full instructions live on their sites. Are you one of the creators and want a card changed or removed? Just say the word. Found a costume tutorial we should feature? <a href="/upload">Tell us about it</a>.</p>
 </div>
 
 <script>

@@ -3406,6 +3406,12 @@ def map_view(request: Request, cat: str = "halloween"):
 DIY_VIDEOS = [
     {"title": "DIY Circus Tent — Halloween Party Build", "creator": "Taylor Booth (@theballoonchickaz)", "url": "https://www.tiktok.com/@theballoonchickaz/video/7698864214865087775", "video_id": "7698864214865087775", "blurb": "A full-size circus tent, built from scratch for a Halloween party — Taylor's whole process in 85 seconds. 229K views and counting, and you'll see why."},
     {"title": "Fog Chiller DIY — Maiden Voyage", "creator": "@theblackirishouse", "url": "https://www.tiktok.com/@theblackirishouse/video/7693254709972372767", "video_id": "7693254709972372767", "blurb": "Chill your fog machine's output and the fog hugs the ground like a graveyard at dawn. This build's first run shows exactly how it's done."},
+    {"title": "Fog Chiller v2.0 — The Upgrades", "creator": "@theblackirishouse", "url": "https://www.tiktok.com/@theblackirishouse/video/7694109884777893150", "video_id": "7694109884777893150", "blurb": "Version two of the chiller: a legit spider web and frozen water bottles join the build for thicker, lower fog."},
+    {"title": "Low-Lying Fog Setup — Full Rundown", "creator": "@theblackirishouse", "url": "https://www.tiktok.com/@theblackirishouse/video/7696612187141360926", "video_id": "7696612187141360926", "blurb": "Everyone asked, so here's the quick rundown of the whole low-lying fog setup — how the chiller is plumbed and why it works."},
+    {"title": "Fog Chiller at Full Send", "creator": "@theblackirishouse", "url": "https://www.tiktok.com/@theblackirishouse/video/7699253873872997662", "video_id": "7699253873872997662", "blurb": "Less than a minute of ideal conditions — and the chiller was RIPPIN'. The maiden-voyage build, proven in the wild."},
+    {"title": "The Junk-Drawer Glow Trick", "creator": "@wyldwoodsdiy", "url": "https://www.tiktok.com/@wyldwoodsdiy/video/7700009652347587854", "video_id": "7700009652347587854", "blurb": "One simple trick hiding in your junk drawer turns ordinary specimen jars into glowing, radioactive-looking decor. You already own everything you need."},
+    {"title": "Radioactive Specimen Jar DIY", "creator": "@wyldwoodsdiy", "url": "https://www.tiktok.com/@wyldwoodsdiy/video/7699612887765028109", "video_id": "7699612887765028109", "blurb": "This spooky specimen jar looks like it's glowing from the inside — the radioactive lab piece your mad-scientist corner was missing."},
+    {"title": "Jar of Moving Eyeballs DIY", "creator": "@wyldwoodsdiy", "url": "https://www.tiktok.com/@wyldwoodsdiy/video/7698888739572976910", "video_id": "7698888739572976910", "blurb": "She made a jar of eyeballs that MOVE. Creepy, clever, and impossible to stop watching."},
     {"title": "Pirate Skeleton DIY", "creator": "@wyldwoodsdiy", "url": "https://www.tiktok.com/@wyldwoodsdiy/video/7698131249034005774", "video_id": "7698131249034005774", "blurb": "Another Halloween DIY — and it might be her favorite yet. Pirate bones done right."},
     {"title": "Witch's Cauldron DIY", "creator": "@wyldwoodsdiy", "url": "https://www.tiktok.com/@wyldwoodsdiy/video/7698064196147236109", "video_id": "7698064196147236109", "blurb": "Every witch needs a cauldron — and this one may have gotten a little carried away."},
     {"title": "Best Halloween DIYs in 20 Seconds", "creator": "@wyldwoodsdiy", "url": "https://www.tiktok.com/@wyldwoodsdiy/video/7698024441569234190", "video_id": "7698024441569234190", "blurb": "Months of crafting, creativity and chaos in one rapid-fire highlight reel."},
@@ -3414,6 +3420,7 @@ DIY_VIDEOS = [
     {"title": "Haunted Dollhouse DIY", "creator": "@wyldwoodsdiy", "url": "https://www.tiktok.com/@wyldwoodsdiy/video/7697030306649492749", "video_id": "7697030306649492749", "blurb": "Who knew a 1991 Playskool dollhouse could turn into something so creepy?"},
     {"title": "The Boo-zy Skeleton Fountain", "creator": "@wyldwoodsdiy", "url": "https://www.tiktok.com/@wyldwoodsdiy/video/7696649206160837902", "video_id": "7696649206160837902", "blurb": "A skeleton chilling in a bubbling green fountain — the porch centerpiece your neighbors will copy next year."},
     {"title": "Slimed House DIY", "creator": "@wyldwoodsdiy", "url": "https://www.tiktok.com/@wyldwoodsdiy/video/7693296146705403149", "video_id": "7693296146705403149", "blurb": "She slimed her whole house for Halloween — gutters and all — and it turned out amazing."},
+    {"title": "Pendant-Light Skeleton Club", "creator": "@wyldwoodsdiy", "url": "https://www.tiktok.com/@wyldwoodsdiy/video/7694066781580758285", "video_id": "7694066781580758285", "blurb": "She posed mini skeletons on her kitchen pendant lights — heels and all — and 3 million viewers agree it's the hottest Halloween club in town. Proof decor doesn't have to be scary."},
     {"title": "Easiest Halloween DIY of the Year", "creator": "@wyldwoodsdiy", "url": "https://www.tiktok.com/@wyldwoodsdiy/video/7690324637577710862", "video_id": "7690324637577710862", "blurb": "Quite possibly the easiest Halloween DIY she's made all year."},
     {"title": "Disgusting Dollar Tree Eyeballs", "creator": "@wyldwoodsdiy", "url": "https://www.tiktok.com/@wyldwoodsdiy/video/7689903755977837837", "video_id": "7689903755977837837", "blurb": "Dollar Tree eyeballs… but make them DISGUSTING."},
     {"title": "Spooky Sparkly Eyeball DIY", "creator": "@wyldwoodsdiy", "url": "https://www.tiktok.com/@wyldwoodsdiy/video/7687246122758278413", "video_id": "7687246122758278413", "blurb": "Spooky, sparkly, and just the right amount of creepy."},
@@ -3426,9 +3433,11 @@ DIY_VIDEOS = [
     {"title": "$3 DIY That Looks Expensive", "creator": "@wyldwoodsdiy", "url": "https://www.tiktok.com/@wyldwoodsdiy/video/7683255523625487629", "video_id": "7683255523625487629", "blurb": "A stylish $3 DIY that looks WAY more expensive than it is."},
     {"title": "Preserved Specimen DIY", "creator": "@wyldwoodsdiy", "url": "https://www.tiktok.com/@wyldwoodsdiy/video/7682907699306155278", "video_id": "7682907699306155278", "blurb": "Her favorite creepy DIY yet — a preserved specimen straight out of a mad lab."},
     {"title": "Looks Complicated, Isn't DIY", "creator": "@wyldwoodsdiy", "url": "https://www.tiktok.com/@wyldwoodsdiy/video/7682859305539734797", "video_id": "7682859305539734797", "blurb": "This Halloween DIY looks WAY more complicated than it actually is."},
+    {"title": "Glowing Gate Tutorial", "creator": "@wyldwoodsdiy", "url": "https://www.tiktok.com/@wyldwoodsdiy/video/7560463323624443150", "video_id": "7560463323624443150", "blurb": "A HUGE 10-foot gate that glows — a true statement piece for your haunt entrance, and the full tutorial walks the whole build."},
 ]
 
 DIY_VIDEOS_NICK = [
+    {"title": "Who's Hungry!? — One-Hour DIY", "creator": "@nicksnightmarefac", "url": "https://www.tiktok.com/@nicksnightmarefac/video/7699008843090595085", "video_id": "7699008843090595085", "blurb": "A fun, easy DIY that took less than an hour to build — fresh off the Nightmare Factory workbench."},
     {"title": "Gravestone Crawler DIY Tutorial", "creator": "@nicksnightmarefac", "url": "https://www.tiktok.com/@nicksnightmarefac/video/7684419946595552526", "video_id": "7684419946595552526", "blurb": "Their first full tutorial — a fun, easy Gravestone Crawler you can build along with, step by step."},
     {"title": "Meet the Gravestone Crawler", "creator": "@nicksnightmarefac", "url": "https://www.tiktok.com/@nicksnightmarefac/video/7684153715183439118", "video_id": "7684153715183439118", "blurb": "The Gravestone Creeper got a friend — meet the Crawler, the prop reveal that kicked off the tutorials."},
     {"title": "Gravestone Creeper DIY Tutorial", "creator": "@nicksnightmarefac", "url": "https://www.tiktok.com/@nicksnightmarefac/video/7685645350278860046", "video_id": "7685645350278860046", "blurb": "Tutorial number two: create your very own Gravestone Creeper."},
@@ -3441,10 +3450,19 @@ DIY_VIDEOS_NICK = [
 ]
 
 
+DIY_VIDEOS_BROOKLYN = [
+    {"title": "Spinning Jack-o'-Lantern", "creator": "@heybrooklynb", "url": "https://www.tiktok.com/@heybrooklynb/video/7696976404730137887", "video_id": "7696976404730137887", "blurb": "She made her jack-o'-lantern SPIN — the carved-pumpkin hack your porch needs this year."},
+    {"title": "Skeleton Tombstone Pop-Up Craft", "creator": "@heybrooklynb", "url": "https://www.tiktok.com/@heybrooklynb/video/7692588485563239711", "video_id": "7692588485563239711", "blurb": "A DIY skeleton craft that pops out of its tombstone — wait until you see it lit up at night."},
+    {"title": "Glow-in-the-Dark Sorting Hat", "creator": "@heybrooklynb", "url": "https://www.tiktok.com/@heybrooklynb/video/7694068054950546719", "video_id": "7694068054950546719", "blurb": "A handmade Sorting Hat that glows in the dark — part prop, part costume, all magic."},
+]
+
+
 @app.get("/diy", response_class=HTMLResponse)
 def diy_page(request: Request):
     return templates.TemplateResponse(
-        request, "diy.html", {"videos": DIY_VIDEOS, "nick_videos": DIY_VIDEOS_NICK},
+        request, "diy.html",
+        {"videos": DIY_VIDEOS, "nick_videos": DIY_VIDEOS_NICK,
+         "brooklyn_videos": DIY_VIDEOS_BROOKLYN},
     )
 
 
@@ -3453,8 +3471,9 @@ def diy_page(request: Request):
 # step-by-step instructions live at each credited source, linked from every
 # card. PHOTOS ARE NEVER OURS AND NEVER COPIED (Dan, Oct 22 rework): every
 # card shows the creator's own photo or video through the platform's official
-# embed — a Pinterest pin embed ("pin" = pin id) or a YouTube click-to-play
-# facade ("yt" = video id) — served by the platform with the creator's credit
+# embed — a Pinterest pin embed ("pin" = pin id), a YouTube click-to-play
+# facade ("yt" = video id) or a TikTok embed ("tt" = video id) — served by
+# the platform with the creator's credit
 # and link-back. Tutorials with no embeddable post of the costume are NOT
 # shown; they sit on the permission-ask list
 # (files/diy-costumes-permission-asks.md) until the creator says yes.
@@ -3508,6 +3527,10 @@ COSTUME_SECTIONS = [
              "materials": "Pom-pom balls, a strap top or tank, red skirt, headband, cardstock for the 25¢ slot",
              "blurb": "DIY Joy's candy-machine classic: pom-poms glued over a top, a red skirt as the machine base, and a hand-drawn quarter slot to finish it. Insert coin, become the costume.",
              "source": "DIY Joy", "url": "https://diyjoy.com/easy-diy-gumball-machine-costume/", "pin": "292593307067691850"},
+            {"name": "Optical-Illusion Costume", "who": "Adults & teens", "difficulty": "Medium", "time": "An afternoon",
+             "materials": "A base outfit to build the illusion on — her video walks through the whole rig and lists every piece she uses",
+             "blurb": "Wyld Woods DIY's brand-new optical-illusion build: the kind of costume that makes people look twice, then ask how you did it. Tap the video and she walks the whole trick, start to finish.",
+             "source": "Wyld Woods DIY (@wyldwoodsdiy)", "url": "https://www.tiktok.com/@wyldwoodsdiy/video/7700739541933493517", "tt": "7700739541933493517"},
         ],
     },
     {
