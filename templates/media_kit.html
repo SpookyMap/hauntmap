@@ -8,6 +8,7 @@
 
 <h2 class="mk-h2">Audience</h2>
 <div class="mk-stats">
+  <div class="mk-stat"><strong>{{ '{:,}'.format(kit.total_views) }}</strong><span>total page views (all-time)</span></div>
   <div class="mk-stat"><strong>{{ '{:,}'.format(kit.visitors_week) }}</strong><span>visitors, {{ kit.week_range }}</span></div>
   <div class="mk-stat"><strong>{{ '{:,}'.format(kit.visitors_today) }}</strong><span>visitors today ({{ kit.today_label }})</span></div>
 </div>

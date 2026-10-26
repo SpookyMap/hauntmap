@@ -6848,6 +6848,18 @@ def _mk_visitors(today_d) -> dict:
     return dict(_ttl_cached(f"mkvis:{today_d.isoformat()}", build))
 
 
+def _mk_total_views() -> int:
+    """Media-kit all-time total page views: the same COUNT(*) over
+    page_views that /admin/stats shows as its total, so the kit and
+    the dashboard can never drift apart. TTL-cached like the other
+    kit aggregates (fortification pass 2 pattern)."""
+    def build():
+        with get_conn(DB_PATH) as conn:
+            return conn.execute(
+                "SELECT COUNT(*) FROM page_views").fetchone()[0]
+    return int(_ttl_cached("mktotalviews", build))
+
+
 def _mk_geo() -> dict:
     """Media-kit geographic spread: distinct town labels + states
     across ALL categories. TTL-cached (fortification pass 2) — it was
@@ -6884,6 +6896,7 @@ def media_kit(request: Request):
         "week_range": f"{week_start_d.strftime(fmt_day)} – {today_d.strftime(fmt_day)}",
         "visitors_today": 0,
         "visitors_week": 0,
+        "total_views": 0,
         "total_pins": 0,
         "categories": [],
         "town_count": 0,
@@ -6898,6 +6911,10 @@ def media_kit(request: Request):
         vis = _mk_visitors(today_d)
         kit["visitors_today"] = vis["today"]
         kit["visitors_week"] = vis["week"]
+    except Exception:
+        pass
+    try:
+        kit["total_views"] = _mk_total_views()
     except Exception:
         pass
     counts = _category_counts()
