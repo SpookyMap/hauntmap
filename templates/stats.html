@@ -101,6 +101,19 @@
 <p style="color:#888;margin-bottom:24px;">No pin interactions yet in the last 7 days.</p>
 {% endif %}
 
+<h3>⏱️ Time on each page <span style="font-size:0.75em;color:#888;">(last 7 days — active time, tab in front)</span></h3>
+{% if page_time %}
+<table style="width:100%;border-collapse:collapse;margin-bottom:8px;">
+  <tr><th style="text-align:left;padding:8px;">Page</th><th style="text-align:right;padding:8px;">Views</th><th style="text-align:right;padding:8px;">Avg active</th><th style="text-align:right;padding:8px;">Median active</th><th style="text-align:right;padding:8px;">Total attention</th><th style="text-align:right;padding:8px;">Quick exits (&lt;5s)</th></tr>
+  {% for r in page_time %}
+  <tr><td style="padding:8px;"><a href="{{ r.path }}">{{ r.label }}</a></td><td style="text-align:right;padding:8px;">{{ r.views }}</td><td style="text-align:right;padding:8px;">{{ r.avg_s }}</td><td style="text-align:right;padding:8px;">{% if r.median_s is not none %}{{ r.median_s }}{% else %}&mdash;{% endif %}</td><td style="text-align:right;padding:8px;">{{ r.total_s }}</td><td style="text-align:right;padding:8px;">{% if r.quick is not none %}{{ "%.0f"|format(r.quick) }}%{% else %}&mdash;{% endif %}</td></tr>
+  {% endfor %}
+</table>
+<p style="color:#888;font-size:0.85em;margin-bottom:24px;">The timer counts only while the page is the front tab — a page left open in the background earns nothing, and counting stops at 30 active minutes per page view. <strong>Avg active</strong> = total attention &divide; all views. <strong>Median active</strong> and <strong>quick exits</strong> are worked out per individual page view from the views the timer measured; a stay under about a second sends no timing at all, so the very fastest bounces don&rsquo;t appear in those two columns. Pages with a high quick-exit share aren&rsquo;t holding people — those are the pages to work on.</p>
+{% else %}
+<p style="color:#888;margin-bottom:24px;">No page views yet in the last 7 days.</p>
+{% endif %}
+
 <h3>Views by day</h3>
 <table style="width:100%;border-collapse:collapse;margin-bottom:24px;">
   <tr><th style="text-align:left;padding:8px;">Date</th><th style="text-align:right;padding:8px;">Views</th></tr>

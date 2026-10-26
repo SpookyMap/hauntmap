@@ -404,9 +404,10 @@ def _analytics_write_batch(conn, batch: list) -> None:
     engaged = [r[1:] for r in batch if r[0] == "engaged"]
     if engaged:
         conn.executemany(
-            "INSERT INTO engagement_events (created_at, event, path, seconds, sid) "
-            "VALUES (?, ?, ?, ?, ?)",
-            [(c, ENGAGED_EVENT, p, s, sid) for (c, s, p, sid) in engaged])
+            "INSERT INTO engagement_events (created_at, event, path, seconds, sid, pvid) "
+            "VALUES (?, ?, ?, ?, ?, ?)",
+            [(c, ENGAGED_EVENT, p, s, sid, (rest[0] if rest else None))
+             for (c, s, p, sid, *rest) in engaged])
     engs = [r[1:] for r in batch if r[0] == "eng"]
     if engs:
         # Town is derived from the entry, as the old inline logger did —
@@ -4416,7 +4417,7 @@ ENGAGEMENT_TABLE_SQL = (
     "CREATE TABLE IF NOT EXISTS engagement_events "
     "(id INTEGER PRIMARY KEY AUTOINCREMENT, created_at TEXT NOT NULL, "
     "event TEXT NOT NULL, entry_id INTEGER, town TEXT, path TEXT, "
-    "seconds INTEGER, sid TEXT, source TEXT)"
+    "seconds INTEGER, sid TEXT, source TEXT, pvid TEXT)"
 )
 # Whitelist for POST /api/track — anything else is a silent no-op.
 TRACK_EVENTS = ("video_play", "tour_add", "next_bar_click", "rail_click")
@@ -4463,17 +4464,21 @@ def _log_engagement(event: str, entry_id: int | None = None,
         pass
 
 
-def _log_engaged(seconds: int, path: str, sid: str | None) -> None:
+def _log_engaged(seconds: int, path: str, sid: str | None,
+                 pvid: str | None = None) -> None:
     """Record one engaged-time beacon row: `seconds` of INCREMENTAL engaged
     time (client sends deltas, never cumulative totals) spent on `path`.
     Real time-on-page per page/session is SUM(seconds) over these rows —
     e.g. SELECT path, SUM(seconds) FROM engagement_events
-    WHERE event='engaged' GROUP BY path. Fire-and-forget like
+    WHERE event='engaged' GROUP BY path. `pvid` is the beacon's random
+    per-page-load id: grouping rows by it reconstructs ONE page view's
+    total dwell, which is what the admin per-page time table medians
+    over (per-page time stats, Oct 25). Fire-and-forget like
     _log_engagement: analytics must never break a page. Enqueue only
     (blip hardening, Oct 25)."""
     try:
         _analytics_q.put(("engaged", datetime.now(timezone.utc).isoformat(),
-                          seconds, path, sid))
+                          seconds, path, sid, pvid))
     except Exception:
         pass
 
@@ -4501,8 +4506,8 @@ def _scare_counts_for(entry_id: int) -> tuple[dict, int]:
 @app.post("/api/track")
 async def api_track(request: Request):
     """Beacon endpoint for client-side engagement events. Accepts a JSON
-    body {event, entry_id} — or {event:'engaged', seconds, path} for the
-    Item 6 time-on-page beacon. navigator.sendBeacon posts as text/plain,
+    body {event, entry_id} — or {event:'engaged', seconds, path, pvid} for
+    the Item 6 time-on-page beacon. navigator.sendBeacon posts as text/plain,
     so the raw body is parsed, never request.json()/form. Whitelisted
     events only; always 204 with no body, malformed input included, so a
     tracking failure can never surface on a page."""
@@ -4526,8 +4531,13 @@ async def api_track(request: Request):
             seconds = max(0, min(seconds, ENGAGED_MAX_SECONDS))
             path = str(data.get("path") or "")
             path = path.split("?")[0].split("#")[0][:500]
+            # Per-page-load id (per-page time stats, Oct 25): minted by
+            # the beacon per page load; kept to lowercase alphanumerics
+            # and capped, anything else becomes None (row still lands —
+            # it just can't join a per-view dwell group).
+            pvid = re.sub(r"[^a-z0-9]", "", str(data.get("pvid") or "").lower())[:40] or None
             if seconds > 0 and path.startswith("/"):
-                _log_engaged(seconds, path, request.cookies.get("hm_sid"))
+                _log_engaged(seconds, path, request.cookies.get("hm_sid"), pvid)
         elif event == RAIL_IMPRESSION_EVENT:
             # {event:'rail_impression', source:<rail>} — whitelisted rail
             # names only; no entry_id (the impression belongs to the
@@ -6592,6 +6602,116 @@ def admin_fanart_delete(fid: int, request: Request):
 
 # ---------------------------------------------------------------- admin
 
+# ------------------------------------------------- per-page time (Oct 25)
+# Dan's ask: how long people spend on EACH page, not just per visit.
+# Built from the engaged-time beacon rows (Item 6): every row is an
+# incremental delta of VISIBLE time on a path, stamped with the
+# beacon's per-page-load pvid, so SUM(seconds) GROUP BY path, pvid
+# reconstructs one page view's dwell. Views come from page_views (the
+# full count, including sub-second and no-JS views the beacon never
+# sees); avg = total attention / views. Median + quick-exit share are
+# computed over the measured page views only (pvid groups) — a stay
+# under ~1s sends no beacon at all, so the very fastest bounces are
+# invisible to those two columns; the template says so in plain words.
+# The aggregate sits behind _ttl_cached like every other hot admin
+# aggregate (fortification pass 2) — an admin render never re-scans
+# the analytics tables inline.
+_PAGE_TIME_LABELS = {
+    "/": "Home", "/events": "Events", "/map": "Map", "/nearby": "Nearby",
+    "/tours": "Tours", "/watch": "Watch", "/leaderboard": "Top Haunts",
+    "/leaderboard/states": "Top 10 by State",
+    "/restaurhaunts": "Restaurhaunts", "/hauntsocial": "HauntSocial",
+    "/games": "Games", "/diy": "DIY", "/diy-costumes": "DIY Costumes",
+    "/movies": "Movies", "/music": "Music", "/markets": "Markets",
+    "/passport": "Haunt Passport", "/daily": "Daily Fright",
+    "/about": "About Us", "/advertise": "Advertise",
+    "/signup": "Sign Up", "/login": "Log In",
+}
+
+
+def _fmt_attention(sec: float) -> str:
+    """Humanized total-attention: 45s / 3m 20s / 2h 05m."""
+    sec = int(round(sec))
+    if sec < 60:
+        return f"{sec}s"
+    if sec < 3600:
+        return f"{sec // 60}m {sec % 60:02d}s"
+    return f"{sec // 3600}h {(sec % 3600) // 60:02d}m"
+
+
+def _page_time_build() -> list:
+    rows_out: list = []
+    with get_conn(DB_PATH) as conn:
+        cand = conn.execute(
+            "SELECT path, COUNT(*) AS views FROM page_views "
+            "WHERE viewed_at >= datetime('now', '-7 days') "
+            # Infrastructure paths are not pages anyone spends time on
+            # (the health check alone would hold a top slot forever),
+            # and neither are /api/* JSON endpoints.
+            "AND path NOT IN ('/healthz', '/favicon.ico', '/robots.txt', "
+            "'/sitemap.xml') AND path NOT LIKE '/api/%' "
+            "GROUP BY path ORDER BY views DESC LIMIT 25").fetchall()
+        if not cand:
+            return rows_out
+        paths = [r["path"] for r in cand]
+        marks = ",".join("?" * len(paths))
+        att = {r["path"]: (r["secs"] or 0) for r in conn.execute(
+            "SELECT path, SUM(seconds) AS secs FROM engagement_events "
+            "WHERE event = 'engaged' "
+            "AND created_at >= datetime('now', '-7 days') "
+            f"AND path IN ({marks}) GROUP BY path", paths)}
+        dwell: dict = {}
+        for r in conn.execute(
+                "SELECT path, SUM(seconds) AS secs FROM engagement_events "
+                "WHERE event = 'engaged' AND pvid IS NOT NULL "
+                "AND created_at >= datetime('now', '-7 days') "
+                f"AND path IN ({marks}) GROUP BY path, pvid", paths):
+            dwell.setdefault(r["path"], []).append(r["secs"] or 0)
+        pin_ids = [int(p[3:]) for p in paths
+                   if p.startswith("/d/") and p[3:].isdigit()]
+        pins: dict = {}
+        if pin_ids:
+            pm = ",".join("?" * len(pin_ids))
+            for r in conn.execute(
+                    f"SELECT id, title, town FROM entries WHERE id IN ({pm})",
+                    pin_ids):
+                pins[r["id"]] = r
+    for r in cand:
+        path, views = r["path"], r["views"]
+        total_secs = att.get(path, 0)
+        ds = sorted(dwell.get(path, []))
+        n = len(ds)
+        median = 0.0
+        if n:
+            mid = n // 2
+            median = ds[mid] if n % 2 else (ds[mid - 1] + ds[mid]) / 2
+        label = _PAGE_TIME_LABELS.get(path)
+        if label is None and path.startswith("/d/") and path[3:].isdigit():
+            e = pins.get(int(path[3:]))
+            label = (f"#{path[3:]} {e['title']}" if e and e["title"]
+                     else f"Pin {path[3:]}")
+            if e and e["town"]:
+                label += f" · {e['town']}"
+        rows_out.append({
+            "path": path, "label": label or path, "views": views,
+            "avg_s": _fmt_dur_admin(total_secs / views) if views else "0s",
+            "median_s": _fmt_dur_admin(median) if n else None,
+            "total_s": _fmt_attention(total_secs),
+            "measured": n,
+            "quick": (sum(1 for d in ds if d < 5) / n * 100) if n else None,
+        })
+    return rows_out
+
+
+def _fmt_dur_admin(sec: float) -> str:
+    sec = int(round(sec))
+    return f"{sec}s" if sec < 60 else f"{sec // 60}m {sec % 60:02d}s"
+
+
+def _page_time_stats() -> list:
+    return _ttl_cached("admin:page_time", _page_time_build)
+
+
 @app.get("/admin", response_class=HTMLResponse)
 def admin(request: Request):
     if not is_admin(request):
@@ -6744,7 +6864,8 @@ def admin_stats(request: Request):
         {"request": request, "total": total, "today": today, "week": week,
          "by_day": by_day, "top_pages": top_pages,
          "top_referrers": top_referrers, "by_device": by_device,
-         "duration": duration, "engagement": engagement})
+         "duration": duration, "engagement": engagement,
+         "page_time": _page_time_stats()})
 
 
 @app.post("/admin/login", response_class=HTMLResponse)

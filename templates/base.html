@@ -685,9 +685,13 @@ hmTourSync();
    Measures REAL time-on-page: page_views alone record 0s for a visitor
    who lands, watches a 2-minute video and leaves. This block accumulates
    only VISIBLE time and reports INCREMENTAL seconds to POST /api/track
-   as {event:'engaged', seconds, path} — a heartbeat every 15s of engaged
-   time plus a final flush on pagehide / tab-hide. Server clamps each
-   beacon to 60s and SUMs the rows. No timers run while the tab is
+   as {event:'engaged', seconds, path, pvid} — a heartbeat every 15s of
+   engaged time plus a final flush on pagehide / tab-hide. Server clamps
+   each beacon to 60s and SUMs the rows. pvid is a random id minted per
+   page load so the admin stats page can rebuild ONE page view's total
+   dwell (per-page time stats, Oct 25); counting stops at CAP engaged
+   seconds per page load so a tab left open in front of someone cannot
+   credit a page with hours. No timers run while the tab is
    hidden; nothing is sent for sub-second remainders. Focus is
    deliberately NOT required: window blur fires when a visitor clicks
    into an embedded video iframe — exactly the watching being measured. #}
@@ -695,7 +699,10 @@ hmTourSync();
 (function () {
   var PATH = location.pathname;
   var HEARTBEAT = 15;          // send after this many engaged seconds
+  var CAP = 1800;              // max engaged seconds counted per page load (30 min)
+  var PVID = (Math.random().toString(36).slice(2, 10) + Date.now().toString(36)).slice(0, 24);
   var pending = 0;             // banked, unsent engaged seconds (float)
+  var sentTotal = 0;           // engaged seconds already sent for this page load
   var visibleSince = null;     // ms timestamp the current visible stretch began
   var timer = null;
 
@@ -710,7 +717,7 @@ hmTourSync();
   }
   function send(secs) {
     try {
-      var payload = JSON.stringify({ event: 'engaged', seconds: secs, path: PATH });
+      var payload = JSON.stringify({ event: 'engaged', seconds: secs, path: PATH, pvid: PVID });
       if (navigator.sendBeacon) {
         var blob = new Blob([payload], { type: 'text/plain' });
         if (navigator.sendBeacon('/api/track', blob)) return;
@@ -724,10 +731,14 @@ hmTourSync();
     var t = total() - whole;
     bank();
     pending = t;
+    sentTotal += whole;
     if (document.visibilityState === 'visible') visibleSince = Date.now();
+    if (sentTotal >= CAP) stopClock();  // page load fully counted; stop here
   }
   function heartbeat() {
     var whole = Math.floor(total());
+    var room = CAP - sentTotal;
+    if (whole > room) whole = room;
     if (whole >= HEARTBEAT) { consume(whole); send(whole); }
   }
   function flush() {
@@ -737,9 +748,12 @@ hmTourSync();
     // finds <1s left and sends nothing.
     bank();
     var whole = Math.floor(pending);
-    if (whole >= 1) { pending -= whole; send(whole); }
+    var room = CAP - sentTotal;
+    if (whole > room) whole = room;
+    if (whole >= 1) { pending -= whole; sentTotal += whole; send(whole); }
   }
   function startClock() {
+    if (sentTotal >= CAP) return;  // this page load is fully counted
     if (visibleSince === null) visibleSince = Date.now();
     if (timer === null) timer = setInterval(heartbeat, 5000);
   }
