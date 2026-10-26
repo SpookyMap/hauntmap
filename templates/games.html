@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% block head %}
-<script src="/static/js/portal_games.js?v=20261026z145" defer></script>
+<script src="/static/js/portal_games.js?v=20261026z158" defer></script>
 <style>
 /* /games section-nav buttons (Dan, Oct 26): the two full-width banner
    panels (HauntMap Games / The Halloween Arcade) become one compact
@@ -51,19 +51,21 @@ html { scroll-behavior: smooth; }
   </a>
 </div>
 
-{# PORTAL CATALOG (Dan, Oct 26) — GameDistribution partner games under
-   their publisher embed program. Click-to-load facades only: cover
-   art + Play; portal_games.js swaps in the iframe on tap, one game at
-   a time. Dan's order: this shelf leads /games, Ghost Maze below it. #}
+{# PORTAL CATALOG (Dan, Oct 26) — GamePix partner games under their
+   open webmaster embed program (GameDistribution rejected HauntMap's
+   publisher signup, so the shelf moved to GamePix the same day).
+   Click-to-load facades only: cover art + Play; portal_games.js swaps
+   in the iframe on tap, one game at a time. Dan's order: this shelf
+   leads /games, Ghost Maze below it. #}
 <section class="games-sec" id="halloween-arcade">
 <h2 class="games-sec-head">&#x1F383; The Halloween Arcade</h2>
 
 <div class="portal-grid">
   {% for g in portal_games %}
-  <div class="portal-card" data-game-id="{{ g.id }}" data-game-title="{{ g.title }}">
+  <div class="portal-card" data-game-slug="{{ g.slug }}" data-game-title="{{ g.title }}">
     <div class="portal-frame" style="--pw: {{ g.w }}; --ph: {{ g.h }};">
       <button class="portal-facade" type="button" aria-label="Play {{ g.title }}">
-        <img src="https://img.gamedistribution.com/{{ g.id }}-{{ g.get('img', '512x384') }}.jpeg" alt="{{ g.title }} cover art" loading="lazy">
+        <img src="{{ g.img }}" alt="{{ g.title }} cover art" loading="lazy">
         <span class="portal-playbtn" aria-hidden="true">&#x25B6;</span>
       </button>
     </div>
@@ -73,7 +75,7 @@ html { scroll-behavior: smooth; }
   </div>
   {% endfor %}
 </div>
-<p class="portal-note">Partner games are hosted by GameDistribution and the ads inside them are theirs &mdash; everything else on this page (Ghost Maze included) is 100% HauntMap.</p>
+<p class="portal-note">Partner games are hosted by GamePix and the ads inside them are theirs &mdash; everything else on this page (Ghost Maze included) is 100% HauntMap.</p>
 </section>
 
 <section class="games-sec" id="hauntmap-games">

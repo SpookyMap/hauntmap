@@ -3707,68 +3707,90 @@ def haunt_or_not_page(request: Request):
 # ------------------------------------------------------- portal catalog
 # PORTAL CATALOG (Dan, Oct 26: "Let's add more games as well" — the
 # "portal catalog later" half of his Oct 25 "Both — ours first, portal
-# catalog later" call). Route: GameDistribution's publisher program —
-# embedding catalog games on third-party sites IS the product (their
-# DGI/publisher docs walk through exactly this iframe flow), games are
-# hosted + ad-monetized by GD under the publisher agreement, and each
-# embed carries gd_sdk_referrer_url pointing at the page the game plays
-# on (here: the /games hub itself). CrazyGames was evaluated and ruled
-# out: it is a developer-submission portal whose games are sitelocked
-# to crazygames.com domains — no third-party embed program exists.
+# catalog later" call).
+#
+# Oct 26 SWAP (Dan: "Swap the Arcade to ungated games now"): the
+# original route was GameDistribution's publisher program, but GD
+# REJECTED HauntMap's publisher registration on traffic grounds the
+# same day, and its embeds render GD's "NOT AVAILABLE HERE"
+# interstitial on gethauntmap.com — the domain was never approved,
+# so no GD title can ever play here. The shelf now runs on GamePix's
+# open webmaster embed program: embedding catalog games on
+# third-party sites IS the product, there is no domain approval or
+# publisher-account gate, games are hosted + ad-monetized by GamePix,
+# and each embed is play.gamepix.com/<slug>/embed?sid=<publisher id>
+# (portal_games.js builds the URL; the sid is the one GamePix
+# distributes in its public demo feed — swap in HauntMap's own free
+# GamePix sid in portal_games.js if attribution is ever wanted).
+# CrazyGames stays ruled out: developer-submission portal, games
+# sitelocked to crazygames.com, no third-party embed program.
 #
 # Curation rules applied: Halloween/horror/spooky only, family-
 # appropriate (no gore FPS), touch-first controls (most traffic is
-# phones), instantly playable. Every id below was verified live
-# (embed endpoint 200, no X-Frame-Options) on 2026-10-26. The hub
-# renders click-to-load facades, so these cost the page nothing until
-# a visitor taps Play. Ghost Maze stays the featured hero above this
-# section; nothing here touches it or its leaderboard.
+# phones), instantly playable. Genre-for-genre swap against the GD
+# shelf (bubble / knife timing / tower defense / merge / match-3 /
+# memory / hidden object / coloring). Cover art is GamePix's own
+# img CDN (the facade role GD's img CDN played before). Ghost Maze
+# stays the featured hero above this section; nothing here touches
+# it or its leaderboard.
 #
-# SHIP GATE: staged on branch games-catalog for Dan's preview. Before
-# this goes live for real, Dan creates the free GameDistribution
-# publisher account and registers gethauntmap.com so the plays (and
-# the publisher revenue share) are attributed to HauntMap.
+# RENDER-VERIFIED Oct 26 (live-browser play-through, each embed
+# taken past the GamePix splash into real gameplay — see
+# hidden_files/arcade-swap-prep/VERIFIED.md). Three prep candidates
+# were caught bad and replaced: knife-hit-horror-2 (loaded a
+# different game), spooky-bubble-shooter (game file Access Denied),
+# halloween-match / zombie-gems (wrong gameplay / wrong game).
+# Aspect w/h per GamePix feed metadata + the verification pass.
 PORTAL_GAMES = [
-    {"id": "77f19c21dda1480cb63444ff8e8eaaf3",
+    {"slug": "halloween-bubble-shooter",
+     "img": "https://img.gamepix.com/games/halloween-bubble-shooter/cover/halloween-bubble-shooter.png?w=512",
      "title": "Halloween Bubble Shooter",
      "blurb": "Aim, match and pop the monster bubbles. Tap, drag, "
               "release \u2014 pure Halloween candy for your brain.",
-     "tag": "Bubble shooter \u00b7 all ages", "w": 960, "h": 540},
-    {"id": "b311fce6d5cc498095f4deca5ff9d943",
-     "title": "Halloween Knife Hit",
-     "blurb": "Throw knives, split the pumpkins, beat the boss. "
+     "tag": "Bubble shooter \u00b7 all ages", "w": 600, "h": 800},
+    {"slug": "knife-hit",
+     "img": "https://img.gamepix.com/games/knife-hit/cover/knife-hit.png?w=512",
+     "title": "Knife Hit",
+     "blurb": "Throw knives, split the targets, beat the boss. "
               "One-tap timing that gets dangerously addictive.",
-     "tag": "Arcade timing \u00b7 portrait play", "w": 720, "h": 1280},
-    {"id": "cdf013b031d24277ada4c46ea30ada44",
-     "title": "Zombies Are Coming",
-     "blurb": "Tower defense: man the turret, freeze and zap the "
-              "horde, survive the night.",
-     "tag": "Tower defense", "w": 1280, "h": 720},
-    {"id": "e648747296814ee2afb3f8884599cec2",
-     "title": "Spooky Bubble Shooter",
-     "blurb": "Pop the zombie eyes, free the golden jack-o\u2019-lanterns "
-              "\u2014 72 levels of spooky bubble popping.",
-     "tag": "Bubble shooter \u00b7 72 levels", "w": 800, "h": 480},
-    {"id": "0e927ec3e6fe4fdab30da247832941d0", "img": "512x340",
-     "title": "Zombie Gems",
-     "blurb": "Match-3 with a spooky twist \u2014 line up the zombie "
-              "gems and chain the combos.",
-     "tag": "Match-3 puzzle", "w": 640, "h": 480},
-    {"id": "cc0c400d12c540b6b134230148d4eb4f",
-     "title": "Fun Halloween Memory",
-     "blurb": "Flip the tiles and match the monsters \u2014 14 levels "
-              "of concentration candy.",
-     "tag": "Memory \u00b7 kids love it", "w": 1280, "h": 720},
-    {"id": "f16d560cf9214a46abccb92ae11952f5", "img": "512x340",
-     "title": "Scary Halloween Party",
-     "blurb": "Hidden-object hunt: find the 10 hidden stars in "
-              "every spooky scene before the clock runs out.",
+     "tag": "Arcade timing", "w": 800, "h": 600},
+    {"slug": "chaos-zombie-tower-defense",
+     "img": "https://img.gamepix.com/games/chaos-zombie-tower-defense/cover/chaos-zombie-tower-defense.png?w=512",
+     "title": "Chaos Zombie Tower Defense",
+     "blurb": "Tower defense: build your line, hold the gate, "
+              "zap and freeze the horde, survive the night.",
+     "tag": "Tower defense", "w": 800, "h": 600},
+    {"slug": "spooky-merge",
+     "img": "https://img.gamepix.com/games/spooky-merge/cover/spooky-merge.png?w=512",
+     "title": "Spooky Merge",
+     "blurb": "Drop the spooky pieces and merge your way up the "
+              "chain \u2014 pumpkins, ghosts and monsters combine into "
+              "bigger and bigger haunts.",
+     "tag": "Merge puzzle \u00b7 portrait play", "w": 600, "h": 800},
+    {"slug": "jewel-monsters",
+     "img": "https://img.gamepix.com/games/jewel-monsters/cover/jewel-monsters.png?w=512",
+     "title": "Jewel Monsters",
+     "blurb": "Match-3 with a monstrous twist \u2014 line up the "
+              "jewel monsters and chain the combos.",
+     "tag": "Match-3 puzzle \u00b7 portrait play", "w": 600, "h": 800},
+    {"slug": "halloween-matching",
+     "img": "https://img.gamepix.com/games/halloween-matching/cover/halloween-matching.png?w=512",
+     "title": "Halloween Matching",
+     "blurb": "Flip the tiles and match the monsters \u2014 "
+              "concentration candy for sharp little ghouls.",
+     "tag": "Memory \u00b7 kids love it", "w": 800, "h": 600},
+    {"slug": "spooky-halloween-hidden-pumpkin",
+     "img": "https://img.gamepix.com/games/spooky-halloween-hidden-pumpkin/cover/spooky-halloween-hidden-pumpkin.png?w=512",
+     "title": "Spooky Halloween Hidden Pumpkin",
+     "blurb": "Hidden-object hunt: spot every hidden pumpkin "
+              "haunting the spooky scenes before the clock runs out.",
      "tag": "Hidden object", "w": 800, "h": 600},
-    {"id": "7d22c82a53a7499ca906c001df0ebf1c", "img": "512x340",
+    {"slug": "halloween-coloring-book-for-kids",
+     "img": "https://img.gamepix.com/games/halloween-coloring-book-for-kids/cover/halloween-coloring-book-for-kids.png?w=512",
      "title": "Halloween Coloring Book",
      "blurb": "Color the witches, cats and jack-o\u2019-lanterns \u2014 "
               "the calm corner of the arcade.",
-     "tag": "Coloring \u00b7 all ages", "w": 854, "h": 480},
+     "tag": "Coloring \u00b7 all ages", "w": 800, "h": 600},
 ]
 
 
