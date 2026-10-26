@@ -823,4 +823,22 @@ function hmFullHomepage() {
   <a class="browse-towns-link" href="/towns">Browse by town &rarr;</a>
 </div>
 
+{# bubbles-bottom (Dan, Oct 26): the hero bubble strip repeats at the
+   END of the feed, just above the footer — Music and every other
+   bubble reachable after a full feed scroll, not only at the top.
+   Same buttons, same classes/order as the top copy; the
+   .vt-tv-strip-bottom rules (style.css) seat it at both widths
+   (phone reuses the phone twin's wrap fit, labels inside bubbles).
+   Plain links only — no ids, no JS hooks — so no collision with
+   the two copies above. #}
+<div class="vt-tv-strip vt-tv-strip-bottom">
+  <a class="vt-btn" href="/virtual-tour"><span class="vt-ic">&#x25B6;&#xFE0F;</span><span class="vt-label"><span class="vt-l1">Virtual</span> <span class="vt-l2">Tour</span></span></a>
+  <a class="tv-btn" href="/virtual-tour?mode=tv"><span class="vt-ic">&#x1F4FA;</span><span class="vt-label"><span class="vt-l1">HauntMap</span> <span class="vt-l2">TV</span></span></a>
+  <a class="music-btn" href="/music"><span class="vt-ic">&#x1F3B5;</span><span class="vt-label"><span class="vt-l1">HauntMap</span> <span class="vt-l2">Music</span></span></a>
+  <a class="movies-btn" href="/movies"><span class="vt-ic">&#x1F3AC;</span><span class="vt-label"><span class="vt-l1">HauntMap</span> <span class="vt-l2">Movies</span></span></a>
+  <a class="art-btn" href="/fan-art"><span class="vt-ic">&#x1F3A8;</span><span class="vt-label"><span class="vt-l1">HauntMap</span> <span class="vt-l2">Art</span></span></a>
+  <a class="markets-btn" href="/markets"><span class="vt-ic">&#x1F6D2;</span><span class="vt-label"><span class="vt-l1">Flea</span> <span class="vt-l2">Markets</span> <span class="vt-l3">&amp; Pop-Ups</span></span></a>
+  <a class="top100-btn" href="/leaderboard/top-100"><span class="vt-ic">&#x1F3C6;</span><span class="vt-label"><span class="vt-l1">Top 100</span> <span class="vt-l2">Nationwide</span></span></a>
+</div>
+
 {% endblock %}

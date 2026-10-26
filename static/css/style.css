@@ -2892,6 +2892,29 @@ body.has-tourbar.has-radio { padding-bottom: 124px; }
   .vt-tv-strip-phone .vt-ic { font-size: 0.92rem; line-height: 1; }
 }
 
+/* ============ bubbles-bottom (Dan, Oct 26) ============
+   Third copy of the bubble strip, seated at the END of the homepage
+   feed just above the footer (index.html). All base .vt-tv-strip
+   rules apply as-is; these rules only seat the copy: desktop mirrors
+   the top copy's fit trim, phone mirrors the phone twin's FINAL
+   wrap layout (4-up rows, icon over stacked label lines, labels
+   fully inside their bubbles, nothing off-screen) without needing
+   the .hero-split seat. */
+.vt-tv-strip-bottom { margin: 1.1rem 0 0.5rem; }
+@media (min-width: 761px) {
+  .vt-tv-strip-bottom a { font-size: 0.68rem; }
+}
+@media (max-width: 760px) {
+  .vt-tv-strip-bottom { flex-wrap: wrap; justify-content: center; gap: 0.35rem; }
+  .vt-tv-strip-bottom a {
+    flex: 0 1 calc((100% - 3 * 0.35rem) / 4);
+    flex-direction: column; justify-content: center;
+    gap: 0.14rem; padding: 0.42rem 0.1rem;
+    font-size: 0.52rem; line-height: 1.18;
+  }
+  .vt-tv-strip-bottom .vt-ic { font-size: 1rem; line-height: 1; }
+}
+
 /* ============ z80: PHONE MODULE DIET (Dan, Oct 23) ============
    Phone only (<=760px); desktop rendering untouched. Two homepage
    modules shrink hard at phone width:
