@@ -5205,3 +5205,37 @@ main.wrap:has(> .vt-tv-strip-bottom) { padding-bottom: 0; }
 .header-band .header-hook .ep1 { color: #c9a7fc; }
 .header-band .header-hook .ep2 { color: #e01e26; }
 .header-band .header-hook .ep3 { color: #fc7518; }
+/* ============ z155: PHONE JOIN PILL SLIMS DOWN (Dan, Oct 26) ============
+   Dan (phone screenshot): "make the Join HauntSocial button smaller
+   and less clunky, neat and clean for the phone view." PHONE PORTRAIT
+   ONLY — the laptop pill keeps its z150/z151 seat and size exactly,
+   and compact landscape (pill beside the GIF) is a different band
+   and is not in this block.
+   Two moves inside the phone-portrait band:
+   (1) The "- The First Halloween Social Network" caption is DROPPED
+       on phone. In the 120px seat it stacked into 3 cramped lines
+       (0.46rem, z151) — over half the pill's height — and a one-line
+       version cannot fit: ~34 chars at the ~0.5rem floor is ~135px
+       of type against a ~105px content box. Neatness wins: the
+       homepage HauntSocial band carries the full pitch, and the
+       header pill becomes one clean line.
+   (2) Part of the freed height returns as vertical padding so the
+       pill lands at a tidy ~38px instead of a ~21px sliver:
+       vertical padding 0.24rem -> 0.75rem, horizontal unchanged.
+       Height math, anchored on z151's measured 49.5px phone pill
+       (border 4 + padding 7.7 + label line 10.2 + caption margin
+       1.6 + caption 3 lines x 8.83 = 49.5): -28.1px of caption
+       + 16.3px of padding = ~38px, with the "Join HauntSocial"
+       label (Eater brand at z133's 0.58rem floor, untouched —
+       smaller slices its glyphs) centered on one line.
+   The member @handle pill shares this padding rule and gets the
+   same slim seat (~35px); its cqw handle scaling is untouched.
+   Width still matches the Events GIF column exactly; the GIF ->
+   pill gap, the discs, the hook and everything else in the header
+   are untouched, and the header gives back the ~11.5px the pill
+   sheds (~258.8 -> ~247px at 390 where the column drives the
+   rows). */
+@media (max-width: 760px) and (orientation: portrait) {
+  .header-events-col a.nav-join .nav-join-tag { display: none; }
+  .site-header.v2 .header-nav .header-events-col a.nav-join { padding: 0.75rem 0.35rem; }
+}
