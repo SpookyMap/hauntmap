@@ -1660,23 +1660,22 @@ def detail_chain(entry: dict) -> dict:
                     break
     # Retention Wave 1, Item 3 (video chain): when THIS pin has footage,
     # the primary Next target chains to ANOTHER pin with footage (same
-    # predicate) instead of the nearest pin of any kind, and the
-    # under-player strip lists those nearby footage pins. The radius cap
+    # predicate) instead of the nearest pin of any kind. The radius cap
     # keeps "near" honest — beyond it the caller falls back to the plain
     # geographic next above. WHICH footage pin leads the chain is the
     # most-viewed one (see the Dan note inside the block below).
+    # (The old under-player "More videos near here" strip — `more_videos`
+    # — was removed Oct 26 at Dan's order: his rail data showed it at
+    # 23 seen / 0 clicks while the next-bar earned the clicks doing the
+    # same job, so the next-bar is now the single video-continuation
+    # path and "More near here" took the under-player slot.)
     out["next_video_pin"] = None
-    out["more_videos"] = []
     out["video_chain"] = []
     out["town_centers"] = []
     if has_footage(entry):
         # `coord` is already distance-sorted and carries `distance`.
         vids = [p for p in coord
                 if has_footage(p) and p["distance"] <= VIDEO_CHAIN_RADIUS_MI]
-        # The strip itself obeys the near-rail cap (Dan, Oct 25) even
-        # though the chain pick below keeps the wider video radius.
-        out["more_videos"] = [p for p in vids
-                              if p["distance"] <= NEAR_RAIL_CAP_MI][:6]
         # Dan (Oct 23, later the same day): "Play the most viewed
         # first" — and it should be based on the USER's location, like
         # everything else on the site. The pick is now the MOST-VIEWED
@@ -1695,8 +1694,6 @@ def detail_chain(entry: dict) -> dict:
         #      is near the visitor;
         #   3. if that pool is empty the caller keeps today's plain
         #      geographic next.
-        # `more_videos` (the "More videos near here" strip) stays
-        # nearest-first, as its label says.
         views_by_id = _chain_views
         with get_conn(DB_PATH) as conn:
             inventory = _town_inventory(conn, entry["category"])
@@ -4943,7 +4940,6 @@ def detail(request: Request, entry_id: int):
          "next_is_video": bool(video_next_pin),
          "video_chain": chain.get("video_chain", []),
          "town_centers": chain.get("town_centers", []),
-         "more_videos": chain.get("more_videos", []),
          "prev_pin": chain["prev_pin"], "more_near": chain["more_near"],
          "more_like": chain["more_like"], "town_pin_ids": town_pin_ids,
          "more_haunts": more_haunts, "town_haunts": town_haunts,

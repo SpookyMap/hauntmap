@@ -60,24 +60,18 @@
     {% if entry.is_sample %}<span class="sample-badge">Sample</span>{% endif %}
   </div>
   {% endif %}
-  {% if more_videos %}
-  {# Retention Wave 1, Item 3: compact footage rail DIRECTLY under the
-     player, so a video visitor's next tap is another video — before the
-     title/meta block and everything that follows it. #}
-  <section class="more-videos" aria-label="More videos near here">
-    <h2>&#x1F3AC; More videos near here{% if more_videos %} &middot; within {{ "%.1f"|format(more_videos|map(attribute='distance')|max) }} mi{% endif %}</h2>
-    <div class="rail" data-rail="footage">
-      {% for p in more_videos %}{{ pin_card(p, true) }}{% endfor %}
-    </div>
-  </section>
-  {% endif %}
   {% if more_near %}
   {# Rail Boost (Oct 25), Item 4: "More near here" MOVED here from below
-     the map — proximity first, directly under the footage rail and above
-     the town rail, so the discovery chain starts with what's closest.
-     Same pins, same order (nearest first); nothing was removed from
-     the page, this section just lives higher now. Item 5: the rail-end
-     bulk add turns this discovery into a tour in one tap. #}
+     the map — proximity first, above the town rail, so the discovery
+     chain starts with what's closest. Same pins, same order (nearest
+     first). Item 5: the rail-end bulk add turns this discovery into a
+     tour in one tap.
+     Rail merge (Oct 26, Dan): the "More videos near here" footage rail
+     that used to sit between the player and this rail is GONE — Dan's
+     rail data had it at 23 seen / 0 clicks while the sticky next-bar
+     earned the clicks doing the same job. The next-bar is now the
+     single video-continuation path, and this rail takes the vacated
+     slot DIRECTLY under the player as the first rail on the page. #}
   <section class="rail-section rail-boost-near">
     <h2>&#x1F4CD; More near here &middot; within {{ "%.1f"|format(more_near|map(attribute='distance')|max) }} mi</h2>
     <div class="rail" data-rail="near-here">
