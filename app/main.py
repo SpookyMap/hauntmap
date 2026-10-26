@@ -2998,6 +2998,7 @@ def events_page(request: Request, type: str = "", genre: str = "",
             day_groups.append({
                 "label": _ev_day_label(on_date, today),
                 "anchor": "day-" + on_date.isoformat(),
+                "date": on_date,
                 "entries": _ev_sort_day(entries, sort)})
     else:
         by_day: dict = {}
@@ -3012,13 +3013,142 @@ def events_page(request: Request, type: str = "", genre: str = "",
             day_groups.append({
                 "label": _ev_day_label(d, today),
                 "anchor": "day-" + d.isoformat(),
+                "date": d,
                 "entries": _ev_sort_day(by_day[d], sort)})
         if undated:
             day_groups.append({
                 "label": "More events \u2014 see the listing for dates",
                 "anchor": "day-more",
+                "date": None,
                 "entries": _ev_sort_day(undated, sort)})
     entries = [e for g in day_groups for e in g["entries"]]
+    # ---------------------------------------------------------------
+    # Events upgrade (Dan, Oct 25 — from the time-on-page table:
+    # /events pulled top-tier views at ~0s average active time; the
+    # first screen was chrome, not an answer). Everything below
+    # ANNOTATES the same listed set — day_groups / entries / counts
+    # keep their exact semantics, so listing parity is structural:
+    #   * per-entry _ev_day / _day_short / _start_label / _dist for
+    #     the upgraded cards (date badge, start time, distance);
+    #   * a SPOTLIGHT — the soonest day's best event: nearest to the
+    #     visitor within the 50 mi visitable cap when a point
+    #     resolves, else the day's biggest (votes, then video, then
+    #     earliest start). Labelled Tonight only when it IS tonight;
+    #   * a NEAR YOU lead — listed events within 50 mi of the
+    #     visitor point, soonest first, ahead of (never instead of)
+    #     the full day-grouped list;
+    #   * chip data for the sticky client-side filter bar.
+    # The visitor point: the explicit ?lat=&lng= fix when one rode
+    # along, else _visitor_geo's Cloudflare coordinates, else the
+    # centroid of the visitor's exact events town (the same cached
+    # inventory the ?near= flow resolves against). No signal ->
+    # _dist stays None and there is no near section; the page leads
+    # with the day list exactly as before. Distances print only at
+    # <= 50 mi — the standing "near means visitable" rule.
+    ev_chrome = on_date is None
+    _wd = today.weekday()
+    _sat = today - timedelta(days=_wd - 5) if _wd >= 5 \
+        else today + timedelta(days=5 - _wd)
+    _weekend = {_sat, _sat + timedelta(days=1)}
+    for g in day_groups:
+        gd = g.get("date")
+        g["rel"] = ("today" if gd == today else
+                    "tomorrow" if gd == today + timedelta(days=1) else "")
+        g["is_weekend"] = bool(gd and gd in _weekend)
+    vpoint = None
+    try:
+        _flat, _flng = float(lat), float(lng)
+        if -90 <= _flat <= 90 and -180 <= _flng <= 180:
+            vpoint = (_flat, _flng)
+    except (TypeError, ValueError):
+        vpoint = None
+    _geo = None
+    if vpoint is None:
+        _geo = _visitor_geo(request)
+        if _geo and _geo.get("lat") is not None \
+                and _geo.get("lng") is not None:
+            vpoint = (_geo["lat"], _geo["lng"])
+    if vpoint is None and _geo and (_geo.get("city") or _geo.get("state")):
+        _cands = [t for t in _town_inventory(None, "events")
+                  if _geo.get("city") and t["clat"] is not None
+                  and t["city"].lower() == _geo["city"].lower()]
+        if _geo.get("state"):
+            _in_st = [t for t in _cands if t["state"] == _geo["state"]]
+            if _in_st:
+                _cands = _in_st
+        if _cands:
+            _t0 = sorted(_cands, key=lambda t: -t["count"])[0]
+            vpoint = (_t0["clat"], _t0["clng"])
+
+    def _fmt_start(mins):
+        if mins is None:
+            return None
+        h24, m = divmod(mins, 60)
+        return f"{h24 % 12 or 12}:{m:02d} {'AM' if h24 < 12 else 'PM'}"
+
+    for g in day_groups:
+        gd = g.get("date")
+        for e in g["entries"]:
+            e["_ev_day"] = gd
+            if gd is None:
+                e["_day_short"] = ""
+            elif gd == today:
+                e["_day_short"] = "Tonight"
+            elif gd == today + timedelta(days=1):
+                e["_day_short"] = "Tomorrow"
+            else:
+                e["_day_short"] = gd.strftime("%a, %b ") + str(gd.day)
+            e["_start_min"] = _event_start_minutes(e["title"])
+            e["_start_label"] = _fmt_start(e["_start_min"])
+            e["_dist"] = None
+            if vpoint and e.get("lat") is not None \
+                    and e.get("lng") is not None:
+                e["_dist"] = round(haversine_miles(
+                    vpoint[0], vpoint[1], e["lat"], e["lng"]), 1)
+    spotlight = None
+    near_events: list = []
+    if ev_chrome:
+        _dated = [g for g in day_groups if g.get("date")]
+        if _dated:
+            _pool = _dated[0]["entries"]
+            _pick = None
+            if vpoint:
+                _near_pool = [e for e in _pool
+                              if e["_dist"] is not None
+                              and e["_dist"] <= 50]
+                if _near_pool:
+                    _pick = min(_near_pool, key=lambda e: (
+                        e["_dist"], e["_start_min"] is None,
+                        e["_start_min"] or 0, e["id"]))
+            if _pick is None:
+                def _big_key(e):
+                    return (-(e["votes"] or 0),
+                            0 if ((e.get("tiktok_url") or "").strip()
+                                  or e.get("media_type") == "video")
+                            else 1,
+                            e["_start_min"] is None,
+                            e["_start_min"] or 0, e["id"])
+                _pick = min(_pool, key=_big_key)
+            spotlight = {"entry": _pick, "date": _dated[0]["date"],
+                         "is_tonight": _dated[0]["date"] == today,
+                         "day_label": _ev_day_label(_dated[0]["date"],
+                                                    today)}
+        if vpoint:
+            _cand = [e for g in _dated for e in g["entries"]
+                     if e["_dist"] is not None and e["_dist"] <= 50]
+            _cand.sort(key=lambda e: (
+                e["_ev_day"], e["_start_min"] is None,
+                e["_start_min"] or 0, e["_dist"], e["id"]))
+            near_events = _cand[:8]
+    _type_labels = {o["value"]: o["label"] for o in facets[0]["options"]}
+    _type_counts: dict = {}
+    for e in entries:
+        if e.get("ev_type"):
+            _type_counts[e["ev_type"]] = \
+                _type_counts.get(e["ev_type"], 0) + 1
+    chip_types = [{"value": v, "label": _type_labels.get(v, v), "count": n}
+                  for v, n in sorted(_type_counts.items(),
+                                     key=lambda kv: (-kv[1], kv[0]))]
     # Near-me state carried through the facet form + sort toggles as
     # hidden fields / a query fragment, so changing type/genre/sort
     # never drops the visitor's area. Bare "clear filters" links stay
@@ -3035,6 +3165,8 @@ def events_page(request: Request, type: str = "", genre: str = "",
     return templates.TemplateResponse(request, "events.html",
         {"request": request, "entries": entries, "sort": sort,
          "day_groups": day_groups,
+         "spotlight": spotlight, "near_events": near_events,
+         "chip_types": chip_types, "ev_chrome": ev_chrome,
          "facets": facets, "selected": selected, "total": total,
          "loc": loc,
          "filtered": any(selected.values()) or bool(state) or bool(town)
