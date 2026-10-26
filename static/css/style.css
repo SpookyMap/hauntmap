@@ -5297,8 +5297,10 @@ main.wrap:has(> .vt-tv-strip-bottom) { padding-bottom: 0; }
    strip's height at every width, and both rotating lines are
    absolutely inset to the same content box. The whole strip is
    ONE <a href="/advertise"> in both states. Copy figures are the
-   verified sponsor-send floors (200,000+ total views Oct 26 —
-   Dan's admin showed 206,175 the same day); never inflated. */
+   verified sponsor-send floors (120,000+ total HUMAN views,
+   corrected Oct 26 — the earlier 200,000+ figure came from
+   counters that counted /healthz health-check pings as views;
+   Dan's admin showed 206,175 raw the same day); never inflated. */
 .adv-strip {
   --adv-py: 0.55rem; --adv-px: 0.7rem;
   position: relative; display: block; box-sizing: border-box;
@@ -5500,3 +5502,11 @@ main.wrap:has(> .vt-tv-strip-bottom) { padding-bottom: 0; }
   }
 }
 
+/* z166 (Oct 26, 2026): SPONSOR FIGURES — HUMAN-ONLY CORRECTION (Dan
+   approved Oct 26). The homepage sponsor strip's business line now
+   reads "seen by 120,000+ Halloween visitors" (was 200,000+): the
+   old figure came from counters that counted /healthz health-check
+   pings as views (68,573 pings through Oct 26). Copy lives in
+   templates/index.html; the /media-kit aggregates in app/main.py
+   now exclude machine paths the same way, so every sponsor-facing
+   number is human page views only. No style rules in this block. */

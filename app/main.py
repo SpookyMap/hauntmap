@@ -7066,34 +7066,42 @@ def movies_page(request: Request):
     )
 
 
+# Sponsor-facing counts are HUMAN page views only: machine paths are
+# excluded (Oct 26, 2026 correction — /healthz health-check pings were
+# being logged in page_views and counted as views, and every ping
+# carried its own sid so each one also counted as a separate "visit":
+# 68,573 pings through Oct 26). /admin/stats keeps the raw request
+# count for ops; the media kit never quotes it.
+_MK_HUMAN = "path NOT IN ('/healthz', '/sitemap.xml') AND path NOT LIKE '/api/%'"
+
+
 def _mk_visitors(today_d) -> dict:
-    """Media-kit visitor counts: distinct session ids today / last 7
-    days. TTL-cached per UTC date (fortification pass 2): each count
-    was a COUNT(DISTINCT sid) scan over the whole page_views table
-    (the substr() date filter defeats the date index) on every
-    /media-kit render."""
+    """Media-kit visitor counts: distinct session ids on human page
+    views, today / last 7 days. TTL-cached per UTC date (fortification
+    pass 2): each count was a COUNT(DISTINCT sid) scan over the whole
+    page_views table (the substr() date filter defeats the date index)
+    on every /media-kit render."""
     def build():
         week_start_d = today_d - timedelta(days=6)
         with get_conn(DB_PATH) as conn:
             today = conn.execute(
-                "SELECT COUNT(DISTINCT sid) FROM page_views WHERE substr(viewed_at, 1, 10) = ?",
+                "SELECT COUNT(DISTINCT sid) FROM page_views WHERE substr(viewed_at, 1, 10) = ? AND " + _MK_HUMAN,
                 (today_d.isoformat(),)).fetchone()[0]
             week = conn.execute(
-                "SELECT COUNT(DISTINCT sid) FROM page_views WHERE substr(viewed_at, 1, 10) >= ?",
+                "SELECT COUNT(DISTINCT sid) FROM page_views WHERE substr(viewed_at, 1, 10) >= ? AND " + _MK_HUMAN,
                 (week_start_d.isoformat(),)).fetchone()[0]
         return {"today": today, "week": week}
     return dict(_ttl_cached(f"mkvis:{today_d.isoformat()}", build))
 
 
 def _mk_total_views() -> int:
-    """Media-kit all-time total page views: the same COUNT(*) over
-    page_views that /admin/stats shows as its total, so the kit and
-    the dashboard can never drift apart. TTL-cached like the other
-    kit aggregates (fortification pass 2 pattern)."""
+    """Media-kit all-time total HUMAN page views (machine paths
+    excluded via _MK_HUMAN — see the Oct 26 note above). TTL-cached
+    like the other kit aggregates (fortification pass 2 pattern)."""
     def build():
         with get_conn(DB_PATH) as conn:
             return conn.execute(
-                "SELECT COUNT(*) FROM page_views").fetchone()[0]
+                "SELECT COUNT(*) FROM page_views WHERE " + _MK_HUMAN).fetchone()[0]
     return int(_ttl_cached("mktotalviews", build))
 
 
