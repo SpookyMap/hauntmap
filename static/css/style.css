@@ -5238,4 +5238,27 @@ main.wrap:has(> .vt-tv-strip-bottom) { padding-bottom: 0; }
 @media (max-width: 760px) and (orientation: portrait) {
   .header-events-col a.nav-join .nav-join-tag { display: none; }
   .site-header.v2 .header-nav .header-events-col a.nav-join { padding: 0.75rem 0.35rem; }
+
+/* ============ z156: TOP STRIP GOES FULL WIDTH (Dan, Oct 26) ============
+   Dan: "Space out top of page Virtual Tour through Top 100
+   Nationwide buttons to span the entire page left to right with
+   proper spacing in between buttons. Nice and clean." z147 capped
+   BOTH strips at the hero's 1060px breakout, centered; the TOP
+   strip now drops the cap and takes the page's full span instead:
+   width calc(100vw - 2rem) leaves exactly the 1rem page margin a
+   side the header's own content sits at (logo at x=16, Frank flank
+   at vw-16 at every laptop width), so the first bubble is flush
+   with the page's left content edge and the last flush right. The
+   z147 centering breakout (left: 50% + translateX(-50%)) and the
+   base flex:1 1 0 carry over — only the width changes, so the 7
+   bubbles share the wider span with the same uniform 0.6rem gaps.
+   Slim z147 height, maze walls, pellets, labels, order and links
+   untouched. The BOTTOM strip keeps z147's 1060px centered geometry
+   exactly — this block selects the top strip only. Scoped to
+   >=1000px like z147's breakout; below that the strip keeps its
+   column seat and the phone twin is unchanged. (Re-dispatch of the
+   first attempt's WIP commit 108cce6 on branch topstrip-fullwidth,
+   rebased onto z152; renumbered z151 -> z156 at ship time (z153-z155 were taken by the bottom-strip, hook-colors and join-pill ships ahead of it in the Oct 26 retry queue).) */
+@media (min-width: 1000px) {
+  .vt-tv-strip.vt-tv-strip-top { width: calc(100vw - 2rem); }
 }
