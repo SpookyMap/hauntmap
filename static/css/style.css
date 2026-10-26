@@ -5269,7 +5269,7 @@ main.wrap:has(> .vt-tv-strip-bottom) { padding-bottom: 0; }
   .vt-tv-strip.vt-tv-strip-top { width: calc(100vw - 2rem); }
 }
 
-/* ============ z161: SPONSOR-VISIBILITY STRIP (Dan, Oct 26) ============
+/* ============ z161: SPONSOR-VISIBILITY STRIP (Dan, Oct 26) =====
    Dan approved the strip + the ROTATING version ("rotate both
    lines"). The leak: /advertise — the page every sponsor pitch
    points at, both price ladders + live Stripe checkout — got 103
@@ -5341,4 +5341,45 @@ main.wrap:has(> .vt-tv-strip-bottom) { padding-bottom: 0; }
   .hero-split { grid-template-rows: auto auto 376.63px auto auto; }
   .hero-split .adv-strip-rail { display: block; }
   .adv-strip-phone { display: none; }
+}
+
+/* ============ z162: PHONE JOIN PILL — A LITTLE SLIMMER STILL (Dan, Oct 26) ============
+   Dan, looking at the LIVE z155 pill on his phone (wide light-azure
+   capsule under Events & Parties): "joint jaunt soci button under
+   events and parties a little slimmer." A modest trim of the z155
+   seat, PHONE PORTRAIT ONLY — same band, later in the file so the
+   rules win on order. Measured on the local rig (Chromium, 390
+   portrait, anonymous): the z155 pill is 120 x 46.6px (Eater's line
+   box runs ~18.6px, taller than z155's analytic 10.2 — the live
+   number is the one that matters); this block lands it at
+   108 x 33.8px and the header gives back ~13px (255.9 -> 243).
+   (1) Height: vertical padding 0.75rem -> 0.35rem. The label type
+       is untouched (0.58rem Eater no-slice floor) — padding only.
+   (2) Width: 100% of the events column -> 90%, centered via
+       align-self: center (the z150 rule stretches it; same
+       specificity, this block is later): a slim ~6px inset a side
+       at the 120px column. At <=380 the column itself is only
+       110px and 90% would starve the label, so the pill keeps the
+       column's full width there (height trim still applies).
+   (3) The label is pinned to ONE line (nowrap, letter-spacing 0):
+       at 108px the two brand words would otherwise wrap at their
+       space and balloon the pill back to ~57px. With the tighter
+       horizontal padding (0.35rem -> 0.15rem) the one-line label
+       fits its ~99px content box exactly, fully inside, verified
+       at 390 / 430 / 360 with zero horizontal overflow.
+   The member @handle pill rides the same pill selector and gets
+   the same trim; its cqw handle scaling is untouched. The caption
+   stays dropped (z155); azure gradient, blue glow, GIF -> pill
+   gap, discs, hook and everything else are untouched, and laptop
+   + compact landscape are outside this band entirely. */
+@media (max-width: 760px) and (orientation: portrait) {
+  .site-header.v2 .header-nav .header-events-col a.nav-join {
+    padding: 0.35rem 0.15rem; width: 90%; align-self: center;
+  }
+  .header-events-col a.nav-join .nav-join-label {
+    white-space: nowrap; letter-spacing: 0;
+  }
+}
+@media (max-width: 380px) and (orientation: portrait) {
+  .site-header.v2 .header-nav .header-events-col a.nav-join { width: 100%; }
 }
