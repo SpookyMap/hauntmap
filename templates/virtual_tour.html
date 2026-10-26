@@ -2,7 +2,7 @@
 {% block title %}{% if is_tv %}HauntMap TV{% else %}Virtual Tour{% endif %} &middot; {{ site_name }}{% endblock %}
 {% block head %}
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 {% endblock %}
 {% block content %}
 <div class="vt-head">
@@ -44,6 +44,14 @@
 </section>
 {% endif %}
 
+<div class="vt-resume" id="vt-resume" hidden>
+  <p class="vt-resume-note" id="vt-resume-text">&#x23EF;&#xFE0F; You left off mid-tour.</p>
+  <div class="vt-resume-btns">
+    <button type="button" class="btn vt-resume-go" id="vt-resume-go">&#x25B6; Resume</button>
+    <button type="button" class="btn" id="vt-resume-x">Start over</button>
+  </div>
+</div>
+
 <div class="vt-main" id="vt-main">
   <div class="vt-left">
     <div class="vt-stage" id="vt-stage"></div>
@@ -56,13 +64,17 @@
       <p class="meta" id="vt-stop-meta"></p>
       <p class="entry-address" id="vt-stop-address" hidden></p>
       <p class="scare-badge" id="vt-stop-scare" hidden></p>
+      <div class="vt-actions">
+        <button type="button" class="tour-add-btn vt-add-btn" id="vt-add" data-tour-btn data-id="" data-lat="" data-lng="" data-title="" data-town="" data-thumb="">+ Tour</button>
+        <button type="button" class="btn vt-share-btn" id="vt-share">&#x1F517; Share this haunt</button>
+      </div>
     </div>
     <div class="vt-controls">
       <button type="button" class="btn vt-nav" id="vt-prev">&larr; Prev house</button>
       <span class="vt-counter" id="vt-counter">House 1 of 12</span>
       <button type="button" class="btn vt-nav vt-next" id="vt-next">Next house &rarr;</button>
     </div>
-    <div class="vt-progress"><div class="vt-progress-fill" id="vt-progress-fill"></div></div>
+    <div class="vt-progress" id="vt-progress" role="progressbar" aria-label="Tour progress" aria-valuemin="0" aria-valuemax="12" aria-valuenow="1"></div>
   </div>
   <aside class="vt-side">
     <div id="vt-map" class="vt-map"></div>
@@ -78,6 +90,10 @@
   <button type="button" class="btn btn-big" id="vt-build">&#x1F9ED; Build this as a real tour</button>
   {% if is_tv %}<button type="button" class="btn vt-channels-btn" id="vt-channels">&#x1F4FA; More channels — back to HauntMap TV guide</button>{% endif %}
   <button type="button" class="btn vt-replay" id="vt-replay">&#x21BB; Replay tour</button>
+  <div class="vt-end-channels" id="vt-end-channels" hidden>
+    <p class="vt-end-channels-label">Keep riding — pick another tour:</p>
+    <div class="vt-end-channels-row" id="vt-end-channels-row"></div>
+  </div>
   {% with sms_source = "virtual-tour" %}{% include "_text_alerts.html" %}{% endwith %}
 </section>
 
@@ -155,8 +171,24 @@
   .vt-nav:disabled { opacity: 0.4; cursor: default; }
   .vt-next { background: var(--accent); color: #1a0f00; border-color: var(--accent); font-weight: 800; }
   .vt-counter { font-weight: 700; color: var(--muted); white-space: nowrap; }
-  .vt-progress { height: 8px; background: #2c2145; border-radius: 99px; margin-top: 0.7rem; overflow: hidden; }
-  .vt-progress-fill { height: 100%; background: linear-gradient(90deg, var(--accent2), var(--accent)); width: 0; transition: width 0.3s ease; }
+  .vt-progress { display: flex; gap: 3px; margin-top: 0.7rem; }
+  .vt-seg { flex: 1 1 0; height: 8px; border-radius: 99px; background: #2c2145; transition: background 0.3s ease; }
+  .vt-seg-on { background: linear-gradient(90deg, var(--accent2), var(--accent)); }
+  .vt-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.65rem; }
+  .vt-add-btn { margin-top: 0; min-height: 48px; padding: 0.6rem 1.15rem; font-size: 0.95rem; display: inline-flex; align-items: center; }
+  .vt-share-btn { min-height: 48px; padding: 0.6rem 1.15rem; font-weight: 700; }
+  body.hm-tv .vt-add-btn, body.hm-tv .vt-share-btn { min-height: 60px; font-size: 1.05rem; }
+  .vt-resume {
+    margin: 0 0 1rem; padding: 0.8rem; border: 2px dashed var(--accent);
+    border-radius: 12px; background: #241243; text-align: center;
+  }
+  .vt-resume-note { margin: 0 0 0.6rem; font-weight: 700; }
+  .vt-resume-btns { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; }
+  .vt-resume-go { background: var(--accent); color: #1a0f00; border-color: var(--accent); font-weight: 800; min-height: 48px; }
+  .vt-end-channels { margin-top: 1.4rem; }
+  .vt-end-channels-label { font-weight: 700; color: var(--muted); margin: 0 0 0.6rem; }
+  .vt-end-channels-row { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; }
+  .vt-end-channels-row .btn { min-height: 48px; font-weight: 700; }
   .vt-side { display: flex; flex-direction: column; gap: 0.8rem; }
   .vt-map { height: 260px; border-radius: 14px; border: 2px solid #3a2566; overflow: hidden; background: #1d1530; z-index: 0; }
   .vt-stops { display: flex; flex-direction: column; gap: 0.45rem; max-height: 430px; overflow-y: auto; }
@@ -216,9 +248,15 @@ var VT_SCARE = {
       tvNext = document.getElementById('vt-tv-next'),
       stopsBox = document.getElementById('vt-stops'),
       counter = document.getElementById('vt-counter'),
-      fill = document.getElementById('vt-progress-fill'),
+      progress = document.getElementById('vt-progress'),
       prevBtn = document.getElementById('vt-prev'),
-      nextBtn = document.getElementById('vt-next');
+      nextBtn = document.getElementById('vt-next'),
+      addBtn = document.getElementById('vt-add'),
+      shareBtn = document.getElementById('vt-share'),
+      resumeBar = document.getElementById('vt-resume'),
+      resumeText = document.getElementById('vt-resume-text'),
+      resumeGo = document.getElementById('vt-resume-go'),
+      resumeX = document.getElementById('vt-resume-x');
   if (VT_TV) document.body.classList.add('hm-tv');
 
   function channelMeta(name) {
@@ -257,6 +295,55 @@ var VT_SCARE = {
       b.addEventListener('click', function () { go(i); });
       stopsBox.appendChild(b);
     });
+    // Keep the current stop visible inside the rail (horizontal strip on
+    // phones, vertical list on desktop) — it drifts off the end otherwise.
+    var on = stopsBox.querySelector('.vt-stop-on');
+    if (on) {
+      try {
+        var br = stopsBox.getBoundingClientRect(), cr = on.getBoundingClientRect();
+        if (window.innerWidth < 900) stopsBox.scrollBy({ left: cr.left - br.left - 12, behavior: 'smooth' });
+        else stopsBox.scrollBy({ top: cr.top - br.top - 8, behavior: 'smooth' });
+      } catch (e) {}
+    }
+  }
+
+  // Segmented progress (story-style): one segment per stop, filled up to
+  // the current stop — rebuilt per route, re-marked per stop change.
+  function buildProgress() {
+    progress.innerHTML = '';
+    stops.forEach(function () {
+      var d = document.createElement('div');
+      d.className = 'vt-seg';
+      progress.appendChild(d);
+    });
+    progress.setAttribute('aria-valuemax', stops.length);
+    markProgress();
+  }
+  function markProgress() {
+    var segs = progress.children;
+    for (var i = 0; i < segs.length; i++) segs[i].classList.toggle('vt-seg-on', i <= idx);
+    progress.setAttribute('aria-valuenow', idx + 1);
+  }
+
+  // Exit recovery: remember where a visitor left each tour (per route)
+  // so a return visit can offer to pick up mid-tour instead of
+  // restarting at House 1. 7-day freshness window.
+  var POS_KEY = 'hm_vt_pos';
+  function savePos() {
+    try {
+      localStorage.setItem(POS_KEY, JSON.stringify({ r: routeName, i: idx, t: Date.now() }));
+    } catch (e) {}
+  }
+  function readPos() {
+    try {
+      var p = JSON.parse(localStorage.getItem(POS_KEY) || 'null');
+      if (!p || typeof p.i !== 'number' || !p.r) return null;
+      if (Date.now() - (p.t || 0) > 7 * 24 * 3600 * 1000) return null;
+      return p;
+    } catch (e) { return null; }
+  }
+  function clearPos() {
+    try { localStorage.removeItem(POS_KEY); } catch (e) {}
   }
 
   function renderStage() {
@@ -316,7 +403,25 @@ var VT_SCARE = {
       scare.innerHTML = VT_SCARE[s.scare][0] + ' ' + VT_SCARE[s.scare][1];
     } else scare.hidden = true;
     counter.textContent = (VT_TV ? '📺 ' : '') + 'House ' + (idx + 1) + ' of ' + stops.length;
-    fill.style.width = Math.round(100 * (idx + 1) / stops.length) + '%';
+    markProgress();
+    // Per-stop tour add: point the sitewide [data-tour-btn] button at
+    // THIS stop — base.html's handler does the localStorage add and
+    // fires hmTrack('tour_add', id); hmTourSync paints its state.
+    if (addBtn) {
+      addBtn.setAttribute('data-id', s.id);
+      addBtn.setAttribute('data-lat', s.lat);
+      addBtn.setAttribute('data-lng', s.lng);
+      addBtn.setAttribute('data-title', s.title);
+      addBtn.setAttribute('data-town', s.town);
+      addBtn.setAttribute('data-thumb', s.thumb_url || '');
+      if (window.hmTourSync) hmTourSync();
+    }
+    savePos();
+    // Preload the NEXT stop's poster so the stage paints instantly on
+    // advance — one image ahead only, and never the video file itself
+    // (Render bandwidth is metered; the poster carries the transition).
+    var nxt = stops[idx + 1];
+    if (nxt && nxt.thumb_url) { var pi = new Image(); pi.src = nxt.thumb_url; }
     prevBtn.disabled = idx === 0;
     nextBtn.textContent = idx === stops.length - 1 ? 'Finish tour ✓' : 'Next house →';
     renderStops();
@@ -360,6 +465,7 @@ var VT_SCARE = {
   function go(i) {
     idx = Math.max(0, Math.min(i, stops.length - 1));
     endCard.hidden = true;
+    if (resumeBar) resumeBar.hidden = true;
     if (picker) picker.hidden = true;
     main.style.display = '';
     renderStage();
@@ -369,12 +475,33 @@ var VT_SCARE = {
   function finish() {
     main.style.display = 'none';
     if (picker) picker.hidden = true;
+    if (resumeBar) resumeBar.hidden = true;
     endCard.hidden = false;
+    clearPos();
     var meta = channelMeta(routeName);
     document.getElementById('vt-end-title').textContent =
-      'That\'s the ' + meta.label + (VT_TV ? ' channel' : ' tour') + '!';
+      'That\'s the ' + meta.label.replace(/ Tour$/, '') + (VT_TV ? ' channel' : ' tour') + '!';
     document.getElementById('vt-end-stats').textContent =
       stops.length + ' video haunts · ' + stateCount() + ' states · ~' + routeMiles() + ' miles of haunting';
+    // Completion loop: from the end card, one tap starts another tour —
+    // previously only TV mode had a way onward (its channel guide).
+    var ecBox = document.getElementById('vt-end-channels'),
+        ecRow = document.getElementById('vt-end-channels-row');
+    if (ecBox && ecRow) {
+      ecRow.innerHTML = '';
+      var others = 0;
+      VT_CHANNELS.forEach(function (c) {
+        if (c.id === routeName || !VT_ROUTES[c.id]) return;
+        others++;
+        var b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'btn';
+        b.textContent = c.emoji + ' ' + c.label;
+        b.addEventListener('click', function () { playChannel(c.id); });
+        ecRow.appendChild(b);
+      });
+      ecBox.hidden = !others;
+    }
     try { history.replaceState(null, '', '#end'); } catch (e) {}
     endCard.scrollIntoView({ block: 'start', behavior: 'smooth' });
   }
@@ -407,8 +534,10 @@ var VT_SCARE = {
     document.getElementById('vt-title').innerHTML = meta.title;
     document.getElementById('vt-sub').textContent = meta.sub;
     endCard.hidden = true;
+    if (resumeBar) resumeBar.hidden = true;
     main.style.display = '';
     initMap();
+    buildProgress();
     renderStage();
   }
 
@@ -438,6 +567,73 @@ var VT_SCARE = {
     if (e.key === 'ArrowRight' && !endShown()) { if (idx < stops.length - 1) go(idx + 1); else finish(); }
     if (e.key === 'ArrowLeft' && !endShown() && idx > 0) go(idx - 1);
   });
+  // Per-stop share: native share sheet where available, clipboard
+  // fallback (same pattern as the bracket / trivia pages).
+  if (shareBtn) shareBtn.addEventListener('click', function () {
+    var s = stops[idx];
+    if (!s) return;
+    var url = location.origin + '/d/' + s.id;
+    var text = s.title + ' — ' + s.town_label + ' on HauntMap 🎃';
+    if (navigator.share) {
+      try { var pr = navigator.share({ title: s.title, text: text, url: url }); if (pr && pr.catch) pr.catch(function () {}); } catch (e) {}
+    } else if (navigator.clipboard && navigator.clipboard.writeText) {
+      var done = function () {
+        var old = shareBtn.innerHTML;
+        shareBtn.innerHTML = '✓ Link copied';
+        setTimeout(function () { shareBtn.innerHTML = old; }, 1600);
+      };
+      navigator.clipboard.writeText(url).then(done, done);
+    } else {
+      try { prompt('Copy this haunt link:', url); } catch (e) {}
+    }
+  });
+
+  // Swipe navigation on the stage — phones are the dominant device and
+  // the stage previously offered buttons only. Horizontal-dominant
+  // swipes only; a real swipe also swallows the click that trails it,
+  // so swiping across a TikTok facade navigates instead of playing it.
+  var swipeX = null, swipeY = null, swipeAt = 0;
+  stage.addEventListener('touchstart', function (e) {
+    if (e.touches.length === 1) { swipeX = e.touches[0].clientX; swipeY = e.touches[0].clientY; }
+  }, { passive: true });
+  stage.addEventListener('touchend', function (e) {
+    if (swipeX === null || endShown() || pickerShown()) { swipeX = null; return; }
+    var dx = e.changedTouches[0].clientX - swipeX,
+        dy = e.changedTouches[0].clientY - swipeY;
+    swipeX = swipeY = null;
+    if (Math.abs(dx) < 48 || Math.abs(dx) < Math.abs(dy) * 1.4) return;
+    swipeAt = Date.now();
+    if (dx < 0) { if (idx < stops.length - 1) go(idx + 1); else finish(); }
+    else if (idx > 0) go(idx - 1);
+  }, { passive: true });
+  stage.addEventListener('click', function (e) {
+    if (Date.now() - swipeAt < 400) { e.stopPropagation(); e.preventDefault(); }
+  }, true);
+
+  // Resume offer (exit recovery): shown on a plain landing when a
+  // previous visit left a tour mid-way. Same-route resumes in place;
+  // cross-route resumes ride the existing ?route + #stop-N deep link.
+  function offerResume(p) {
+    if (!resumeBar || !resumeGo || !p || p.i < 1) return;
+    if (p.r === routeName) {
+      if (p.i >= stops.length) return;
+      resumeText.textContent = '⏯️ You left off at House ' + (p.i + 1) + ' of ' + stops.length + ' on this tour.';
+      resumeGo.addEventListener('click', function () { resumeBar.hidden = true; go(p.i); });
+    } else if (VT_ROUTES[p.r]) {
+      var meta = channelMeta(p.r);
+      resumeText.textContent = '⏯️ You left off at House ' + (p.i + 1) + ' of ' + VT_ROUTES[p.r].length + ' on the ' + meta.label + ' tour.';
+      resumeGo.addEventListener('click', function () {
+        location.href = '/virtual-tour?route=' + encodeURIComponent(p.r) +
+          (VT_TV ? '&mode=tv' : '') + '#stop-' + (p.i + 1);
+      });
+    } else return;
+    resumeBar.hidden = false;
+  }
+  if (resumeX) resumeX.addEventListener('click', function () {
+    resumeBar.hidden = true;
+    clearPos();
+  });
+
   document.getElementById('vt-replay').addEventListener('click', function () { go(0); });
   document.getElementById('vt-build').addEventListener('click', function () {
     var tour = [];
@@ -455,6 +651,9 @@ var VT_SCARE = {
     var initialHash = location.hash || '';
     var qs = new URLSearchParams(location.search);
     var explicitRoute = qs.has('route');
+    // Read any saved position BEFORE setRoute renders stop 1 (which
+    // re-saves position 0 and would clobber the stored one).
+    var savedPos = readPos();
     setRoute(VT_ACTIVE);
     var m = initialHash.match(/^#stop-(\d+)$/);
     if (m) go(Math.min(parseInt(m[1], 10) - 1, stops.length - 1));
@@ -463,6 +662,10 @@ var VT_SCARE = {
     // TV mode opens on the channel guide unless a channel / stop was
     // deep-linked — picking a channel is the lean-back front door.
     else if (VT_TV && !explicitRoute) showPicker(false);
+    // Plain landing, not TV: if a past visit left a tour mid-way,
+    // offer the pick-up instead of a silent restart (TV mode's front
+    // door is its channel guide, so the offer lives here only).
+    else if (!VT_TV) offerResume(savedPos);
   }
   // Boot after layout settles so Leaflet measures the real container size
   // (a 0-height read makes fitBounds zoom to the max and strands the map).
