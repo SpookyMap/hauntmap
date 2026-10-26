@@ -55,10 +55,28 @@
 
 <div class="vt-main" id="vt-main">
   <div class="vt-left">
-    <div class="vt-stage" id="vt-stage"></div>
+    <div class="vt-frame" id="vt-frame">
+    <div class="vt-stage" id="vt-stage">{% if is_tv %}<video id="vt-video" controls playsinline preload="metadata" hidden></video><iframe id="vt-tt" hidden allowfullscreen allow="autoplay; encrypted-media; picture-in-picture; fullscreen" title="TikTok video player"></iframe>{% endif %}</div>
     <div class="vt-tv-next" id="vt-tv-next" hidden>
       <p class="vt-tv-next-note">&#x1F4FA; <strong>HauntMap TV:</strong> TikTok stops can't auto-play the next house — watch this one, then ride on:</p>
       <button type="button" class="btn vt-tv-next-btn" id="vt-tv-next-btn">&#x25B6; Next haunt</button>
+    </div>
+    {% if is_tv %}
+    <div class="vt-remote" id="vt-remote">
+      <button type="button" class="vt-remote-btn" id="vt-mute" aria-pressed="false">&#x1F509; Sound</button>
+      <button type="button" class="vt-remote-btn" id="vt-remote-next">&#x23ED; Next</button>
+      <button type="button" class="vt-remote-btn vt-remote-fs" id="vt-fs" aria-pressed="false">&#x26F6; Full screen</button>
+    </div>
+    <div class="vt-frame-note" id="vt-frame-note" hidden></div>
+    <div class="vt-end-overlay" id="vt-end-overlay" hidden>
+      <p class="vt-end-emoji">&#x1F383;</p>
+      <h2 id="vt-end-overlay-title">That's the channel!</h2>
+      <p class="vt-end-stats" id="vt-end-overlay-stats"></p>
+      <p class="vt-end-channels-label">Keep riding — pick another channel:</p>
+      <div class="vt-end-channels-row" id="vt-end-overlay-row"></div>
+      <button type="button" class="btn vt-replay" id="vt-end-overlay-replay">&#x21BB; Replay channel</button>
+    </div>
+    {% endif %}
     </div>
     <div class="vt-info" id="vt-info">
       <h2 class="vt-stop-title"><a id="vt-stop-link" href="#">&nbsp;</a></h2>
@@ -77,7 +95,6 @@
       <button type="button" class="btn vt-nav" id="vt-prev">&larr; Prev house</button>
       <span class="vt-counter" id="vt-counter">House 1 of 12</span>
       <button type="button" class="btn vt-nav vt-next" id="vt-next">Next house &rarr;</button>
-      {% if is_tv %}<button type="button" class="btn vt-nav vt-fs-btn" id="vt-fs" aria-pressed="false">&#x26F6; Full screen</button>{% endif %}
     </div>
     <div class="vt-progress" id="vt-progress" role="progressbar" aria-label="Tour progress" aria-valuemin="0" aria-valuemax="12" aria-valuenow="1"></div>
   </div>
@@ -256,10 +273,10 @@
      TV mode emulates a TV: once the tour starts the viewer never
      modulates the view. The stage is ONE fixed frame — videos of any
      aspect letterbox/pillarbox inside it instead of resizing the
-     picture between stops — and fullscreen is held on #vt-shell
-     (stage + info + controls + end card, never removed from the
-     DOM), so swapping the video inside it can't drop the big
-     screen, not even at the end of the tour. */
+     picture between stops — and fullscreen is held on #vt-frame
+     (the video frame below), whose media elements are never
+     removed from the DOM, so swapping the video inside it can't
+     drop the big screen, not even at the end of the tour. */
   body.hm-tv .vt-stage {
     aspect-ratio: 16 / 9; width: 100%; max-height: 84vh; min-height: 0;
     margin-inline: auto;
@@ -268,26 +285,109 @@
     body.hm-tv .vt-stage { aspect-ratio: 4 / 5; max-height: 62vh; }
   }
   body.hm-tv .vt-stage video {
+    /* Absolute fill, not a flex item: as a flex item Chrome sizes
+       a replaced element by its intrinsic ratio instead of the
+       stage box (measured: a 4:3 clip rendered 564px wide in a
+       756px stage, offset -54px). Absolute inset:0 makes the
+       element box exactly the stage; object-fit letterboxes the
+       picture inside it. */
+    position: absolute; inset: 0;
     width: 100%; height: 100%; max-height: none; object-fit: contain;
   }
   body.hm-tv .vt-stage .tt-facade { width: 100%; height: 100%; }
   body.hm-tv .vt-stage .tt-facade img { height: 100%; max-height: none; }
   body.hm-tv .vt-stage .tiktok-embed,
   body.hm-tv .vt-stage iframe { max-width: 100%; max-height: 100%; }
-  #vt-shell:fullscreen, #vt-shell:-webkit-full-screen {
-    background: #07040f; overflow-y: auto; padding: 0.75rem;
+  /* The persistent TikTok player fills the stage (letterboxed by
+     TikTok's own player page, like the /diy embeds). Absolute fill
+     for the same flex-item reason as the video above. */
+  body.hm-tv .vt-stage iframe#vt-tt {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    border: 0; display: block;
   }
-  #vt-shell:fullscreen .vt-stage { max-height: calc(100vh - 250px); }
-  .vt-fs-btn { font-weight: 800; white-space: nowrap; }
+  /* CRITICAL: the author display rules above (and the base
+     .vt-stage video{display:block}) defeat the UA's
+     [hidden]{display:none} — without this rule the "hidden"
+     player stays rendered ON TOP of the visible one, transparent
+     and eating every click over the stage (the exact dead-controls
+     failure this rebuild exists to fix; caught by the suite when
+     the hidden iframe intercepted clicks meant for Next). */
+  body.hm-tv .vt-stage video[hidden],
+  body.hm-tv .vt-stage iframe#vt-tt[hidden] { display: none !important; }
+  /* ---- The video frame (Dan, Oct 26, second pass) ----
+     Fullscreen targets #vt-frame — the stage, the TikTok Next bar
+     and the TV remote, nothing else. No picker, no map, no page
+     furniture: the big screen is the VIDEO, TV-style. The frame is
+     never removed from the DOM and the media elements inside it
+     are created once (see renderTvMedia), so a stop change swaps
+     only a src — nothing exists that a browser can drop the big
+     screen for, in any engine. */
+  .vt-frame { position: relative; }
+  #vt-frame:fullscreen, #vt-frame:-webkit-full-screen {
+    background: #000; display: flex; flex-direction: column; padding: 0;
+  }
+  #vt-frame:fullscreen .vt-stage, #vt-frame:-webkit-full-screen .vt-stage {
+    flex: 1 1 auto; width: 100%; max-height: none; min-height: 0;
+    aspect-ratio: auto; border: 0; border-radius: 0;
+  }
+  /* In fullscreen the TikTok Next bar floats over the stage's
+     bottom edge instead of taking a flex row — otherwise the
+     picture area SHRINKS by the bar's height at TikTok stops
+     (measured: stage 800px tall at uploaded stops, 664px at
+     TikTok stops), breaking the fixed picture frame. */
+  #vt-frame:fullscreen .vt-tv-next, #vt-frame:-webkit-full-screen .vt-tv-next {
+    position: absolute; left: 0; right: 0; bottom: 0;
+    margin: 0; z-index: 5;
+  }
+  /* The TV remote: the ESSENTIAL controls (sound, next, fullscreen).
+     It never fades and never loses pointer events — a TV viewer can
+     always reach sound and the big screen, even mid-video, even
+     with the pointer parked on the picture. It floats over the
+     frame's top-right (letterbox zone for portrait embeds, clear of
+     both players' own bottom control bars). */
+  body.hm-tv .vt-remote {
+    position: absolute; top: 0.6rem; right: 0.6rem; z-index: 6;
+    display: flex; gap: 0.45rem;
+  }
+  .vt-remote-btn {
+    background: rgba(13, 9, 22, 0.78); color: #f9e5c2;
+    border: 1.5px solid rgba(178, 102, 255, 0.65); border-radius: 999px;
+    padding: 0.5rem 0.95rem; font-weight: 800; font-size: 0.95rem;
+    min-height: 44px; cursor: pointer; white-space: nowrap;
+    backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px);
+  }
+  .vt-remote-btn:hover, .vt-remote-btn:focus-visible {
+    background: rgba(32, 18, 58, 0.95); border-color: var(--accent2, #b266ff);
+  }
+  .vt-remote-fs { border-color: var(--accent, #ff7518); }
+  .vt-frame-note {
+    position: absolute; left: 50%; bottom: 0.8rem; transform: translateX(-50%);
+    z-index: 6; max-width: 92%; background: rgba(13, 9, 22, 0.92);
+    color: #f9e5c2; border: 1.5px solid rgba(178, 102, 255, 0.65);
+    border-radius: 10px; padding: 0.55rem 0.9rem; font-weight: 700;
+    font-size: 0.92rem; text-align: center;
+  }
+  /* End-of-channel choices as an overlay INSIDE the frame, so the
+     ride can continue without leaving the big screen. */
+  .vt-end-overlay {
+    position: absolute; inset: 0; z-index: 7; overflow-y: auto;
+    background: rgba(7, 4, 15, 0.93); text-align: center;
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: center; padding: 1.5rem 1rem;
+  }
+  .vt-end-overlay[hidden] { display: none; }
+  .vt-end-overlay h2 { margin: 0.4rem 0 0.2rem; }
   /* Chrome fades like a real TV once the ride is rolling; any input
      (mouse, touch, key) brings it straight back. The TikTok Next
-     prompt is a driving control, not chrome — it never fades. */
+     prompt is a driving control, not chrome — it never fades. The
+     remote is exempt by design (see above). */
   body.hm-tv .vt-controls, body.hm-tv .vt-info, body.hm-tv .vt-progress {
     transition: opacity 0.45s ease;
   }
   body.hm-tv.vt-idle .vt-controls, body.hm-tv.vt-idle .vt-info,
   body.hm-tv.vt-idle .vt-progress { opacity: 0; pointer-events: none; }
-  body.hm-tv.vt-idle #vt-shell { cursor: none; }
+  body.hm-tv.vt-idle .vt-stage { cursor: none; }
+  body.hm-tv.vt-idle .vt-remote, body.hm-tv.vt-idle .vt-remote * { cursor: pointer; }
 </style>
 <script>
 var VT_ROUTES = {{ routes|tojson }};
@@ -470,38 +570,51 @@ var VT_SCARE = {
 
   // ---- HauntMap TV screen discipline (TV mode only; every piece
   // below is inert in the regular player). Dan: a TV doesn't make
-  // you re-modulate the view once the show starts. So:
-  //  * Fullscreen lives on #vt-shell — the wrapper around picker,
-  //    player AND end card that is never removed from the DOM.
-  //    Videos swap INSIDE it, so fullscreen survives every stop
-  //    change and the end of the tour; it ends only when the
-  //    viewer ends it (Esc / the button), and a manual exit
-  //    clears the intent flag — nothing re-enters on its own.
-  //  * If the viewer full-screened the media element itself (the
-  //    native video / TikTok button), the next swap rips that
-  //    element out and the browser drops fullscreen: renderStage
-  //    flags the swap as ours just before it happens, and the
-  //    change handler re-enters on the shell once the drop has
-  //    settled (a re-entry requested inside the exit's own change
-  //    notification is silently rolled back by Chrome — measured).
-  //    If an engine still refuses (no user activation), the
-  //    viewer's next tap restores the screen they asked for
-  //    (pointerdown recovery).
-  //  * Player chrome fades out while the ride rolls and returns
-  //    on any input; the viewer's volume carries from each video
-  //    to the next so sound never needs re-setting between stops.
-  var shell = document.getElementById('vt-shell');
+  // you re-modulate the view once the show starts. Second pass
+  // (Oct 26, from Dan's own laptop): the first pass held fullscreen
+  // on #vt-shell and rebuilt the stage at every stop. On his
+  // MacBook that meant (Chrome) a fullscreen button buried below
+  // the fold inside chrome that fades — and fades back only on
+  // parent-document input the viewer can't give while the pointer
+  // sits on the video — and (Safari) the whole website on the big
+  // screen, dropping out between videos anyway. So now:
+  //  * Fullscreen lives on #vt-frame — ONLY the video frame
+  //    (stage + TikTok Next bar + the remote + the end overlay).
+  //    No picker, no map, no page furniture: the big screen is
+  //    the video, TV-style.
+  //  * The media elements are IMMORTAL: one <video> and one
+  //    TikTok <iframe>, created once in the markup, reused for
+  //    every stop — a stop change swaps only a src, never an
+  //    element. There is nothing left for any engine to drop
+  //    fullscreen over: no rebuild for WebKit to punish, and no
+  //    timed re-entry for its gesture window to reject. (The
+  //    handoff/retry machinery below survives only for the one
+  //    remaining removal case: leaving a TikTok stop a viewer
+  //    had full-screened from inside the embed.)
+  //  * The essential controls live in the remote (#vt-remote),
+  //    which NEVER fades: sound and fullscreen are reachable at
+  //    every moment of the ride. Only the info chrome below the
+  //    frame still fades like a TV.
+  //  * The viewer's volume carries from each video to the next
+  //    so sound never needs re-setting between stops.
+  var frame = document.getElementById('vt-frame');
   var fsBtn = document.getElementById('vt-fs');
-  var fsIntent = false, fsHandoff = 0, fsGen = 0;
+  var muteBtn = document.getElementById('vt-mute');
+  var remoteNext = document.getElementById('vt-remote-next');
+  var frameNote = document.getElementById('vt-frame-note');
+  var endOverlay = document.getElementById('vt-end-overlay');
+  var tvVideo = document.getElementById('vt-video');
+  var tvTt = document.getElementById('vt-tt');
+  var fsIntent = false;
   var tvVol = null;
   function fsCurrent() {
     return document.fullscreenElement || document.webkitFullscreenElement || null;
   }
-  function fsEnterShell() {
-    if (!shell || fsCurrent() === shell) return;
+  function fsEnterFrame() {
+    if (!frame || fsCurrent() === frame) return;
     try {
-      var p = shell.requestFullscreen ? shell.requestFullscreen()
-            : (shell.webkitRequestFullscreen ? shell.webkitRequestFullscreen() : null);
+      var p = frame.requestFullscreen ? frame.requestFullscreen()
+            : (frame.webkitRequestFullscreen ? frame.webkitRequestFullscreen() : null);
       if (p && p.catch) p.catch(function () {});
     } catch (e) {}
   }
@@ -521,9 +634,39 @@ var VT_SCARE = {
   }
   function toggleFs() {
     if (fsCurrent()) { fsIntent = false; fsExit(); }
-    else { fsIntent = true; fsEnterShell(); }
+    else { fsIntent = true; fsEnterFrame(); }
   }
-  if (VT_TV && shell) {
+  function isTtStop(s) {
+    return !!(s && s.tiktok_url && s.tiktok_url.indexOf('/video/') !== -1);
+  }
+  // The remote's sound button mirrors the CURRENT stop: on uploaded
+  // videos it toggles the element's own mute; on TikTok stops the
+  // page cannot reach inside the embed (TikTok starts embeds muted
+  // by its own policy and exposes no volume API), so the button
+  // says so and points at the video's own speaker icon — which is
+  // clickable precisely because nothing overlays the iframe.
+  function setMuteUI() {
+    if (!muteBtn || !tvVideo) return;
+    if (isTtStop(stops[idx])) {
+      muteBtn.innerHTML = '&#x1F509; Sound';
+      muteBtn.setAttribute('aria-pressed', 'false');
+    } else if (tvVideo.muted) {
+      muteBtn.innerHTML = '&#x1F507; Unmute';
+      muteBtn.setAttribute('aria-pressed', 'false');
+    } else {
+      muteBtn.innerHTML = '&#x1F50A; Sound on';
+      muteBtn.setAttribute('aria-pressed', 'true');
+    }
+  }
+  var noteTimer = null;
+  function showFrameNote(msg) {
+    if (!frameNote) return;
+    frameNote.textContent = msg;
+    frameNote.hidden = false;
+    clearTimeout(noteTimer);
+    noteTimer = setTimeout(function () { frameNote.hidden = true; }, 3200);
+  }
+  if (VT_TV && frame) {
     // The sitewide Add-Yours popup times itself 8-18s into a
     // visit — mid-first-video on a lean-back session. Its own
     // script (later in this same page) checks this exact session
@@ -531,52 +674,86 @@ var VT_SCARE = {
     // interrupt a TV tour. Other pages are untouched.
     try { sessionStorage.setItem('hm_addyours_shown', '1'); } catch (e) {}
     if (fsBtn) {
-      if (!shell.requestFullscreen && !shell.webkitRequestFullscreen) {
+      if (!frame.requestFullscreen && !frame.webkitRequestFullscreen) {
         fsBtn.style.display = 'none';
       }
       fsBtn.addEventListener('click', toggleFs);
       setFsUI();
     }
+    if (tvVideo) {
+      // Persistent-element listeners, attached ONCE: the element
+      // outlives every stop, so its handlers do too.
+      tvVideo.setAttribute('controlslist', 'nofullscreen');
+      tvVideo.autoplay = true;
+      tvVideo.addEventListener('ended', function () {
+        if (idx < stops.length - 1) go(idx + 1); else finish();
+      });
+      tvVideo.addEventListener('volumechange', function () {
+        tvVol = { v: tvVideo.volume, m: tvVideo.muted };
+        setMuteUI();
+      });
+    }
+    if (muteBtn) muteBtn.addEventListener('click', function () {
+      if (isTtStop(stops[idx])) {
+        showFrameNote('\uD83D\uDD09 Sound for TikTok lives in the video — tap the speaker icon on the video itself.');
+        return;
+      }
+      if (!tvVideo) return;
+      tvVideo.muted = !tvVideo.muted;
+      if (!tvVideo.muted && tvVideo.paused) {
+        try { var pr = tvVideo.play(); if (pr && pr.catch) pr.catch(function () {}); } catch (e) {}
+      }
+      setMuteUI();
+    });
+    if (remoteNext) remoteNext.addEventListener('click', function () {
+      if (idx < stops.length - 1) go(idx + 1); else finish();
+    });
+    var endOverlayReplay = document.getElementById('vt-end-overlay-replay');
+    if (endOverlayReplay) endOverlayReplay.addEventListener('click', function () { go(0); });
     document.addEventListener('fullscreenchange', function () {
-      fsGen++;
       var cur = fsCurrent();
       if (cur) {
-        // Any fullscreen inside the shell is the viewer choosing
-        // the big screen — remember the intent (renderStage hands
-        // media-element fullscreen off to the shell at swap time).
-        if (shell.contains(cur)) fsIntent = true;
+        // Any fullscreen inside the frame is the viewer choosing
+        // the big screen — remember the intent.
+        if (frame.contains(cur)) fsIntent = true;
       } else if (fsIntent) {
-        if (fsHandoff && Date.now() - fsHandoff < 3000) {
-          // Our own handoff drop across a media swap: take the
-          // big screen back, now on the shell. Deliberately NOT
-          // synchronous — Chrome silently rolls back a fullscreen
-          // re-entry requested inside the removal-exit's own
-          // change notification (measured on the rig: the exit
-          // transaction has to settle first; ~350ms is safely
-          // past it, with one retry behind it).
-          fsHandoff = 0;
-          // The retries carry this change's generation: if ANY
-          // further fullscreen change lands first — above all the
-          // viewer's own manual exit — they stand down. A retry
-          // must never resurrect a screen the viewer just left.
-          var gen = fsGen;
-          setTimeout(function () {
-            if (fsGen === gen && fsIntent && !fsCurrent()) fsEnterShell();
-          }, 350);
-          setTimeout(function () {
-            if (fsGen === gen && fsIntent && !fsCurrent()) fsEnterShell();
-          }, 1000);
-        } else {
-          // The viewer left on purpose (Esc / exit button).
-          // Sovereign: respected for the rest of the session.
-          fsIntent = false;
-        }
+        // Fullscreen is gone. Whatever took it — the viewer's
+        // Esc / exit button, or (hypothetically) an engine drop
+        // at a src swap — the intent is CLEARED, so nothing can
+        // ever resurrect the big screen unasked. An earlier
+        // build kept timed re-entry retries for the drop case;
+        // they provably resurrected over deliberate exits that
+        // landed inside their window (reproduced in Chromium:
+        // exit shortly after a transition under a
+        // natively-fullscreened video → fullscreen back at
+        // +350ms). Sovereignty beats speculation: Chromium and
+        // WebKit both hold fullscreen across src swaps on the
+        // persistent elements (measured), and if some engine
+        // ever does drop it, the ⛶ button is always visible
+        // in the remote — one tap, a real gesture, restores it.
+        fsIntent = false;
+      }
+      // Leaving the big screen while the end overlay is up: the
+      // same choices continue on the regular page end card.
+      if (!cur && endOverlay && !endOverlay.hidden) {
+        endOverlay.hidden = true;
+        showPageEnd();
       }
       setFsUI();
     });
     document.addEventListener('pointerdown', function () {
-      if (fsIntent && !fsCurrent()) fsEnterShell();
+      if (fsIntent && !fsCurrent()) fsEnterFrame();
     }, true);
+    // Clicking INTO the TikTok iframe moves focus there and the
+    // parent stops seeing the pointer entirely (the fade's blind
+    // spot) — treat the click-in as the input it is and wake the
+    // info chrome. The remote never faded, so this is polish,
+    // not a rescue.
+    window.addEventListener('blur', function () {
+      setTimeout(function () {
+        if (tvTt && document.activeElement === tvTt) wakeChrome();
+      }, 0);
+    });
   }
 
   // Chrome auto-hide (TV only): menus don't stay on a TV picture.
@@ -604,22 +781,52 @@ var VT_SCARE = {
     });
   }
 
+  // TV media rendering: the two media elements are immortal —
+  // created once in the markup, never removed, never rebuilt. A
+  // stop change only swaps a src and toggles which one is visible,
+  // so a browser has no removal to drop fullscreen over (the
+  // failure Dan hit in Safari, where the swap rebuilt the stage
+  // and the timed re-entry then died in WebKit's gesture window).
+  // TikTok stops use the direct embed/v2 player — the same iframe
+  // the /diy pages run — with allowfullscreen set by US, instead of
+  // the blockquote + embed.js flow whose SDK-built iframe the page
+  // cannot vouch for.
+  function renderTvMedia(s, isTikTok) {
+    if (endOverlay) endOverlay.hidden = true;
+    if (!tvVideo || !tvTt) return;
+    if (isTikTok) {
+      try { tvVideo.pause(); } catch (e) {}
+      tvVideo.hidden = true;
+      if (tvVideo.getAttribute('src')) { tvVideo.removeAttribute('src'); try { tvVideo.load(); } catch (e) {} }
+      var url = 'https://www.tiktok.com/embed/v2/' + s.tiktok_url.split('/video/')[1].split('?')[0];
+      if (tvTt.getAttribute('src') !== url) tvTt.src = url;
+      tvTt.hidden = false;
+    } else {
+      var ttSrc = tvTt.getAttribute('src');
+      if (ttSrc && ttSrc !== 'about:blank') tvTt.src = 'about:blank';
+      tvTt.hidden = true;
+      tvVideo.hidden = false;
+      if (s.thumb_url) tvVideo.poster = s.thumb_url;
+      if (tvVideo.getAttribute('src') !== s.media_url) tvVideo.src = s.media_url;
+      // The viewer's sound setting rides to the next video — a TV
+      // doesn't make you re-set the volume every stop.
+      if (tvVol) { try { tvVideo.volume = tvVol.v; tvVideo.muted = tvVol.m; } catch (e) {} }
+      // Lean-back: uploaded videos play straight through and roll
+      // into the next stop on 'ended' (the persistent listener
+      // attached at init); autoplay is best-effort — browsers may
+      // still require one tap, and we never pretend otherwise.
+      try { var pr = tvVideo.play(); if (pr && pr.catch) pr.catch(function () {}); } catch (e) {}
+    }
+    setMuteUI();
+  }
+
   function renderStage() {
     var s = stops[idx];
-    // TV fullscreen handoff: if the viewer full-screened the media
-    // element itself, the swap below rips it out of the DOM and
-    // the browser drops fullscreen. Mark the swap as OUR move
-    // (timestamped) — the fullscreenchange handler sees the drop,
-    // recognises the mark, and re-enters on the shell. (Exiting
-    // programmatically first was tried and loses the race: the
-    // queued exit lands AFTER the re-entry and tears it down.)
-    if (VT_TV && fsIntent) {
-      var fc = fsCurrent();
-      if (fc && fc !== shell && stage.contains(fc)) fsHandoff = Date.now();
-    }
-    stage.innerHTML = '';
     var isTikTok = !!(s.tiktok_url && s.tiktok_url.indexOf('/video/') !== -1);
-    if (isTikTok) {
+    if (VT_TV) {
+      renderTvMedia(s, isTikTok);
+    } else if (isTikTok) {
+      stage.innerHTML = '';
       var ttId = s.tiktok_url.split('/video/')[1].split('?')[0];
       var f = document.createElement('div');
       f.className = 'tt-facade';
@@ -643,6 +850,7 @@ var VT_SCARE = {
       });
       stage.appendChild(f);
     } else {
+      stage.innerHTML = '';
       var v = document.createElement('video');
       v.src = s.media_url;
       if (s.thumb_url) v.poster = s.thumb_url;
@@ -654,7 +862,7 @@ var VT_SCARE = {
         v.addEventListener('volumechange', function () {
           tvVol = { v: v.volume, m: v.muted };
         });
-        // Steer Chrome-family viewers to the shell's ⛶ button:
+        // Steer Chrome-family viewers to the remote's ⛶ button:
         // the native per-video fullscreen button is the one that
         // used to drop at every stop change. (The handoff above
         // still covers engines that ignore controlslist.)
@@ -726,7 +934,7 @@ var VT_SCARE = {
     if (VT_TV) wakeChrome();
   }
 
-  function endShown() { return !endCard.hidden; }
+  function endShown() { return !endCard.hidden || (endOverlay && !endOverlay.hidden); }
   function pickerShown() { return picker && !picker.hidden; }
 
   function pinIcon(i, cur) {
@@ -783,6 +991,40 @@ var VT_SCARE = {
   function finish() {
     pauseRide();
     clearIdle();
+    // TV on the big screen: the end choices overlay the frame
+    // itself — a program ending doesn't kick you out of the big
+    // screen, and the keep-riding channels are one tap away
+    // inside it. If the viewer leaves fullscreen with the
+    // overlay up, the fullscreenchange handler swaps to the
+    // regular page end card (showPageEnd) with the same choices.
+    if (VT_TV && fsCurrent() && endOverlay) {
+      if (picker) picker.hidden = true;
+      if (resumeBar) resumeBar.hidden = true;
+      clearPos();
+      var meta = channelMeta(routeName);
+      document.getElementById('vt-end-overlay-title').textContent =
+        'That\'s the ' + meta.label.replace(/ Tour$/, '') + ' channel!';
+      document.getElementById('vt-end-overlay-stats').textContent =
+        stops.length + ' video haunts · ' + stateCount() + ' states · ~' + routeMiles() + ' miles of haunting';
+      var oRow = document.getElementById('vt-end-overlay-row');
+      oRow.innerHTML = '';
+      VT_CHANNELS.forEach(function (c) {
+        if (c.id === routeName || !VT_ROUTES[c.id]) return;
+        var b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'btn';
+        b.textContent = c.emoji + ' ' + c.label;
+        b.addEventListener('click', function () { playChannel(c.id); });
+        oRow.appendChild(b);
+      });
+      endOverlay.hidden = false;
+      try { history.replaceState(null, '', '#end'); } catch (e) {}
+      return;
+    }
+    showPageEnd();
+  }
+
+  function showPageEnd() {
     main.style.display = 'none';
     if (picker) picker.hidden = true;
     if (resumeBar) resumeBar.hidden = true;
@@ -813,9 +1055,11 @@ var VT_SCARE = {
       ecBox.hidden = !others;
     }
     try { history.replaceState(null, '', '#end'); } catch (e) {}
-    // Fullscreen deliberately NOT exited here (TV rule: a program
-    // ending doesn't kick you out of the big screen) — the end
-    // card lives inside the shell, keep-riding buttons included.
+    // Fullscreen deliberately NOT exited here either (TV rule:
+    // a program ending doesn't kick you out of the big screen) —
+    // when this page end card is reached from the frame overlay,
+    // the view has already left fullscreen by the viewer's own
+    // hand, and the big screen stays theirs to re-enter.
     if (!fsCurrent()) endCard.scrollIntoView({ block: 'start', behavior: 'smooth' });
   }
 
