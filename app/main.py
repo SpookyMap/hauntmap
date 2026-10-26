@@ -83,6 +83,13 @@ CAT_EMOJI = {"halloween": "🎃", "christmas": "🎄", "halloween_stores": "👻
 # refuse venue entries server-side.
 VENUE_CATS = ("restaurants", "coffee", "shops", "halloween_stores")
 
+# Just-added ticker categories (Dan, Oct 26): the homepage "🆕 Just
+# Added" crawl is reserved for new haunts + events only — halloween
+# displays, haunted houses and events. Venue listings (the VENUE_CATS
+# set), christmas, parks and live never appear in the ticker, however
+# recent they are.
+TICKER_CATS = ("halloween", "haunted_houses", "events")
+
 # Events facets (Dan, Oct 22): /events is searchable by event type, music
 # genre and venue style. Stored values stay short (they ride in URLs);
 # a few get friendlier display labels in the dropdowns.
@@ -2398,17 +2405,28 @@ def home(request: Request, sort: str = "new", town: str = "", town_search: str =
         sponsors = [dict(r) for r in conn.execute(
             "SELECT * FROM sponsors WHERE is_active = 1 ORDER BY "
             "CASE tier WHEN 'title' THEN 0 WHEN 'premium' THEN 1 ELSE 2 END, created_at").fetchall()]
+        _tick_ph = ",".join("?" * len(TICKER_CATS))
         ticker_rows = conn.execute(
             "SELECT id, title, town, category, ev_type, lat, lng FROM entries "
-            "WHERE hidden = 0 ORDER BY id DESC LIMIT 60").fetchall()
+            f"WHERE hidden = 0 AND category IN ({_tick_ph}) "
+            "ORDER BY id DESC LIMIT 60", TICKER_CATS).fetchall()
     # Just-added ticker / update bar (Dan, Oct 23; announcement Dan,
-    # Oct 25): the site's newest additions across every category,
-    # newest first — pins, events and markets alike, each with a type
-    # emoji (markets = cart, events = ghost, the rest = the pumpkin)
-    # and the derived 'City, ST' label used on every card. The crawl
-    # LEADS with Dan's pinned announcement for the Oct 25 national
-    # events batch (116 new events across every major city), which
-    # carries its own href to /events instead of a pin page.
+    # Oct 25): the site's newest haunts + events, newest first, each
+    # with a type emoji (markets = cart, events = ghost, the rest =
+    # the pumpkin) and the derived 'City, ST' label used on every
+    # card. The crawl LEADS with Dan's pinned announcement for the
+    # Oct 25 national events batch (116 new events across every major
+    # city), which carries its own href to /events instead of a pin
+    # page.
+    # Category rule (Dan, Oct 26): the ticker pool is haunts + events
+    # ONLY (TICKER_CATS). After the Tour Fuel batch flooded the
+    # recent-adds pool with restaurhaunts, shops and cafes, Dan
+    # reserved the crawl for halloween displays, haunted houses and
+    # events — venues, christmas, parks and live never appear. The
+    # filter lives in the SQL above, so the LIMIT-60 window and every
+    # ordering tier below operate on the eligible set alone: a visitor
+    # whose nearest adds are all venues falls through to the state /
+    # newest tiers instead of seeing venues or an empty bar.
     # Location-first ordering (Dan, Oct 25): "the new sites on the new
     # button should be relevant to the user's location and local
     # enough to visit." When the visitor's area is known (the same
@@ -2416,9 +2434,8 @@ def home(request: Request, sort: str = "new", town: str = "", town_search: str =
     # adds near the visitor — within NEAR_RAIL_CAP_MI of their point,
     # or in their city — then adds from their state, then the newest
     # overall as filler, newest-first inside each bucket, so the bar
-    # never empties. WHICH categories appear is unchanged (still every
-    # category); with no geo signal this is exactly the old behaviour:
-    # the newest 12, site-wide.
+    # never empties. With no geo signal the crawl is simply the newest
+    # 12 haunts + events, site-wide.
     if geo:
         vlat, vlng = geo.get("lat"), geo.get("lng")
         vstate = (geo.get("state") or "").upper()
