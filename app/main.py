@@ -4382,7 +4382,16 @@ def virtual_tour_page(request: Request, route: str = "tonight",
     NYC Metro (every video pin in the pool is downstate NY: the five
     boroughs + Long Island) and New Jersey — each ranked by views with
     the same 2-per-town cap. A channel thinner than 6 stops is hidden,
-    exactly like the Scariest tab rule."""
+    exactly like the Scariest tab rule.
+
+    Oct 26 expansion (STAGED for Dan's approval): the pool has since
+    grown far beyond downstate NY, so the same mechanism now also feeds
+    a Family Friendly route plus the state/metro clusters the supply
+    supports — Virginia, Florida, Chicagoland, Texas, Colorado, Arizona,
+    Las Vegas, and California split into Bay Area vs Southern California.
+    Salem MA / New Orleans / Hudson Valley have no video pins in the
+    pool yet, so they can't carry a route; Bergen County and Long Island
+    already ride inside the NJ / NYC Metro routes."""
     with get_conn(DB_PATH) as conn:
         pool = _vt_video_pool(conn)
     by_views = lambda d: (-d["_views"], -d["votes"], d["id"])  # noqa: E731
@@ -4395,13 +4404,57 @@ def virtual_tour_page(request: Request, route: str = "tonight",
                        -d["votes"], d["id"]))
     nyc = _vt_pick([d for d in pool if d["_state"] == "NY"], key=by_views)
     nj = _vt_pick([d for d in pool if d["_state"] == "NJ"], key=by_views)
+    # More prebuilt tours (Dan, Oct 26 — STAGED for his approval): the same
+    # mechanism on the clusters the video pool actually supports — a
+    # family-rated counterpart to Scariest, then state/metro picks ranked
+    # by views with the same 2-per-town cap and the same >=6 gate. The CA
+    # pool splits at 36.9N / 121.5W: Bay Area (SF + San Jose + Peninsula)
+    # vs SoCal (LA + Orange County); Sacramento-area / Central Valley pins
+    # sit in neither and stay in the national routes.
+    family = _vt_pick(
+        [d for d in pool if (d.get("scare_level") or "") == "family"],
+        key=by_views)
+    virginia = _vt_pick([d for d in pool if d["_state"] == "VA"], key=by_views)
+    florida = _vt_pick([d for d in pool if d["_state"] == "FL"], key=by_views)
+    chicagoland = _vt_pick([d for d in pool if d["_state"] == "IL"],
+                           key=by_views)
+    texas = _vt_pick([d for d in pool if d["_state"] == "TX"], key=by_views)
+    colorado = _vt_pick([d for d in pool if d["_state"] == "CO"], key=by_views)
+    arizona = _vt_pick([d for d in pool if d["_state"] == "AZ"], key=by_views)
+    vegas = _vt_pick([d for d in pool if d["_state"] == "NV"], key=by_views)
+    bayarea = _vt_pick(
+        [d for d in pool if d["_state"] == "CA"
+         and d["lat"] >= 36.9 and d["lng"] <= -121.5], key=by_views)
+    socal = _vt_pick(
+        [d for d in pool if d["_state"] == "CA" and d["lat"] < 36.9],
+        key=by_views)
     routes = {"tonight": tonight}
     if len(scariest) >= 6:  # thinner than that isn't a tour — hide the tab
         routes["scariest"] = scariest
+    if len(family) >= 6:
+        routes["family"] = family
     if len(nyc) >= 6:
         routes["nyc"] = nyc
     if len(nj) >= 6:
         routes["nj"] = nj
+    if len(virginia) >= 6:
+        routes["virginia"] = virginia
+    if len(florida) >= 6:
+        routes["florida"] = florida
+    if len(chicagoland) >= 6:
+        routes["chicagoland"] = chicagoland
+    if len(texas) >= 6:
+        routes["texas"] = texas
+    if len(colorado) >= 6:
+        routes["colorado"] = colorado
+    if len(arizona) >= 6:
+        routes["arizona"] = arizona
+    if len(vegas) >= 6:
+        routes["vegas"] = vegas
+    if len(bayarea) >= 6:
+        routes["bayarea"] = bayarea
+    if len(socal) >= 6:
+        routes["socal"] = socal
     if route not in routes:
         route = "tonight"
     is_tv = mode == "tv"
@@ -4430,6 +4483,66 @@ def virtual_tour_page(request: Request, route: str = "tonight",
                 "beyond, ranked by views.",
          "blurb": "Dumont, Hawthorne, Ridgewood, Hackensack — Jersey's "
                   "most-watched video haunts."},
+        {"id": "family", "label": "Family Friendly", "emoji": "🍬",
+         "title": "🍬 Family Friendly — Virtual Tour",
+         "sub": "All treats, no tricks — the gentlest video haunts on "
+                "the map, safe for little haunters.",
+         "blurb": "Family-rated video haunts nationwide — Hoboken "
+                  "stoops, farm festivals and a giant LEGO skeleton."},
+        {"id": "virginia", "label": "Virginia Haunts", "emoji": "⚓",
+         "title": "⚓ Virginia Haunts — Virtual Tour",
+         "sub": "Virginia Beach's huge haunt scene and Hampton Roads, "
+                "ranked by views.",
+         "blurb": "Virginia Beach alone packs 20 video haunts — plus "
+                  "Chesapeake, Yorktown and Franklin."},
+        {"id": "florida", "label": "Florida", "emoji": "🐊",
+         "title": "🐊 Florida — Virtual Tour",
+         "sub": "South Florida's best video haunts — Fort Lauderdale, "
+                "Miami and beyond, ranked by views.",
+         "blurb": "Pembroke Pines, Davie, Cutler Bay and Palm Bay — "
+                  "Florida's most-watched video haunts."},
+        {"id": "chicagoland", "label": "Chicagoland", "emoji": "🌆",
+         "title": "🌆 Chicagoland — Virtual Tour",
+         "sub": "Chicago and its suburbs — Naperville, Joliet, Oak "
+                "Lawn — ranked by views.",
+         "blurb": "Wilkes Family Halloween in Bensenville, Spirits on "
+                  "Sproat and more Chicago-area haunts."},
+        {"id": "texas", "label": "Texas", "emoji": "🤠",
+         "title": "🤠 Texas — Virtual Tour",
+         "sub": "The Lone Star State's best video haunts — San Antonio, "
+                "Dallas–Fort Worth and Houston, ranked by views.",
+         "blurb": "Menefee Manor, Dark Hour, Cutting Edge and more — "
+                  "everything's bigger in Texas."},
+        {"id": "colorado", "label": "Colorado", "emoji": "🏔️",
+         "title": "🏔️ Colorado — Virtual Tour",
+         "sub": "Denver-metro video haunts — Thornton, Aurora, Castle "
+                "Rock — ranked by views.",
+         "blurb": "Denver, Thornton, Aurora and Westminster — the Mile "
+                  "High haunt run."},
+        {"id": "arizona", "label": "Arizona", "emoji": "🌵",
+         "title": "🌵 Arizona — Virtual Tour",
+         "sub": "Phoenix-metro video haunts plus Tucson, ranked by "
+                "views.",
+         "blurb": "Glendale, Peoria, Chandler, Queen Creek and Tucson "
+                  "— desert haunts, ranked by views."},
+        {"id": "vegas", "label": "Las Vegas", "emoji": "🎰",
+         "title": "🎰 Las Vegas — Virtual Tour",
+         "sub": "Vegas and Boulder City video haunts — the Strip's "
+                "spooky side, ranked by views.",
+         "blurb": "Las Vegas home haunts plus Tom Devlin's Monster "
+                  "Museum in Boulder City."},
+        {"id": "bayarea", "label": "Bay Area", "emoji": "🌉",
+         "title": "🌉 Bay Area — Virtual Tour",
+         "sub": "San Francisco, San Jose and the Peninsula — the Bay's "
+                "best video haunts, ranked by views.",
+         "blurb": "San Francisco, San Jose, Palo Alto, Redwood City — "
+                  "the Bay's most-watched video haunts."},
+        {"id": "socal", "label": "Southern California", "emoji": "🌴",
+         "title": "🌴 Southern California — Virtual Tour",
+         "sub": "LA and Orange County video haunts — Burbank, Anaheim, "
+                "Whittier — ranked by views.",
+         "blurb": "Burbank's haunt scene, Anaheim, Mission Viejo and "
+                  "more SoCal video haunts."},
     ]
     channels = [c for c in channel_meta if c["id"] in routes]
 
