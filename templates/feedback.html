@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}Feedback · {{ site_name }}{% endblock %}
+{% block head %}<meta name="description" content="Tell HauntMap how we can improve the site — and what we can do to make your Halloween spookier and your experience here creepier.">{% endblock %}
+{% block content %}
+<h1>&#x1F383; Help Us Haunt Better</h1>
+{% if request.query_params.get('sent') %}
+<div class="fb-panel fb-thanks">
+  <p class="fb-thanks-big">&#x1F383; Thank you — your words just crawled into our crypt.</p>
+  <p>We read every single note. The best ideas rise from the grave and onto the site.</p>
+  <p class="fb-thanks-links"><a href="/" class="btn">Back to the haunts &rarr;</a> <a href="/tour" class="btn">Build a tour &rarr;</a></p>
+</div>
+{% else %}
+<p class="fb-intro">HauntMap is built by Halloween lovers, for Halloween lovers — and nobody knows better than the haunters using it. Tell us how we can improve the site, and what we could do to make your Halloween spookier and your experience here creepier. Every note gets read.</p>
+{% if request.query_params.get('error') == 'empty' %}
+<p class="form-error">Tell us at least one thing — either box below is fine.</p>
+{% elif request.query_params.get('error') == 'email' %}
+<p class="form-error">That email doesn't look right — fix it, or just leave the email blank.</p>
+{% endif %}
+<form method="post" action="/feedback" class="fb-panel fb-form">
+  <div class="fb-chips" role="radiogroup" aria-label="What's this about?">
+    <label class="fb-chip"><input type="radio" name="category" value="site-idea" checked><span>&#x1F4A1; Site idea</span></label>
+    <label class="fb-chip"><input type="radio" name="category" value="spookier"><span>&#x1F47B; Spookier stuff</span></label>
+    <label class="fb-chip"><input type="radio" name="category" value="bug"><span>&#x1F577;&#xFE0F; Bug report</span></label>
+    <label class="fb-chip"><input type="radio" name="category" value="other"><span>&#x1F383; Other</span></label>
+  </div>
+  <label class="fb-label" for="fb-improve">How can we improve the site?</label>
+  <textarea id="fb-improve" name="improve" rows="5" maxlength="4000" placeholder="Faster pages? Better tours? A town we're missing? Tell us&hellip;"></textarea>
+  <label class="fb-label" for="fb-spookier">What could we do to make your Halloween spookier — and your experience here creepier?</label>
+  <textarea id="fb-spookier" name="spookier" rows="5" maxlength="4000" placeholder="Darker tours? Creepier sounds? A haunt that follows you home? Dream big&hellip;"></textarea>
+  <div class="fb-row">
+    <label class="fb-small">Name (optional)
+      <input type="text" name="name" maxlength="80" autocomplete="name" placeholder="Your name">
+    </label>
+    <label class="fb-small">Email (optional — only if you want a reply)
+      <input type="email" name="email" maxlength="120" autocomplete="email" placeholder="you@email.com">
+    </label>
+  </div>
+  <input type="text" name="website" class="hp-field" tabindex="-1" autocomplete="off" aria-hidden="true">
+  <input type="hidden" name="page" id="fb-page" value="">
+  <button type="submit" class="btn btn-big fb-send">Send feedback &#x1F47B;</button>
+</form>
+<script>document.getElementById('fb-page').value = document.referrer || '';</script>
+{% endif %}
+<style>
+.fb-intro { color: #d7e6fa; max-width: 680px; line-height: 1.55; }
+.fb-panel { background: rgba(10, 22, 40, 0.78); border: 1px solid rgba(87, 168, 255, 0.5); border-radius: 16px; padding: 1.1rem 1.2rem; box-shadow: 0 0 22px rgba(87, 168, 255, 0.22), inset 0 0 18px rgba(87, 168, 255, 0.06); max-width: 720px; }
+.fb-form label.fb-label { display: block; font-weight: 800; color: #f9e5c2; margin: 1rem 0 0.4rem; letter-spacing: 0.01em; }
+.fb-form textarea, .fb-form input[type="text"], .fb-form input[type="email"] { width: 100%; box-sizing: border-box; background: rgba(0, 0, 0, 0.35); border: 1px solid #274860; border-radius: 10px; padding: 0.6rem 0.7rem; color: #e8e6e3; font: inherit; }
+.fb-form textarea:focus, .fb-form input:focus { outline: 2px solid #57a8ff; outline-offset: 1px; border-color: #57a8ff; }
+.fb-chips { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.fb-chip { position: relative; cursor: pointer; }
+.fb-chip input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.fb-chip span { display: inline-block; padding: 0.45rem 0.85rem; border-radius: 999px; border: 1px solid #57a8ff; color: #bfe0ff; font-weight: 700; font-size: 0.92rem; background: rgba(87, 168, 255, 0.08); }
+.fb-chip input:checked + span { background: linear-gradient(180deg, #8fd8ff, #57a8ff); color: #081527; box-shadow: 0 0 14px rgba(87, 168, 255, 0.55); }
+.fb-chip input:focus-visible + span { outline: 2px solid #f9e5c2; outline-offset: 2px; }
+.fb-row { display: flex; gap: 0.8rem; flex-wrap: wrap; margin-top: 1rem; }
+.fb-row .fb-small { flex: 1 1 220px; font-weight: 700; color: #bfe0ff; font-size: 0.92rem; }
+.fb-row .fb-small input { margin-top: 0.35rem; }
+.fb-send { margin-top: 1.1rem; }
+.fb-thanks-big { font-size: 1.25rem; font-weight: 800; color: #f9e5c2; }
+.fb-thanks p { color: #d7e6fa; line-height: 1.55; }
+.fb-thanks-links .btn { margin-right: 0.5rem; }
+</style>
+{% endblock %}

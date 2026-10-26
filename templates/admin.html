@@ -128,5 +128,22 @@
 {% else %}
 <p class="muted">No town requests yet.</p>
 {% endif %}
+
+<h2>Visitor feedback ({{ feedback_count }})</h2>
+<p class="muted">From the <a href="/feedback">/feedback</a> page — how visitors say we can improve the site, and how to make their Halloween spookier.</p>
+{% if feedback_rows %}
+<div class="admin-list">
+  {% for f in feedback_rows %}
+  <div class="admin-row" style="display:block">
+    <strong>{{ f.category_label }}</strong>
+    <span class="meta">{{ f.created_at[:10] }}{% if f.name %} &middot; {{ f.name }}{% endif %}{% if f.email %} &middot; {{ f.email }}{% endif %}</span>
+    {% if f.improve_text %}<p style="margin:.35rem 0 0; white-space:pre-wrap"><em>Improve the site:</em> {{ f.improve_text }}</p>{% endif %}
+    {% if f.spookier_text %}<p style="margin:.35rem 0 0; white-space:pre-wrap"><em>Spookier / creepier:</em> {{ f.spookier_text }}</p>{% endif %}
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<p class="muted">No feedback yet.</p>
+{% endif %}
 {% endif %}
 {% endblock %}

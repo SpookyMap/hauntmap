@@ -5436,6 +5436,64 @@ async def town_request(request: Request):
     return RedirectResponse(f"{ref}{sep}town_req_error=1", status_code=303)
 
 
+# ------------------------------------------------------------- feedback
+# Visitor feedback (Dan, Oct 26): his two questions — "how can we improve
+# the site?" and "what can we do to make your Halloween spookier and your
+# experience here creepier?" Capture-only, same shape as town requests:
+# submissions land in the feedback table (carried by the nightly DB
+# backup) and surface in /admin. No email is sent.
+
+FEEDBACK_TABLE_SQL = (
+    "CREATE TABLE IF NOT EXISTS feedback "
+    "(id INTEGER PRIMARY KEY, name TEXT, email TEXT, category TEXT, "
+    "improve_text TEXT, spookier_text TEXT, page TEXT, created_at TEXT)"
+)
+
+FEEDBACK_CATEGORIES = {
+    "site-idea": "💡 Site idea",
+    "spookier": "👻 Spookier stuff",
+    "bug": "🕷️ Bug report",
+    "other": "🎃 Other",
+}
+
+
+@app.get("/feedback", response_class=HTMLResponse)
+def feedback_page(request: Request):
+    return templates.TemplateResponse(
+        request, "feedback.html", {"site_name": SITE_NAME})
+
+
+@app.post("/feedback")
+async def feedback_submit(request: Request):
+    form = await request.form()
+    # Honeypot: real visitors never see or fill this field. Bots that do
+    # get a fake success and nothing is stored (same as /town-request).
+    if (form.get("website") or "").strip():
+        return RedirectResponse("/feedback?sent=1", status_code=303)
+    name = (form.get("name") or "").strip()[:80]
+    email = (form.get("email") or "").strip().lower()[:120]
+    category = (form.get("category") or "").strip()[:20]
+    if category not in FEEDBACK_CATEGORIES:
+        category = "other"
+    improve = (form.get("improve") or "").strip()[:4000]
+    spookier = (form.get("spookier") or "").strip()[:4000]
+    if email and ("@" not in email or "." not in email.split("@")[-1]):
+        return RedirectResponse("/feedback?error=email", status_code=303)
+    if not improve and not spookier:
+        # Empty submissions store nothing.
+        return RedirectResponse("/feedback?error=empty", status_code=303)
+    page = (form.get("page") or "").strip()[:200]
+    with get_conn(DB_PATH) as conn:
+        conn.execute(FEEDBACK_TABLE_SQL)
+        conn.execute(
+            "INSERT INTO feedback (name, email, category, improve_text, "
+            "spookier_text, page, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
+            (name, email, category, improve, spookier, page,
+             datetime.now(timezone.utc).isoformat()))
+        conn.commit()
+    return RedirectResponse("/feedback?sent=1", status_code=303)
+
+
 # ------------------------------------------------------------- SMS alerts
 # Capture-first (Dan, Oct 22): phone numbers are collected now and texting
 # turns on when Twilio env vars land (see app/sms_alerts.py). Sending is
@@ -7360,6 +7418,14 @@ def admin(request: Request):
             "ORDER BY created_at DESC LIMIT 100").fetchall()
         town_req_count = conn.execute(
             "SELECT COUNT(*) FROM town_requests").fetchone()[0]
+        conn.execute(FEEDBACK_TABLE_SQL)
+        feedback_rows = [dict(r) for r in conn.execute(
+            "SELECT * FROM feedback ORDER BY created_at DESC LIMIT 100").fetchall()]
+        for f in feedback_rows:
+            f["category_label"] = FEEDBACK_CATEGORIES.get(
+                f.get("category") or "other", "🎃 Other")
+        feedback_count = conn.execute(
+            "SELECT COUNT(*) FROM feedback").fetchone()[0]
         conn.execute(FANART_SQL)
         fanart_pending = [dict(r) for r in conn.execute(
             "SELECT * FROM fan_art WHERE approved = 0 ORDER BY created_at DESC").fetchall()]
@@ -7372,6 +7438,7 @@ def admin(request: Request):
         {"request": request, "logged_in": True, "flagged": flagged,
          "all_entries": all_entries, "subs": subs, "sub_count": sub_count, "error": None,
          "town_reqs": town_reqs, "town_req_count": town_req_count,
+         "feedback_rows": feedback_rows, "feedback_count": feedback_count,
          "fanart_pending": fanart_pending, "fanart_live": fanart_live},
     )
 
