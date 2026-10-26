@@ -67,6 +67,9 @@
       <div class="vt-actions">
         <button type="button" class="tour-add-btn vt-add-btn" id="vt-add" data-tour-btn data-id="" data-lat="" data-lng="" data-title="" data-town="" data-thumb="">+ Tour</button>
         <button type="button" class="btn vt-share-btn" id="vt-share">&#x1F517; Share this haunt</button>
+        {% if not is_tv %}
+        <button type="button" class="btn vt-ride-btn" id="vt-ride" aria-pressed="false">&#x25B6; Play all</button>
+        {% endif %}
       </div>
     </div>
     <div class="vt-controls">
@@ -177,6 +180,11 @@
   .vt-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.65rem; }
   .vt-add-btn { margin-top: 0; min-height: 48px; padding: 0.6rem 1.15rem; font-size: 0.95rem; display: inline-flex; align-items: center; }
   .vt-share-btn { min-height: 48px; padding: 0.6rem 1.15rem; font-weight: 700; }
+  .vt-ride-btn {
+    min-height: 48px; padding: 0.6rem 1.15rem; font-weight: 800;
+    background: var(--accent); color: #1a0f00; border-color: var(--accent);
+  }
+  .vt-ride-btn.vt-riding { background: var(--accent2, #b266ff); border-color: var(--accent2, #b266ff); color: #fff; }
   body.hm-tv .vt-add-btn, body.hm-tv .vt-share-btn { min-height: 60px; font-size: 1.05rem; }
   .vt-resume {
     margin: 0 0 1rem; padding: 0.8rem; border: 2px dashed var(--accent);
@@ -253,6 +261,7 @@ var VT_SCARE = {
       nextBtn = document.getElementById('vt-next'),
       addBtn = document.getElementById('vt-add'),
       shareBtn = document.getElementById('vt-share'),
+      rideBtn = document.getElementById('vt-ride'),
       resumeBar = document.getElementById('vt-resume'),
       resumeText = document.getElementById('vt-resume-text'),
       resumeGo = document.getElementById('vt-resume-go'),
@@ -292,7 +301,7 @@ var VT_SCARE = {
       b.innerHTML = '<img src="' + s.thumb_url + '" alt="" loading="lazy">' +
         '<span class="vt-stop-n">' + (i + 1) + '</span>' +
         '<span class="vt-stop-t">' + s.title + '<small>' + s.town_label + '</small></span>';
-      b.addEventListener('click', function () { go(i); });
+      b.addEventListener('click', function () { pauseRide(); go(i); });
       stopsBox.appendChild(b);
     });
     // Keep the current stop visible inside the rail (horizontal strip on
@@ -346,6 +355,67 @@ var VT_SCARE = {
     try { localStorage.removeItem(POS_KEY); } catch (e) {}
   }
 
+  // ---- Play-all ride mode (regular mode only; TV mode already leans
+  // back). Uploaded videos ride MUTED (the only autoplay browsers
+  // allow) and advance on their real 'ended' event. TikTok embeds
+  // expose no play/ended control to the page, so those stops — and
+  // any stop whose video can't start — get a fixed dwell, then the
+  // ride moves on; it never fakes a play or touches the embed. The
+  // visitor stays in control: any manual navigation (Prev/Next, rail,
+  // keys, swipe), +Tour, Share, playing a TikTok by hand, switching
+  // route, or hiding the tab pauses the ride instead of fighting it.
+  var RIDE_DWELL_MS = 8000;
+  var riding = false, rideTimer = null;
+  function setRideUI() {
+    if (!rideBtn) return;
+    rideBtn.innerHTML = riding ? '&#x23F8; Pause ride' : '&#x25B6; Play all';
+    rideBtn.classList.toggle('vt-riding', riding);
+    rideBtn.setAttribute('aria-pressed', riding ? 'true' : 'false');
+  }
+  function clearRideTimer() {
+    if (rideTimer) { clearTimeout(rideTimer); rideTimer = null; }
+  }
+  function rideAdvance() {
+    if (!riding) return;
+    if (idx < stops.length - 1) go(idx + 1); else finish();
+  }
+  function armRideDwell() {
+    clearRideTimer();
+    rideTimer = setTimeout(rideAdvance, RIDE_DWELL_MS);
+  }
+  function rideStep() {
+    clearRideTimer();
+    if (!riding) return;
+    var v = stage.querySelector('video');
+    if (!v) { armRideDwell(); return; }
+    try { v.muted = true; } catch (e) {}
+    var pr = null;
+    try { pr = v.play(); } catch (e) {}
+    if (pr && pr.catch) pr.catch(function () { if (riding) armRideDwell(); });
+    // Safety net: a clip that genuinely can't start (dead file, no
+    // source) becomes a dwell stop, so one bad file never stalls the
+    // ride. A still-loading healthy file (networkState 2) is left
+    // alone — its 'ended' will advance the ride.
+    setTimeout(function () {
+      if (riding && stage.contains(v) && v.paused && !v.ended &&
+          v.readyState < 2 && v.networkState !== 2) armRideDwell();
+    }, 3000);
+  }
+  function startRide() {
+    if (VT_TV || !rideBtn || !stops.length || endShown()) return;
+    riding = true;
+    setRideUI();
+    rideStep();
+  }
+  function pauseRide() {
+    if (!riding) return;
+    riding = false;
+    clearRideTimer();
+    var v = stage.querySelector('video');
+    if (v && !v.paused) { try { v.pause(); } catch (e) {} }
+    setRideUI();
+  }
+
   function renderStage() {
     var s = stops[idx];
     stage.innerHTML = '';
@@ -365,6 +435,13 @@ var VT_SCARE = {
       f.addEventListener('keydown', function (e) {
         if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); hmLoadTikTok(f); }
       });
+      // Ride mode: playing an embed by hand pauses the ride — once a
+      // TikTok starts it is outside the page's control, and the dwell
+      // must never yank a watching visitor on to the next house.
+      f.addEventListener('click', function () { pauseRide(); });
+      f.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' || e.key === ' ') pauseRide();
+      });
       stage.appendChild(f);
     } else {
       var v = document.createElement('video');
@@ -377,6 +454,9 @@ var VT_SCARE = {
       // require one tap, and we never pretend otherwise).
       if (VT_TV) v.autoplay = true;
       v.addEventListener('ended', function () { if (idx < stops.length - 1) go(idx + 1); else finish(); });
+      // Ride mode fallback: a file that errors out becomes a dwell
+      // stop (rideStep also covers a refused play() promise).
+      v.addEventListener('error', function () { if (riding) armRideDwell(); }, true);
       stage.appendChild(v);
       if (VT_TV) { try { var pr = v.play(); if (pr && pr.catch) pr.catch(function () {}); } catch (e) {} }
     }
@@ -427,6 +507,9 @@ var VT_SCARE = {
     renderStops();
     markMap();
     try { history.replaceState(null, '', '#stop-' + (idx + 1)); } catch (e) {}
+    // Ride mode: every fresh stop re-arms the ride for its own kind
+    // (uploaded video plays muted; anything else dwells).
+    if (riding) rideStep();
   }
 
   function endShown() { return !endCard.hidden; }
@@ -473,6 +556,7 @@ var VT_SCARE = {
   }
 
   function finish() {
+    pauseRide();
     main.style.display = 'none';
     if (picker) picker.hidden = true;
     if (resumeBar) resumeBar.hidden = true;
@@ -524,6 +608,7 @@ var VT_SCARE = {
 
   function setRoute(name) {
     if (!VT_ROUTES[name]) return;
+    pauseRide();
     routeName = name;
     stops = VT_ROUTES[name];
     idx = 0;
@@ -551,9 +636,23 @@ var VT_SCARE = {
   document.querySelectorAll('[data-vt-play]').forEach(function (b) {
     b.addEventListener('click', function () { playChannel(b.getAttribute('data-vt-play')); });
   });
-  prevBtn.addEventListener('click', function () { if (idx > 0) go(idx - 1); });
+  prevBtn.addEventListener('click', function () { pauseRide(); if (idx > 0) go(idx - 1); });
   nextBtn.addEventListener('click', function () {
+    pauseRide();
     if (idx < stops.length - 1) go(idx + 1); else finish();
+  });
+  // Ride toggle: Play all starts the ride from the current stop;
+  // tapping it again (as Pause ride) stops it in place.
+  if (rideBtn) rideBtn.addEventListener('click', function () {
+    if (riding) pauseRide(); else startRide();
+  });
+  // +Tour is a visitor action, not ride business — it pauses the ride
+  // (base.html's sitewide handler still does the add itself).
+  if (addBtn) addBtn.addEventListener('click', function () { pauseRide(); });
+  // Auto-pause when the tab is hidden: a ride nobody is watching
+  // shouldn't burn through the route (or the metered video bandwidth).
+  document.addEventListener('visibilitychange', function () {
+    if (document.hidden) pauseRide();
   });
   var tvNextBtn = document.getElementById('vt-tv-next-btn');
   if (tvNextBtn) tvNextBtn.addEventListener('click', function () {
@@ -564,12 +663,13 @@ var VT_SCARE = {
   document.addEventListener('keydown', function (e) {
     if (e.target && /INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return;
     if (pickerShown()) return;
-    if (e.key === 'ArrowRight' && !endShown()) { if (idx < stops.length - 1) go(idx + 1); else finish(); }
-    if (e.key === 'ArrowLeft' && !endShown() && idx > 0) go(idx - 1);
+    if (e.key === 'ArrowRight' && !endShown()) { pauseRide(); if (idx < stops.length - 1) go(idx + 1); else finish(); }
+    if (e.key === 'ArrowLeft' && !endShown() && idx > 0) { pauseRide(); go(idx - 1); }
   });
   // Per-stop share: native share sheet where available, clipboard
   // fallback (same pattern as the bracket / trivia pages).
   if (shareBtn) shareBtn.addEventListener('click', function () {
+    pauseRide();
     var s = stops[idx];
     if (!s) return;
     var url = location.origin + '/d/' + s.id;
@@ -603,6 +703,7 @@ var VT_SCARE = {
     swipeX = swipeY = null;
     if (Math.abs(dx) < 48 || Math.abs(dx) < Math.abs(dy) * 1.4) return;
     swipeAt = Date.now();
+    pauseRide();
     if (dx < 0) { if (idx < stops.length - 1) go(idx + 1); else finish(); }
     else if (idx > 0) go(idx - 1);
   }, { passive: true });
