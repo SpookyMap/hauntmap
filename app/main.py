@@ -76,6 +76,13 @@ CAT_EMOJI = {"halloween": "🎃", "christmas": "🎄", "halloween_stores": "👻
              "restaurants": "🍽️", "coffee": "☕", "shops": "🛍️", "parks": "🌳",
              "haunted_houses": "🏚️", "events": "🎪", "live": "🔴"}
 
+# Venue categories (Dan, Oct 25): food/drink/retail listings — the
+# Restaurhaunts set (restaurants, coffee, shops) plus Halloween stores.
+# Venues are tour stops, not haunts: their detail pages render no
+# Scare-O-Meter and no haunt vote, and the vote/scare POST endpoints
+# refuse venue entries server-side.
+VENUE_CATS = ("restaurants", "coffee", "shops", "halloween_stores")
+
 # Events facets (Dan, Oct 22): /events is searchable by event type, music
 # genre and venue style. Stored values stay short (they ride in URLs);
 # a few get friendlier display labels in the dropdowns.
@@ -3607,6 +3614,18 @@ async def api_duel_vote(request: Request):
         return JSONResponse({"ok": False}, status_code=400)
     if winner == loser:
         return JSONResponse({"ok": False}, status_code=400)
+    # The duel pool only ever serves 'halloween' entries (see api_duel);
+    # refuse stats for anything else (venues included) so a crafted
+    # POST can't put a non-haunt on the Haunt or Not board.
+    with get_conn(DB_PATH) as conn:
+        pair = {r["id"]: r for r in conn.execute(
+            "SELECT id, category, hidden FROM entries WHERE id IN (?, ?)",
+            (winner, loser)).fetchall()}
+    if (len(pair) != 2
+            or pair[winner]["category"] != "halloween"
+            or pair[loser]["category"] != "halloween"
+            or pair[winner]["hidden"] or pair[loser]["hidden"]):
+        return JSONResponse({"ok": False}, status_code=400)
     with get_conn(DB_PATH) as conn:
         conn.execute(DUEL_TABLE_SQL)
         conn.execute(
@@ -4697,6 +4716,7 @@ def detail(request: Request, entry_id: int):
     # count on video cards.
     return templates.TemplateResponse(request, "detail.html",
         {"request": request, "entry": entry, "voted": voted, "reported": reported,
+         "is_venue": entry["category"] in VENUE_CATS,
          "tips": tips, "scare_counts": scare_counts, "scare_total": scare_total,
          "scare_pick": scare_pick, "next_pin": effective_next_pin,
          "next_geo_pin": geo_next_pin,
@@ -4726,6 +4746,13 @@ def scare_vote(entry_id: int, level: str, request: Request):
     entry = get_entry(entry_id)
     if not entry or entry["hidden"]:
         raise HTTPException(404, "Entry not found.")
+    if entry["category"] in VENUE_CATS:
+        # Venues have no Scare-O-Meter (Dan, Oct 25): refuse API-style
+        # calls, silently ignore stale form posts. Nothing is written.
+        if _wants_json(request):
+            return JSONResponse({"ok": False, "error": "venues have no scare meter"},
+                                status_code=403)
+        return RedirectResponse(f"/d/{entry_id}", status_code=303)
     if level not in SCARE_LEVELS:
         raise HTTPException(400, "Bad scare level.")
     cookie = f"scare_{entry_id}"
@@ -4789,6 +4816,13 @@ def vote(entry_id: int, request: Request):
     entry = get_entry(entry_id)
     if not entry or entry["hidden"]:
         raise HTTPException(404, "Entry not found.")
+    if entry["category"] in VENUE_CATS:
+        # Venues have no haunt vote (Dan, Oct 25): refuse API-style
+        # calls, silently ignore stale form posts. Nothing is written.
+        if _wants_json(request):
+            return JSONResponse({"ok": False, "error": "venues have no haunt vote"},
+                                status_code=403)
+        return RedirectResponse(f"/d/{entry_id}", status_code=303)
     cookie = f"voted_{entry_id}"
     # Soft limit: one vote per browser. Clearing cookies bypasses it — by design
     # for v1 (no accounts). Good enough to stop casual double-voting.
@@ -4817,6 +4851,12 @@ def unvote(entry_id: int, request: Request):
     entry = get_entry(entry_id)
     if not entry or entry["hidden"]:
         raise HTTPException(404, "Entry not found.")
+    if entry["category"] in VENUE_CATS:
+        # Vote mechanic is closed for venues (see vote above): ignore.
+        if _wants_json(request):
+            return JSONResponse({"ok": False, "error": "venues have no haunt vote"},
+                                status_code=403)
+        return RedirectResponse(f"/d/{entry_id}", status_code=303)
     cookie = f"voted_{entry_id}"
     had_vote = cookie in request.cookies
     if had_vote:

@@ -111,7 +111,9 @@
     {% endfor %}
   </p>
   {% endif %}
+  {% if not is_venue %}
   <p class="votes-big">&#x1F383; {{ entry.votes }} vote{{ 's' if entry.votes != 1 }}</p>
+  {% endif %}
 
   {# Retention Wave 2, Item 5: Daily Fright streak chip. Filled and
      unhidden by hmFrightState() in static/js/retention2.js (loaded
@@ -186,6 +188,7 @@
   {% endif %}
 
   <div class="detail-actions">
+    {% if not is_venue %}
     {% if voted %}
     <form method="post" action="/d/{{ entry.id }}/unvote">
       <button type="submit" class="btn btn-voted">&#x2713; Voted — tap to undo</button>
@@ -194,6 +197,7 @@
     <form method="post" action="/d/{{ entry.id }}/vote">
       <button type="submit" class="btn btn-big">&#x1F383; Vote for this haunt</button>
     </form>
+    {% endif %}
     {% endif %}
     <button class="btn" id="btn-add-tour" style="margin-top:0.5rem">+ Add to my tour</button>
   </div>
@@ -233,6 +237,7 @@
   <a class="btn btn-big next-haunt" href="/d/{{ next_pin.id }}">{% if next_is_video %}&#x1F3AC; Play next haunt &rarr;{% else %}Next haunt near here &rarr;{% endif %}<span class="next-haunt-sub">{{ next_pin.title }} &middot; {{ "%.1f"|format(next_pin.distance) }} mi &middot; {{ next_pin.town_label }}</span></a>
   {% endif %}
 
+  {% if not is_venue %}
   <div class="scare-meter" id="scare">
     <h2>&#x1F4CA; Scare-O-Meter — how scary is it really?</h2>
     {% set scare_meta = {'family': ('&#x1F60A;', 'Family-friendly'), 'spooky': ('&#x1F47B;', 'Spooky'), 'creepy': ('&#x1F9DB;', 'Creepy'), 'terrifying': ('&#x1F631;', 'Terrifying'), 'extreme': ('&#x1F480;', 'EXTREME')} %}
@@ -254,8 +259,9 @@
       {% else %}No ratings yet — be the first to rate it!{% endif %}
     </p>
   </div>
+  {% endif %}
 
-  {% if entry.thumb_url or entry.media_url %}
+  {% if not is_venue and (entry.thumb_url or entry.media_url) %}
   <section class="hon-card">
     <img src="{{ entry.thumb_url or entry.media_url }}" alt="{{ entry.title }}" loading="lazy">
     <div class="hon-body">
