@@ -196,7 +196,8 @@ CREATE TABLE IF NOT EXISTS profiles (
     user_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
     display_name TEXT,
     bio TEXT,
-    town TEXT,
+    town TEXT,                            -- hometown
+    current_city TEXT,                    -- where they live now (edit-page only)
     avatar_choice TEXT,                   -- preset key, NULL = initial tile
     avatar_path TEXT,                     -- uploaded profile picture (rel path under uploads/); beats avatar_choice
     banner_choice TEXT,                   -- preset key, NULL = default banner
@@ -400,6 +401,8 @@ def init_db(db_path: Path) -> None:
             conn.execute("ALTER TABLE profiles ADD COLUMN theme TEXT")
         if pcols and "avatar_path" not in pcols:
             conn.execute("ALTER TABLE profiles ADD COLUMN avatar_path TEXT")
+        if pcols and "current_city" not in pcols:
+            conn.execute("ALTER TABLE profiles ADD COLUMN current_city TEXT")
         wcols = {r["name"] for r in conn.execute("PRAGMA table_info(wall_comments)").fetchall()}
         if wcols and "sticker" not in wcols:
             conn.execute("ALTER TABLE wall_comments ADD COLUMN sticker TEXT")

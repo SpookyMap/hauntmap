@@ -20,7 +20,7 @@
     </div>
     <div class="soc-id">
       <h1>{{ display_name }}</h1>
-      <p class="soc-handle">@{{ user.handle }}{% if user.is_official %} <span class="soc-official">&#x2B50; Official host</span>{% endif %}{% if profile.town %} &middot; &#x1F4CD; {{ profile.town }}{% endif %}</p>
+      <p class="soc-handle">@{{ user.handle }}{% if user.is_official %} <span class="soc-official">&#x2B50; Official host</span>{% endif %}{% if profile.current_city and profile.town %} &middot; &#x1F4CD; Lives in {{ profile.current_city }} &middot; From {{ profile.town }}{% elif profile.current_city %} &middot; &#x1F4CD; Lives in {{ profile.current_city }}{% elif profile.town %} &middot; &#x1F4CD; {{ profile.town }}{% endif %}</p>
       <p class="soc-since">Haunting since {{ member_since }}</p>
     </div>
     <div class="soc-actions">

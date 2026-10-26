@@ -14,9 +14,13 @@
       <textarea name="bio" rows="3" maxlength="500"
                 placeholder="Decorator? Haunter? Horror band? Tell the neighborhood.">{{ profile.bio or '' }}</textarea>
     </label>
-    <label>Home town
+    <label>Hometown
       <input type="text" name="town" maxlength="80"
              value="{{ profile.town or '' }}" placeholder="e.g. Hackensack, NJ">
+    </label>
+    <label>Current city
+      <input type="text" name="current_city" maxlength="80"
+             value="{{ profile.current_city or '' }}" placeholder="e.g. Brooklyn, NY">
     </label>
     <label>Avatar
       <span class="soc-picker">

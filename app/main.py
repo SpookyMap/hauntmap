@@ -8241,14 +8241,16 @@ def pin_search(request: Request, q: str = ""):
 @app.post("/profile/edit", response_class=HTMLResponse)
 async def profile_edit_submit(request: Request,
                               display_name: str = Form(""), bio: str = Form(""),
-                              town: str = Form(""), avatar_choice: str = Form(""),
+                              town: str = Form(""), current_city: str = Form(""),
+                              avatar_choice: str = Form(""),
                               banner_choice: str = Form(""), theme: str = Form(""),
                               music_embed_url: str = Form("")):
     member = current_member(request)
     if not member:
         return RedirectResponse("/login?next=/profile/edit", status_code=303)
     values = {"display_name": display_name.strip(), "bio": bio.strip(),
-              "town": town.strip(), "avatar_choice": avatar_choice,
+              "town": town.strip(), "current_city": current_city.strip(),
+              "avatar_choice": avatar_choice,
               "banner_choice": banner_choice, "theme": theme,
               "music_embed_url": music_embed_url.strip()}
 
@@ -8263,6 +8265,8 @@ async def profile_edit_submit(request: Request,
         return fail("Bios cap at 500 characters.")
     if len(values["town"]) > 80:
         return fail("Town caps at 80 characters.")
+    if len(values["current_city"]) > 80:
+        return fail("Current city caps at 80 characters.")
     if avatar_choice and avatar_choice not in AVATAR_PRESETS:
         return fail("Pick an avatar from the set.")
     if banner_choice and banner_choice not in BANNER_PRESETS:
@@ -8311,10 +8315,12 @@ async def profile_edit_submit(request: Request,
     with get_conn(DB_PATH) as conn:
         conn.execute(
             "INSERT INTO profiles (user_id, display_name, bio, town, "
-            "avatar_choice, banner_choice, theme, music_embed_url, updated_at) "
-            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) "
+            "current_city, avatar_choice, banner_choice, theme, "
+            "music_embed_url, updated_at) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) "
             "ON CONFLICT(user_id) DO UPDATE SET display_name = excluded.display_name, "
             "bio = excluded.bio, town = excluded.town, "
+            "current_city = excluded.current_city, "
             "avatar_choice = excluded.avatar_choice, "
             "banner_choice = excluded.banner_choice, "
             "theme = excluded.theme, "
@@ -8322,6 +8328,7 @@ async def profile_edit_submit(request: Request,
             "updated_at = excluded.updated_at",
             (member["id"], values["display_name"] or member["handle"],
              values["bio"] or None, values["town"] or None,
+             values["current_city"] or None,
              avatar_choice or None, banner_choice or None, theme or None,
              music or None, datetime.now(timezone.utc).isoformat()))
         conn.execute("DELETE FROM profile_top8 WHERE user_id = ?",
