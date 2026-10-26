@@ -214,6 +214,19 @@
   .vt-stop-t small { display: block; color: var(--muted); font-weight: 500; }
   .vt-stop-on { border-color: var(--accent); background: #322154; }
   .vt-stop-on .vt-stop-n { background: #57a8ff; color: #1a0f00; }
+  /* Numbered map markers — same chip family as the stop cards below
+     (.vt-stop-n): purple circle, cream numeral. Current stop goes
+     orange (the old current-marker color) and slightly larger. */
+  .vt-pin {
+    width: 26px; height: 26px; border-radius: 50%; background: #3a2566;
+    border: 2px solid #b266ff; color: #f9e5c2; font-size: 0.82rem; font-weight: 800;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 1px 6px rgba(0,0,0,0.6);
+  }
+  .vt-pin-cur {
+    width: 32px; height: 32px; background: #ff7b1c; border-color: #14101d;
+    color: #14101d; font-size: 0.95rem;
+  }
   .vt-end { text-align: center; padding: 2rem 0 1rem; }
   .vt-end-emoji { font-size: 3.2rem; margin: 0; }
   .vt-end-stats { color: var(--muted); font-weight: 700; }
@@ -515,13 +528,23 @@ var VT_SCARE = {
   function endShown() { return !endCard.hidden; }
   function pickerShown() { return picker && !picker.hidden; }
 
+  function pinIcon(i, cur) {
+    return L.divIcon({
+      className: '',
+      html: '<div class="vt-pin' + (cur ? ' vt-pin-cur' : '') + '">' + (i + 1) + '</div>',
+      iconSize: cur ? [32, 32] : [26, 26],
+      iconAnchor: cur ? [16, 16] : [13, 13]
+    });
+  }
+
   function markMap() {
     if (!map) return;
-    if (curMarker) { map.removeLayer(curMarker); curMarker = null; }
     var s = stops[idx];
-    curMarker = L.circleMarker([s.lat, s.lng], {
-      radius: 11, color: '#14101d', weight: 2, fillColor: '#ff7b1c', fillOpacity: 1
-    }).addTo(map).bindPopup('<strong>' + s.title + '</strong><br>' + s.town_label);
+    // Numbered markers: restyle in place — the current stop's marker
+    // turns orange (with its number), the previous one goes back to
+    // purple. Numbers come from the same stops order as the cards.
+    markers.forEach(function (m, i) { m.setIcon(pinIcon(i, i === idx)); });
+    curMarker = markers[idx] || null;
     map.panTo([s.lat, s.lng]);
     if (map.getZoom() < 8) map.setZoom(8);
   }
@@ -538,9 +561,8 @@ var VT_SCARE = {
     var pts = stops.map(function (s) { return [s.lat, s.lng]; });
     line = L.polyline(pts, { color: '#b266ff', weight: 3, dashArray: '7 7', opacity: 0.9 }).addTo(map);
     stops.forEach(function (s, i) {
-      markers.push(L.circleMarker([s.lat, s.lng], {
-        radius: 6, color: '#14101d', weight: 1.5, fillColor: '#b266ff', fillOpacity: 0.95
-      }).addTo(map).bindPopup((i + 1) + '. <strong>' + s.title + '</strong><br>' + s.town_label));
+      markers.push(L.marker([s.lat, s.lng], { icon: pinIcon(i, false) })
+        .addTo(map).bindPopup((i + 1) + '. <strong>' + s.title + '</strong><br>' + s.town_label));
     });
     map.fitBounds(line.getBounds(), { padding: [24, 24] });
   }
