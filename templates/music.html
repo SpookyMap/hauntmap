@@ -6,6 +6,7 @@
 <p class="lede">The soundtrack of fright night. Press play on the playlists while you build your tour, watch the classic videos, and meet the artists who own the season.</p>
 
 <nav class="movies-subnav" aria-label="Music sections">
+  <a href="#edm">&#x26A1; EDM Channels</a>
   <a href="#featured">&#x2B50; Featured Set</a>
   <a href="#spotify">&#x1F3A7; Spotify Playlists</a>
   <a href="#radio">&#x1F4FB; Live Radio</a>
@@ -13,6 +14,22 @@
   <a href="#performances">&#x1F3A4; Performances</a>
   <a href="#icons">&#x1F451; Icons &amp; Pop</a>
 </nav>
+
+<h2 class="music-h2" id="edm">&#x26A1; EDM Channels</h2>
+<p>The biggest EDM channels on YouTube — the labels and tastemakers behind the drops. Spinnin&rsquo; Radio is live around the clock; the rest are each channel&rsquo;s flagship mix or defining upload. Tap any cover to play.</p>
+<div class="yt-grid">
+  {% for c in edm_channels %}
+  <div class="yt-item">
+    <button type="button" class="yt-facade" data-yt="{{ c.id }}" aria-label="Play {{ c.title }}">
+      <img src="https://i.ytimg.com/vi/{{ c.id }}/hqdefault.jpg" alt="" loading="lazy">
+      <span class="yt-play" aria-hidden="true">&#9654;</span>
+    </button>
+    <p class="yt-cap">{{ c.name }}</p>
+    <p class="yt-meta">{{ c.blurb }}</p>
+    <p class="yt-meta">{{ c.meta }}</p>
+  </div>
+  {% endfor %}
+</div>
 
 <h2 class="music-h2" id="featured">&#x2B50; Featured Set</h2>
 <p>A full-length EDM, dance &amp; house session from our friends at {{ yt_spotlight.channel }} — the ZombieSquad mix, over two hours of it. Tap the cover to play.</p>

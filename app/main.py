@@ -6378,6 +6378,60 @@ MUSIC_RADIO_IHEART = [
      "format": "New York's Best Variety",
      "blurb": "The softer side of the dial — workday variety."},
 ]
+# EDM Channels (Dan, Oct 26): the major EDM YouTube channels, one card
+# each, leading the /music page. Every ID verified via YouTube oEmbed on
+# 2026-10-26 (title + author match, embeddable). Spinnin's pick is the
+# label's official 24/7 live radio — its watch page confirmed isLiveNow
+# at verification time. The rest are each channel's flagship mix or
+# defining upload (Monstercat's Best of 2025 album mix, NCS's 3-hour
+# 10 Year MIX, Proximity's Decade Mix, Sheepy's Taking You Higher mix,
+# UKF's On Air live session, Revealed Radio's best-of episode; Trap
+# Nation posts premieres, not mixes, so its card is the Lucian remix —
+# the upload that built the channel). Selected. and Musical Freedom
+# were dropped: no verifiable official flagship mix on either channel.
+MUSIC_EDM_CHANNELS = [
+    {"name": "Spinnin' Records", "id": "xf9Ejt4OmWQ",
+     "title": "Spinnin' Records | 24/7 Live Radio | Best Dance Music",
+     "blurb": "The Dutch giant's own radio — big-room, house and dance, "
+              "live around the clock.",
+     "meta": "🔴 LIVE · 24/7 Live Radio"},
+    {"name": "Monstercat", "id": "JVYDN3PmOG4",
+     "title": "Monstercat - Best of 2025 [Album Mix]",
+     "blurb": "The label that launched a thousand bass drops — the "
+              "year's heaviest Monstercat releases in one album mix.",
+     "meta": "Best of 2025 [Album Mix] · 1:33:39"},
+    {"name": "NCS (NoCopyrightSounds)", "id": "yUXJjIvhZz8",
+     "title": "NCS 10 Year MIX - 3 Hours | NCS - Copyright Free Music",
+     "blurb": "The copyright-free giants — three straight hours of the "
+              "biggest NCS releases ever, back to back.",
+     "meta": "10 Year MIX · 2:59:55"},
+    {"name": "Trap Nation", "id": "DArzZ3RvejU",
+     "title": "Alessia Cara - Here (Lucian Remix)",
+     "blurb": "YouTube's trap tastemakers — the Lucian remix of "
+              "“Here” is the upload that built the Nation.",
+     "meta": "Alessia Cara — Here (Lucian Remix)"},
+    {"name": "UKF", "id": "CxB1AO6AcmA",
+     "title": "Shift K3Y with Live Orchestra London Mozart Players - "
+              "UKF On Air",
+     "blurb": "The UK bass institution — UKF On Air takes Shift K3Y "
+              "into the concert hall with a live orchestra.",
+     "meta": "UKF On Air · live session"},
+    {"name": "Proximity", "id": "gnV-8pkILF0",
+     "title": "Proximity - Best EDM of 2010-2019 (Decade Mix)",
+     "blurb": "The curator channel that broke a generation of EDM — "
+              "the best of a whole decade in one ride.",
+     "meta": "Decade Mix · 2:17:03"},
+    {"name": "MrSuicideSheep", "id": "GN5fRaKla5Y",
+     "title": "'Taking You Higher Pt. 5' (Progressive House Mix)",
+     "blurb": "The sheep that soundtracked a million late nights — "
+              "his beloved progressive house mix series, part five.",
+     "meta": "Taking You Higher Pt. 5 · Progressive House Mix"},
+    {"name": "Revealed Recordings", "id": "OvfL__kKcWQ",
+     "title": "Revealed Radio 100 - Best of Revealed Radio",
+     "blurb": "Hardwell's label — the best-of episode of Revealed "
+              "Radio, its long-running weekly show.",
+     "meta": "Revealed Radio 100 · 56:20"},
+]
 # Top-of-page featured set (Dan, Oct 23): his friends' ZombieSquad mix on
 # the Dead On Pictures channel, featured at the top of /music by request.
 # Verified via yt-dlp 2026-10-23: public, playable_in_embed, maxres thumb.
@@ -6609,6 +6663,7 @@ def music_page(request: Request):
         request, "music.html",
         {"site_name": SITE_NAME, "playlists": MUSIC_SPOTIFY_PLAYLISTS,
          "radio_stations": MUSIC_RADIO_IHEART,
+         "edm_channels": MUSIC_EDM_CHANNELS,
          "yt_spotlight": MUSIC_SPOTLIGHT,
          "yt_featured": MUSIC_YOUTUBE_FEATURED, "yt_grid": MUSIC_YOUTUBE_GRID,
          "yt_performances": MUSIC_PERFORMANCES, "yt_dj_sets": MUSIC_DJ_SETS,
