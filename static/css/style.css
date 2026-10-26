@@ -5238,6 +5238,12 @@ main.wrap:has(> .vt-tv-strip-bottom) { padding-bottom: 0; }
 @media (max-width: 760px) and (orientation: portrait) {
   .header-events-col a.nav-join .nav-join-tag { display: none; }
   .site-header.v2 .header-nav .header-events-col a.nav-join { padding: 0.75rem 0.35rem; }
+}
+/* z157 fix: the z155 block's closing brace above was dropped in the
+   z156 ship's rebase-conflict resolution, which left this phone-only
+   @media unclosed and nested the z156 block inside it — disabling the
+   top-strip full-width rule at every width. Brace restored; no rule
+   changes. */
 
 /* ============ z156: TOP STRIP GOES FULL WIDTH (Dan, Oct 26) ============
    Dan: "Space out top of page Virtual Tour through Top 100
