@@ -24,6 +24,7 @@
   </div>
 </div>
 
+<div class="vt-shell" id="vt-shell">
 {% if is_tv %}
 <section class="vt-picker" id="vt-picker" hidden aria-label="HauntMap TV channels">
   <h2 class="vt-picker-title">&#x1F4FA; Pick a channel</h2>
@@ -76,6 +77,7 @@
       <button type="button" class="btn vt-nav" id="vt-prev">&larr; Prev house</button>
       <span class="vt-counter" id="vt-counter">House 1 of 12</span>
       <button type="button" class="btn vt-nav vt-next" id="vt-next">Next house &rarr;</button>
+      {% if is_tv %}<button type="button" class="btn vt-nav vt-fs-btn" id="vt-fs" aria-pressed="false">&#x26F6; Full screen</button>{% endif %}
     </div>
     <div class="vt-progress" id="vt-progress" role="progressbar" aria-label="Tour progress" aria-valuemin="0" aria-valuemax="12" aria-valuenow="1"></div>
   </div>
@@ -99,6 +101,7 @@
   </div>
   {% with sms_source = "virtual-tour" %}{% include "_text_alerts.html" %}{% endwith %}
 </section>
+</div>
 
 <style>
   .vt-head h1 { margin-bottom: 0.3rem; }
@@ -249,6 +252,42 @@
     .vt-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 0.45rem; }
     .vt-tab { text-align: center; padding: 0.5rem 0.35rem; font-size: 0.92rem; }
   }
+  /* ---- HauntMap TV: one stable screen (Dan, Oct 26) ----
+     TV mode emulates a TV: once the tour starts the viewer never
+     modulates the view. The stage is ONE fixed frame — videos of any
+     aspect letterbox/pillarbox inside it instead of resizing the
+     picture between stops — and fullscreen is held on #vt-shell
+     (stage + info + controls + end card, never removed from the
+     DOM), so swapping the video inside it can't drop the big
+     screen, not even at the end of the tour. */
+  body.hm-tv .vt-stage {
+    aspect-ratio: 16 / 9; width: 100%; max-height: 84vh; min-height: 0;
+    margin-inline: auto;
+  }
+  @media (max-width: 899px) and (orientation: portrait) {
+    body.hm-tv .vt-stage { aspect-ratio: 4 / 5; max-height: 62vh; }
+  }
+  body.hm-tv .vt-stage video {
+    width: 100%; height: 100%; max-height: none; object-fit: contain;
+  }
+  body.hm-tv .vt-stage .tt-facade { width: 100%; height: 100%; }
+  body.hm-tv .vt-stage .tt-facade img { height: 100%; max-height: none; }
+  body.hm-tv .vt-stage .tiktok-embed,
+  body.hm-tv .vt-stage iframe { max-width: 100%; max-height: 100%; }
+  #vt-shell:fullscreen, #vt-shell:-webkit-full-screen {
+    background: #07040f; overflow-y: auto; padding: 0.75rem;
+  }
+  #vt-shell:fullscreen .vt-stage { max-height: calc(100vh - 250px); }
+  .vt-fs-btn { font-weight: 800; white-space: nowrap; }
+  /* Chrome fades like a real TV once the ride is rolling; any input
+     (mouse, touch, key) brings it straight back. The TikTok Next
+     prompt is a driving control, not chrome — it never fades. */
+  body.hm-tv .vt-controls, body.hm-tv .vt-info, body.hm-tv .vt-progress {
+    transition: opacity 0.45s ease;
+  }
+  body.hm-tv.vt-idle .vt-controls, body.hm-tv.vt-idle .vt-info,
+  body.hm-tv.vt-idle .vt-progress { opacity: 0; pointer-events: none; }
+  body.hm-tv.vt-idle #vt-shell { cursor: none; }
 </style>
 <script>
 var VT_ROUTES = {{ routes|tojson }};
@@ -429,8 +468,155 @@ var VT_SCARE = {
     setRideUI();
   }
 
+  // ---- HauntMap TV screen discipline (TV mode only; every piece
+  // below is inert in the regular player). Dan: a TV doesn't make
+  // you re-modulate the view once the show starts. So:
+  //  * Fullscreen lives on #vt-shell — the wrapper around picker,
+  //    player AND end card that is never removed from the DOM.
+  //    Videos swap INSIDE it, so fullscreen survives every stop
+  //    change and the end of the tour; it ends only when the
+  //    viewer ends it (Esc / the button), and a manual exit
+  //    clears the intent flag — nothing re-enters on its own.
+  //  * If the viewer full-screened the media element itself (the
+  //    native video / TikTok button), the next swap rips that
+  //    element out and the browser drops fullscreen: renderStage
+  //    flags the swap as ours just before it happens, and the
+  //    change handler re-enters on the shell once the drop has
+  //    settled (a re-entry requested inside the exit's own change
+  //    notification is silently rolled back by Chrome — measured).
+  //    If an engine still refuses (no user activation), the
+  //    viewer's next tap restores the screen they asked for
+  //    (pointerdown recovery).
+  //  * Player chrome fades out while the ride rolls and returns
+  //    on any input; the viewer's volume carries from each video
+  //    to the next so sound never needs re-setting between stops.
+  var shell = document.getElementById('vt-shell');
+  var fsBtn = document.getElementById('vt-fs');
+  var fsIntent = false, fsHandoff = 0, fsGen = 0;
+  var tvVol = null;
+  function fsCurrent() {
+    return document.fullscreenElement || document.webkitFullscreenElement || null;
+  }
+  function fsEnterShell() {
+    if (!shell || fsCurrent() === shell) return;
+    try {
+      var p = shell.requestFullscreen ? shell.requestFullscreen()
+            : (shell.webkitRequestFullscreen ? shell.webkitRequestFullscreen() : null);
+      if (p && p.catch) p.catch(function () {});
+    } catch (e) {}
+  }
+  function fsExit() {
+    if (!fsCurrent()) return;
+    try {
+      var p = document.exitFullscreen ? document.exitFullscreen()
+            : (document.webkitExitFullscreen ? document.webkitExitFullscreen() : null);
+      if (p && p.catch) p.catch(function () {});
+    } catch (e) {}
+  }
+  function setFsUI() {
+    if (!fsBtn) return;
+    var on = !!fsCurrent();
+    fsBtn.innerHTML = on ? '&#x26F6; Exit full screen' : '&#x26F6; Full screen';
+    fsBtn.setAttribute('aria-pressed', on ? 'true' : 'false');
+  }
+  function toggleFs() {
+    if (fsCurrent()) { fsIntent = false; fsExit(); }
+    else { fsIntent = true; fsEnterShell(); }
+  }
+  if (VT_TV && shell) {
+    // The sitewide Add-Yours popup times itself 8-18s into a
+    // visit — mid-first-video on a lean-back session. Its own
+    // script (later in this same page) checks this exact session
+    // flag before doing anything, so set it now: no dialogs
+    // interrupt a TV tour. Other pages are untouched.
+    try { sessionStorage.setItem('hm_addyours_shown', '1'); } catch (e) {}
+    if (fsBtn) {
+      if (!shell.requestFullscreen && !shell.webkitRequestFullscreen) {
+        fsBtn.style.display = 'none';
+      }
+      fsBtn.addEventListener('click', toggleFs);
+      setFsUI();
+    }
+    document.addEventListener('fullscreenchange', function () {
+      fsGen++;
+      var cur = fsCurrent();
+      if (cur) {
+        // Any fullscreen inside the shell is the viewer choosing
+        // the big screen — remember the intent (renderStage hands
+        // media-element fullscreen off to the shell at swap time).
+        if (shell.contains(cur)) fsIntent = true;
+      } else if (fsIntent) {
+        if (fsHandoff && Date.now() - fsHandoff < 3000) {
+          // Our own handoff drop across a media swap: take the
+          // big screen back, now on the shell. Deliberately NOT
+          // synchronous — Chrome silently rolls back a fullscreen
+          // re-entry requested inside the removal-exit's own
+          // change notification (measured on the rig: the exit
+          // transaction has to settle first; ~350ms is safely
+          // past it, with one retry behind it).
+          fsHandoff = 0;
+          // The retries carry this change's generation: if ANY
+          // further fullscreen change lands first — above all the
+          // viewer's own manual exit — they stand down. A retry
+          // must never resurrect a screen the viewer just left.
+          var gen = fsGen;
+          setTimeout(function () {
+            if (fsGen === gen && fsIntent && !fsCurrent()) fsEnterShell();
+          }, 350);
+          setTimeout(function () {
+            if (fsGen === gen && fsIntent && !fsCurrent()) fsEnterShell();
+          }, 1000);
+        } else {
+          // The viewer left on purpose (Esc / exit button).
+          // Sovereign: respected for the rest of the session.
+          fsIntent = false;
+        }
+      }
+      setFsUI();
+    });
+    document.addEventListener('pointerdown', function () {
+      if (fsIntent && !fsCurrent()) fsEnterShell();
+    }, true);
+  }
+
+  // Chrome auto-hide (TV only): menus don't stay on a TV picture.
+  var idleTimer = null;
+  function clearIdle() {
+    clearTimeout(idleTimer);
+    document.body.classList.remove('vt-idle');
+  }
+  function armIdle() {
+    if (!VT_TV) return;
+    clearTimeout(idleTimer);
+    idleTimer = setTimeout(function () {
+      if (pickerShown() || endShown()) return; // menus keep their chrome
+      document.body.classList.add('vt-idle');
+    }, 3500);
+  }
+  function wakeChrome() {
+    if (!VT_TV) return;
+    document.body.classList.remove('vt-idle');
+    armIdle();
+  }
+  if (VT_TV) {
+    ['mousemove', 'mousedown', 'touchstart', 'keydown'].forEach(function (ev) {
+      document.addEventListener(ev, wakeChrome, { passive: true });
+    });
+  }
+
   function renderStage() {
     var s = stops[idx];
+    // TV fullscreen handoff: if the viewer full-screened the media
+    // element itself, the swap below rips it out of the DOM and
+    // the browser drops fullscreen. Mark the swap as OUR move
+    // (timestamped) — the fullscreenchange handler sees the drop,
+    // recognises the mark, and re-enters on the shell. (Exiting
+    // programmatically first was tried and loses the race: the
+    // queued exit lands AFTER the re-entry and tears it down.)
+    if (VT_TV && fsIntent) {
+      var fc = fsCurrent();
+      if (fc && fc !== shell && stage.contains(fc)) fsHandoff = Date.now();
+    }
     stage.innerHTML = '';
     var isTikTok = !!(s.tiktok_url && s.tiktok_url.indexOf('/video/') !== -1);
     if (isTikTok) {
@@ -461,6 +647,19 @@ var VT_SCARE = {
       v.src = s.media_url;
       if (s.thumb_url) v.poster = s.thumb_url;
       v.controls = true; v.playsInline = true; v.preload = 'metadata';
+      if (VT_TV) {
+        // The viewer's sound setting rides to the next video —
+        // a TV doesn't make you re-set the volume every stop.
+        if (tvVol) { try { v.volume = tvVol.v; v.muted = tvVol.m; } catch (e) {} }
+        v.addEventListener('volumechange', function () {
+          tvVol = { v: v.volume, m: v.muted };
+        });
+        // Steer Chrome-family viewers to the shell's ⛶ button:
+        // the native per-video fullscreen button is the one that
+        // used to drop at every stop change. (The handoff above
+        // still covers engines that ignore controlslist.)
+        v.setAttribute('controlslist', 'nofullscreen');
+      }
       // Lean-back (TV mode): uploaded videos play straight through and
       // roll into the next stop on 'ended' — the handler below is the
       // auto-advance; autoplay itself is best-effort (browsers may still
@@ -523,6 +722,8 @@ var VT_SCARE = {
     // Ride mode: every fresh stop re-arms the ride for its own kind
     // (uploaded video plays muted; anything else dwells).
     if (riding) rideStep();
+    // TV: each fresh stop briefly shows the chrome, then it fades.
+    if (VT_TV) wakeChrome();
   }
 
   function endShown() { return !endCard.hidden; }
@@ -574,11 +775,14 @@ var VT_SCARE = {
     if (picker) picker.hidden = true;
     main.style.display = '';
     renderStage();
-    stage.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    // In fullscreen the picture is already the whole screen —
+    // scrolling the page behind it would be view modulation.
+    if (!fsCurrent()) stage.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
   }
 
   function finish() {
     pauseRide();
+    clearIdle();
     main.style.display = 'none';
     if (picker) picker.hidden = true;
     if (resumeBar) resumeBar.hidden = true;
@@ -609,23 +813,27 @@ var VT_SCARE = {
       ecBox.hidden = !others;
     }
     try { history.replaceState(null, '', '#end'); } catch (e) {}
-    endCard.scrollIntoView({ block: 'start', behavior: 'smooth' });
+    // Fullscreen deliberately NOT exited here (TV rule: a program
+    // ending doesn't kick you out of the big screen) — the end
+    // card lives inside the shell, keep-riding buttons included.
+    if (!fsCurrent()) endCard.scrollIntoView({ block: 'start', behavior: 'smooth' });
   }
 
   function showPicker(scroll) {
     if (!picker) return;
+    clearIdle();
     endCard.hidden = true;
     main.style.display = 'none';
     picker.hidden = false;
     try { history.replaceState(null, '', '#channels'); } catch (e) {}
-    if (scroll) picker.scrollIntoView({ block: 'start', behavior: 'smooth' });
+    if (scroll && !fsCurrent()) picker.scrollIntoView({ block: 'start', behavior: 'smooth' });
   }
 
   function playChannel(name) {
     setRoute(name);
     if (picker) picker.hidden = true;
     main.style.display = '';
-    stage.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    if (!fsCurrent()) stage.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
   }
 
   function setRoute(name) {
@@ -684,6 +892,8 @@ var VT_SCARE = {
   if (channelsBtn) channelsBtn.addEventListener('click', function () { showPicker(true); });
   document.addEventListener('keydown', function (e) {
     if (e.target && /INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return;
+    // TV: F is the remote's fullscreen button.
+    if (VT_TV && (e.key === 'f' || e.key === 'F')) { toggleFs(); return; }
     if (pickerShown()) return;
     if (e.key === 'ArrowRight' && !endShown()) { pauseRide(); if (idx < stops.length - 1) go(idx + 1); else finish(); }
     if (e.key === 'ArrowLeft' && !endShown() && idx > 0) { pauseRide(); go(idx - 1); }
