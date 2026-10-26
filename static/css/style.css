@@ -5122,3 +5122,32 @@ a.game-card-featured:hover { border-color: #ff7b1c; }
      via the tighter padding above + the smaller caption here. */
   .header-events-col a.nav-join .nav-join-tag { font-size: 0.46rem; }
 }
+
+/* ============ z152: SPONSOR GAP PINNED AT MID WIDTHS (Dan, Oct 26) ============
+   "Center space evenly below TikTok videos and the sponsor block."
+   z149 centered the sponsor in its hero-grid row, which is perfect
+   while the row is only as tall as the panel + 44.9px of slack
+   (1440/1280: gaps 36.84 == 36.84). But at 1000–1199px the tablet
+   hero runs the video full-width, the headline spans the sponsor +
+   town rows, and its extra height distributes EQUALLY into both
+   spanned rows — the sponsor's row balloons to ~778px and the
+   centering splits the void around the panel: 237.66px above ==
+   237.67px below, the sponsor adrift in an empty rail (Dan's
+   photo). Content-sized tracks (max-content / fit-content) still
+   absorb that span distribution in Chromium; a DEFINITE track
+   size does not. So the sponsor row (row 3 in BOTH desktop hero
+   layouts) is pinned to exactly the height it has at 1440 today:
+   panel 331.75px + 44.88px of slack (2 x 22.44). z149's centering
+   then yields the wide-layout rhythm at EVERY desktop width by
+   construction: visible gap = 0.9rem row gap (14.4) + 22.44 =
+   36.84 above (video bottom -> sponsor top) and 36.84 below
+   (sponsor bottom -> town card top). The headline's extra height
+   now lands in the town row (below the rail stack) at mid widths;
+   grid total height, headline/strip rects and the whole 1440/1280
+   layout are pixel-identical to before (verified: rows, sponsor
+   and town tops match to 0.03px). If the sponsor panel's height
+   ever changes, re-derive: row = panel height + 44.88px.
+   Phone (<1000px) is not in this block and renders as before. */
+@media (min-width: 1000px) {
+  .hero-split { grid-template-rows: auto auto 376.63px auto; }
+}
