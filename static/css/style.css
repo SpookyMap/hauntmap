@@ -783,6 +783,29 @@ a.game-card:hover { border-color: #ff7518; transform: translateY(-2px); }
 .game-soon { opacity: 0.75; }
 .game-soon .game-play { color: #9a97a3; }
 
+/* Portal catalog (Dan, Oct 26) — GameDistribution partner games on
+   the /games hub, below our own games. Click-to-load facades keep the
+   hub fast: cover art only until Play is tapped. Blue-glow theme to
+   match the rebrand; the frame keeps each game's native aspect ratio
+   (portrait titles like Knife Hit get a tall, centered stage instead
+   of a stretched one), capped so no single game eats the page. */
+.portal-head { margin-top: 2.2rem; }
+.portal-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem; margin: 1.25rem 0 1rem; }
+.portal-card { background: #161c24; border: 1px solid #2a3442; border-radius: 12px; padding: 1rem 1.1rem 1.1rem; color: #e8e6e3; }
+.portal-card h3 { margin: 0.7rem 0 0.4rem; font-size: 1.15rem; }
+.portal-card p { color: #c9c4d4; line-height: 1.45; margin: 0 0 0.6rem; }
+.portal-tag { color: #8fd8ff; font-size: 0.85rem; font-weight: 700; letter-spacing: 0.02em; }
+.portal-frame { position: relative; width: min(100%, calc(430px * var(--pw) / var(--ph))); aspect-ratio: var(--pw) / var(--ph); margin: 0 auto; background: #000; border: 1px solid #2a3442; border-radius: 10px; overflow: hidden; }
+.portal-facade { position: absolute; inset: 0; width: 100%; height: 100%; padding: 0; border: 0; background: #000; cursor: pointer; display: block; }
+.portal-facade img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.portal-facade::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,0) 55%, rgba(0,0,0,0.45)); }
+.portal-playbtn { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 1; width: 58px; height: 58px; border-radius: 50%; background: rgba(10, 22, 40, 0.82); border: 2px solid #57a8ff; box-shadow: 0 0 18px rgba(87, 168, 255, 0.55); color: #eaf6ff; font-size: 1.35rem; line-height: 54px; text-align: center; padding-left: 4px; }
+.portal-facade:hover .portal-playbtn, .portal-facade:focus-visible .portal-playbtn { background: rgba(23, 58, 102, 0.92); box-shadow: 0 0 26px rgba(87, 168, 255, 0.85); }
+.portal-frame iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; display: block; }
+.portal-close { position: absolute; top: 6px; right: 6px; z-index: 2; width: 34px; height: 34px; border-radius: 50%; border: 1px solid #57a8ff; background: rgba(10, 22, 40, 0.88); color: #eaf6ff; font-size: 1rem; line-height: 1; cursor: pointer; }
+.portal-card.is-playing { border-color: #57a8ff; box-shadow: 0 0 18px rgba(87, 168, 255, 0.28); }
+.portal-note { color: #9a97a3; font-size: 0.9rem; margin: 0 0 2rem; }
+
 /* Daily Trivia */
 .trivia-box { background: #161c24; border: 1px solid #2a3442; border-radius: 12px; padding: 1.2rem 1.3rem; max-width: 640px; margin: 1rem auto; }
 .trivia-progress { display: flex; justify-content: space-between; color: #9a97a3; font-size: 0.92rem; margin-bottom: 0.6rem; }

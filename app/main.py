@@ -3650,9 +3650,78 @@ def haunt_or_not_page(request: Request):
     )
 
 
+# ------------------------------------------------------- portal catalog
+# PORTAL CATALOG (Dan, Oct 26: "Let's add more games as well" — the
+# "portal catalog later" half of his Oct 25 "Both — ours first, portal
+# catalog later" call). Route: GameDistribution's publisher program —
+# embedding catalog games on third-party sites IS the product (their
+# DGI/publisher docs walk through exactly this iframe flow), games are
+# hosted + ad-monetized by GD under the publisher agreement, and each
+# embed carries gd_sdk_referrer_url pointing at the page the game plays
+# on (here: the /games hub itself). CrazyGames was evaluated and ruled
+# out: it is a developer-submission portal whose games are sitelocked
+# to crazygames.com domains — no third-party embed program exists.
+#
+# Curation rules applied: Halloween/horror/spooky only, family-
+# appropriate (no gore FPS), touch-first controls (most traffic is
+# phones), instantly playable. Every id below was verified live
+# (embed endpoint 200, no X-Frame-Options) on 2026-10-26. The hub
+# renders click-to-load facades, so these cost the page nothing until
+# a visitor taps Play. Ghost Maze stays the featured hero above this
+# section; nothing here touches it or its leaderboard.
+#
+# SHIP GATE: staged on branch games-catalog for Dan's preview. Before
+# this goes live for real, Dan creates the free GameDistribution
+# publisher account and registers gethauntmap.com so the plays (and
+# the publisher revenue share) are attributed to HauntMap.
+PORTAL_GAMES = [
+    {"id": "77f19c21dda1480cb63444ff8e8eaaf3",
+     "title": "Halloween Bubble Shooter",
+     "blurb": "Aim, match and pop the monster bubbles. Tap, drag, "
+              "release \u2014 pure Halloween candy for your brain.",
+     "tag": "Bubble shooter \u00b7 all ages", "w": 960, "h": 540},
+    {"id": "b311fce6d5cc498095f4deca5ff9d943",
+     "title": "Halloween Knife Hit",
+     "blurb": "Throw knives, split the pumpkins, beat the boss. "
+              "One-tap timing that gets dangerously addictive.",
+     "tag": "Arcade timing \u00b7 portrait play", "w": 720, "h": 1280},
+    {"id": "cdf013b031d24277ada4c46ea30ada44",
+     "title": "Zombies Are Coming",
+     "blurb": "Tower defense: man the turret, freeze and zap the "
+              "horde, survive the night.",
+     "tag": "Tower defense", "w": 1280, "h": 720},
+    {"id": "e648747296814ee2afb3f8884599cec2",
+     "title": "Spooky Bubble Shooter",
+     "blurb": "Pop the zombie eyes, free the golden jack-o\u2019-lanterns "
+              "\u2014 72 levels of spooky bubble popping.",
+     "tag": "Bubble shooter \u00b7 72 levels", "w": 800, "h": 480},
+    {"id": "0e927ec3e6fe4fdab30da247832941d0", "img": "512x340",
+     "title": "Zombie Gems",
+     "blurb": "Match-3 with a spooky twist \u2014 line up the zombie "
+              "gems and chain the combos.",
+     "tag": "Match-3 puzzle", "w": 640, "h": 480},
+    {"id": "cc0c400d12c540b6b134230148d4eb4f",
+     "title": "Fun Halloween Memory",
+     "blurb": "Flip the tiles and match the monsters \u2014 14 levels "
+              "of concentration candy.",
+     "tag": "Memory \u00b7 kids love it", "w": 1280, "h": 720},
+    {"id": "f16d560cf9214a46abccb92ae11952f5", "img": "512x340",
+     "title": "Scary Halloween Party",
+     "blurb": "Hidden-object hunt: find the 10 hidden stars in "
+              "every spooky scene before the clock runs out.",
+     "tag": "Hidden object", "w": 800, "h": 600},
+    {"id": "7d22c82a53a7499ca906c001df0ebf1c", "img": "512x340",
+     "title": "Halloween Coloring Book",
+     "blurb": "Color the witches, cats and jack-o\u2019-lanterns \u2014 "
+              "the calm corner of the arcade.",
+     "tag": "Coloring \u00b7 all ages", "w": 854, "h": 480},
+]
+
+
 @app.get("/games", response_class=HTMLResponse)
 def games_page(request: Request):
-    return templates.TemplateResponse(request, "games.html", {})
+    return templates.TemplateResponse(
+        request, "games.html", {"portal_games": PORTAL_GAMES})
 
 
 # ------------------------------------------------------------- ghost maze
