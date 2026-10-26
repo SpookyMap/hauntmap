@@ -5179,32 +5179,32 @@ a.game-card-featured:hover { border-color: #ff7b1c; }
 .vt-tv-strip-bottom { margin: 2.85rem 0 0; }
 main.wrap:has(> .vt-tv-strip-bottom) { padding-bottom: 0; }
 
-/* ============ z154: HOOK RED WORDS -> EVENTS & PARTIES LETTER COLORS (Dan, Oct 26) ============
-   Dan: "use the color letters from Events & Parties to jazz up the top
-   header hook — instead of red letters let's use alternating colors to
-   match the colors in 'Events & Parties' — for the red letters on the
-   header only."
-   Palette sampled programmatically from the header artwork itself
-   (static/img/events-btn-4-borderless.gif): k-means over the letter
-   pixels of frames 0-2 (alpha>160, value>60; shading/shadow clusters
-   dropped) resolves to exactly three letter families — lavender
-   #C9A7FC (largest cluster), red #E01E26, orange #FC7518 — listed here
-   in order of first appearance across "EVENTS & PARTIES" (frame 0:
-   E lavender, V red, & orange). Every glyph of the hook's old red runs
-   — Halloween, map, Build Your Night (incl. its .hook-dot period) and
-   the whole THE HAUNT STARTS HERE closer — is now wrapped in .ep1 /
-   .ep2 / .ep3 letter spans cycling lavender -> red -> orange
-   continuously across the hook, each word inside an .epw nowrap wrapper
-   so line-breaking behaves exactly as the old single-span words did.
-   Direct rules on the letter spans supersede the per-band .hw-red /
-   .tag-b / .tag-c / .tag-d colors they used to inherit (incl. the phone
-   band's lavender closer split). Untouched: the cream words, the
-   lavender NEW HAUNTS DAILY!!! (.tag-a), wording, sizes, fonts, and
-   everything outside the header hook. */
+/* ============ z160: HOOK LETTER COLORS -> NEW-LOGO PALETTE (Dan, Oct 26 — VARIANT 2, shipped: Dan picked V2 over the live V1 and ordered the flip; replaces the z154 block) ============
+   Dan: "If that doesn't look good we can just try alternating the red
+   letters to match the colors of the new logo."
+   Same letter-span structure as the Events & Parties variant (z154):
+   every glyph of the old red runs wrapped in .ep1-.ep5 spans, this time
+   cycling a 5-color palette sampled from Dan's ghost-map logo
+   (static/img/hauntmap_logo_lockup.webp — clustered + hue-family means):
+   neon ghost green #77DFB8 (the glow; largest bright family in the art,
+   sampled family mean), compass gold #E6B16D, window amber #F19D45,
+   pumpkin #EB7A2C, cream #F9E5C2 (gold/amber/pumpkin families are
+   present in the file but compression-muted in the 309px webp, so the
+   brand values from Dan's art are used for those three).
+   EXCLUDED from the logo palette: night purple #402F54 (sampled
+   #3E2D50 — too dark to read as letters on the black header), the deep
+   scene greens #0B4737 / #2A7868 (too dark/mid for headline letters),
+   and the slate/brown shading tones (scene shading, not brand colors).
+   Cycle order follows the logo's own arrangement: green glow first,
+   then the warm lit-window/compass tones out to pumpkin, resting on
+   cream. Untouched: cream words, lavender NEW HAUNTS DAILY!!!, wording,
+   sizes, fonts, everything outside the header hook. */
 .header-band .header-hook .epw { white-space: nowrap; }
-.header-band .header-hook .ep1 { color: #c9a7fc; }
-.header-band .header-hook .ep2 { color: #e01e26; }
-.header-band .header-hook .ep3 { color: #fc7518; }
+.header-band .header-hook .ep1 { color: #77dfb8; }
+.header-band .header-hook .ep2 { color: #e6b16d; }
+.header-band .header-hook .ep3 { color: #f19d45; }
+.header-band .header-hook .ep4 { color: #eb7a2c; }
+.header-band .header-hook .ep5 { color: #f9e5c2; }
 /* ============ z155: PHONE JOIN PILL SLIMS DOWN (Dan, Oct 26) ============
    Dan (phone screenshot): "make the Join HauntSocial button smaller
    and less clunky, neat and clean for the phone view." PHONE PORTRAIT
