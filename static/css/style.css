@@ -4563,3 +4563,85 @@ a.soc-top8-card:hover { border-color: var(--accent2); }
   border-top: 1px dashed #33254f; overflow-wrap: anywhere; }
 .soc-passport-list a { color: var(--accent2); font-weight: 700; }
 .soc-passport-town { color: var(--muted); font-size: 0.85rem; }
+
+/* ============ z142: GHOST MAZE (Dan, Oct 25) ====
+   HauntMap's own maze-chase arcade game at /games/ghost-maze. The
+   cabinet rides the rebrand language — dark glass panels, azure
+   glow, cream type, pumpkin for the one loud button — and the board
+   itself is all canvas (static/js/ghost_maze.js draws everything,
+   no image assets). Featured card takes the top of the /games hub
+   without demoting anything: the grid just gains a hero row. */
+.game-card-featured { grid-column: 1 / -1; border-color: #57a8ff;
+  background: linear-gradient(135deg, #0f2e54 0%, #16232b 55%, #2a1608 130%);
+  box-shadow: 0 0 22px rgba(87,168,255,0.35); }
+.game-card-featured h3 { font-size: 1.5rem; }
+a.game-card-featured:hover { border-color: #ff7b1c; }
+
+.gm-wrap { max-width: 460px; margin: 0 auto; }
+.gm-hud { display: flex; align-items: flex-end; gap: 0.9rem;
+  padding: 0.5rem 0.2rem 0.6rem; }
+.gm-stat { display: flex; flex-direction: column; line-height: 1.15; }
+.gm-stat-l { font-size: 0.62rem; font-weight: 800; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--muted); }
+.gm-stat-n { font-family: Fredoka, system-ui, sans-serif; font-weight: 700;
+  font-size: 1.15rem; color: var(--ink); }
+.gm-iconbtn { margin-left: auto; background: rgba(14,27,33,0.85);
+  border: 1px solid #2a4a6b; border-radius: 10px; color: var(--ink);
+  font-size: 1rem; padding: 0.3rem 0.5rem; cursor: pointer; }
+.gm-iconbtn + .gm-iconbtn { margin-left: 0; }
+.gm-iconbtn:hover { border-color: #57a8ff; }
+
+.gm-stage { position: relative; border-radius: var(--radius);
+  box-shadow: 0 0 30px rgba(87,168,255,0.35), 0 0 4px rgba(87,168,255,0.6);
+  border: 1px solid #2a4a6b; overflow: hidden; background: #05080a; }
+#gm-canvas { display: block; width: 100%; height: auto; touch-action: none; }
+
+.gm-overlay { position: absolute; inset: 0; display: none;
+  align-items: center; justify-content: center; padding: 1rem;
+  background: rgba(5,8,10,0.55); }
+.gm-overlay.gm-show { display: flex; }
+.gm-panel { text-align: center; max-width: 330px; padding: 1.2rem 1.3rem;
+  background: rgba(14,27,33,0.92); border: 1px solid #57a8ff;
+  border-radius: var(--radius);
+  box-shadow: 0 0 26px rgba(87,168,255,0.45); }
+.gm-panel-title { margin: 0 0 0.4rem; font-family: Fredoka, system-ui, sans-serif;
+  font-size: 1.7rem; color: var(--ink); }
+.gm-panel-text { margin: 0 0 0.8rem; color: #c9c4d4; line-height: 1.45; }
+.gm-panel-score { margin: 0 0 0.5rem; font-family: Fredoka, system-ui, sans-serif;
+  font-weight: 700; font-size: 1.15rem; color: #ff7b1c; }
+.gm-panel-note { margin: 0 0 0.8rem; font-size: 0.88rem; color: var(--muted); }
+.gm-panel-note:not([hidden]) + .gm-start { margin-top: 0.1rem; }
+.gm-start { background: #ff7b1c; color: #16100a; border: none; cursor: pointer;
+  font-family: Fredoka, system-ui, sans-serif; font-weight: 700;
+  font-size: 1.1rem; padding: 0.65rem 1.5rem; border-radius: 999px;
+  box-shadow: 0 0 18px rgba(255,123,28,0.55); }
+.gm-start:hover { background: #ff8c3a; }
+.gm-panel-hint { margin: 0.7rem 0 0; font-size: 0.8rem; color: var(--muted); }
+
+.gm-dpad { display: grid; gap: 0.4rem; justify-content: center;
+  grid-template-columns: repeat(3, 58px); grid-template-rows: repeat(2, 52px);
+  margin: 0.9rem auto 0.2rem; }
+.gm-dbtn { background: rgba(14,27,33,0.9); border: 1px solid #2a4a6b;
+  border-radius: 12px; color: #57a8ff; font-size: 1.15rem; cursor: pointer;
+  touch-action: none; -webkit-tap-highlight-color: transparent; }
+.gm-dbtn:active { background: #0f2e54; border-color: #57a8ff; }
+.gm-dup { grid-column: 2; grid-row: 1; }
+.gm-dleft { grid-column: 1; grid-row: 2; }
+.gm-ddown { grid-column: 2; grid-row: 2; }
+.gm-dright { grid-column: 3; grid-row: 2; }
+
+.gm-board, .gm-how { max-width: 460px; margin: 1.6rem auto 0; }
+.gm-board h2, .gm-how h2 { font-family: Fredoka, system-ui, sans-serif; }
+.gm-board-list { list-style: none; counter-reset: gmrank; margin: 0; padding: 0; }
+.gm-board-list li { counter-increment: gmrank; display: flex;
+  align-items: baseline; gap: 0.6rem; padding: 0.45rem 0.7rem;
+  background: #161c24; border: 1px solid #2a3442; border-radius: 10px;
+  margin-bottom: 0.4rem; }
+.gm-board-list li::before { content: counter(gmrank);
+  font-family: Fredoka, system-ui, sans-serif; font-weight: 700;
+  color: #57a8ff; min-width: 1.2rem; text-align: right; }
+.gm-board-list a { color: var(--ink); font-weight: 700; text-decoration: none; }
+.gm-board-score { margin-left: auto; font-family: Fredoka, system-ui, sans-serif;
+  font-weight: 700; color: #ff7b1c; }
+.gm-board-empty, .gm-board-you { color: var(--muted); }
+.gm-how p { color: #c9c4d4; line-height: 1.55; }

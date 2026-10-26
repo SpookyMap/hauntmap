@@ -3486,6 +3486,94 @@ def games_page(request: Request):
     return templates.TemplateResponse(request, "games.html", {})
 
 
+# ------------------------------------------------------------- ghost maze
+# GHOST MAZE (Dan, Oct 25: "ours first, portal catalog later") — an
+# original maze-chase arcade game built for HauntMap: our ghost, our
+# maze, our monsters, all art drawn in code on a canvas. The genre's
+# mechanics are free to use; nothing here reproduces any other game's
+# name, maze, art, or audio. Engine: static/js/ghost_maze.js.
+#
+# Member leaderboard: game_scores holds ONE row per member — their
+# best score — written only by the authenticated submit below.
+# Anonymous players keep a device-local best (localStorage) and are
+# nudged to join HauntSocial for the board.
+#
+# Plausibility cap, derived from the shipped maze (static/js/
+# ghost_maze.js): 205 candy x 10 + 4 power pumpkins x 50 + chaser
+# chains 4 x (200+400+800+1600) + 2 candy buckets x 1000 = 16,250
+# points is a PERFECT level. 500,000 is ~30 perfect levels back to
+# back — beyond any real run, so anything above it is not a score,
+# it's a script.
+GHOST_MAZE_SCORE_CAP = 500_000
+
+
+def _ghost_maze_board(conn, limit: int = 10) -> list[dict]:
+    rows = conn.execute(
+        "SELECT u.handle, g.best_score, g.achieved_at FROM game_scores g "
+        "JOIN users u ON u.id = g.user_id "
+        "ORDER BY g.best_score DESC, g.achieved_at ASC LIMIT ?",
+        (limit,)).fetchall()
+    return [dict(r) for r in rows]
+
+
+@app.get("/games/ghost-maze", response_class=HTMLResponse)
+def ghost_maze_page(request: Request):
+    member = getattr(request.state, "member", None)
+    with get_conn(DB_PATH) as conn:
+        board = _ghost_maze_board(conn)
+        my_best = None
+        if member:
+            row = conn.execute(
+                "SELECT best_score FROM game_scores WHERE user_id = ?",
+                (member["id"],)).fetchone()
+            my_best = row["best_score"] if row else None
+    return templates.TemplateResponse(
+        request, "ghost_maze.html",
+        {"board": board, "my_best": my_best})
+
+
+@app.post("/api/games/ghost-maze/score")
+async def api_ghost_maze_score(request: Request):
+    """Submit a finished GHOST MAZE run for the member leaderboard.
+
+    Best-only: the stored row moves only when the new score beats it.
+    Requires a member session (401 otherwise); the score must be a
+    plain int inside [0, GHOST_MAZE_SCORE_CAP] or it's refused (422).
+    Returns {ok, best, board} so the page can re-render its Top 10
+    without a reload."""
+    member = current_member(request)
+    if member is None:
+        return JSONResponse(
+            {"error": "Sign in to save your score."}, status_code=401)
+    try:
+        data = await request.json()
+    except Exception:
+        data = {}
+    score = data.get("score") if isinstance(data, dict) else None
+    if isinstance(score, bool) or not isinstance(score, int) \
+            or score < 0 or score > GHOST_MAZE_SCORE_CAP:
+        return JSONResponse(
+            {"error": "That score doesn't fit this maze."},
+            status_code=422)
+    now = datetime.now(timezone.utc).isoformat()
+    with get_conn(DB_PATH) as conn:
+        row = conn.execute(
+            "SELECT best_score FROM game_scores WHERE user_id = ?",
+            (member["id"],)).fetchone()
+        best = row["best_score"] if row else 0
+        if score > best:
+            conn.execute(
+                "INSERT INTO game_scores (user_id, best_score, achieved_at) "
+                "VALUES (?, ?, ?) ON CONFLICT(user_id) DO UPDATE SET "
+                "best_score = excluded.best_score, "
+                "achieved_at = excluded.achieved_at",
+                (member["id"], score, now))
+            conn.commit()
+            best = score
+        board = _ghost_maze_board(conn)
+    return JSONResponse({"ok": True, "best": best, "board": board})
+
+
 # ------------------------------------------------------------- daily trivia
 
 TRIVIA_QUESTIONS = [
@@ -5608,7 +5696,7 @@ def town_page(request: Request, slug: str):
 @app.get("/sitemap.xml")
 def sitemap():
     base = "https://gethauntmap.com"
-    urls = ["/", "/map", "/nearby", "/tour", "/diy", "/diy-costumes", "/games", "/leaderboard", "/leaderboard/states", "/leaderboard/top-100",
+    urls = ["/", "/map", "/nearby", "/tour", "/diy", "/diy-costumes", "/games", "/games/ghost-maze", "/leaderboard", "/leaderboard/states", "/leaderboard/top-100",
             "/towns", "/passport", "/daily", "/advertise", "/media-kit", "/about", "/hauntsocial", "/costume-contest", "/trivia", "/haunt-or-not", "/fan-art",
             "/restaurhaunts"]
     for t in _towns_with_counts():

@@ -282,6 +282,16 @@ CREATE TABLE IF NOT EXISTS passport_stamps (
     PRIMARY KEY (user_id, entry_id)
 );
 CREATE INDEX IF NOT EXISTS idx_passport_stamps_user ON passport_stamps(user_id, stamped_at);
+-- GHOST MAZE member leaderboard (Dan, Oct 25): one row per member —
+-- their best GHOST MAZE score, kept by the authenticated submit in
+-- POST /api/games/ghost-maze/score (best-only upsert, server-side
+-- plausibility cap). Anonymous players keep a device-local best and
+-- never reach this table.
+CREATE TABLE IF NOT EXISTS game_scores (
+    user_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+    best_score INTEGER NOT NULL DEFAULT 0,
+    achieved_at TEXT NOT NULL
+);
 CREATE TABLE IF NOT EXISTS reports (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     reporter_user_id INTEGER REFERENCES users(id),

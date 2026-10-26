@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block title %}Ghost Maze &middot; {{ site_name }}{% endblock %}
+{% block head %}
+<script src="/static/js/ghost_maze.js?v=20261025z142" defer></script>
+{% endblock %}
+{% block content %}
+{# GHOST MAZE (Dan, Oct 25) — HauntMap's own maze-chase arcade game.
+   The ghost, the maze, the monsters and the bleeps are all original
+   and drawn/synthesized in code (static/js/ghost_maze.js); the page
+   is just the cabinet: HUD, canvas, overlays, D-pad, leaderboard.
+   Members get the Top 10 board (game_scores); anonymous players keep
+   a device-local best and see the join nudge. #}
+<div class="hero-intro">
+  <h1>&#x1F47B; Ghost Maze</h1>
+  <p>Our ghost is loose in the haunted neighborhood. Munch every candy, dodge Frank and his monster crew &mdash; and if you grab a power pumpkin, the hunt flips.</p>
+</div>
+
+<div class="gm-wrap" id="gm-wrap" data-member="{{ '1' if request.state.member else '0' }}" data-handle="{{ request.state.member.handle if request.state.member else '' }}">
+  <div class="gm-hud">
+    <div class="gm-stat"><span class="gm-stat-l">Score</span><span class="gm-stat-n" id="gm-score">0</span></div>
+    <div class="gm-stat"><span class="gm-stat-l">Best</span><span class="gm-stat-n" id="gm-best">0</span></div>
+    <div class="gm-stat"><span class="gm-stat-l">Level</span><span class="gm-stat-n" id="gm-level">1</span></div>
+    <div class="gm-stat"><span class="gm-stat-l">Lives</span><span class="gm-stat-n" id="gm-lives">&#x1F47B;&#x1F47B;&#x1F47B;</span></div>
+    <button type="button" class="gm-iconbtn" id="gm-mute" aria-label="Mute sound">&#x1F50A;</button>
+    <button type="button" class="gm-iconbtn" id="gm-pause" aria-label="Pause game">&#x23F8;&#xFE0F;</button>
+  </div>
+
+  <div class="gm-stage">
+    <canvas id="gm-canvas" width="418" height="528" aria-label="Ghost Maze game board"></canvas>
+    <div class="gm-overlay" id="gm-overlay">
+      <div class="gm-panel">
+        <h2 class="gm-panel-title" id="gm-panel-title">Ghost Maze</h2>
+        <p class="gm-panel-text" id="gm-panel-text">Eat all the candy to clear the street. Power pumpkins turn the monsters into snacks &mdash; for a few seconds.</p>
+        <p class="gm-panel-score" id="gm-panel-score" hidden></p>
+        <p class="gm-panel-note" id="gm-panel-note" hidden></p>
+        <button type="button" class="gm-start" id="gm-action">Start haunting</button>
+        <p class="gm-panel-hint">Swipe, use the pad below, or arrow keys / WASD.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="gm-dpad" aria-hidden="false">
+    <button type="button" class="gm-dbtn gm-dup" data-dir="up" aria-label="Move up">&#x25B2;</button>
+    <button type="button" class="gm-dbtn gm-dleft" data-dir="left" aria-label="Move left">&#x25C0;</button>
+    <button type="button" class="gm-dbtn gm-ddown" data-dir="down" aria-label="Move down">&#x25BC;</button>
+    <button type="button" class="gm-dbtn gm-dright" data-dir="right" aria-label="Move right">&#x25B6;</button>
+  </div>
+</div>
+
+<div class="gm-board">
+  <h2>&#x1F3C6; Ghost Maze Top 10</h2>
+  {% if board %}
+  <ol class="gm-board-list" id="gm-board-list">
+    {% for row in board %}
+    <li><a href="/@{{ row.handle }}">@{{ row.handle }}</a><span class="gm-board-score">{{ "{:,}".format(row.best_score) }}</span></li>
+    {% endfor %}
+  </ol>
+  {% else %}
+  <ol class="gm-board-list" id="gm-board-list"></ol>
+  <p class="gm-board-empty" id="gm-board-empty">No member scores yet &mdash; the crown is unclaimed.</p>
+  {% endif %}
+  {% if request.state.member %}
+  <p class="gm-board-you" id="gm-board-you">
+    {% if my_best is not none %}Your best: <strong>{{ "{:,}".format(my_best) }}</strong> — every finished run posts automatically.{% else %}You have no score on the board yet — finish a run and it posts automatically.{% endif %}
+  </p>
+  {% else %}
+  <p class="gm-board-you">Playing as a guest — your best lives on this device only. <a href="/signup">Join HauntSocial</a> to put your name on the board.</p>
+  {% endif %}
+</div>
+
+<div class="gm-how">
+  <h2>How to play</h2>
+  <p><strong>Candy</strong> is 10 points a piece. The four <strong>power pumpkins</strong> are 50 — and for a few seconds Frank, the vampire, the skeleton and the witch turn blue and edible (200 &rarr; 400 &rarr; 800 &rarr; 1600 a monster). A <strong>candy bucket</strong> drops by twice a street for bonus points. Clear every candy to light the next street — faster monsters, braver ghost. You have three lives; don't get caught.</p>
+</div>
+{% endblock %}
