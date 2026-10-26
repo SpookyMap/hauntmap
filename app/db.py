@@ -24,7 +24,10 @@ from pathlib import Path
 #   video was last-season footage of this already-posted display, so
 #   the ⭐ lands on this existing pin and its embed stays untouched.
 #   Featured only — this change does not touch the hand-picked list.)
-FEATURED_ENTRY_IDS = (5541, 5542, 5551, 5584, 5587, 5175, 4370, 5653, 5654, 5655, 5766, 5572)
+#   5940 FL Orlando (Oct 26: Dan's send — @explore_orlando's TikTok
+#   live room, a Featured Live pin mirroring Ghost Manor 171, the
+#   site's original live-category pin; also hand-picked below.)
+FEATURED_ENTRY_IDS = (5541, 5542, 5551, 5584, 5587, 5175, 4370, 5653, 5654, 5655, 5766, 5572, 5940)
 
 # Hand-picked pins (Dan, Oct 23): pins Dan personally sent in chat or
 # curated for posting. These lead every feed view — hand-picked first
@@ -54,6 +57,9 @@ FEATURED_ENTRY_IDS = (5541, 5542, 5551, 5584, 5587, 5175, 4370, 5653, 5654, 5655
 # pick ("give the top pin some love"): the site's #1 pin by
 # interactions. As the newest hand-picked pin it leads the homepage
 # feed as the first card for every visitor.
+# Oct 26 addition: 5940 (Orlando FL) — @explore_orlando's TikTok live
+# room, sent by Dan personally ("add this to the live button and
+# feature it"), so it joins this Dan-sent set as the newest entry.
 HANDPICKED_ENTRY_IDS = (
     805, 930, 936, 4370, 4372, 4373, 4374, 4375, 4376, 4377, 4384,
     4395, 4465, 4546, 4548, 4550, 4557, 4558, 4559, 4560, 4561, 4562,
@@ -64,7 +70,7 @@ HANDPICKED_ENTRY_IDS = (
     5576, 5577, 5578, 5579, 5580, 5581, 5582, 5583, 5584, 5585, 5586,
     5587, 5588, 5589, 5590, 5591, 5592, 5593, 5595, 5596, 5597, 5598,
     5599, 5600, 5601, 5602, 5603, 5604, 5605, 5606, 5607, 5608, 5609,
-    5610, 5611, 5612, 5613, 5614, 5615, 5616, 5617, 5618, 5766,
+    5610, 5611, 5612, 5613, 5614, 5615, 5616, 5617, 5618, 5766, 5940,
 )
 
 SCHEMA = """
