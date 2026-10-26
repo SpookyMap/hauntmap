@@ -5422,3 +5422,57 @@ main.wrap:has(> .vt-tv-strip-bottom) { padding-bottom: 0; }
 @media (max-width: 380px) and (orientation: portrait) {
   .site-header.v2 .header-nav .header-events-col a.nav-join { width: 100%; }
 }
+
+/* ============ z164: PHONE JOIN PILL — TWO ROWS, LONGER (Dan, Oct 26) ============
+   Dan's own phone screenshot of the LIVE z163 pill showed the label
+   ellipsized — "JOIN HAUNTSOCI…" — although the sandbox rig measured
+   it fitting: at z163's 0.12rem horizontal padding the one-line label
+   had only ~4px of slack a side in Chromium (text 80.1px in an 88.2px
+   content box), and his iPhone renders Eater wider than that, so the
+   ellipsis fired. His fix, verbatim: "Make the join haunt social
+   longer an thing we but center it under parties and events" and
+   "You can put join on too [top] and jaunt [Haunt] social on the
+   bottom in two rows." So the label STACKS — JOIN over HAUNTSOCIAL —
+   and the pill is sized off the single wide word with real headroom.
+   PHONE PORTRAIT ONLY, same band, later in the file so the rules win
+   on order (this block also supersedes z163's <=380 width:100% —
+   same selector, later source position).
+   (1) TWO ROWS: .nav-join-first goes display:block, so "Join" takes
+       the top line and "HauntSocial" the bottom, both centered (the
+       pill's text-align:center carries down to both lines), each on
+       its own nowrap line at z163's 0.55rem Eater with line-height
+       1.3, so the rows sit close. The z155-dropped caption stays
+       dropped. The pill grows taller to hug the two lines; the
+       0.24rem vertical padding is unchanged.
+   (2) WIDTH FROM THE WIDE WORD, WITH THE iOS SAFETY FACTOR: rig-
+       measured (Chromium, Eater fully loaded) "HauntSocial" is
+       57.94px at the pill's seat (0.96em of the 0.55rem label).
+       Inflated x1.2 for iOS the design text width is 69.5px. The
+       pill is a fixed 116px with 0.94rem (15px) horizontal padding:
+       content box 116 - 30 - 4 (borders) = 82px, so even at the
+       inflated width the text sits ~6px inside the content box and
+       ~23px from each pill edge — and the word would have to render
+       ~41% wider than Chromium before it could touch the content
+       box at all. No ellipsis is possible (label scroll == client,
+       verified): the pill is sized to the text, never the reverse.
+   (3) CENTERED, NO OVERFLOW: align-self:center (z162/z163) centers
+       the 116px pill on the Events & Parties column — inside the
+       120px column at 390/430; at 360 (110px column) it overhangs
+       the column 3px a side with its left edge at ~2.6px, so page
+       overflow stays zero at 360/390/430 (verified) and the header
+       row is otherwise untouched.
+   The member @handle pill shares the pill width/padding rule and
+   keeps its single line; its label scales by cqw off the pill
+   (container-type stands), so the wider seat scales the handle
+   proportionally — same fit as before. Azure gradient, blue glow
+   and the GIF -> pill gap are untouched; laptop + compact landscape
+   are outside this band entirely. */
+@media (max-width: 760px) and (orientation: portrait) {
+  .site-header.v2 .header-nav .header-events-col a.nav-join {
+    width: 116px; padding: 0.24rem 0.94rem;
+  }
+  .site-header.v2 .header-nav .header-events-col a.nav-join:not(.nav-join-member) .nav-join-first {
+    display: block;
+  }
+}
+
