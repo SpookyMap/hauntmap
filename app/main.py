@@ -4484,8 +4484,132 @@ def _vt_video_pool(conn) -> list[dict]:
             continue
         seen_keys.add(key)
         d["_state"] = extract_state(d.get("town") or "")
+        d["_kind"] = ("tiktok" if "/video/" in (d.get("tiktok_url") or "")
+                      else "video")
         out.append(d)
     return out
+
+
+def _vt_kind(d: dict) -> str:
+    """Stop kind for the tour player: a TikTok embed, an uploaded video,
+    or a photo (states the video supply hasn't reached yet)."""
+    if "/video/" in (d.get("tiktok_url") or ""):
+        return "tiktok"
+    mp = (d.get("media_path") or "").lower()
+    if mp.endswith((".mp4", ".webm", ".mov")):
+        return "video"
+    return "photo"
+
+
+def _vt_photo_pool(conn, exclude_ids: set) -> list[dict]:
+    """Photo stops: live pins with a real uploaded photo + thumbnail and
+    map coordinates, never 2025-tagged — the same currency/media rules
+    as the video pool. These represent states the video pool can't
+    reach yet on the All America route (video first, strongest photo
+    where a state has no video)."""
+    rows = conn.execute(
+        """SELECT e.* FROM entries e
+           WHERE e.hidden = 0
+             AND e.lat IS NOT NULL AND e.lng IS NOT NULL
+             AND e.thumb_path IS NOT NULL AND TRIM(e.thumb_path) != ''
+             AND e.media_path IS NOT NULL AND TRIM(e.media_path) != ''
+             AND LOWER(e.media_path) NOT LIKE '%.mp4'
+             AND LOWER(e.media_path) NOT LIKE '%.webm'
+             AND LOWER(e.media_path) NOT LIKE '%.mov'
+             AND NOT (e.tiktok_url IS NOT NULL
+                      AND e.tiktok_url LIKE '%/video/%')
+             AND NOT (',' || COALESCE(e.tags, '') || ',') LIKE '%,2025,%'
+           ORDER BY e.id""").fetchall()
+    views = _views_by_id(conn)
+    out, seen_keys = [], set()
+    for r in rows:
+        d = row_to_dict(r)
+        if d["id"] in exclude_ids:
+            continue
+        d["_views"] = views.get(d["id"], 0)
+        key = ((d.get("title") or "").strip().lower(), d["town_label"])
+        if key in seen_keys:
+            continue
+        seen_keys.add(key)
+        d["_state"] = extract_state(d.get("town") or "")
+        d["_kind"] = "photo"
+        out.append(d)
+    return out
+
+
+# All 50 states + DC: names, a fitting little emoji per state (the
+# curated channels set the pattern — 🐊 FL, 🤠 TX, 🌵 AZ), and a
+# west→east sweep order so the All America ride crosses the country
+# instead of teleporting around it.
+VT_STATE_NAMES = {
+    "AL": "Alabama", "AK": "Alaska", "AZ": "Arizona", "AR": "Arkansas",
+    "CA": "California", "CO": "Colorado", "CT": "Connecticut",
+    "DE": "Delaware", "DC": "Washington DC", "FL": "Florida",
+    "GA": "Georgia", "HI": "Hawaii", "ID": "Idaho", "IL": "Illinois",
+    "IN": "Indiana", "IA": "Iowa", "KS": "Kansas", "KY": "Kentucky",
+    "LA": "Louisiana", "ME": "Maine", "MD": "Maryland",
+    "MA": "Massachusetts", "MI": "Michigan", "MN": "Minnesota",
+    "MS": "Mississippi", "MO": "Missouri", "MT": "Montana",
+    "NE": "Nebraska", "NV": "Nevada", "NH": "New Hampshire",
+    "NJ": "New Jersey", "NM": "New Mexico", "NY": "New York",
+    "NC": "North Carolina", "ND": "North Dakota", "OH": "Ohio",
+    "OK": "Oklahoma", "OR": "Oregon", "PA": "Pennsylvania",
+    "RI": "Rhode Island", "SC": "South Carolina", "SD": "South Dakota",
+    "TN": "Tennessee", "TX": "Texas", "UT": "Utah", "VT": "Vermont",
+    "VA": "Virginia", "WA": "Washington", "WV": "West Virginia",
+    "WI": "Wisconsin", "WY": "Wyoming",
+}
+VT_STATE_EMOJI = {
+    "AL": "🎶", "AK": "🐻", "AZ": "🌵", "AR": "💎", "CA": "🌴",
+    "CO": "🏔️", "CT": "⚓", "DE": "🏖️", "DC": "🏛️", "FL": "🐊",
+    "GA": "🍑", "HI": "🌺", "ID": "🥔", "IL": "🌆", "IN": "🏁",
+    "IA": "🌽", "KS": "🌻", "KY": "🐎", "LA": "🎷", "ME": "🦞",
+    "MD": "🦀", "MA": "🦃", "MI": "🚗", "MN": "🛶", "MS": "🎸",
+    "MO": "🎵", "MT": "🦬", "NE": "🌾", "NV": "🎰", "NH": "🍁",
+    "NJ": "🎃", "NM": "🌶️", "NY": "🗽", "NC": "🛩️", "ND": "🦌",
+    "OH": "🚀", "OK": "🌪️", "OR": "🌲", "PA": "🔔", "RI": "⛵",
+    "SC": "🌙", "SD": "🗿", "TN": "🎻", "TX": "🤠", "UT": "🏜️",
+    "VT": "🍦", "VA": "🌊", "WA": "☕", "WV": "⛰️", "WI": "🧀",
+    "WY": "♨️",
+}
+VT_STATE_ORDER = [
+    "WA", "OR", "CA", "NV", "ID", "UT", "AZ", "MT", "WY", "CO", "NM",
+    "ND", "SD", "NE", "KS", "OK", "TX", "MN", "IA", "MO", "AR", "LA",
+    "WI", "IL", "MS", "MI", "IN", "KY", "TN", "AL", "OH", "GA", "FL",
+    "SC", "NC", "VA", "WV", "DC", "MD", "DE", "PA", "NY", "NJ", "CT",
+    "RI", "MA", "VT", "NH", "ME", "AK", "HI",
+]
+VT_AMERICA_LEN = 64
+
+
+def _vt_america(pool: list[dict], photo_pool: list[dict]) -> list[dict]:
+    """All America route (Dan, Oct 26 — 'the whole country
+    represented'): one guaranteed stop per state + DC that has pins,
+    then a second VIDEO stop for states that have one to spare.
+    Within a state, video pins rank ahead of photo pins, then views —
+    video first, strongest photo where a state has no video yet.
+    Stops ride in a west→east state sweep, rep first in each state."""
+    def rank(d):
+        return (0 if d["_kind"] != "photo" else 1,
+                -d["_views"], -d["votes"], d["id"])
+
+    by_state: dict[str, list[dict]] = {}
+    for d in list(pool) + list(photo_pool):
+        st = d["_state"]
+        if st not in VT_STATE_NAMES:  # US states + DC only
+            continue
+        by_state.setdefault(st, []).append(d)
+    order = {st: i for i, st in enumerate(VT_STATE_ORDER)}
+    picked = []  # (state sweep idx, is-extra, -views, stop)
+    for st, lst in by_state.items():
+        lst.sort(key=rank)
+        picked.append((order.get(st, 99), 0, -lst[0]["_views"], lst[0]))
+        for d in lst[1:]:
+            if d["_kind"] != "photo":
+                picked.append((order.get(st, 99), 1, -d["_views"], d))
+                break
+    picked.sort(key=lambda t: t[:3])
+    return [t[3] for t in picked[:VT_AMERICA_LEN]]
 
 
 def _vt_pick(pool: list[dict], key, n: int = VT_ROUTE_LEN,
@@ -4539,9 +4663,20 @@ def virtual_tour_page(request: Request, route: str = "tonight",
     Las Vegas, and California split into Bay Area vs Southern California.
     Salem MA / New Orleans / Hudson Valley have no video pins in the
     pool yet, so they can't carry a route; Bergen County and Long Island
-    already ride inside the NJ / NYC Metro routes."""
+    already ride inside the NJ / NYC Metro routes.
+
+    Whole-country expansion (Dan, Oct 26 — 'add as many states as
+    possible, the whole country represented in Haunt TV and virtual
+    tour'): an All America channel guarantees one stop per state + DC
+    that has pins — the state's best video pin, or its strongest photo
+    pin where the state has no video yet (photo stops dwell and roll
+    on, in both the tour ride and TV mode) — plus a second video stop
+    per state that has one. And the state channels are now systematic:
+    any state whose video pool reaches the 6-stop gate gets a channel
+    automatically, no hand-list to extend."""
     with get_conn(DB_PATH) as conn:
         pool = _vt_video_pool(conn)
+        photo_pool = _vt_photo_pool(conn, {d["id"] for d in pool})
     by_views = lambda d: (-d["_views"], -d["votes"], d["id"])  # noqa: E731
     tonight = _vt_pick(pool, key=by_views)
     scare_rank = {"extreme": 0, "terrifying": 1, "creepy": 2}
@@ -4576,6 +4711,22 @@ def virtual_tour_page(request: Request, route: str = "tonight",
     socal = _vt_pick(
         [d for d in pool if d["_state"] == "CA" and d["lat"] < 36.9],
         key=by_views)
+    america = _vt_america(pool, photo_pool)
+    # Systematic state channels: the curated routes above cover NY,
+    # NJ, VA, FL, IL, TX, CO, AZ, NV and CA (split in two). Any OTHER
+    # state whose video supply reaches the same >=6 gate earns its own
+    # channel automatically, so coverage survives new content with no
+    # hand-list to maintain.
+    _covered_states = {"NY", "NJ", "VA", "FL", "IL", "TX", "CO", "AZ",
+                       "NV", "CA"}
+    state_routes = {}
+    for st in sorted({d["_state"] for d in pool}):
+        if st in _covered_states or st not in VT_STATE_NAMES:
+            continue
+        stops = _vt_pick([d for d in pool if d["_state"] == st],
+                         key=by_views)
+        if len(stops) >= 6:
+            state_routes[st] = stops
     routes = {"tonight": tonight}
     if len(scariest) >= 6:  # thinner than that isn't a tour — hide the tab
         routes["scariest"] = scariest
@@ -4603,22 +4754,37 @@ def virtual_tour_page(request: Request, route: str = "tonight",
         routes["bayarea"] = bayarea
     if len(socal) >= 6:
         routes["socal"] = socal
+    if len(america) >= 6:
+        routes["america"] = america
+    for st, stops in state_routes.items():
+        routes[f"state-{st.lower()}"] = stops
     if route not in routes:
         route = "tonight"
     is_tv = mode == "tv"
     channel_meta = [
         {"id": "tonight", "label": "Tonight's Tour", "emoji": "🎬",
+         "featured": True,
          "title": "🎬 Tonight's Virtual Tour",
          "sub": "The best video haunts in the country, one after another "
                 "— sit back and ride along.",
          "blurb": "Tonight's best video haunts nationwide, ranked by "
                   "what haunters are actually watching."},
         {"id": "scariest", "label": "Scariest in America", "emoji": "😱",
+         "featured": True,
          "title": "😱 Scariest in America — Virtual Tour",
          "sub": "The most terrifying video haunts on the map, ranked by "
                 "scare level — enter if you dare.",
          "blurb": "The creepiest, most terrifying video haunts on the "
                   "map, ranked by scare level."},
+        {"id": "america", "label": "All America", "emoji": "🗺️",
+         "featured": True, "unit": "haunts — videos & photos",
+         "title": "🗺️ All America — Coast to Coast Virtual Tour",
+         "sub": "Every state on the map, one stop at a time — each "
+                "state's best video haunt, and its strongest photo "
+                "where video hasn't reached yet.",
+         "blurb": "Coast to coast: a stop in every state + DC on the "
+                  "map — video first, a photo stop where a state has "
+                  "no video yet."},
         {"id": "nyc", "label": "NYC Metro", "emoji": "🗽",
          "title": "🗽 NYC Metro — Virtual Tour",
          "sub": "Video haunts across the five boroughs and Long Island "
@@ -4692,6 +4858,16 @@ def virtual_tour_page(request: Request, route: str = "tonight",
          "blurb": "Burbank's haunt scene, Anaheim, Mission Viejo and "
                   "more SoCal video haunts."},
     ]
+    for st in sorted(state_routes, key=lambda s: VT_STATE_NAMES[s]):
+        emo = VT_STATE_EMOJI.get(st, "🎃")
+        channel_meta.append(
+            {"id": f"state-{st.lower()}", "label": VT_STATE_NAMES[st],
+             "emoji": emo,
+             "title": f"{emo} {VT_STATE_NAMES[st]} — Virtual Tour",
+             "sub": f"Every video haunt we have in {VT_STATE_NAMES[st]}, "
+                    "ranked by views.",
+             "blurb": f"{VT_STATE_NAMES[st]}'s most-watched video "
+                      "haunts."})
     channels = [c for c in channel_meta if c["id"] in routes]
 
     def slim(stops: list[dict]) -> list[dict]:
@@ -4701,7 +4877,7 @@ def virtual_tour_page(request: Request, route: str = "tonight",
             "address": d.get("address") or "",
             "lat": d["lat"], "lng": d["lng"],
             "thumb_url": d["thumb_url"], "media_url": d["media_url"],
-            "media_type": d["media_type"],
+            "media_type": d["media_type"], "kind": _vt_kind(d),
             "tiktok_url": d.get("tiktok_url") or "",
             "creator": d.get("display_name") or "",
             "scare": d.get("scare_level") or "",

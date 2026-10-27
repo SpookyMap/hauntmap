@@ -28,18 +28,27 @@
 {% if is_tv %}
 <section class="vt-picker" id="vt-picker" hidden aria-label="HauntMap TV channels">
   <h2 class="vt-picker-title">&#x1F4FA; Pick a channel</h2>
-  <p class="vt-picker-sub">Every channel is a non-stop ride through real video haunts. Pick one and it plays stop after stop — uploaded videos roll straight into the next house; on TikTok stops, tap the video, watch, then hit the big &#x25B6; Next button.</p>
+  <p class="vt-picker-sub">Every channel is a non-stop ride through real haunts. Pick one and it plays stop after stop — uploaded videos roll straight into the next house; on TikTok stops, tap the video, watch, then hit the big &#x25B6; Next button. A few All America stops are photos — states where video hasn't reached yet; the ride pauses on the picture a few seconds, then rolls on.</p>
   <div class="vt-picker-grid">
-    {% for c in channels %}
+    {% for c in channels if c.featured %}
     <article class="vt-channel" data-vt-channel="{{ c.id }}">
       {% if routes[c.id] %}<img src="{{ routes[c.id][0].thumb_url }}" alt="" loading="lazy">{% endif %}
       <div class="vt-channel-body">
         <h3>{{ c.emoji }} {{ c.label }}</h3>
         <p>{{ c.blurb }}</p>
-        <p class="vt-channel-meta">{{ routes[c.id]|length }} video haunts</p>
+        <p class="vt-channel-meta">{{ routes[c.id]|length }} {{ c.unit or 'video haunts' }}</p>
         <button type="button" class="btn btn-big vt-channel-play" data-vt-play="{{ c.id }}">&#x25B6;&#xFE0F; Play channel</button>
       </div>
     </article>
+    {% endfor %}
+  </div>
+  <h3 class="vt-picker-subhead">More channels — states &amp; metros</h3>
+  <div class="vt-chan-grid">
+    {% for c in channels if not c.featured %}
+    <button type="button" class="vt-chan-btn" data-vt-play="{{ c.id }}">
+      <span class="vt-chan-emoji">{{ c.emoji }}</span>
+      <span class="vt-chan-txt"><span class="vt-chan-name">{{ c.label }}</span><span class="vt-chan-count">{{ routes[c.id]|length }} stops</span></span>
+    </button>
     {% endfor %}
   </div>
 </section>
@@ -56,7 +65,7 @@
 <div class="vt-main" id="vt-main">
   <div class="vt-left">
     <div class="vt-frame" id="vt-frame">
-    <div class="vt-stage" id="vt-stage">{% if is_tv %}<video id="vt-video" controls playsinline preload="metadata" hidden></video><iframe id="vt-tt" hidden allowfullscreen allow="autoplay; encrypted-media; picture-in-picture; fullscreen" title="TikTok video player"></iframe>{% endif %}</div>
+    <div class="vt-stage" id="vt-stage">{% if is_tv %}<video id="vt-video" controls playsinline preload="metadata" hidden></video><iframe id="vt-tt" hidden allowfullscreen allow="autoplay; encrypted-media; picture-in-picture; fullscreen" title="TikTok video player"></iframe><img id="vt-photo" hidden alt="">{% endif %}</div>
     <div class="vt-tv-next" id="vt-tv-next" hidden>
       <p class="vt-tv-next-note">&#x1F4FA; <strong>HauntMap TV:</strong> TikTok stops can't auto-play the next house — watch this one, then ride on:</p>
       <button type="button" class="btn vt-tv-next-btn" id="vt-tv-next-btn">&#x25B6; Next haunt</button>
@@ -123,10 +132,11 @@
 <style>
   .vt-head h1 { margin-bottom: 0.3rem; }
   .vt-sub { color: var(--muted); margin-top: 0; }
-  .vt-tabs { display: flex; gap: 0.5rem; flex-wrap: wrap; margin: 0.6rem 0 1rem; }
+  .vt-tabs { display: flex; gap: 0.4rem; flex-wrap: wrap; margin: 0.6rem 0 1rem; }
   .vt-tab {
-    padding: 0.5rem 1.1rem; border-radius: 999px; text-decoration: none;
+    padding: 0.34rem 0.72rem; border-radius: 999px; text-decoration: none;
     background: var(--bg2); color: var(--ink); border: 1px solid #443366; font-weight: 600;
+    font-size: 0.86rem; line-height: 1.2;
   }
   .vt-tab-on { background: var(--accent); color: #1a0f00; border-color: var(--accent); font-weight: 800; }
   /* ---- HauntMap TV (staged Oct 23) ---- */
@@ -148,6 +158,34 @@
   .vt-picker-title { margin-bottom: 0.25rem; }
   .vt-picker-sub { color: var(--muted); margin-top: 0; max-width: 46rem; }
   .vt-picker-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 0.9rem; }
+  /* Compact channel buttons (Dan, Oct 26): with a channel per state
+     the picker can't be all big cards — the non-featured channels
+     shrink into a tight emoji-button grid, 3-across on phone, more
+     on laptop, labels fully inside their buttons. */
+  .vt-picker-subhead { margin: 1.05rem 0 0.5rem; font-size: 1rem; }
+  .vt-chan-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.45rem; }
+  @media (min-width: 700px) {
+    .vt-chan-grid { grid-template-columns: repeat(auto-fill, minmax(158px, 1fr)); }
+  }
+  .vt-chan-btn {
+    display: flex; align-items: center; gap: 0.42rem; text-align: left; cursor: pointer;
+    background: var(--card); border: 1.5px solid #3a2a5e; border-radius: 10px;
+    padding: 0.45rem 0.55rem; color: var(--ink); font: inherit; min-height: 46px;
+  }
+  .vt-chan-btn:hover, .vt-chan-btn:focus-visible { border-color: var(--accent); }
+  .vt-chan-emoji { font-size: 1.05rem; line-height: 1; flex: 0 0 auto; }
+  .vt-chan-txt { display: flex; flex-direction: column; min-width: 0; }
+  .vt-chan-name { font-weight: 700; font-size: 0.83rem; line-height: 1.15; }
+  .vt-chan-count { color: var(--muted); font-size: 0.72rem; font-weight: 700; }
+  /* Photo stops (All America states with no video yet): the still
+     fills the stage like a facade picture, with an honest chip. */
+  .vt-photo-stop { position: relative; width: 100%; }
+  .vt-photo-stop img { width: 100%; max-height: 62vh; object-fit: contain; display: block; background: #0d0916; }
+  .vt-photo-chip {
+    position: absolute; left: 0.6rem; bottom: 0.6rem; background: rgba(13, 9, 22, 0.87);
+    color: #f9e5c2; border: 1px solid rgba(178, 102, 255, 0.65); border-radius: 999px;
+    padding: 0.3rem 0.7rem; font-size: 0.8rem; font-weight: 700;
+  }
   .vt-channel { background: var(--card); border: 2px solid #3a2a5e; border-radius: 14px; overflow: hidden; }
   .vt-channel img { width: 100%; height: 128px; object-fit: cover; display: block; }
   .vt-channel-body { padding: 0.75rem 0.85rem 0.95rem; }
@@ -265,9 +303,12 @@
     .vt-nav { flex: 1 1 40%; }
     .vt-tv-logo { font-size: 1.9rem; }
     .vt-picker-grid { grid-template-columns: minmax(0, 1fr); }
-    /* Phone: channel tabs in a compact 2x2 grid instead of one per row */
-    .vt-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 0.45rem; }
-    .vt-tab { text-align: center; padding: 0.5rem 0.35rem; font-size: 0.92rem; }
+    .vt-photo-stop img { max-height: 52vh; }
+    /* Phone: channel tabs in a compact 3-across grid (Dan, Oct 26 —
+       smaller buttons that fit nicely together now that the states
+       joined); every label stays fully inside its pill. */
+    .vt-tabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.4rem; }
+    .vt-tab { text-align: center; padding: 0.42rem 0.2rem; font-size: 0.8rem; }
   }
   /* ---- HauntMap TV: one stable screen (Dan, Oct 26) ----
      TV mode emulates a TV: once the tour starts the viewer never
@@ -313,7 +354,16 @@
      failure this rebuild exists to fix; caught by the suite when
      the hidden iframe intercepted clicks meant for Next). */
   body.hm-tv .vt-stage video[hidden],
-  body.hm-tv .vt-stage iframe#vt-tt[hidden] { display: none !important; }
+  body.hm-tv .vt-stage iframe#vt-tt[hidden],
+  body.hm-tv .vt-stage img#vt-photo[hidden] { display: none !important; }
+  /* The photo player: a third immortal element, same doctrine as
+     the video and the TikTok iframe — created once, only its src
+     ever swaps, so a photo stop can't drop fullscreen either. It
+     fills the frame like the other players (letterboxed still). */
+  body.hm-tv .vt-stage img#vt-photo {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    object-fit: contain; background: #000; display: block;
+  }
   /* ---- The video frame (Dan, Oct 26, second pass) ----
      Fullscreen targets #vt-frame — the stage, the TikTok Next bar
      and the TV remote, nothing else. No picker, no map, no page
@@ -442,6 +492,13 @@ var VT_SCARE = {
     var s = {};
     stops.forEach(function (x) { if (x.state) s[x.state] = 1; });
     return Object.keys(s).length;
+  }
+  function stopStats() {
+    var vc = 0;
+    stops.forEach(function (x) { if (x.kind !== 'photo') vc++; });
+    return stops.length + ' haunts · ' +
+      (vc < stops.length ? vc + ' with video · ' : '') +
+      stateCount() + ' states · ~' + routeMiles() + ' miles of haunting';
   }
 
   function renderStops() {
@@ -605,6 +662,9 @@ var VT_SCARE = {
   var endOverlay = document.getElementById('vt-end-overlay');
   var tvVideo = document.getElementById('vt-video');
   var tvTt = document.getElementById('vt-tt');
+  var tvPhoto = document.getElementById('vt-photo');
+  var tvPhotoTimer = null;
+  var TV_PHOTO_MS = 9000;
   var fsIntent = false;
   var tvVol = null;
   function fsCurrent() {
@@ -647,7 +707,10 @@ var VT_SCARE = {
   // clickable precisely because nothing overlays the iframe.
   function setMuteUI() {
     if (!muteBtn || !tvVideo) return;
-    if (isTtStop(stops[idx])) {
+    if (stops[idx] && stops[idx].kind === 'photo') {
+      muteBtn.innerHTML = '&#x1F4F8; Photo';
+      muteBtn.setAttribute('aria-pressed', 'false');
+    } else if (isTtStop(stops[idx])) {
       muteBtn.innerHTML = '&#x1F509; Sound';
       muteBtn.setAttribute('aria-pressed', 'false');
     } else if (tvVideo.muted) {
@@ -694,6 +757,10 @@ var VT_SCARE = {
       });
     }
     if (muteBtn) muteBtn.addEventListener('click', function () {
+      if (stops[idx] && stops[idx].kind === 'photo') {
+        showFrameNote('\uD83D\uDCF8 Photo stop — no video for this haunt yet. The ride rolls on in a few seconds.');
+        return;
+      }
       if (isTtStop(stops[idx])) {
         showFrameNote('\uD83D\uDD09 Sound for TikTok lives in the video — tap the speaker icon on the video itself.');
         return;
@@ -794,7 +861,28 @@ var VT_SCARE = {
   function renderTvMedia(s, isTikTok) {
     if (endOverlay) endOverlay.hidden = true;
     if (!tvVideo || !tvTt) return;
-    if (isTikTok) {
+    clearTimeout(tvPhotoTimer); tvPhotoTimer = null;
+    if (s.kind === 'photo') {
+      // Photo stop: the still holds the frame like a TV slideshow
+      // picture, then the ride rolls on by itself — no viewer input
+      // needed, and the Next button still works at any moment (any
+      // stop change clears this timer at the top of this function).
+      try { tvVideo.pause(); } catch (e) {}
+      tvVideo.hidden = true;
+      if (tvVideo.getAttribute('src')) { tvVideo.removeAttribute('src'); try { tvVideo.load(); } catch (e) {} }
+      var pSrc = tvTt.getAttribute('src');
+      if (pSrc && pSrc !== 'about:blank') tvTt.src = 'about:blank';
+      tvTt.hidden = true;
+      if (tvPhoto) {
+        if (s.thumb_url && tvPhoto.getAttribute('src') !== s.thumb_url) tvPhoto.src = s.thumb_url;
+        tvPhoto.hidden = false;
+        tvPhotoTimer = setTimeout(function () {
+          if (endShown()) return;
+          if (idx < stops.length - 1) go(idx + 1); else finish();
+        }, TV_PHOTO_MS);
+      }
+    } else if (isTikTok) {
+      if (tvPhoto) tvPhoto.hidden = true;
       try { tvVideo.pause(); } catch (e) {}
       tvVideo.hidden = true;
       if (tvVideo.getAttribute('src')) { tvVideo.removeAttribute('src'); try { tvVideo.load(); } catch (e) {} }
@@ -802,6 +890,7 @@ var VT_SCARE = {
       if (tvTt.getAttribute('src') !== url) tvTt.src = url;
       tvTt.hidden = false;
     } else {
+      if (tvPhoto) tvPhoto.hidden = true;
       var ttSrc = tvTt.getAttribute('src');
       if (ttSrc && ttSrc !== 'about:blank') tvTt.src = 'about:blank';
       tvTt.hidden = true;
@@ -849,6 +938,13 @@ var VT_SCARE = {
         if (e.key === 'Enter' || e.key === ' ') pauseRide();
       });
       stage.appendChild(f);
+    } else if (s.kind === 'photo') {
+      stage.innerHTML = '';
+      var ph = document.createElement('div');
+      ph.className = 'vt-photo-stop';
+      ph.innerHTML = (s.thumb_url ? '<img src="' + s.thumb_url + '" alt="">' : '<div class="tt-facade-blank">&#x1F383;</div>') +
+        '<span class="vt-photo-chip">&#x1F4F8; Photo stop — no video for this haunt (yet)</span>';
+      stage.appendChild(ph);
     } else {
       stage.innerHTML = '';
       var v = document.createElement('video');
@@ -990,6 +1086,7 @@ var VT_SCARE = {
 
   function finish() {
     pauseRide();
+    clearTimeout(tvPhotoTimer); tvPhotoTimer = null;
     clearIdle();
     // TV on the big screen: the end choices overlay the frame
     // itself — a program ending doesn't kick you out of the big
@@ -1004,8 +1101,7 @@ var VT_SCARE = {
       var meta = channelMeta(routeName);
       document.getElementById('vt-end-overlay-title').textContent =
         'That\'s the ' + meta.label.replace(/ Tour$/, '') + ' channel!';
-      document.getElementById('vt-end-overlay-stats').textContent =
-        stops.length + ' video haunts · ' + stateCount() + ' states · ~' + routeMiles() + ' miles of haunting';
+      document.getElementById('vt-end-overlay-stats').textContent = stopStats();
       var oRow = document.getElementById('vt-end-overlay-row');
       oRow.innerHTML = '';
       VT_CHANNELS.forEach(function (c) {
@@ -1033,8 +1129,7 @@ var VT_SCARE = {
     var meta = channelMeta(routeName);
     document.getElementById('vt-end-title').textContent =
       'That\'s the ' + meta.label.replace(/ Tour$/, '') + (VT_TV ? ' channel' : ' tour') + '!';
-    document.getElementById('vt-end-stats').textContent =
-      stops.length + ' video haunts · ' + stateCount() + ' states · ~' + routeMiles() + ' miles of haunting';
+    document.getElementById('vt-end-stats').textContent = stopStats();
     // Completion loop: from the end card, one tap starts another tour —
     // previously only TV mode had a way onward (its channel guide).
     var ecBox = document.getElementById('vt-end-channels'),
