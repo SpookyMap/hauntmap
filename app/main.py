@@ -4531,6 +4531,15 @@ def watch_page(request: Request):
 
 VT_ROUTE_LEN = 12
 
+# Long Island channel (Dan, Oct 27): the Nassau + Suffolk towns that
+# actually carry video pins in the pool, matched on the parsed city so
+# address-form town strings ('417 S 1st St, Lindenhurst, NY') count too.
+# Membership is NOT exclusive — these stops stay in NYC Metro as well.
+VT_LI_CITIES = {
+    "Bethpage", "Deer Park", "East Islip", "Levittown", "Lindenhurst",
+    "Melville", "Merrick", "Old Bethpage", "Plainview", "West Islip",
+}
+
 
 def _vt_video_pool(conn) -> list[dict]:
     """Playable-video pins eligible for a Virtual Tour: a TikTok /video/
@@ -4740,8 +4749,10 @@ def virtual_tour_page(request: Request, route: str = "tonight",
     supports — Virginia, Florida, Chicagoland, Texas, Colorado, Arizona,
     Las Vegas, and California split into Bay Area vs Southern California.
     Salem MA / New Orleans / Hudson Valley have no video pins in the
-    pool yet, so they can't carry a route; Bergen County and Long Island
-    already ride inside the NJ / NYC Metro routes.
+    pool yet, so they can't carry a route; Bergen County already rides
+    inside the NJ route. Long Island rode inside NYC Metro until
+    Oct 27, when Dan gave it a channel of its own — its stops stay in
+    NYC Metro too (channel membership is not exclusive).
 
     Whole-country expansion (Dan, Oct 26 — 'add as many states as
     possible, the whole country represented in Haunt TV and virtual
@@ -4764,6 +4775,12 @@ def virtual_tour_page(request: Request, route: str = "tonight",
         key=lambda d: (scare_rank[d["scare_level"]], -d["_views"],
                        -d["votes"], d["id"]))
     nyc = _vt_pick([d for d in pool if d["_state"] == "NY"], key=by_views)
+    # Long Island gets its own channel (Dan, Oct 27): the Nassau +
+    # Suffolk slice of the NY pool. Non-exclusive — the same stops
+    # stay in NYC Metro above.
+    li = _vt_pick([d for d in pool if d["_state"] == "NY"
+                   and extract_city(d["town"]) in VT_LI_CITIES],
+                  key=by_views)
     nj = _vt_pick([d for d in pool if d["_state"] == "NJ"], key=by_views)
     # More prebuilt tours (Dan, Oct 26 — STAGED for his approval): the same
     # mechanism on the clusters the video pool actually supports — a
@@ -4812,6 +4829,8 @@ def virtual_tour_page(request: Request, route: str = "tonight",
         routes["family"] = family
     if len(nyc) >= 6:
         routes["nyc"] = nyc
+    if len(li) >= 6:
+        routes["li"] = li
     if len(nj) >= 6:
         routes["nj"] = nj
     if len(virginia) >= 6:
@@ -4869,6 +4888,12 @@ def virtual_tour_page(request: Request, route: str = "tonight",
                 "— the densest haunting in America, one stop at a time.",
          "blurb": "The five boroughs + Long Island: Dyker Heights, "
                   "Staten Island, Lindenhurst and more."},
+        {"id": "li", "label": "Long Island", "emoji": "👻",
+         "title": "👻 Long Island — Virtual Tour",
+         "sub": "Nassau and Suffolk's best video haunts — Lindenhurst, "
+                "Plainview, Levittown and more, ranked by views.",
+         "blurb": "Lindenhurst, Plainview, Levittown, Merrick — the "
+                  "Island's most-watched video haunts."},
         {"id": "nj", "label": "New Jersey Haunts", "emoji": "🎃",
          "title": "🎃 New Jersey Haunts — Virtual Tour",
          "sub": "Jersey's best video haunts — Bergen, Essex, Morris and "
