@@ -359,6 +359,61 @@ CREATE TABLE IF NOT EXISTS chat_messages (
     deleted_at TEXT
 );
 CREATE INDEX IF NOT EXISTS idx_chat_messages_id ON chat_messages(id);
+-- Haunt Chat real-time upgrade (Dan, Oct 27): treat reactions, the
+-- moderation audit log + shadow-mutes, and member-vs-member word games.
+-- Reactions: one row per (message, member, sticker) — re-tapping the
+-- same sticker deletes the row (toggle), enforced by the primary key.
+CREATE TABLE IF NOT EXISTS chat_reactions (
+    message_id INTEGER NOT NULL REFERENCES chat_messages(id) ON DELETE CASCADE,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    sticker TEXT NOT NULL,
+    created_at TEXT NOT NULL,
+    PRIMARY KEY (message_id, user_id, sticker)
+);
+CREATE INDEX IF NOT EXISTS idx_chat_reactions_msg ON chat_reactions(message_id);
+-- Moderation audit log: every delete / shadow-mute / unmute / report /
+-- word-filter catch lands here so admins can see who did what, when.
+CREATE TABLE IF NOT EXISTS chat_mod_log (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    actor_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+    action TEXT NOT NULL,
+    target_user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+    message_id INTEGER,
+    detail TEXT,
+    created_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_chat_mod_log_id ON chat_mod_log(id);
+-- Shadow-mute: a muted member's messages are stored but delivered only
+-- to themselves (and admins) — no public scene, per the research brief.
+CREATE TABLE IF NOT EXISTS chat_mutes (
+    user_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+    muted_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
+    created_at TEXT NOT NULL
+);
+-- Word games: one row per challenge/game. state is the game's JSON
+-- state (kind-specific); status walks pending -> active -> finished,
+-- with declined / expired as terminal side-exits from pending.
+CREATE TABLE IF NOT EXISTS chat_games (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    kind TEXT NOT NULL,
+    challenger_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    opponent_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    status TEXT NOT NULL DEFAULT 'pending',
+    state TEXT NOT NULL DEFAULT '{}',
+    winner_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    expires_at TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_chat_games_status ON chat_games(status, id);
+-- Per-member, per-game win/loss tally rendered on HauntSocial profiles.
+CREATE TABLE IF NOT EXISTS chat_game_tallies (
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    kind TEXT NOT NULL,
+    wins INTEGER NOT NULL DEFAULT 0,
+    losses INTEGER NOT NULL DEFAULT 0,
+    PRIMARY KEY (user_id, kind)
+);
 """
 
 
@@ -381,6 +436,13 @@ def init_db(db_path: Path) -> None:
     db_path.parent.mkdir(parents=True, exist_ok=True)
     with get_conn(db_path) as conn:
         conn.executescript(SCHEMA)
+        # Haunt Chat games opt-out (Oct 27): profiles predating the
+        # chat-games build gain the "don't receive game challenges" flag.
+        pcols = {r["name"] for r in conn.execute("PRAGMA table_info(profiles)").fetchall()}
+        if "no_challenges" not in pcols:
+            conn.execute(
+                "ALTER TABLE profiles ADD COLUMN no_challenges INTEGER NOT NULL DEFAULT 0"
+            )
         # Migrate DBs created before the food-section columns existed.
         cols = {r["name"] for r in conn.execute("PRAGMA table_info(entries)").fetchall()}
         if "category" not in cols:

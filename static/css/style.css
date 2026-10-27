@@ -6252,3 +6252,107 @@ main.wrap:has(> .vt-tv-strip-bottom) { padding-bottom: 0; }
   .chat-pin-text { font-size: 0.9rem; }
   .chat-send { padding: 0.7rem 0.9rem; }
 }
+
+/* ============ z193: HAUNT CHAT REAL-TIME (Dan, Oct 27) ================
+   Presence bar + typing line, treat reactions, the admin mod panel,
+   and the word-game strip (challenge form + game cards). Same azure
+   HauntSocial treatment as the z192 room; everything level. */
+.chat-presence { display: flex; flex-wrap: wrap; align-items: center;
+  gap: 0.45rem 0.8rem; background: var(--card);
+  border: 1px solid rgba(143,216,255,.30); border-radius: var(--radius);
+  padding: 0.5rem 0.8rem; margin-bottom: 0.7rem; font-size: 0.85rem; }
+.chat-presence-count { font-weight: 700; color: #8fd8ff; }
+.chat-presence-users { display: flex; flex-wrap: wrap; gap: 0.3rem; }
+.chat-presence-chip { display: inline-flex; align-items: center; gap: 0.3rem;
+  background: var(--bg2); color: var(--ink); border: 1px solid rgba(143,216,255,.30);
+  border-radius: 999px; padding: 0.12rem 0.55rem 0.12rem 0.15rem;
+  font-size: 0.78rem; cursor: pointer; }
+.chat-presence-chip:hover { border-color: rgba(143,216,255,.7); }
+.chat-presence-chip .soc-avatar { width: 20px; height: 20px; font-size: 0.62rem; }
+.chat-typing { color: var(--muted); font-style: italic; font-size: 0.8rem;
+  min-height: 1em; }
+.chat-report { background: none; border: none; color: var(--muted);
+  font-size: 0.75rem; padding: 0.1rem 0.2rem; cursor: pointer; opacity: 0.5; }
+.chat-report:hover, .chat-report:focus-visible { color: var(--danger); opacity: 1; }
+.chat-reacts { display: flex; flex-wrap: wrap; gap: 0.3rem; margin-top: 0.3rem;
+  align-items: center; }
+.chat-react-chip { background: var(--bg2); color: var(--ink);
+  border: 1px solid rgba(143,216,255,.30); border-radius: 999px;
+  padding: 0.08rem 0.5rem; font-size: 0.8rem; cursor: pointer; line-height: 1.5; }
+button.chat-react-chip:hover { border-color: rgba(143,216,255,.75); }
+.chat-react-chip.mine { background: rgba(143,216,255,.22);
+  border-color: #8fd8ff; font-weight: 700; }
+span.chat-react-chip { cursor: default; }
+.chat-react-add { background: none; border: 1px dashed rgba(143,216,255,.4);
+  color: var(--muted); border-radius: 999px; padding: 0.08rem 0.5rem;
+  font-size: 0.75rem; cursor: pointer; line-height: 1.5; }
+.chat-react-add:hover { color: var(--ink); border-color: rgba(143,216,255,.8); }
+.chat-react-picker { display: flex; gap: 0.25rem; margin-top: 0.3rem; }
+.chat-react-picker[hidden] { display: none; }
+.chat-react-pick { background: var(--bg2); border: 1px solid rgba(143,216,255,.3);
+  border-radius: 8px; padding: 0.15rem 0.4rem; font-size: 1rem; cursor: pointer; }
+.chat-react-pick:hover { border-color: #8fd8ff; }
+.chat-mod { margin-top: 0.9rem; background: var(--card);
+  border: 1px solid rgba(255,190,90,.4); border-radius: var(--radius);
+  padding: 0.7rem 0.9rem; }
+.chat-mod summary { cursor: pointer; font-weight: 700; }
+.chat-mod-body { margin-top: 0.6rem; display: flex; flex-direction: column;
+  gap: 0.55rem; }
+.chat-mod-row { display: flex; flex-wrap: wrap; gap: 0.45rem; align-items: center;
+  font-size: 0.85rem; margin: 0; }
+.chat-mod-row input { background: var(--bg2); color: var(--ink);
+  border: 1px solid rgba(143,216,255,.35); border-radius: 8px;
+  padding: 0.35rem 0.55rem; font: inherit; font-size: 0.9rem; }
+.chat-mod-row button { background: #8fd8ff; color: #0a1622; font-weight: 700;
+  border: none; border-radius: 8px; padding: 0.4rem 0.8rem; cursor: pointer; }
+.chat-mod-muted { margin: 0; font-size: 0.82rem; color: var(--muted); }
+.chat-mod-log { margin: 0; padding-left: 1.1rem; font-size: 0.8rem;
+  color: var(--muted); max-height: 180px; overflow-y: auto; }
+.chat-games { background: var(--card); border: 1px solid rgba(143,216,255,.30);
+  border-radius: var(--radius); padding: 0.7rem 0.9rem; margin-bottom: 0.7rem; }
+.chat-games-head { display: flex; flex-wrap: wrap; gap: 0.5rem 0.9rem;
+  align-items: center; justify-content: space-between; }
+.chat-games-title { font-weight: 800; color: #8fd8ff; }
+.chat-challenge-form { display: flex; flex-wrap: wrap; gap: 0.4rem;
+  align-items: center; margin: 0; }
+.chat-challenge-handle, .chat-challenge-kind { background: var(--bg2);
+  color: var(--ink); border: 1px solid rgba(143,216,255,.35);
+  border-radius: 8px; padding: 0.42rem 0.55rem; font: inherit;
+  font-size: 0.9rem; }
+.chat-challenge-handle { width: 9.5rem; }
+.chat-challenge-btn { background: #8fd8ff; color: #0a1622; font-weight: 800;
+  border: none; border-radius: 8px; padding: 0.48rem 0.85rem; cursor: pointer; }
+.chat-challenge-btn:hover { background: #b3e5ff; }
+.game-cards { display: flex; flex-direction: column; gap: 0.55rem;
+  margin-top: 0.55rem; }
+.game-cards:empty { margin-top: 0; }
+.game-card { border: 1px solid rgba(143,216,255,.4); border-radius: 10px;
+  background: linear-gradient(120deg, rgba(87,168,255,.12), rgba(143,216,255,.03));
+  padding: 0.6rem 0.75rem; }
+.game-card.game-finished { border-color: rgba(255,209,102,.55); }
+.game-head { margin: 0 0 0.25rem; font-weight: 700; font-size: 0.9rem;
+  color: #8fd8ff; }
+.game-status { margin: 0.15rem 0; font-size: 0.86rem; color: var(--ink);
+  overflow-wrap: anywhere; }
+.game-masked { margin: 0.25rem 0; font-size: 1.35rem; font-weight: 800;
+  letter-spacing: 0.14em; overflow-wrap: anywhere; }
+.game-ghost { margin: 0.15rem 0; font-size: 0.9rem; color: var(--muted); }
+.game-deadline { color: var(--muted); }
+.game-actions { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.4rem; }
+.game-btn { background: #8fd8ff; color: #0a1622; font-weight: 700; border: none;
+  border-radius: 8px; padding: 0.42rem 0.8rem; cursor: pointer;
+  font-size: 0.88rem; }
+.game-btn:hover { background: #b3e5ff; }
+.game-btn.ghost { background: none; color: var(--muted);
+  border: 1px solid rgba(143,216,255,.4); }
+.game-move { display: flex; gap: 0.4rem; margin-top: 0.45rem; }
+.game-input { flex: 1 1 auto; min-width: 0; background: var(--bg2);
+  color: var(--ink); border: 1px solid rgba(143,216,255,.35);
+  border-radius: 8px; padding: 0.45rem 0.6rem; font: inherit; }
+.soc-games-list { list-style: none; margin: 0; padding: 0;
+  display: flex; flex-direction: column; gap: 0.25rem; }
+@media (max-width: 520px) {
+  .chat-challenge-handle { width: 7.5rem; }
+  .game-masked { font-size: 1.1rem; }
+  .chat-presence { font-size: 0.8rem; }
+}

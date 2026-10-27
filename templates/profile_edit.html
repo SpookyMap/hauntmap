@@ -135,6 +135,7 @@
         <input type="text" name="fav_song" maxlength="120"
                value="{{ profile.fav_song or '' }}" placeholder="e.g. This Is Halloween">
       </label>
+      <label class="soc-pick"><input type="checkbox" name="no_challenges" value="1" {% if profile.no_challenges %}checked{% endif %}> Don&rsquo;t receive game challenges in Haunt Chat</label>
     </div>
     <div class="soc-top8-edit">
       <p class="soc-top8-edit-head">&#x2B50; My Top 8 <span class="opt">(things, not people — your favorite haunts &amp; films)</span></p>

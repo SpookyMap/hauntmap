@@ -88,6 +88,18 @@
   </section>
   {% endif %}
 
+  {% if game_record %}
+  <section class="soc-games">
+    <h2>&#x1F3AE; Haunt Chat Game Record</h2>
+    <ul class="soc-games-list">
+      {% set game_labels = {'ghost_word': 'Ghost Word 👻', 'unscramble': 'Word Unscramble Duel 🔤', 'word_chain': 'Word Chain: Haunt Edition 🔗'} %}
+      {% for g in game_record %}
+      <li>{{ game_labels.get(g.kind, g.kind) }} — <b>{{ g.wins }}W</b> · {{ g.losses }}L</li>
+      {% endfor %}
+    </ul>
+  </section>
+  {% endif %}
+
   {% if top8 %}
   <section class="soc-top8">
     <h2>&#x2B50; My Top 8</h2>

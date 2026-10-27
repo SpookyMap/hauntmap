@@ -5,6 +5,7 @@ Voting is limited to one vote per browser per entry via cookie — this is a
 SOFT limit only (cookies are trivially cleared); it stops casual double
 voting, not determined abuse. See the vote route below.
 """
+import asyncio
 import calendar
 import hashlib
 import hmac
@@ -32,7 +33,7 @@ import urllib.parse
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-from fastapi import BackgroundTasks, FastAPI, Form, HTTPException, Request, UploadFile, File
+from fastapi import BackgroundTasks, FastAPI, Form, HTTPException, Request, UploadFile, File, WebSocket, WebSocketDisconnect
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse, Response, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -10290,12 +10291,39 @@ def _chat_view(row) -> dict:
             "body": row["body"], "created_at": row["created_at"]}
 
 
-def _chat_recent(limit: int) -> list[dict]:
-    """The newest `limit` live messages, oldest first (room order)."""
+def _shadow_muted_ids(conn) -> set[int]:
+    """User ids currently shadow-muted (chat_mutes). A muted member's
+    messages are visible ONLY to themselves and to admins — everyone
+    else's room simply never contains them (brief §5)."""
+    try:
+        return {r["user_id"] for r in conn.execute(
+            "SELECT user_id FROM chat_mutes").fetchall()}
+    except sqlite3.OperationalError:
+        return set()
+
+
+def _chat_visibility(viewer: dict | None,
+                     muted: set[int]) -> tuple[str, list]:
+    """(SQL fragment, params) hiding shadow-muted authors from `viewer`.
+    Admins see everything; a muted author still sees their own posts."""
+    if not muted or _chat_is_admin(viewer):
+        return "", []
+    keep = [viewer["id"]] if viewer and viewer["id"] in muted else []
+    hide = sorted(muted - set(keep))
+    if not hide:
+        return "", []
+    marks = ", ".join("?" for _ in hide)
+    return f" AND m.user_id NOT IN ({marks})", hide
+
+
+def _chat_recent(limit: int, viewer: dict | None = None) -> list[dict]:
+    """The newest `limit` live messages, oldest first (room order),
+    shadow-mute filtered for `viewer`."""
     with get_conn(DB_PATH) as conn:
+        frag, params = _chat_visibility(viewer, _shadow_muted_ids(conn))
         rows = conn.execute(
-            _CHAT_SELECT + "WHERE m.deleted = 0 ORDER BY m.id DESC "
-            "LIMIT ?", (limit,)).fetchall()
+            _CHAT_SELECT + "WHERE m.deleted = 0" + frag +
+            " ORDER BY m.id DESC LIMIT ?", (*params, limit)).fetchall()
     return [_chat_view(r) for r in reversed(rows)]
 
 
@@ -10308,11 +10336,22 @@ def chat_page(request: Request):
            "frank_welcome": FRANK_CHAT_WELCOME,
            "chat_max": CHAT_MAX_CHARS}
     if member:
-        ctx.update({"messages": _chat_recent(CHAT_ROOM_LIMIT),
+        msgs = _chat_recent(CHAT_ROOM_LIMIT, member)
+        _attach_reactions(msgs, member["id"])
+        ctx.update({"messages": msgs,
                     "can_moderate": _chat_is_admin(member),
-                    "teaser": False})
+                    "teaser": False,
+                    "games": _chat_games_for_room(member),
+                    "stickers": list(TREAT_STICKERS),
+                    "game_kinds": GAME_KIND_LABELS})
+        if _chat_is_admin(member):
+            ctx.update({"mod_log": _chat_mod_log_recent(30),
+                        "muted_handles": _chat_muted_handles(),
+                        "slow_mode_s": _chat_slow_mode_s()})
     else:
-        ctx.update({"messages": _chat_recent(CHAT_TEASER_LIMIT),
+        msgs = _chat_recent(CHAT_TEASER_LIMIT)
+        _attach_reactions(msgs, None)
+        ctx.update({"messages": msgs,
                     "can_moderate": False, "teaser": True})
     return templates.TemplateResponse(request, "chat.html", ctx)
 
@@ -10330,10 +10369,11 @@ def chat_poll(request: Request, after: int = 0):
         return JSONResponse({"error": "members only"}, status_code=401)
     gone: list[int] = []
     with get_conn(DB_PATH) as conn:
+        frag, vparams = _chat_visibility(member, _shadow_muted_ids(conn))
         if after > 0:
             rows = conn.execute(
-                _CHAT_SELECT + "WHERE m.deleted = 0 AND m.id > ? "
-                "ORDER BY m.id ASC LIMIT 100", (after,)).fetchall()
+                _CHAT_SELECT + "WHERE m.deleted = 0 AND m.id > ?" + frag +
+                " ORDER BY m.id ASC LIMIT 100", (after, *vparams)).fetchall()
             gone = [r["id"] for r in conn.execute(
                 "SELECT id FROM chat_messages WHERE deleted = 1 "
                 "AND id <= ? AND deleted_at > ?",
@@ -10341,7 +10381,8 @@ def chat_poll(request: Request, after: int = 0):
                          - timedelta(minutes=30)).isoformat())).fetchall()]
             msgs = [_chat_view(r) for r in rows]
         else:
-            msgs = _chat_recent(CHAT_ROOM_LIMIT)
+            msgs = _chat_recent(CHAT_ROOM_LIMIT, member)
+    _attach_reactions(msgs, member["id"])
     resp = JSONResponse({"messages": msgs, "gone": gone,
                          "latest_id": msgs[-1]["id"] if msgs else after})
     resp.headers["Cache-Control"] = "no-store"
@@ -10368,10 +10409,32 @@ async def chat_post(request: Request):
             {"ok": False,
              "error": f"Messages cap at {CHAT_MAX_CHARS} characters."},
             status_code=400)
+    # Word filter (brief §5): family room — a filtered word never lands,
+    # and the catch is written to the moderation audit log.
+    hit = _chat_filter_hit(body)
+    if hit:
+        _chat_mod_log(member["id"], "filter", member["id"], None,
+                      f"blocked word '{hit}' in: {body[:80]}")
+        return JSONResponse(
+            {"ok": False,
+             "error": "Let's keep it family-friendly in here — that "
+                      "one can't be posted."}, status_code=400)
     now = datetime.now(timezone.utc)
+    # Effective rate limits: the base gap, raised by admin slow mode,
+    # and raised again for brand-new accounts (brief §5 friction).
+    min_gap = max(CHAT_MIN_GAP_S, _chat_slow_mode_s())
+    burst_limit = CHAT_BURST_LIMIT
+    try:
+        acct_age = (now - datetime.fromisoformat(
+            member["created_at"])).total_seconds()
+    except (ValueError, TypeError):
+        acct_age = CHAT_NEW_ACCOUNT_S + 1
+    if acct_age < CHAT_NEW_ACCOUNT_S:
+        min_gap = max(min_gap, CHAT_NEW_ACCOUNT_GAP_S)
+        burst_limit = CHAT_NEW_ACCOUNT_BURST
     with get_conn(DB_PATH) as conn:
         # Rate limits, server-side, read off the member's own rows:
-        # a ~2s floor between posts, plus a burst cap.
+        # a min-gap floor between posts, plus a burst cap.
         last = conn.execute(
             "SELECT created_at FROM chat_messages WHERE user_id = ? "
             "ORDER BY id DESC LIMIT 1", (member["id"],)).fetchone()
@@ -10380,18 +10443,18 @@ async def chat_post(request: Request):
                 gap = (now - datetime.fromisoformat(
                     last["created_at"])).total_seconds()
             except ValueError:
-                gap = CHAT_MIN_GAP_S
-            if gap < CHAT_MIN_GAP_S:
+                gap = min_gap
+            if gap < min_gap:
                 return JSONResponse(
                     {"ok": False,
-                     "error": "Slow down — give it a couple of seconds "
+                     "error": "Slow down — give it a few seconds "
                               "between messages."}, status_code=429)
         burst = conn.execute(
             "SELECT COUNT(*) AS n FROM chat_messages WHERE user_id = ? "
             "AND created_at > ?",
             (member["id"],
              (now - timedelta(minutes=10)).isoformat())).fetchone()["n"]
-        if burst >= CHAT_BURST_LIMIT:
+        if burst >= burst_limit:
             return JSONResponse(
                 {"ok": False,
                  "error": "Whoa — that's a lot of messages. Take a "
@@ -10402,7 +10465,13 @@ async def chat_post(request: Request):
         conn.commit()
         row = conn.execute(
             _CHAT_SELECT + "WHERE m.id = ?", (cur.lastrowid,)).fetchone()
-    return JSONResponse({"ok": True, "message": _chat_view(row)})
+        muted = member["id"] in _shadow_muted_ids(conn)
+    view = _chat_view(row)
+    view["reactions"] = {"counts": {}, "by": {}, "mine": []}
+    # Real-time fan-out. A shadow-muted author's message goes only to
+    # their own sockets and to admins — everyone else never sees it.
+    _hub_broadcast_message(view, author_id=member["id"], shadow=muted)
+    return JSONResponse({"ok": True, "message": view})
 
 
 @app.post("/api/chat/messages/{message_id}/delete")
@@ -10414,8 +10483,8 @@ def chat_delete(request: Request, message_id: int):
         return JSONResponse({"error": "admins only"}, status_code=403)
     with get_conn(DB_PATH) as conn:
         row = conn.execute(
-            "SELECT id FROM chat_messages WHERE id = ? AND deleted = 0",
-            (message_id,)).fetchone()
+            "SELECT id, user_id, body FROM chat_messages "
+            "WHERE id = ? AND deleted = 0", (message_id,)).fetchone()
         if row is None:
             return JSONResponse({"error": "no such message"},
                                 status_code=404)
@@ -10424,7 +10493,1214 @@ def chat_delete(request: Request, message_id: int):
             "WHERE id = ?",
             (datetime.now(timezone.utc).isoformat(), message_id))
         conn.commit()
+    _chat_mod_log(member["id"], "delete", row["user_id"], message_id,
+                  (row["body"] or "")[:80])
+    _hub.broadcast({"type": "gone", "id": message_id})
     return JSONResponse({"ok": True, "id": message_id})
+
+
+# ------------------------------------------- Haunt Chat real-time upgrade
+# Dan (Oct 27, 2026 — STAGED for his preview): the research brief's
+# approved build. Native WebSockets inside this app on the ONE worker
+# (in-memory registry — a second worker would silently split the room;
+# see brief §3), the polling endpoint above stays as the automatic
+# fallback, and reconnecting clients catch up through it. Ships with:
+# presence + typing, the §5 safety pack (slow mode, server-side word
+# filter, shadow-mute, audit log, per-message report, new-account
+# friction), treat reactions, and the member-vs-member word games in
+# the next section. Guests never open a socket — the teaser stays REST.
+CHAT_NEW_ACCOUNT_S = 600        # "brand-new" window: 10 minutes
+CHAT_NEW_ACCOUNT_GAP_S = 10     # min post gap inside that window
+CHAT_NEW_ACCOUNT_BURST = 5      # burst cap inside that window
+CHAT_SLOW_MODE_KEY = "chat_slow_mode_s"
+
+# Family-room word filter. Curated common profanity/slurs, matched on
+# whole tokens after a light leetspeak normalization, plus a squashed
+# check for longer words so "f u c k"-style spacing doesn't slip by.
+# Kept deliberately moderate to avoid Scunthorpe false positives.
+CHAT_BANNED_WORDS = [
+    "fuck", "fucking", "fucker", "shit", "shitty", "bitch", "bitches",
+    "bastard", "asshole", "dickhead", "pussy", "whore", "slut",
+    "nigger", "nigga", "faggot", "fag", "retard", "retarded",
+    "cunt", "cock", "porn", "porno", "pornhub", "sexcam", "blowjob",
+    "handjob", "jizz", "cumshot", "dildo", "hentai", "molest",
+    "pedophile", "paedophile", "rapist", "suicide", "kys",
+    "nazi", "hitler", "kkk",
+]
+_LEET_TABLE = str.maketrans({"0": "o", "1": "i", "3": "e", "4": "a",
+                             "5": "s", "7": "t", "@": "a", "$": "s"})
+
+
+def _chat_filter_hit(body: str) -> str | None:
+    """The banned word found in `body`, or None. Whole-token match
+    first. The squashed-letters pass (catches 'f u c k' spacing) only
+    runs when the message carries the evasion signature — several
+    single-letter tokens — or on words >= 5 chars, so innocent words
+    that merely contain a banned substring (shiitake, assassin)
+    never trip it."""
+    norm = body.lower().translate(_LEET_TABLE)
+    tokens = re.findall(r"[a-z]+", norm)
+    token_set = set(tokens)
+    squashed = "".join(tokens)
+    spaced = sum(1 for t in tokens if len(t) == 1) >= 3
+    for w in CHAT_BANNED_WORDS:
+        if w in token_set:
+            return w
+        if w in squashed and (len(w) >= 5 or (spaced and len(w) >= 4)):
+            return w
+    return None
+
+
+def _chat_slow_mode_s() -> int:
+    """Admin slow mode: minimum seconds between anyone's posts,
+    0 = off. Stored in social_meta so the mod panel can change it
+    without a redeploy."""
+    try:
+        return max(0, min(60, int(_social_meta_get(CHAT_SLOW_MODE_KEY)
+                                  or 0)))
+    except (TypeError, ValueError):
+        return 0
+
+
+def _chat_mod_log(actor_id, action: str, target_user_id,
+                  message_id, detail: str | None) -> None:
+    """One moderation audit-log row (delete / mute / unmute / report /
+    filter / slowmode). Best-effort: moderation never fails on it."""
+    try:
+        with get_conn(DB_PATH) as conn:
+            conn.execute(
+                "INSERT INTO chat_mod_log (actor_id, action, "
+                "target_user_id, message_id, detail, created_at) "
+                "VALUES (?, ?, ?, ?, ?, ?)",
+                (actor_id, action, target_user_id, message_id,
+                 (detail or "")[:300] or None,
+                 datetime.now(timezone.utc).isoformat()))
+            conn.commit()
+    except sqlite3.OperationalError:
+        pass
+
+
+def _chat_mod_log_recent(limit: int) -> list[dict]:
+    try:
+        with get_conn(DB_PATH) as conn:
+            rows = conn.execute(
+                "SELECT l.id, l.action, l.detail, l.created_at, "
+                "a.handle AS actor, t.handle AS target "
+                "FROM chat_mod_log l "
+                "LEFT JOIN users a ON a.id = l.actor_id "
+                "LEFT JOIN users t ON t.id = l.target_user_id "
+                "ORDER BY l.id DESC LIMIT ?", (limit,)).fetchall()
+        return [dict(r) for r in rows]
+    except sqlite3.OperationalError:
+        return []
+
+
+def _chat_muted_handles() -> list[str]:
+    try:
+        with get_conn(DB_PATH) as conn:
+            rows = conn.execute(
+                "SELECT u.handle FROM chat_mutes m "
+                "JOIN users u ON u.id = m.user_id "
+                "ORDER BY u.handle").fetchall()
+        return [r["handle"] for r in rows]
+    except sqlite3.OperationalError:
+        return []
+
+
+def _member_avatar_view(user_id: int) -> dict:
+    with get_conn(DB_PATH) as conn:
+        row = conn.execute(
+            "SELECT u.handle, p.display_name, p.avatar_choice, "
+            "p.avatar_path FROM users u "
+            "LEFT JOIN profiles p ON p.user_id = u.id WHERE u.id = ?",
+            (user_id,)).fetchone()
+    if row is None:
+        return _avatar_view(None, None, "?")
+    return _avatar_view(row["avatar_choice"], row["display_name"],
+                        row["handle"], row["avatar_path"])
+
+
+# ------------------------------------------------------------ the WS hub
+# In-memory connection registry. This is correct ONLY because the app
+# runs exactly one worker (Dockerfile pins --workers 1): every socket
+# lives in this process, so a plain dict is the whole fan-out. The day
+# a second worker/instance exists, this must move to a pub/sub
+# backplane or Ably (brief §3/§4) — presence would otherwise split
+# silently. Broadcasts are callable from any thread (sync endpoints run
+# in the threadpool): pushes hop onto the captured event loop.
+class _ChatConn:
+    __slots__ = ("user_id", "handle", "queue")
+
+    def __init__(self, user_id: int, handle: str, queue):
+        self.user_id = user_id
+        self.handle = handle
+        self.queue = queue
+
+
+class _ChatHub:
+    def __init__(self):
+        self.conns: dict[int, set] = {}
+        self.admin_ids: set[int] = set()
+        self.avatars: dict[int, dict] = {}
+        self.typing: dict[int, tuple] = {}   # user_id -> (handle, expiry)
+        self.loop = None
+
+    def register(self, member: dict, avatar: dict) -> _ChatConn:
+        conn = _ChatConn(member["id"], member["handle"],
+                         asyncio.Queue(maxsize=200))
+        self.conns.setdefault(member["id"], set()).add(conn)
+        self.avatars[member["id"]] = avatar
+        if _chat_is_admin(member):
+            self.admin_ids.add(member["id"])
+        return conn
+
+    def unregister(self, conn: _ChatConn) -> None:
+        room = self.conns.get(conn.user_id)
+        if room:
+            room.discard(conn)
+            if not room:
+                del self.conns[conn.user_id]
+        self.typing.pop(conn.user_id, None)
+
+    def _push(self, conn: _ChatConn, payload: dict) -> None:
+        loop = self.loop
+        if loop is None:
+            return
+
+        def _put():
+            try:
+                conn.queue.put_nowait(payload)
+            except asyncio.QueueFull:
+                # A wedged phone must never block a broadcast: drop its
+                # oldest queued event, keep the newest.
+                try:
+                    conn.queue.get_nowait()
+                    conn.queue.put_nowait(payload)
+                except Exception:
+                    pass
+
+        try:
+            loop.call_soon_threadsafe(_put)
+        except RuntimeError:
+            pass
+
+    def broadcast(self, payload: dict, to_ids: set[int] | None = None):
+        for uid, conns in list(self.conns.items()):
+            if to_ids is not None and uid not in to_ids:
+                continue
+            for conn in list(conns):
+                self._push(conn, payload)
+
+    def typing_handles(self) -> list[str]:
+        now = time.monotonic()
+        stale = [uid for uid, (_, exp) in self.typing.items()
+                 if exp <= now]
+        for uid in stale:
+            del self.typing[uid]
+        return sorted(h for h, _ in self.typing.values())
+
+    def presence_payload(self) -> dict:
+        users = [{"handle": c.handle, "avatar": self.avatars.get(uid)}
+                 for uid, conns in self.conns.items()
+                 for c in list(conns)[:1]]
+        users.sort(key=lambda u: u["handle"])
+        return {"type": "presence", "count": len(users),
+                "users": users, "typing": self.typing_handles()}
+
+    def broadcast_presence(self) -> None:
+        self.broadcast(self.presence_payload())
+
+    def set_typing(self, member: dict, on: bool) -> None:
+        if on:
+            self.typing[member["id"]] = (member["handle"],
+                                         time.monotonic() + 4)
+        else:
+            self.typing.pop(member["id"], None)
+        self.broadcast({"type": "typing",
+                        "handles": self.typing_handles()})
+
+
+_hub = _ChatHub()
+
+
+def _hub_broadcast_message(view: dict, author_id: int,
+                           shadow: bool) -> None:
+    """Fan a new message out over the sockets. Shadow-muted authors'
+    messages go only to their own sockets and to admins (the REST
+    paths filter the same way — see _chat_visibility)."""
+    payload = {"type": "message", "message": view}
+    if shadow:
+        _hub.broadcast(payload,
+                       to_ids={author_id} | set(_hub.admin_ids))
+    else:
+        _hub.broadcast(payload)
+
+
+async def _ws_send_loop(websocket: WebSocket, queue) -> None:
+    while True:
+        payload = await queue.get()
+        await websocket.send_json(payload)
+
+
+async def _ws_ping_loop(queue) -> None:
+    # Cloudflare kills idle WebSockets at ~100s; a frame every 30s
+    # keeps the connection warm (brief §2.1). Browsers ignore the
+    # unknown message type.
+    while True:
+        await asyncio.sleep(30)
+        try:
+            queue.put_nowait({"type": "ping"})
+        except asyncio.QueueFull:
+            pass
+
+
+@app.websocket("/ws/chat")
+async def chat_ws(websocket: WebSocket):
+    member = current_member(websocket)
+    if not member:
+        await websocket.close(code=4401)
+        return
+    await websocket.accept()
+    _hub.loop = asyncio.get_running_loop()
+    conn = _hub.register(member, _member_avatar_view(member["id"]))
+    sender = asyncio.create_task(_ws_send_loop(websocket, conn.queue))
+    pinger = asyncio.create_task(_ws_ping_loop(conn.queue))
+    _hub.broadcast_presence()
+
+    async def _pump():
+        while True:
+            data = await websocket.receive_json()
+            if not isinstance(data, dict):
+                continue
+            if data.get("type") == "typing":
+                _hub.set_typing(member, bool(data.get("on")))
+
+    pump = asyncio.create_task(_pump())
+    try:
+        await asyncio.wait({pump, sender},
+                           return_when=asyncio.FIRST_COMPLETED)
+    finally:
+        for task in (pump, sender, pinger):
+            task.cancel()
+        _hub.unregister(conn)
+        _hub.broadcast_presence()
+        _hub.broadcast({"type": "typing",
+                        "handles": _hub.typing_handles()})
+
+
+# ------------------------------------------------------------- reactions
+def _reactions_map(conn, message_ids: list[int],
+                   viewer_id: int | None) -> dict:
+    """{message_id: {"counts": {sticker: n}, "by": {sticker: [handles]},
+    "mine": [stickers the viewer stuck]}} for a batch of messages."""
+    out = {mid: {"counts": {}, "by": {}, "mine": []}
+           for mid in message_ids}
+    if not message_ids:
+        return out
+    marks = ", ".join("?" for _ in message_ids)
+    try:
+        rows = conn.execute(
+            "SELECT r.message_id, r.sticker, r.user_id, u.handle "
+            "FROM chat_reactions r JOIN users u ON u.id = r.user_id "
+            f"WHERE r.message_id IN ({marks})", message_ids).fetchall()
+    except sqlite3.OperationalError:
+        return out
+    for r in rows:
+        entry = out[r["message_id"]]
+        entry["counts"][r["sticker"]] = \
+            entry["counts"].get(r["sticker"], 0) + 1
+        entry["by"].setdefault(r["sticker"], []).append(r["handle"])
+        if viewer_id and r["user_id"] == viewer_id:
+            entry["mine"].append(r["sticker"])
+    return out
+
+
+def _attach_reactions(msgs: list[dict],
+                      viewer_id: int | None) -> list[dict]:
+    if not msgs:
+        return msgs
+    with get_conn(DB_PATH) as conn:
+        rmap = _reactions_map(conn, [m["id"] for m in msgs], viewer_id)
+    for m in msgs:
+        m["reactions"] = rmap.get(
+            m["id"], {"counts": {}, "by": {}, "mine": []})
+    return msgs
+
+
+@app.post("/api/chat/messages/{message_id}/react")
+async def chat_react(request: Request, message_id: int):
+    """Toggle one treat sticker on a message (brief §6 #1). One row per
+    (message, member, sticker): re-tapping removes it."""
+    member = current_member(request)
+    if not member:
+        return JSONResponse({"error": "members only"}, status_code=401)
+    try:
+        data = await request.json()
+    except Exception:
+        return JSONResponse({"ok": False, "error": "bad request"},
+                            status_code=400)
+    sticker = str(data.get("sticker") or "")
+    if sticker not in TREAT_STICKERS:
+        return JSONResponse({"ok": False, "error": "unknown sticker"},
+                            status_code=400)
+    now = datetime.now(timezone.utc).isoformat()
+    with get_conn(DB_PATH) as conn:
+        msg = conn.execute(
+            "SELECT user_id FROM chat_messages "
+            "WHERE id = ? AND deleted = 0", (message_id,)).fetchone()
+        if msg is None:
+            return JSONResponse({"ok": False, "error": "no such message"},
+                                status_code=404)
+        if (msg["user_id"] in _shadow_muted_ids(conn)
+                and not _chat_is_admin(member)
+                and msg["user_id"] != member["id"]):
+            return JSONResponse({"ok": False, "error": "no such message"},
+                                status_code=404)
+        existing = conn.execute(
+            "SELECT 1 FROM chat_reactions WHERE message_id = ? "
+            "AND user_id = ? AND sticker = ?",
+            (message_id, member["id"], sticker)).fetchone()
+        if existing:
+            conn.execute(
+                "DELETE FROM chat_reactions WHERE message_id = ? "
+                "AND user_id = ? AND sticker = ?",
+                (message_id, member["id"], sticker))
+        else:
+            conn.execute(
+                "INSERT INTO chat_reactions (message_id, user_id, "
+                "sticker, created_at) VALUES (?, ?, ?, ?)",
+                (message_id, member["id"], sticker, now))
+        conn.commit()
+        summary = _reactions_map(conn, [message_id], member["id"])[message_id]
+    _hub.broadcast({"type": "reaction", "message_id": message_id,
+                    "counts": summary["counts"], "by": summary["by"]})
+    return JSONResponse({"ok": True, "reactions": summary})
+
+
+@app.post("/api/chat/messages/{message_id}/report")
+def chat_report(request: Request, message_id: int):
+    """Per-message report: lands in the shared reports queue (the admin
+    surface the wall reports already use) AND in the chat audit log."""
+    member = current_member(request)
+    if not member:
+        return JSONResponse({"error": "members only"}, status_code=401)
+    now = datetime.now(timezone.utc).isoformat()
+    with get_conn(DB_PATH) as conn:
+        row = conn.execute(
+            "SELECT user_id, body FROM chat_messages "
+            "WHERE id = ? AND deleted = 0", (message_id,)).fetchone()
+        if row is None:
+            return JSONResponse({"ok": False, "error": "no such message"},
+                                status_code=404)
+        conn.execute(
+            "INSERT INTO reports (reporter_user_id, target_type, "
+            "target_id, reason, created_at) "
+            "VALUES (?, 'chat_message', ?, ?, ?)",
+            (member["id"], message_id,
+             f"chat message by user {row['user_id']}", now))
+        conn.commit()
+    _chat_mod_log(member["id"], "report", row["user_id"], message_id,
+                  (row["body"] or "")[:80])
+    return JSONResponse({"ok": True})
+
+
+# -------------------------------------------------------- admin endpoints
+@app.get("/api/chat/modlog")
+def chat_modlog(request: Request):
+    member = current_member(request)
+    if not member:
+        return JSONResponse({"error": "members only"}, status_code=401)
+    if not _chat_is_admin(member):
+        return JSONResponse({"error": "admins only"}, status_code=403)
+    return JSONResponse({"entries": _chat_mod_log_recent(50),
+                         "muted": _chat_muted_handles(),
+                         "slow_mode_s": _chat_slow_mode_s()})
+
+
+async def _chat_admin_target(request: Request):
+    """(member, target row) for the mute/unmute endpoints, or a
+    JSONResponse error in place of the target."""
+    member = current_member(request)
+    if not member:
+        return None, JSONResponse({"error": "members only"},
+                                  status_code=401)
+    if not _chat_is_admin(member):
+        return None, JSONResponse({"error": "admins only"},
+                                  status_code=403)
+    try:
+        data = await request.json()
+    except Exception:
+        return None, JSONResponse({"ok": False, "error": "bad request"},
+                                  status_code=400)
+    handle = str(data.get("handle") or "").strip().lower().lstrip("@")
+    with get_conn(DB_PATH) as conn:
+        row = conn.execute("SELECT id, handle FROM users WHERE handle = ?",
+                           (handle,)).fetchone()
+    if row is None:
+        return None, JSONResponse({"ok": False,
+                                   "error": "no such member"},
+                                  status_code=404)
+    return member, dict(row)
+
+
+@app.post("/api/chat/admin/mute")
+async def chat_admin_mute(request: Request):
+    """Shadow-mute a member: their posts keep 'working' for them but
+    reach only themselves and admins. Silent by design."""
+    member, target = await _chat_admin_target(request)
+    if member is None:
+        return target
+    with get_conn(DB_PATH) as conn:
+        conn.execute(
+            "INSERT OR IGNORE INTO chat_mutes (user_id, muted_by, "
+            "created_at) VALUES (?, ?, ?)",
+            (target["id"], member["id"],
+             datetime.now(timezone.utc).isoformat()))
+        conn.commit()
+    _chat_mod_log(member["id"], "mute", target["id"], None,
+                  f"shadow-muted @{target['handle']}")
+    return JSONResponse({"ok": True, "muted": _chat_muted_handles()})
+
+
+@app.post("/api/chat/admin/unmute")
+async def chat_admin_unmute(request: Request):
+    member, target = await _chat_admin_target(request)
+    if member is None:
+        return target
+    with get_conn(DB_PATH) as conn:
+        conn.execute("DELETE FROM chat_mutes WHERE user_id = ?",
+                     (target["id"],))
+        conn.commit()
+    _chat_mod_log(member["id"], "unmute", target["id"], None,
+                  f"unmuted @{target['handle']}")
+    return JSONResponse({"ok": True, "muted": _chat_muted_handles()})
+
+
+@app.post("/api/chat/admin/slowmode")
+async def chat_admin_slowmode(request: Request):
+    member = current_member(request)
+    if not member:
+        return JSONResponse({"error": "members only"}, status_code=401)
+    if not _chat_is_admin(member):
+        return JSONResponse({"error": "admins only"}, status_code=403)
+    try:
+        data = await request.json()
+        seconds = max(0, min(60, int(data.get("seconds"))))
+    except Exception:
+        return JSONResponse({"ok": False, "error": "bad request"},
+                            status_code=400)
+    _social_meta_set(CHAT_SLOW_MODE_KEY, str(seconds))
+    _chat_mod_log(member["id"], "slowmode", None, None,
+                  f"slow mode set to {seconds}s")
+    return JSONResponse({"ok": True, "slow_mode_s": seconds})
+
+
+# ------------------------------------------------------------------ games
+# Member-vs-member word games (Dan-picked, brief §7): Ghost Word,
+# Word Unscramble Duel, Word Chain: Haunt Edition. All turn-based and
+# async-safe — a game row is JSON state in chat_games, moves ride the
+# same REST+WS paths as chat, and results are announced by Frank as
+# real chat messages and tallied onto profiles. No wagering, no side
+# channels, blocking blocks challenges, profiles can opt out.
+GAME_KIND_LABELS = {
+    "ghost_word": "Ghost Word 👻",
+    "unscramble": "Word Unscramble Duel 🔤",
+    "word_chain": "Word Chain: Haunt Edition 🔗",
+}
+CHAT_CHALLENGE_TTL_S = 120       # accept window on an invite card
+CHAT_CHALLENGE_HOURLY_CAP = 10   # invites sent per member per hour
+GHOST_MAX_WRONG = 8              # wrong guesses that complete the ghost
+UNSCRAMBLE_ROUNDS = 5
+CHAIN_TURN_S = 45                # seconds per Word Chain turn
+CHAIN_MAX_STRIKES = 2
+
+HALLOWEEN_WORDS = [
+    "pumpkin", "ghost", "witch", "vampire", "werewolf", "skeleton",
+    "haunted", "costume", "candy", "spider", "cobweb", "cauldron",
+    "graveyard", "tombstone", "mummy", "zombie", "monster", "dracula",
+    "raven", "goblin", "ghoul", "phantom", "specter", "warlock",
+    "wizard", "potion", "spellbook", "curse", "coffin", "crypt",
+    "dungeon", "lantern", "broomstick", "blackcat", "fullmoon",
+    "howling", "creepy", "spooky", "eerie", "fright", "terror",
+    "haunting", "poltergeist", "seance", "ouija", "tarot", "crystal",
+    "candle", "shadow", "midnight", "october", "autumn", "harvest",
+    "scarecrow", "hayride", "cornmaze", "bonfire", "cider", "caramel",
+    "apple", "treat", "trick", "mask", "cape", "fangs", "claws",
+    "wings", "broom", "wand", "hat", "cloak", "gown", "makeup",
+    "facepaint", "wig", " horns", "tail", "pumpkins", "ghosts",
+    "witches", "spiders", "bats", "owls", "cats", "rats", "snakes",
+    "frogs", "toads", "newts", "wolves", "bears", "crows", "webs",
+    "skeletons", "mummies", "zombies", "vampires", "goblins",
+    "hauntedhouse", "cemetery", "mausoleum", "headstone", "epitaph",
+    "funeral", "burial", "coffins", "chains", "locks", "keys",
+    "doors", "windows", "attic", "basement", "cellar", "stairs",
+    "hallway", "mirror", "portrait", "chandelier", "fireplace",
+    "thunder", "lightning", "storm", "rain", "wind", "fog",
+    "moonlight", "starlight", "darkness", "silence", "whisper",
+    "scream", "giggle", "cackle", "moan", "groan", "rattle",
+    "scratch", "knock", "creak", "thump", "howl", "hoot",
+    "pumpkinking", "jackolantern", "nightmare", "daydream",
+    "frankenstein", "bride", "groom", "wedding", "party",
+    "parade", "festival", "carnival", "circus", "magic", "magician",
+]
+# Normalize the bank: lowercase alpha only, no dupes, no strays.
+HALLOWEEN_WORDS = sorted({w.strip() for w in HALLOWEEN_WORDS
+                          if w.strip().isalpha() and len(w.strip()) >= 3})
+_HALLOWEEN_SET = set(HALLOWEEN_WORDS)
+_GAME_WORD_POOL = [w for w in HALLOWEEN_WORDS if len(w) >= 5]
+
+_WORDLIST_CACHE: set | None = None
+
+
+def _wordlist_set() -> set:
+    """Bundled dictionary for Word Chain validation (app/
+    chat_wordlist.txt, ~150k common words) plus the Halloween bank,
+    which always validates (and scores the bonus). Loaded lazily,
+    once, off the request path's hot loop."""
+    global _WORDLIST_CACHE
+    if _WORDLIST_CACHE is None:
+        words = set(_HALLOWEEN_SET)
+        try:
+            text = (Path(__file__).parent / "chat_wordlist.txt") \
+                .read_text(encoding="utf-8")
+            words |= {w.strip() for w in text.splitlines() if w.strip()}
+        except OSError:
+            pass
+        _WORDLIST_CACHE = words
+    return _WORDLIST_CACHE
+
+
+# Pairings that declined a challenge: (challenger_id, opponent_id) —
+# their invites stay muted for the rest of the server run (brief §7.4).
+_DECLINE_MUTES: set = set()
+
+
+def _now_iso() -> str:
+    return datetime.now(timezone.utc).isoformat()
+
+
+def _frank_announce(body: str) -> None:
+    """Post a system announcement as Frank (the host account) and fan
+    it out over the sockets. Silent no-op if Frank's row is absent."""
+    try:
+        with get_conn(DB_PATH) as conn:
+            frank = conn.execute(
+                "SELECT id FROM users WHERE handle = ?",
+                (FRANK_HANDLE,)).fetchone()
+            if frank is None:
+                return
+            cur = conn.execute(
+                "INSERT INTO chat_messages (user_id, body, created_at) "
+                "VALUES (?, ?, ?)", (frank["id"], body, _now_iso()))
+            conn.commit()
+            row = conn.execute(
+                _CHAT_SELECT + "WHERE m.id = ?",
+                (cur.lastrowid,)).fetchone()
+        view = _chat_view(row)
+        view["reactions"] = {"counts": {}, "by": {}, "mine": []}
+        _hub.broadcast({"type": "message", "message": view})
+    except sqlite3.OperationalError:
+        pass
+
+
+def _game_players(conn, g: dict) -> dict:
+    """{user_id: {"handle", "avatar"}} for a game's two players."""
+    out = {}
+    for uid in (g["challenger_id"], g["opponent_id"]):
+        row = conn.execute(
+            "SELECT u.handle, p.display_name, p.avatar_choice, "
+            "p.avatar_path FROM users u "
+            "LEFT JOIN profiles p ON p.user_id = u.id WHERE u.id = ?",
+            (uid,)).fetchone()
+        if row:
+            out[uid] = {
+                "handle": row["handle"],
+                "avatar": _avatar_view(row["avatar_choice"],
+                                       row["display_name"],
+                                       row["handle"], row["avatar_path"])}
+    return out
+
+
+def _game_public_state(g: dict) -> dict:
+    """The state a client may see. Secrets stay server-side: Ghost
+    Word's answer is masked, Unscramble's word is never sent while a
+    round is open."""
+    state = g["state"]
+    kind = g["kind"]
+    if kind == "ghost_word":
+        word = state.get("word", "")
+        guessed = state.get("guessed", [])
+        return {"masked": " ".join(
+                    ch if ch in guessed else "_" for ch in word),
+                "guessed": guessed, "wrong": state.get("wrong", 0),
+                "max_wrong": GHOST_MAX_WRONG, "turn": state.get("turn"),
+                "word": word if g["status"] == "finished" else None}
+    if kind == "unscramble":
+        return {"round": state.get("round", 1), "rounds": UNSCRAMBLE_ROUNDS,
+                "scrambled": state.get("scrambled", ""),
+                "scores": state.get("scores", {}),
+                "round_open": state.get("round_open", False),
+                "round_winner": state.get("round_winner"),
+                "last_word": state.get("last_word")}
+    if kind == "word_chain":
+        return {"current": state.get("current"),
+                "used": state.get("used", [])[-14:],
+                "turn": state.get("turn"),
+                "strikes": state.get("strikes", {}),
+                "bonus": state.get("bonus", {}),
+                "deadline": state.get("deadline")}
+    return {}
+
+
+def _game_view(conn, g: dict, viewer_id: int | None) -> dict:
+    players = _game_players(conn, g)
+    c_id, o_id = g["challenger_id"], g["opponent_id"]
+    winner = None
+    if g.get("winner_id"):
+        wrow = conn.execute("SELECT handle FROM users WHERE id = ?",
+                            (g["winner_id"],)).fetchone()
+        winner = wrow["handle"] if wrow else None
+    state = _game_public_state(g)
+    return {"id": g["id"], "kind": g["kind"],
+            "label": GAME_KIND_LABELS.get(g["kind"], g["kind"]),
+            "status": g["status"],
+            "challenger": players.get(c_id, {}),
+            "opponent": players.get(o_id, {}),
+            "challenger_id": c_id, "opponent_id": o_id,
+            "winner": winner,
+            "state": state,
+            "is_player": viewer_id in (c_id, o_id),
+            "my_turn": state.get("turn") == viewer_id,
+            "detail": g["state"].get("detail"),
+            "expires_at": g.get("expires_at"),
+            "created_at": g.get("created_at")}
+
+
+def _game_row(conn, game_id: int) -> dict | None:
+    row = conn.execute("SELECT * FROM chat_games WHERE id = ?",
+                       (game_id,)).fetchone()
+    if row is None:
+        return None
+    g = dict(row)
+    try:
+        g["state"] = json.loads(g["state"] or "{}")
+    except ValueError:
+        g["state"] = {}
+    return g
+
+
+def _game_save(conn, g: dict) -> None:
+    conn.execute(
+        "UPDATE chat_games SET status = ?, state = ?, winner_id = ?, "
+        "updated_at = ? WHERE id = ?",
+        (g["status"], json.dumps(g["state"]), g.get("winner_id"),
+         _now_iso(), g["id"]))
+
+
+def _game_broadcast(g: dict, viewerless: bool = False) -> None:
+    with get_conn(DB_PATH) as conn:
+        view = _game_view(conn, g, None)
+    # Per-viewer flags (is_player/my_turn) are recomputed by clients
+    # from the id fields the view carries; the broadcast payload is
+    # the neutral spectator view.
+    _hub.broadcast({"type": "game", "game": view})
+
+
+def _tally_win_loss(conn, winner_id: int, loser_id: int,
+                    kind: str) -> None:
+    for uid, col in ((winner_id, "wins"), (loser_id, "losses")):
+        conn.execute(
+            "INSERT INTO chat_game_tallies (user_id, kind, wins, "
+            "losses) VALUES (?, ?, ?, ?) "
+            "ON CONFLICT(user_id, kind) DO UPDATE SET "
+            "wins = wins + excluded.wins, "
+            "losses = losses + excluded.losses",
+            (uid, kind, 1 if col == "wins" else 0,
+             1 if col == "losses" else 0))
+
+
+def _finish_game(conn, g: dict, winner_id: int | None,
+                 detail: str) -> dict:
+    """Terminal transition: status, tally, Frank's result post, and a
+    live game event. Returns the public view."""
+    g["status"] = "finished"
+    g["winner_id"] = winner_id
+    g["state"]["detail"] = detail
+    _game_save(conn, g)
+    players = _game_players(conn, g)
+    c_h = players.get(g["challenger_id"], {}).get("handle", "?")
+    o_h = players.get(g["opponent_id"], {}).get("handle", "?")
+    label = GAME_KIND_LABELS.get(g["kind"], g["kind"])
+    if winner_id:
+        loser_id = (g["opponent_id"] if winner_id == g["challenger_id"]
+                    else g["challenger_id"])
+        _tally_win_loss(conn, winner_id, loser_id, g["kind"])
+        w_h = players.get(winner_id, {}).get("handle", "?")
+        l_h = players.get(loser_id, {}).get("handle", "?")
+        text = (f"🏆 @{w_h} beat @{l_h} at {label} — {detail} "
+                f"Rematch, anyone?")
+    else:
+        text = (f"🏁 @{c_h} vs @{o_h} at {label} ended level — "
+                f"{detail} Rematch, anyone?")
+    conn.commit()
+    view = _game_view(conn, g, None)
+    _frank_announce(text)
+    _hub.broadcast({"type": "game", "game": view})
+    return view
+
+
+def _scramble(word: str) -> str:
+    letters = list(word)
+    for _ in range(24):
+        random.shuffle(letters)
+        if "".join(letters) != word:
+            break
+    return "".join(letters)
+
+
+def _game_init_state(kind: str, challenger_id: int,
+                     opponent_id: int) -> dict:
+    if kind == "ghost_word":
+        return {"word": random.choice(_GAME_WORD_POOL), "guessed": [],
+                "wrong": 0, "turn": challenger_id}
+    if kind == "unscramble":
+        word = random.choice(_GAME_WORD_POOL)
+        return {"round": 1, "word": word, "scrambled": _scramble(word),
+                "scores": {str(challenger_id): 0, str(opponent_id): 0},
+                "round_open": True, "round_winner": None,
+                "last_word": None, "used": [word]}
+    if kind == "word_chain":
+        return {"current": None, "used": [], "turn": challenger_id,
+                "strikes": {str(challenger_id): 0, str(opponent_id): 0},
+                "bonus": {str(challenger_id): 0, str(opponent_id): 0},
+                "deadline": (datetime.now(timezone.utc)
+                             + timedelta(seconds=CHAIN_TURN_S)
+                             ).isoformat()}
+    return {}
+
+
+def _chain_apply_timeout(g: dict) -> bool:
+    """Word Chain's turn timer, enforced lazily on view/move: a player
+    who lets the clock run out takes a strike and loses the turn; two
+    strikes ends the game. Returns True if state changed."""
+    if g["kind"] != "word_chain" or g["status"] != "active":
+        return False
+    state = g["state"]
+    now = datetime.now(timezone.utc)
+    try:
+        deadline = datetime.fromisoformat(state["deadline"])
+    except (KeyError, ValueError):
+        return False
+    if now <= deadline:
+        return False
+    turn = state["turn"]
+    other = (g["opponent_id"] if turn == g["challenger_id"]
+             else g["challenger_id"])
+    state["strikes"][str(turn)] = state["strikes"].get(str(turn), 0) + 1
+    if state["strikes"][str(turn)] >= CHAIN_MAX_STRIKES:
+        g["_timeout_finish"] = other
+        return True
+    state["turn"] = other
+    state["deadline"] = (now + timedelta(seconds=CHAIN_TURN_S)).isoformat()
+    return True
+
+
+def _expire_challenges(conn) -> None:
+    conn.execute(
+        "UPDATE chat_games SET status = 'expired', updated_at = ? "
+        "WHERE status = 'pending' AND expires_at IS NOT NULL "
+        "AND expires_at < ?", (_now_iso(), _now_iso()))
+    conn.commit()
+
+
+def _chat_games_for_room(member: dict) -> list[dict]:
+    """Games the room renders: live challenges + active games (open to
+    spectators) + just-finished ones (result card + Rematch), newest
+    first. Pending invites older than their window are expired here."""
+    views = []
+    with get_conn(DB_PATH) as conn:
+        _expire_challenges(conn)
+        rows = conn.execute(
+            "SELECT * FROM chat_games WHERE status IN ('pending', "
+            "'active') OR (status = 'finished' AND updated_at > ?) "
+            "ORDER BY id DESC LIMIT 14",
+            ((datetime.now(timezone.utc)
+              - timedelta(minutes=15)).isoformat(),)).fetchall()
+        games = []
+        for row in rows:
+            g = dict(row)
+            try:
+                g["state"] = json.loads(g["state"] or "{}")
+            except ValueError:
+                g["state"] = {}
+            if _chain_apply_timeout(g):
+                if g.get("_timeout_finish"):
+                    _finish_game(conn, g, g.pop("_timeout_finish"),
+                                 "ran out of time twice in the chain.")
+                else:
+                    _game_save(conn, g)
+                    conn.commit()
+            games.append(g)
+        views = [_game_view(conn, g, member["id"]) for g in games]
+    return views
+
+
+@app.get("/api/chat/games")
+def chat_games(request: Request):
+    member = current_member(request)
+    if not member:
+        return JSONResponse({"error": "members only"}, status_code=401)
+    return JSONResponse({"games": _chat_games_for_room(member)})
+
+
+@app.post("/api/chat/challenge")
+async def chat_challenge(request: Request):
+    member = current_member(request)
+    if not member:
+        return JSONResponse({"error": "members only"}, status_code=401)
+    try:
+        data = await request.json()
+    except Exception:
+        return JSONResponse({"ok": False, "error": "bad request"},
+                            status_code=400)
+    kind = str(data.get("kind") or "")
+    if kind not in GAME_KIND_LABELS:
+        return JSONResponse({"ok": False, "error": "unknown game"},
+                            status_code=400)
+    handle = str(data.get("handle") or "").strip().lower().lstrip("@")
+    if handle == member["handle"]:
+        return JSONResponse(
+            {"ok": False, "error": "You can't challenge yourself."},
+            status_code=400)
+    now = datetime.now(timezone.utc)
+    with get_conn(DB_PATH) as conn:
+        target = conn.execute(
+            "SELECT u.id, u.handle, p.no_challenges FROM users u "
+            "LEFT JOIN profiles p ON p.user_id = u.id "
+            "WHERE u.handle = ? AND u.status = 'active'",
+            (handle,)).fetchone()
+        if target is None:
+            return JSONResponse({"ok": False,
+                                 "error": "No such member."},
+                                status_code=404)
+        if target["no_challenges"]:
+            return JSONResponse(
+                {"ok": False,
+                 "error": f"@{handle} has game challenges turned off."},
+                status_code=403)
+        blocked = conn.execute(
+            "SELECT 1 FROM blocks WHERE (blocker_id = ? AND "
+            "blocked_id = ?) OR (blocker_id = ? AND blocked_id = ?)",
+            (member["id"], target["id"], target["id"],
+             member["id"])).fetchone()
+        if blocked:
+            return JSONResponse(
+                {"ok": False, "error": "You can't challenge that member."},
+                status_code=403)
+        if (member["id"], target["id"]) in _DECLINE_MUTES:
+            return JSONResponse(
+                {"ok": False,
+                 "error": f"@{handle} passed on your last challenge — "
+                          "give it a rest for now."}, status_code=403)
+        _expire_challenges(conn)
+        outgoing = conn.execute(
+            "SELECT 1 FROM chat_games WHERE challenger_id = ? "
+            "AND status = 'pending'", (member["id"],)).fetchone()
+        if outgoing:
+            return JSONResponse(
+                {"ok": False,
+                 "error": "You already have a challenge out — wait for "
+                          "an answer first."}, status_code=409)
+        recent = conn.execute(
+            "SELECT COUNT(*) AS n FROM chat_games WHERE challenger_id "
+            "= ? AND created_at > ?",
+            (member["id"],
+             (now - timedelta(hours=1)).isoformat())).fetchone()["n"]
+        if recent >= CHAT_CHALLENGE_HOURLY_CAP:
+            return JSONResponse(
+                {"ok": False,
+                 "error": "That's a lot of challenges — take a breather."},
+                status_code=429)
+        cur = conn.execute(
+            "INSERT INTO chat_games (kind, challenger_id, opponent_id, "
+            "status, state, created_at, updated_at, expires_at) "
+            "VALUES (?, ?, ?, 'pending', '{}', ?, ?, ?)",
+            (kind, member["id"], target["id"], now.isoformat(),
+             now.isoformat(),
+             (now + timedelta(seconds=CHAT_CHALLENGE_TTL_S)).isoformat()))
+        conn.commit()
+        g = _game_row(conn, cur.lastrowid)
+        view = _game_view(conn, g, member["id"])
+    _hub.broadcast({"type": "game", "game": view})
+    _frank_announce(
+        f"⚔️ @{member['handle']} challenged @{handle} to "
+        f"{GAME_KIND_LABELS[kind]}! Will they accept?")
+    return JSONResponse({"ok": True, "game": view})
+
+
+@app.post("/api/chat/games/{game_id}/accept")
+def chat_game_accept(request: Request, game_id: int):
+    member = current_member(request)
+    if not member:
+        return JSONResponse({"error": "members only"}, status_code=401)
+    with get_conn(DB_PATH) as conn:
+        g = _game_row(conn, game_id)
+        if g is None or g["opponent_id"] != member["id"]:
+            return JSONResponse({"ok": False, "error": "not your game"},
+                                status_code=404)
+        if g["status"] != "pending":
+            return JSONResponse({"ok": False,
+                                 "error": "That challenge is over."},
+                                status_code=409)
+        if g["expires_at"] and g["expires_at"] < _now_iso():
+            g["status"] = "expired"
+            _game_save(conn, g)
+            conn.commit()
+            return JSONResponse({"ok": False,
+                                 "error": "That challenge expired."},
+                                status_code=409)
+        g["state"] = _game_init_state(g["kind"], g["challenger_id"],
+                                      g["opponent_id"])
+        g["status"] = "active"
+        g["expires_at"] = None
+        _game_save(conn, g)
+        conn.commit()
+        view = _game_view(conn, g, member["id"])
+    _hub.broadcast({"type": "game", "game": view})
+    return JSONResponse({"ok": True, "game": view})
+
+
+@app.post("/api/chat/games/{game_id}/decline")
+def chat_game_decline(request: Request, game_id: int):
+    member = current_member(request)
+    if not member:
+        return JSONResponse({"error": "members only"}, status_code=401)
+    with get_conn(DB_PATH) as conn:
+        g = _game_row(conn, game_id)
+        if g is None or g["opponent_id"] != member["id"]:
+            return JSONResponse({"ok": False, "error": "not your game"},
+                                status_code=404)
+        if g["status"] != "pending":
+            return JSONResponse({"ok": False,
+                                 "error": "That challenge is over."},
+                                status_code=409)
+        g["status"] = "declined"
+        _game_save(conn, g)
+        conn.commit()
+        view = _game_view(conn, g, member["id"])
+    # Declining is silent (brief §7.1): no announcement, and the pair's
+    # invites mute for the session so it can't become harassment.
+    _DECLINE_MUTES.add((g["challenger_id"], g["opponent_id"]))
+    _hub.broadcast({"type": "game", "game": view})
+    return JSONResponse({"ok": True, "game": view})
+
+
+@app.post("/api/chat/games/{game_id}/cancel")
+def chat_game_cancel(request: Request, game_id: int):
+    member = current_member(request)
+    if not member:
+        return JSONResponse({"error": "members only"}, status_code=401)
+    with get_conn(DB_PATH) as conn:
+        g = _game_row(conn, game_id)
+        if g is None or g["challenger_id"] != member["id"]:
+            return JSONResponse({"ok": False, "error": "not your game"},
+                                status_code=404)
+        if g["status"] != "pending":
+            return JSONResponse({"ok": False,
+                                 "error": "That challenge is already live."},
+                                status_code=409)
+        g["status"] = "cancelled"
+        _game_save(conn, g)
+        conn.commit()
+        view = _game_view(conn, g, member["id"])
+    _hub.broadcast({"type": "game", "game": view})
+    return JSONResponse({"ok": True, "game": view})
+
+
+@app.post("/api/chat/games/{game_id}/rematch")
+def chat_game_rematch(request: Request, game_id: int):
+    """One tap on a finished game's card: a fresh game, same pairing
+    and kind, live immediately (both players already consented by
+    playing the first one)."""
+    member = current_member(request)
+    if not member:
+        return JSONResponse({"error": "members only"}, status_code=401)
+    now = datetime.now(timezone.utc)
+    with get_conn(DB_PATH) as conn:
+        old = _game_row(conn, game_id)
+        if old is None or member["id"] not in (old["challenger_id"],
+                                               old["opponent_id"]):
+            return JSONResponse({"ok": False, "error": "not your game"},
+                                status_code=404)
+        if old["status"] != "finished":
+            return JSONResponse({"ok": False,
+                                 "error": "That game isn't over yet."},
+                                status_code=409)
+        other_id = (old["opponent_id"] if member["id"] == old["challenger_id"]
+                    else old["challenger_id"])
+        state = _game_init_state(old["kind"], member["id"], other_id)
+        cur = conn.execute(
+            "INSERT INTO chat_games (kind, challenger_id, opponent_id, "
+            "status, state, created_at, updated_at) "
+            "VALUES (?, ?, ?, 'active', ?, ?, ?)",
+            (old["kind"], member["id"], other_id, json.dumps(state),
+             now.isoformat(), now.isoformat()))
+        conn.commit()
+        g = _game_row(conn, cur.lastrowid)
+        view = _game_view(conn, g, member["id"])
+        other = conn.execute("SELECT handle FROM users WHERE id = ?",
+                             (other_id,)).fetchone()
+    _hub.broadcast({"type": "game", "game": view})
+    _frank_announce(
+        f"🔁 Rematch! @{member['handle']} runs it back against "
+        f"@{other['handle'] if other else '?'} at "
+        f"{GAME_KIND_LABELS[old['kind']]}.")
+    return JSONResponse({"ok": True, "game": view})
+
+
+@app.post("/api/chat/games/{game_id}/move")
+async def chat_game_move(request: Request, game_id: int):
+    member = current_member(request)
+    if not member:
+        return JSONResponse({"error": "members only"}, status_code=401)
+    try:
+        data = await request.json()
+    except Exception:
+        return JSONResponse({"ok": False, "error": "bad request"},
+                            status_code=400)
+    me = member["id"]
+    with get_conn(DB_PATH) as conn:
+        g = _game_row(conn, game_id)
+        if g is None or me not in (g["challenger_id"], g["opponent_id"]):
+            return JSONResponse({"ok": False, "error": "not your game"},
+                                status_code=404)
+        if g["status"] != "active":
+            return JSONResponse({"ok": False,
+                                 "error": "That game isn't live."},
+                                status_code=409)
+        other = (g["opponent_id"] if me == g["challenger_id"]
+                 else g["challenger_id"])
+        state = g["state"]
+        err = None
+        if g["kind"] == "word_chain" and _chain_apply_timeout(g):
+            if g.get("_timeout_finish"):
+                view = _finish_game(conn, g, g.pop("_timeout_finish"),
+                                    "ran out of time twice in the chain.")
+                return JSONResponse({"ok": True, "game": view})
+            _game_save(conn, g)
+            conn.commit()
+            _hub.broadcast({"type": "game", "game": _game_view(conn, g, None)})
+            state = g["state"]
+
+        if g["kind"] == "ghost_word":
+            if state["turn"] != me:
+                err = "Not your turn."
+            else:
+                letter = str(data.get("letter") or "").strip().lower()
+                if len(letter) != 1 or not letter.isalpha():
+                    err = "Guess one letter."
+                elif letter in state["guessed"]:
+                    err = "Already guessed that one."
+                else:
+                    state["guessed"].append(letter)
+                    word = state["word"]
+                    if letter not in word:
+                        state["wrong"] += 1
+                    if all(ch in state["guessed"] for ch in word):
+                        view = _finish_game(
+                            conn, g, me,
+                            f"got '{word}' with {state['wrong']} wrong "
+                            f"guess{'es' if state['wrong'] != 1 else ''}.")
+                        return JSONResponse({"ok": True, "game": view})
+                    if state["wrong"] >= GHOST_MAX_WRONG:
+                        view = _finish_game(
+                            conn, g, other,
+                            f"the ghost got fully built — '{word}' "
+                            f"stayed hidden.")
+                        return JSONResponse({"ok": True, "game": view})
+                    state["turn"] = other
+        elif g["kind"] == "unscramble":
+            if data.get("action") == "next":
+                if state["round_open"]:
+                    err = "This round is still open."
+                elif state["round"] >= UNSCRAMBLE_ROUNDS:
+                    err = "That was the last round."
+                else:
+                    used = state.get("used", [])
+                    pool = [w for w in _GAME_WORD_POOL if w not in used]
+                    word = random.choice(pool or _GAME_WORD_POOL)
+                    state["round"] += 1
+                    state["word"] = word
+                    state["scrambled"] = _scramble(word)
+                    state["round_open"] = True
+                    state["round_winner"] = None
+                    state["used"] = used + [word]
+            else:
+                guess = str(data.get("guess") or "").strip().lower()
+                if not state["round_open"]:
+                    err = "That round is decided — start the next one."
+                elif not guess:
+                    err = "Type your unscrambled guess."
+                elif guess == state["word"]:
+                    state["scores"][str(me)] = \
+                        state["scores"].get(str(me), 0) + 1
+                    state["round_open"] = False
+                    state["round_winner"] = me
+                    state["last_word"] = state["word"]
+                    if state["round"] >= UNSCRAMBLE_ROUNDS:
+                        c_score = state["scores"].get(
+                            str(g["challenger_id"]), 0)
+                        o_score = state["scores"].get(
+                            str(g["opponent_id"]), 0)
+                        winner = (g["challenger_id"] if c_score > o_score
+                                  else g["opponent_id"] if o_score > c_score
+                                  else None)
+                        view = _finish_game(
+                            conn, g, winner,
+                            f"final score {c_score}–{o_score} "
+                            f"in the Unscramble.")
+                        return JSONResponse({"ok": True, "game": view})
+                else:
+                    _game_save(conn, g)
+                    conn.commit()
+                    view = _game_view(conn, g, me)
+                    return JSONResponse({"ok": True, "correct": False,
+                                         "game": view})
+        elif g["kind"] == "word_chain":
+            if state["turn"] != me:
+                err = "Not your turn."
+            else:
+                word = str(data.get("word") or "").strip().lower()
+                current = state.get("current")
+                if len(word) < 3 or not word.isalpha():
+                    err = "Words are 3+ letters, letters only."
+                elif current and word[0] != current[-1]:
+                    err = f"Your word must start with '{current[-1]}'."
+                elif word in state["used"]:
+                    err = "That word is already used in this chain."
+                elif word not in _wordlist_set():
+                    err = "That one's not in the dictionary."
+                elif _chat_filter_hit(word):
+                    err = "Let's keep it family-friendly."
+                else:
+                    state["used"].append(word)
+                    state["current"] = word
+                    if word in _HALLOWEEN_SET:
+                        state["bonus"][str(me)] = \
+                            state["bonus"].get(str(me), 0) + 1
+                    state["turn"] = other
+                    state["deadline"] = (
+                        datetime.now(timezone.utc)
+                        + timedelta(seconds=CHAIN_TURN_S)).isoformat()
+        if err:
+            return JSONResponse({"ok": False, "error": err},
+                                status_code=400)
+        _game_save(conn, g)
+        conn.commit()
+        view = _game_view(conn, g, me)
+        bview = _game_view(conn, g, None)
+    _hub.broadcast({"type": "game", "game": bview})
+    return JSONResponse({"ok": True, "game": view})
 
 
 # ------------------------------------------------------------------- profiles
@@ -10499,6 +11775,17 @@ def _profile_context(request: Request, handle: str, member: dict | None,
             viewer_is_blocked = conn.execute(
                 "SELECT 1 FROM blocks WHERE blocker_id = ? AND blocked_id = ?",
                 (user["id"], member["id"])).fetchone() is not None
+        # Chat-game record (Oct 27): W/L per game kind from the tallies
+        # table; empty until the member has finished a game.
+        try:
+            game_record = [
+                {"kind": r["kind"], "wins": r["wins"], "losses": r["losses"]}
+                for r in conn.execute(
+                    "SELECT kind, wins, losses FROM chat_game_tallies "
+                    "WHERE user_id = ? AND (wins + losses) > 0",
+                    (user["id"],)).fetchall()]
+        except sqlite3.OperationalError:
+            game_record = []
     display = profile.get("display_name") or user["handle"]
     embed = _music_embed(profile.get("music_embed_url"))
     gtk = _gtk_view(profile, bool(embed),
@@ -10532,6 +11819,7 @@ def _profile_context(request: Request, handle: str, member: dict | None,
         "viewer_blocked": viewer_blocked,
         "viewer_is_blocked": viewer_is_blocked,
         "wall_error": wall_error,
+        "game_record": game_record,
         "reported": request.query_params.get("reported") == "1",
         "not_found": False,
     }
@@ -10799,7 +12087,8 @@ async def profile_edit_submit(request: Request,
                               haunt_name: str = Form(""),
                               haunt_theme: str = Form(""),
                               season_start: str = Form(""),
-                              fav_song: str = Form("")):
+                              fav_song: str = Form(""),
+                              no_challenges: str = Form("")):
     member = current_member(request)
     if not member:
         return RedirectResponse("/login?next=/profile/edit", status_code=303)
@@ -10931,6 +12220,12 @@ async def profile_edit_submit(request: Request,
             "film_title) VALUES (?, ?, ?, ?, ?)",
             [(member["id"], slot, kind, entry_id, film)
              for slot, kind, entry_id, film in top8_rows])
+        # Game-challenge opt-out (chat games, Oct 27): a plain UPDATE so
+        # the big upsert above stays untouched.
+        conn.execute(
+            "UPDATE profiles SET no_challenges = ? WHERE user_id = ?",
+            (1 if no_challenges in ("1", "on", "true", "yes") else 0,
+             member["id"]))
         conn.commit()
     return RedirectResponse(f"/@{member['handle']}", status_code=303)
 

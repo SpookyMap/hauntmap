@@ -1,19 +1,47 @@
 {% extends "base.html" %}
 {% block title %}💬 The Haunt Chat · {{ site_name }}{% endblock %}
 {% block content %}
-{# Haunt Chat (Dan, Oct 27 — STAGED): one members-only room for
-   HauntMap + HauntSocial. Members read the whole room and post;
-   guests get the teaser — Frank's pinned welcome + the latest few
-   messages — above a join gate. The pinned welcome is rendered from
-   code (FRANK_CHAT_WELCOME in app/main.py), never a DB row, so it
-   can't be deleted or buried. User text renders through Jinja
-   autoescape here and textContent in the poll/post JS — never raw. #}
+{# Haunt Chat (Dan, Oct 27): one members-only room for HauntMap +
+   HauntSocial. Members read the whole room and post; guests get the
+   teaser — Frank's pinned welcome + the latest few messages — above
+   a join gate. The pinned welcome is rendered from code
+   (FRANK_CHAT_WELCOME in app/main.py), never a DB row, so it can't
+   be deleted or buried. User text renders through Jinja autoescape
+   here and textContent in the JS — never raw.
+   REAL-TIME UPGRADE (Oct 27, staged): members connect over a native
+   WebSocket (/ws/chat) for instant messages, presence and typing;
+   the original 4s polling stays as the automatic fallback and the
+   reconnect catch-up path. Treat reactions, the mod panel, and the
+   word-game cards all ride the same socket. #}
 <section class="chat-wrap">
   <header class="chat-head">
     <p class="soc-kicker">👻 <span class="hs-brand">HauntSocial</span></p>
     <h1 class="chat-title">💬 The Haunt Chat</h1>
     <p class="chat-sub">The HauntMap hangout — talk haunts, events, parties, music and costumes with your fellow haunters.</p>
   </header>
+
+  {% if member %}
+  <div class="chat-presence" id="chatPresence">
+    <span class="chat-presence-count" id="presenceCount">🟢 Connecting…</span>
+    <span class="chat-presence-users" id="presenceUsers"></span>
+    <span class="chat-typing" id="typingLine" aria-live="polite"></span>
+  </div>
+
+  <div class="chat-games" id="chatGames">
+    <div class="chat-games-head">
+      <span class="chat-games-title">🎮 Word Games</span>
+      <form class="chat-challenge-form" id="challengeForm">
+        <input class="chat-challenge-handle" id="challengeHandle" type="text" placeholder="@handle" autocomplete="off" maxlength="21">
+        <select class="chat-challenge-kind" id="challengeKind">
+          {% for key, label in game_kinds.items() %}<option value="{{ key }}">{{ label }}</option>{% endfor %}
+        </select>
+        <button class="chat-challenge-btn" type="submit">⚔️ Challenge</button>
+      </form>
+    </div>
+    <p class="chat-err" id="challengeErr" role="alert"></p>
+    <div class="game-cards" id="gameCards"></div>
+  </div>
+  {% endif %}
 
   <div class="chat-room">
     <div class="chat-pin">
@@ -29,8 +57,13 @@
       <div class="chat-msg" data-mid="{{ m.id }}">
         <a class="chat-ava" href="/@{{ m.handle }}" aria-label="@{{ m.handle }}'s page"><span class="soc-avatar soc-avatar-sm" style="background: {{ m.avatar.bg }}">{% if m.avatar.img %}<img class="soc-avatar-img" src="{{ m.avatar.img }}" alt="">{% elif m.avatar.emoji %}<span>{{ m.avatar.emoji }}</span>{% else %}<span>{{ m.avatar.initial }}</span>{% endif %}</span></a>
         <div class="chat-msg-main">
-          <p class="chat-meta"><a class="chat-handle" href="/@{{ m.handle }}">@{{ m.handle }}</a> <time class="chat-time" datetime="{{ m.created_at }}">{{ m.created_at[11:16] }}</time>{% if can_moderate %} <button type="button" class="chat-del" data-del="{{ m.id }}" title="Delete message" aria-label="Delete message">✕</button>{% endif %}</p>
+          <p class="chat-meta"><a class="chat-handle" href="/@{{ m.handle }}">@{{ m.handle }}</a> <time class="chat-time" datetime="{{ m.created_at }}">{{ m.created_at[11:16] }}</time>{% if member and m.handle != member.handle %} <button type="button" class="chat-report" data-report="{{ m.id }}" title="Report message" aria-label="Report message">⚑</button>{% endif %}{% if can_moderate %} <button type="button" class="chat-del" data-del="{{ m.id }}" title="Delete message" aria-label="Delete message">✕</button>{% endif %}</p>
           <p class="chat-text">{{ m.body }}</p>
+          <div class="chat-reacts" data-reacts="{{ m.id }}">
+            {% for sticker, n in m.reactions.counts.items() %}{% if member %}<button type="button" class="chat-react-chip{% if sticker in m.reactions.mine %} mine{% endif %}" data-react="{{ m.id }}" data-sticker="{{ sticker }}">{{ sticker }} {{ n }}</button>{% else %}<span class="chat-react-chip">{{ sticker }} {{ n }}</span>{% endif %}{% endfor %}
+            {% if member %}<button type="button" class="chat-react-add" data-addreact="{{ m.id }}" title="Add a treat" aria-label="Add a treat reaction">🎃+</button>{% endif %}
+          </div>
+          {% if member %}<div class="chat-react-picker" data-picker="{{ m.id }}" hidden>{% for s in stickers %}<button type="button" class="chat-react-pick" data-react="{{ m.id }}" data-sticker="{{ s }}">{{ s }}</button>{% endfor %}</div>{% endif %}
         </div>
       </div>
       {% else %}
@@ -49,6 +82,30 @@
     </div>
     {% endif %}
   </div>
+
+  {% if can_moderate %}
+  <details class="chat-mod" id="chatMod">
+    <summary>🛡️ Moderation</summary>
+    <div class="chat-mod-body">
+      <form class="chat-mod-row" id="slowForm">
+        <label for="slowSecs">Slow mode (sec between posts, 0 = off)</label>
+        <input id="slowSecs" type="number" min="0" max="60" value="{{ slow_mode_s }}">
+        <button type="submit">Set</button>
+      </form>
+      <form class="chat-mod-row" id="muteForm">
+        <label for="muteHandle">Shadow-mute / unmute a member</label>
+        <input id="muteHandle" type="text" placeholder="@handle" autocomplete="off">
+        <button type="submit" data-mute="1">Mute</button>
+        <button type="submit" data-mute="0">Unmute</button>
+      </form>
+      <p class="chat-mod-muted">Shadow-muted now: <span id="mutedList">{{ muted_handles|join(', ') or 'nobody' }}</span></p>
+      <p class="chat-err" id="modErr" role="alert"></p>
+      <ul class="chat-mod-log" id="modLog">
+        {% for e in mod_log %}<li><time>{{ e.created_at[:16].replace('T', ' ') }}</time> <b>{{ e.action }}</b>{% if e.actor %} by @{{ e.actor }}{% endif %}{% if e.target %} → @{{ e.target }}{% endif %}{% if e.detail %} — {{ e.detail }}{% endif %}</li>{% endfor %}
+      </ul>
+    </div>
+  </details>
+  {% endif %}
 
   <script>
   // Every visitor gets local times (the server renders a UTC fallback
@@ -80,10 +137,20 @@
     var count = document.getElementById('chatCount');
     var MAX = {{ chat_max }};
     var CAN_MOD = {{ 'true' if can_moderate else 'false' }};
+    var ME = {{ member.handle|tojson }};
+    var STICKERS = {{ stickers|tojson }};
+    var INITIAL_GAMES = {{ games|tojson }};
     var lastId = 0;
     msgs.querySelectorAll('.chat-msg').forEach(function (el) {
       var id = parseInt(el.getAttribute('data-mid'), 10) || 0;
       if (id > lastId) lastId = id;
+    });
+    // My own treat toggles per message (the socket broadcasts counts
+    // for everyone; "mine" is tracked locally per client).
+    var myReacts = {};
+    msgs.querySelectorAll('.chat-react-chip.mine').forEach(function (chip) {
+      var mid = chip.getAttribute('data-react');
+      (myReacts[mid] = myReacts[mid] || {})[chip.getAttribute('data-sticker')] = true;
     });
 
     function localTime(iso) {
@@ -91,13 +158,6 @@
       if (isNaN(d)) return '';
       return d.toLocaleTimeString([], {hour: 'numeric', minute: '2-digit'});
     }
-    function fixTimes(root) {
-      root.querySelectorAll('time.chat-time').forEach(function (t) {
-        t.textContent = localTime(t.getAttribute('datetime'));
-      });
-    }
-    fixTimes(msgs);
-
     function nearBottom() {
       return msgs.scrollHeight - msgs.scrollTop - msgs.clientHeight < 140;
     }
@@ -120,8 +180,77 @@
       return span;
     }
 
+    // ------------------------------------------------------------ treats
+    function reactsNode(m) {
+      var wrap = document.createElement('div');
+      wrap.className = 'chat-reacts';
+      wrap.setAttribute('data-reacts', m.id);
+      var r = m.reactions || {counts: {}, by: {}};
+      Object.keys(r.counts || {}).forEach(function (sticker) {
+        var chip = document.createElement('button');
+        chip.type = 'button';
+        chip.className = 'chat-react-chip' +
+          ((myReacts[m.id] || {})[sticker] ? ' mine' : '');
+        chip.setAttribute('data-react', m.id);
+        chip.setAttribute('data-sticker', sticker);
+        chip.title = (r.by && r.by[sticker] ? r.by[sticker].map(function (h) { return '@' + h; }).join(' ') : '');
+        chip.textContent = sticker + ' ' + r.counts[sticker];
+        wrap.appendChild(chip);
+      });
+      var add = document.createElement('button');
+      add.type = 'button';
+      add.className = 'chat-react-add';
+      add.setAttribute('data-addreact', m.id);
+      add.title = 'Add a treat';
+      add.setAttribute('aria-label', 'Add a treat reaction');
+      add.textContent = '🎃+';
+      wrap.appendChild(add);
+      return wrap;
+    }
+    function pickerNode(mid) {
+      var p = document.createElement('div');
+      p.className = 'chat-react-picker';
+      p.setAttribute('data-picker', mid);
+      p.hidden = true;
+      STICKERS.forEach(function (s) {
+        var b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'chat-react-pick';
+        b.setAttribute('data-react', mid);
+        b.setAttribute('data-sticker', s);
+        b.textContent = s;
+        p.appendChild(b);
+      });
+      return p;
+    }
+    function renderReacts(mid, countsMap, byMap) {
+      var msg = msgs.querySelector('.chat-msg[data-mid="' + mid + '"]');
+      if (!msg) return;
+      var old = msg.querySelector('.chat-reacts');
+      if (!old) return;
+      old.replaceWith(reactsNode({id: mid, reactions: {counts: countsMap, by: byMap}}));
+    }
+    function toggleReact(mid, sticker) {
+      fetch('/api/chat/messages/' + mid + '/react', {
+        method: 'POST', headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({sticker: sticker})
+      }).then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (d) {
+          if (!d || !d.reactions) return;
+          myReacts[mid] = {};
+          (d.reactions.mine || []).forEach(function (s) { myReacts[mid][s] = true; });
+          renderReacts(mid, d.reactions.counts, d.reactions.by);
+        }).catch(function () {});
+      var picker = msgs.querySelector('[data-picker="' + mid + '"]');
+      if (picker) picker.hidden = true;
+    }
+
+    // ---------------------------------------------------------- messages
     function addMessage(m) {
-      if (msgs.querySelector('.chat-msg[data-mid="' + m.id + '"]')) return;
+      if (msgs.querySelector('.chat-msg[data-mid="' + m.id + '"]')) {
+        if (m.id > lastId) lastId = m.id;
+        return;
+      }
       var empty = document.getElementById('chatEmpty');
       if (empty) empty.remove();
       var stick = nearBottom();
@@ -143,6 +272,15 @@
       meta.appendChild(h);
       meta.appendChild(document.createTextNode(' '));
       meta.appendChild(t);
+      if (m.handle !== ME) {
+        var rep = document.createElement('button');
+        rep.type = 'button'; rep.className = 'chat-report';
+        rep.setAttribute('data-report', m.id);
+        rep.title = 'Report message'; rep.setAttribute('aria-label', 'Report message');
+        rep.textContent = '⚑';
+        meta.appendChild(document.createTextNode(' '));
+        meta.appendChild(rep);
+      }
       if (CAN_MOD) {
         var b = document.createElement('button');
         b.type = 'button'; b.className = 'chat-del';
@@ -155,44 +293,117 @@
       var text = document.createElement('p');
       text.className = 'chat-text'; text.textContent = m.body;
       main.appendChild(meta); main.appendChild(text);
+      main.appendChild(reactsNode(m));
+      main.appendChild(pickerNode(m.id));
       row.appendChild(ava); row.appendChild(main);
       msgs.appendChild(row);
       if (m.id > lastId) lastId = m.id;
       if (stick) scrollBottom();
     }
 
-    function poll() {
-      if (document.hidden) return;
-      fetch('/api/chat/messages?after=' + lastId, {headers: {'Accept': 'application/json'}})
+    function applyPoll(d) {
+      if (!d) return;
+      (d.gone || []).forEach(function (id) {
+        var el = msgs.querySelector('.chat-msg[data-mid="' + id + '"]');
+        if (el) el.remove();
+      });
+      (d.messages || []).forEach(addMessage);
+    }
+    function catchUp() {
+      return fetch('/api/chat/messages?after=' + lastId, {headers: {'Accept': 'application/json'}})
         .then(function (r) { return r.ok ? r.json() : null; })
-        .then(function (d) {
-          if (!d) return;
-          (d.gone || []).forEach(function (id) {
-            var el = msgs.querySelector('.chat-msg[data-mid="' + id + '"]');
-            if (el) el.remove();
-          });
-          (d.messages || []).forEach(addMessage);
-        })
+        .then(applyPoll)
         .catch(function () {});
     }
-    setInterval(poll, 4000);
 
-    msgs.addEventListener('click', function (e) {
-      var b = e.target.closest ? e.target.closest('[data-del]') : null;
-      if (!b) return;
-      var id = b.getAttribute('data-del');
-      fetch('/api/chat/messages/' + id + '/delete', {method: 'POST'})
-        .then(function (r) {
-          if (r.ok) {
-            var el = msgs.querySelector('.chat-msg[data-mid="' + id + '"]');
-            if (el) el.remove();
-          }
-        })
-        .catch(function () {});
-    });
+    // --------------------------------------------- realtime + fallback
+    var ws = null, wsOpen = false, reconnectMs = 1000, pollTimer = null;
+    function startPolling() {
+      if (pollTimer) return;
+      pollTimer = setInterval(function () { if (!document.hidden) catchUp(); }, 4000);
+    }
+    function stopPolling() {
+      if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+    }
+    function renderPresence(p) {
+      var pc = document.getElementById('presenceCount');
+      var pu = document.getElementById('presenceUsers');
+      if (!pc || !p) return;
+      pc.textContent = '🟢 ' + p.count + (p.count === 1 ? ' haunter' : ' haunters') + ' in the room';
+      pu.textContent = '';
+      (p.users || []).forEach(function (u) {
+        var chip = document.createElement('button');
+        chip.type = 'button';
+        chip.className = 'chat-presence-chip';
+        chip.title = 'Challenge @' + u.handle;
+        chip.setAttribute('data-online-handle', u.handle);
+        chip.appendChild(avatarNode(u.avatar));
+        var s = document.createElement('span');
+        s.textContent = '@' + u.handle;
+        chip.appendChild(s);
+        pu.appendChild(chip);
+      });
+      renderTyping(p.typing || []);
+    }
+    function renderTyping(handles) {
+      var tl = document.getElementById('typingLine');
+      if (!tl) return;
+      var others = (handles || []).filter(function (h) { return h !== ME; });
+      tl.textContent = others.length
+        ? others.map(function (h) { return '@' + h; }).join(', ') +
+          (others.length === 1 ? ' is typing…' : ' are typing…')
+        : '';
+    }
+    function connect() {
+      var proto = location.protocol === 'https:' ? 'wss://' : 'ws://';
+      try { ws = new WebSocket(proto + location.host + '/ws/chat'); }
+      catch (e) { startPolling(); scheduleReconnect(); return; }
+      ws.onopen = function () {
+        wsOpen = true; reconnectMs = 1000;
+        stopPolling();
+        catchUp();           // REST catch-up fills anything missed
+        refreshGames();
+      };
+      ws.onmessage = function (ev) {
+        var d;
+        try { d = JSON.parse(ev.data); } catch (e) { return; }
+        if (d.type === 'message') addMessage(d.message);
+        else if (d.type === 'gone') {
+          var el = msgs.querySelector('.chat-msg[data-mid="' + d.id + '"]');
+          if (el) el.remove();
+        } else if (d.type === 'reaction') {
+          renderReacts(d.message_id, d.counts, d.by);
+        } else if (d.type === 'presence') renderPresence(d);
+        else if (d.type === 'typing') renderTyping(d.handles);
+        else if (d.type === 'game') refreshGames();
+      };
+      ws.onclose = ws.onerror = function () {
+        wsOpen = false;
+        startPolling();      // the 4s poll carries us until WS returns
+        scheduleReconnect();
+      };
+    }
+    function scheduleReconnect() {
+      var jitter = reconnectMs * (0.7 + Math.random() * 0.6);
+      setTimeout(connect, jitter);
+      reconnectMs = Math.min(reconnectMs * 2, 30000);
+    }
+    connect();
 
+    // Typing: tell the room while composing (throttled), clear on send.
+    var typingSent = 0, typingTimer = null;
+    function sendTyping(on) {
+      if (!wsOpen || !ws) return;
+      try { ws.send(JSON.stringify({type: 'typing', on: on})); } catch (e) {}
+    }
     input.addEventListener('input', function () {
       count.textContent = input.value.length + '/' + MAX;
+      var now = Date.now();
+      if (input.value && now - typingSent > 2500) {
+        typingSent = now; sendTyping(true);
+      }
+      clearTimeout(typingTimer);
+      typingTimer = setTimeout(function () { sendTyping(false); }, 3000);
     });
     input.addEventListener('keydown', function (e) {
       if (e.key === 'Enter' && !e.shiftKey) {
@@ -205,6 +416,7 @@
       var body = input.value.trim();
       if (!body) return;
       err.textContent = '';
+      clearTimeout(typingTimer); sendTyping(false);
       fetch('/api/chat/messages', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
@@ -225,6 +437,293 @@
         })
         .catch(function () { err.textContent = 'Could not send — try again.'; });
     });
+
+    // Message actions: reactions, report, delete (admin).
+    msgs.addEventListener('click', function (e) {
+      var t = e.target;
+      if (!t || !t.closest) return;
+      var addB = t.closest('[data-addreact]');
+      if (addB) {
+        var p = msgs.querySelector('[data-picker="' + addB.getAttribute('data-addreact') + '"]');
+        if (p) p.hidden = !p.hidden;
+        return;
+      }
+      var reactB = t.closest('[data-react]');
+      if (reactB) {
+        toggleReact(reactB.getAttribute('data-react'), reactB.getAttribute('data-sticker'));
+        return;
+      }
+      var repB = t.closest('[data-report]');
+      if (repB) {
+        fetch('/api/chat/messages/' + repB.getAttribute('data-report') + '/report', {method: 'POST'})
+          .then(function (r) { if (r.ok) { repB.textContent = '✓'; repB.disabled = true; } })
+          .catch(function () {});
+        return;
+      }
+      var delB = t.closest('[data-del]');
+      if (delB) {
+        var id = delB.getAttribute('data-del');
+        fetch('/api/chat/messages/' + id + '/delete', {method: 'POST'})
+          .then(function (r) {
+            if (r.ok) {
+              var el = msgs.querySelector('.chat-msg[data-mid="' + id + '"]');
+              if (el) el.remove();
+            }
+          })
+          .catch(function () {});
+      }
+    });
+
+    // -------------------------------------------------------------- games
+    var gameCards = document.getElementById('gameCards');
+    var challengeErr = document.getElementById('challengeErr');
+    function playerName(g, id) {
+      if (g.challenger_id === id) return '@' + (g.challenger.handle || '?');
+      if (g.opponent_id === id) return '@' + (g.opponent.handle || '?');
+      return '@?';
+    }
+    function el(tag, cls, text) {
+      var n = document.createElement(tag);
+      if (cls) n.className = cls;
+      if (text !== undefined) n.textContent = text;
+      return n;
+    }
+    function gameButton(gid, action, label, cls) {
+      var b = el('button', 'game-btn ' + (cls || ''));
+      b.type = 'button';
+      b.setAttribute('data-game-action', action);
+      b.setAttribute('data-gid', gid);
+      b.textContent = label;
+      return b;
+    }
+    function turnLine(g) {
+      if (!g.is_player) return 'Spectating — ' + playerName(g, g.state.turn) + ' to move';
+      return g.my_turn ? 'Your move!' : 'Waiting on ' + playerName(g, g.state.turn) + '…';
+    }
+    function moveForm(g, field, placeholder, btnLabel) {
+      var f = el('form', 'game-move');
+      f.setAttribute('data-move-form', g.id);
+      var inp = el('input', 'game-input');
+      inp.type = 'text';
+      inp.placeholder = placeholder;
+      inp.setAttribute('data-move-field', field);
+      if (field === 'letter') inp.maxLength = 1;
+      f.appendChild(inp);
+      var sb = el('button', 'game-btn', btnLabel);
+      sb.type = 'submit';
+      f.appendChild(sb);
+      return f;
+    }
+    function renderGame(g) {
+      var card = el('div', 'game-card game-' + g.status);
+      card.setAttribute('data-game-card', g.id);
+      card.appendChild(el('p', 'game-head',
+        g.label + ' — @' + (g.challenger.handle || '?') +
+        ' vs @' + (g.opponent.handle || '?')));
+      var st = g.state || {};
+      if (g.status === 'pending') {
+        card.appendChild(el('p', 'game-status',
+          '⚔️ Challenge is out — waiting for an answer (about 2 minutes).'));
+        var row = el('div', 'game-actions');
+        if (ME === g.opponent.handle) {
+          row.appendChild(gameButton(g.id, 'accept', '✅ Accept'));
+          row.appendChild(gameButton(g.id, 'decline', 'Pass', 'ghost'));
+        }
+        if (ME === g.challenger.handle) {
+          row.appendChild(gameButton(g.id, 'cancel', 'Cancel challenge', 'ghost'));
+        }
+        card.appendChild(row);
+      } else if (g.status === 'active' && g.kind === 'ghost_word') {
+        var stages = Math.max(1, Math.round((st.wrong || 0) / (st.max_wrong || 8) * 8));
+        card.appendChild(el('p', 'game-ghost',
+          '👻'.repeat(stages) + '  wrong: ' + (st.wrong || 0) + '/' + (st.max_wrong || 8)));
+        card.appendChild(el('p', 'game-masked', st.masked || ''));
+        card.appendChild(el('p', 'game-status',
+          'Guessed: ' + ((st.guessed || []).join(' ') || '—') + ' · ' + turnLine(g)));
+        if (g.is_player && g.my_turn) card.appendChild(moveForm(g, 'letter', 'a letter', 'Guess'));
+      } else if (g.status === 'active' && g.kind === 'unscramble') {
+        card.appendChild(el('p', 'game-status',
+          'Round ' + st.round + ' of ' + st.rounds + ' · Score — ' +
+          playerName(g, g.challenger_id) + ' ' + ((st.scores || {})[g.challenger_id] || 0) +
+          ' · ' + playerName(g, g.opponent_id) + ' ' + ((st.scores || {})[g.opponent_id] || 0)));
+        if (st.round_open) {
+          card.appendChild(el('p', 'game-masked', st.scrambled || ''));
+          if (g.is_player) card.appendChild(moveForm(g, 'guess', 'unscramble it!', 'Guess'));
+          else card.appendChild(el('p', 'game-status', 'Spectating — first to unscramble takes the round!'));
+        } else {
+          card.appendChild(el('p', 'game-status',
+            'Round to ' + playerName(g, st.round_winner) + ' — the word was "' +
+            (st.last_word || '') + '".'));
+          if (g.is_player) {
+            var row2 = el('div', 'game-actions');
+            row2.appendChild(gameButton(g.id, 'next', '▶ Next round'));
+            card.appendChild(row2);
+          }
+        }
+      } else if (g.status === 'active' && g.kind === 'word_chain') {
+        card.appendChild(el('p', 'game-masked', st.current ? st.current : '— opening move —'));
+        card.appendChild(el('p', 'game-status',
+          (st.used || []).length ? 'Chain: ' + st.used.join(' → ')
+            : 'Any Halloween or dictionary word opens the chain.'));
+        var meta = 'Strikes — ' + playerName(g, g.challenger_id) + ' ' +
+          ((st.strikes || {})[g.challenger_id] || 0) + ' · ' + playerName(g, g.opponent_id) +
+          ' ' + ((st.strikes || {})[g.opponent_id] || 0) + ' · ' + turnLine(g);
+        if (st.current) meta += ' · next word starts with "' + st.current.slice(-1) + '"';
+        card.appendChild(el('p', 'game-status', meta));
+        if (st.deadline) {
+          var dl = el('p', 'game-status game-deadline');
+          dl.setAttribute('data-deadline', st.deadline);
+          card.appendChild(dl);
+        }
+        if (g.is_player && g.my_turn) card.appendChild(moveForm(g, 'word', 'your word', 'Play word'));
+      } else if (g.status === 'finished') {
+        card.appendChild(el('p', 'game-status',
+          (g.winner ? '🏆 @' + g.winner + ' won! ' : '🏁 A draw. ') + (g.detail || '')));
+        if (g.is_player) {
+          var row3 = el('div', 'game-actions');
+          row3.appendChild(gameButton(g.id, 'rematch', '🔁 Rematch'));
+          card.appendChild(row3);
+        }
+      }
+      return card;
+    }
+    function renderGames(games) {
+      gameCards.textContent = '';
+      (games || []).forEach(function (g) { gameCards.appendChild(renderGame(g)); });
+    }
+    function refreshGames() {
+      fetch('/api/chat/games', {headers: {'Accept': 'application/json'}})
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (d) { if (d) renderGames(d.games); })
+        .catch(function () {});
+    }
+    renderGames(INITIAL_GAMES);
+    setInterval(function () { if (!document.hidden) refreshGames(); }, 60000);
+
+    // Word Chain turn clocks tick locally; the server applies strikes
+    // lazily, so an expired clock triggers one refetch.
+    setInterval(function () {
+      var now = Date.now();
+      gameCards.querySelectorAll('[data-deadline]').forEach(function (n) {
+        var left = Math.round((new Date(n.getAttribute('data-deadline')).getTime() - now) / 1000);
+        n.textContent = left > 0 ? '⏱ ' + left + 's on the clock' : '⏱ Time! Checking the clock…';
+        if (left <= 0 && !n.getAttribute('data-expired')) {
+          n.setAttribute('data-expired', '1');
+          setTimeout(refreshGames, 600);
+        }
+      });
+    }, 1000);
+
+    document.getElementById('challengeForm').addEventListener('submit', function (e) {
+      e.preventDefault();
+      challengeErr.textContent = '';
+      var handle = document.getElementById('challengeHandle').value.trim();
+      var kind = document.getElementById('challengeKind').value;
+      if (!handle) { challengeErr.textContent = 'Type a member @handle first.'; return; }
+      fetch('/api/chat/challenge', {
+        method: 'POST', headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({handle: handle, kind: kind})
+      }).then(function (r) { return r.json().then(function (d) { return {ok: r.ok, d: d}; }); })
+        .then(function (res) {
+          if (res.ok) refreshGames();
+          else challengeErr.textContent = (res.d && res.d.error) || 'Could not send that challenge.';
+        })
+        .catch(function () { challengeErr.textContent = 'Could not send that challenge.'; });
+    });
+    // Tapping an online haunter's chip fills the challenge handle.
+    document.getElementById('presenceUsers').addEventListener('click', function (e) {
+      var chip = e.target.closest ? e.target.closest('[data-online-handle]') : null;
+      if (chip) document.getElementById('challengeHandle').value = '@' + chip.getAttribute('data-online-handle');
+    });
+    gameCards.addEventListener('click', function (e) {
+      var b = e.target.closest ? e.target.closest('[data-game-action]') : null;
+      if (!b) return;
+      var gid = b.getAttribute('data-gid');
+      var action = b.getAttribute('data-game-action');
+      if (action === 'next') {
+        fetch('/api/chat/games/' + gid + '/move', {
+          method: 'POST', headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({action: 'next'})
+        }).then(function () { refreshGames(); }).catch(function () {});
+      } else {
+        fetch('/api/chat/games/' + gid + '/' + action, {method: 'POST'})
+          .then(function () { refreshGames(); })
+          .catch(function () {});
+      }
+    });
+    gameCards.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var f = e.target.closest('[data-move-form]');
+      if (!f) return;
+      var gid = f.getAttribute('data-move-form');
+      var field = f.querySelector('[data-move-field]');
+      var payload = {};
+      payload[field.getAttribute('data-move-field')] = field.value;
+      fetch('/api/chat/games/' + gid + '/move', {
+        method: 'POST', headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(payload)
+      }).then(function (r) { return r.json().then(function (d) { return {ok: r.ok, d: d}; }); })
+        .then(function (res) {
+          if (!res.ok) {
+            challengeErr.textContent = (res.d && res.d.error) || 'Move rejected.';
+          } else {
+            challengeErr.textContent = res.d.correct === false
+              ? 'Nope — not the word. Try again!' : '';
+          }
+          refreshGames();
+        })
+        .catch(function () {});
+    });
+
+    {% if can_moderate %}
+    // ---------------------------------------------------------- mod panel
+    var modErr = document.getElementById('modErr');
+    function refreshModLog() {
+      fetch('/api/chat/modlog', {headers: {'Accept': 'application/json'}})
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (d) {
+          if (!d) return;
+          document.getElementById('mutedList').textContent =
+            (d.muted || []).join(', ') || 'nobody';
+          var ul = document.getElementById('modLog');
+          ul.textContent = '';
+          (d.entries || []).forEach(function (en) {
+            var li = document.createElement('li');
+            li.textContent = (en.created_at || '').slice(0, 16).replace('T', ' ') + ' ' +
+              en.action + (en.actor ? ' by @' + en.actor : '') +
+              (en.target ? ' → @' + en.target : '') +
+              (en.detail ? ' — ' + en.detail : '');
+            ul.appendChild(li);
+          });
+        }).catch(function () {});
+    }
+    document.getElementById('slowForm').addEventListener('submit', function (e) {
+      e.preventDefault();
+      var secs = parseInt(document.getElementById('slowSecs').value, 10) || 0;
+      fetch('/api/chat/admin/slowmode', {
+        method: 'POST', headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({seconds: secs})
+      }).then(function (r) { return r.json(); })
+        .then(function (d) {
+          modErr.textContent = d.ok ? 'Slow mode set to ' + d.slow_mode_s + 's.' : (d.error || 'Failed.');
+          refreshModLog();
+        }).catch(function () {});
+    });
+    document.getElementById('muteForm').addEventListener('submit', function (e) {
+      e.preventDefault();
+      var handle = document.getElementById('muteHandle').value.trim();
+      var mute = e.submitter && e.submitter.getAttribute('data-mute') === '1';
+      if (!handle) return;
+      fetch('/api/chat/admin/' + (mute ? 'mute' : 'unmute'), {
+        method: 'POST', headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({handle: handle})
+      }).then(function (r) { return r.json(); })
+        .then(function (d) {
+          modErr.textContent = d.ok ? (mute ? 'Shadow-muted ' : 'Unmuted ') + handle + '.' : (d.error || 'Failed.');
+          refreshModLog();
+        }).catch(function () {});
+    });
+    {% endif %}
   })();
   </script>
   {% endif %}
