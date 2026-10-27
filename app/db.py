@@ -60,6 +60,11 @@ FEATURED_ENTRY_IDS = (5541, 5542, 5551, 5584, 5587, 5175, 4370, 5653, 5654, 5655
 # Oct 26 addition: 5940 (Orlando FL) — @explore_orlando's TikTok live
 # room, sent by Dan personally ("add this to the live button and
 # feature it"), so it joins this Dan-sent set as the newest entry.
+# Oct 27 addition: 6005 (Pittsburgh PA) — Jonas Brothers — Live,
+# @nycthrasher's live room, posted Oct 26 on Dan's hold-until-live
+# instruction. Dan (Oct 27): "Move Jonas Brothers to #1 on the Live
+# board." As the newest hand-picked pin it leads the live category;
+# 5940 keeps its flag and follows at #2 — nothing else moves.
 HANDPICKED_ENTRY_IDS = (
     805, 930, 936, 4370, 4372, 4373, 4374, 4375, 4376, 4377, 4384,
     4395, 4465, 4546, 4548, 4550, 4557, 4558, 4559, 4560, 4561, 4562,
@@ -71,6 +76,7 @@ HANDPICKED_ENTRY_IDS = (
     5587, 5588, 5589, 5590, 5591, 5592, 5593, 5595, 5596, 5597, 5598,
     5599, 5600, 5601, 5602, 5603, 5604, 5605, 5606, 5607, 5608, 5609,
     5610, 5611, 5612, 5613, 5614, 5615, 5616, 5617, 5618, 5766, 5940,
+    6005,
 )
 
 SCHEMA = """
