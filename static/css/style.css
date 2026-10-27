@@ -585,11 +585,12 @@ a { color: var(--accent); }
 .top10-home-list .featured-badge { margin-top: 0; flex: 0 0 auto; }
 .top10-home-more { font-weight: 700; }
 
-/* Auto Tour — homepage block (STAGED for preview, Oct 27): "Build my
-   tour for me" entry point. Same panel treatment as .top10-home,
-   with the blue glow (accent2) the theme uses for interactive
-   highlights. Hero copy in the panel under Top 10 on laptop; phone
-   twin in .hero-split as grid area "autotour". */
+/* Auto Tour — homepage block: "Build my tour for me" entry point.
+   Same panel treatment as .top10-home, with the blue glow (accent2)
+   the theme uses for interactive highlights. Seat (Dan, Oct 27 —
+   order update): inside .hero-intro directly under the find block,
+   one copy for both viewports (see the z181 exception that keeps
+   it visible at >=761px). */
 .auto-tour-home {
   margin: 1.2rem 0 0.4rem; padding: 1rem;
   background: linear-gradient(160deg, #14222b, #0e1a20);
@@ -620,7 +621,6 @@ a { color: var(--accent); }
    >=761px (z67 rule), so the laptop grid never sees it and the
    in-hero copy + laptop layout are untouched. */
 .hero-split > .top10-home { grid-area: top10home; margin: 0; }
-.hero-split > .auto-tour-home { grid-area: autotour; margin: 0; }
 
 /* admin */
 .admin-list { display: grid; gap: 0.6rem; margin-bottom: 2rem; }
@@ -1597,7 +1597,7 @@ a.game-card:hover { border-color: #ff7518; transform: translateY(-2px); }
 .hero-split {
   display: grid;
   grid-template-columns: 1fr;
-  grid-template-areas: "headline" "vtstrip" "video" "top10home" "autotour" "strip" "social" "sponsor";
+  grid-template-areas: "headline" "vtstrip" "video" "top10home" "strip" "social" "sponsor";
   gap: 0.9rem;
   margin: 0.4rem 0;
 }
@@ -1758,7 +1758,7 @@ a.game-card:hover { border-color: #ff7518; transform: translateY(-2px); }
 /* Town-request form inside the hero grid: its own area under the sponsor
    billboard in the left column (last in the stacked order on phone).
    strip-fit: "vtstrip" (phone VT/TV twin) joins right after "headline". */
-.hero-split { grid-template-areas: "headline" "vtstrip" "video" "top10home" "autotour" "strip" "social" "sponsor" "townreq"; }
+.hero-split { grid-template-areas: "headline" "vtstrip" "video" "top10home" "strip" "social" "sponsor" "townreq"; }
 .hero-split .town-request {
   grid-area: townreq; margin: 0; max-width: none; width: 100%;
   box-sizing: border-box; text-align: left;
@@ -2347,7 +2347,7 @@ body.has-tourbar.has-radio { padding-bottom: 124px; }
   .site-header.v2 .header-nav a.navbtn[href="/diy-costumes"] span { font-size: 0.36rem; }
 }
 @media (max-width: 760px) {
-  .hero-split { grid-template-areas: "headline" "vtstrip" "video" "top10home" "autotour" "strip" "social" "sponsor" "townreq"; }
+  .hero-split { grid-template-areas: "headline" "vtstrip" "video" "top10home" "strip" "social" "sponsor" "townreq"; }
 }
 
 /* ============ z65: PHONE NAV — TWO ROWS OF FIVE (Dan, Oct 22; supersedes the z64 single row) ====
@@ -6046,4 +6046,44 @@ main.wrap:has(> .vt-tv-strip-bottom) { padding-bottom: 0; }
   .social-promo { flex-direction: column; gap: 1rem; }
   .social-promo-main, .social-promo-shot { flex: none; }
   .social-promo-shot { width: min(340px, 100%); }
+}
+/* ============ z185: HOMEPAGE POP HAUNT CULTURE FEATURE (Dan, Oct 27) ====
+   Dan: a Pop Haunt Culture feature below the top search bar,
+   featuring the best-of-Brooklyn video from Pop Haunt Culture (its
+   lead, POP_CULTURE_FEATURED — one data source feeds both places).
+   Final stack under the search bar (Dan's order update, same day):
+   (1) Auto Tour, (2) this Pop Haunt Culture feature, then the hero
+   order resumes. The block sits inside .hero-intro directly under
+   the Auto Tour panel, so ONE copy serves both viewports (like
+   .hm-find itself): on laptop it sits in the hero panel above the
+   .hero-stack; on phone it follows the search inside the panel. Panel treatment matches the
+   homepage modules (.auto-tour-home family), accent swapped to Pop
+   Haunt Culture violet (#b18cff — the strip bubble's hue). The
+   .hero-intro generic p rules (white, big margins) are beaten with
+   .pop-home-scoped selectors below. The facade + play button reuse
+   the shared .yt-facade/.yt-play styles untouched. */
+.pop-home {
+  margin: 1rem 0 0.4rem; padding: 1rem; text-align: left;
+  background: linear-gradient(160deg, #1c1038, #0e1a20);
+  border: 1px solid #b18cff; border-radius: 14px;
+  box-shadow: 0 0 18px rgba(177, 140, 255, 0.35);
+}
+.pop-home h2 { font-size: 1.25rem; margin: 0 0 0.5rem; color: #efe6ff; }
+.pop-home p.yt-cap { color: var(--muted); font-size: 0.9rem; margin: 0.4rem 0 0; text-shadow: none; line-height: 1.45; }
+.pop-home p.pop-home-blurb { color: var(--ink); font-size: 0.92rem; margin: 0.35rem 0 0; text-shadow: none; line-height: 1.5; }
+.pop-home p.pop-home-more { margin: 0.6rem 0 0; text-shadow: none; line-height: 1.45; }
+.pop-home-more a { font-weight: 700; color: #b18cff; }
+.pop-home-more a:hover { color: #d3bcff; }
+
+/* Auto Tour's move under the search bar (Dan, Oct 27 — order
+   update): the panel's single copy now lives inside .hero-intro
+   directly under .hm-find, above .pop-home, with no hero-copy
+   twin. The z67 one-copy rule above hides .auto-tour-home:not
+   (.hero-copy) at >=761px (it was written for the old below-band
+   phone twin), so this higher-specificity exception keeps the
+   moved panel visible on laptop; below 761px the base styles
+   already show it. Its old .hero-split "autotour" grid seat and
+   hero-stack seat are removed. */
+@media (min-width: 761px) {
+  .hero-intro > .auto-tour-home:not(.hero-copy) { display: block; }
 }

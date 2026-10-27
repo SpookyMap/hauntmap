@@ -304,6 +304,22 @@ function hmFullHomepage() {
 })();
 </script>
 
+{# Auto Tour (Dan, Oct 27 — order update): "Build my tour for me"
+   moves OUT of the hero stack / phone grid seat and sits directly
+   under the find block, FIRST under the search bar, with the Pop
+   Haunt Culture feature right under it; the hero order then resumes
+   (Near You -> Top 10 -> ...). One copy inside .hero-intro serves
+   both viewports (the .hm-find pattern); the z185 CSS exception
+   keeps it visible at >=761px where the old one-copy rule hides
+   non-hero copies. See _auto_tour_home.html. #}
+{% include "_auto_tour_home.html" %}
+
+{# Pop Haunt Culture feature (Dan, Oct 27): directly under Auto
+   Tour (Dan's order: search -> Auto Tour -> Pop Haunt Culture),
+   above the laptop hero stack — one copy inside .hero-intro
+   serves both viewports. See _pop_culture_home.html. #}
+{% include "_pop_culture_home.html" %}
+
 {# Laptop hero stack (z67, Dan Oct 22): inside the hero photo panel,
    under the headline — Near-you, then Trending, then Text Alerts,
    each in its own sub-block. (The z67 Airbnb-style search pill that
@@ -353,11 +369,10 @@ function hmFullHomepage() {
      Oct 26 — it moved to the rail under the hero.) #}
   {% with hero = True %}{% include "_top10_home.html" %}{% endwith %}
 
-  {# Auto Tour (STAGED for preview, Oct 27): "Build my tour for me"
-     sits directly under Top 10 in the hero order — it's the Top-10
-     idea with the work taken out. Phone twin lives in .hero-split
-     as grid area "autotour" (see below). #}
-  {% with hero = True %}{% include "_auto_tour_home.html" %}{% endwith %}
+  {# Auto Tour's hero-stack seat is GONE (Dan, Oct 27 — order
+     update): the panel now sits directly under the find block,
+     above this stack — see the include before _pop_culture_home
+     above. Top 10 keeps its seat here. #}
 
   {# Trending's in-panel hero copy REMOVED (Dan, Oct 26 — z173,
      shipped): on desktop Trending now appears exactly
@@ -524,11 +539,10 @@ function hmFullHomepage() {
    Fright -> Bracket -> Text Alerts with no gap. #}
 {% include "_top10_home.html" %}
 
-{# Auto Tour phone copy (STAGED for preview, Oct 27): twin of the
-   hero block — grid area "autotour", under Top 10 and above the
-   Follow-us banner, same seat pattern as top10home (z103). Hidden
-   at >=761px where the hero copy shows. #}
-{% include "_auto_tour_home.html" %}
+{# Auto Tour's phone grid seat is GONE (Dan, Oct 27 — order
+   update): the panel moved inside .hero-intro directly under the
+   find block (one copy, both viewports), so there is no "autotour"
+   grid area anymore and no twin here. #}
 
 <a class="tt-follow-vert" href="https://www.tiktok.com/@gethauntmap" target="_blank" rel="noopener" aria-label="Follow us on TikTok @GetHauntmap">
   <img src="/static/img/tiktok_logo.png" alt="TikTok">

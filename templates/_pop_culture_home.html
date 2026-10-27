@@ -1,0 +1,38 @@
+{# Pop Haunt Culture — homepage feature (Dan, Oct 27): Dan asked for
+   a Pop Haunt Culture feature RIGHT BELOW the top search bar,
+   leading with the best-of-Brooklyn video the section page leads
+   with. The block lives inside .hero-intro directly under the
+   .hm-find block, so ONE copy serves both viewports (exactly like
+   .hm-find itself): on laptop it heads the hero panel above the
+   .hero-stack (Near You and everything after keep their order);
+   on phone it follows the search under the front-door rail.
+   Data is POP_CULTURE_FEATURED from app/main.py, passed in as
+   pop_featured — the same dict /pop-haunt-culture renders, so the
+   homepage feature and the section page can never drift. #}
+<section class="pop-home" aria-label="Pop Haunt Culture feature">
+  <h2>&#x1F4FA; Pop Haunt Culture</h2>
+  <button type="button" class="yt-facade" data-yt="{{ pop_featured.id }}" aria-label="Play {{ pop_featured.title }}">
+    <img src="https://i.ytimg.com/vi/{{ pop_featured.id }}/hqdefault.jpg" alt="" loading="lazy">
+    <span class="yt-play" aria-hidden="true">&#9654;</span>
+  </button>
+  <p class="yt-cap">{{ pop_featured.title }} &middot; {{ pop_featured.channel }}</p>
+  <p class="pop-home-blurb">{{ pop_featured.blurb }}</p>
+  <p class="pop-home-more"><a href="/pop-haunt-culture">See all of Pop Haunt Culture &rarr;</a></p>
+  <script>
+  // YouTube click-to-play facade (same pattern as /pop-haunt-culture,
+  // /music and /movies): the real player only loads when a visitor
+  // taps the cover — no autoplay, no third-party requests before it.
+  document.addEventListener('click', function (ev) {
+    var b = ev.target.closest && ev.target.closest('.pop-home .yt-facade');
+    if (!b || b.dataset.loaded) return;
+    b.dataset.loaded = '1';
+    var f = document.createElement('iframe');
+    f.className = 'yt-frame';
+    f.src = 'https://www.youtube-nocookie.com/embed/' + b.getAttribute('data-yt') + '?autoplay=1&rel=0';
+    f.setAttribute('allow', 'autoplay; encrypted-media; picture-in-picture');
+    f.setAttribute('allowfullscreen', '');
+    f.setAttribute('title', b.getAttribute('aria-label') || 'YouTube video');
+    b.replaceWith(f);
+  });
+  </script>
+</section>

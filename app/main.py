@@ -2850,6 +2850,9 @@ def home(request: Request, sort: str = "new", town: str = "", town_search: str =
          "tstrip": tstrip,
          "slim_events": slim_events,
          "bracket_teaser": _bracket_teaser(),
+         # Pop Haunt Culture homepage feature (Dan, Oct 27): the
+         # section page's lead dict, shared so they can't drift.
+         "pop_featured": POP_CULTURE_FEATURED,
          "trending": trending, "near_towns": near_towns,
          "home_top10": home_top10,
          "near_heading": resolved_area["heading"],
