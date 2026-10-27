@@ -19,8 +19,20 @@ html { scroll-behavior: smooth; }
 .gnb-sub { font-size: 0.74rem; line-height: 1.25; color: var(--muted); }
 .games-sec { scroll-margin-top: 76px; }
 .games-sec-head { font-size: 1.3rem; margin: 1.55rem 0 0.2rem; color: var(--ink); }
+/* Ninja shelves (Dan, Oct 27): green-glow nav variants for the LEGO
+   Ninjago + Ninja Games sections, and link-out facades (an <a> wearing
+   the portal facade's clothes — LEGO blocks iframing with
+   X-Frame-Options: SAMEORIGIN, and the itch picks ship link-out too,
+   so these cards travel to the official page instead of embedding). */
+.games-nav-btn--ninjago { border-color: #57c84c; box-shadow: 0 0 10px rgba(87, 200, 76, 0.35), inset 0 0 8px rgba(87, 200, 76, 0.12); }
+.games-nav-btn--ninjago:hover { box-shadow: 0 0 16px rgba(87, 200, 76, 0.55), inset 0 0 8px rgba(87, 200, 76, 0.18); }
+a.portal-facade { text-decoration: none; }
+.portal-go { position: absolute; left: 50%; bottom: 0.55rem; transform: translateX(-50%); z-index: 1; background: rgba(10, 22, 40, 0.85); border: 1.5px solid #57c84c; color: #eaf6ff; font-weight: 800; font-size: 0.82rem; padding: 0.32rem 0.8rem; border-radius: 999px; white-space: nowrap; }
+a.portal-facade:hover .portal-go, a.portal-facade:focus-visible .portal-go { background: rgba(24, 66, 20, 0.92); }
+.games-sec-intro { color: var(--muted); margin: 0.1rem 0 0.4rem; line-height: 1.45; }
 @media (max-width: 520px) {
-  .games-nav-btn { padding: 0.55rem 0.6rem; gap: 0.45rem; }
+  .games-nav { flex-wrap: wrap; }
+  .games-nav-btn { padding: 0.55rem 0.6rem; gap: 0.45rem; flex: 1 1 42%; }
   .gnb-icon { font-size: 1.15rem; }
   .gnb-label { font-size: 0.86rem; }
   .gnb-sub { font-size: 0.68rem; }
@@ -47,6 +59,20 @@ html { scroll-behavior: smooth; }
     <span class="gnb-text">
       <span class="gnb-label">The Halloween Arcade</span>
       <span class="gnb-sub">Free partner games &mdash; tap &amp; play</span>
+    </span>
+  </a>
+  <a class="games-nav-btn games-nav-btn--ninjago" href="#lego-ninjago">
+    <span class="gnb-icon" aria-hidden="true">&#x1F977;</span>
+    <span class="gnb-text">
+      <span class="gnb-label">LEGO Ninjago</span>
+      <span class="gnb-sub">Official games on LEGO.com</span>
+    </span>
+  </a>
+  <a class="games-nav-btn games-nav-btn--ninjago" href="#ninja-games">
+    <span class="gnb-icon" aria-hidden="true">&#x1F977;</span>
+    <span class="gnb-text">
+      <span class="gnb-label">Ninja Games</span>
+      <span class="gnb-sub">More ninja games &mdash; play here &amp; on itch.io</span>
     </span>
   </a>
 </div>
@@ -125,6 +151,75 @@ html { scroll-behavior: smooth; }
     <span class="game-play">Browse the gallery &rarr;</span>
   </a>
 </div>
+</section>
+
+{# LEGO NINJAGO SHELF (Dan, Oct 27) — LINK-OUT cards only. LEGO's own
+   kids site serves every game page with X-Frame-Options: SAMEORIGIN,
+   so embedding is blocked by LEGO itself; each card travels to the
+   game's official LEGO.com for Kids page. Cover art is LEGO's own
+   CDN art (same hotlink role as the GamePix covers). Nothing LEGO is
+   hosted or copied here. #}
+<section class="games-sec" id="lego-ninjago">
+<h2 class="games-sec-head">&#x1F977; LEGO Ninjago Games</h2>
+<p class="games-sec-intro">The official Ninjago web games, straight from LEGO &mdash; free to play on LEGO.com for Kids. Tap a card to go play (LEGO keeps its games on its own site, so these open there).</p>
+
+<div class="portal-grid">
+  {% for g in ninjago_games %}
+  <div class="portal-card">
+    <div class="portal-frame" style="--pw: 1200; --ph: 630;">
+      <a class="portal-facade" href="{{ g.url }}" target="_blank" rel="noopener" aria-label="Play {{ g.title }} on LEGO.com">
+        <img src="{{ g.img }}" alt="{{ g.title }} official art from LEGO.com" loading="lazy">
+        <span class="portal-go" aria-hidden="true">Play on LEGO.com &#x2197;</span>
+      </a>
+    </div>
+    <h3>{{ g.title }}</h3>
+    <p>{{ g.blurb }}</p>
+    <span class="portal-tag">{{ g.tag }}</span>
+  </div>
+  {% endfor %}
+</div>
+<p class="portal-note">LEGO&reg;, the LEGO logo and NINJAGO&reg; are trademarks of the LEGO Group, which does not sponsor, authorize or endorse HauntMap. Games play free on LEGO's official site.</p>
+</section>
+
+{# NINJA GAMES SHELF (Dan, Oct 27, scope expansion) — the GamePix
+   four EMBED in place via the same open webmaster program as the
+   Halloween Arcade (portal_games.js builds their iframes on tap).
+   The itch.io picks are LINK-OUT cards to each creator's official
+   itch page: per-title playable-embed grants could not be cleanly
+   verified, so they travel instead of embedding. #}
+<section class="games-sec" id="ninja-games">
+<h2 class="games-sec-head">&#x1F977; Ninja Games</h2>
+<p class="games-sec-intro">Every ninja game we could cleanly line up: the GamePix four play right here, and the indie picks open on their creators' itch.io pages.</p>
+
+<div class="portal-grid">
+  {% for g in ninja_portal_games %}
+  <div class="portal-card" data-game-slug="{{ g.slug }}" data-game-title="{{ g.title }}">
+    <div class="portal-frame" style="--pw: {{ g.w }}; --ph: {{ g.h }};">
+      <button class="portal-facade" type="button" aria-label="Play {{ g.title }}">
+        <img src="{{ g.img }}" alt="{{ g.title }} cover art" loading="lazy">
+        <span class="portal-playbtn" aria-hidden="true">&#x25B6;</span>
+      </button>
+    </div>
+    <h3>{{ g.title }}</h3>
+    <p>{{ g.blurb }}</p>
+    <span class="portal-tag">{{ g.tag }}</span>
+  </div>
+  {% endfor %}
+  {% for g in ninja_link_games %}
+  <div class="portal-card">
+    <div class="portal-frame" style="--pw: {{ g.w }}; --ph: {{ g.h }};">
+      <a class="portal-facade" href="{{ g.url }}" target="_blank" rel="noopener" aria-label="Play {{ g.title }} free on itch.io">
+        <img src="{{ g.img }}" alt="{{ g.title }} cover art" loading="lazy">
+        <span class="portal-go" aria-hidden="true">Play on itch.io &#x2197;</span>
+      </a>
+    </div>
+    <h3>{{ g.title }}</h3>
+    <p>{{ g.blurb }}</p>
+    <span class="portal-tag">{{ g.tag }} &middot; {{ g.byline }}</span>
+  </div>
+  {% endfor %}
+</div>
+<p class="portal-note">Embedded games are hosted by GamePix and the ads inside them are theirs. Linked games play free on each creator's official itch.io page.</p>
 </section>
 
 {% endblock %}

@@ -4135,10 +4135,196 @@ PORTAL_GAMES = [
 ]
 
 
+# ------------------------------------------------- lego ninjago shelf
+# LEGO NINJAGO GAMES (Dan, Oct 27: "Can we ninjago video games to the
+# games?"). IP-clean by construction: HauntMap hosts NOTHING here — no
+# game files, no ripped assets. Every card is a LINK-OUT to the game's
+# official page on LEGO.com for Kids (kids.lego.com), with cover art
+# hotlinked from LEGO's own CDN (the same facade role GamePix's img
+# CDN plays for the Arcade shelf above).
+#
+# EMBEDS ARE NOT AN OPTION: verified Oct 27, every kids.lego.com game
+# page sends `x-frame-options: SAMEORIGIN`, so iframing them anywhere
+# else is blocked by LEGO itself. Link-out cards are the only legal +
+# working shape. All eight titles below were verified LIVE in LEGO's
+# official kids games catalog on Oct 27, 2026 (slugs carry LEGO's own
+# content ids; Ninjago: The Quest is the current hub adventure).
+#
+# Deliberately NOT here: the big console titles (The LEGO NINJAGO
+# Movie Video Game, Shadow of Ronin, LEGO Brawls) — /games is a
+# tap-and-play page, and this shelf is playable-web-games only.
+NINJAGO_GAMES = [
+    {"title": "NINJAGO: The Quest",
+     "url": "https://kids.lego.com/en-us/games/ninjago-the-quest",
+     "img": "https://www.lego.com/cdn/cs/kids-lego-com/assets/bltbdabe1629e7416bd/SEO_Image.png?crop=1200%3A630&format=jpg",
+     "blurb": "LEGO's newest Ninjago adventure — journey across the "
+              "Merged Lands, sharpen your Spinjitzu and save the "
+              "Realms from the forces of evil.",
+     "tag": "Adventure · free on LEGO.com"},
+    {"title": "Fear No Chaos",
+     "url": "https://kids.lego.com/en-us/games/fear-no-chaos-f6f0a617bc2e46d28a38361a2fba7a16",
+     "img": "https://www.lego.com/cdn/cs/kids-lego-com/assets/blt126653566dd96767/fear_no_chaos.png?crop=1200%3A630&format=jpg",
+     "blurb": "The 2025 Dragons Rising game: stand with Arin, Sora "
+              "and Wyldfyre and face down the chaos — fear no chaos.",
+     "tag": "Action · free on LEGO.com"},
+    {"title": "Crystalized",
+     "url": "https://kids.lego.com/en-us/games/crystalized-37ece4e897344e6ab1e570158611c3a2",
+     "img": "https://www.lego.com/cdn/cs/kids-lego-com/assets/bltc84802ea5a9be742/crystalized.png?crop=1200%3A630&format=jpg",
+     "blurb": "The Crystal King is marching on Ninjago City — "
+              "crystalize your courage and defend the city with the "
+              "whole ninja team.",
+     "tag": "Battle · free on LEGO.com"},
+    {"title": "Ninja Unite!",
+     "url": "https://kids.lego.com/en-us/games/ninja-unite-977ee66c38be4157a51decaebd01e9bd",
+     "img": "https://www.lego.com/cdn/cs/kids-lego-com/assets/bltf38eb0ff0e51eabf/ninja_unite.jpg?crop=1200%3A630&format=jpg",
+     "blurb": "Ninja are stronger together: unite Kai, Lloyd, Jay, "
+              "Cole, Zane and Nya and take the fight to the bad guys "
+              "as one team.",
+     "tag": "Team action · free on LEGO.com"},
+    {"title": "Chen's Return",
+     "url": "https://kids.lego.com/en-us/games/chens-return-c471618a72688352875c53cc0d66a47e",
+     "img": "https://www.lego.com/cdn/cs/kids-lego-com/assets/blt1e5525c0629d49ab/chens-return.jpg?crop=1200%3A630&format=jpg",
+     "blurb": "Master Chen is back and up to his old tricks — battle "
+              "through his island of traps, snakes and henchmen.",
+     "tag": "Action · free on LEGO.com"},
+    {"title": "Golden Legacy",
+     "url": "https://kids.lego.com/en-us/games/golden-legacy-d346fc1d92084519bbcb3c39c549d41f",
+     "img": "https://www.lego.com/cdn/cs/kids-lego-com/assets/bltda4e097d78850503/ninjago_golden_legacy.png?crop=1200%3A630&format=jpg",
+     "blurb": "A golden celebration of Ninjago's greatest hits — "
+              "replay classic moments from the early seasons in "
+              "shining Legacy style.",
+     "tag": "Classics · free on LEGO.com"},
+    {"title": "Prime Empire",
+     "url": "https://kids.lego.com/en-us/games/prime-empire-f98e88849512c6f12bb01678c9ce6c65",
+     "img": "https://www.lego.com/cdn/cs/kids-lego-com/assets/bltfed6decfa8075a71/prime_empire.jpg?crop=1200%3A630&format=jpg",
+     "blurb": "Step INSIDE the Prime Empire video game — race, "
+              "fight and level up through the arcade world from "
+              "Season 12. Don't let Unagami win.",
+     "tag": "Arcade adventure · free on LEGO.com"},
+    {"title": "What Would a Ninja Do?",
+     "url": "https://kids.lego.com/en-us/games/what-would-a-ninja-do-8dc2552267354847aeac8bee5e1ed63d",
+     "img": "https://www.lego.com/cdn/cs/kids-lego-com/assets/blt32b34e0d5cd2814d/what_would_a_ninja.jpg?crop=1200%3A630&format=jpg",
+     "blurb": "Quick-fire ninja dilemmas: a tricky moment pops up "
+              "and you decide — what would a ninja do? Think like "
+              "a master.",
+     "tag": "Quiz · free on LEGO.com"},
+]
+
+
+# ------------------------------------------------- ninja games shelf
+# NINJA GAMES (Dan, Oct 27, scope expansion: "lets put any ninja games
+# you can find on there as well"). Same IP discipline as the Ninjago
+# shelf — only channels that are legally clean for HauntMap:
+#
+# EMBEDS run on GamePix's open webmaster embed program — the exact
+# channel the Halloween Arcade already ships on (embedding IS the
+# product; games hosted + ad-monetized by GamePix; portal_games.js
+# builds play.gamepix.com/<slug>/embed, cover art is GamePix's own
+# img CDN). All four ninja titles below were pulled from GamePix's
+# public catalog feed and embed-verified (HTTP 200) on Oct 27, 2026.
+# Family-fit pass applied: cartoon pirates/bombs only, no gore.
+#
+# LINK-OUTS go to the creators' own itch.io pages (verified playable
+# in-browser + family-fit on Oct 27, 2026). itch playable embeds are
+# only clean when the creator shares an embed grant; that could not
+# be cleanly verified per title (and one title warns Safari/Firefox
+# may not run it), so — same call as the LEGO shelf — these ship as
+# link-out cards, never iframes. Cover art is each creator's own
+# itch CDN art.
+#
+# REJECTED (checked Oct 27, do not add): GameDistribution ninja
+# titles (GD rejected HauntMap's publisher signup — embeds render
+# their NOT AVAILABLE interstitial here); CrazyGames (sitelocked, no
+# third-party embed program); itch fan clones of commercial games
+# (a Sekiro remake, an 8-bit Strider clone — other studios' IP);
+# itch titles off the family brief (Dojo of Death, JK Assassins,
+# Drunk Ninja, HACKSLASH); every ROM/emulator and "free ninja games"
+# clone-portal result (ripped files, no license chain).
+NINJA_PORTAL_GAMES = [
+    {"slug": "angry-ninja",
+     "img": "https://img.gamepix.com/games/angry-ninja/cover/angry-ninja.png?w=512",
+     "title": "Angry Ninja",
+     "blurb": "The pirates have picked the wrong island — help the "
+              "Angry Ninjas bounce, slash and puzzle their way "
+              "through every last one of them.",
+     "tag": "Arcade · plays here via GamePix", "w": 480, "h": 320},
+    {"slug": "bighead-ninja",
+     "img": "https://img.gamepix.com/games/bighead-ninja/cover/bighead-ninja.png?w=512",
+     "title": "Bighead Ninja!",
+     "blurb": "A big-headed ninja endless runner: sprint, leap and "
+              "dodge as far as your little legs can carry you.",
+     "tag": "Runner · plays here via GamePix", "w": 480, "h": 320},
+    {"slug": "block-ninja",
+     "img": "https://img.gamepix.com/games/block-ninja/cover/block-ninja.png?w=512",
+     "title": "Block Ninja",
+     "blurb": "Two ninjas, one swipe at a time — steer both blocky "
+              "ninjas up and down and thread them through the gaps.",
+     "tag": "Swipe arcade · plays here via GamePix", "w": 480, "h": 320},
+    {"slug": "blow-out-bomb-blast-ninja",
+     "img": "https://img.gamepix.com/games/blow-out-bomb-blast-ninja/cover/blow-out-bomb-blast-ninja.png?w=512",
+     "title": "Blow Out Bomb Blast Ninja",
+     "blurb": "Bombs away — slice the fuses and blow out every bomb "
+              "before the clock (and the bomb) goes off.",
+     "tag": "Arcade · plays here via GamePix", "w": 320, "h": 480},
+]
+
+NINJA_LINK_GAMES = [
+    {"title": "Ninja Shurican",
+     "byline": "by SnoutUp",
+     "url": "https://snoutup.itch.io/shurican",
+     "img": "https://img.itch.zone/aW1hZ2UvODM0My84MDk5MS5wbmc=/508x254%23mb/kzN3PH.png",
+     "blurb": "Jump, slash and shuriken-throw your way through the "
+              "horde — a fast little arcade ninja from the maker of "
+              "Iron Snout.",
+     "tag": "Play free on itch.io", "w": 508, "h": 254},
+    {"title": "Ninja Cat (Classic)",
+     "byline": "by cubee",
+     "url": "https://cubeegames.itch.io/ninja-cat",
+     "img": "https://img.itch.zone/aW1hZ2UvNzEzNzY2LzUwNjYyNjQucG5n/347x500/eKbgdB.png",
+     "blurb": "A platformer about a ninja cat with a grappling hook. "
+              "You have nine lives — make them count.",
+     "tag": "Play free on itch.io", "w": 347, "h": 500},
+    {"title": "Shelled Shinobi",
+     "byline": "by magu",
+     "url": "https://magu.itch.io/shelled-shinobi",
+     "img": "https://img.itch.zone/aW1nLzE1MDkxNTUyLnBuZw==/original/ABnFAN.png",
+     "blurb": "A turtle shinobi speedster: slide and bounce around "
+              "in your shell at high speed, then pop out for precise "
+              "jumps and quick turns.",
+     "tag": "Play free on itch.io", "w": 480, "h": 270},
+    {"title": "Sound Ninja",
+     "byline": "by Kisiou",
+     "url": "https://kisiou.itch.io/sound-ninja",
+     "img": "https://img.itch.zone/aW1hZ2UvNTE1ODQ1MC8zMTI2NjQ2NS5wbmc=/347x500/o1b5SI.png",
+     "blurb": "A rhythm ninja: the bamboo dances to the music, the "
+              "beat throws you skyward — rotate, aim and slash on "
+              "the rhythm.",
+     "tag": "Play free on itch.io", "w": 347, "h": 500},
+    {"title": "Nine Hole Ninja",
+     "byline": "by Damon L. Wakes",
+     "url": "https://damonwakes.itch.io/nine-hole-ninja",
+     "img": "https://img.itch.zone/aW1hZ2UvMTkwOTk4MC8xMTIzMTQ0OC5wbmc=/347x500/hCjcqj.png",
+     "blurb": "Ninja mini-golf! Nine holes of shuriken putting — "
+              "the stealthiest sport on the fairway.",
+     "tag": "Play free on itch.io", "w": 347, "h": 500},
+    {"title": "Cherry Ninja",
+     "byline": "by Hidebu Games",
+     "url": "https://hidebu.itch.io/cherry-ninja",
+     "img": "https://img.itch.zone/aW1nLzEzNzQyNjM0LnBuZw==/original/9aL9HZ.png",
+     "blurb": "A cherry-blossom ninja dash under falling petals — "
+              "quick, pretty and tougher than it looks. (Runs best "
+              "in Chrome.)",
+     "tag": "Play free on itch.io", "w": 480, "h": 270},
+]
+
+
 @app.get("/games", response_class=HTMLResponse)
 def games_page(request: Request):
     return templates.TemplateResponse(
-        request, "games.html", {"portal_games": PORTAL_GAMES})
+        request, "games.html", {"portal_games": PORTAL_GAMES,
+                                "ninjago_games": NINJAGO_GAMES,
+                                "ninja_portal_games": NINJA_PORTAL_GAMES,
+                                "ninja_link_games": NINJA_LINK_GAMES})
 
 
 # ------------------------------------------------------------- ghost maze

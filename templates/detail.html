@@ -63,63 +63,68 @@
   {% if extra_videos %}
   {# Multi-video pins (Dan, Oct 27): every video of a place lives on its
      one pin. The primary plays in the hero above; the rest sit behind
-     click-to-play facades in the /pop-haunt-culture pattern — the tap
-     swaps in TikTok's embed/v2 iframe with the fullscreen token in its
-     allow string (the WebKit fix) — so a pin page never loads two live
-     TikTok players unprompted. Each facade's poster is the video's own
-     cover frame when one is stored, else the pin's own photo. #}
+     click-to-play facades that swap in the EXACT hero construction —
+     the .tt-facade + hmLoadTikTok() blockquote/embed.js mechanism — so
+     a pin page never loads two live TikTok players unprompted.
+     WHY NOT the /pop-haunt-culture embed/v2 iframe (bugfix Oct 27):
+     TikTok's embed/v2 endpoint refuses SOME videos outright — HTTP 400
+     with a server-rendered "Video currently unavailable" card — while
+     serving others fine. Pin 5974's second video (@alchilebarmexican
+     7695615821242027277) is one of the refused ones: Dan's iPhone
+     showed the dead card while the hero on the same page played. The
+     video is NOT embed-restricted — TikTok's oEmbed endpoint returns a
+     full embed payload for it and player/v1 serves it — and the SDK
+     mechanism the hero uses plays it. Extras therefore use the hero
+     mechanism verbatim. Each facade's poster is the video's own cover
+     frame when one is stored, else the pin's own photo. #}
   <section class="more-videos">
     <h2 class="more-videos-title">&#x1F3AC; More videos of this place</h2>
     {% for v in extra_videos %}
     <article class="more-video-card">
-      <button type="button" class="ttv-facade{% if v.cover_path %} has-cover{% endif %}" data-ttv="{{ v.video_id }}" data-entry-id="{{ entry.id }}" aria-label="Play TikTok video{% if v.creator %} by @{{ v.creator }}{% endif %}">
+      <div class="tt-facade{% if v.cover_path %} has-cover{% endif %}" data-tt-url="{{ v.url }}" data-tt-id="{{ v.video_id }}" data-entry-id="{{ entry.id }}" role="button" tabindex="0" aria-label="Play TikTok video{% if v.creator %} by @{{ v.creator }}{% endif %}">
         {% if v.cover_path %}
         <img src="{{ v.cover_path }}" alt="Video of {{ entry.title }}{% if v.creator %} by @{{ v.creator }}{% endif %} on TikTok" loading="lazy">
         {% elif entry.thumb_url %}
         <img src="{{ entry.thumb_url }}" alt="{{ entry.title }}" loading="lazy">
         {% else %}
-        <span class="ttv-facade-blank">&#x1F383;</span>
+        <div class="tt-facade-blank">&#x1F383;</div>
         {% endif %}
         <span class="tt-play">&#x25B6;</span>
         <span class="tt-facade-label">&#x1F3B5; Tap to play video</span>
-      </button>
+      </div>
+      <noscript>
+        <blockquote class="tiktok-embed" cite="{{ v.url }}" data-video-id="{{ v.video_id }}" style="max-width: 605px;min-width: 325px;">
+          <section><a href="{{ v.url }}" target="_blank">Watch on TikTok</a></section>
+        </blockquote>
+        <script async src="https://www.tiktok.com/embed.js"></script>
+      </noscript>
       <p class="more-video-caption">{% if v.creator %}by <a href="https://www.tiktok.com/@{{ v.creator }}" target="_blank" rel="noopener">@{{ v.creator }}</a> on TikTok &middot; {% endif %}<a href="{{ v.url }}" target="_blank" rel="noopener">Watch on TikTok &#x2197;</a></p>
     </article>
     {% endfor %}
   </section>
   <style>
-  /* More-videos facades (Oct 27): same player treatment as the Art /
-     Pop pages, sized for the pin-page column. */
+  /* More-videos facades (Oct 27, bugfix same day): the facades are the
+     hero's global .tt-facade construction; these rules only size that
+     facade inside the narrower more-video card. */
   .more-videos { margin: 1.4rem auto 0; max-width: 605px; }
   .more-videos-title { text-align: center; margin: 0 0 0.9rem; }
   .more-video-card { max-width: 340px; margin: 0 auto 1.1rem; background: #17122b; border: 1px solid #372b5e; border-radius: 12px; overflow: hidden; padding-bottom: 0.55rem; }
-  .ttv-facade { position: relative; display: block; width: 100%; padding: 0; border: 0; background: #0d0a1a; cursor: pointer; }
-  .ttv-facade img { width: 100%; display: block; object-fit: cover; }
-  .ttv-facade.has-cover img { aspect-ratio: 9 / 16; }
-  .ttv-facade-blank { display: block; padding: 3.2rem 0; font-size: 3rem; text-align: center; }
-  .ttv-facade .tt-play { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 2rem; color: #fff; background: rgba(13, 10, 26, 0.55); border-radius: 999px; width: 3.4rem; height: 3.4rem; line-height: 3.4rem; text-align: center; pointer-events: none; }
-  .ttv-facade .tt-facade-label { position: absolute; left: 0; right: 0; bottom: 0; padding: 0.45rem 0.4rem; font-size: 0.8rem; color: #e8e6e3; background: linear-gradient(transparent, rgba(13, 10, 26, 0.85)); pointer-events: none; }
-  .ttv-frame { width: 100%; aspect-ratio: 9 / 16; border: 0; display: block; background: #0d0a1a; }
+  .more-videos .tt-facade { background: #0d0a1a; overflow: hidden; }
+  .more-videos .tt-facade img { width: 100%; display: block; object-fit: cover; }
+  .more-videos .tt-facade.has-cover img { aspect-ratio: 9 / 16; }
+  .more-videos .tt-facade .tt-facade-blank { height: 300px; }
+  .more-videos .tiktok-embed { margin: 0 auto; }
   .more-video-caption { margin: 0.55rem 0.7rem 0; font-size: 0.92rem; line-height: 1.35; text-align: center; }
   </style>
   <script>
-  // More-videos click-to-play: the real player (embed/v2 iframe) only
-  // loads when a visitor taps a facade. The allow string carries the
-  // fullscreen token alongside allowfullscreen — the WebKit fix from
-  // the /pop-haunt-culture fullscreen pass (Oct 27). Mirrors fan_art.
-  document.addEventListener('click', function (ev) {
-    var b = ev.target.closest && ev.target.closest('.more-videos .ttv-facade');
-    if (!b || b.dataset.loaded) return;
-    b.dataset.loaded = '1';
-    if (window.hmTrack) hmTrack('video_play', Number(b.getAttribute('data-entry-id')) || null);
-    var f = document.createElement('iframe');
-    f.className = 'ttv-frame';
-    f.src = 'https://www.tiktok.com/embed/v2/' + b.getAttribute('data-ttv');
-    f.setAttribute('allow', 'autoplay; encrypted-media; fullscreen; picture-in-picture');
-    f.setAttribute('allowfullscreen', '');
-    f.setAttribute('scrolling', 'no');
-    f.setAttribute('title', b.getAttribute('aria-label') || 'TikTok video');
-    b.replaceWith(f);
+  // More-videos click-to-play: identical binding to the hero facade —
+  // hmLoadTikTok() (base.html) swaps in the tiktok-embed blockquote and
+  // re-executes embed.js, the mechanism proven on every pin page.
+  document.querySelectorAll('.more-videos .tt-facade').forEach(function (f) {
+    f.addEventListener('click', function () { hmLoadTikTok(f); });
+    f.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); hmLoadTikTok(f); }
+    });
   });
   </script>
   {% endif %}
