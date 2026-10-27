@@ -5911,3 +5911,23 @@ main.wrap:has(> .vt-tv-strip-bottom) { padding-bottom: 0; }
 @media (min-width: 1200px) and (min-height: 501px) {
   .header-band .header-frank { transform: translateX(-26.66px); }
 }
+
+/* ============ z179: POP HAUNT CULTURE (Dan, Oct 27) ============
+   New section page /pop-haunt-culture + its bubble in the VT/TV
+   strip. The page grid reuses the /movies yt-grid + facade styles;
+   new here: (1) the launch-state "more on the way" panel, (2) the
+   vertical-Short framing — a Short's still is a vertical frame
+   inside a 4:3 image, so contain shows it whole instead of the
+   cover crop cutting the subject, (3) the strip bubble itself:
+   Pop Haunt Culture sits DIRECTLY after HauntMap TV in all three
+   strip copies (homepage top, homepage phone twin, base bottom
+   strip), in the same bubble family with its own accent — violet,
+   the one hue the strip didn't already carry (Tour/TV azure, Music
+   orange, Movies red, Art pink, Markets green, Top 100 gold). */
+.pop-more { border: 2px dashed #3a2a5e; border-radius: var(--radius); padding: 1.1rem 1rem; margin-top: 0.9rem; text-align: center; color: var(--muted); background: var(--card); }
+.pop-more p { margin: 0; }
+.yt-facade--short img { object-fit: contain; }
+.vt-tv-strip .pop-btn { background: #160a2e; border: 2px solid #b18cff; color: #efe6ff; }
+.vt-tv-strip a.pop-btn::before, .vt-tv-strip a.pop-btn::after {
+  background: #b18cff; box-shadow: 0 0 6px 2px rgba(177, 140, 255, 0.50);
+}

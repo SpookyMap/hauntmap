@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}Pop Haunt Culture &middot; {{ site_name }}{% endblock %}
+{% block head %}<meta name="description" content="Pop Haunt Culture — Halloween in pop culture: the iconic movie and TV moments, music videos, costumes and viral clips the season lives on, ready to play right here.">{% endblock %}
+{% block content %}
+<h1>&#x1F4FA; Pop Haunt Culture</h1>
+<p class="lede">Halloween in pop culture — the iconic episodes, movie and TV moments, music videos, costumes and viral clips the season lives on. Tap any cover to play right here.</p>
+
+<nav class="movies-subnav" aria-label="Pop Haunt Culture shelves">
+  <a href="#featured">&#x2B50; Featured</a>
+  <a href="#collection">&#x1F4FC; The Collection</a>
+</nav>
+
+<h2 class="music-h2" id="featured">&#x2B50; Featured</h2>
+<div class="yt-feature">
+  <button type="button" class="yt-facade" data-yt="{{ featured.id }}" aria-label="Play {{ featured.title }}">
+    <img src="https://i.ytimg.com/vi/{{ featured.id }}/hqdefault.jpg" alt="" loading="lazy">
+    <span class="yt-play" aria-hidden="true">&#9654;</span>
+  </button>
+  <p class="yt-cap">{{ featured.title }} &middot; {{ featured.channel }}</p>
+  <p class="movie-blurb">{{ featured.blurb }}</p>
+</div>
+
+<h2 class="music-h2" id="collection">&#x1F4FC; The Collection</h2>
+<p>The shelf where the season's pop-culture moments collect — episodes, scenes, videos, costumes and clips.</p>
+{% if grid %}
+<div class="yt-grid">
+  {% for v in grid %}
+  <article class="yt-item movie-card">
+    <button type="button" class="yt-facade{% if v.short %} yt-facade--short{% endif %}" data-yt="{{ v.id }}" aria-label="Play {{ v.title }}">
+      <img src="https://i.ytimg.com/vi/{{ v.id }}/hqdefault.jpg" alt="" loading="lazy">
+      <span class="yt-play" aria-hidden="true">&#9654;</span>
+    </button>
+    <h3 class="movie-title">{{ v.title }}</h3>
+    <p class="movie-blurb">{{ v.blurb }}</p>
+    <p class="yt-cap">{{ v.kind }} &middot; {{ v.channel }}</p>
+  </article>
+  {% endfor %}
+</div>
+{% endif %}
+<div class="pop-more">
+  <p><strong>&#x1F383; More moments on the way.</strong><br>
+  Pop Haunt Culture is brand new — it grows one hand-picked entry at a time, all season long. Check back as the shelf fills up.</p>
+</div>
+
+<p class="music-events-cta">Keep the marathon going: <a href="/movies">The Screening Room &rarr;</a> &middot; <a href="/music">Halloween Music &rarr;</a></p>
+
+<script>
+// YouTube click-to-play facades (same pattern as /music and /movies):
+// the real player only loads when a visitor taps a cover — no autoplay,
+// no third-party requests before the tap.
+document.addEventListener('click', function (ev) {
+  var b = ev.target.closest && ev.target.closest('.yt-facade');
+  if (!b || b.dataset.loaded) return;
+  b.dataset.loaded = '1';
+  var f = document.createElement('iframe');
+  f.className = 'yt-frame';
+  f.src = 'https://www.youtube-nocookie.com/embed/' + b.getAttribute('data-yt') + '?autoplay=1&rel=0';
+  f.setAttribute('allow', 'autoplay; encrypted-media; picture-in-picture');
+  f.setAttribute('allowfullscreen', '');
+  f.setAttribute('title', b.getAttribute('aria-label') || 'YouTube video');
+  b.replaceWith(f);
+});
+</script>
+{% endblock %}

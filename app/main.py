@@ -7789,6 +7789,107 @@ def movies_page(request: Request):
     )
 
 
+# ------------------------------------------------------- pop haunt culture
+# /pop-haunt-culture (Dan, Oct 27): Halloween in pop culture — the iconic
+# movie/TV moments, music videos, costumes and viral clips the season
+# lives on. Same construction as /movies and /music: hand-picked entries
+# in plain lists below (adding one is a data change, not a redesign),
+# every card a click-to-play YouTube facade, card art the video's own
+# YouTube still. Every ID must be verified via YouTube oEmbed before it
+# is added (real title + channel match, embeddable). Verified on
+# 2026-10-27: the lead below and the grid's first two entries, all
+# oEmbed-verified — "NYC Halloween 2026 Decorations in Brooklyn"
+# and "Thriller Dance NYC Halloween Parade 2026 (Behind the
+# Scenes)", both by The NYC Walking Show, and "The Halloween
+# Episode" by Friends Keep Secrets. Display titles drop the
+# hashtags/emoji the raw oEmbed titles carry; the words are the
+# creators' own.
+POP_CULTURE_FEATURED = {
+    "id": "aG-2lzbCf30",
+    "title": "NYC Halloween 2026 Decorations in Brooklyn New York "
+             "BEST Halloween Outdoor Yard Decorations 4K",
+    "channel": "The NYC Walking Show",
+    "kind": "Video",
+    "blurb": "Dan's top feature: a 4K walk through Brooklyn's most "
+             "decorated Halloween houses — porches stacked with "
+             "skeletons, clowns and color.",
+}
+# The collection grid. Dan feeds entries one at a time; append dicts of
+# {"id", "title", "channel", "kind", "blurb"} — the template renders
+# them as cards next to the featured pick. The Shorts below were all
+# verified via oEmbed on 2026-10-27 (embeddable); "short": True marks
+# a vertical YouTube Short so the card frames its still uncropped.
+POP_CULTURE_GRID: list[dict] = [
+    {"id": "kxXVk4UI0WI",
+     "title": "Thriller Dance NYC Halloween Parade 2026 "
+              "(Behind the Scenes): Michael Jackson Zombie Dance "
+              "Rehearsal",
+     "channel": "The NYC Walking Show",
+     "kind": "Video",
+     "blurb": "Behind the scenes at the Thriller rehearsal for New "
+              "York's Halloween Parade — dozens of dancers in zombie "
+              "gear running Michael Jackson's most famous "
+              "choreography."},
+    {"id": "jWCpbCsOKis",
+     "title": "The Halloween Episode",
+     "channel": "Friends Keep Secrets",
+     "kind": "Video",
+     "blurb": "The Halloween episode from Friends Keep Secrets — "
+              "the video that opened Pop Haunt Culture."},
+    {"id": "gssmks0iCAQ",
+     "title": "Crazy Halloween Makeup Illusion",
+     "channel": "Leah Comptonn",
+     "kind": "YouTube Short", "short": True,
+     "blurb": "A clown makeup illusion in under a minute — the face "
+              "melts into a grin that isn't hers."},
+    {"id": "0xl5AKjy99c",
+     "title": "Ranking the Most Unexpected Halloween Makeup, Pt. 1",
+     "channel": "Ranked Looks",
+     "kind": "YouTube Short", "short": True,
+     "blurb": "Ranked Looks counts down the Halloween makeup looks "
+              "nobody saw coming."},
+    {"id": "yT_3qDBL8FE",
+     "title": "I Ranked New Halloween Costume Trend of 2026 (Part 8)",
+     "channel": "Thalynea",
+     "kind": "YouTube Short", "short": True,
+     "blurb": "Thalynea ranks the new Halloween costume trends of "
+              "2026 — part 8 of the series."},
+    {"id": "_51_XhE32C4",
+     "title": "Ranking the Best Halloween Makeup Trend",
+     "channel": "Mind Forge",
+     "kind": "YouTube Short", "short": True,
+     "blurb": "Mind Forge ranks the best Halloween makeup trends, "
+              "from a scary smile to the Venom couple."},
+    {"id": "2gYHYNUTqlk",
+     "title": "Best Halloween Costume Trend of 2026! Got Ranked (Part 9)",
+     "channel": "Thalynea",
+     "kind": "YouTube Short", "short": True,
+     "blurb": "Thalynea's costume-trend rankings roll on — part 9 "
+              "of the series."},
+    {"id": "hSsUwFuDhPY",
+     "title": "2010 vs 2026 Halloween Makeup — Save This for Inspo",
+     "channel": "Ella Nysss",
+     "kind": "YouTube Short", "short": True,
+     "blurb": "Ella Nysss puts 2010 Halloween makeup side by side "
+              "with 2026's take on the same look."},
+    {"id": "Hkg98AnpeaI",
+     "title": "Top 5 Halloween Costumes You'll See Everywhere in 2026",
+     "channel": "Trey Eversman",
+     "kind": "YouTube Short", "short": True,
+     "blurb": "Trey Eversman calls the five costumes you'll see "
+              "everywhere this Halloween."},
+]
+
+
+@app.get("/pop-haunt-culture", response_class=HTMLResponse)
+def pop_culture_page(request: Request):
+    return templates.TemplateResponse(
+        request, "pop_culture.html",
+        {"site_name": SITE_NAME, "featured": POP_CULTURE_FEATURED,
+         "grid": POP_CULTURE_GRID},
+    )
+
+
 # Sponsor-facing counts are HUMAN page views only: machine paths are
 # excluded (Oct 26, 2026 correction — /healthz health-check pings were
 # being logged in page_views and counted as views, and every ping
@@ -8220,6 +8321,7 @@ _PAGE_TIME_LABELS = {
     "/restaurhaunts": "Restaurhaunts", "/hauntsocial": "HauntSocial",
     "/games": "Games", "/diy": "DIY", "/diy-costumes": "DIY Costumes",
     "/movies": "Movies", "/music": "Music", "/markets": "Markets",
+    "/pop-haunt-culture": "Pop Haunt Culture",
     "/passport": "Haunt Passport", "/daily": "Daily Fright",
     "/about": "About Us", "/advertise": "Advertise",
     "/signup": "Sign Up", "/login": "Log In",
