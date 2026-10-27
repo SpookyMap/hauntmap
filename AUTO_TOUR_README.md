@@ -41,7 +41,7 @@ Nothing here is live; stylesheet bump z176 → z177 is staged with it.
   address** (`entries.address` non-empty). On the Oct 26 production
   backup that filter costs almost nothing: 3,256 of 3,258 halloween
   pins qualify.
-- **Radius** — Top 10 searches **50 mi**; Top 100 searches **100 mi**
+- **Radius** — Top 10 searches **25 mi** (Dan's pick, Oct 27); Top 100 searches **100 mi**
   (the site's own "near" radius, `_GEO_NEAR_RADIUS_MI`). If fewer
   pins qualify than requested, the page says so honestly ("Top 73
   near … — that's every eligible haunt within 100 miles").
@@ -92,10 +92,10 @@ Nothing here is live; stylesheet bump z176 → z177 is staged with it.
 
 ## Decisions for Dan
 
-1. **Top 10 radius: 50 mi vs 25 mi.** At 50 mi the NY-metro Top 10
-   routes to ~88 mi of driving — a big night. At 25 mi the pool is
-   still deep (301 near Hackensack) and the night gets much tighter.
-   Prototype ships 50 mi; one-line change.
+1. **Top 10 radius — DECIDED (Dan, Oct 27): 25 mi.** At 50 mi the
+   NY-metro Top 10 routed to ~83 mi of driving — a big night. At
+   25 mi the pool is still deep (301 near Hackensack) and the night
+   is much tighter. Shipped at 25 mi.
 2. **Nights of 10** for the Top 100 (could be 8 or 12).
 3. Whether auto-tours should also be offered per-category
    (events/stores) later — buttons currently use the default map.

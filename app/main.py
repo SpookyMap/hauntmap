@@ -6321,9 +6321,11 @@ def leaderboard_top100(request: Request, cat: str = "halloween"):
 #     single 100-stop tour was never an option; nights of 10 sit
 #     comfortably inside it.)
 AUTO_TOUR_NIGHT_SIZE = 10
-# One night of driving gets a 50 mi net; the Top 100 hunt gets the
-# site's own "near" radius (_GEO_NEAR_RADIUS_MI = 100 mi).
-AUTO_TOUR_RADIUS_MI = {10: 50.0, 100: 100.0}
+# One night of driving gets a tighter 25 mi net (Dan's pick, Oct 27 —
+# at 50 mi the NY-metro Top 10 routed to ~83 mi of driving); the
+# Top 100 hunt gets the site's own "near" radius
+# (_GEO_NEAR_RADIUS_MI = 100 mi).
+AUTO_TOUR_RADIUS_MI = {10: 25.0, 100: 100.0}
 
 
 def _auto_tour_pool(conn, cat: str, clat: float, clng: float,
