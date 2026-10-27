@@ -50,7 +50,12 @@ from pathlib import Path
 #   Mortem Manor, 5770 W Irlo Bronson Memorial Hwy, posted today as
 #   pin 6085 via @hiddenshorestravel's TikTok. Featured only — the
 #   hand-picked list is untouched.)
-FEATURED_ENTRY_IDS = (5541, 5542, 5551, 5584, 5587, 5175, 4370, 5653, 5654, 5655, 5766, 5572, 5940, 6006, 116, 6084, 4932, 6085)
+#   30 NJ Ridgewood (Oct 27: Dan's "All top 10" burst pick —
+#   Ridgewood Halloween House, 294 West End Ave; the pin already
+#   existed with no video, so no duplicate was posted and
+#   @growingwithju's TikTok was attached to it below. Featured
+#   only — the hand-picked list is untouched.)
+FEATURED_ENTRY_IDS = (5541, 5542, 5551, 5584, 5587, 5175, 4370, 5653, 5654, 5655, 5766, 5572, 5940, 6006, 116, 6084, 4932, 6085, 30)
 
 # Hand-picked pins (Dan, Oct 23): pins Dan personally sent in chat or
 # curated for posting. These lead every feed view — hand-picked first
@@ -791,6 +796,17 @@ def init_db(db_path: Path) -> None:
         add_entry_video(
             conn, 6085,
             "https://www.tiktok.com/@boosandbubbly/video/7692137070936018207",
+        )
+        # Dan-sent video attach (Oct 27): @growingwithju's TikTok of
+        # the Ridgewood Halloween House (294 West End Ave, Ridgewood
+        # NJ — posted Oct 11, 2026) joins its one pin (30) — the
+        # standing one-pin-per-place rule. The pin carried no video,
+        # so add_entry_video fills the empty primary mirror
+        # (fill-if-empty) and lists the video at position 0; it
+        # dedupes by video id, so repeat boots are no-ops.
+        add_entry_video(
+            conn, 30,
+            "https://www.tiktok.com/@growingwithju/video/7695491140866428174",
         )
         if "is_handpicked" not in cols:
             # Hand-picked feed boost (Dan, Oct 23): pins Dan personally
