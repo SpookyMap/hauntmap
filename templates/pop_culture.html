@@ -26,10 +26,17 @@
 <div class="yt-grid">
   {% for v in grid %}
   <article class="yt-item movie-card">
+    {% if v.platform == 'facebook' %}
+    <button type="button" class="yt-facade yt-facade--fb" data-fb="{{ v.url }}" aria-label="Play {{ v.title }}">
+      <img src="{{ v.thumb }}" alt="" loading="lazy">
+      <span class="yt-play" aria-hidden="true">&#9654;</span>
+    </button>
+    {% else %}
     <button type="button" class="yt-facade{% if v.short %} yt-facade--short{% endif %}" data-yt="{{ v.id }}" aria-label="Play {{ v.title }}">
       <img src="https://i.ytimg.com/vi/{{ v.id }}/hqdefault.jpg" alt="" loading="lazy">
       <span class="yt-play" aria-hidden="true">&#9654;</span>
     </button>
+    {% endif %}
     <h3 class="movie-title">{{ v.title }}</h3>
     <p class="movie-blurb">{{ v.blurb }}</p>
     <p class="yt-cap">{{ v.kind }} &middot; {{ v.channel }}</p>
@@ -45,19 +52,32 @@
 <p class="music-events-cta">Keep the marathon going: <a href="/movies">The Screening Room &rarr;</a> &middot; <a href="/music">Halloween Music &rarr;</a></p>
 
 <script>
-// YouTube click-to-play facades (same pattern as /music and /movies):
+// Click-to-play facades (same pattern as /music and /movies):
 // the real player only loads when a visitor taps a cover — no autoplay,
-// no third-party requests before the tap.
+// no third-party requests before the tap. YouTube entries swap in the
+// YouTube iframe; Facebook entries (data-fb) swap in Facebook's
+// official embedded player for the reel (never re-hosted).
 document.addEventListener('click', function (ev) {
   var b = ev.target.closest && ev.target.closest('.yt-facade');
   if (!b || b.dataset.loaded) return;
   b.dataset.loaded = '1';
   var f = document.createElement('iframe');
-  f.className = 'yt-frame';
-  f.src = 'https://www.youtube-nocookie.com/embed/' + b.getAttribute('data-yt') + '?autoplay=1&rel=0';
-  f.setAttribute('allow', 'autoplay; encrypted-media; fullscreen; picture-in-picture');
-  f.setAttribute('allowfullscreen', '');
-  f.setAttribute('title', b.getAttribute('aria-label') || 'YouTube video');
+  var fb = b.getAttribute('data-fb');
+  if (fb) {
+    f.className = 'fb-frame';
+    f.src = 'https://www.facebook.com/plugins/video.php?href=' +
+      encodeURIComponent(fb) + '&show_text=false&autoplay=true';
+    f.setAttribute('allow', 'autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture; web-share');
+    f.setAttribute('allowfullscreen', '');
+    f.setAttribute('scrolling', 'no');
+    f.setAttribute('title', b.getAttribute('aria-label') || 'Facebook video');
+  } else {
+    f.className = 'yt-frame';
+    f.src = 'https://www.youtube-nocookie.com/embed/' + b.getAttribute('data-yt') + '?autoplay=1&rel=0';
+    f.setAttribute('allow', 'autoplay; encrypted-media; fullscreen; picture-in-picture');
+    f.setAttribute('allowfullscreen', '');
+    f.setAttribute('title', b.getAttribute('aria-label') || 'YouTube video');
+  }
   b.replaceWith(f);
 });
 </script>

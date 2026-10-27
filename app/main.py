@@ -8018,7 +8018,27 @@ POP_CULTURE_FEATURED = {
 # them as cards next to the featured pick. The Shorts below were all
 # verified via oEmbed on 2026-10-27 (embeddable); "short": True marks
 # a vertical YouTube Short so the card frames its still uncropped.
+# Non-YouTube entries carry "platform" + "url" + "thumb" (a local
+# cover-frame file in static/img/): the template renders the local
+# still and the click handler swaps in that platform's official embed.
 POP_CULTURE_GRID: list[dict] = [
+    # First Facebook entry (Dan, 2026-10-27): Dude Dad's couples-costume
+    # reel, shared by Dan as a facebook.com/share/r link and resolved
+    # via the Facebook connector. Public reel (posted Oct 26, 2026);
+    # the still is the reel's own cover frame from Facebook's plugin
+    # page (the video itself is never re-hosted — tap swaps in
+    # Facebook's official embedded player).
+    {"id": "2305908356865207",
+     "platform": "facebook",
+     "url": "https://www.facebook.com/reel/2305908356865207/",
+     "thumb": "/static/img/dude_dad_couples_costumes.jpg",
+     "title": "What's Your Best Couples Costume Idea?",
+     "channel": "Dude Dad",
+     "kind": "Facebook Reel", "short": True,
+     "blurb": "Five couples costumes in one reel — Dolly Parton "
+              "beside a Little Free Library, a bride and groom, a "
+              "swashbuckler, Nemo, even an AI data center that takes "
+              "two people to wear — then he asks for yours."},
     {"id": "kxXVk4UI0WI",
      "title": "Thriller Dance NYC Halloween Parade 2026 "
               "(Behind the Scenes): Michael Jackson Zombie Dance "
