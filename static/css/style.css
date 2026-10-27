@@ -863,6 +863,19 @@ a.game-card:hover { border-color: #ff7518; transform: translateY(-2px); }
 .portal-facade:hover .portal-playbtn, .portal-facade:focus-visible .portal-playbtn { background: rgba(23, 58, 102, 0.92); box-shadow: 0 0 26px rgba(87, 168, 255, 0.85); }
 .portal-frame iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; display: block; }
 .portal-close { position: absolute; top: 6px; right: 6px; z-index: 2; width: 34px; height: 34px; border-radius: 50%; border: 1px solid #57a8ff; background: rgba(10, 22, 40, 0.88); color: #eaf6ff; font-size: 1rem; line-height: 1; cursor: pointer; }
+/* Fullscreen for games (Dan, Oct 27) — one ⛶ chip for every in-site
+   playable game, styled as the portal ✕'s twin and parked just left of
+   it on the frame. The frame CONTAINER goes fullscreen (helper:
+   static/js/game_fullscreen.js) so chip + game scale together; in
+   fullscreen the frame sheds its capped inline size and fills the
+   screen — GamePix titles letterbox inside their own player, so the
+   game keeps its native aspect. Exiting restores the card layout. */
+.game-fs-btn { position: absolute; top: 6px; right: 46px; z-index: 2; width: 34px; height: 34px; border-radius: 50%; border: 1px solid #57a8ff; background: rgba(10, 22, 40, 0.88); color: #eaf6ff; font-size: 1.05rem; line-height: 1; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0; }
+.game-fs-btn:hover { background: rgba(23, 58, 102, 0.92); }
+@media (pointer: coarse) {
+  .game-fs-btn { width: 44px; height: 44px; right: 56px; font-size: 1.2rem; }
+}
+.portal-frame:fullscreen, .portal-frame:-webkit-full-screen { width: 100%; height: 100%; max-width: none; aspect-ratio: auto; border: 0; border-radius: 0; background: #000; }
 .portal-card.is-playing { border-color: #57a8ff; box-shadow: 0 0 18px rgba(87, 168, 255, 0.28); }
 .portal-note { color: #9a97a3; font-size: 0.9rem; margin: 0 0 2rem; }
 
@@ -4729,6 +4742,17 @@ a.game-card-featured:hover { border-color: #ff7b1c; }
   font-size: 1rem; padding: 0.3rem 0.5rem; cursor: pointer; }
 .gm-iconbtn + .gm-iconbtn { margin-left: 0; }
 .gm-iconbtn:hover { border-color: #57a8ff; }
+/* Ghost Maze fullscreen (Dan, Oct 27) — the ⛶ chip lives in the HUD
+   (the cabinet's own control row, same dark-chip/azure language as the
+   portal frames) and fullscreens the whole cabinet (#gm-wrap): HUD,
+   stage and D-pad stay together and the stage is sized off the screen
+   HEIGHT so nothing overflows or stretches — canvas keeps its native
+   418:528 aspect. Exit restores the 460px column untouched. */
+#gm-fs { color: #8fd8ff; }
+@media (pointer: coarse) { #gm-fs { min-width: 44px; min-height: 44px; } }
+.gm-wrap:fullscreen, .gm-wrap:-webkit-full-screen { max-width: none; width: 100%; height: 100%; background: #05080a; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 0.5rem; box-sizing: border-box; overflow: auto; }
+.gm-wrap:fullscreen .gm-hud, .gm-wrap:-webkit-full-screen .gm-hud,
+.gm-wrap:fullscreen .gm-stage, .gm-wrap:-webkit-full-screen .gm-stage { width: min(96vw, calc((100vh - 200px) * 0.7917)); width: min(96vw, calc((100dvh - 200px) * 0.7917)); flex: none; }
 
 .gm-stage { position: relative; border-radius: var(--radius);
   box-shadow: 0 0 30px rgba(87,168,255,0.35), 0 0 4px rgba(87,168,255,0.6);
