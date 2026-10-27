@@ -544,6 +544,7 @@ function hmFullHomepage() {
    the join pitch; a logged-in member gets a link to their own page
    instead — no join pitch to a member. #}
 <section class="social-promo" aria-label="Join the HauntMap social network">
+  <div class="social-promo-main">
   <div class="social-promo-top">
     <img class="social-promo-ghost" src="/static/img/hauntmap_ghost.webp" alt="" aria-hidden="true">
     <div class="social-promo-head">
@@ -566,6 +567,15 @@ function hmFullHomepage() {
     <a class="social-promo-what" href="/hauntsocial">What is <span class="hs-brand">HauntSocial</span>?</a>
   </div>
   {% endif %}
+  </div>
+  {# Profile preview (Dan, Oct 27): a real screenshot of the host @frank's
+     profile page beside the join pitch, so visitors see what their own
+     page could look like. The picture itself links to /signup. #}
+  <a class="social-promo-shot" href="/signup">
+    <img src="/static/img/hauntsocial-profile-preview.webp" loading="lazy"
+         alt="A HauntSocial profile page — Frank's page with his Frankenstein banner, profile photo, bio and anthem">
+    <span class="social-promo-shot-cap">Your page could look like this &#x1F47B;</span>
+  </a>
 </section>
 
 {% if sponsors %}

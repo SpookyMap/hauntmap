@@ -5953,3 +5953,26 @@ main.wrap:has(> .vt-tv-strip-bottom) { padding-bottom: 0; }
 .vt-tv-strip a.pop-btn::before, .vt-tv-strip a.pop-btn::after {
   background: #b18cff; box-shadow: 0 0 6px 2px rgba(177, 140, 255, 0.50);
 }
+
+/* ============ z182: PROFILE PREVIEW BESIDE THE JOIN BLOCK (Dan, Oct 27) ============
+   A real screenshot of the host @frank's profile page sits NEXT TO the
+   homepage Join HauntSocial block, so visitors see what their own page
+   could look like before they sign up. The block's copy column wraps in
+   .social-promo-main (new wrapper, copy untouched); the picture is a
+   link to /signup with a slight preview-card tilt + blue glow. Laptop:
+   side-by-side. Phone: the picture stacks under the copy, centered.
+   The .social-promo section exists only on the homepage, so no other
+   page changes. */
+.social-promo { flex-direction: row; align-items: stretch; }
+.social-promo-main { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 0.65rem; }
+.social-promo-shot { flex: 0 0 248px; display: flex; flex-direction: column; gap: 0.45rem;
+  text-decoration: none; align-self: center; }
+.social-promo-shot img { width: 100%; height: auto; display: block; border-radius: 12px;
+  border: 1px solid rgba(143, 216, 255, 0.55); transform: rotate(1.3deg);
+  box-shadow: 0 0 22px rgba(87, 168, 255, 0.35), 0 12px 26px rgba(0, 0, 0, 0.55); }
+.social-promo-shot:hover img { filter: brightness(1.07); }
+.social-promo-shot-cap { color: #a9cdf5; font-size: 0.82rem; text-align: center; }
+@media (max-width: 760px) {
+  .social-promo { flex-direction: column; }
+  .social-promo-shot { flex: none; width: min(290px, 92%); }
+}
