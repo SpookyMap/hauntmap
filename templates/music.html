@@ -5,10 +5,30 @@
 <h1>&#x1F383; Halloween Music</h1>
 <p class="lede">The soundtrack of fright night. Press play on the playlists while you build your tour, watch the classic videos, and meet the artists who own the season.</p>
 
+<h2 class="music-h2" id="featured">&#x2B50; Featured Set</h2>
+<p>A full-length EDM, dance &amp; house session from our friends at {{ yt_spotlight.channel }} — the ZombieSquad mix, over two hours of it. Tap the cover to play.</p>
+<div class="yt-feature">
+  <button type="button" class="yt-facade" data-yt="{{ yt_spotlight.id }}" aria-label="Play {{ yt_spotlight.title }}">
+    <img src="https://i.ytimg.com/vi/{{ yt_spotlight.id }}/maxresdefault.jpg" alt="" loading="lazy">
+    <span class="yt-play" aria-hidden="true">&#9654;</span>
+  </button>
+  <p class="yt-cap">{{ yt_spotlight.title }} &middot; {{ yt_spotlight.channel }}</p>
+  <p class="yt-meta">{{ yt_spotlight.meta }}</p>
+</div>
+<p>And right below it, the newest set on the page — {{ yt_spotlight_next.channel }}&rsquo;s Halloween future bass mix. Tap the cover to play.</p>
+<div class="yt-feature">
+  <button type="button" class="yt-facade" data-yt="{{ yt_spotlight_next.id }}" aria-label="Play {{ yt_spotlight_next.title }}">
+    <img src="https://i.ytimg.com/vi/{{ yt_spotlight_next.id }}/hqdefault.jpg" alt="" loading="lazy">
+    <span class="yt-play" aria-hidden="true">&#9654;</span>
+  </button>
+  <p class="yt-cap">{{ yt_spotlight_next.title }} &middot; {{ yt_spotlight_next.channel }}</p>
+  <p class="yt-meta">{{ yt_spotlight_next.meta }}</p>
+</div>
+
 <nav class="movies-subnav" aria-label="Music sections">
+  <a href="#featured">&#x2B50; Featured Set</a>
   <a href="#edm">&#x26A1; EDM Channels</a>
   <a href="#hiphop">&#x1F3A4; Hip Hop Stations</a>
-  <a href="#featured">&#x2B50; Featured Set</a>
   <a href="#spotify">&#x1F3A7; Spotify Playlists</a>
   <a href="#radio">&#x1F4FB; Live Radio</a>
   <a href="#classics">&#x1F4FA; Classic Videos</a>
@@ -46,17 +66,6 @@
     <p class="yt-meta">{{ c.meta }}</p>
   </div>
   {% endfor %}
-</div>
-
-<h2 class="music-h2" id="featured">&#x2B50; Featured Set</h2>
-<p>A full-length EDM, dance &amp; house session from our friends at {{ yt_spotlight.channel }} — the ZombieSquad mix, over two hours of it. Tap the cover to play.</p>
-<div class="yt-feature">
-  <button type="button" class="yt-facade" data-yt="{{ yt_spotlight.id }}" aria-label="Play {{ yt_spotlight.title }}">
-    <img src="https://i.ytimg.com/vi/{{ yt_spotlight.id }}/maxresdefault.jpg" alt="" loading="lazy">
-    <span class="yt-play" aria-hidden="true">&#9654;</span>
-  </button>
-  <p class="yt-cap">{{ yt_spotlight.title }} &middot; {{ yt_spotlight.channel }}</p>
-  <p class="yt-meta">{{ yt_spotlight.meta }}</p>
 </div>
 
 <h2 class="music-h2" id="spotify">&#x1F3A7; Listen on Spotify</h2>

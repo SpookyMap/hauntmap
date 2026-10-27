@@ -7275,11 +7275,23 @@ MUSIC_HIPHOP_STATIONS = [
 # Top-of-page featured set (Dan, Oct 23): his friends' ZombieSquad mix on
 # the Dead On Pictures channel, featured at the top of /music by request.
 # Verified via yt-dlp 2026-10-23: public, playable_in_embed, maxres thumb.
+# Dan, Oct 27: the Featured Set section itself now sits at the very top of
+# /music (above the EDM Channels), as THE feature of the page.
 MUSIC_SPOTLIGHT = {
     "id": "MlgxFvrCgoA",
     "title": "ZombieSquad EDM Mix Session | 20261023 | EDM - Dance - House",
     "channel": "Dead On Pictures",
     "meta": "Full-length set · 2:13:03",
+}
+# Directly below the ZombieSquad feature (Dan, Oct 27): the Halloween
+# future bass mix he sent the same morning — moved out of the DJ Sets
+# grid (where it sat last) into the featured flow, as the next entry a
+# visitor sees. oEmbed-verified 2026-10-27 (title + channel, embeddable).
+MUSIC_SPOTLIGHT_NEXT = {
+    "id": "WOGat2B7Vak",
+    "title": "Spooky Vibes (2026) // Future Bass Mix - EDM Vibes Collection",
+    "channel": "Timothy Caldwell",
+    "meta": "A future bass Halloween mix from the EDM Vibes Collection",
 }
 MUSIC_YOUTUBE_FEATURED = {
     "id": "sOnqjkJTMaA",
@@ -7371,12 +7383,9 @@ MUSIC_DJ_SETS = [
      "title": "Adam Beyer — Drumcode Halloween at Tobacco Dock",
      "meta": "Drumcode's London Halloween takeover · 2:02:17",
      "channel": "DJ Mag"},
-    # Added by Dan, Oct 27 — oEmbed-verified same day (title + channel
-    # match, embeddable).
-    {"id": "WOGat2B7Vak",
-     "title": "Spooky Vibes (2026) // Future Bass Mix - EDM Vibes Collection",
-     "meta": "A future bass Halloween mix from the EDM Vibes Collection",
-     "channel": "Timothy Caldwell"},
+    # WOGat2B7Vak (Timothy Caldwell's Spooky Vibes future bass mix) lived
+    # here Oct 27 until Dan moved it up under the ZombieSquad feature —
+    # see MUSIC_SPOTLIGHT_NEXT.
 ]
 # Halloween singles not already on this page (Dan, Oct 23). oEmbed-verified
 # 2026-10-23 on official/VEVO/label channels wherever they exist; where a
@@ -7512,6 +7521,7 @@ def music_page(request: Request):
          "edm_channels": MUSIC_EDM_CHANNELS,
          "hiphop_stations": MUSIC_HIPHOP_STATIONS,
          "yt_spotlight": MUSIC_SPOTLIGHT,
+         "yt_spotlight_next": MUSIC_SPOTLIGHT_NEXT,
          "yt_featured": MUSIC_YOUTUBE_FEATURED, "yt_grid": MUSIC_YOUTUBE_GRID,
          "yt_performances": MUSIC_PERFORMANCES, "yt_dj_sets": MUSIC_DJ_SETS,
          "yt_singles": MUSIC_SINGLES,
