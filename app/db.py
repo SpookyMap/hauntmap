@@ -158,7 +158,7 @@ from pathlib import Path
 #   Blue Chalet. Featured alone on the brand-new California
 #   Hotels board. Hotels are venues: no Scare-O-Meter, no vote.
 #   The hand-picked list is untouched.)
-FEATURED_ENTRY_IDS = (5541, 5542, 5551, 5584, 5587, 5175, 4370, 5653, 5654, 5655, 5766, 5572, 5940, 6006, 116, 6084, 4932, 6085, 6087, 6088, 6086, 6090, 6089, 6091, 30, 6098, 6096, 1641, 6092, 6100, 6099, 6101, 1239, 5728, 5967, 6095, 6097, 6093, 6094, 6102, 6103, 6105, 6106, 1996, 6104, 6108, 6107)
+FEATURED_ENTRY_IDS = (5541, 5542, 5551, 5584, 5587, 5175, 4370, 5653, 5654, 5655, 5766, 5572, 5940, 6006, 116, 6084, 4932, 6085, 6087, 6088, 6086, 6090, 6089, 6091, 30, 6098, 6096, 1641, 6092, 6100, 6099, 6101, 1239, 5728, 5967, 6095, 6097, 6093, 6094, 6102, 6103, 6105, 6106, 1996, 6104, 6108, 6107, 4268)
 # Hand-picked pins (Dan, Oct 23): pins Dan personally sent in chat or
 # curated for posting. These lead every feed view — hand-picked first
 # (newest hand-picked first), then all other pins newest-first — per
@@ -1002,6 +1002,26 @@ def init_db(db_path: Path) -> None:
         add_entry_video(
             conn, 1996,
             "https://www.tiktok.com/@geras88jerry/video/7701197521317563666",
+        )
+        # Dan-sent video attach (Oct 27): @ninjamomm's TikTok of The
+        # Escondido Madhouse (posted Oct 25, 2026 — she calls it the
+        # coolest haunted house she has ever seen; the haunt is open
+        # Oct 31) joins its one pin (4268, 10275 Spruce Woodlands Way,
+        # Escondido CA — the FrightMaps-imported pin already carried
+        # the verified address, exact-house coords and a photo, but
+        # no video) — the standing one-pin-per-place rule. The pin
+        # carried no video, so add_entry_video fills the empty
+        # primary mirror (fill-if-empty) and lists the video at
+        # position 0; it dedupes by video id, so repeat boots are
+        # no-ops. (A fresh /upload for this place was attempted first
+        # and correctly rejected/dupe-avoided: the address geocodes
+        # only under OSM's "Hidden Meadows" locality and the place
+        # already had its pin.) Pin 4268 joins FEATURED_ENTRY_IDS
+        # for the California Halloween Top 10 — Dan's "All top 10"
+        # burst directive; ranking data untouched.
+        add_entry_video(
+            conn, 4268,
+            "https://www.tiktok.com/@ninjamomm/video/7700668531167350047",
         )
         if "is_handpicked" not in cols:
             # Hand-picked feed boost (Dan, Oct 23): pins Dan personally
