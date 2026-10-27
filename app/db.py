@@ -37,7 +37,10 @@ from pathlib import Path
 #   the pin already existed as an events pin, so no duplicate was
 #   posted and @suzebauer's TikTok of the Blaze was attached to it.
 #   Featured only — the hand-picked list is untouched.)
-FEATURED_ENTRY_IDS = (5541, 5542, 5551, 5584, 5587, 5175, 4370, 5653, 5654, 5655, 5766, 5572, 5940, 6006, 116)
+#   6084 NJ Fair Lawn (Oct 27: Dan's "Top 10" pick — Halloween House,
+#   17-05 Ellis Ave, @lilroamingexplorers Part 14, posted today as
+#   pin 6084. Featured only — the hand-picked list is untouched.)
+FEATURED_ENTRY_IDS = (5541, 5542, 5551, 5584, 5587, 5175, 4370, 5653, 5654, 5655, 5766, 5572, 5940, 6006, 116, 6084)
 
 # Hand-picked pins (Dan, Oct 23): pins Dan personally sent in chat or
 # curated for posting. These lead every feed view — hand-picked first
