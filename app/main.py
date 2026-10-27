@@ -4318,13 +4318,230 @@ NINJA_LINK_GAMES = [
 ]
 
 
+# ------------------------------------------- minecraft games shelf
+# MINECRAFT GAMES (Dan, Oct 27: "Any Minecraft games?" — the shelf
+# widened from a Dungeons headliner to the whole live Minecraft
+# family). Same IP discipline as the LEGO shelf: LINK-OUT cards to
+# official pages only, official art only, nothing hosted or ripped.
+# Mojang/Microsoft does not offer a browser-playable Dungeons, so no
+# card here pretends to embed a game; the one playable card is
+# Minecraft Classic, Mojang's own free browser version, linked out
+# (its tiny Azure shell serves no framing grant we rely on, and a
+# keyboard WebGL game belongs full-screen anyway). Card art is each
+# channel's own official art: Mojang's DAM key art for the
+# minecraft.net cards, the Steam capsule from Valve's CDN, the
+# TitledHeroArt from Microsoft's store catalog, the PS4 icon from
+# PlayStation's image API — every URL curl-verified HTTP 200 with a
+# gethauntmap.com Referer on Oct 27, 2026.
+#
+# Dungeons keeps the featured first seat — Dan named it first.
+# Minecraft Dungeons II (released Sep 29, 2026) joins as the second
+# card. CHECKED AND SKIPPED (dead/delisted, named so they are not
+# re-added): Minecraft Earth (servers shut down June 2021) and
+# Minecraft: Story Mode (delisted 2019, stores pulled).
+MINECRAFT_GAMES = [
+    {"title": "Minecraft Dungeons",
+     "url": "https://www.minecraft.net/en-us/about-dungeons",
+     "img": "https://www.minecraft.net/content/dam/minecraftnet/games/dungeons/key-art/Dungeons-PMP_Hero-Art_ParallaxB_1920x1080.jpg",
+     "blurb": "The headliner: an action-RPG dungeon crawler set in "
+              "the Minecraft world. Brave treasure-stuffed dungeons "
+              "solo or with up to three friends, gear up with dozens "
+              "of enchanted weapons and take down the evil "
+              "Arch-Illager.",
+     "tag": "Action RPG · E10+ · Official page",
+     "go": "Official page", "w": 1920, "h": 1080, "featured": True},
+    {"title": "Minecraft Dungeons II",
+     "url": "https://www.minecraft.net/en-us/about-dungeons-ii",
+     "img": "https://www.minecraft.net/content/dam/minecraftnet/games/spicewood/logos/Global-Header_Image-Tile_Dungeons-II_570x321.jpg",
+     "blurb": "The brand-new sequel: drop the pickaxe, grab a sword. "
+              "A new evil threatens two worlds at once and the "
+              "dungeons are tougher than ever — charge in solo or "
+              "with up to four players in co-op.",
+     "tag": "New for 2026 · Official page",
+     "go": "Official page", "w": 570, "h": 321},
+    {"title": "Minecraft",
+     "url": "https://www.minecraft.net/en-us/about-minecraft",
+     "img": "https://www.minecraft.net/content/dam/minecraftnet/games/minecraft/key-art/About-Minecraft_Featured-Image-0_570x321.jpg",
+     "blurb": "The one that started it all: build anything you can "
+              "imagine block by block in Creative, or craft, gear up "
+              "and survive the night in Survival. Java & Bedrock "
+              "editions for PC, console and mobile.",
+     "tag": "Sandbox · E10+ · Official page",
+     "go": "Official page", "w": 570, "h": 321},
+    {"title": "Minecraft Classic",
+     "url": "https://classic.minecraft.net/",
+     "img": "https://www.minecraft.net/content/dam/minecraftnet/games/minecraft/key-art/Global-Header_Image-Tile_Build-Worlds-Shape-Play_570x321.jpg.jpg",
+     "blurb": "Mojang's freebie: the original 2009 Creative mode, "
+              "playable free right in your browser — 32 classic "
+              "blocks and pure nostalgia. You will need a keyboard.",
+     "tag": "FREE in your browser · Official",
+     "go": "Play free", "w": 570, "h": 321},
+    {"title": "Minecraft Legends",
+     "url": "https://www.minecraft.net/en-us/about-legends",
+     "img": "https://www.minecraft.net/content/dam/minecraftnet/games/badger/key-art/Global-Header_Image-Tile_MC-Legends_570x321.jpg",
+     "blurb": "Action-strategy in the Overworld: unite your allies, "
+              "raise your banners and lead the charge to save the "
+              "Overworld from the piglin invasion.",
+     "tag": "Action strategy · Official page",
+     "go": "Official page", "w": 570, "h": 321},
+    {"title": "Minecraft Education",
+     "url": "https://education.minecraft.net/en-us",
+     "img": "https://education.minecraft.net/content/dam/education-edition/key-art/MCEDU_PropArt_15_1080x1080-1.png",
+     "blurb": "The classroom edition: game-based learning with "
+              "coding, chemistry and 600+ ready-made lessons, built "
+              "for schools, camps and clubs.",
+     "tag": "For classrooms · Official site",
+     "go": "Official site", "w": 1080, "h": 1080},
+]
+
+# GET MINECRAFT DUNGEONS — the official store listings for the
+# headliner (each card travels to that store; art is the store's own
+# where the store serves it, Mojang's DAM key art for Nintendo,
+# whose storefront renders its art client-side only).
+MINECRAFT_DUNGEONS_STORES = [
+    {"title": "Dungeons on Steam",
+     "url": "https://store.steampowered.com/app/1672970/Minecraft_Dungeons/",
+     "img": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/1672970/capsule_616x353.jpg?t=1787063807",
+     "blurb": "For PC on Steam: the base game, plus the Ultimate "
+              "Edition with all six DLCs and the Ultimate DLC Bundle.",
+     "tag": "PC · Steam", "go": "Steam store", "w": 616, "h": 353},
+    {"title": "Dungeons on Xbox",
+     "url": "https://www.xbox.com/en-us/games/store/minecraft-dungeons/9n8nj74fztg9",
+     "img": "https://store-images.s-microsoft.com/image/apps.39985.14045794648370014.2229d39b-90c3-496e-8fac-9987450ca4d8.6db84bdb-2341-470a-88b0-0f119b204065",
+     "blurb": "For Xbox Series X|S, Xbox One and Windows — also "
+              "included with Xbox Game Pass, cloud play and all.",
+     "tag": "Xbox · Windows · Game Pass", "go": "Xbox store",
+     "w": 1920, "h": 1080},
+    {"title": "Dungeons on Nintendo Switch",
+     "url": "https://www.nintendo.com/us/store/products/minecraft-dungeons-switch/",
+     "img": "https://www.minecraft.net/content/dam/minecraftnet/games/dungeons/key-art/MinecraftDungeons_Ultimate_Net_640x384.jpg",
+     "blurb": "For Nintendo Switch: dungeon-crawling on the go, in "
+              "TV, tabletop and handheld modes.",
+     "tag": "Nintendo Switch", "go": "Nintendo store",
+     "w": 640, "h": 384},
+    {"title": "Dungeons on PlayStation",
+     "url": "https://www.playstation.com/en-us/games/minecraft-dungeons/",
+     "img": "https://image.api.playstation.com/gs2-sec/appkgo/prod/CUSA18779_00/4/i_c7b0467e8d83d7fa53d63d40a50e65e5da0edc39e07306e356cf5a6f2aba1977/i/icon0.png",
+     "blurb": "For PS4 (playable on PS5): Sony's official Dungeons "
+              "page, with the PlayStation Store editions.",
+     "tag": "PlayStation · PS4", "go": "PlayStation",
+     "w": 512, "h": 512},
+]
+
+# The ONE trailer: the official Minecraft channel's Dungeons
+# Ultimate Edition trailer. YouTube oEmbed answered for this video
+# on Oct 27, 2026 (author "Minecraft"), i.e. embedding is enabled;
+# it ships as a click-to-play facade on the same pattern as
+# /pop-haunt-culture — the player loads only on tap.
+MINECRAFT_TRAILER = {"yt": "CoZ2V7XsSYk",
+                     "title": "Minecraft Dungeons: Ultimate Edition "
+                              "Trailer",
+                     "img": "https://i.ytimg.com/vi/CoZ2V7XsSYk/hqdefault.jpg"}
+
+
+# ------------------------------------------------- roblox shelf
+# ROBLOX GAMES (Dan, Oct 27). Roblox blocks iframing, so every card
+# is a LINK-OUT to the experience's official roblox.com page. All
+# data verified Oct 27, 2026 from Roblox's OWN APIs (games.roblox.com
+# details + apis.roblox.com omni-search, which returns each game's
+# canonical URL and Roblox's official content-maturity label) — no
+# fan wikis as the source of record. Art is each experience's own
+# icon from Roblox's thumbnail CDN (tr.rbxcdn.com, curl-verified
+# HTTP 200 with a gethauntmap.com Referer for every card).
+#
+# Curation: the platform's giants with a Halloween lean first.
+# Maturity labels are Roblox's own, printed on every card. Murder
+# Mystery 2 carries Roblox's "Moderate" label (cartoon whodunit
+# violence) — shown plainly like the rest. The Mimic was checked
+# specifically for its rating before inclusion: Roblox currently
+# labels it Mild, the same class as DOORS and Piggy.
+ROBLOX_GAMES = [
+    {"title": "DOORS",
+     "url": "https://www.roblox.com/games/6516141723/DOORS",
+     "img": "https://tr.rbxcdn.com/180DAY-6d72472d3b2a47c5441194c8cf9f002c/512/512/Image/Png/noFilter",
+     "blurb": "Roblox's haunted-hotel phenomenon: work through 100 "
+              "doors, grab loot and outrun the entities hunting the "
+              "halls — every death teaches you something. Loud sounds "
+              "and flashing lights ahead!",
+     "tag": "Adventure · Maturity: Mild", "byline": "by LSPLASH"},
+    {"title": "The Mimic",
+     "url": "https://www.roblox.com/games/6243699076/The-Mimic",
+     "img": "https://tr.rbxcdn.com/180DAY-2035f6e350e78ced10a0b001dce70eae/512/512/Image/Png/noFilter",
+     "blurb": "Four spooky storybooks drawn from Japanese history "
+              "and urban legends: explore, solve and survive the "
+              "things that mimic our world. Flashing lights, loud "
+              "noises and jumpscares throughout.",
+     "tag": "Horror · Maturity: Mild", "byline": "by CTStudio"},
+    {"title": "Piggy",
+     "url": "https://www.roblox.com/games/4623386862/Piggy",
+     "img": "https://tr.rbxcdn.com/180DAY-027355d999aa09c6b486ad39dd8a48d2/512/512/Image/Png/noFilter",
+     "blurb": "The survival-horror classic: solve the puzzles and "
+              "escape the map before Piggy finds you — or be the "
+              "Piggy and hunt your friends.",
+     "tag": "Horror · Maturity: Mild",
+     "byline": "by Piggy Dev Team"},
+    {"title": "Rainbow Friends",
+     "url": "https://www.roblox.com/games/7991339063/Rainbow-Friends",
+     "img": "https://tr.rbxcdn.com/180DAY-52711cf678d6a095888b0d4c8f893809/512/512/Image/Png/noFilter",
+     "blurb": "A field trip to the Odd World amusement park goes "
+              "very wrong: survive nights of tasks while Blue, "
+              "Green, Orange and Purple hunt you down.",
+     "tag": "Horror · Maturity: Mild",
+     "byline": "by Roy & Charcle"},
+    {"title": "Murder Mystery 2",
+     "url": "https://www.roblox.com/games/142823291/Murder-Mystery-2",
+     "img": "https://tr.rbxcdn.com/180DAY-ab1484ff8063476d413da09dd25df93f/512/512/Image/Png/noFilter",
+     "blurb": "The giant whodunit party game: Innocents run and "
+              "hide, the Sheriff protects them, and one secret "
+              "Murderer is on the loose. Collect and trade hundreds "
+              "of knives.",
+     "tag": "Horror · Maturity: Moderate", "byline": "by Nikilis"},
+    {"title": "Brookhaven RP",
+     "url": "https://www.roblox.com/games/4924922222/Brookhaven-RP",
+     "img": "https://tr.rbxcdn.com/180DAY-577f3f78d1f056c80db7d2a54c8d384d/512/512/Image/Png/noFilter",
+     "blurb": "Roblox's biggest hangout: claim a house, grab a car, "
+              "pick a job and roleplay your own stories across a "
+              "whole city — a Halloween candy-corn event is running "
+              "right now.",
+     "tag": "Town and City · Maturity: Minimal",
+     "byline": "by Brookhaven by Voldex"},
+    {"title": "Adopt Me!",
+     "url": "https://www.roblox.com/games/920587237/Adopt-Me",
+     "img": "https://tr.rbxcdn.com/180DAY-4dd71502e99ee8c47cbafec4c95c442d/512/512/Image/Png/noFilter",
+     "blurb": "Raise pets, build your dream home and trade with "
+              "friends in Roblox's beloved roleplay world — its "
+              "Halloween event is on right now.",
+     "tag": "RPG · Maturity: Minimal", "byline": "by Uplift Games"},
+    {"title": "Tower of Hell",
+     "url": "https://www.roblox.com/games/1962086868/Tower-of-Hell",
+     "img": "https://tr.rbxcdn.com/180DAY-9704151d9c8a70e7ebe0ced8cb2b95c1/512/512/Image/Png/noFilter",
+     "blurb": "The famous rage tower: race up a randomly built obby "
+              "tower against the clock — no checkpoints, no mercy, "
+              "endless bragging rights.",
+     "tag": "Adventure · Maturity: Minimal",
+     "byline": "by YXceptional Studios"},
+    {"title": "Welcome to Bloxburg",
+     "url": "https://www.roblox.com/games/185655149/Welcome-to-Bloxburg",
+     "img": "https://tr.rbxcdn.com/180DAY-b6e76b3760f566e5b97b339609d72284/512/512/Image/Png/noFilter",
+     "blurb": "Build and decorate the house of your dreams, work a "
+              "job, level up your skills and live a whole second "
+              "life in the town of Bloxburg.",
+     "tag": "Town and City · Maturity: Minimal",
+     "byline": "by Bloxburg Development"},
+]
+
+
 @app.get("/games", response_class=HTMLResponse)
 def games_page(request: Request):
     return templates.TemplateResponse(
         request, "games.html", {"portal_games": PORTAL_GAMES,
                                 "ninjago_games": NINJAGO_GAMES,
                                 "ninja_portal_games": NINJA_PORTAL_GAMES,
-                                "ninja_link_games": NINJA_LINK_GAMES})
+                                "ninja_link_games": NINJA_LINK_GAMES,
+                                "minecraft_games": MINECRAFT_GAMES,
+                                "minecraft_stores": MINECRAFT_DUNGEONS_STORES,
+                                "minecraft_trailer": MINECRAFT_TRAILER,
+                                "roblox_games": ROBLOX_GAMES})
 
 
 # ------------------------------------------------------------- ghost maze

@@ -31,6 +31,19 @@ a.portal-facade { text-decoration: none; }
 .portal-go { position: absolute; left: 50%; bottom: 0.55rem; transform: translateX(-50%); z-index: 1; background: rgba(10, 22, 40, 0.85); border: 1.5px solid #57c84c; color: #eaf6ff; font-weight: 800; font-size: 0.82rem; padding: 0.32rem 0.8rem; border-radius: 999px; white-space: nowrap; }
 a.portal-facade:hover .portal-go, a.portal-facade:focus-visible .portal-go { background: rgba(24, 66, 20, 0.92); }
 .games-sec-intro { color: var(--muted); margin: 0.1rem 0 0.4rem; line-height: 1.45; }
+/* Minecraft + Roblox shelves (Dan, Oct 27): creeper-green and
+   Roblox-red glow variants of the section-nav buttons. The Minecraft
+   shelf's headliner card (Dungeons, the game Dan named first) spans
+   two grid columns on wide screens with a green ring. */
+.games-nav-btn--minecraft { border-color: #3ddc3d; box-shadow: 0 0 10px rgba(61, 220, 61, 0.35), inset 0 0 8px rgba(61, 220, 61, 0.12); }
+.games-nav-btn--minecraft:hover { box-shadow: 0 0 16px rgba(61, 220, 61, 0.55), inset 0 0 8px rgba(61, 220, 61, 0.18); }
+.games-nav-btn--roblox { border-color: #e2231a; box-shadow: 0 0 10px rgba(226, 35, 26, 0.35), inset 0 0 8px rgba(226, 35, 26, 0.12); }
+.games-nav-btn--roblox:hover { box-shadow: 0 0 16px rgba(226, 35, 26, 0.55), inset 0 0 8px rgba(226, 35, 26, 0.18); }
+.portal-card--featured { border-color: #3ddc3d; box-shadow: 0 0 14px rgba(61, 220, 61, 0.25); }
+@media (min-width: 700px) {
+  .portal-card--featured { grid-column: span 2; }
+}
+.games-sub-head { font-size: 1.08rem; margin: 1.3rem 0 0.2rem; color: var(--ink); }
 @media (max-width: 520px) {
   .games-nav { flex-wrap: wrap; }
   .games-nav-btn { padding: 0.55rem 0.6rem; gap: 0.45rem; flex: 1 1 42%; }
@@ -74,6 +87,20 @@ a.portal-facade:hover .portal-go, a.portal-facade:focus-visible .portal-go { bac
     <span class="gnb-text">
       <span class="gnb-label">Ninja Games</span>
       <span class="gnb-sub">More ninja games &mdash; play here &amp; on itch.io</span>
+    </span>
+  </a>
+  <a class="games-nav-btn games-nav-btn--minecraft" href="#minecraft-games">
+    <span class="gnb-icon" aria-hidden="true">&#x26CF;</span>
+    <span class="gnb-text">
+      <span class="gnb-label">Minecraft Games</span>
+      <span class="gnb-sub">Dungeons &amp; the whole family &mdash; official pages</span>
+    </span>
+  </a>
+  <a class="games-nav-btn games-nav-btn--roblox" href="#roblox-games">
+    <span class="gnb-icon" aria-hidden="true">&#x1F7E5;</span>
+    <span class="gnb-text">
+      <span class="gnb-label">Roblox Games</span>
+      <span class="gnb-sub">DOORS, Piggy &amp; more &mdash; play on Roblox</span>
     </span>
   </a>
 </div>
@@ -222,5 +249,112 @@ a.portal-facade:hover .portal-go, a.portal-facade:focus-visible .portal-go { bac
 </div>
 <p class="portal-note">Embedded games are hosted by GamePix and the ads inside them are theirs. Linked games play free on each creator's official itch.io page.</p>
 </section>
+
+{# MINECRAFT GAMES SHELF (Dan, Oct 27, widened same day to the whole
+   family) — LINK-OUT cards to the official minecraft.net pages and
+   store listings; Mojang sells Dungeons, it does not give it away in
+   a browser, so nothing here pretends to embed the game. The one
+   playable card is Minecraft Classic (Mojang's own free browser
+   version, linked out). The trailer is a click-to-play YouTube
+   facade of the official Minecraft channel (oEmbed-verified
+   embeddable), swapped in by the script at the bottom on the
+   /pop-haunt-culture pattern. Art is each channel's own official
+   art — Mojang DAM key art, Steam capsule, Microsoft store hero
+   art, PlayStation icon — hotlinked, never copied. #}
+<section class="games-sec" id="minecraft-games">
+<h2 class="games-sec-head">&#x26CF; Minecraft Games</h2>
+<p class="games-sec-intro">The whole Minecraft family, straight from Mojang: <strong>Minecraft Dungeons</strong> leads the shelf, and every card travels to the game's official page. Dungeons is a buy-it game (no browser version exists), but Minecraft Classic below is Mojang's own free browser edition.</p>
+
+<div class="portal-grid">
+  <div class="portal-card">
+    <button type="button" class="yt-facade" data-yt="{{ minecraft_trailer.yt }}" aria-label="Play {{ minecraft_trailer.title }}">
+      <img src="{{ minecraft_trailer.img }}" alt="{{ minecraft_trailer.title }} thumbnail" loading="lazy">
+      <span class="yt-play" aria-hidden="true">&#x25B6;</span>
+    </button>
+    <h3>{{ minecraft_trailer.title }}</h3>
+    <p>The official trailer for the complete Dungeons adventure — every dungeon, every DLC, one quest to stop the Arch-Illager. Tap to watch right here.</p>
+    <span class="portal-tag">Official trailer · Minecraft on YouTube</span>
+  </div>
+  {% for g in minecraft_games %}
+  <div class="portal-card{% if g.featured %} portal-card--featured{% endif %}">
+    <div class="portal-frame" style="--pw: {{ g.w }}; --ph: {{ g.h }};">
+      <a class="portal-facade" href="{{ g.url }}" target="_blank" rel="noopener" aria-label="{{ g.title }} — {{ g.go }} (official)">
+        <img src="{{ g.img }}" alt="{{ g.title }} official art" loading="lazy">
+        <span class="portal-go" aria-hidden="true">{{ g.go }} &#x2197;</span>
+      </a>
+    </div>
+    <h3>{{ g.title }}</h3>
+    <p>{{ g.blurb }}</p>
+    <span class="portal-tag">{{ g.tag }}</span>
+  </div>
+  {% endfor %}
+</div>
+
+<h3 class="games-sub-head">&#x1F3AE; Get Minecraft Dungeons</h3>
+<p class="games-sec-intro">The official store listings for the headliner — pick your platform:</p>
+<div class="portal-grid">
+  {% for g in minecraft_stores %}
+  <div class="portal-card">
+    <div class="portal-frame" style="--pw: {{ g.w }}; --ph: {{ g.h }};">
+      <a class="portal-facade" href="{{ g.url }}" target="_blank" rel="noopener" aria-label="{{ g.title }} — {{ g.go }} (official store)">
+        <img src="{{ g.img }}" alt="{{ g.title }} official art" loading="lazy">
+        <span class="portal-go" aria-hidden="true">{{ g.go }} &#x2197;</span>
+      </a>
+    </div>
+    <h3>{{ g.title }}</h3>
+    <p>{{ g.blurb }}</p>
+    <span class="portal-tag">{{ g.tag }}</span>
+  </div>
+  {% endfor %}
+</div>
+<p class="portal-note">MINECRAFT, MINECRAFT DUNGEONS and MINECRAFT LEGENDS are trademarks of Mojang AB / Microsoft, which do not sponsor, authorize or endorse HauntMap. Games are sold (or, for Classic, given away) on the official pages these cards link to.</p>
+</section>
+
+{# ROBLOX GAMES SHELF (Dan, Oct 27) — LINK-OUT cards only: Roblox
+   itself blocks iframing, so every card travels to the experience's
+   official roblox.com page. Art is each experience's own icon from
+   Roblox's thumbnail CDN. Names, genres and maturity labels are
+   Roblox's own (verified from Roblox's official APIs, Oct 27,
+   2026); maturity labels are Roblox's content ratings, printed so
+   parents can judge at a glance. #}
+<section class="games-sec" id="roblox-games">
+<h2 class="games-sec-head">&#x1F7E5; Roblox Games</h2>
+<p class="games-sec-intro">The Roblox giants with a Halloween lean — haunted hotels, spooky storybooks and the biggest hangouts on the platform. Roblox is free with a free Roblox account; these cards link out to each game's official Roblox page (the games live on Roblox, not on HauntMap).</p>
+
+<div class="portal-grid">
+  {% for g in roblox_games %}
+  <div class="portal-card">
+    <div class="portal-frame" style="--pw: 512; --ph: 512;">
+      <a class="portal-facade" href="{{ g.url }}" target="_blank" rel="noopener" aria-label="Play {{ g.title }} on Roblox">
+        <img src="{{ g.img }}" alt="{{ g.title }} official icon from Roblox" loading="lazy">
+        <span class="portal-go" aria-hidden="true">Play on Roblox &#x2197;</span>
+      </a>
+    </div>
+    <h3>{{ g.title }}</h3>
+    <p>{{ g.blurb }}</p>
+    <span class="portal-tag">{{ g.tag }} &middot; {{ g.byline }}</span>
+  </div>
+  {% endfor %}
+</div>
+<p class="portal-note">Maturity labels are Roblox's own content ratings, shown on each game's Roblox page. ROBLOX is a trademark of Roblox Corporation, which does not sponsor, authorize or endorse HauntMap.</p>
+</section>
+
+<script>
+// Minecraft trailer facade (same click-to-play pattern as
+// /pop-haunt-culture): the YouTube player only loads when a visitor
+// taps the cover — no third-party requests before the tap.
+document.addEventListener('click', function (ev) {
+  var b = ev.target.closest && ev.target.closest('#minecraft-games .yt-facade');
+  if (!b || b.dataset.loaded) return;
+  b.dataset.loaded = '1';
+  var f = document.createElement('iframe');
+  f.className = 'yt-frame';
+  f.src = 'https://www.youtube-nocookie.com/embed/' + b.getAttribute('data-yt') + '?autoplay=1&rel=0';
+  f.setAttribute('allow', 'autoplay; encrypted-media; fullscreen; picture-in-picture');
+  f.setAttribute('allowfullscreen', '');
+  f.setAttribute('title', b.getAttribute('aria-label') || 'YouTube video');
+  b.replaceWith(f);
+});
+</script>
 
 {% endblock %}
