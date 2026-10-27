@@ -5601,3 +5601,57 @@ main.wrap:has(> .vt-tv-strip-bottom) { padding-bottom: 0; }
   }
 }
 
+
+/* ============ z168: SPONSOR STRIP — SEQUENTIAL SWAP, ONE CLOCK (Dan, Oct 26) ============
+   Dan's live iPhone screenshot: BOTH rotating lines printed at once,
+   overlapping into garbled double-text under Tonight's Display.
+   Root cause (rig-verified on the z161 build): the rotation was TWO
+   independent CSS animations sharing @keyframes advRotate, kept in
+   phase ONLY by a 6s animation-delay on line B — a one-time
+   assumption with no mechanism holding it. And even perfectly in
+   phase, the designed ~1.2s symmetric crossfade superimposes both
+   texts twice per cycle (rig samples at 390: cycle 6.3s a=0.13 /
+   b=0.50, 12.3s a=0.50 / b=0.13 — the incoming line at half strength
+   over the outgoing ghost already reads as double-text). Dan's
+   photo is worse than any in-phase instant — line B at FULL opacity
+   over line A at ~0.36 — which the designed timeline never produces
+   (when B is 1, A is 0); it is the fingerprint of the two clocks
+   out of phase on his phone. Reproduced exactly in the rig by
+   re-timing line B's clock: identical garble.
+   Fix: kill the two clocks. The lines no longer animate on their
+   own — base state parks line A at opacity 1 and line B at 0, and a
+   single .adv-show-b class on the strip (toggled every 6s by the
+   inline script beside the phone copy in index.html) swaps them.
+   One state = the lines cannot disagree about which is showing.
+   The fades are choreographed SEQUENTIALLY by transition-delay:
+   the outgoing line fades out immediately over .45s; the incoming
+   line's fade-in is delayed .4s, starting only once the outgoing
+   line is at ~3% — a beat where NEITHER is legible, and the two
+   are never simultaneously readable (peak overlap ≈ 0.03 opacity).
+   The 12s rhythm is preserved (6s per line). Pause is the script's
+   job now (hover / focus / touch-hold stop the one clock; any
+   in-flight fade completes to a single clean line). No JS or
+   reduced motion = parked on the business line, as before.
+   Height: the in-flow .adv-sizer already pinned the strip across
+   the cycle (rig: 78.6px and the Daily Fright top constant through
+   the whole 12s, before and after); a 78px min-height floor in the
+   phone band is added as insurance so the box can never collapse
+   mid-rotation. Copy, seats, link and figures untouched. */
+.adv-strip .adv-line {
+  animation: none;
+  transition: opacity 0.45s ease;
+}
+/* Line A parks visible; its .4s delay applies only when it is the
+   ENTERING line (class removed) — leaving is immediate (below). */
+.adv-strip .adv-line-a { opacity: 1; transition-delay: 0.4s; }
+.adv-strip .adv-line-b { opacity: 0; transition-delay: 0s; }
+.adv-strip.adv-show-b .adv-line-a { opacity: 0; transition-delay: 0s; }
+.adv-strip.adv-show-b .adv-line-b { opacity: 1; transition-delay: 0.4s; }
+@media (max-width: 480px) {
+  .adv-strip { min-height: 78px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .adv-strip .adv-line { transition: none; }
+  .adv-strip .adv-line-a { opacity: 1; }
+  .adv-strip .adv-line-b { opacity: 0; }
+}

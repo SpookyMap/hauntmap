@@ -647,14 +647,51 @@ function hmFullHomepage() {
 </a>
 <script>
 (function () {
-  // Hold-to-pause for touch: a finger resting on the strip freezes
-  // the rotation (hover/focus pause is pure CSS in style.css z161).
-  document.querySelectorAll('.adv-strip').forEach(function (s) {
-    s.addEventListener('touchstart', function () { s.classList.add('adv-paused'); }, { passive: true });
-    s.addEventListener('touchend', function () {
-      setTimeout(function () { s.classList.remove('adv-paused'); }, 2500);
-    }, { passive: true });
+  // z168 (Dan, Oct 26): the strip rotation is driven from here — ONE
+  // state class (.adv-show-b) on the strip swaps the two lines, so
+  // the pair can never drift out of phase the way z161's two
+  // independent CSS animations did (they were phase-locked only by a
+  // 6s animation-delay on line B; on Dan's iPhone they desynced and
+  // both lines printed at once, garbled). style.css z168 owns the
+  // sequential fade choreography — the outgoing line fades fully
+  // out, a beat of neither, the incoming line fades in — and this
+  // script owns the single 6s clock both lines obey. No JS, or
+  // prefers-reduced-motion, parks the strip on the business line.
+  var strips = document.querySelectorAll('.adv-strip');
+  if (!strips.length) return;
+  if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  var PERIOD = 6000, timer = null, resumeTimer = null, showingB = false;
+  function render() {
+    strips.forEach(function (s) { s.classList.toggle('adv-show-b', showingB); });
+  }
+  function stop() {
+    if (timer) { clearInterval(timer); timer = null; }
+    if (resumeTimer) { clearTimeout(resumeTimer); resumeTimer = null; }
+  }
+  function start() {
+    stop();
+    timer = setInterval(function () { showingB = !showingB; render(); }, PERIOD);
+  }
+  function pause() {
+    stop();
+    strips.forEach(function (s) { s.classList.add('adv-paused'); });
+  }
+  function resume(delay) {
+    strips.forEach(function (s) { s.classList.remove('adv-paused'); });
+    stop();
+    resumeTimer = setTimeout(start, delay || 0);
+  }
+  strips.forEach(function (s) {
+    s.addEventListener('mouseenter', pause);
+    s.addEventListener('mouseleave', function () { resume(0); });
+    s.addEventListener('focusin', pause);
+    s.addEventListener('focusout', function () { resume(0); });
+    // Hold-to-pause for touch (z161 behaviour kept): a finger resting
+    // on the strip freezes the rotation; it restarts 2.5s after lift.
+    s.addEventListener('touchstart', pause, { passive: true });
+    s.addEventListener('touchend', function () { resume(2500); }, { passive: true });
   });
+  start();
 })();
 </script>
 
