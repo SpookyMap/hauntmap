@@ -3,7 +3,7 @@
 {% block content %}
 <div class="hero-intro">
   <h1>&#x2702;&#xFE0F; DIY Halloween Costumes</h1>
-  <p>Make your own costume this year. Every card below is our quick take on a tutorial we love — and the photo on each card is the <strong>creator's own</strong>, streamed in through Pinterest, YouTube or TikTok's official embeds, so what you see is the real finished costume. Tap any photo to visit the creator, and follow the link on each card for the full step-by-step.</p>
+  <p>Make your own costume this year. Every card below is our quick take on a tutorial we love — and the photo on each card is the <strong>creator's own</strong>, streamed in through Pinterest, YouTube, TikTok or Instagram's official embeds, so what you see is the real finished costume. Tap any photo to visit the creator, and follow the link on each card for the full step-by-step.</p>
   <p>Short on time? Jump to <a href="#last-minute">Last-Minute &amp; No-Sew</a>. Want to browse thousands more? <a href="https://www.pinterest.com/search/pins/?q=diy%20halloween%20costume" target="_blank" rel="noopener">Search DIY costumes on Pinterest &#x2197;</a></p>
   <p>More of a decorator? Our <a href="/diy">DIY Decorations</a> page has the prop builds. Showing off a finished costume instead? Enter the <a href="/costume-contest">Costume Contest</a>.</p>
 </div>
@@ -31,6 +31,12 @@
       <iframe src="https://www.tiktok.com/embed/v2/{{ c.tt }}" allowfullscreen scrolling="no" allow="encrypted-media; picture-in-picture" loading="lazy" title="{{ c.name }}"></iframe>
     </div>
     <p class="costume-media-note">&#x1F4F7; Video by {{ c.source }}, shown via TikTok&rsquo;s official embed</p>
+    {% elif c.ig %}
+    <button type="button" class="ig-facade" data-ig="{{ c.ig }}" aria-label="Play {{ c.name }} reel by {{ c.source }} on Instagram">
+      <img src="{{ c.ig_thumb }}" alt="" loading="lazy">
+      <span class="yt-play" aria-hidden="true">&#9654;</span>
+    </button>
+    <p class="costume-media-note">&#x1F4F7; Reel by {{ c.source }}, via Instagram — tap to play</p>
     {% endif %}
     <h3>{{ c.name }}</h3>
     <p class="diy-creator">For: {{ c.who }}</p>
@@ -44,7 +50,7 @@
 {% endfor %}
 
 <div class="costume-credits">
-  <p>Every idea above is credited to its creator. The photos and videos are the creators&rsquo; own, shown through Pinterest, YouTube and TikTok&rsquo;s official embeds — we never copy or re-host their pictures, and the full instructions live on their sites. Are you one of the creators and want a card changed or removed? Just say the word. Found a costume tutorial we should feature? <a href="/upload">Tell us about it</a>.</p>
+  <p>Every idea above is credited to its creator. The photos and videos are the creators&rsquo; own, shown through Pinterest, YouTube, TikTok and Instagram&rsquo;s official embeds — we never copy or re-host their pictures or videos, and the full instructions live on their sites. Are you one of the creators and want a card changed or removed? Just say the word. Found a costume tutorial we should feature? <a href="/upload">Tell us about it</a>.</p>
 </div>
 
 <script>
@@ -61,6 +67,22 @@ document.addEventListener('click', function (ev) {
   f.setAttribute('allow', 'autoplay; encrypted-media; fullscreen; picture-in-picture');
   f.setAttribute('allowfullscreen', '');
   f.setAttribute('title', b.getAttribute('aria-label') || 'YouTube video');
+  b.replaceWith(f);
+});
+// Instagram click-to-play facades (same pattern as YouTube above): the
+// reel's own cover frame — fetched from Instagram's CDN — shows first, and
+// Instagram's official embed player only loads when a visitor taps. The
+// video itself is never re-hosted here.
+document.addEventListener('click', function (ev) {
+  var b = ev.target.closest && ev.target.closest('.ig-facade');
+  if (!b || b.dataset.loaded) return;
+  b.dataset.loaded = '1';
+  var f = document.createElement('iframe');
+  f.className = 'ig-frame';
+  f.src = 'https://www.instagram.com/reel/' + b.getAttribute('data-ig') + '/embed';
+  f.setAttribute('allow', 'autoplay; encrypted-media; fullscreen; picture-in-picture');
+  f.setAttribute('allowfullscreen', '');
+  f.setAttribute('title', b.getAttribute('aria-label') || 'Instagram reel');
   b.replaceWith(f);
 });
 // Pinterest pin embeds, lazy: Pinterest's own pinit.js (the official embed

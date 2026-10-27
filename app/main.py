@@ -3687,6 +3687,18 @@ def diy_page(request: Request):
 
 COSTUME_SECTIONS = [
     {
+        "id": "just-added",
+        "title": "&#x2B50; Just Added",
+        "sub": "The newest costume on the page — fresh from the feed, straight to the top.",
+        "ideas": [
+            {"name": "DIY Groot Costume from Foam Pipe Insulation", "who": "Adults & teens", "difficulty": "Hard", "time": "A weekend or more",
+             "materials": "Foam pipe insulation tubes, hot glue, brown and grey paint for the bark finish, moss or faux greenery for the sprouts",
+             "blurb": "Danielle built a full Groot out of hardware-store foam pipe insulation — twisted foam tubes become the vine-like limbs and bark body, moss and all. Her Groot broke the internet years ago and she still calls it one of her favorite homemade costumes. Tap the photo to watch the reel.",
+             "source": "Danielle | DIY + DESIGN (@themindfulhaven)", "url": "https://www.instagram.com/reel/Dew32sWMjd8/",
+             "ig": "Dew32sWMjd8", "ig_thumb": "/static/img/groot_costume_reel.jpg"},
+        ],
+    },
+    {
         "id": "kids",
         "title": "&#x1F383; For Kids",
         "sub": "Weekend projects and after-school builds — cardboard, felt and a glue gun go a long way.",

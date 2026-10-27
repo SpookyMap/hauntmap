@@ -6106,3 +6106,16 @@ main.wrap:has(> .vt-tv-strip-bottom) { padding-bottom: 0; }
   border: 1px solid #b18cff; border-radius: 999px;
   font-size: 0.72rem; font-weight: 700; letter-spacing: 0.02em;
   padding: 0.22rem 0.6rem; }
+
+/* ============ z187: DIY COSTUMES INSTAGRAM REEL FACADE (Dan, Oct 27) ====
+   First Instagram entry on /diy-costumes (Danielle @themindfulhaven's DIY
+   Groot reel, the new #1 card): a click-to-play facade in the .yt-facade
+   pattern but vertical 9/16 — the reel's own cover frame (fetched from
+   Instagram's CDN, never the video) shows until tap, then Instagram's
+   official embed iframe (.ig-frame, sized like .diy-embed's player)
+   swaps in. Scoped to .costume-card so nothing else moves. */
+.costume-card .ig-facade { position: relative; display: block; width: 100%; max-width: 300px; aspect-ratio: 9 / 16; margin: 0 auto 0.35rem; padding: 0; border: 1px solid #274860; border-radius: var(--radius); overflow: hidden; background: #000; cursor: pointer; }
+.costume-card .ig-facade img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.costume-card .ig-facade:hover .yt-play, .costume-card .ig-facade:focus-visible .yt-play { background: #ff8c42; }
+.costume-card .ig-frame { width: 100%; max-width: 340px; height: 600px; margin: 0 auto 0.35rem; border: 0; border-radius: 10px; display: block; background: #000; }
+ (DIY COSTUMES: GROOT REEL AT THE TOP (Dan, Oct 27): Dan sent Danielle | DIY + DESIGN's Instagram reel (Dew32sWMjd8) — 'New diy costumes' + 'Put at the top of page.' The reel: a full Groot built from foam pipe insulation (posted Oct 21, 2026; her caption: the homemade costume that 'broke the internet'). It is the new #1 card in a new 'Just Added' section above For Kids on /diy-costumes; nothing else moved. Pattern: first Instagram entry on the page — a click-to-play facade mirroring the YouTube one (the reel's OWN cover frame, fetched from Instagram's CDN before the signed URL expired, stored as static/img/groot_costume_reel.jpg — the video itself is never re-hosted); on tap it swaps in Instagram's official embed iframe (instagram.com/reel/<id>/embed, allow incl. fullscreen + allowfullscreen). Credit on the card: 'Danielle | DIY + DESIGN (@themindfulhaven)'; the card's tutorial link opens the reel on Instagram. Intro + credits copy now name Instagram among the official-embed sources. CSS: facade/frame rules appended (vertical 9/16 facade, 600px embed frame sized like .diy-embed's player), scoped to .costume-card.)
