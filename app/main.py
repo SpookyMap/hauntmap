@@ -6524,7 +6524,7 @@ BUSINESS_PACKAGES = [
      "blurb": "Your business in front of local Halloween haunters.",
      "features": ["Logo + link in the Featured Sponsors row on the homepage",
                   "Featured pin for your location",
-                  "Runs through Halloween — and on the Jolly Map through Christmas"]},
+                  "A full year of sponsorship — site, social media, and newsletter for 12 months from purchase, through the same holiday next year"]},
     {"id": "premium", "name": "Premium", "price": 500,
      "stripe_link": "https://buy.stripe.com/7sY7sK3K05ySge49iebbG01",
      "blurb": "Homepage plus the weekly email — for a full year.",
@@ -6585,29 +6585,31 @@ SPONSOR_ORDER_OPTIONS = [o for g in SPONSOR_ORDER_GROUPS for o in g["options"]]
 
 @app.get("/advertise", response_class=HTMLResponse)
 def advertise(request: Request):
-    today = datetime.now(timezone.utc).date().isoformat()
-    week_ago = (datetime.now(timezone.utc) - timedelta(days=7)).isoformat()
+    today_d = datetime.now(timezone.utc).date()
     stats = {"today": 0, "week": 0, "pins": 0, "towns": 0}
+    # Sponsor-facing counts are the SAME human-only numbers the media
+    # kit quotes, sourced from the shared _mk_* helpers (Oct 27, 2026
+    # fix): this handler used to run its own COUNT(DISTINCT sid) over
+    # ALL page_views with no machine-path exclusion, so /healthz pings
+    # (each carrying its own sid) inflated "visitors today" ~3x
+    # (17,478 shown vs the kit's 5,810) and its rolling-7x24h "week"
+    # window (199,644) disagreed with the kit's 7-calendar-day window
+    # (104,651). One computation, both pages, never drift again.
+    try:
+        vis = _mk_visitors(today_d)
+        stats["today"] = vis["today"]
+        stats["week"] = vis["week"]
+    except Exception:
+        pass
+    try:
+        stats["pins"] = sum(_category_counts().values())
+        stats["towns"] = _mk_geo()["town_count"]
+    except Exception:
+        pass
     with get_conn(DB_PATH) as conn:
-        try:
-            stats["today"] = conn.execute(
-                "SELECT COUNT(DISTINCT sid) FROM page_views WHERE substr(viewed_at, 1, 10) = ?",
-                (today,)).fetchone()[0]
-            stats["week"] = conn.execute(
-                "SELECT COUNT(DISTINCT sid) FROM page_views WHERE viewed_at >= ?",
-                (week_ago,)).fetchone()[0]
-        except Exception:
-            pass
-        stats["pins"] = conn.execute(
-            "SELECT COUNT(*) FROM entries WHERE hidden = 0").fetchone()[0]
         sponsors = [dict(r) for r in conn.execute(
             "SELECT * FROM sponsors WHERE is_active = 1 ORDER BY "
             "CASE tier WHEN 'title' THEN 0 WHEN 'premium' THEN 1 ELSE 2 END LIMIT 1").fetchall()]
-    with get_conn(DB_PATH) as conn:
-        town_rows = conn.execute(
-            "SELECT DISTINCT town FROM entries WHERE hidden = 0").fetchall()
-    stats["towns"] = len({lbl for r in town_rows
-                          if (lbl := extract_city_state(r["town"] or ""))})
     pkg = request.query_params.get("pkg", "")
     if pkg not in {o["id"] for o in SPONSOR_ORDER_OPTIONS}:
         pkg = ""
