@@ -833,6 +833,29 @@ def init_db(db_path: Path) -> None:
             conn, 30,
             "https://www.tiktok.com/@growingwithju/video/7695491140866428174",
         )
+        # Dan-sent video append (Oct 27): @hownola's Ghost Manor
+        # video (posted Oct 23, 2026) joins its one pin (6088, Ghost
+        # Manor, 2502 Magazine St, New Orleans LA) as a second video —
+        # @closetsamples' video stays primary. add_entry_video dedupes
+        # by video id, so repeat boots are no-ops and the primary is
+        # never touched. Cover is the video's own frame.
+        add_entry_video(
+            conn, 6088,
+            "https://www.tiktok.com/@hownola/video/7699937273437015309",
+            "/static/img/tt_7699937273437015309.jpg",
+        )
+        # Pin 6088 coords correction (Oct 27): its upload geocode
+        # landed on the north shore (30.4306, -90.4171), ~38 mi from
+        # the verified address point — Nominatim and Google place
+        # data agree 2502 Magazine St is 29.9273, -90.0800. Guarded
+        # to the bad pair so it fires once and never overrides a
+        # later admin-set position.
+        conn.execute(
+            "UPDATE entries SET lat = ?, lng = ? WHERE id = 6088 "
+            "AND ABS(lat - 30.430578882834343) < 0.001 "
+            "AND ABS(lng + 90.41706556462721) < 0.001",
+            (29.9272990, -90.0799994),
+        )
         if "is_handpicked" not in cols:
             # Hand-picked feed boost (Dan, Oct 23): pins Dan personally
             # sent/curated lead every feed. Ranking data is never
