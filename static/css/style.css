@@ -5713,3 +5713,32 @@ main.wrap:has(> .vt-tv-strip-bottom) { padding-bottom: 0; }
     height: calc(100% + 0.35em);
   }
 }
+/* ============ z172: LOGO CENTRED ON THE EVENTS COLUMN (Dan, Oct 26) ====
+   Dan, from his laptop photo: "Center HauntMap logo on laptop view."
+   The ghost + HAUNTMAP lockup was centred in its own 130px flank zone
+   (z68), but the left column it sits over — the Events & Parties GIF
+   in row two — is wider than the zone, so the lockup's centre fell
+   LEFT of the column's axis at every desktop size (rig-measured on
+   the z171 tree: 26.66px at >=1200, 18.33px at 1000-1199, 11.66px at
+   761-999). The fix shifts the lockup IMAGE right onto the column
+   axis by exactly that offset per band: the shift is the GIF's
+   half-width minus the zone's half-width (the GIF renders at its
+   exact 10:3 aspect — 183.33 / 166.67 / 153.33px wide at its 55 /
+   50 / 46px band heights — and the zone half is 65px).
+   Deliberately NOT done by widening the zone: z68's twin 130px
+   flank zones (logo left, Frankenstein right) are what land the
+   hook band's centre on the banner centre, and the hook, Franken-
+   stein, the nav rows and the logo's size are all untouched. The
+   shifted lockup's right edge lands ~0.3px past the zone into the
+   band's 0.9rem gap — no contact with the hook. Phone (<=760) and
+   compact landscape (<=500 tall) sit outside these media queries
+   and render byte-identical. */
+@media (min-width: 761px) and (min-height: 501px) {
+  .header-band .brand-logo { transform: translateX(11.66px); }
+}
+@media (min-width: 1000px) and (min-height: 501px) {
+  .header-band .brand-logo { transform: translateX(18.33px); }
+}
+@media (min-width: 1200px) and (min-height: 501px) {
+  .header-band .brand-logo { transform: translateX(26.66px); }
+}
