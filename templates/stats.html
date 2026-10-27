@@ -101,15 +101,15 @@
 <p style="color:#888;margin-bottom:24px;">No pin interactions yet in the last 7 days.</p>
 {% endif %}
 
-<h3>⏱️ Time on each page <span style="font-size:0.75em;color:#888;">(last 7 days — active time, tab in front)</span></h3>
+<h3>⏱️ Time on each page <span style="font-size:0.75em;color:#888;">(last 7 days — active time, tab in front; top 40 pages)</span></h3>
 {% if page_time %}
 <table style="width:100%;border-collapse:collapse;margin-bottom:8px;">
-  <tr><th style="text-align:left;padding:8px;">Page</th><th style="text-align:right;padding:8px;">Views</th><th style="text-align:right;padding:8px;">Avg active</th><th style="text-align:right;padding:8px;">Median active</th><th style="text-align:right;padding:8px;">Total attention</th><th style="text-align:right;padding:8px;">Quick exits (&lt;5s)</th></tr>
+  <tr><th style="text-align:left;padding:8px;">Page</th><th style="text-align:right;padding:8px;">Views</th><th style="text-align:right;padding:8px;">Measured</th><th style="text-align:right;padding:8px;">Avg active</th><th style="text-align:right;padding:8px;">Median active</th><th style="text-align:right;padding:8px;">Total attention</th><th style="text-align:right;padding:8px;">Quick exits (&lt;5s)</th></tr>
   {% for r in page_time %}
-  <tr><td style="padding:8px;"><a href="{{ r.path }}">{{ r.label }}</a></td><td style="text-align:right;padding:8px;">{{ r.views }}</td><td style="text-align:right;padding:8px;">{{ r.avg_s }}</td><td style="text-align:right;padding:8px;">{% if r.median_s is not none %}{{ r.median_s }}{% else %}&mdash;{% endif %}</td><td style="text-align:right;padding:8px;">{{ r.total_s }}</td><td style="text-align:right;padding:8px;">{% if r.quick is not none %}{{ "%.0f"|format(r.quick) }}%{% else %}&mdash;{% endif %}</td></tr>
+  <tr><td style="padding:8px;"><a href="{{ r.path }}">{{ r.label }}</a></td><td style="text-align:right;padding:8px;">{{ r.views }}</td><td style="text-align:right;padding:8px;">{{ r.measured }}</td><td style="text-align:right;padding:8px;">{{ r.avg_s }}</td><td style="text-align:right;padding:8px;">{% if r.median_s is not none %}{{ r.median_s }}{% else %}&mdash;{% endif %}</td><td style="text-align:right;padding:8px;">{{ r.total_s }}</td><td style="text-align:right;padding:8px;">{% if r.quick is not none %}{{ "%.0f"|format(r.quick) }}%{% else %}&mdash;{% endif %}</td></tr>
   {% endfor %}
 </table>
-<p style="color:#888;font-size:0.85em;margin-bottom:24px;">The timer counts only while the page is the front tab — a page left open in the background earns nothing, and counting stops at 30 active minutes per page view. <strong>Avg active</strong> = total attention &divide; all views. <strong>Median active</strong> and <strong>quick exits</strong> are worked out per individual page view from the views the timer measured; a stay under about a second sends no timing at all, so the very fastest bounces don&rsquo;t appear in those two columns. Pages with a high quick-exit share aren&rsquo;t holding people — those are the pages to work on.</p>
+<p style="color:#888;font-size:0.85em;margin-bottom:24px;">The timer counts only while the page is the front tab — a page left open in the background earns nothing, and counting stops at 30 active minutes per page view. <strong>Views</strong> are human views: machine paths and known bot / crawler / health-check user agents are excluded (user agents are recorded since Oct 27, 2026 — earlier views can&rsquo;t be screened by agent, only by path). <strong>Measured</strong> is how many of those views the timer actually timed — a page whose Measured count is far below its Views is mostly being bounced off or read without JavaScript, so trust its averages less. <strong>Avg active</strong> = total attention &divide; all views. <strong>Median active</strong> and <strong>quick exits</strong> are worked out per individual page view from the views the timer measured; a stay under about a second sends no timing at all, so the very fastest bounces don&rsquo;t appear in those two columns. Pages with a high quick-exit share aren&rsquo;t holding people — those are the pages to work on.</p>
 {% else %}
 <p style="color:#888;margin-bottom:24px;">No page views yet in the last 7 days.</p>
 {% endif %}
@@ -147,7 +147,7 @@
 </table>
 
 <h3>🌍 Visitors by geography <span style="font-size:0.75em;color:#888;">(collecting since {{ geo_since }})</span></h3>
-<p style="color:#888;font-size:0.85em;">Where visitors are, from Cloudflare&rsquo;s location headers on each page view. <strong>Visitors</strong> counts each person once per place (distinct visitor ids); <strong>Views</strong> is raw page views, like the tables above. Location is recorded only on views since {{ geo_since }} &mdash; older views carry no geography, so this is not all-time coverage.</p>
+<p style="color:#888;font-size:0.85em;">Where visitors are, from Cloudflare&rsquo;s location headers on each page view. <strong>Visitors</strong> counts each person once per place (distinct visitor ids); <strong>Views</strong> is raw page views, like the tables above. Location is recorded only on views since {{ geo_since }} &mdash; older views carry no geography, so this is not all-time coverage. The U.S. states table below goes further: human views only, every state, with its own coverage note.</p>
 {% if geo.countries %}
 <h4 style="margin-bottom:8px;">Top countries</h4>
 <table style="width:100%;border-collapse:collapse;margin-bottom:24px;">
@@ -159,14 +159,45 @@
 {% else %}
 <p style="color:#888;">No location data yet &mdash; countries start appearing here with the next visits.</p>
 {% endif %}
-{% if geo.states %}
-<h4 style="margin-bottom:8px;">Top US states</h4>
-<table style="width:100%;border-collapse:collapse;margin-bottom:24px;">
-  <tr><th style="text-align:left;padding:8px;">State</th><th style="text-align:right;padding:8px;">Visitors</th><th style="text-align:right;padding:8px;">Views</th></tr>
-  {% for row in geo.states %}
-  <tr><td style="padding:8px;">{{ row.label }}</td><td style="text-align:right;padding:8px;">{{ row.visitors }}</td><td style="text-align:right;padding:8px;">{{ row.views }}</td></tr>
+<h4 style="margin-bottom:8px;">🇺🇸 U.S. states <span style="font-size:0.8em;color:#888;">(human views only — click a column to sort)</span></h4>
+{% if us_states.coverage %}
+<p style="color:#888;font-size:0.85em;">State is known for <strong style="color:#ddd;">{{ us_states.coverage.state_known_views }}</strong> of <strong style="color:#ddd;">{{ us_states.coverage.us_views }}</strong> U.S. human views ({{ us_states.coverage.known_pct }}%). Of the state-known views, {{ us_states.coverage.cf_views }} came from Cloudflare&rsquo;s location headers and {{ us_states.coverage.ip_views }} from the local IP-location lookup (collecting since {{ ip_geo_since }}). {{ us_states.coverage.total_human }} human views in total, {{ us_states.coverage.with_country }} of them with any country recorded. Human = machine paths and known bot / health-check / crawler user agents excluded; views before user-agent recording (Oct 27, 2026) are screened by path only. State from an IP lookup is approximate — it&rsquo;s where the visitor&rsquo;s internet provider routes them, not a street address.</p>
+{% endif %}
+{% if us_states.rows %}
+<table class="sortable" style="width:100%;border-collapse:collapse;margin-bottom:24px;">
+  <thead><tr><th data-type="str" style="text-align:left;padding:8px;cursor:pointer;">State</th><th data-type="num" style="text-align:right;padding:8px;cursor:pointer;">Visitors (7d)</th><th data-type="num" style="text-align:right;padding:8px;cursor:pointer;">Views (7d)</th><th data-type="num" style="text-align:right;padding:8px;cursor:pointer;">Visitors</th><th data-type="num" style="text-align:right;padding:8px;cursor:pointer;">Views</th><th data-type="num" style="text-align:right;padding:8px;cursor:pointer;">Share</th></tr></thead>
+  <tbody>
+  {% for row in us_states.rows %}
+  <tr><td style="padding:8px;">{{ row.label }}</td><td style="text-align:right;padding:8px;">{{ row.visitors7 }}</td><td style="text-align:right;padding:8px;">{{ row.views7 }}</td><td style="text-align:right;padding:8px;">{{ row.visitors }}</td><td style="text-align:right;padding:8px;">{{ row.views }}</td><td style="text-align:right;padding:8px;">{{ row.share }}%</td></tr>
   {% endfor %}
+  {% if us_states.unknown %}
+  <tr style="color:#888;"><td style="padding:8px;">U.S. — state not recorded</td><td style="text-align:right;padding:8px;">{{ us_states.unknown.visitors7 }}</td><td style="text-align:right;padding:8px;">{{ us_states.unknown.views7 }}</td><td style="text-align:right;padding:8px;">{{ us_states.unknown.visitors }}</td><td style="text-align:right;padding:8px;">{{ us_states.unknown.views }}</td><td style="text-align:right;padding:8px;">&mdash;</td></tr>
+  {% endif %}
+  </tbody>
 </table>
+<script>
+document.querySelectorAll("table.sortable").forEach(function (tbl) {
+  var heads = tbl.querySelectorAll("th");
+  heads.forEach(function (th, idx) {
+    th.addEventListener("click", function () {
+      var body = tbl.tBodies[0];
+      var rows = Array.prototype.slice.call(body.rows);
+      var dir = th.dataset.dir === "asc" ? -1 : 1;
+      heads.forEach(function (h) { delete h.dataset.dir; });
+      th.dataset.dir = dir === 1 ? "asc" : "desc";
+      var num = th.dataset.type === "num";
+      rows.sort(function (a, b) {
+        var x = a.cells[idx].textContent.trim(), y = b.cells[idx].textContent.trim();
+        if (num) { x = parseFloat(x.replace(/[^0-9.\-]/g, "")) || 0; y = parseFloat(y.replace(/[^0-9.\-]/g, "")) || 0; return (x - y) * dir; }
+        return x.localeCompare(y) * dir;
+      });
+      rows.forEach(function (r) { body.appendChild(r); });
+    });
+  });
+});
+</script>
+{% else %}
+<p style="color:#888;">No U.S. state data yet — states start appearing here as visits arrive (IP-location lookup is live; it only knows views from {{ ip_geo_since }} on).</p>
 {% endif %}
 {% if geo.cities %}
 <h4 style="margin-bottom:8px;">Top cities</h4>
@@ -177,7 +208,7 @@
   {% endfor %}
 </table>
 {% endif %}
-{% if geo.countries and not (geo.states or geo.cities) %}
-<p style="color:#888;font-size:0.85em;margin-bottom:24px;">Country is flowing. State &amp; city tables appear once region data arrives &mdash; that detail needs Cloudflare&rsquo;s &ldquo;Add visitor location headers&rdquo; transform switched on for the zone (dashboard setting).</p>
+{% if geo.countries and not geo.cities %}
+<p style="color:#888;font-size:0.85em;margin-bottom:24px;">States are covered by the IP-location lookup above. <strong>Cities</strong> (and edge-exact states) still need Cloudflare&rsquo;s &ldquo;Add visitor location headers&rdquo; managed transform switched on for the zone — Cloudflare dashboard &rarr; Rules &rarr; Transform Rules &rarr; Managed Transforms. Worth flipping during the next Cloudflare pass: it makes state exact instead of approximate and turns the city table on.</p>
 {% endif %}
 {% endblock %}

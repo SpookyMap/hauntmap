@@ -136,9 +136,11 @@ CREATE TABLE IF NOT EXISTS page_views (
     device TEXT,                          -- coarse UA bucket: iOS/Android/Windows/Mac/Linux/Other
     sid TEXT,                             -- anonymous hm_sid session cookie id
     country TEXT,                         -- Cloudflare cf-ipcountry (Oct 26 geo stats); NULL on older rows
-    region TEXT,                          -- cf-ipregion: US state code when resolvable, else CF's region name
+    region TEXT,                          -- cf-ipregion: US state code when resolvable, else CF's region name; from Oct 27 also filled by the writer's IP lookup when the header is absent
     city TEXT,                            -- cf-ipcity (needs CF's visitor-location transform); NULL when absent
-    user_agent TEXT                       -- raw User-Agent header, <=512 chars (Oct 27 UA logging); NULL on older rows
+    user_agent TEXT,                      -- raw User-Agent header, <=512 chars (Oct 27 UA logging); NULL on older rows
+    ip_addr TEXT,                         -- visitor IP as delivered by Cloudflare (cf-connecting-ip); tracker-table only, never displayed (Oct 27); NULL on older rows
+    geo_src TEXT                          -- where region came from: 'cf' (Cloudflare header) | 'ip' (bundled GeoLite2 lookup); NULL when no region
 );
 CREATE INDEX IF NOT EXISTS idx_page_views_date ON page_views(viewed_at);
 CREATE TABLE IF NOT EXISTS sponsors (
@@ -490,6 +492,16 @@ def init_db(db_path: Path) -> None:
         # pattern; older rows stay NULL.
         if "user_agent" not in pvcols:
             conn.execute("ALTER TABLE page_views ADD COLUMN user_agent TEXT")
+        # Visitor IP + region source (Dan, Oct 27): ip_addr is the
+        # visitor address as delivered by Cloudflare (cf-connecting-ip),
+        # stored in this tracker table only and never displayed — the
+        # analytics writer resolves a U.S. state from it against the
+        # bundled GeoLite2 database when Cloudflare's headers carry no
+        # region, and geo_src records where the region came from
+        # ('cf' | 'ip'). Same startup-ensure pattern; older rows NULL.
+        for col in ("ip_addr", "geo_src"):
+            if col not in pvcols:
+                conn.execute(f"ALTER TABLE page_views ADD COLUMN {col} TEXT")
         # HauntMap Social (Phase 1): a pin's owner once a haunter claims
         # it. NULL until claimed; profile "My haunts" reads this column.
         if "owner_user_id" not in cols:

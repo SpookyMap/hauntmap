@@ -8,6 +8,7 @@ voting, not determined abuse. See the vote route below.
 import calendar
 import hashlib
 import hmac
+import ipaddress
 import logging
 import os
 import queue
@@ -467,10 +468,33 @@ _analytics_thread: threading.Thread | None = None
 def _analytics_write_batch(conn, batch: list) -> None:
     pv = [r[1:] for r in batch if r[0] == "pv"]
     if pv:
+        # Region source + IP fallback (Oct 27): a row's region normally
+        # comes from Cloudflare's headers ('cf'). When the header
+        # carried none — the zone's visitor-location transform is off,
+        # so this is most rows today — the writer resolves the state
+        # from the row's stored visitor IP against the bundled
+        # GeoLite2 database ('ip'). Resolution lives HERE, on the
+        # writer thread, never in the request path; a missing database
+        # or library degrades silently to header-only geography.
+        rows = []
+        for r in pv:
+            path_, ts_, ref_, dev_, sid_, country_, region_, city_, ua_ = r[:9]
+            ip_addr = r[9] if len(r) > 9 else None
+            geo_src = "cf" if region_ else None
+            if ip_addr and (not region_ or not country_):
+                ip_country, ip_state = _geoip_lookup(ip_addr)
+                if ip_country:
+                    if not country_:
+                        country_ = ip_country
+                    if not region_ and ip_country == "US" and ip_state:
+                        region_ = ip_state
+                        geo_src = "ip"
+            rows.append((path_, ts_, ref_, dev_, sid_, country_, region_,
+                         city_, ua_, ip_addr, geo_src))
         conn.executemany(
             "INSERT INTO page_views (path, viewed_at, referrer, device, sid, "
-            "country, region, city, user_agent) "
-            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", pv)
+            "country, region, city, user_agent, ip_addr, geo_src) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", rows)
     engaged = [r[1:] for r in batch if r[0] == "engaged"]
     if engaged:
         conn.executemany(
@@ -599,6 +623,21 @@ def _ua_family(ua: str | None) -> str:
     return "other"
 
 
+def _machine_ua_sql(column: str = "user_agent") -> tuple:
+    """(sql_fragment, params): TRUE for rows whose stored User-Agent
+    does NOT classify as a machine family under _UA_FAMILY_RULES — the
+    report-time human screen for the traffic meta analysis (Oct 27),
+    mirroring _ua_family exactly on the machine side (the needles are
+    matched as substrings of the lowered UA, as the classifier does).
+    Rows with no UA stored (everything before Oct 27's UA logging)
+    pass: they cannot be UA-screened either way, and the admin page
+    labels that instead of silently dropping the pre-UA era."""
+    needles = sorted({n for _, ns in _UA_FAMILY_RULES for n in ns})
+    likes = " OR ".join(f"lower({column}) LIKE ?" for _ in needles)
+    return (f"({column} IS NULL OR NOT ({likes}))",
+            tuple(f"%{n}%" for n in needles))
+
+
 # Date the page_views geo columns started collecting (ship date of the
 # geography panel) — the /admin stats page prints it so the breakdown
 # is never mistaken for all-time coverage.
@@ -629,6 +668,78 @@ def _pv_geo(request: Request) -> tuple:
     return country, region, city
 
 
+# ------------------------------------------- IP state fallback (Oct 27)
+# Dan's ask: which U.S. states are visiting. Cloudflare's region header
+# only arrives with the zone's visitor-location transform, which is off
+# (production rows carry country but ZERO region/city) — so page views
+# also record the visitor's IP address (tracker table only, never
+# displayed anywhere) and the analytics writer resolves the state from
+# the bundled GeoLite2-City database (app/geoip/, MaxMind free edition
+# — no external API calls, nothing leaves the server). State-level
+# resolution for the admin stats table is all the address is used for.
+_IP_GEO_COLLECTING_SINCE = "Oct 27, 2026"
+_GEOIP_DB_PATH = Path(__file__).parent / "geoip" / "GeoLite2-City.mmdb"
+_geoip_reader = None  # None = not tried yet, False = unavailable
+_geoip_lock = threading.Lock()
+
+
+def _geoip_lookup(ip: str) -> tuple:
+    """(country_iso, us_state_code) for an IP or network address from
+    the bundled GeoLite2-City database; (None, None) when the database
+    or library is unavailable or the address isn't in it. Called only
+    from the analytics writer thread."""
+    global _geoip_reader
+    if _geoip_reader is None:
+        with _geoip_lock:
+            if _geoip_reader is None:
+                try:
+                    import maxminddb
+                    _geoip_reader = (maxminddb.open_database(
+                        str(_GEOIP_DB_PATH)) if _GEOIP_DB_PATH.exists()
+                        else False)
+                except Exception:
+                    _geoip_reader = False
+    if not _geoip_reader:
+        return None, None
+    try:
+        rec = _geoip_reader.get(ip)
+    except Exception:
+        return None, None
+    if not rec:
+        return None, None
+    country = ((rec.get("country") or {}).get("iso_code")
+               or "").strip().upper() or None
+    state = None
+    if country == "US":
+        subs = rec.get("subdivisions") or []
+        if subs:
+            code = str(subs[0].get("iso_code") or "").strip().upper()
+            if code.startswith("US-"):
+                code = code[3:]
+            if code in US_STATE_CODES:
+                state = code
+    return country, state
+
+
+def _pv_ip(request: Request) -> str | None:
+    """The visitor's IP address, canonicalized, for the writer's state
+    lookup. The site sits behind Cloudflare, so the real visitor
+    address is cf-connecting-ip; the first x-forwarded-for hop and the
+    direct peer are fallbacks for non-proxied requests. Unparseable =
+    None (nothing stored). String work only — this runs in the
+    tracking middleware and must stay microseconds-cheap."""
+    h = request.headers
+    raw = (h.get("cf-connecting-ip") or "").strip()
+    if not raw:
+        raw = (h.get("x-forwarded-for") or "").split(",")[0].strip()
+    if not raw and request.client:
+        raw = request.client.host or ""
+    try:
+        return str(ipaddress.ip_address(raw))
+    except ValueError:
+        return None
+
+
 @app.middleware("http")
 async def _track_page_view(request: Request, call_next):
     """Log page views for the admin traffic dashboard. Skips static/media/admin, logged-in admin visits, and Jarvis's own verification checks.
@@ -656,7 +767,8 @@ async def _track_page_view(request: Request, call_next):
                     _analytics_q.put((
                         "pv", path, datetime.now(timezone.utc).isoformat(),
                         referrer, _device_bucket(ua), sid,
-                        country, region, city, ua_stored))
+                        country, region, city, ua_stored,
+                        _pv_ip(request)))
                     if new_sid:
                         response.set_cookie("hm_sid", sid, max_age=30 * 24 * 3600,
                                             httponly=True, samesite="lax")
@@ -8391,9 +8503,10 @@ def admin_fanart_delete(fid: int, request: Request):
 # Built from the engaged-time beacon rows (Item 6): every row is an
 # incremental delta of VISIBLE time on a path, stamped with the
 # beacon's per-page-load pvid, so SUM(seconds) GROUP BY path, pvid
-# reconstructs one page view's dwell. Views come from page_views (the
-# full count, including sub-second and no-JS views the beacon never
-# sees); avg = total attention / views. Median + quick-exit share are
+# reconstructs one page view's dwell. Views come from page_views
+# (human-screened since Oct 27 — machine paths + machine user agents
+# excluded — but still including sub-second and no-JS views the beacon
+# never sees); avg = total attention / views. Median + quick-exit share are
 # computed over the measured page views only (pvid groups) — a stay
 # under ~1s sends no beacon at all, so the very fastest bounces are
 # invisible to those two columns; the template says so in plain words.
@@ -8427,6 +8540,12 @@ def _fmt_attention(sec: float) -> str:
 
 def _page_time_build() -> list:
     rows_out: list = []
+    # Views are HUMAN views (Oct 27): the machine-UA screen joins the
+    # long-standing machine-path exclusions, so a crawler fetching a
+    # page no longer inflates the denominator its (zero) attention is
+    # averaged over. The beacon side needs no screen — its rows only
+    # exist when a real browser ran the page's timer.
+    frag, frag_params = _machine_ua_sql()
     with get_conn(DB_PATH) as conn:
         cand = conn.execute(
             "SELECT path, COUNT(*) AS views FROM page_views "
@@ -8436,7 +8555,8 @@ def _page_time_build() -> list:
             # and neither are /api/* JSON endpoints.
             "AND path NOT IN ('/healthz', '/favicon.ico', '/robots.txt', "
             "'/sitemap.xml') AND path NOT LIKE '/api/%' "
-            "GROUP BY path ORDER BY views DESC LIMIT 25").fetchall()
+            f"AND {frag} "
+            "GROUP BY path ORDER BY views DESC LIMIT 40", frag_params).fetchall()
         if not cand:
             return rows_out
         paths = [r["path"] for r in cand]
@@ -8496,6 +8616,108 @@ def _fmt_dur_admin(sec: float) -> str:
 
 def _page_time_stats() -> list:
     return _ttl_cached("admin:page_time", _page_time_build)
+
+
+# ------------------------------------------------- US states (Oct 27)
+# Dan's ask: which U.S. states are visiting — the whole map, not a
+# top-20. Built from page_views geography: country has flowed from
+# Cloudflare on every proxied view since Oct 26, but region (state)
+# only arrives with CF's visitor-location transform (off today), so
+# since Oct 27 the analytics writer ALSO resolves the state from the
+# view's stored IP against the bundled GeoLite2 database
+# (geo_src marks which source each row's state came from). Counts are
+# HUMAN views only — the sponsor figures' machine-path screen
+# (_MK_HUMAN) plus the machine-UA screen (_machine_ua_sql) — and the
+# coverage block states plainly how many U.S. views carry a state at
+# all, so a thin table can never masquerade as the whole audience.
+# TTL-cached like the other admin aggregates.
+
+def _us_states_build() -> dict:
+    frag, frag_params = _machine_ua_sql()
+    human = f"{_MK_HUMAN} AND {frag}"
+    win7 = "viewed_at >= datetime('now', '-7 days')"
+    out = {"rows": [], "unknown": None, "coverage": {}}
+    with get_conn(DB_PATH) as conn:
+        def _count(where: str) -> int:
+            return conn.execute(
+                f"SELECT COUNT(*) FROM page_views WHERE {where}",
+                frag_params).fetchone()[0]
+
+        known_views = _count(
+            f"{human} AND country = 'US' "
+            "AND region IS NOT NULL AND region != ''")
+        cov = {
+            "total_human": _count(human),
+            "with_country": _count(
+                f"{human} AND country IS NOT NULL AND country != ''"),
+            "us_views": _count(f"{human} AND country = 'US'"),
+            "state_known_views": known_views,
+            "cf_views": 0, "ip_views": 0,
+        }
+        for r in conn.execute(
+                "SELECT geo_src, COUNT(*) AS n FROM page_views "
+                f"WHERE {human} AND country = 'US' "
+                "AND region IS NOT NULL AND region != '' "
+                "GROUP BY geo_src", frag_params):
+            if r["geo_src"] == "cf":
+                cov["cf_views"] = r["n"]
+            elif r["geo_src"] == "ip":
+                cov["ip_views"] = r["n"]
+        agg_sql = (
+            "SELECT COUNT(DISTINCT sid) AS visitors, COUNT(*) AS views, "
+            "COUNT(DISTINCT CASE WHEN {w} THEN sid END) AS visitors7, "
+            "SUM(CASE WHEN {w} THEN 1 ELSE 0 END) AS views7 "
+            "FROM page_views WHERE {cond}")
+        unk = conn.execute(
+            agg_sql.format(w=win7, cond=(
+                f"{human} AND country = 'US' "
+                "AND (region IS NULL OR region = '')")),
+            frag_params).fetchone()
+        if unk and unk["views"]:
+            out["unknown"] = {
+                "visitors": unk["visitors"], "views": unk["views"],
+                "visitors7": unk["visitors7"], "views7": unk["views7"]}
+        merged: dict = {}
+        for r in conn.execute(
+                "SELECT region, COUNT(DISTINCT sid) AS visitors, "
+                "COUNT(*) AS views, "
+                f"COUNT(DISTINCT CASE WHEN {win7} THEN sid END) "
+                "AS visitors7, "
+                f"SUM(CASE WHEN {win7} THEN 1 ELSE 0 END) AS views7 "
+                f"FROM page_views WHERE {human} AND country = 'US' "
+                "AND region IS NOT NULL AND region != '' "
+                "GROUP BY region", frag_params):
+            # Stored regions are already state codes when resolvable,
+            # but a raw CF region name can survive as a fallback —
+            # normalize both shapes to the code before grouping.
+            code = _state_code_from_region(r["region"], "") or "??"
+            m = merged.setdefault(code, {"visitors": 0, "views": 0,
+                                         "visitors7": 0, "views7": 0})
+            m["visitors"] += r["visitors"]
+            m["views"] += r["views"]
+            m["visitors7"] += r["visitors7"]
+            m["views7"] += r["views7"] or 0
+    rows = []
+    for code, m in merged.items():
+        name = US_STATE_NAMES.get(code)
+        rows.append({
+            "code": code,
+            "label": (f"{name} ({code})" if name else
+                      "Unrecognized region label"),
+            **m,
+            "share": (round(m["views"] / known_views * 100, 1)
+                      if known_views else 0.0),
+        })
+    rows.sort(key=lambda x: (-x["visitors"], -x["views"], x["label"]))
+    cov["known_pct"] = (round(known_views / cov["us_views"] * 100, 1)
+                        if cov["us_views"] else 0.0)
+    out["rows"] = rows
+    out["coverage"] = cov
+    return out
+
+
+def _us_states_stats() -> dict:
+    return _ttl_cached("admin:us_states", _us_states_build)
 
 
 @app.get("/admin", response_class=HTMLResponse)
@@ -8574,10 +8796,11 @@ def admin_stats(request: Request):
         # Geo columns exist only on views recorded since
         # _GEO_COLLECTING_SINCE — every query below filters to rows
         # that carry a value, so nothing here implies older coverage.
-        # Region/city rows exist only once Cloudflare's visitor-
-        # location transform is on, so those tables render only when
-        # they have rows (the template carries the note otherwise).
-        geo = {"countries": [], "states": [], "cities": []}
+        # City rows exist only once Cloudflare's visitor-location
+        # transform is on; state rows (the _us_states_stats table
+        # below this panel) additionally come from the writer's IP
+        # lookup since Oct 27, transform or not.
+        geo = {"countries": [], "cities": []}
         for r in conn.execute(
                 "SELECT country, COUNT(DISTINCT sid) AS visitors, "
                 "COUNT(*) AS views FROM page_views "
@@ -8588,16 +8811,9 @@ def admin_stats(request: Request):
                 "code": r["country"],
                 "label": _COUNTRY_NAMES.get(r["country"], r["country"]),
                 "visitors": r["visitors"], "views": r["views"]})
-        for r in conn.execute(
-                "SELECT region, COUNT(DISTINCT sid) AS visitors, "
-                "COUNT(*) AS views FROM page_views "
-                "WHERE country = 'US' AND region IS NOT NULL AND region != '' "
-                "GROUP BY region ORDER BY visitors DESC, views DESC "
-                "LIMIT 20"):
-            name = US_STATE_NAMES.get(r["region"])
-            geo["states"].append({
-                "label": f"{name} ({r['region']})" if name else r["region"],
-                "visitors": r["visitors"], "views": r["views"]})
+        # US states moved to _us_states_stats() (Oct 27): the full
+        # human-only state table with 7-day + all-time windows, share
+        # and an explicit coverage block — see its section comment.
         for r in conn.execute(
                 "SELECT city, region, country, COUNT(DISTINCT sid) AS visitors, "
                 "COUNT(*) AS views FROM page_views "
@@ -8706,6 +8922,8 @@ def admin_stats(request: Request):
          "top_referrers": top_referrers, "by_device": by_device,
          "duration": duration, "engagement": engagement,
          "geo": geo, "geo_since": _GEO_COLLECTING_SINCE,
+         "us_states": _us_states_stats(),
+         "ip_geo_since": _IP_GEO_COLLECTING_SINCE,
          "page_time": _page_time_stats()})
 
 
