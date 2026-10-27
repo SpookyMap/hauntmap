@@ -6671,7 +6671,7 @@ MEDIA_KIT_CATEGORY_LABELS = [
     ("live", "Live"),
 ]
 
-MEDIA_KIT_GAMES = ["Haunt or Not", "Scare-O-Meter", "Daily Halloween Trivia", "Costume Contest"]
+MEDIA_KIT_GAMES = ["The Halloween Arcade (8 free games)", "Ghost Maze", "Haunt or Not", "Haunt Bracket", "Scare-O-Meter", "Daily Halloween Trivia", "Costume Contest"]
 
 
 @app.get("/about", response_class=HTMLResponse)
