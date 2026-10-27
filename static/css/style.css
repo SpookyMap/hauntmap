@@ -5656,7 +5656,7 @@ main.wrap:has(> .vt-tv-strip-bottom) { padding-bottom: 0; }
   .adv-strip .adv-line-b { opacity: 0; }
 }
 
-/* ============ z169: BUILD YOUR NIGHT ROUTE ART (Dan, Oct 26) ============
+/* ============ z170: BUILD YOUR NIGHT ROUTE ART (Dan, Oct 26) ============
    Dan's circular route badge is redrawn as an inline SVG
    behind ONLY the existing .hook-line.alt span that contains
    "Build Your Night." The SVG is absolutely positioned, so it adds no
@@ -5668,7 +5668,17 @@ main.wrap:has(> .vt-tv-strip-bottom) { padding-bottom: 0; }
    cream jack-o'-lantern face. Existing hook-letter colors are not
    changed. A taller treatment was rejected during staging: on
    laptop it either clips above the header band or overlaps the
-   second hook line, so this is the single text-height treatment. */
+   second hook line, so this is the single text-height treatment.
+   z170 tightening (Dan, Oct 26: "a little smaller and tighter around
+   the letters and slightly more faded into the background — cleaner
+   and neater, snug around the letters"): the art box shrank from
+   spilling ~0.34em past the phrase on each side to hugging it —
+   it now starts just inside the span's padding, so the scene edges
+   sit only ~1.5px (phone) / ~2.5px (laptop) outside the letterforms
+   (phone ≈115×26, laptop ≈210×44, vs z169's 132×29 / 240×52), and
+   the whole scene is faded to 0.76 opacity so it reads as a subtle
+   backdrop. The words themselves are untouched: same size, color
+   and position, full strength. */
 .header-band .header-hook .byn-art {
   position: relative;
   isolation: isolate;
@@ -5678,12 +5688,17 @@ main.wrap:has(> .vt-tv-strip-bottom) { padding-bottom: 0; }
 .header-band .header-hook .byn-route-art {
   position: absolute;
   z-index: -1;
-  top: -0.22em;
-  right: -0.34em;
-  bottom: -0.30em;
-  left: -0.34em;
-  width: calc(100% + 0.68em);
-  height: calc(100% + 0.52em);
+  top: -0.11em;
+  left: 0.16em;
+  width: calc(100% - 0.32em);
+  height: calc(100% + 0.265em);
+  opacity: 0.76;
   overflow: visible;
   pointer-events: none;
+}
+@media (max-width: 760px) {
+  .header-band .header-hook .byn-route-art {
+    top: -0.15em;
+    height: calc(100% + 0.35em);
+  }
 }
