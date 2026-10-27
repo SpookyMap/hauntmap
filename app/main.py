@@ -5896,6 +5896,19 @@ def shared_tour_page(request: Request, slug: str):
 # ("123A"); the street part must contain a letter (so "123 4" fails).
 _STREET_ADDRESS_RE = re.compile(r"^\d{1,6}(?:-\d{1,5})?[A-Za-z]?\s+\S+.*[A-Za-z]", re.DOTALL)
 
+# UK addresses (Oct 27 — first UK pin: Ffear Fforest, Zip World
+# Betws-y-Coed): rural UK venues routinely have NO house number; their
+# routable street address is the road designator/name + the full UK
+# postcode (the postcode is the routing key — Nominatim resolves it to
+# the venue). Accept that shape as a street address too: a UK postcode
+# AND a road token (an A/B-road designator like "A470", or a street /
+# road / lane word). The Nominatim geocode + town-anchor checks below
+# still gate every submission, exactly as on the US path.
+_UK_POSTCODE_RE = re.compile(r"\b[A-Za-z]{1,2}\d[A-Za-z\d]?\s*\d[A-Za-z]{2}\b")
+_UK_ROAD_RE = re.compile(
+    r"\b(?:[ABM]\d{1,4}|street|road|lane|avenue|drive|way|close|place|"
+    r"square|hill|bridge)\b", re.IGNORECASE)
+
 ADDRESS_REQUIRED_MSG = ("We need the street address — e.g. 123 Main St — "
                         "so visitors can find it on the map.")
 ADDRESS_NOT_FOUND_MSG = ("We couldn't find that street address on the map — "
@@ -5903,7 +5916,11 @@ ADDRESS_NOT_FOUND_MSG = ("We couldn't find that street address on the map — "
 
 
 def looks_like_street_address(address: str) -> bool:
-    return bool(_STREET_ADDRESS_RE.match((address or "").strip()))
+    a = (address or "").strip()
+    if _STREET_ADDRESS_RE.match(a):
+        return True
+    # UK shape: road designator/name + full postcode, no house number.
+    return bool(_UK_POSTCODE_RE.search(a) and _UK_ROAD_RE.search(a))
 
 
 @app.post("/upload", response_class=HTMLResponse)
