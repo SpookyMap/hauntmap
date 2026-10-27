@@ -158,7 +158,7 @@ from pathlib import Path
 #   Blue Chalet. Featured alone on the brand-new California
 #   Hotels board. Hotels are venues: no Scare-O-Meter, no vote.
 #   The hand-picked list is untouched.)
-FEATURED_ENTRY_IDS = (5541, 5542, 5551, 5584, 5587, 5175, 4370, 5653, 5654, 5655, 5766, 5572, 5940, 6006, 116, 6084, 4932, 6085, 6087, 6088, 6086, 6090, 6089, 6091, 30, 6098, 6096, 1641, 6092, 6100, 6099, 6101, 1239, 5728, 5967, 6095, 6097, 6093, 6094, 6102, 6103, 6105, 6106, 1996, 6104, 6108, 6107, 4268)
+FEATURED_ENTRY_IDS = (5541, 5542, 5551, 5584, 5587, 5175, 4370, 5653, 5654, 5655, 5766, 5572, 5940, 6006, 116, 6084, 4932, 6085, 6087, 6088, 6086, 6090, 6089, 6091, 30, 6098, 6096, 1641, 6092, 6100, 6099, 6101, 1239, 5728, 5967, 6095, 6097, 6093, 6094, 6102, 6103, 6105, 6106, 1996, 6104, 6108, 6107, 4268, 3983, 3992, 3997, 4004, 4193, 4677, 5966, 5970, 6109, 6110, 6111, 6112, 6113, 6114)
 # Hand-picked pins (Dan, Oct 23): pins Dan personally sent in chat or
 # curated for posting. These lead every feed view — hand-picked first
 # (newest hand-picked first), then all other pins newest-first — per
@@ -908,6 +908,90 @@ def init_db(db_path: Path) -> None:
             conn, 6085,
             "https://www.tiktok.com/@freaks_of_hhn/video/7698953629817900302",
         )
+        # @freaks_of_hhn featured-review batch (Dan, Oct 27): Dan sent
+        # the Freaks of HHN account itself (730K followers, haunt
+        # reviews) with the standing dreadalertmedia treatment — "all
+        # of these should be featured, they do reviews." Their 40 most
+        # recent/relevant place videos (Oct 16-27, 2026) join each
+        # place's ONE pin below; six places that had no pin were
+        # created first via /upload (6109 Fear Reach Scream Park,
+        # 6110 Dr. Grimley's Haunted Trail, 6111 Ominous Descent,
+        # 6112 Fright Fest at Six Flags Over Georgia, 6113 Dark Harbor,
+        # 6114 Jurassic Haunt) and carry their Freaks video as the
+        # uploaded primary — only their SECOND videos appear here.
+        # Every pin in this table also joins FEATURED_ENTRY_IDS above.
+        # add_entry_video dedupes by video id, so repeat boots are
+        # no-ops and no primary is ever touched.
+        for _pin_id, _pin_urls in (
+            # Halloween Horror Nights — Universal Orlando (3983)
+            (3983, (
+                "https://www.tiktok.com/@freaks_of_hhn/video/7700351818836004110",
+                "https://www.tiktok.com/@freaks_of_hhn/video/7700023745154403598",
+                "https://www.tiktok.com/@freaks_of_hhn/video/7699925351530499342",
+                "https://www.tiktok.com/@freaks_of_hhn/video/7699561525173832974",
+                "https://www.tiktok.com/@freaks_of_hhn/video/7698073901993135373",
+                "https://www.tiktok.com/@freaks_of_hhn/video/7698038478898056462",
+                "https://www.tiktok.com/@freaks_of_hhn/video/7697782097062137102",
+            )),
+            # Howl-O-Scream — SeaWorld Orlando (3992)
+            (3992, (
+                "https://www.tiktok.com/@freaks_of_hhn/video/7701140016449326349",
+                "https://www.tiktok.com/@freaks_of_hhn/video/7700009372511898893",
+                "https://www.tiktok.com/@freaks_of_hhn/video/7699582267038928142",
+                "https://www.tiktok.com/@freaks_of_hhn/video/7699335000402955533",
+                "https://www.tiktok.com/@freaks_of_hhn/video/7698450110878862606",
+                "https://www.tiktok.com/@freaks_of_hhn/video/7698224339266571534",
+                "https://www.tiktok.com/@freaks_of_hhn/video/7698219338280520974",
+            )),
+            # Howl-O-Scream — Busch Gardens Tampa (3997)
+            (3997, (
+                "https://www.tiktok.com/@freaks_of_hhn/video/7701194510453247246",
+                "https://www.tiktok.com/@freaks_of_hhn/video/7699943559440420109",
+                "https://www.tiktok.com/@freaks_of_hhn/video/7699189661574483213",
+                "https://www.tiktok.com/@freaks_of_hhn/video/7697747241267744014",
+            )),
+            # Sir Henry's Haunted Trail (4004)
+            (4004, (
+                "https://www.tiktok.com/@freaks_of_hhn/video/7701470511464762637",
+                "https://www.tiktok.com/@freaks_of_hhn/video/7700034910081256718",
+            )),
+            # Night Creepers Haunted House (4193)
+            (4193, (
+                "https://www.tiktok.com/@freaks_of_hhn/video/7701026245923917070",
+                "https://www.tiktok.com/@freaks_of_hhn/video/7697412135931923725",
+            )),
+            # The Horrorland Scream Park, Miami (4677)
+            (4677, (
+                "https://www.tiktok.com/@freaks_of_hhn/video/7698971431849184526",
+                "https://www.tiktok.com/@freaks_of_hhn/video/7698061558835842318",
+            )),
+            # Mickey's Not-So-Scary Halloween Party (5966)
+            (5966, (
+                "https://www.tiktok.com/@freaks_of_hhn/video/7701096238598393101",
+                "https://www.tiktok.com/@freaks_of_hhn/video/7701033563596115213",
+            )),
+            # Knott's Scary Farm (5970)
+            (5970, (
+                "https://www.tiktok.com/@freaks_of_hhn/video/7699177879350906125",
+                "https://www.tiktok.com/@freaks_of_hhn/video/7697805155185528077",
+            )),
+            # Halloween Horror Nights — Universal Studios Hollywood (6090)
+            (6090, (
+                "https://www.tiktok.com/@freaks_of_hhn/video/7699643125119208718",
+                "https://www.tiktok.com/@freaks_of_hhn/video/7698976494063799565",
+                "https://www.tiktok.com/@freaks_of_hhn/video/7697834848022613261",
+            )),
+            # Fear Reach Scream Park (6109) — second video
+            (6109, (
+                "https://www.tiktok.com/@freaks_of_hhn/video/7701085429092650253",
+            )),
+            # Dr. Grimley's Haunted Trail (6110) — second video
+            (6110, (
+                "https://www.tiktok.com/@freaks_of_hhn/video/7701031724951555342",
+            )),
+        ):
+            for _pin_url in _pin_urls:
+                add_entry_video(conn, _pin_id, _pin_url)
         # Dan-sent video attach (Oct 27): @growingwithju's TikTok of
         # the Ridgewood Halloween House (294 West End Ave, Ridgewood
         # NJ — posted Oct 11, 2026) joins its one pin (30) — the
