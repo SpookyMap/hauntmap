@@ -806,6 +806,16 @@ def init_db(db_path: Path) -> None:
             conn, 6085,
             "https://www.tiktok.com/@freaks_of_hhn/video/7698953629817900302",
         )
+        # Ghost Manor (6088) town-label fix (Oct 27): the pin posted
+        # with town "New Orleans" (no state), and the state boards group
+        # by extract_state(town) — without ", LA" the pin can never
+        # appear on the Louisiana board it was featured onto. One-shot
+        # correction; the WHERE clause matches only the bare label, so
+        # repeat boots are no-ops.
+        conn.execute(
+            "UPDATE entries SET town = 'New Orleans, LA' "
+            "WHERE id = 6088 AND town = 'New Orleans'"
+        )
         if "is_handpicked" not in cols:
             # Hand-picked feed boost (Dan, Oct 23): pins Dan personally
             # sent/curated lead every feed. Ranking data is never
