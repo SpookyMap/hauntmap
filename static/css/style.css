@@ -185,6 +185,10 @@ a { color: var(--accent); }
 .signup-strip p { color: #a9cdf5; margin: 0 0 0.4rem; font-size: 0.78rem; line-height: 1.35; }
 .signup-strip .newsletter-form input { background: rgba(0,0,0,0.25); }
 .signup-strip-slim { padding: 0.8rem 1rem; margin: 1rem 0; }
+/* /tour only (Dan, Oct 27): center the "Don't miss a stop" catcher in the
+   page column — .signup-strip-slim zeroes the horizontal auto margins the
+   base .signup-strip relies on, so restore them for this instance only. */
+.tour-catcher-center { margin-left: auto; margin-right: auto; }
 
 .footer-social { margin-top: 0.6rem; }
 .social-btn {
