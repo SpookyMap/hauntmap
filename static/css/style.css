@@ -6273,3 +6273,23 @@ main.wrap:has(> .vt-tv-strip-bottom) { padding-bottom: 0; }
 @media (min-width: 761px) {
   .social-promo-shot-cap { font-size: 0.75rem; }
 }
+
+/* ============ z194: CREEPY PALM WATERMARK IN THE JOIN BLOCK (Dan, Oct 27) ====
+   Dan: "add a creepy palm tree somewhere on the text side of the
+   HauntSocial block, large in the background, not so dark so the text
+   can still be read." An inline SVG silhouette (gnarled curved trunk,
+   drooping ragged fronds, a dead-frond skirt under the crown) sits
+   behind the COPY half only (.social-promo-main) — never the preview
+   half, never behind Frank's card. Soft azure-slate tint at watermark
+   opacity so every text element stays crisp over it; the tree anchors
+   to the right of the copy half, rises past the top, and its trunk
+   runs off the bottom edge (the half clips it — no layout shift, no
+   overflow anywhere). pointer-events: none; content rides above it. */
+.social-promo-main { position: relative; overflow: hidden; }
+.social-promo-palm { position: absolute; right: -16px; bottom: -18px;
+  height: 118%; width: auto; aspect-ratio: 400 / 540;
+  color: #7fb8e8; opacity: 0.16; z-index: 0; pointer-events: none; }
+.social-promo-main > *:not(.social-promo-palm) { position: relative; z-index: 1; }
+@media (max-width: 760px) {
+  .social-promo-palm { height: 112%; right: -24px; opacity: 0.13; }
+}
