@@ -123,7 +123,13 @@ from pathlib import Path
 #   documented and the hotel runs Davenport After Dark tours.
 #   Featured alone on the brand-new Washington Hotels board. The
 #   hand-picked list is untouched.)
-FEATURED_ENTRY_IDS = (5541, 5542, 5551, 5584, 5587, 5175, 4370, 5653, 5654, 5655, 5766, 5572, 5940, 6006, 116, 6084, 4932, 6085, 6087, 6088, 6086, 6090, 6089, 6091, 30, 6098, 6096, 1641, 6092, 6100, 6099, 6101, 1239, 5728, 5967, 6095, 6097, 6093, 6094)
+#   6102 BC Abbotsford (Oct 27: CANADA OPENS — Maan Farms'
+#   Halloween Fright Festival, 790 McKenzie Road; HauntMap's
+#   first Canadian pin, posted with @maanfarms' own TikTok on
+#   Dan's explicit freshness override + Canada order. Featured
+#   so it leads the new British Columbia board. Featured only —
+#   the hand-picked list is untouched.)
+FEATURED_ENTRY_IDS = (5541, 5542, 5551, 5584, 5587, 5175, 4370, 5653, 5654, 5655, 5766, 5572, 5940, 6006, 116, 6084, 4932, 6085, 6087, 6088, 6086, 6090, 6089, 6091, 30, 6098, 6096, 1641, 6092, 6100, 6099, 6101, 1239, 5728, 5967, 6095, 6097, 6093, 6094, 6102)
 
 # Hand-picked pins (Dan, Oct 23): pins Dan personally sent in chat or
 # curated for posting. These lead every feed view — hand-picked first

@@ -2203,6 +2203,9 @@ US_STATE_NAMES = {
     "MO": "Missouri", "KS": "Kansas", "NE": "Nebraska", "OK": "Oklahoma", "AR": "Arkansas",
     "LA": "Louisiana", "MS": "Mississippi", "AL": "Alabama", "TN": "Tennessee",
     "KY": "Kentucky", "IN": "Indiana", "WV": "West Virginia",
+    # Canada opens (Dan, Oct 27): provinces resolve through the same
+    # region-name map so a Canadian pin's board/tabs read properly.
+    "BC": "British Columbia",
 }
 
 # Region tabs shown after the state tabs in the homepage bottom place row,
@@ -7613,6 +7616,23 @@ def _towns_with_counts(category: str = "halloween") -> list[dict]:
             label = extract_city_state(r["town"] or "")
             if label:
                 counts[label] = counts.get(label, 0) + 1
+        if category == "halloween":
+            # Canada opens (Dan, Oct 27): a town whose only pins are
+            # events (first case: Abbotsford, BC — Maan Farms' Halloween
+            # Fright Festival) still earns a /towns listing and a town
+            # page. Towns that already have halloween pins keep their
+            # existing counts untouched.
+            with get_conn(DB_PATH) as conn:
+                erows = conn.execute(
+                    "SELECT town FROM entries WHERE hidden = 0 "
+                    "AND category = 'events'").fetchall()
+            ecounts: dict[str, int] = {}
+            for r in erows:
+                label = extract_city_state(r["town"] or "")
+                if label:
+                    ecounts[label] = ecounts.get(label, 0) + 1
+            for label, c in ecounts.items():
+                counts.setdefault(label, c)
         return sorted(
             ({"label": l, "slug": _town_slug(l), "count": c}
              for l, c in counts.items()),
@@ -7660,6 +7680,14 @@ def town_page(request: Request, slug: str):
                              e["created_at"] or "", e["id"]),
               reverse=True)
     entries = [e for e in rows if e["town_label"] == label]
+    if not entries:
+        # Events-only towns (Canada opening, Oct 27): the town resolved
+        # via its event pins, so list those — same feed order as above.
+        erows = _category_rows("events")
+        erows.sort(key=lambda e: (e["is_handpicked"] or 0,
+                                  e["created_at"] or "", e["id"]),
+                   reverse=True)
+        entries = [e for e in erows if e["town_label"] == label]
     # Item 7: town-page cards show all-time view counts (one grouped query).
     with get_conn(DB_PATH) as conn:
         _attach_views(conn, entries)
