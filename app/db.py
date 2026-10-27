@@ -50,7 +50,12 @@ from pathlib import Path
 #   Mortem Manor, 5770 W Irlo Bronson Memorial Hwy, posted today as
 #   pin 6085 via @hiddenshorestravel's TikTok. Featured only — the
 #   hand-picked list is untouched.)
-FEATURED_ENTRY_IDS = (5541, 5542, 5551, 5584, 5587, 5175, 4370, 5653, 5654, 5655, 5766, 5572, 5940, 6006, 116, 6084, 4932, 6085, 6087, 6088)
+#   6086 CA Sacramento (Oct 27: Dan's "All top 10" burst pick —
+#   Phantom Manor, 875 Rancho Roble Way; the interactive Halloween
+#   Scavenger Haunt home haunt from @ulyssesbaltazar's TikTok,
+#   posted today as pin 6086. Featured only — the hand-picked
+#   list is untouched.)
+FEATURED_ENTRY_IDS = (5541, 5542, 5551, 5584, 5587, 5175, 4370, 5653, 5654, 5655, 5766, 5572, 5940, 6006, 116, 6084, 4932, 6085, 6087, 6088, 6086)
 
 # Hand-picked pins (Dan, Oct 23): pins Dan personally sent in chat or
 # curated for posting. These lead every feed view — hand-picked first
