@@ -56,6 +56,9 @@
   {{ leader_items(s.entries) }}
 </section>
 {% endfor %}
+<div class="cat-tabs state-jump">
+  {% for s in states %}<a href="#state-{{ s.code|lower }}">{{ s.code }} &middot; {{ s.count }}</a>{% endfor %}
+</div>
 {% endif %}
 
 {% if not states and not metros %}
