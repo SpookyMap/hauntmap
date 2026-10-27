@@ -438,6 +438,45 @@
   body.hm-tv.vt-idle .vt-progress { opacity: 0; pointer-events: none; }
   body.hm-tv.vt-idle .vt-stage { cursor: none; }
   body.hm-tv.vt-idle .vt-remote, body.hm-tv.vt-idle .vt-remote * { cursor: pointer; }
+  /* Laptop type boost (Dan, Oct 27): the working text on this page —
+     channel tabs, picker/guide labels, the stop rail, the current
+     stop's title + meta, counters and end copy — steps up a clear
+     notch on desktop widths so the lists are easy to scan from the
+     couch / across a desk. Phone rendering is untouched: every rule
+     here sits inside the same min-width: 900px gate as the wide
+     layout above. Display headings (h1, the TV logo) keep their size;
+     only the reading text grows, with line-height opened up to match. */
+  @media (min-width: 900px) {
+    .vt-sub { font-size: 1.13rem; line-height: 1.55; }
+    .vt-tab { font-size: 1rem; padding: 0.44rem 0.88rem; line-height: 1.25; }
+    .vt-tv-tag { font-size: 1.12rem; }
+    .vt-mode-toggle { font-size: 1.05rem; }
+    .vt-picker-sub { font-size: 1.1rem; line-height: 1.6; }
+    .vt-picker-subhead { font-size: 1.18rem; }
+    .vt-channel-body h3 { font-size: 1.3rem; }
+    .vt-channel-body p { font-size: 1.06rem; line-height: 1.5; }
+    .vt-chan-name { font-size: 0.99rem; line-height: 1.2; }
+    .vt-chan-count { font-size: 0.86rem; }
+    .vt-chan-emoji { font-size: 1.2rem; }
+    .vt-chan-btn { min-height: 54px; padding: 0.55rem 0.65rem; }
+    .vt-info h2 { font-size: 1.55rem; line-height: 1.3; }
+    .vt-info .meta { font-size: 1rem; line-height: 1.5; }
+    .vt-counter { font-size: 1.1rem; }
+    .vt-nav { font-size: 1.05rem; }
+    .vt-add-btn { font-size: 1.02rem; }
+    .vt-frame-note { font-size: 1.02rem; }
+    .vt-remote-btn { font-size: 1.05rem; }
+    .vt-main { grid-template-columns: minmax(0, 1fr) 372px; }
+    .vt-stops { max-height: 480px; }
+    .vt-stop { padding: 0.5rem 0.65rem; }
+    .vt-stop img { width: 60px; height: 46px; }
+    .vt-stop-n { width: 28px; height: 28px; font-size: 0.92rem; }
+    .vt-stop-t { font-size: 1.03rem; line-height: 1.32; }
+    .vt-stop-t small { font-size: 0.88rem; line-height: 1.3; }
+    .vt-end-stats { font-size: 1.1rem; }
+    .vt-end-copy { font-size: 1.1rem; line-height: 1.6; }
+    .vt-end-channels-label { font-size: 1.05rem; }
+  }
 </style>
 <script>
 var VT_ROUTES = {{ routes|tojson }};

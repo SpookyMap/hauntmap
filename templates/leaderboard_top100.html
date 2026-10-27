@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% block title %}Top 100 nationwide &middot; {{ site_name }}{% endblock %}
 {% block content %}
+<div class="t100">
 <div class="cat-tabs">
   <a href="/leaderboard/top-100?cat=halloween" class="{% if cat == 'halloween' %}active{% endif %}">&#x1F383; Haunt Map</a>
   <a href="/leaderboard/top-100?cat=christmas" class="{% if cat == 'christmas' %}active{% endif %}">&#x1F384; Jolly Map</a>
@@ -43,4 +44,5 @@
   <p>No haunts yet. <a href="/upload">Add the first one</a>.</p>
 </div>
 {% endif %}
+</div>
 {% endblock %}
