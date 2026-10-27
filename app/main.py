@@ -915,6 +915,53 @@ def has_footage(entry: dict) -> bool:
     return "/video/" in tt or entry.get("media_type") == "video"
 
 
+# Restaurhaunts ordering (Dan, Oct 26): "Feature the Restaurants that
+# most decked for Halloween first when using relocate for the user" —
+# inside any location-scoped restaurant result set (the /restaurhaunts
+# listing, /nearby with a restaurhaunt category, the pin-page near
+# rails), the most Halloween-decked venues lead; location still scopes
+# the set and the previous order (distance / recency) breaks ties.
+# The score is computed ONLY from fields the entry already carries —
+# no invented ratings:
+#   +4  footage of the space (a TikTok URL or an uploaded video —
+#       video proof of the decor; Al Chile is the archetype)
+#   +2  per seasonal-decking term in title/description/tags
+#       (Halloween pop-ups, decor, "decked out", spooky season…)
+#   +1  per spooky-theming term in title/description/tags
+#       (horror, haunted, ghost, vampire, coffin, gothic, skeleton,
+#        witch, pumpkin, creepy, spooky)
+_DECKED_SEASONAL_TERMS = (
+    "halloween pop-up", "halloween popup", "halloween-themed",
+    "halloween themed", "halloween menu", "halloween party",
+    "halloween cocktail", "halloween drink", "spooky season",
+    "decked", "decorat",
+)
+_DECKED_THEME_TERMS = (
+    "horror", "haunted", "ghost", "vampire", "coffin", "gothic",
+    "skeleton", "witch", "pumpkin", "creepy", "spooky",
+)
+
+
+def decked_score(entry: dict) -> int:
+    """How decked-for-Halloween a restaurhaunt entry reads, from its
+    own title / description / tags / media only (see the term lists
+    above). Higher = more decked. Used purely as an ordering key for
+    the restaurant lane (RESTAURHAUNT_CATS); never displayed."""
+    text = " ".join(str(entry.get(k) or "") for k in
+                    ("title", "description", "tags")).lower()
+    score = 0
+    if (entry.get("tiktok_url") or "").strip() \
+            or entry.get("media_type") == "video":
+        score += 4
+    for term in _DECKED_SEASONAL_TERMS:
+        if term in text:
+            score += 2
+    for term in _DECKED_THEME_TERMS:
+        if term in text:
+            score += 1
+    return score
+
+
 # Item 1: Cloudflare visitor-location headers. The site sits behind
 # Cloudflare, whose "Add visitor location headers" managed transform can
 # attach cf-ipcity / cf-ipregion / cf-ipcountry / cf-iplatitude /
@@ -1667,8 +1714,15 @@ def detail_chain(entry: dict) -> dict:
         # within NEAR_RAIL_CAP_MI — however few that leaves. The full
         # `coord` list still drives the next/prev chain below, which
         # is geographic by design and unchanged.
-        out["more_near"] = [p for p in coord
-                            if p["distance"] <= NEAR_RAIL_CAP_MI][:6]
+        _near = [p for p in coord if p["distance"] <= NEAR_RAIL_CAP_MI]
+        if entry.get("category") in RESTAURHAUNT_CATS:
+            # Restaurhaunts ordering (Dan, Oct 26): inside the
+            # location-scoped set, the most decked-for-Halloween
+            # venues lead the rail; distance breaks ties. The
+            # geographic next/prev chain below keeps using `coord`.
+            _near.sort(key=lambda p: (-decked_score(p), p["distance"],
+                                      p["id"]))
+        out["more_near"] = _near[:6]
         out["next_pin"] = coord[0] if coord else None
         # Prev = the closest pin whose OWN nearest neighbour is this pin
         # (reciprocal nearest) — the step a chain-walker came from. Bounded
@@ -3352,10 +3406,12 @@ def restaurhaunts(request: Request, sort: str = "new", f: str = "all",
     # category chip so the mix stays legible.
     # Feed-order rule (Dan, Oct 23): default sort is newest (hand-picked
     # first, then newest-first); "Top" is an explicit choice only.
+    # Restaurhaunts ordering (Dan, Oct 26): the DEFAULT view of this
+    # venue lane leads with the most decked-for-Halloween places
+    # (decked_score), then the Oct 23 chain (hand-picked, newest)
+    # breaks ties. "Top" keeps its votes order untouched.
     sort = sort if sort in ("top", "new") else "new"
     f = f if f in ("all",) + RESTAURHAUNT_CATS else "all"
-    order = ("votes DESC, created_at DESC" if sort == "top"
-             else "is_handpicked DESC, created_at DESC, id DESC")
     query = ("SELECT * FROM entries WHERE hidden = 0 "
              "AND category IN ('restaurants', 'coffee', 'shops')")
     params: list = []
@@ -3366,9 +3422,18 @@ def restaurhaunts(request: Request, sort: str = "new", f: str = "all",
     if town_search:
         query += " AND LOWER(town) LIKE ?"
         params.append(f"%{extract_city(town_search).lower()}%")
-    query += f" ORDER BY {order} LIMIT 100"
+    if sort == "top":
+        query += " ORDER BY votes DESC, created_at DESC LIMIT 100"
     with get_conn(DB_PATH) as conn:
         entries = [row_to_dict(r) for r in conn.execute(query, params).fetchall()]
+    if sort != "top":
+        # Stable sorts in reverse priority order (the /nearby pattern):
+        # the last sort applied is the primary key.
+        entries.sort(key=lambda e: e["id"], reverse=True)
+        entries.sort(key=lambda e: e.get("created_at") or "", reverse=True)
+        entries.sort(key=lambda e: 0 if e.get("is_handpicked") else 1)
+        entries.sort(key=lambda e: -decked_score(e))
+        entries = entries[:100]
     # Category tab counts from the shared TTL cache (fortification
     # pass 2) instead of a per-render GROUP BY over entries.
     all_counts = _category_counts()
@@ -3432,6 +3497,12 @@ def nearby(request: Request, q: str = "", miles: float = 10, cat: str = "hallowe
         else:
             entries.sort(key=lambda e: 0 if e.get("is_handpicked") else 1)
         entries.sort(key=lambda e: e["distance"])
+        if cat in RESTAURHAUNT_CATS:
+            # Restaurhaunts ordering (Dan, Oct 26): the radius still
+            # scopes the set, but inside it the most decked-for-
+            # Halloween venues lead; the chain above (distance, then
+            # the chosen sort) breaks ties (stable sort).
+            entries.sort(key=lambda e: -decked_score(e))
     voted = {k[6:] for k in request.cookies if k.startswith("voted_")}
     return templates.TemplateResponse(request, "nearby.html",
         {"request": request, "entries": entries, "q": q, "miles": miles,
@@ -5189,6 +5260,10 @@ def api_explore(request: Request, from_id: int, exclude: str = ""):
     # done and the section's own copy takes over ("You've seen
     # everything near here — the map has the rest of the country").
     peers = [p for p in peers if p["distance"] <= NEAR_RAIL_CAP_MI]
+    if entry.get("category") in RESTAURHAUNT_CATS:
+        # Restaurhaunts ordering (Dan, Oct 26): decked-first inside
+        # the capped near set; distance breaks ties.
+        peers.sort(key=lambda p: (-decked_score(p), p["distance"], p["id"]))
     batch = peers[:EXPLORE_BATCH]
     if not batch:
         return JSONResponse(empty)
@@ -5243,10 +5318,20 @@ def detail(request: Request, entry_id: int):
     # for the prominent "More haunts near this one" block. Real-media pins
     # (an actual uploaded photo/video — i.e. not stock-photo pins, which sit
     # in DUEL_EXCLUDE_IDS) rank ahead of stock ones at equal distance.
-    more_haunts = sorted(
-        chain["more_near"],
-        key=lambda p: (1 if p["id"] in DUEL_EXCLUDE_IDS else 0, p["distance"]),
-    )[:3]
+    if entry.get("category") in RESTAURHAUNT_CATS:
+        # Restaurhaunts ordering (Dan, Oct 26): decked-first inside the
+        # near set — real-media first (existing rule), then the most
+        # decked venues, then distance.
+        more_haunts = sorted(
+            chain["more_near"],
+            key=lambda p: (1 if p["id"] in DUEL_EXCLUDE_IDS else 0,
+                           -decked_score(p), p["distance"]),
+        )[:3]
+    else:
+        more_haunts = sorted(
+            chain["more_near"],
+            key=lambda p: (1 if p["id"] in DUEL_EXCLUDE_IDS else 0, p["distance"]),
+        )[:3]
     # Collection loop: ids of every visible pin in this pin's town + category,
     # so the page can show "You've seen X of Y displays in [Town]" (the
     # seen-set itself lives in the visitor's localStorage — no accounts).
