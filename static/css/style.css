@@ -6138,3 +6138,25 @@ main.wrap:has(> .vt-tv-strip-bottom) { padding-bottom: 0; }
   .vt-tv-strip.vt-tv-strip-top a .vt-ic,
   .vt-tv-strip.vt-tv-strip-bottom a .vt-ic { font-size: 1.08rem; }
 }
+
+/* ============ z190: JOIN BLOCK — PROMO LINE + COPY FILLS ITS HALF (Dan, Oct 27) ====
+   Three Dan notes on the homepage Join HauntSocial block: (1) MORE
+   PROMOTION — a new promo line in the copy half ("Post your favorite
+   haunts, share your favorite memories, and chat with your friends
+   about your favorite Halloween events, parties, music, and
+   costumes." — a .social-promo-line under the existing body copy,
+   template-only). (2) "Fill the space on the text side and space it
+   nicely with less dead space": the copy half was justify-content:
+   center (z183), which floated the copy as a cluster mid-half — on
+   laptop ~28px dead bands top and bottom while the inter-element
+   gaps sat at the 0.65rem minimum. Now space-between: the headline
+   row pins to the top of the half, the CTA group to the bottom, and
+   the leftover height distributes evenly into the gaps between the
+   copy elements, so the text side fills its half with an even rhythm
+   against the preview half. The 0.65rem flex gap stays as the
+   minimum spacing. On phone the copy half is content height, so
+   there is no dead space to distribute — the same even gaps carry
+   through the stack. (3) The preview caption now reads "Join before
+   Halloween and get access to our HauntSocial Chatroom!" (template).
+   Preview card untouched (still perfectly straight). */
+.social-promo-main { justify-content: space-between; }
