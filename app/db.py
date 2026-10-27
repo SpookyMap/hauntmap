@@ -343,6 +343,20 @@ CREATE TABLE IF NOT EXISTS social_meta (
     key TEXT PRIMARY KEY,
     value TEXT
 );
+-- Haunt Chat (Dan, Oct 27): the single members-only chat room at /chat.
+-- One row per message; deleted is a soft delete so a moderator removal
+-- can propagate to already-open rooms through the since-id poll (the
+-- poll reports recently deleted ids alongside new messages). Frank's
+-- pinned welcome is rendered from code, never a row here.
+CREATE TABLE IF NOT EXISTS chat_messages (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    body TEXT NOT NULL,
+    deleted INTEGER NOT NULL DEFAULT 0,
+    created_at TEXT NOT NULL,
+    deleted_at TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_chat_messages_id ON chat_messages(id);
 """
 
 

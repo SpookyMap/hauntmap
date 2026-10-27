@@ -6910,7 +6910,7 @@ def town_page(request: Request, slug: str):
 def sitemap():
     base = "https://gethauntmap.com"
     urls = ["/", "/map", "/nearby", "/tour", "/diy", "/diy-costumes", "/games", "/games/ghost-maze", "/leaderboard", "/leaderboard/states", "/leaderboard/top-100",
-            "/towns", "/passport", "/daily", "/advertise", "/media-kit", "/about", "/hauntsocial", "/costume-contest", "/trivia", "/haunt-or-not", "/fan-art",
+            "/towns", "/passport", "/daily", "/advertise", "/media-kit", "/about", "/hauntsocial", "/chat", "/costume-contest", "/trivia", "/haunt-or-not", "/fan-art",
             "/restaurhaunts"]
     for t in _towns_with_counts():
         urls.append(f"/towns/{t['slug']}")
@@ -8344,6 +8344,7 @@ _PAGE_TIME_LABELS = {
     "/tours": "Tours", "/watch": "Watch", "/leaderboard": "Top Haunts",
     "/leaderboard/states": "Top 10 by State",
     "/restaurhaunts": "Restaurhaunts", "/hauntsocial": "HauntSocial",
+    "/chat": "Haunt Chat",
     "/games": "Games", "/diy": "DIY", "/diy-costumes": "DIY Costumes",
     "/movies": "Movies", "/music": "Music", "/markets": "Markets",
     "/pop-haunt-culture": "Pop Haunt Culture",
@@ -9140,7 +9141,7 @@ RESERVED_HANDLES = {
     "moderator", "mod", "system", "root", "api", "login", "logout",
     "signup", "register", "settings", "profile", "edit", "about", "terms",
     "frank",
-    "privacy", "events", "map", "watch", "tour", "tours", "nearby",
+    "privacy", "events", "map", "watch", "tour", "tours", "nearby", "chat",
     "games", "music", "movies", "markets", "leaderboard", "passport",
     "daily", "towns", "advertise", "upload", "diy", "fanart", "fan-art",
     "jollymap", "gethauntmap", "haunt", "halloween", "christmas",
@@ -9962,6 +9963,189 @@ def hauntsocial_page(request: Request):
     # Dan's approved explainer copy (Oct 25) — what HauntSocial is,
     # linked from the promo band and /signup.
     return templates.TemplateResponse(request, "hauntsocial.html", {"request": request})
+
+
+# --------------------------------------------------------------- Haunt Chat
+# Dan (Oct 27, 2026 — built STAGED for his preview, not yet shipped):
+# ONE members-only chat room at /chat for HauntMap + HauntSocial.
+# Members read the whole room and post; guests get a public teaser —
+# the room shell, Frank's pinned welcome, and the latest few messages —
+# behind a join gate. Fresh messages arrive by POLLING (4s, since-id,
+# indexed id query, tiny payloads) — no websockets, so the single
+# worker never holds a socket per visitor. Frank's welcome is pinned
+# FROM CODE (a constant rendered at the top of the room), not a seeded
+# row: it can never be deleted, buried, or duplicated by a re-seed.
+CHAT_MAX_CHARS = 300
+CHAT_ROOM_LIMIT = 100        # messages the room renders for a member
+CHAT_TEASER_LIMIT = 5        # messages a guest may peek at
+CHAT_MIN_GAP_S = 2           # min seconds between a member's posts
+CHAT_BURST_LIMIT = 20        # posts per member per 10 minutes
+CHAT_ADMIN_HANDLES = {"dan", "gethauntmap"}
+FRANK_CHAT_WELCOME = (
+    "Boo! 👻 Frank here — welcome to The Haunt Chat, haunters! This is "
+    "our room to swap favorite haunts, plan Halloween events and "
+    "parties, trade costume ideas, and argue over the best spooky "
+    "music. Pull up a tombstone and say hi — just keep it friendly. 🎃")
+
+_CHAT_SELECT = (
+    "SELECT m.id, m.body, m.created_at, u.handle, "
+    "p.display_name, p.avatar_choice, p.avatar_path "
+    "FROM chat_messages m JOIN users u ON u.id = m.user_id "
+    "LEFT JOIN profiles p ON p.user_id = u.id ")
+
+
+def _chat_is_admin(member: dict | None) -> bool:
+    """Chat moderation gate: the users.is_admin flag, or the two
+    operator handles (Dan's own + the official brand account)."""
+    return bool(member and (member.get("is_admin")
+                            or member["handle"] in CHAT_ADMIN_HANDLES))
+
+
+def _chat_view(row) -> dict:
+    """One chat message as chat.html and the polling JSON render it."""
+    return {"id": row["id"], "handle": row["handle"],
+            "label": row["display_name"] or row["handle"],
+            "avatar": _avatar_view(row["avatar_choice"],
+                                   row["display_name"], row["handle"],
+                                   row["avatar_path"]),
+            "body": row["body"], "created_at": row["created_at"]}
+
+
+def _chat_recent(limit: int) -> list[dict]:
+    """The newest `limit` live messages, oldest first (room order)."""
+    with get_conn(DB_PATH) as conn:
+        rows = conn.execute(
+            _CHAT_SELECT + "WHERE m.deleted = 0 ORDER BY m.id DESC "
+            "LIMIT ?", (limit,)).fetchall()
+    return [_chat_view(r) for r in reversed(rows)]
+
+
+@app.get("/chat", response_class=HTMLResponse)
+def chat_page(request: Request):
+    member = current_member(request)
+    ctx = {"request": request, "member": member,
+           "frank_avatar": _avatar_view(FRANK_AVATAR_CHOICE, "Frank",
+                                         FRANK_HANDLE),
+           "frank_welcome": FRANK_CHAT_WELCOME,
+           "chat_max": CHAT_MAX_CHARS}
+    if member:
+        ctx.update({"messages": _chat_recent(CHAT_ROOM_LIMIT),
+                    "can_moderate": _chat_is_admin(member),
+                    "teaser": False})
+    else:
+        ctx.update({"messages": _chat_recent(CHAT_TEASER_LIMIT),
+                    "can_moderate": False, "teaser": True})
+    return templates.TemplateResponse(request, "chat.html", ctx)
+
+
+@app.get("/api/chat/messages")
+def chat_poll(request: Request, after: int = 0):
+    """The polling endpoint (members only). ?after=<last id seen>
+    returns just the newer live messages plus the ids of messages a
+    moderator deleted in the last 30 minutes ('gone'), so open rooms
+    drop them without a reload. No `after` returns the room's latest
+    CHAT_ROOM_LIMIT. Indexed id lookups only — this runs every ~4s
+    per open room and must stay cheap on the single worker."""
+    member = current_member(request)
+    if not member:
+        return JSONResponse({"error": "members only"}, status_code=401)
+    gone: list[int] = []
+    with get_conn(DB_PATH) as conn:
+        if after > 0:
+            rows = conn.execute(
+                _CHAT_SELECT + "WHERE m.deleted = 0 AND m.id > ? "
+                "ORDER BY m.id ASC LIMIT 100", (after,)).fetchall()
+            gone = [r["id"] for r in conn.execute(
+                "SELECT id FROM chat_messages WHERE deleted = 1 "
+                "AND id <= ? AND deleted_at > ?",
+                (after, (datetime.now(timezone.utc)
+                         - timedelta(minutes=30)).isoformat())).fetchall()]
+            msgs = [_chat_view(r) for r in rows]
+        else:
+            msgs = _chat_recent(CHAT_ROOM_LIMIT)
+    resp = JSONResponse({"messages": msgs, "gone": gone,
+                         "latest_id": msgs[-1]["id"] if msgs else after})
+    resp.headers["Cache-Control"] = "no-store"
+    return resp
+
+
+@app.post("/api/chat/messages")
+async def chat_post(request: Request):
+    member = current_member(request)
+    if not member:
+        return JSONResponse({"error": "members only"}, status_code=401)
+    try:
+        data = await request.json()
+    except Exception:
+        return JSONResponse({"ok": False, "error": "bad request"},
+                            status_code=400)
+    body = str(data.get("body") or "").strip()
+    if not body:
+        return JSONResponse({"ok": False,
+                             "error": "Write something first."},
+                            status_code=400)
+    if len(body) > CHAT_MAX_CHARS:
+        return JSONResponse(
+            {"ok": False,
+             "error": f"Messages cap at {CHAT_MAX_CHARS} characters."},
+            status_code=400)
+    now = datetime.now(timezone.utc)
+    with get_conn(DB_PATH) as conn:
+        # Rate limits, server-side, read off the member's own rows:
+        # a ~2s floor between posts, plus a burst cap.
+        last = conn.execute(
+            "SELECT created_at FROM chat_messages WHERE user_id = ? "
+            "ORDER BY id DESC LIMIT 1", (member["id"],)).fetchone()
+        if last:
+            try:
+                gap = (now - datetime.fromisoformat(
+                    last["created_at"])).total_seconds()
+            except ValueError:
+                gap = CHAT_MIN_GAP_S
+            if gap < CHAT_MIN_GAP_S:
+                return JSONResponse(
+                    {"ok": False,
+                     "error": "Slow down — give it a couple of seconds "
+                              "between messages."}, status_code=429)
+        burst = conn.execute(
+            "SELECT COUNT(*) AS n FROM chat_messages WHERE user_id = ? "
+            "AND created_at > ?",
+            (member["id"],
+             (now - timedelta(minutes=10)).isoformat())).fetchone()["n"]
+        if burst >= CHAT_BURST_LIMIT:
+            return JSONResponse(
+                {"ok": False,
+                 "error": "Whoa — that's a lot of messages. Take a "
+                          "breather."}, status_code=429)
+        cur = conn.execute(
+            "INSERT INTO chat_messages (user_id, body, created_at) "
+            "VALUES (?, ?, ?)", (member["id"], body, now.isoformat()))
+        conn.commit()
+        row = conn.execute(
+            _CHAT_SELECT + "WHERE m.id = ?", (cur.lastrowid,)).fetchone()
+    return JSONResponse({"ok": True, "message": _chat_view(row)})
+
+
+@app.post("/api/chat/messages/{message_id}/delete")
+def chat_delete(request: Request, message_id: int):
+    member = current_member(request)
+    if not member:
+        return JSONResponse({"error": "members only"}, status_code=401)
+    if not _chat_is_admin(member):
+        return JSONResponse({"error": "admins only"}, status_code=403)
+    with get_conn(DB_PATH) as conn:
+        row = conn.execute(
+            "SELECT id FROM chat_messages WHERE id = ? AND deleted = 0",
+            (message_id,)).fetchone()
+        if row is None:
+            return JSONResponse({"error": "no such message"},
+                                status_code=404)
+        conn.execute(
+            "UPDATE chat_messages SET deleted = 1, deleted_at = ? "
+            "WHERE id = ?",
+            (datetime.now(timezone.utc).isoformat(), message_id))
+        conn.commit()
+    return JSONResponse({"ok": True, "id": message_id})
 
 
 # ------------------------------------------------------------------- profiles

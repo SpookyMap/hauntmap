@@ -1,0 +1,232 @@
+{% extends "base.html" %}
+{% block title %}💬 The Haunt Chat · {{ site_name }}{% endblock %}
+{% block content %}
+{# Haunt Chat (Dan, Oct 27 — STAGED): one members-only room for
+   HauntMap + HauntSocial. Members read the whole room and post;
+   guests get the teaser — Frank's pinned welcome + the latest few
+   messages — above a join gate. The pinned welcome is rendered from
+   code (FRANK_CHAT_WELCOME in app/main.py), never a DB row, so it
+   can't be deleted or buried. User text renders through Jinja
+   autoescape here and textContent in the poll/post JS — never raw. #}
+<section class="chat-wrap">
+  <header class="chat-head">
+    <p class="soc-kicker">👻 <span class="hs-brand">HauntSocial</span></p>
+    <h1 class="chat-title">💬 The Haunt Chat</h1>
+    <p class="chat-sub">The HauntMap hangout — talk haunts, events, parties, music and costumes with your fellow haunters.</p>
+  </header>
+
+  <div class="chat-room">
+    <div class="chat-pin">
+      <span class="soc-avatar soc-avatar-sm" style="background: {{ frank_avatar.bg }}">{% if frank_avatar.img %}<img class="soc-avatar-img" src="{{ frank_avatar.img }}" alt="">{% elif frank_avatar.emoji %}<span>{{ frank_avatar.emoji }}</span>{% else %}<span>{{ frank_avatar.initial }}</span>{% endif %}</span>
+      <div class="chat-pin-main">
+        <p class="chat-pin-meta">📌 <a href="/@frank">Frank</a> · your host</p>
+        <p class="chat-pin-text">{{ frank_welcome }}</p>
+      </div>
+    </div>
+
+    <div class="chat-msgs" id="chatMsgs">
+      {% for m in messages %}
+      <div class="chat-msg" data-mid="{{ m.id }}">
+        <a class="chat-ava" href="/@{{ m.handle }}" aria-label="@{{ m.handle }}'s page"><span class="soc-avatar soc-avatar-sm" style="background: {{ m.avatar.bg }}">{% if m.avatar.img %}<img class="soc-avatar-img" src="{{ m.avatar.img }}" alt="">{% elif m.avatar.emoji %}<span>{{ m.avatar.emoji }}</span>{% else %}<span>{{ m.avatar.initial }}</span>{% endif %}</span></a>
+        <div class="chat-msg-main">
+          <p class="chat-meta"><a class="chat-handle" href="/@{{ m.handle }}">@{{ m.handle }}</a> <time class="chat-time" datetime="{{ m.created_at }}">{{ m.created_at[11:16] }}</time>{% if can_moderate %} <button type="button" class="chat-del" data-del="{{ m.id }}" title="Delete message" aria-label="Delete message">✕</button>{% endif %}</p>
+          <p class="chat-text">{{ m.body }}</p>
+        </div>
+      </div>
+      {% else %}
+      <p class="chat-empty" id="chatEmpty">No messages yet — be the first haunter to say boo. 👻</p>
+      {% endfor %}
+    </div>
+
+    {% if teaser %}
+    <div class="chat-gate">
+      <p class="chat-gate-title">🔒 This room is for <span class="hs-brand">HauntSocial</span> members</p>
+      <p class="chat-gate-sub">Join free to read the rest and jump into the conversation.</p>
+      <div class="chat-gate-btns">
+        <a class="social-promo-btn" href="/signup">Join free</a>
+        <a class="chat-gate-login" href="/login?next=/chat">Log in</a>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+  <script>
+  // Every visitor gets local times (the server renders a UTC fallback
+  // inside <time datetime>); the member script below re-runs this for
+  // messages it appends itself.
+  document.querySelectorAll('time.chat-time').forEach(function (t) {
+    var d = new Date(t.getAttribute('datetime'));
+    if (!isNaN(d)) {
+      t.textContent = d.toLocaleTimeString([], {hour: 'numeric', minute: '2-digit'});
+    }
+  });
+  </script>
+
+  {% if member %}
+  <form class="chat-composer" id="chatForm">
+    <label class="chat-composer-label" for="chatInput">Chatting as @{{ member.handle }}</label>
+    <div class="chat-composer-row">
+      <textarea id="chatInput" class="chat-input" rows="1" maxlength="{{ chat_max }}" placeholder="Say something spooky…" autocomplete="off"></textarea>
+      <button class="chat-send" type="submit">Send</button>
+    </div>
+    <p class="chat-composer-meta"><span class="chat-err" id="chatErr" role="alert"></span><span class="chat-count" id="chatCount">0/{{ chat_max }}</span></p>
+  </form>
+  <script>
+  (function () {
+    var msgs = document.getElementById('chatMsgs');
+    var form = document.getElementById('chatForm');
+    var input = document.getElementById('chatInput');
+    var err = document.getElementById('chatErr');
+    var count = document.getElementById('chatCount');
+    var MAX = {{ chat_max }};
+    var CAN_MOD = {{ 'true' if can_moderate else 'false' }};
+    var lastId = 0;
+    msgs.querySelectorAll('.chat-msg').forEach(function (el) {
+      var id = parseInt(el.getAttribute('data-mid'), 10) || 0;
+      if (id > lastId) lastId = id;
+    });
+
+    function localTime(iso) {
+      var d = new Date(iso);
+      if (isNaN(d)) return '';
+      return d.toLocaleTimeString([], {hour: 'numeric', minute: '2-digit'});
+    }
+    function fixTimes(root) {
+      root.querySelectorAll('time.chat-time').forEach(function (t) {
+        t.textContent = localTime(t.getAttribute('datetime'));
+      });
+    }
+    fixTimes(msgs);
+
+    function nearBottom() {
+      return msgs.scrollHeight - msgs.scrollTop - msgs.clientHeight < 140;
+    }
+    function scrollBottom() { msgs.scrollTop = msgs.scrollHeight; }
+    scrollBottom();
+
+    function avatarNode(a) {
+      var span = document.createElement('span');
+      span.className = 'soc-avatar soc-avatar-sm';
+      span.style.background = (a && a.bg) || '#3a1c66';
+      if (a && a.img) {
+        var img = document.createElement('img');
+        img.className = 'soc-avatar-img'; img.src = a.img; img.alt = '';
+        span.appendChild(img);
+      } else {
+        var s = document.createElement('span');
+        s.textContent = (a && (a.emoji || a.initial)) || '?';
+        span.appendChild(s);
+      }
+      return span;
+    }
+
+    function addMessage(m) {
+      if (msgs.querySelector('.chat-msg[data-mid="' + m.id + '"]')) return;
+      var empty = document.getElementById('chatEmpty');
+      if (empty) empty.remove();
+      var stick = nearBottom();
+      var row = document.createElement('div');
+      row.className = 'chat-msg'; row.setAttribute('data-mid', m.id);
+      var ava = document.createElement('a');
+      ava.className = 'chat-ava'; ava.href = '/@' + m.handle;
+      ava.appendChild(avatarNode(m.avatar));
+      var main = document.createElement('div');
+      main.className = 'chat-msg-main';
+      var meta = document.createElement('p');
+      meta.className = 'chat-meta';
+      var h = document.createElement('a');
+      h.className = 'chat-handle'; h.href = '/@' + m.handle;
+      h.textContent = '@' + m.handle;
+      var t = document.createElement('time');
+      t.className = 'chat-time'; t.setAttribute('datetime', m.created_at);
+      t.textContent = localTime(m.created_at);
+      meta.appendChild(h);
+      meta.appendChild(document.createTextNode(' '));
+      meta.appendChild(t);
+      if (CAN_MOD) {
+        var b = document.createElement('button');
+        b.type = 'button'; b.className = 'chat-del';
+        b.setAttribute('data-del', m.id);
+        b.title = 'Delete message'; b.setAttribute('aria-label', 'Delete message');
+        b.textContent = '✕';
+        meta.appendChild(document.createTextNode(' '));
+        meta.appendChild(b);
+      }
+      var text = document.createElement('p');
+      text.className = 'chat-text'; text.textContent = m.body;
+      main.appendChild(meta); main.appendChild(text);
+      row.appendChild(ava); row.appendChild(main);
+      msgs.appendChild(row);
+      if (m.id > lastId) lastId = m.id;
+      if (stick) scrollBottom();
+    }
+
+    function poll() {
+      if (document.hidden) return;
+      fetch('/api/chat/messages?after=' + lastId, {headers: {'Accept': 'application/json'}})
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (d) {
+          if (!d) return;
+          (d.gone || []).forEach(function (id) {
+            var el = msgs.querySelector('.chat-msg[data-mid="' + id + '"]');
+            if (el) el.remove();
+          });
+          (d.messages || []).forEach(addMessage);
+        })
+        .catch(function () {});
+    }
+    setInterval(poll, 4000);
+
+    msgs.addEventListener('click', function (e) {
+      var b = e.target.closest ? e.target.closest('[data-del]') : null;
+      if (!b) return;
+      var id = b.getAttribute('data-del');
+      fetch('/api/chat/messages/' + id + '/delete', {method: 'POST'})
+        .then(function (r) {
+          if (r.ok) {
+            var el = msgs.querySelector('.chat-msg[data-mid="' + id + '"]');
+            if (el) el.remove();
+          }
+        })
+        .catch(function () {});
+    });
+
+    input.addEventListener('input', function () {
+      count.textContent = input.value.length + '/' + MAX;
+    });
+    input.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        if (form.requestSubmit) form.requestSubmit();
+      }
+    });
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var body = input.value.trim();
+      if (!body) return;
+      err.textContent = '';
+      fetch('/api/chat/messages', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({body: body})
+      })
+        .then(function (r) {
+          return r.json().then(function (d) { return {ok: r.ok, d: d}; });
+        })
+        .then(function (res) {
+          if (res.ok && res.d.message) {
+            addMessage(res.d.message);
+            input.value = '';
+            count.textContent = '0/' + MAX;
+            scrollBottom();
+          } else {
+            err.textContent = (res.d && res.d.error) || 'Could not send — try again.';
+          }
+        })
+        .catch(function () { err.textContent = 'Could not send — try again.'; });
+    });
+  })();
+  </script>
+  {% endif %}
+</section>
+{% endblock %}

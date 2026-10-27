@@ -573,12 +573,14 @@ function hmFullHomepage() {
   <div class="social-promo-cta">
     <a class="social-promo-btn" href="/@{{ request.state.member.handle }}">Go to your page</a>
     <span class="social-promo-alt">Signed in as @{{ request.state.member.handle }}</span>
+    <a class="social-promo-what" href="/chat">💬 Haunt Chat</a>
     <a class="social-promo-what" href="/hauntsocial">What is <span class="hs-brand">HauntSocial</span>?</a>
   </div>
   {% else %}
   <div class="social-promo-cta">
     <a class="social-promo-btn" href="/signup"><span class="hs-brand promo-join-first">Join</span> <span class="hs-brand">HauntSocial</span></a>
     <a class="social-promo-alt" href="/login">Already a member? Sign in</a>
+    <a class="social-promo-what" href="/chat">💬 Haunt Chat</a>
     <a class="social-promo-what" href="/hauntsocial">What is <span class="hs-brand">HauntSocial</span>?</a>
   </div>
   {% endif %}

@@ -6160,3 +6160,80 @@ main.wrap:has(> .vt-tv-strip-bottom) { padding-bottom: 0; }
    Halloween and get access to our HauntSocial Chatroom!" (template).
    Preview card untouched (still perfectly straight). */
 .social-promo-main { justify-content: space-between; }
+
+/* ============ z191: HAUNT CHAT (Dan, Oct 27 — STAGED) ================
+   /chat — the members-only HauntSocial chat room with a public teaser.
+   Azure/blue-glow HauntSocial branding on the site's dark cards; the
+   room is a self-contained panel (message list scrolls internally,
+   composer sits under it in flow) so phone and laptop both keep the
+   composer on screen without any fixed positioning. Nothing tilted. */
+.chat-wrap { max-width: 880px; margin: 0 auto; padding: 1.2rem 1rem 2.2rem; }
+.chat-head { text-align: center; margin-bottom: 1rem; }
+.chat-title { margin: 0.15rem 0 0.3rem; font-size: 2rem; line-height: 1.15; }
+.chat-sub { color: var(--muted); margin: 0 auto; max-width: 560px; }
+.chat-room { background: var(--card); border: 1px solid rgba(143,216,255,.38);
+  border-radius: var(--radius); box-shadow: 0 0 26px rgba(87,168,255,.16);
+  overflow: hidden; }
+.chat-pin { display: flex; gap: 0.7rem; padding: 0.85rem 1rem;
+  background: linear-gradient(120deg, rgba(87,168,255,.16), rgba(143,216,255,.05));
+  border-bottom: 1px solid rgba(143,216,255,.30); }
+.chat-pin-main { min-width: 0; }
+.chat-pin-meta { margin: 0 0 0.15rem; font-size: 0.82rem; font-weight: 700;
+  color: #8fd8ff; }
+.chat-pin-meta a { color: #8fd8ff; text-decoration: none; }
+.chat-pin-meta a:hover { text-decoration: underline; }
+.chat-pin-text { margin: 0; font-size: 0.95rem; line-height: 1.45; }
+.chat-msgs { display: flex; flex-direction: column; gap: 0.9rem;
+  padding: 1rem; max-height: 58vh; min-height: 220px; overflow-y: auto; }
+.chat-empty { color: var(--muted); text-align: center; margin: auto 0; }
+.chat-msg { display: flex; gap: 0.6rem; align-items: flex-start; }
+.chat-ava { flex-shrink: 0; line-height: 0; }
+.chat-msg-main { min-width: 0; }
+.chat-meta { margin: 0; font-size: 0.8rem; color: var(--muted); }
+.chat-handle { color: #8fd8ff; font-weight: 700; text-decoration: none; }
+.chat-handle:hover { text-decoration: underline; }
+.chat-time { color: var(--muted); opacity: 0.75; }
+.chat-del { background: none; border: none; color: var(--muted);
+  font-size: 0.78rem; line-height: 1; padding: 0.1rem 0.25rem; cursor: pointer;
+  opacity: 0.55; vertical-align: baseline; }
+.chat-del:hover, .chat-del:focus-visible { color: var(--danger); opacity: 1; }
+.chat-text { margin: 0.1rem 0 0; line-height: 1.45; overflow-wrap: anywhere;
+  white-space: pre-wrap; }
+.chat-gate { border-top: 1px dashed rgba(143,216,255,.4);
+  padding: 1.1rem 1rem 1.25rem; text-align: center;
+  background: linear-gradient(180deg, rgba(87,168,255,.05), rgba(87,168,255,.13)); }
+.chat-gate-title { margin: 0 0 0.25rem; font-size: 1.05rem; font-weight: 700; }
+.chat-gate-sub { margin: 0 0 0.8rem; color: var(--muted); }
+.chat-gate-btns { display: flex; gap: 0.6rem; justify-content: center;
+  align-items: center; flex-wrap: wrap; }
+.chat-gate-login { color: #8fd8ff; font-weight: 700; text-decoration: none;
+  border: 1px solid rgba(143,216,255,.55); border-radius: 999px;
+  padding: 0.55rem 1.1rem; }
+.chat-gate-login:hover { background: rgba(143,216,255,.12); }
+.chat-composer { margin-top: 0.9rem; background: var(--card);
+  border: 1px solid rgba(143,216,255,.38); border-radius: var(--radius);
+  padding: 0.8rem 0.9rem 0.6rem; box-shadow: 0 0 26px rgba(87,168,255,.12); }
+.chat-composer-label { display: block; font-size: 0.8rem; color: var(--muted);
+  margin-bottom: 0.45rem; }
+.chat-composer-row { display: flex; gap: 0.55rem; align-items: flex-end; }
+.chat-input { flex: 1 1 auto; min-width: 0; resize: none; max-height: 7.5rem;
+  background: var(--bg2); color: var(--ink); border: 1px solid rgba(143,216,255,.35);
+  border-radius: 10px; padding: 0.65rem 0.75rem; font: inherit; font-size: 1rem;
+  line-height: 1.35; }
+.chat-input:focus { outline: 2px solid rgba(143,216,255,.6); outline-offset: 0; }
+.chat-send { flex-shrink: 0; background: #8fd8ff; color: #0a1622; font-weight: 800;
+  border: none; border-radius: 10px; padding: 0.7rem 1.15rem; cursor: pointer;
+  font-size: 1rem; }
+.chat-send:hover { background: #b3e5ff; }
+.chat-composer-meta { display: flex; justify-content: space-between; gap: 1rem;
+  margin: 0.4rem 0 0; font-size: 0.78rem; min-height: 1em; }
+.chat-err { color: var(--danger); }
+.chat-count { color: var(--muted); margin-left: auto; }
+@media (max-width: 520px) {
+  .chat-wrap { padding: 0.9rem 0.6rem 1.6rem; }
+  .chat-title { font-size: 1.55rem; }
+  .chat-msgs { max-height: 54vh; min-height: 190px; padding: 0.8rem; gap: 0.75rem; }
+  .chat-pin { padding: 0.75rem 0.8rem; }
+  .chat-pin-text { font-size: 0.9rem; }
+  .chat-send { padding: 0.7rem 0.9rem; }
+}
