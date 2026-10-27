@@ -4083,50 +4083,50 @@ def haunt_or_not_page(request: Request):
 # halloween-match / zombie-gems (wrong gameplay / wrong game).
 # Aspect w/h per GamePix feed metadata + the verification pass.
 PORTAL_GAMES = [
-    {"slug": "halloween-bubble-shooter",
+    {"iphone": True, "slug": "halloween-bubble-shooter",
      "img": "https://img.gamepix.com/games/halloween-bubble-shooter/cover/halloween-bubble-shooter.png?w=512",
      "title": "Halloween Bubble Shooter",
      "blurb": "Aim, match and pop the monster bubbles. Tap, drag, "
               "release \u2014 pure Halloween candy for your brain.",
      "tag": "Bubble shooter \u00b7 all ages", "w": 600, "h": 800},
-    {"slug": "knife-hit",
+    {"iphone": True, "slug": "knife-hit",
      "img": "https://img.gamepix.com/games/knife-hit/cover/knife-hit.png?w=512",
      "title": "Knife Hit",
      "blurb": "Throw knives, split the targets, beat the boss. "
               "One-tap timing that gets dangerously addictive.",
      "tag": "Arcade timing", "w": 800, "h": 600},
-    {"slug": "chaos-zombie-tower-defense",
+    {"iphone": True, "slug": "chaos-zombie-tower-defense",
      "img": "https://img.gamepix.com/games/chaos-zombie-tower-defense/cover/chaos-zombie-tower-defense.png?w=512",
      "title": "Chaos Zombie Tower Defense",
      "blurb": "Tower defense: build your line, hold the gate, "
               "zap and freeze the horde, survive the night.",
      "tag": "Tower defense", "w": 800, "h": 600},
-    {"slug": "spooky-merge",
+    {"iphone": True, "slug": "spooky-merge",
      "img": "https://img.gamepix.com/games/spooky-merge/cover/spooky-merge.png?w=512",
      "title": "Spooky Merge",
      "blurb": "Drop the spooky pieces and merge your way up the "
               "chain \u2014 pumpkins, ghosts and monsters combine into "
               "bigger and bigger haunts.",
      "tag": "Merge puzzle \u00b7 portrait play", "w": 600, "h": 800},
-    {"slug": "jewel-monsters",
+    {"iphone": True, "slug": "jewel-monsters",
      "img": "https://img.gamepix.com/games/jewel-monsters/cover/jewel-monsters.png?w=512",
      "title": "Jewel Monsters",
      "blurb": "Match-3 with a monstrous twist \u2014 line up the "
               "jewel monsters and chain the combos.",
      "tag": "Match-3 puzzle \u00b7 portrait play", "w": 600, "h": 800},
-    {"slug": "halloween-matching",
+    {"iphone": True, "slug": "halloween-matching",
      "img": "https://img.gamepix.com/games/halloween-matching/cover/halloween-matching.png?w=512",
      "title": "Halloween Matching",
      "blurb": "Flip the tiles and match the monsters \u2014 "
               "concentration candy for sharp little ghouls.",
      "tag": "Memory \u00b7 kids love it", "w": 800, "h": 600},
-    {"slug": "spooky-halloween-hidden-pumpkin",
+    {"iphone": True, "slug": "spooky-halloween-hidden-pumpkin",
      "img": "https://img.gamepix.com/games/spooky-halloween-hidden-pumpkin/cover/spooky-halloween-hidden-pumpkin.png?w=512",
      "title": "Spooky Halloween Hidden Pumpkin",
      "blurb": "Hidden-object hunt: spot every hidden pumpkin "
               "haunting the spooky scenes before the clock runs out.",
      "tag": "Hidden object", "w": 800, "h": 600},
-    {"slug": "halloween-coloring-book-for-kids",
+    {"iphone": True, "slug": "halloween-coloring-book-for-kids",
      "img": "https://img.gamepix.com/games/halloween-coloring-book-for-kids/cover/halloween-coloring-book-for-kids.png?w=512",
      "title": "Halloween Coloring Book",
      "blurb": "Color the witches, cats and jack-o\u2019-lanterns \u2014 "
@@ -4241,26 +4241,26 @@ NINJAGO_GAMES = [
 # Drunk Ninja, HACKSLASH); every ROM/emulator and "free ninja games"
 # clone-portal result (ripped files, no license chain).
 NINJA_PORTAL_GAMES = [
-    {"slug": "angry-ninja",
+    {"iphone": True, "slug": "angry-ninja",
      "img": "https://img.gamepix.com/games/angry-ninja/cover/angry-ninja.png?w=512",
      "title": "Angry Ninja",
      "blurb": "The pirates have picked the wrong island — help the "
               "Angry Ninjas bounce, slash and puzzle their way "
               "through every last one of them.",
      "tag": "Arcade · plays here via GamePix", "w": 480, "h": 320},
-    {"slug": "bighead-ninja",
+    {"iphone": True, "slug": "bighead-ninja",
      "img": "https://img.gamepix.com/games/bighead-ninja/cover/bighead-ninja.png?w=512",
      "title": "Bighead Ninja!",
      "blurb": "A big-headed ninja endless runner: sprint, leap and "
               "dodge as far as your little legs can carry you.",
      "tag": "Runner · plays here via GamePix", "w": 480, "h": 320},
-    {"slug": "block-ninja",
+    {"iphone": True, "slug": "block-ninja",
      "img": "https://img.gamepix.com/games/block-ninja/cover/block-ninja.png?w=512",
      "title": "Block Ninja",
      "blurb": "Two ninjas, one swipe at a time — steer both blocky "
               "ninjas up and down and thread them through the gaps.",
      "tag": "Swipe arcade · plays here via GamePix", "w": 480, "h": 320},
-    {"slug": "blow-out-bomb-blast-ninja",
+    {"iphone": True, "slug": "blow-out-bomb-blast-ninja",
      "img": "https://img.gamepix.com/games/blow-out-bomb-blast-ninja/cover/blow-out-bomb-blast-ninja.png?w=512",
      "title": "Blow Out Bomb Blast Ninja",
      "blurb": "Bombs away — slice the fuses and blow out every bomb "
