@@ -132,7 +132,8 @@ CREATE TABLE IF NOT EXISTS page_views (
     sid TEXT,                             -- anonymous hm_sid session cookie id
     country TEXT,                         -- Cloudflare cf-ipcountry (Oct 26 geo stats); NULL on older rows
     region TEXT,                          -- cf-ipregion: US state code when resolvable, else CF's region name
-    city TEXT                             -- cf-ipcity (needs CF's visitor-location transform); NULL when absent
+    city TEXT,                            -- cf-ipcity (needs CF's visitor-location transform); NULL when absent
+    user_agent TEXT                       -- raw User-Agent header, <=512 chars (Oct 27 UA logging); NULL on older rows
 );
 CREATE INDEX IF NOT EXISTS idx_page_views_date ON page_views(viewed_at);
 CREATE TABLE IF NOT EXISTS sponsors (
@@ -461,6 +462,15 @@ def init_db(db_path: Path) -> None:
         conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_page_views_country "
             "ON page_views(country)")
+        # Raw User-Agent per page view (Dan, Oct 27): the device bucket
+        # alone can't separate bot families (Googlebot vs TikTok /
+        # iMessage link previews vs uptime monitors), which the Oct 27
+        # machine-traffic breakdown flagged as the blind spot in sponsor
+        # reporting. Additive only — no counting query reads this column,
+        # so every published figure is unchanged. Same startup-ensure
+        # pattern; older rows stay NULL.
+        if "user_agent" not in pvcols:
+            conn.execute("ALTER TABLE page_views ADD COLUMN user_agent TEXT")
         # HauntMap Social (Phase 1): a pin's owner once a haunter claims
         # it. NULL until claimed; profile "My haunts" reads this column.
         if "owner_user_id" not in cols:

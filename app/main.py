@@ -419,8 +419,8 @@ def _analytics_write_batch(conn, batch: list) -> None:
     if pv:
         conn.executemany(
             "INSERT INTO page_views (path, viewed_at, referrer, device, sid, "
-            "country, region, city) "
-            "VALUES (?, ?, ?, ?, ?, ?, ?, ?)", pv)
+            "country, region, city, user_agent) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", pv)
     engaged = [r[1:] for r in batch if r[0] == "engaged"]
     if engaged:
         conn.executemany(
@@ -511,6 +511,44 @@ def _device_bucket(ua: str) -> str:
     return "Other"
 
 
+# UA families for traffic breakdowns (Oct 27): page_views.user_agent is
+# stored raw; this classifier is applied at REPORT time (machine-traffic
+# breakdowns, sponsor-accuracy checks), never in the request path.
+# Ordered most-specific first — search crawlers and preview fetchers
+# also contain "bot", so they must win over the generic bot bucket.
+_UA_FAMILY_RULES = (
+    ("uptime_health", ("uptimerobot", "pingdom", "statuscake", "healthcheck",
+                       "health-check", "render/", "kube-probe", "site24x7")),
+    ("search_crawler", ("googlebot", "google-inspectiontool", "bingbot",
+                        "duckduckbot", "baiduspider", "yandexbot", "applebot",
+                        "petalbot", "seznambot", "naverbot")),
+    ("social_preview", ("facebookexternalhit", "facebot", "twitterbot",
+                        "whatsapp", "telegrambot", "discordbot", "slackbot",
+                        "linkedinbot", "pinterestbot", "tiktok", "snapchat",
+                        "skypeuripreview", "redditbot", "embedly", "iframely")),
+    ("bot_scanner", ("bot", "spider", "crawler", "scraper", "curl", "wget",
+                     "python-requests", "python-urllib", "go-http-client",
+                     "headlesschrome", "scrapy", "libwww", "httpclient",
+                     "okhttp", "axios", "node-fetch", "zgrab", "masscan")),
+)
+
+
+def _ua_family(ua: str | None) -> str:
+    """Classify one stored User-Agent into a traffic family:
+    'uptime_health', 'search_crawler', 'social_preview', 'bot_scanner',
+    'browser' (a real browser UA), or 'other' (empty/unrecognized)."""
+    if not ua:
+        return "other"
+    low = ua.lower()
+    for family, needles in _UA_FAMILY_RULES:
+        if any(n in low for n in needles):
+            return family
+    if "mozilla" in low and any(b in low for b in (
+            "chrome", "safari", "firefox", "edg", "opr/", "samsungbrowser")):
+        return "browser"
+    return "other"
+
+
 # Date the page_views geo columns started collecting (ship date of the
 # geography panel) — the /admin stats page prints it so the breakdown
 # is never mistaken for all-time coverage.
@@ -555,6 +593,11 @@ async def _track_page_view(request: Request, call_next):
                    "HauntMap-Verify" not in request.headers.get("user-agent", ""):
                     referrer = request.headers.get("referer", "")[:500]
                     ua = request.headers.get("user-agent", "")[:500]
+                    # Raw UA for the row (Oct 27 UA logging): stored at
+                    # up to 512 chars so bot families can be told apart
+                    # later; the device bucket above keeps its 500-char
+                    # input and its buckets are unchanged.
+                    ua_stored = request.headers.get("user-agent", "")[:512]
                     sid = request.cookies.get("hm_sid")
                     new_sid = not sid
                     if new_sid:
@@ -563,7 +606,7 @@ async def _track_page_view(request: Request, call_next):
                     _analytics_q.put((
                         "pv", path, datetime.now(timezone.utc).isoformat(),
                         referrer, _device_bucket(ua), sid,
-                        country, region, city))
+                        country, region, city, ua_stored))
                     if new_sid:
                         response.set_cookie("hm_sid", sid, max_age=30 * 24 * 3600,
                                             httponly=True, samesite="lax")
