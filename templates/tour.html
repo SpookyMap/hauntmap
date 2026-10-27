@@ -22,11 +22,22 @@
 .tour-stats { color: var(--muted); margin-bottom: 1rem; }
 .share-row { display: flex; gap: 0.5rem; margin-bottom: 1rem; }
 .share-row input { flex: 1; background: var(--bg2); color: var(--ink); border: 1px solid #33254f; border-radius: 10px; padding: 0.5rem; font-size: 0.85rem; }
+.auto-tour-banner { background: linear-gradient(160deg, #14222b, #0e1a20); border: 1px solid var(--accent2); border-radius: 12px; padding: 0.8rem 1rem; margin-bottom: 1rem; box-shadow: 0 0 16px rgba(87, 168, 255, 0.25); }
+.auto-tour-banner strong { display: block; margin-bottom: 0.25rem; }
+.auto-tour-banner p { margin: 0; color: var(--muted); font-size: 0.92rem; }
 </style>
 {% endblock %}
 {% block content %}
 <h2>&#x1F383; My Haunt Tour</h2>
 <p style="color: var(--muted); margin-top: -0.5rem; margin-bottom: 1rem;">Customize your haunt tour just the way you like it — pick your stops, set the order, and hit the road.</p>
+{# Auto Tour banner (STAGED for preview, Oct 27): the no-work path,
+   for visitors who don't want to hand-pick stops. #}
+<div class="auto-tour-banner">
+  <strong>&#x26A1; Short on time? Let us build it for you</strong>
+  <p>One tap lines up the most-viewed haunts near you in drive order:
+  <a href="/auto-tour?size=10">Top 10 near me — one night</a> &middot;
+  <a href="/auto-tour?size=100">Top 100 near me — planned by nights</a></p>
+</div>
 <div class="signup-strip signup-strip-slim">
   {% if request.query_params.get('subscribed') %}
   <p class="newsletter-success">&#x1F389; You're in! First word on new haunts near your stops — and first in line for the Jolly Map &#x1F384;</p>

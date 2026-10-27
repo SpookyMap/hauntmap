@@ -559,6 +559,30 @@ a { color: var(--accent); }
 .top10-home-list .featured-badge { margin-top: 0; flex: 0 0 auto; }
 .top10-home-more { font-weight: 700; }
 
+/* Auto Tour — homepage block (STAGED for preview, Oct 27): "Build my
+   tour for me" entry point. Same panel treatment as .top10-home,
+   with the blue glow (accent2) the theme uses for interactive
+   highlights. Hero copy in the panel under Top 10 on laptop; phone
+   twin in .hero-split as grid area "autotour". */
+.auto-tour-home {
+  margin: 1.2rem 0 0.4rem; padding: 1rem;
+  background: linear-gradient(160deg, #14222b, #0e1a20);
+  border: 1px solid #402f54; border-radius: 14px;
+  box-shadow: 0 0 18px rgba(87, 168, 255, 0.28);
+}
+.auto-tour-home h2 { font-size: 1.25rem; margin: 0 0 0.3rem; }
+.auto-tour-sub { color: #a9cdf5; margin: 0 0 0.7rem; }
+.auto-tour-btns { display: grid; gap: 0.5rem; }
+.auto-tour-btn {
+  display: flex; flex-direction: column; gap: 0.1rem;
+  color: var(--ink); text-decoration: none;
+  background: rgba(87, 168, 255, 0.10); border: 1px solid var(--accent2);
+  border-radius: 10px; padding: 0.55rem 0.7rem;
+}
+.auto-tour-btn:hover { background: rgba(87, 168, 255, 0.20); }
+.auto-tour-btn-title { font-weight: 800; }
+.auto-tour-btn-sub { color: var(--muted); font-size: 0.82rem; }
+
 /* ============ z103: TOP 10 PHONE SEAT (Dan, Oct 23 ~21:33) ====
    Dan: "Put the top ten by state under the my tik tok videos above
    the follow us on tik tok view on the phone." The phone copy moves
@@ -570,6 +594,7 @@ a { color: var(--accent); }
    >=761px (z67 rule), so the laptop grid never sees it and the
    in-hero copy + laptop layout are untouched. */
 .hero-split > .top10-home { grid-area: top10home; margin: 0; }
+.hero-split > .auto-tour-home { grid-area: autotour; margin: 0; }
 
 /* admin */
 .admin-list { display: grid; gap: 0.6rem; margin-bottom: 2rem; }
@@ -1546,7 +1571,7 @@ a.game-card:hover { border-color: #ff7518; transform: translateY(-2px); }
 .hero-split {
   display: grid;
   grid-template-columns: 1fr;
-  grid-template-areas: "headline" "vtstrip" "video" "top10home" "strip" "social" "sponsor";
+  grid-template-areas: "headline" "vtstrip" "video" "top10home" "autotour" "strip" "social" "sponsor";
   gap: 0.9rem;
   margin: 0.4rem 0;
 }
@@ -1707,7 +1732,7 @@ a.game-card:hover { border-color: #ff7518; transform: translateY(-2px); }
 /* Town-request form inside the hero grid: its own area under the sponsor
    billboard in the left column (last in the stacked order on phone).
    strip-fit: "vtstrip" (phone VT/TV twin) joins right after "headline". */
-.hero-split { grid-template-areas: "headline" "vtstrip" "video" "top10home" "strip" "social" "sponsor" "townreq"; }
+.hero-split { grid-template-areas: "headline" "vtstrip" "video" "top10home" "autotour" "strip" "social" "sponsor" "townreq"; }
 .hero-split .town-request {
   grid-area: townreq; margin: 0; max-width: none; width: 100%;
   box-sizing: border-box; text-align: left;
@@ -2296,7 +2321,7 @@ body.has-tourbar.has-radio { padding-bottom: 124px; }
   .site-header.v2 .header-nav a.navbtn[href="/diy-costumes"] span { font-size: 0.36rem; }
 }
 @media (max-width: 760px) {
-  .hero-split { grid-template-areas: "headline" "vtstrip" "video" "top10home" "strip" "social" "sponsor" "townreq"; }
+  .hero-split { grid-template-areas: "headline" "vtstrip" "video" "top10home" "autotour" "strip" "social" "sponsor" "townreq"; }
 }
 
 /* ============ z65: PHONE NAV — TWO ROWS OF FIVE (Dan, Oct 22; supersedes the z64 single row) ====
@@ -2457,6 +2482,7 @@ body.has-tourbar.has-radio { padding-bottom: 124px; }
   .near-you:not(.hero-copy),
   .trending:not(.hero-copy),
   .top10-home:not(.hero-copy),
+  .auto-tour-home:not(.hero-copy),
   .below-band-only { display: none; }
   /* z96: same one-copy rule for the three cards that moved into the
      hero panel (Tonight's Display / Daily Fright / Haunt Bracket). */
@@ -2480,6 +2506,14 @@ body.has-tourbar.has-radio { padding-bottom: 124px; }
   .hero-stack .top10-home.hero-copy {
     margin: 0; background: rgba(5, 8, 10, 0.72);
   }
+  /* Auto Tour hero copy (STAGED): same compact in-panel treatment. */
+  .hero-stack .auto-tour-home.hero-copy {
+    margin: 0; background: rgba(5, 8, 10, 0.72);
+  }
+  .hero-stack .auto-tour-home h2 { font-size: 0.95rem; margin-bottom: 0.2rem; }
+  .hero-stack .auto-tour-sub { font-size: 0.76rem; margin-bottom: 0.4rem; }
+  .hero-stack .auto-tour-btn { padding: 0.4rem 0.55rem; }
+  .hero-stack .auto-tour-btn-title { font-size: 0.85rem; }
   .hero-stack .top10-home h2 { font-size: 0.95rem; margin-bottom: 0.2rem; }
   .hero-stack .top10-home-sub { font-size: 0.76rem; margin-bottom: 0.4rem; }
   .hero-stack .top10-home-list a { padding: 0.35rem 0.55rem; font-size: 0.85rem; }

@@ -1,0 +1,172 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Top 100' if size == 100 else 'Top 10' }} Near Me — Auto Tour - {{ site_name }}{% endblock %}
+{% block head %}
+<style>
+.at-panel {
+  background: linear-gradient(160deg, #14222b, #0e1a20);
+  border: 1px solid #402f54; border-radius: 14px;
+  padding: 1rem; margin-bottom: 1rem;
+  box-shadow: 0 0 18px rgba(87, 168, 255, 0.25);
+}
+.at-panel h2 { margin: 0 0 0.3rem; font-size: 1.4rem; }
+.at-sub { color: #a9cdf5; margin: 0 0 0.8rem; }
+.at-stats { color: var(--muted); margin: 0 0 0.4rem; font-size: 0.95rem; }
+.at-stats strong { color: var(--ink); }
+.at-loc-row { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.7rem; }
+.at-loc-row input {
+  background: var(--bg2); color: var(--ink); border: 1px solid #274860;
+  border-radius: 10px; padding: 0.55rem 0.7rem; font-size: 0.95rem;
+}
+.at-night { margin-bottom: 1.4rem; }
+.at-night-head {
+  display: flex; align-items: center; gap: 0.7rem; flex-wrap: wrap;
+  margin-bottom: 0.6rem;
+}
+.at-night-head h3 { margin: 0; font-size: 1.15rem; }
+.at-night-meta { color: var(--muted); font-size: 0.9rem; }
+.at-open-btn { margin-left: auto; }
+.at-list { list-style: none; padding: 0; margin: 0; }
+.at-list li { margin-bottom: 0.5rem; }
+.at-card {
+  display: flex; gap: 0.6rem; align-items: center;
+  background: var(--card); border: 1px solid #33254f; border-radius: 10px;
+  padding: 0.6rem; text-decoration: none; color: var(--ink);
+}
+.at-card:hover { border-color: var(--accent2); }
+.at-num {
+  background: var(--accent2); color: #06121f; font-weight: 800;
+  width: 1.8rem; height: 1.8rem; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; font-size: 0.95rem;
+}
+.at-thumb { width: 3.5rem; height: 3.5rem; border-radius: 8px; object-fit: cover; flex-shrink: 0; }
+.at-info { flex: 1; min-width: 0; }
+.at-info strong { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.at-info small { color: var(--muted); font-size: 0.85rem; display: block; margin-top: 2px; }
+.at-info .at-addr { color: var(--ink); }
+.at-leg { color: #a9cdf5; font-size: 0.82rem; white-space: nowrap; text-align: right; }
+.at-note { color: var(--muted); font-size: 0.9rem; }
+.at-err { color: #ff9d9d; margin: 0 0 0.6rem; }
+</style>
+{% endblock %}
+{% block content %}
+{% if need_location %}
+<div class="at-panel">
+  <h2>&#x26A1; Build my tour for me</h2>
+  <p class="at-sub">
+    {% if size == 100 %}
+    The <strong>Top 100</strong> most-viewed haunts near you — ranked, routed, and split into nights of 10 stops so no night is a marathon.
+    {% else %}
+    The <strong>Top 10</strong> most-viewed haunts near you — ranked and routed into one ready-to-drive night.
+    {% endif %}
+    First, tell us where you're starting from:
+  </p>
+  {% if err %}<p class="at-err">{{ err }}</p>{% endif %}
+  <div class="at-loc-row">
+    <button class="btn" id="at-locate" type="button">&#x1F4CD; Use my location</button>
+  </div>
+  <form class="at-loc-row" method="get" action="/auto-tour">
+    <input type="hidden" name="size" value="{{ size }}">
+    <input type="text" name="zip" inputmode="numeric" autocomplete="postal-code" placeholder="ZIP code" size="9">
+    <button class="btn" type="submit">Use ZIP</button>
+  </form>
+  <form class="at-loc-row" method="get" action="/auto-tour">
+    <input type="hidden" name="size" value="{{ size }}">
+    <input type="text" name="q" placeholder="Town or city — e.g. Hackensack, NJ" size="26">
+    <button class="btn" type="submit">Use town</button>
+  </form>
+  <p class="at-note" style="margin-top: 0.8rem;">
+    {% if size == 100 %}
+    Rather pick your own stops? <a href="/tour">Build a tour by hand &rarr;</a>
+    {% else %}
+    Want the full run instead? <a href="/auto-tour?size=100">Plan the Top 100 near you &rarr;</a>
+    {% endif %}
+  </p>
+</div>
+<script>
+document.getElementById('at-locate').onclick = () => {
+  if (!navigator.geolocation) { alert('Geolocation is not supported on this device.'); return; }
+  navigator.geolocation.getCurrentPosition(
+    pos => { location.href = `/auto-tour?size={{ size }}&lat=${pos.coords.latitude}&lng=${pos.coords.longitude}`; },
+    () => alert('Could not get your location — try a ZIP or town instead.'),
+    {timeout: 10000});
+};
+</script>
+{% else %}
+<div class="at-panel">
+  <h2>&#x26A1; Top {{ total_stops }} near {{ center_label }}</h2>
+  <p class="at-sub">
+    {% if size == 100 %}
+    Your area's most-viewed haunts, in drive order — split into {{ nights|length }} night{{ 's' if nights|length != 1 }} of up to {{ 10 }} stops. Open a night and it's a real tour: reorder it, drop stops, or send it straight to Google Maps.
+    {% else %}
+    Your area's most-viewed haunts, lined up in drive order — one ready night. Open it and it's a real tour: reorder it, drop stops, or send it straight to Google Maps.
+    {% endif %}
+  </p>
+  <p class="at-stats">
+    <strong>{{ total_stops }}</strong> stop{{ 's' if total_stops != 1 }}
+    &middot; within <strong>{{ radius|int }} mi</strong> of {{ center_label }}{% if approx %} (approximate center){% endif %}
+    &middot; ~<strong>{{ total_miles|round|int }} mi</strong> of driving
+    {% if pool_size > total_stops %}&middot; picked from {{ pool_size }} eligible haunts nearby{% endif %}
+  </p>
+  {% if total_stops < size %}
+  <p class="at-note">That's every eligible haunt within {{ radius|int }} miles — a tour stop needs a verified street address, so a few map pins don't qualify. <a href="/nearby">See everything near you &rarr;</a></p>
+  {% endif %}
+  {% if size == 10 %}
+  <p class="at-note">Feeling ambitious? <a href="/auto-tour?size=100">Plan the Top 100 near you, night by night &rarr;</a></p>
+  {% else %}
+  <p class="at-note">Just one night? <a href="/auto-tour?size=10">Build the Top 10 instead &rarr;</a></p>
+  {% endif %}
+</div>
+
+{% for night in nights %}
+<section class="at-night" aria-label="Night {{ night.num }}">
+  <div class="at-night-head">
+    <h3>{% if nights|length > 1 %}🌙 Night {{ night.num }}{% else %}🌙 Your night{% endif %}</h3>
+    <span class="at-night-meta">{{ night.stops|length }} stops &middot; ~{{ night.miles|round(1) }} mi from home</span>
+    <button class="btn at-open-btn" type="button" data-ids='{{ night.ids | tojson }}' data-title="{{ night.title }}">Open this night as a tour &rarr;</button>
+  </div>
+  <ol class="at-list">
+    {% for e in night.stops %}
+    <li>
+      <a class="at-card" href="/d/{{ e.id }}">
+        <span class="at-num">{{ loop.index }}</span>
+        {% if e.thumb_url %}<img class="at-thumb" src="{{ e.thumb_url }}" alt="" loading="lazy" onerror="this.style.display='none'">{% endif %}
+        <span class="at-info">
+          <strong>{{ e.title }}{% if e.is_featured %} ⭐{% endif %}</strong>
+          <small>{{ e.town_label or e.town }}</small>
+          {% if e.address %}<small class="at-addr">&#x1F4CD; {{ e.address }}</small>{% endif %}
+        </span>
+        <span class="at-leg">&#x1F441;&#xFE0F; {{ e._views }}<br>{% if loop.first %}&#x1F3E0; {{ e._leg|round(1) }} mi{% else %}+{{ e._leg|round(1) }} mi{% endif %}</span>
+      </a>
+    </li>
+    {% endfor %}
+  </ol>
+</section>
+{% endfor %}
+
+<p class="at-note">Stops are ranked by what haunters actually view (the same ranking as <a href="/leaderboard/top-100">Top 100 Nationwide</a>) and ordered to keep the driving short. Every stop has a verified street address. Wrong starting point? <a href="/auto-tour?size={{ size }}">Start over with a ZIP or town &rarr;</a></p>
+
+<script>
+document.querySelectorAll('.at-open-btn').forEach(btn => {
+  btn.onclick = async () => {
+    const ids = JSON.parse(btn.dataset.ids);
+    const original = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = 'Building your tour…';
+    try {
+      const r = await fetch('/api/tours', {method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({pin_ids: ids, title: btn.dataset.title})});
+      const j = await r.json();
+      if (!r.ok || !j.url) throw new Error(j.error || 'share failed');
+      location.href = j.url;
+    } catch (e) {
+      btn.disabled = false;
+      btn.textContent = original;
+      alert('Could not build that tour — please try again.');
+    }
+  };
+});
+</script>
+{% endif %}
+{% endblock %}

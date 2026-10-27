@@ -6294,6 +6294,207 @@ def leaderboard_top100(request: Request, cat: str = "halloween"):
     )
 
 
+# ------------------------------------------- Auto Tour (STAGED for preview)
+#
+# Dan, Oct 27: "add a feature to create a tour of the top 100 and top
+# ten in your area that takes some of the work out for you." One tap
+# builds a ready route from the highest-ranked haunts near the visitor:
+#   * Ranking currency is IDENTICAL to Top 10 by State / Top 100
+#     Nationwide — _entries_with_views + _rank_with_featured (detail-
+#     page views, votes tiebreak, ⭐ Featured picks guaranteed a slot;
+#     counts never altered).
+#   * The pool is radius-filtered around the visitor's point, and a
+#     stop may enter only with coords AND a verified street address
+#     (the standing address rule — a tour stop has to be routable).
+#   * Stops are ordered by nearest-neighbor routing starting at the
+#     VISITOR (the tour builder's Optimize button does the same greedy
+#     walk, but from the first stop), tidied by a bounded 2-opt pass.
+#   * A Top 100 is one ranked set presented as a ready route list,
+#     grouped into "nights" of AUTO_TOUR_NIGHT_SIZE consecutive route
+#     stops — 100 stops is not one drive. Each night becomes a REAL
+#     tour through the existing system: the page's per-night button
+#     POSTs the night's pin ids to /api/tours (the exact call the tour
+#     builder's Share button makes), landing on /t/{slug} with its
+#     map, Google Maps directions export, and Copy-this-tour into the
+#     builder for editing. Nothing is pre-minted — no tour row exists
+#     until a visitor taps. (The shared-tour cap is 50 stops, so a
+#     single 100-stop tour was never an option; nights of 10 sit
+#     comfortably inside it.)
+AUTO_TOUR_NIGHT_SIZE = 10
+# One night of driving gets a 50 mi net; the Top 100 hunt gets the
+# site's own "near" radius (_GEO_NEAR_RADIUS_MI = 100 mi).
+AUTO_TOUR_RADIUS_MI = {10: 50.0, 100: 100.0}
+
+
+def _auto_tour_pool(conn, cat: str, clat: float, clng: float,
+                    radius: float) -> list[dict]:
+    """Eligible auto-tour stops near a point: visible pins in the
+    category with coordinates AND a verified street address, within
+    `radius` miles. Each returned dict is a copy carrying _views (from
+    the shared ranking snapshot) and _dist (miles from the center)."""
+    out = []
+    for e in _entries_with_views(conn, cat):
+        if e.get("lat") is None or e.get("lng") is None:
+            continue
+        if not (e.get("address") or "").strip():
+            continue  # no verified street address — never auto-toured
+        d = haversine_miles(clat, clng, e["lat"], e["lng"])
+        if d <= radius:
+            e = dict(e)
+            e["_dist"] = d
+            out.append(e)
+    return out
+
+
+def _auto_tour_route(stops: list[dict], clat: float,
+                     clng: float) -> list[dict]:
+    """Order stops as a drive starting at the visitor's point:
+    nearest-neighbor, then a bounded 2-opt tidy pass (open path — the
+    drive starts at the visitor and ends wherever the last stop is).
+    Pure haversine on a precomputed distance matrix; n <= 100."""
+    n = len(stops)
+    if n < 2:
+        return list(stops)
+    pts = [(clat, clng)] + [(e["lat"], e["lng"]) for e in stops]
+    dist = [[0.0] * (n + 1) for _ in range(n + 1)]
+    for i in range(n + 1):
+        for j in range(i + 1, n + 1):
+            d = haversine_miles(pts[i][0], pts[i][1], pts[j][0], pts[j][1])
+            dist[i][j] = dist[j][i] = d
+    # Nearest neighbor from node 0 (the visitor).
+    path = [0]
+    left = set(range(1, n + 1))
+    while left:
+        cur = path[-1]
+        nxt = min(left, key=lambda k: dist[cur][k])
+        path.append(nxt)
+        left.discard(nxt)
+    # Bounded 2-opt: reverse any segment that shortens the open path.
+    for _pass in range(8):
+        improved = False
+        for i in range(len(path) - 2):
+            a, b = path[i], path[i + 1]
+            for j in range(i + 2, len(path)):
+                c = path[j]
+                dnode = path[j + 1] if j + 1 < len(path) else None
+                old = dist[a][b] + (dist[c][dnode] if dnode is not None
+                                    else 0.0)
+                new = dist[a][c] + (dist[b][dnode] if dnode is not None
+                                    else 0.0)
+                if new < old - 1e-9:
+                    path[i + 1:j + 1] = reversed(path[i + 1:j + 1])
+                    improved = True
+                    break
+            if improved:
+                break
+        if not improved:
+            break
+    return [stops[k - 1] for k in path[1:]]
+
+
+@app.get("/auto-tour", response_class=HTMLResponse)
+def auto_tour(request: Request, size: int = 10, cat: str = "halloween",
+              lat: str = "", lng: str = "", zip: str = "", q: str = ""):
+    """Auto Tour page: the Top 10 / Top 100 near the visitor, ranked
+    like the leaderboards, ordered as a route, grouped into nights.
+
+    Center resolution mirrors the rest of the site, most explicit
+    first: (1) lat/lng params (browser geolocation, like /nearby);
+    (2) ZIP via the SMS engine's Census ZCTA centroids; (3) a town
+    query via the same Nominatim geocoder /nearby uses; (4) the
+    Cloudflare visitor-geo signal Near You uses — exact coords when
+    the headers carry them, else the resolved area's anchor-town
+    centroid (labeled approximate). No center at all renders the
+    location picker; a wrong area is never presented as the visitor's.
+    """
+    cat = cat if cat in CATEGORIES else "halloween"
+    size = 100 if size == 100 else 10
+    ctx = {"request": request, "size": size, "cat": cat,
+           "cat_labels": CAT_LABELS, "cat_emoji": CAT_EMOJI,
+           "need_location": False, "err": None, "nights": [],
+           "center_label": "", "approx": False, "radius": 0.0,
+           "total_stops": 0, "total_miles": 0.0, "pool_size": 0}
+    center: tuple[float, float] | None = None
+    label = ""
+    approx = False
+    if lat.strip() and lng.strip():
+        try:
+            la, ln = float(lat), float(lng)
+            if -90 <= la <= 90 and -180 <= ln <= 180:
+                center, label = (la, ln), "your location"
+        except ValueError:
+            pass
+    if center is None and zip.strip():
+        c = sms_alerts.zip_centroid(zip)
+        if c is not None:
+            center, label = c, f"ZIP {zip.strip()[:5]}"
+        else:
+            ctx["err"] = f"Couldn't find ZIP {zip.strip()[:5]} — try a town instead."
+    if center is None and q.strip():
+        c = geocode_nominatim(q.strip())
+        if c is not None:
+            center, label = c, q.strip()
+        else:
+            ctx["err"] = f"Couldn't find '{q.strip()}' — try a town or city name."
+    if center is None:
+        geo = _visitor_geo(request)
+        if geo:
+            if geo.get("lat") is not None and geo.get("lng") is not None:
+                center = (geo["lat"], geo["lng"])
+                label = (geo.get("city") or geo.get("state")
+                         or "your area")
+                label = f"{label} area" if label != "your area" else label
+            elif geo.get("city") or geo.get("state"):
+                with get_conn(DB_PATH) as conn:
+                    inv = _town_inventory(conn, "halloween")
+                resolved = _resolve_visitor_area(inv, geo)
+                if resolved["mode"] in ("exact", "near") \
+                        and resolved["chips"]:
+                    anchor = next(
+                        (t for t in inv
+                         if t["label"] == resolved["chips"][0]["label"]),
+                        None)
+                    if anchor and anchor["clat"] is not None:
+                        center = (anchor["clat"], anchor["clng"])
+                        label = resolved["area_name"]
+                        approx = True
+    if center is None:
+        ctx["need_location"] = True
+        return templates.TemplateResponse(request, "auto_tour.html", ctx)
+    radius = AUTO_TOUR_RADIUS_MI[size]
+    with get_conn(DB_PATH) as conn:
+        pool = _auto_tour_pool(conn, cat, center[0], center[1], radius)
+    picked = _rank_with_featured(pool, size)
+    route = _auto_tour_route(picked, center[0], center[1])
+    nights = []
+    for i in range(0, len(route), AUTO_TOUR_NIGHT_SIZE):
+        chunk = route[i:i + AUTO_TOUR_NIGHT_SIZE]
+        miles = 0.0
+        prev = center
+        for e in chunk:
+            leg = haversine_miles(prev[0], prev[1], e["lat"], e["lng"])
+            e["_leg"] = leg
+            miles += leg
+            prev = (e["lat"], e["lng"])
+        nights.append({
+            "num": len(nights) + 1,
+            "stops": chunk,
+            "miles": miles,
+            "ids": [e["id"] for e in chunk],
+            "title": (f"Top {len(route)} near {label} — Night "
+                      f"{len(nights) + 1} of "
+                      f"{(len(route) + AUTO_TOUR_NIGHT_SIZE - 1) // AUTO_TOUR_NIGHT_SIZE}"
+                      if size == 100 else
+                      f"Top {len(route)} near {label} — Auto Tour"),
+        })
+    ctx.update({"nights": nights, "center_label": label,
+                "approx": approx, "radius": radius,
+                "total_stops": len(route),
+                "total_miles": sum(n["miles"] for n in nights),
+                "pool_size": len(pool)})
+    return templates.TemplateResponse(request, "auto_tour.html", ctx)
+
+
 # ------------------------------------------------- Haunt Passport (Wave 4, Item 4)
 #
 # The collection loop, surfaced. A pin-page visit marks the pin seen in

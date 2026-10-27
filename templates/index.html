@@ -352,6 +352,12 @@ function hmFullHomepage() {
      Oct 26 — it moved to the rail under the hero.) #}
   {% with hero = True %}{% include "_top10_home.html" %}{% endwith %}
 
+  {# Auto Tour (STAGED for preview, Oct 27): "Build my tour for me"
+     sits directly under Top 10 in the hero order — it's the Top-10
+     idea with the work taken out. Phone twin lives in .hero-split
+     as grid area "autotour" (see below). #}
+  {% with hero = True %}{% include "_auto_tour_home.html" %}{% endwith %}
+
   {# Trending's in-panel hero copy REMOVED (Dan, Oct 26 — z173,
      shipped): on desktop Trending now appears exactly
      once, as the .fd-rail-desk rail directly under the hero (the
@@ -515,6 +521,12 @@ function hmFullHomepage() {
    the phone band reflows Near You -> Trending -> Tonight -> Daily
    Fright -> Bracket -> Text Alerts with no gap. #}
 {% include "_top10_home.html" %}
+
+{# Auto Tour phone copy (STAGED for preview, Oct 27): twin of the
+   hero block — grid area "autotour", under Top 10 and above the
+   Follow-us banner, same seat pattern as top10home (z103). Hidden
+   at >=761px where the hero copy shows. #}
+{% include "_auto_tour_home.html" %}
 
 <a class="tt-follow-vert" href="https://www.tiktok.com/@gethauntmap" target="_blank" rel="noopener" aria-label="Follow us on TikTok @GetHauntmap">
   <img src="/static/img/tiktok_logo.png" alt="TikTok">

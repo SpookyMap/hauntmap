@@ -1,0 +1,21 @@
+{# Auto Tour — homepage block (STAGED for Dan's preview, Oct 27).
+   Entry point for /auto-tour: one tap builds a tour from the
+   highest-ranked haunts near the visitor. Included twice like the
+   other homepage modules — hero copy inside .hero-stack (laptop,
+   right under Top 10) and a phone copy inside .hero-split as grid
+   area "autotour" (under Top 10, above the Follow-us banner) — with
+   CSS keeping exactly one copy visible per viewport. #}
+<section class="auto-tour-home{% if hero %} hero-copy{% endif %}" aria-label="Build my tour for me">
+  <h2>&#x26A1; Build my tour for me</h2>
+  <p class="auto-tour-sub">Skip the picking — we line up the most-viewed haunts near you into a ready-to-drive route.</p>
+  <div class="auto-tour-btns">
+    <a class="auto-tour-btn" href="/auto-tour?size=10">
+      <span class="auto-tour-btn-title">&#x1F3C6; Top 10 near me</span>
+      <span class="auto-tour-btn-sub">One night, routed for you</span>
+    </a>
+    <a class="auto-tour-btn" href="/auto-tour?size=100">
+      <span class="auto-tour-btn-title">&#x1F4AF; Top 100 near me</span>
+      <span class="auto-tour-btn-sub">The full list, planned by nights</span>
+    </a>
+  </div>
+</section>
