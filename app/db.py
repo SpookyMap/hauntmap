@@ -32,7 +32,12 @@ from pathlib import Path
 #   after the Oct 26 purge deleted its original pin 4566; one of the
 #   site's highest-interaction pins. Featured only — this change does
 #   not touch the hand-picked list.)
-FEATURED_ENTRY_IDS = (5541, 5542, 5551, 5584, 5587, 5175, 4370, 5653, 5654, 5655, 5766, 5572, 5940, 6006)
+#   116 NY Croton-on-Hudson (Oct 27: Dan's "Top 10" pick — the Great
+#   Jack O'Lantern Blaze at Van Cortlandt Manor, 525 S Riverside Ave;
+#   the pin already existed as an events pin, so no duplicate was
+#   posted and @suzebauer's TikTok of the Blaze was attached to it.
+#   Featured only — the hand-picked list is untouched.)
+FEATURED_ENTRY_IDS = (5541, 5542, 5551, 5584, 5587, 5175, 4370, 5653, 5654, 5655, 5766, 5572, 5940, 6006, 116)
 
 # Hand-picked pins (Dan, Oct 23): pins Dan personally sent in chat or
 # curated for posting. These lead every feed view — hand-picked first
