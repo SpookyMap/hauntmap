@@ -22,11 +22,20 @@ body {
 body::before {
   content: "";
   position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 120vmin;
-  height: 120vmin;
+  top: 0;
+  left: 0;
+  right: 0;
+  /* z176 background-fit fix (Dan, Oct 26): the old 120vmin box made the
+     ghost watermark render 20% taller than a wide-but-short viewport,
+     clipping its head and hem off the top and bottom. The layer now spans
+     exactly the visible viewport in every engine (Chrome + Safari):
+     height 100% of the fixed containing block as the fallback, then
+     100dvh so mobile Safari/Chrome dynamic toolbars can never push the
+     ghost off-screen (raw 100vh is taller than the visible area there).
+     With background-size: contain (shorthand below) the whole ghost —
+     head to hem, edge to edge — always fits, centered. */
+  height: 100%;
+  height: 100dvh;
   background: url('/static/img/hauntmap_ghost_watermark.webp') center/contain no-repeat;
   opacity: 0.29;
   pointer-events: none;
