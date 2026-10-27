@@ -6602,3 +6602,18 @@ span.chat-react-chip { cursor: default; }
   .chat-bell-label { display: none; }
   .chat-bell { padding: 0.15rem 0.45rem; }
 }
+
+/* ============ z200: DIY COSTUMES TIKTOK FACADE AT THE TOP (Dan, Oct 27) ====
+   Dan sent @eimi.wordt.dutchie's Silent Hill Nurse tutorial (TikTok
+   7695321330354359584, posted Oct 11, 2026) — "DIY costumes … at top":
+   it is the new #1 card in the Just Added section on /diy-costumes,
+   ahead of the Groot reel (now #2; nothing removed). First TikTok
+   click-to-play facade on the page, in the .ig-facade pattern: the
+   video's OWN cover frame (fetched from TikTok's CDN, stored as
+   static/img/silenthill_nurse_costume.jpg — the video itself is never
+   re-hosted) shows until tap, then the global hmLoadTikTok() swaps in
+   TikTok's official embed.js player (the pin-page construction, not
+   embed/v2). Scoped to .costume-card so nothing else moves. */
+.costume-card .tt-facade { display: block; width: 100%; max-width: 300px; aspect-ratio: 9 / 16; margin: 0 auto 0.35rem; border: 1px solid #274860; border-radius: var(--radius); overflow: hidden; background: #000; }
+.costume-card .tt-facade img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.costume-card .tt-facade:hover .tt-play, .costume-card .tt-facade:focus-visible .tt-play { background: #ff8c42; }

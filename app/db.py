@@ -50,12 +50,17 @@ from pathlib import Path
 #   Mortem Manor, 5770 W Irlo Bronson Memorial Hwy, posted today as
 #   pin 6085 via @hiddenshorestravel's TikTok. Featured only — the
 #   hand-picked list is untouched.)
+#   6086 CA Sacramento (Oct 27: Dan's "All top 10" burst pick —
+#   Phantom Manor, 875 Rancho Roble Way; the interactive Halloween
+#   Scavenger Haunt home haunt from @ulyssesbaltazar's TikTok,
+#   posted today as pin 6086. Featured only — the hand-picked
+#   list is untouched.)
 #   30 NJ Ridgewood (Oct 27: Dan's "All top 10" burst pick —
 #   Ridgewood Halloween House, 294 West End Ave; the pin already
 #   existed with no video, so no duplicate was posted and
 #   @growingwithju's TikTok was attached to it below. Featured
 #   only — the hand-picked list is untouched.)
-FEATURED_ENTRY_IDS = (5541, 5542, 5551, 5584, 5587, 5175, 4370, 5653, 5654, 5655, 5766, 5572, 5940, 6006, 116, 6084, 4932, 6085, 30)
+FEATURED_ENTRY_IDS = (5541, 5542, 5551, 5584, 5587, 5175, 4370, 5653, 5654, 5655, 5766, 5572, 5940, 6006, 116, 6084, 4932, 6085, 6087, 6088, 6086, 30)
 
 # Hand-picked pins (Dan, Oct 23): pins Dan personally sent in chat or
 # curated for posting. These lead every feed view — hand-picked first
@@ -796,6 +801,15 @@ def init_db(db_path: Path) -> None:
         add_entry_video(
             conn, 6085,
             "https://www.tiktok.com/@boosandbubbly/video/7692137070936018207",
+        )
+        # Dan-sent video append (Oct 27): @freaks_of_hhn's Mortem Manor
+        # visit (posted Oct 21, 2026) joins its one pin (6085) as a
+        # third video — @hiddenshorestravel's video stays primary.
+        # add_entry_video dedupes by video id, so repeat boots are
+        # no-ops and the primary is never touched.
+        add_entry_video(
+            conn, 6085,
+            "https://www.tiktok.com/@freaks_of_hhn/video/7698953629817900302",
         )
         # Dan-sent video attach (Oct 27): @growingwithju's TikTok of
         # the Ridgewood Halloween House (294 West End Ave, Ridgewood

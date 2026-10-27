@@ -26,6 +26,13 @@
       <span class="yt-play" aria-hidden="true">&#9654;</span>
     </button>
     <p class="costume-media-note">&#x1F4F7; Video by {{ c.source }}, via YouTube — tap to play</p>
+    {% elif c.ttf %}
+    <div class="tt-facade" data-tt-url="{{ c.url }}" data-tt-id="{{ c.ttf }}" role="button" tabindex="0" aria-label="Play {{ c.name }} video by {{ c.source }}">
+      <img src="{{ c.ttf_thumb }}" alt="" loading="lazy">
+      <span class="tt-play" aria-hidden="true">&#9654;</span>
+      <span class="tt-facade-label">&#x1F3B5; Tap to play video</span>
+    </div>
+    <p class="costume-media-note">&#x1F4F7; Video by {{ c.source }}, via TikTok — tap to play</p>
     {% elif c.tt %}
     <div class="diy-embed">
       <iframe src="https://www.tiktok.com/embed/v2/{{ c.tt }}" allowfullscreen scrolling="no" allow="encrypted-media; picture-in-picture" loading="lazy" title="{{ c.name }}"></iframe>
@@ -84,6 +91,20 @@ document.addEventListener('click', function (ev) {
   f.setAttribute('allowfullscreen', '');
   f.setAttribute('title', b.getAttribute('aria-label') || 'Instagram reel');
   b.replaceWith(f);
+});
+// TikTok click-to-play facades (z200): the video's own cover frame shows
+// first; on tap the global hmLoadTikTok() (base.html) swaps in TikTok's
+// official embed.js player — the same construction as the pin pages, so
+// a video TikTok refuses on embed/v2 still plays. The video itself is
+// never re-hosted here.
+document.addEventListener('click', function (ev) {
+  var f = ev.target.closest && ev.target.closest('.costume-card .tt-facade');
+  if (f) hmLoadTikTok(f);
+});
+document.addEventListener('keydown', function (ev) {
+  if (ev.key !== 'Enter' && ev.key !== ' ') return;
+  var f = ev.target.closest && ev.target.closest('.costume-card .tt-facade');
+  if (f) { ev.preventDefault(); hmLoadTikTok(f); }
 });
 // Pinterest pin embeds, lazy: Pinterest's own pinit.js (the official embed
 // script, which serves each pin's photo from Pinterest with the creator's
