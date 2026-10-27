@@ -107,6 +107,56 @@ EVENT_FACETS = (("type", "ev_type", EVENT_TYPES, EVENT_TYPE_LABELS),
                 ("genre", "ev_genre", EVENT_GENRES, {}),
                 ("venue", "ev_venue", EVENT_VENUES, EVENT_VENUE_LABELS))
 
+# "Fall Family Fun" (Dan, Oct 27): a computed chip on /events for
+# family-appropriate AND fall-flavored events. There is no stored
+# facet for it — membership is derived per listed event from the facet
+# fields plus title/tags/description text signals, so new postings
+# sort themselves and nothing needs back-tagging. Family-safe is a
+# hard gate: party/bar/club types and venues never qualify however
+# fall-named, and neither do haunted attractions or adult-signalled
+# titles (21+/18+, beer/wine/brewery, "horror(s)"). The fall signal
+# and the family text signal read title+tags+description (the copy
+# the posting pipeline writes from official pages); the family place
+# signal (zoo, park, farm...) reads the title only, where the venue
+# is named. The chip bar matches on the sentinel data-cat value
+# FALL_FAMILY_FUN_VALUE — keep it in sync with the events.html JS.
+FALL_FAMILY_FUN_VALUE = "__fff"
+FALL_FAMILY_FUN_LABEL = "Fall Family Fun"
+_FFF_FALL_RE = re.compile(
+    r"(fall|harvest|pumpkin|corn\s*maze|orchard|apple|cider|hay\s?ride|"
+    r"autumn|scarecrow|oktoberfest|trunk[\s-]?or[\s-]?treat|bonfire|"
+    r"county fair)", re.I)
+_FFF_FAMILY_RE = re.compile(
+    r"(famil|kids?|children|all\s+ages|trunk[\s-]?or[\s-]?treat|youth|"
+    r"toddler)", re.I)
+_FFF_PLACE_RE = re.compile(
+    r"\b(park|zoo|aquarium|museum|conservatory|arboretum|botanical|"
+    r"library|farm|orchard)\b", re.I)
+_FFF_ADULT_RE = re.compile(
+    r"(21\s*\+|18\s*\+|adults?\s+only|\bbeer\b|\bwine\b|"
+    r"\bbrewer(?:y|ies)\b|\bbrewpub\b|\bdistillery\b|\bhorrors?\b)", re.I)
+_FFF_FAMILY_TYPES = ("Family Event", "Festival", "Parade")
+_FFF_ADULT_TYPES = ("DJ Party", "Bar Party", "Party")
+_FFF_ADULT_VENUES = ("Bar", "Club", "Rooftop")
+
+
+def _is_fall_family_fun(e: dict) -> bool:
+    """Computed 'Fall Family Fun' membership for one event row dict."""
+    if e.get("ev_type") == "Haunted Attraction Event":
+        return False
+    title = e.get("title") or ""
+    if e.get("ev_type") in _FFF_ADULT_TYPES \
+            or e.get("ev_venue") in _FFF_ADULT_VENUES \
+            or _FFF_ADULT_RE.search(title):
+        return False
+    text = " ".join([title, e.get("tags") or "",
+                     e.get("description") or ""])
+    family_side = e.get("ev_type") in _FFF_FAMILY_TYPES \
+        or e.get("ev_venue") == "Outdoor" \
+        or bool(_FFF_FAMILY_RE.search(text)) \
+        or bool(_FFF_PLACE_RE.search(title))
+    return family_side and bool(_FFF_FALL_RE.search(text))
+
 app = FastAPI(title=SITE_NAME, docs_url=None, redoc_url=None)
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 templates.env.globals["site_name"] = SITE_NAME
@@ -3262,6 +3312,7 @@ def events_page(request: Request, type: str = "", genre: str = "",
     for g in day_groups:
         gd = g.get("date")
         for e in g["entries"]:
+            e["_fff"] = _is_fall_family_fun(e)
             e["_ev_day"] = gd
             if gd is None:
                 e["_day_short"] = ""
@@ -3322,6 +3373,16 @@ def events_page(request: Request, type: str = "", genre: str = "",
     chip_types = [{"value": v, "label": _type_labels.get(v, v), "count": n}
                   for v, n in sorted(_type_counts.items(),
                                      key=lambda kv: (-kv[1], kv[0]))]
+    # Fall Family Fun (Dan, Oct 27): the computed-membership chip rides
+    # the same bar, slotted by count like the type chips (the existing
+    # chips keep their exact relative order).
+    _fff_count = sum(1 for e in entries if e.get("_fff"))
+    if _fff_count:
+        _fff_pos = next((i for i, c in enumerate(chip_types)
+                         if c["count"] < _fff_count), len(chip_types))
+        chip_types.insert(_fff_pos, {
+            "value": FALL_FAMILY_FUN_VALUE,
+            "label": FALL_FAMILY_FUN_LABEL, "count": _fff_count})
     # Near-me state carried through the facet form + sort toggles as
     # hidden fields / a query fragment, so changing type/genre/sort
     # never drops the visitor's area. Bare "clear filters" links stay

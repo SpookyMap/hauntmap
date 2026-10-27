@@ -10,7 +10,7 @@
    each names its own day. The + Tour button rides along unchanged
    (events are tour stops). #}
 {% macro ev_card(e, day=None, show_day=false) %}
-  <a class="card ev-card" href="/d/{{ e.id }}" data-evtype="{{ e.ev_type or '' }}">
+  <a class="card ev-card" href="/d/{{ e.id }}" data-evtype="{{ e.ev_type or '' }}"{% if e._fff %} data-fff="1"{% endif %}>
     <div class="card-media">
       {% if e.media_path %}
       {% if e.media_type == 'video' %}
@@ -239,7 +239,8 @@ function hmEventsNearGo() {
    of the rendered groups (no server round-trip — the facet form
    above and the fortify caches are untouched). Day chips read the
    server-computed ET flags on each group; category chips read each
-   card's data-evtype. #}
+   card's data-evtype — except the computed "Fall Family Fun" chip
+   (Dan, Oct 27), whose cards carry data-fff instead. #}
 {% if ev_chrome and day_groups %}
 <div class="ev-chipbar" id="evChipbar">
   <div class="ev-chiprow" role="group" aria-label="Jump to a day">
@@ -287,7 +288,9 @@ function hmEventsNearGo() {
 // the rendered day groups — no server round-trip, so the facet URLs
 // and the fortify caches are untouched. Day chips key off the
 // server-computed ET flags on each group section; category chips key
-// off each card's data-evtype. A group left with zero matching cards
+// off each card's data-evtype (the computed Fall Family Fun chip —
+// data-cat "__fff", FALL_FAMILY_FUN_VALUE in app/main.py — matches
+// data-fff instead). A group left with zero matching cards
 // hides, and its count flips to the visible number. Spotlight and
 // the Near-you lead step aside while any chip is active.
 (function () {
@@ -323,7 +326,9 @@ function hmEventsNearGo() {
         g.querySelectorAll('.ev-card'), function (c) {
           total++;
           var good = ok && (!catSel ||
-            c.getAttribute('data-evtype') === catSel);
+            (catSel === '__fff'
+              ? c.getAttribute('data-fff') === '1'
+              : c.getAttribute('data-evtype') === catSel));
           c.style.display = good ? '' : 'none';
           if (good) { vis++; shown++; }
         });
