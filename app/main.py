@@ -7832,7 +7832,22 @@ POP_CULTURE_FEATURED = {
 # them as cards next to the featured pick. The Shorts below were all
 # verified via oEmbed on 2026-10-27 (embeddable); "short": True marks
 # a vertical YouTube Short so the card frames its still uncropped.
+# One non-YouTube exception (Dan, Oct 27): the Groot reel is an
+# Instagram source — it carries {"ig_url", "thumb"} instead of "id",
+# and the template renders it as a card with the reel's own still
+# (stored locally, never the video) linking out to the reel on
+# Instagram: embeds/links only, the video itself is never re-hosted.
 POP_CULTURE_GRID: list[dict] = [
+    {"ig_url": "https://www.instagram.com/reel/Dew32sWMjd8/",
+     "thumb": "/static/img/groot_costume_reel.jpg",
+     "title": "DIY Groot Costume from Foam Pipe Insulation "
+              "(Viral Reel)",
+     "channel": "Danielle | DIY + DESIGN",
+     "kind": "Instagram Reel", "short": True,
+     "blurb": "Danielle built a full Groot out of foam pipe "
+              "insulation — the homemade costume that broke the "
+              "internet, and still her favorite build. Tap the "
+              "cover to watch the reel on Instagram."},
     {"id": "kxXVk4UI0WI",
      "title": "Thriller Dance NYC Halloween Parade 2026 "
               "(Behind the Scenes): Michael Jackson Zombie Dance "

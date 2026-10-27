@@ -26,10 +26,18 @@
 <div class="yt-grid">
   {% for v in grid %}
   <article class="yt-item movie-card">
+    {% if v.ig_url %}
+    <a class="yt-facade{% if v.short %} yt-facade--short{% endif %} ig-facade" href="{{ v.ig_url }}" target="_blank" rel="noopener" aria-label="Watch {{ v.title }} on Instagram">
+      <img src="{{ v.thumb }}" alt="" loading="lazy">
+      <span class="yt-play" aria-hidden="true">&#9654;</span>
+      <span class="ig-badge" aria-hidden="true">Instagram &#8599;</span>
+    </a>
+    {% else %}
     <button type="button" class="yt-facade{% if v.short %} yt-facade--short{% endif %}" data-yt="{{ v.id }}" aria-label="Play {{ v.title }}">
       <img src="https://i.ytimg.com/vi/{{ v.id }}/hqdefault.jpg" alt="" loading="lazy">
       <span class="yt-play" aria-hidden="true">&#9654;</span>
     </button>
+    {% endif %}
     <h3 class="movie-title">{{ v.title }}</h3>
     <p class="movie-blurb">{{ v.blurb }}</p>
     <p class="yt-cap">{{ v.kind }} &middot; {{ v.channel }}</p>
