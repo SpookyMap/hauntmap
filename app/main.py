@@ -3458,6 +3458,7 @@ def map_view(request: Request, cat: str = "halloween"):
 
 
 DIY_VIDEOS = [
+    {"title": "5-Foot Chucky Doll Box DIY", "creator": "@darkhousedesigns", "url": "https://www.tiktok.com/@darkhousedesigns/video/7695179364945644831", "video_id": "7695179364945644831", "blurb": "Build a life-size Good Guys toy box for a Home Depot Chucky doll — 5 x 3 x 2 feet, framed with 2x2s and half-inch foam, finished with printed banners for the full Child's Play look."},
     {"title": "DIY Circus Tent — Halloween Party Build", "creator": "Taylor Booth (@theballoonchickaz)", "url": "https://www.tiktok.com/@theballoonchickaz/video/7698864214865087775", "video_id": "7698864214865087775", "blurb": "A full-size circus tent, built from scratch for a Halloween party — Taylor's whole process in 85 seconds. 229K views and counting, and you'll see why."},
     {"title": "Fog Chiller DIY — Maiden Voyage", "creator": "@theblackirishouse", "url": "https://www.tiktok.com/@theblackirishouse/video/7693254709972372767", "video_id": "7693254709972372767", "blurb": "Chill your fog machine's output and the fog hugs the ground like a graveyard at dawn. This build's first run shows exactly how it's done."},
     {"title": "Fog Chiller v2.0 — The Upgrades", "creator": "@theblackirishouse", "url": "https://www.tiktok.com/@theblackirishouse/video/7694109884777893150", "video_id": "7694109884777893150", "blurb": "Version two of the chiller: a legit spider web and frozen water bottles join the build for thicker, lower fog."},
