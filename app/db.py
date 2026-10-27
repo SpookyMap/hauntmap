@@ -89,7 +89,12 @@ from pathlib import Path
 #   Commercial Hotel from @commercial.fun's TikTok, posted
 #   today as pin 6100. Featured only — the hand-picked list
 #   is untouched.)
-FEATURED_ENTRY_IDS = (5541, 5542, 5551, 5584, 5587, 5175, 4370, 5653, 5654, 5655, 5766, 5572, 5940, 6006, 116, 6084, 4932, 6085, 6087, 6088, 6086, 6090, 6089, 6091, 30, 6098, 6096, 1641, 6092, 6100)
+#   6099 CA Temecula (Oct 27: Dan's "All top 10" burst pick —
+#   Anton Haunt, 42330 Wyandotte St; the long-running home haunt
+#   (18th year in 2026) from @susanscottphotography's TikTok,
+#   posted today as pin 6099. Featured only — the hand-picked
+#   list is untouched.)
+FEATURED_ENTRY_IDS = (5541, 5542, 5551, 5584, 5587, 5175, 4370, 5653, 5654, 5655, 5766, 5572, 5940, 6006, 116, 6084, 4932, 6085, 6087, 6088, 6086, 6090, 6089, 6091, 30, 6098, 6096, 1641, 6092, 6100, 6099)
 
 # Hand-picked pins (Dan, Oct 23): pins Dan personally sent in chat or
 # curated for posting. These lead every feed view — hand-picked first
