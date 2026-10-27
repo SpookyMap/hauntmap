@@ -139,13 +139,14 @@ function hmFullHomepage() {
    panel, above the find block: (1) .fd-prop — one plain line that
    says what this place is, no jargon; the 5,000+ floor is the
    verified sponsor-copy floor (5,515 entries in the Oct 26 backup).
-   (2) .fd-rail — PHONE ONLY (CSS hides it >=761px, where the hero
-   stack already leads with Near You + Trending): a compact snap-rail
-   of real haunt cards — Tonight's pick first with its badge, then
-   the top Trending cards, same server data the below-band sections
-   render (twin-copy pattern, exactly like the hero/below-band
-   module pairs). Value first, form second; search stays put right
-   under the rail. No new permission asks, nothing autoplays. #}
+   (2) .fd-rail — PHONE ONLY (CSS hides it >=761px; its desktop
+   twin .fd-rail-desk sits directly under the hero — z173,
+   Oct 26): a compact snap-rail of real haunt cards — Tonight's
+   pick first with its badge, then the top Trending cards, same
+   server data the below-band sections render (twin-copy pattern,
+   exactly like the hero/below-band module pairs). Value first,
+   form second; search stays put right under the rail. No new
+   permission asks, nothing autoplays. #}
 <p class="fd-prop">&#x1F383; 5,000+ displays, real addresses &mdash; let the haunt begin!</p>
 {% if tonight or trending %}
 <div class="fd-rail" aria-label="Start here: tonight's pick and trending haunts">
@@ -345,37 +346,18 @@ function hmFullHomepage() {
   {% endif %}
 
   {# Top 10 by State (Dan, Oct 23): personalized in-hero block —
-     the visitor's own state's Top 10 — above Trending, per Dan's
-     hero order: Near You -> Top 10 -> Trending -> Tonight's ->
-     Daily Fright -> Bracket -> Text Alerts. #}
+     the visitor's own state's Top 10 — per Dan's hero order:
+     Near You -> Top 10 -> Tonight's -> Daily Fright -> Bracket ->
+     Text Alerts. (Trending's in-panel seat is gone as of z173,
+     Oct 26 — it moved to the rail under the hero.) #}
   {% with hero = True %}{% include "_top10_home.html" %}{% endwith %}
 
-  {% if trending %}
-  <section class="trending hero-copy" aria-label="Trending today">
-    <h2>&#x1F525; Trending today</h2>
-    <div class="rail trending-rail">
-      {% for p in trending %}
-      <a class="card rail-card" href="/d/{{ p.id }}">
-        <div class="card-media">
-          {% if p.media_type == 'video' %}
-          {% if p.thumb_path %}<img src="{{ p.thumb_card_url or p.thumb_url }}" alt="{{ p.title }}" width="800" height="600" loading="lazy" onerror="this.onerror=null;this.src='{{ p.thumb_url }}'">{% else %}<div class="card-media-empty">&#x1F3AC;</div>{% endif %}
-          <span class="play-badge">&#x25B6;</span>
-          {% else %}
-          <img src="{{ p.thumb_card_url or p.thumb_url }}" alt="{{ p.title }}" width="800" height="600" loading="lazy" onerror="this.onerror=null;this.src='{{ p.thumb_url }}'">
-          {% endif %}
-          <span class="rank-badge">#{{ loop.index }}</span>
-        </div>
-        <div class="card-body">
-          <h3>{{ p.title }}</h3>
-          <p class="meta">{{ p.town_label }}</p>
-          <p class="views-line">&#x1F441;&#xFE0F; {{ p._views }} view{{ 's' if p._views != 1 }}</p>
-          <span class="tour-add-btn" role="button" tabindex="0" data-tour-btn data-id="{{ p.id }}" data-title="{{ p.title }}" data-town="{{ p.town }}" data-lat="{{ p.lat if p.lat is not none else '' }}" data-lng="{{ p.lng if p.lng is not none else '' }}" data-thumb="{{ p.thumb_url }}">+ Tour</span>
-        </div>
-      </a>
-      {% endfor %}
-    </div>
-  </section>
-  {% endif %}
+  {# Trending's in-panel hero copy REMOVED (Dan, Oct 26 — z173,
+     shipped): on desktop Trending now appears exactly
+     once, as the .fd-rail-desk rail directly under the hero (the
+     desktop twin of the phone front-door rail — see after the
+     .hero-split close below). The below-band .trending section is
+     untouched: still the phone copy, still hidden >=761px. #}
 
   {# z96 (Dan, Oct 23): Tonight's Display, Daily Fright and the Haunt
      Bracket move INTO the hero photo panel — hero copies in the z67
@@ -387,8 +369,9 @@ function hmFullHomepage() {
      z97 (Dan, Oct 23): the in-panel Text Alerts block moves to the
      BOTTOM of the panel, under the Haunt Bracket — see the include
      after the bracket sections below. Order inside the panel is now:
-     Near You -> Trending -> Tonight's -> Daily Fright -> Bracket ->
-     Text Alerts. #}
+     Near You -> Top 10 -> Tonight's -> Daily Fright -> Bracket ->
+     Text Alerts (Trending moved out of the panel, z173 Oct 26
+     — its desktop seat is the rail under the hero). #}
   {% if tonight %}
   <section class="tonight-band hero-copy" aria-label="Tonight's Display">
     <a class="tonight-card" href="/d/{{ tonight.id }}">
@@ -615,6 +598,54 @@ function hmFullHomepage() {
 
 {% include "_town_request.html" %}
 </div>
+
+{# TRENDING RAIL, DESKTOP TWIN (Dan, Oct 26 — shipped as z173):
+   the phone front-door rail (.fd-rail, z167) gets a
+   desktop copy seated DIRECTLY UNDER the hero — same heading, same
+   cards (Tonight's pick first with its badge, then the top 5
+   Trending), same `tonight`/`trending` server data and loop logic
+   as the phone copy, sized for the wide layout by style.css (the
+   z173 block at the end of the stylesheet). CSS shows it only
+   >=761px; the phone copy inside .hero-intro is untouched, and
+   Trending's old in-panel hero copy is removed above, so desktop
+   sees Trending exactly once. Phones never render this copy. #}
+{% if tonight or trending %}
+<div class="fd-rail fd-rail-desk" aria-label="Start here: tonight's pick and trending haunts">
+  <p class="fd-rail-head">&#x1F525; Trending now</p>
+  <div class="fd-rail-track">
+    {% if tonight %}
+    <a class="fd-card" href="/d/{{ tonight.id }}">
+      <span class="fd-card-media">
+        <img src="{{ tonight.thumb_url }}" alt="{{ tonight.title }}" loading="lazy">
+        <span class="fd-badge">&#x1F383; Tonight</span>
+      </span>
+      <span class="fd-card-body">
+        <span class="fd-card-title">{{ tonight.title }}</span>
+        <span class="fd-card-meta">{{ tonight.town_label }}</span>
+      </span>
+    </a>
+    {% endif %}
+    {% for p in trending %}
+    {% if loop.index <= 5 and not (tonight and p.id == tonight.id) %}
+    <a class="fd-card" href="/d/{{ p.id }}">
+      <span class="fd-card-media">
+        {% if p.media_type == 'video' %}
+        {% if p.thumb_path %}<img src="{{ p.thumb_card_url or p.thumb_url }}" alt="{{ p.title }}" loading="lazy" onerror="this.onerror=null;this.src='{{ p.thumb_url }}'">{% else %}<span class="fd-card-empty">&#x1F3AC;</span>{% endif %}
+        <span class="fd-badge fd-badge-play">&#x25B6;</span>
+        {% else %}
+        <img src="{{ p.thumb_card_url or p.thumb_url }}" alt="{{ p.title }}" loading="lazy" onerror="this.onerror=null;this.src='{{ p.thumb_url }}'">
+        {% endif %}
+      </span>
+      <span class="fd-card-body">
+        <span class="fd-card-title">{{ p.title }}</span>
+        <span class="fd-card-meta">{{ p.town_label }}</span>
+      </span>
+    </a>
+    {% endif %}
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
 
 {% if tstrip %}
 {# Item 5 "Tonight" strip: directly above Tonight's Display band, so
