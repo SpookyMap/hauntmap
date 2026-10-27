@@ -5356,7 +5356,7 @@ def shared_tour_page(request: Request, slug: str):
 # address, no upload. A street address = house number + street name; a
 # town or ZIP alone is not an address. The number may carry a unit letter
 # ("123A"); the street part must contain a letter (so "123 4" fails).
-_STREET_ADDRESS_RE = re.compile(r"^\d{1,6}[A-Za-z]?\s+\S+.*[A-Za-z]", re.DOTALL)
+_STREET_ADDRESS_RE = re.compile(r"^\d{1,6}(?:-\d{1,5})?[A-Za-z]?\s+\S+.*[A-Za-z]", re.DOTALL)
 
 ADDRESS_REQUIRED_MSG = ("We need the street address — e.g. 123 Main St — "
                         "so visitors can find it on the map.")
@@ -5382,6 +5382,7 @@ async def upload_submit(
     address: str = Form(""),
     description: str = Form(""),
     uploader_email: str = Form(""),
+    virtual: str = Form(""),
     media: UploadFile = File(None),
 ):
     error: str | None = None
@@ -5391,6 +5392,19 @@ async def upload_submit(
     address = address.strip()[:200]
     description = description.strip()[:1000]
     category = category if category in CATEGORIES else "halloween"
+    # Virtual LIVE exemption (Dan, Oct 27): a category="live" entry that
+    # is an online-only room (e.g. a TikTok quiz stream with no physical
+    # venue) may post with NO street address and NO coordinates. The flag
+    # is honoured ONLY for live — every other category keeps the
+    # street-address mandate below, flag or not. A virtual entry's town
+    # is server-set to the display basis "Online / Virtual"; no address
+    # is stored and nothing is fabricated, so the pin carries no coords
+    # and stays out of the map, tours and Auto Tour (all of which
+    # require coordinates and/or a verified address) by construction.
+    is_virtual = 1 if (category == "live" and (virtual or "").strip()) else 0
+    if is_virtual:
+        town = "Online / Virtual"
+        address = ""
     scare_level = scare_level if scare_level in ("family", "spooky", "creepy", "terrifying", "extreme") else None
     # tags come as repeated form fields from checkboxes
     form = await request.form()
@@ -5404,7 +5418,9 @@ async def upload_submit(
                                      "multi-house", "ticketed", "2025", "market", "oddities", "witchy", "craft", "flea", "free", "flagship", "21+")})) or None
 
     lat_f = lng_f = None
-    if lat.strip() or lng.strip():
+    if is_virtual:
+        pass  # virtual LIVE rooms are coord-less by definition (see above)
+    elif lat.strip() or lng.strip():
         try:
             lat_f, lng_f = float(lat), float(lng)
             if not (-90 <= lat_f <= 90 and -180 <= lng_f <= 180):
@@ -5414,17 +5430,19 @@ async def upload_submit(
 
     if not error and not title:
         error = "Please give your haunt a title."
-    if not error and not town:
+    if not error and not is_virtual and not town:
         error = "Please add a town or neighborhood."
     # Street address is MANDATORY (Dan, Oct 26 — see _STREET_ADDRESS_RE):
     # missing or not a street address (house number + street name) rejects.
-    if not error and not looks_like_street_address(address):
+    # Sole exception: virtual LIVE rooms (is_virtual, set above) skip the
+    # address + geocode gates entirely and are born with NULL coords.
+    if not error and not is_virtual and not looks_like_street_address(address):
         error = ADDRESS_REQUIRED_MSG
     # Geocode the address at submission so the pin is born with coordinates
     # and plots + routes immediately. The geocoded point is authoritative:
     # it replaces any form-supplied lat/lng. An address that cannot be
     # geocoded rejects rather than storing an unplottable pin.
-    if not error:
+    if not error and not is_virtual:
         geo = geocode_nominatim(f"{address}, {town}") or geocode_nominatim(address)
         # Nominatim fuzzy-matches: a bogus street name can resolve to a
         # same-named street on another continent (rig test: "999999 Nowhere
@@ -5492,7 +5510,8 @@ async def upload_submit(
             now = datetime.now(timezone.utc).isoformat()
             with get_conn(DB_PATH) as conn:
                 for col, ddl in (("uploader_email", "TEXT"),
-                                 ("notify_votes", "INTEGER DEFAULT 0")):
+                                 ("notify_votes", "INTEGER DEFAULT 0"),
+                                 ("virtual", "INTEGER NOT NULL DEFAULT 0")):
                     try:
                         conn.execute(f"ALTER TABLE entries ADD COLUMN {col} {ddl}")
                     except Exception:
@@ -5502,12 +5521,12 @@ async def upload_submit(
                        (title, town, display_name, media_path, thumb_path, media_type,
                         lat, lng, votes, flagged, hidden, is_sample, category, created_at,
                         scare_level, tags, tiktok_url, uploader_email, notify_votes,
-                        address, description)
-                       VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, 0, 0, 0, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                        address, description, virtual)
+                       VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, 0, 0, 0, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
                     (title, town, display_name or None, media_rel or "", thumb_rel,
                      media_type or "none", lat_f, lng_f, category, now, scare_level, tags,
                      tiktok_url or None, uploader_email or None, notify_votes,
-                     address or None, description or None),
+                     address or None, description or None, is_virtual),
                 )
                 new_id = cur.lastrowid
                 conn.commit()
@@ -5526,6 +5545,7 @@ async def upload_submit(
             "category": category, "title": title, "town": town,
             "display_name": display_name, "uploader_email": uploader_email,
             "address": address, "scare_level": scare_level or "",
+            "virtual": bool(is_virtual),
             "tags": set(tags.split(",")) if tags else set(),
             "notify_votes": bool(notify_votes),
         }
@@ -8335,6 +8355,251 @@ def costume_vote(cid: int, request: Request):
     return resp
 
 
+
+# Art in Motion (Dan, Oct 27, 2026): @olesamhain's complete TikTok
+# catalogue — handmade Halloween props and displays, embed-only via
+# click-to-play facades on /fan-art (covers are each video's own
+# frame, downloaded to static/img). All 39 profile videos retrieved
+# and oEmbed-verified on 2026-10-27; every one is the creator's own
+# prop/display art, so none were skipped. Newest first.
+ART_VIDEOS: list[dict] = [
+    {"video_id": '7701397572111404301',
+     "url": 'https://www.tiktok.com/@olesamhain/video/7701397572111404301',
+     "title": "It's Halloween week, with just a few days left!",
+     "creator": "@olesamhain",
+     "cover": '/static/img/tt_ole_7701397572111404301.jpg',
+     "posted": 'Oct 27, 2026'},
+    {"video_id": '7651697024068373773',
+     "url": 'https://www.tiktok.com/@olesamhain/video/7651697024068373773',
+     "title": 'Photodump from the 2024 display, inspired by a 1920’s American Halloween party, the Dennison Bogie Book, specifically!',
+     "creator": "@olesamhain",
+     "cover": '/static/img/tt_ole_7651697024068373773.jpg',
+     "posted": 'Jun 15, 2026'},
+    {"video_id": '7651694977461816589',
+     "url": 'https://www.tiktok.com/@olesamhain/video/7651694977461816589',
+     "title": 'Bogey Ball: Hallowe’en 1923 (2024)',
+     "creator": "@olesamhain",
+     "cover": '/static/img/tt_ole_7651694977461816589.jpg',
+     "posted": 'Jun 15, 2026'},
+    {"video_id": '7649929788454440206',
+     "url": 'https://www.tiktok.com/@olesamhain/video/7649929788454440206',
+     "title": 'the last paint job before the 2024 display, the sky was so beautiful 🎃🌙',
+     "creator": "@olesamhain",
+     "cover": '/static/img/tt_ole_7649929788454440206.jpg',
+     "posted": 'Jun 11, 2026'},
+    {"video_id": '7645264420179856653',
+     "url": 'https://www.tiktok.com/@olesamhain/video/7645264420179856653',
+     "title": 'Strange totems have been appearing at the edge of these woods for decades…',
+     "creator": "@olesamhain",
+     "cover": '/static/img/tt_ole_7645264420179856653.jpg',
+     "posted": 'May 29, 2026'},
+    {"video_id": '7638595684119088397',
+     "url": 'https://www.tiktok.com/@olesamhain/video/7638595684119088397',
+     "title": 'In the garage…',
+     "creator": "@olesamhain",
+     "cover": '/static/img/tt_ole_7638595684119088397.jpg',
+     "posted": 'May 11, 2026'},
+    {"video_id": '7634341785258446094',
+     "url": 'https://www.tiktok.com/@olesamhain/video/7634341785258446094',
+     "title": '2026 witch is pretty much finished. Fixing up her mouth and adding some glossy, wet grime in a few spots',
+     "creator": "@olesamhain",
+     "cover": '/static/img/tt_ole_7634341785258446094.jpg',
+     "posted": 'Apr 30, 2026'},
+    {"video_id": '7632320983222865166',
+     "url": 'https://www.tiktok.com/@olesamhain/video/7632320983222865166',
+     "title": 'New witch in progress for 2026',
+     "creator": "@olesamhain",
+     "cover": '/static/img/tt_ole_7632320983222865166.jpg',
+     "posted": 'Apr 24, 2026'},
+    {"video_id": '7625067786108259597',
+     "url": 'https://www.tiktok.com/@olesamhain/video/7625067786108259597',
+     "title": 'Halloween Props — Home Haunt',
+     "creator": "@olesamhain",
+     "cover": '/static/img/tt_ole_7625067786108259597.jpg',
+     "posted": 'Apr 5, 2026'},
+    {"video_id": '7622528133010296077',
+     "url": 'https://www.tiktok.com/@olesamhain/video/7622528133010296077',
+     "title": 'Halloween 2023: AMERICAN WITCHCRAFT',
+     "creator": "@olesamhain",
+     "cover": '/static/img/tt_ole_7622528133010296077.jpg',
+     "posted": 'Mar 29, 2026'},
+    {"video_id": '7620654425312447758',
+     "url": 'https://www.tiktok.com/@olesamhain/video/7620654425312447758',
+     "title": 'The October Country - 2026',
+     "creator": "@olesamhain",
+     "cover": '/static/img/tt_ole_7620654425312447758.jpg',
+     "posted": 'Mar 24, 2026'},
+    {"video_id": '7619498170594184461',
+     "url": 'https://www.tiktok.com/@olesamhain/video/7619498170594184461',
+     "title": 'grim evidence | 3/20',
+     "creator": "@olesamhain",
+     "cover": '/static/img/tt_ole_7619498170594184461.jpg',
+     "posted": 'Mar 21, 2026'},
+    {"video_id": '7619373051934756110',
+     "url": 'https://www.tiktok.com/@olesamhain/video/7619373051934756110',
+     "title": 'His feet sank into the moss-covered slime.',
+     "creator": "@olesamhain",
+     "cover": '/static/img/tt_ole_7619373051934756110.jpg',
+     "posted": 'Mar 20, 2026'},
+    {"video_id": '7613781921478315278',
+     "url": 'https://www.tiktok.com/@olesamhain/video/7613781921478315278',
+     "title": 'Corpse Prop — Home Haunt',
+     "creator": "@olesamhain",
+     "cover": '/static/img/tt_ole_7613781921478315278.jpg',
+     "posted": 'Mar 5, 2026'},
+    {"video_id": '7612722035910790414',
+     "url": 'https://www.tiktok.com/@olesamhain/video/7612722035910790414',
+     "title": 'Some detail painting and playing around with my flood lights yesterday :)',
+     "creator": "@olesamhain",
+     "cover": '/static/img/tt_ole_7612722035910790414.jpg',
+     "posted": 'Mar 2, 2026'},
+    {"video_id": '7611761195292347661',
+     "url": 'https://www.tiktok.com/@olesamhain/video/7611761195292347661',
+     "title": 'Halloween 2026: The October Country',
+     "creator": "@olesamhain",
+     "cover": '/static/img/tt_ole_7611761195292347661.jpg',
+     "posted": 'Feb 28, 2026'},
+    {"video_id": '7610528320760990989',
+     "url": 'https://www.tiktok.com/@olesamhain/video/7610528320760990989',
+     "title": 'Body Snatcher | 2.24 In the garage, starting to paint this scarecrow',
+     "creator": "@olesamhain",
+     "cover": '/static/img/tt_ole_7610528320760990989.jpg',
+     "posted": 'Feb 24, 2026'},
+    {"video_id": '7609963019266805006',
+     "url": 'https://www.tiktok.com/@olesamhain/video/7609963019266805006',
+     "title": 'here comes the snow ❤️',
+     "creator": "@olesamhain",
+     "cover": '/static/img/tt_ole_7609963019266805006.jpg',
+     "posted": 'Feb 23, 2026'},
+    {"video_id": '7609824167298387214',
+     "url": 'https://www.tiktok.com/@olesamhain/video/7609824167298387214',
+     "title": 'some of my antiques, Halloween in the 20’s/30’s was amazing',
+     "creator": "@olesamhain",
+     "cover": '/static/img/tt_ole_7609824167298387214.jpg',
+     "posted": 'Feb 22, 2026'},
+    {"video_id": '7607675008441208077',
+     "url": 'https://www.tiktok.com/@olesamhain/video/7607675008441208077',
+     "title": 'Playing around with lights in the basement, finishing up some painting ❤️',
+     "creator": "@olesamhain",
+     "cover": '/static/img/tt_ole_7607675008441208077.jpg',
+     "posted": 'Feb 17, 2026'},
+    {"video_id": '7607498672640691470',
+     "url": 'https://www.tiktok.com/@olesamhain/video/7607498672640691470',
+     "title": 'Trick or treat?',
+     "creator": "@olesamhain",
+     "cover": '/static/img/tt_ole_7607498672640691470.jpg',
+     "posted": 'Feb 16, 2026'},
+    {"video_id": '7605683492130770190',
+     "url": 'https://www.tiktok.com/@olesamhain/video/7605683492130770190',
+     "title": 'Bogey Ball: Halloween 1923 (2024) Full video',
+     "creator": "@olesamhain",
+     "cover": '/static/img/tt_ole_7605683492130770190.jpg',
+     "posted": 'Feb 11, 2026'},
+    {"video_id": '7603568134280252686',
+     "url": 'https://www.tiktok.com/@olesamhain/video/7603568134280252686',
+     "title": 'Scarecrow from 2024',
+     "creator": "@olesamhain",
+     "cover": '/static/img/tt_ole_7603568134280252686.jpg',
+     "posted": 'Feb 6, 2026'},
+    {"video_id": '7603390005553286414',
+     "url": 'https://www.tiktok.com/@olesamhain/video/7603390005553286414',
+     "title": 'The VVitch',
+     "creator": "@olesamhain",
+     "cover": '/static/img/tt_ole_7603390005553286414.jpg',
+     "posted": 'Feb 5, 2026'},
+    {"video_id": '7603152982485536013',
+     "url": 'https://www.tiktok.com/@olesamhain/video/7603152982485536013',
+     "title": 'In the basement touching up a few things',
+     "creator": "@olesamhain",
+     "cover": '/static/img/tt_ole_7603152982485536013.jpg',
+     "posted": 'Feb 4, 2026'},
+    {"video_id": '7602119695956757773',
+     "url": 'https://www.tiktok.com/@olesamhain/video/7602119695956757773',
+     "title": 'Scarecrow at Pawling Farm in Valley Forge',
+     "creator": "@olesamhain",
+     "cover": '/static/img/tt_ole_7602119695956757773.jpg',
+     "posted": 'Feb 2, 2026'},
+    {"video_id": '7601997379692186893',
+     "url": 'https://www.tiktok.com/@olesamhain/video/7601997379692186893',
+     "title": 'Halloween 1923 (2024)',
+     "creator": "@olesamhain",
+     "cover": '/static/img/tt_ole_7601997379692186893.jpg',
+     "posted": 'Feb 1, 2026'},
+    {"video_id": '7601349962860973326',
+     "url": 'https://www.tiktok.com/@olesamhain/video/7601349962860973326',
+     "title": 'HELL IS REAL Halloween 2025: INFERNO',
+     "creator": "@olesamhain",
+     "cover": '/static/img/tt_ole_7601349962860973326.jpg',
+     "posted": 'Jan 31, 2026'},
+    {"video_id": '7601341568146083086',
+     "url": 'https://www.tiktok.com/@olesamhain/video/7601341568146083086',
+     "title": 'Scarecrow Country',
+     "creator": "@olesamhain",
+     "cover": '/static/img/tt_ole_7601341568146083086.jpg',
+     "posted": 'Jan 31, 2026'},
+    {"video_id": '7601320379285622071',
+     "url": 'https://www.tiktok.com/@olesamhain/video/7601320379285622071',
+     "title": 'Dark Waters',
+     "creator": "@olesamhain",
+     "cover": '/static/img/tt_ole_7601320379285622071.jpg',
+     "posted": 'Jan 31, 2026'},
+    {"video_id": '7601161053040430350',
+     "url": 'https://www.tiktok.com/@olesamhain/video/7601161053040430350',
+     "title": 'Disemboweled',
+     "creator": "@olesamhain",
+     "cover": '/static/img/tt_ole_7601161053040430350.jpg',
+     "posted": 'Jan 30, 2026'},
+    {"video_id": '7600937178910297358',
+     "url": 'https://www.tiktok.com/@olesamhain/video/7600937178910297358',
+     "title": 'Halloween 2023: American Witchcraft',
+     "creator": "@olesamhain",
+     "cover": '/static/img/tt_ole_7600937178910297358.jpg',
+     "posted": 'Jan 29, 2026'},
+    {"video_id": '7600796214719827214',
+     "url": 'https://www.tiktok.com/@olesamhain/video/7600796214719827214',
+     "title": 'In the workshop, have a lot of props I’m working on for a photoshoot that I’ll be doing once the snow is gone',
+     "creator": "@olesamhain",
+     "cover": '/static/img/tt_ole_7600796214719827214.jpg',
+     "posted": 'Jan 29, 2026'},
+    {"video_id": '7600791655037357326',
+     "url": 'https://www.tiktok.com/@olesamhain/video/7600791655037357326',
+     "title": 'Halloween 2023: AMERICAN WITCHCRAFT',
+     "creator": "@olesamhain",
+     "cover": '/static/img/tt_ole_7600791655037357326.jpg',
+     "posted": 'Jan 29, 2026'},
+    {"video_id": '7600790639260847373',
+     "url": 'https://www.tiktok.com/@olesamhain/video/7600790639260847373',
+     "title": 'The Hag — an old witch prop I made, just to photograph',
+     "creator": "@olesamhain",
+     "cover": '/static/img/tt_ole_7600790639260847373.jpg',
+     "posted": 'Jan 29, 2026'},
+    {"video_id": '7600591056786296095',
+     "url": 'https://www.tiktok.com/@olesamhain/video/7600591056786296095',
+     "title": 'Hallowe’en 1923: BOGEY BALL (2024)',
+     "creator": "@olesamhain",
+     "cover": '/static/img/tt_ole_7600591056786296095.jpg',
+     "posted": 'Jan 29, 2026'},
+    {"video_id": '7600589949964012831',
+     "url": 'https://www.tiktok.com/@olesamhain/video/7600589949964012831',
+     "title": 'Halloween 2025: INFERNO',
+     "creator": "@olesamhain",
+     "cover": '/static/img/tt_ole_7600589949964012831.jpg',
+     "posted": 'Jan 29, 2026'},
+    {"video_id": '7600588803157396767',
+     "url": 'https://www.tiktok.com/@olesamhain/video/7600588803157396767',
+     "title": 'The Olde Cemetery',
+     "creator": "@olesamhain",
+     "cover": '/static/img/tt_ole_7600588803157396767.jpg',
+     "posted": 'Jan 29, 2026'},
+    {"video_id": '7600575764773260574',
+     "url": 'https://www.tiktok.com/@olesamhain/video/7600575764773260574',
+     "title": 'HELL IS REAL',
+     "creator": "@olesamhain",
+     "cover": '/static/img/tt_ole_7600575764773260574.jpg',
+     "posted": 'Jan 29, 2026'},
+]
+
+
 # ---------------------------------------------------------------- fan art
 
 FANART_SQL = """CREATE TABLE IF NOT EXISTS fan_art (
@@ -8410,6 +8675,7 @@ def fan_art(request: Request):
     return templates.TemplateResponse(
         request, "fan_art.html",
         {"pieces": pieces, "site_name": SITE_NAME,
+         "art_videos": ART_VIDEOS,
          "error": request.query_params.get("error"),
          "submitted": request.query_params.get("submitted")},
     )

@@ -32,7 +32,15 @@ from pathlib import Path
 #   after the Oct 26 purge deleted its original pin 4566; one of the
 #   site's highest-interaction pins. Featured only — this change does
 #   not touch the hand-picked list.)
-FEATURED_ENTRY_IDS = (5541, 5542, 5551, 5584, 5587, 5175, 4370, 5653, 5654, 5655, 5766, 5572, 5940, 6006)
+#   116 NY Croton-on-Hudson (Oct 27: Dan's "Top 10" pick — the Great
+#   Jack O'Lantern Blaze at Van Cortlandt Manor, 525 S Riverside Ave;
+#   the pin already existed as an events pin, so no duplicate was
+#   posted and @suzebauer's TikTok of the Blaze was attached to it.
+#   Featured only — the hand-picked list is untouched.)
+#   6084 NJ Fair Lawn (Oct 27: Dan's "Top 10" pick — Halloween House,
+#   17-05 Ellis Ave, @lilroamingexplorers Part 14, posted today as
+#   pin 6084. Featured only — the hand-picked list is untouched.)
+FEATURED_ENTRY_IDS = (5541, 5542, 5551, 5584, 5587, 5175, 4370, 5653, 5654, 5655, 5766, 5572, 5940, 6006, 116, 6084)
 
 # Hand-picked pins (Dan, Oct 23): pins Dan personally sent in chat or
 # curated for posting. These lead every feed view — hand-picked first
@@ -124,7 +132,8 @@ CREATE TABLE IF NOT EXISTS entries (
     tags TEXT,                            -- comma-separated: animatronics,inflatables,handmade,walkthrough,projector,lights,music,street-wide,multi-house
     ev_type TEXT,                         -- events facet: event type (see EVENT_TYPES in main.py)
     ev_genre TEXT,                        -- events facet: music genre (see EVENT_GENRES in main.py)
-    ev_venue TEXT                         -- events facet: venue style (see EVENT_VENUES in main.py)
+    ev_venue TEXT,                        -- events facet: venue style (see EVENT_VENUES in main.py)
+    virtual INTEGER NOT NULL DEFAULT 0    -- 1 = online/virtual LIVE room (Dan, Oct 27): no street address, no coords, town stored as "Online / Virtual"; live category only
 );
 CREATE INDEX IF NOT EXISTS idx_entries_town ON entries(town);
 CREATE INDEX IF NOT EXISTS idx_entries_votes ON entries(votes DESC);
@@ -513,6 +522,16 @@ def init_db(db_path: Path) -> None:
             # Free-text description sent by posting crews via /upload
             # (Oct 2026). NULL when not provided.
             conn.execute("ALTER TABLE entries ADD COLUMN description TEXT")
+        if "virtual" not in cols:
+            # Virtual LIVE rooms (Dan, Oct 27): a category='live' entry
+            # that is an online-only room (e.g. a TikTok quiz stream)
+            # may post with NO street address and NO coordinates; its
+            # town is stored as "Online / Virtual". The exemption is
+            # scoped to live+virtual in the /upload handler — every
+            # other category keeps the street-address mandate.
+            conn.execute(
+                "ALTER TABLE entries ADD COLUMN virtual INTEGER NOT NULL DEFAULT 0"
+            )
         if "is_featured" not in cols:
             # Editor's-pick flag (Top 10 by State staging): Dan's
             # hand-picked pins are guaranteed a slot in their state's
@@ -534,6 +553,16 @@ def init_db(db_path: Path) -> None:
             "UPDATE entries SET is_featured = 0 "
             f"WHERE is_featured != 0 AND id NOT IN ({_ph})",
             FEATURED_ENTRY_IDS,
+        )
+        # Dan-sent video attach (Oct 27): @suzebauer's TikTok of the
+        # Great Jack O'Lantern Blaze belongs on the Blaze's one pin
+        # (116) — the standing one-pin-per-place rule. Fill-if-empty
+        # only: an admin-set tiktok_url is never overwritten, and once
+        # the pin carries any video this is a no-op.
+        conn.execute(
+            "UPDATE entries SET tiktok_url = ? "
+            "WHERE id = 116 AND (tiktok_url IS NULL OR TRIM(tiktok_url) = '')",
+            ("https://www.tiktok.com/@suzebauer/video/7691338318004440350",),
         )
         if "is_handpicked" not in cols:
             # Hand-picked feed boost (Dan, Oct 23): pins Dan personally

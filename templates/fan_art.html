@@ -39,6 +39,50 @@
     <p class="art-feature-desc">Shot on the Nikon Z9 and lit with Nanlite Pavotubes, both available at the Adorama online store. #Adorama #Nanlite #Nikon</p>
   </section>
 
+  {# Art in Motion (Dan, Oct 27): @olesamhain's full TikTok catalogue —
+     handmade Halloween props and displays. Embed-only click-to-play
+     facades in the /pop-haunt-culture pattern: each poster is the
+     video's own cover frame; the tap swaps in TikTok's embed/v2 player
+     with the fullscreen token in its allow string (the WebKit fix). #}
+  {% if art_videos %}
+  <section class="art-videos">
+    <h2 class="art-videos-title">🎬 Art in Motion — <a class="fanart-source" href="https://www.tiktok.com/@olesamhain" target="_blank" rel="noopener">@olesamhain</a></h2>
+    <p class="art-videos-sub">Every prop and display handmade by the artist — witches, scarecrows, corpses and vintage-style haunts, built and painted by hand. Tap a cover to play; {{ art_videos|length }} videos, newest first.</p>
+    <div class="art-videos-grid">
+      {% for v in art_videos %}
+      <article class="art-video-card">
+        <button type="button" class="ttv-facade" data-ttv="{{ v.video_id }}" aria-label="Play {{ v.title }}">
+          <img src="{{ v.cover }}" alt="{{ v.title }} — by @olesamhain on TikTok" loading="lazy">
+          <span class="tt-play" aria-hidden="true">&#x25B6;</span>
+          <span class="tt-facade-label">&#x1F3B5; Tap to play video</span>
+        </button>
+        <p class="art-video-caption"><strong>{{ v.title }}</strong><br>
+          <span class="contest-by">by <a class="fanart-source" href="https://www.tiktok.com/@olesamhain" target="_blank" rel="noopener">@olesamhain</a> on TikTok · {{ v.posted }} · <a class="fanart-source" href="{{ v.url }}" target="_blank" rel="noopener">Watch on TikTok &#x2197;</a></span></p>
+      </article>
+      {% endfor %}
+    </div>
+  </section>
+  <script>
+  // TikTok click-to-play facades: the real player (embed/v2 iframe)
+  // only loads when a visitor taps a cover. The allow string carries
+  // the fullscreen token alongside allowfullscreen — the WebKit fix
+  // from the /pop-haunt-culture fullscreen pass (Oct 27).
+  document.addEventListener('click', function (ev) {
+    var b = ev.target.closest && ev.target.closest('.ttv-facade');
+    if (!b || b.dataset.loaded) return;
+    b.dataset.loaded = '1';
+    var f = document.createElement('iframe');
+    f.className = 'ttv-frame';
+    f.src = 'https://www.tiktok.com/embed/v2/' + b.getAttribute('data-ttv');
+    f.setAttribute('allow', 'autoplay; encrypted-media; fullscreen; picture-in-picture');
+    f.setAttribute('allowfullscreen', '');
+    f.setAttribute('scrolling', 'no');
+    f.setAttribute('title', b.getAttribute('aria-label') || 'TikTok video');
+    b.replaceWith(f);
+  });
+  </script>
+  {% endif %}
+
   <form class="contest-form" method="post" action="/fan-art/upload" enctype="multipart/form-data">
     <h2>Share your artwork</h2>
     <label>Artwork image (required)
@@ -112,6 +156,23 @@
 .contest-empty { text-align: center; color: #9a8fb8; }
 @media (max-width: 560px) {
   .contest-card img { height: 300px; }
+}
+/* Art in Motion — @olesamhain video grid (Oct 27). Facades mirror the
+   featured block above: 9/16 stage, cover frame fills it (the frame is
+   the video's own cover, never a caption screenshot). */
+.art-videos { margin: 0 auto 1.8rem; }
+.art-videos-title { text-align: center; margin: 0 0 0.4rem; }
+.art-videos-sub { text-align: center; color: #c9bce8; max-width: 640px; margin: 0 auto 1.1rem; line-height: 1.5; }
+.art-videos-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 1rem; }
+.art-video-card { background: #17122b; border: 1px solid #372b5e; border-radius: 12px; overflow: hidden; padding-bottom: 0.55rem; }
+.ttv-facade { position: relative; display: block; width: 100%; padding: 0; border: 0; background: #0d0a1a; cursor: pointer; }
+.ttv-facade img { width: 100%; aspect-ratio: 9 / 16; object-fit: cover; display: block; }
+.ttv-facade .tt-play { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 2rem; color: #fff; background: rgba(13, 10, 26, 0.55); border-radius: 999px; width: 3.4rem; height: 3.4rem; line-height: 3.4rem; text-align: center; pointer-events: none; }
+.ttv-facade .tt-facade-label { position: absolute; left: 0; right: 0; bottom: 0; padding: 0.45rem 0.4rem; font-size: 0.8rem; color: #e8e6e3; background: linear-gradient(transparent, rgba(13, 10, 26, 0.85)); pointer-events: none; }
+.ttv-frame { width: 100%; aspect-ratio: 9 / 16; border: 0; display: block; background: #0d0a1a; }
+.art-video-caption { margin: 0.55rem 0.7rem 0; font-size: 0.92rem; line-height: 1.35; }
+@media (max-width: 560px) {
+  .art-videos-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 0.7rem; }
 }
 </style>
 <script>

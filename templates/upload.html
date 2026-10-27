@@ -27,14 +27,20 @@
   <label>Title <span class="req">*</span>
     <input type="text" name="title" maxlength="120" required placeholder="e.g. The Skeleton Orchestra House" value="{{ values.get('title', '') }}">
   </label>
-  <label>Town / neighborhood <span class="req">*</span>
-    <input type="text" name="town" maxlength="80" required placeholder="e.g. Salem" value="{{ values.get('town', '') }}">
+  <label>Town / neighborhood <span class="req" id="town-req">*</span>
+    <input type="text" name="town" id="town-input" maxlength="80" required placeholder="e.g. Salem" value="{{ values.get('town', '') }}">
   </label>
-  <label>Street address <span class="req">*</span>
+  <label>Street address <span class="req" id="address-req">*</span>
     <input type="text" name="address" id="address-input" maxlength="200" required autocomplete="street-address" placeholder="e.g. 123 Main St" value="{{ values.get('address', '') }}">
     <small>Required &mdash; house number + street name. We pin your haunt on the map from this address, so visitors can route right to it. No street address, no upload.</small>
     <small id="address-error" style="display:none"></small>
   </label>
+  <div id="virtual-fields" style="display:none">
+    <label class="check-label">
+      <input type="checkbox" name="virtual" id="virtual-input" value="1"{% if values.get('virtual') %} checked{% endif %}> &#x1F310; Online / virtual live room &mdash; no street address
+    </label>
+    <p><small>For Live Streams only: if the room is online-only (no physical venue &mdash; e.g. a quiz or game stream), check this and skip the town + street address. It will be listed as &ldquo;Online / Virtual&rdquo; with no map pin.</small></p>
+  </div>
   <label>Your display name <span class="opt">(optional)</span>
     <input type="text" name="display_name" maxlength="40" placeholder="e.g. The Miller Family" value="{{ values.get('display_name', '') }}">
   </label>
@@ -76,6 +82,21 @@
   </label>
   </div>
   <script>
+  function syncVirtual() {
+    // Virtual LIVE exemption (Dan, Oct 27): the online-room checkbox is
+    // offered only for Live Streams; while it is checked, town + street
+    // address stop being required (the server is the real gate — it
+    // honours the flag for category=live only and files the room under
+    // "Online / Virtual" with no address and no map pin).
+    const v = document.getElementById('category-select').value;
+    const isLive = (v === 'live');
+    document.getElementById('virtual-fields').style.display = isLive ? '' : 'none';
+    const virt = isLive && document.getElementById('virtual-input').checked;
+    document.getElementById('town-input').required = !virt;
+    document.getElementById('address-input').required = !virt;
+    document.getElementById('town-req').style.display = virt ? 'none' : '';
+    document.getElementById('address-req').style.display = virt ? 'none' : '';
+  }
   function syncMediaRequired() {
     const v = document.getElementById('category-select').value;
     const show = (v === 'halloween' || v === 'christmas');
@@ -84,8 +105,10 @@
     document.getElementById('media-input').required = !mediaOptional;
     document.getElementById('media-req').style.display = mediaOptional ? 'none' : '';
     document.getElementById('media-opt').style.display = mediaOptional ? '' : 'none';
+    syncVirtual();
   }
   document.getElementById('category-select').addEventListener('change', syncMediaRequired);
+  document.getElementById('virtual-input').addEventListener('change', syncVirtual);
   syncMediaRequired();
   </script>
   <p><small>&#x1F4CD; Map pin: we place it on the map from your street address when you share &mdash; that&rsquo;s how visitors find your haunt and route to it.</small></p>
@@ -105,6 +128,11 @@
     return /^\d{1,6}[A-Za-z]?\s+\S+.*[A-Za-z]/.test((v || '').trim());
   }
   form.addEventListener('submit', function (e) {
+    var virt = document.getElementById('virtual-input');
+    if (virt && virt.checked &&
+        document.getElementById('category-select').value === 'live') {
+      return; // virtual LIVE room: no street address by design (server-gated)
+    }
     if (!looksLikeStreetAddress(addr.value)) {
       e.preventDefault();
       err.textContent = MSG;
