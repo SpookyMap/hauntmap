@@ -143,7 +143,16 @@ from pathlib import Path
 #   existed with no video, so no duplicate was posted and
 #   @geras88jerry's TikTok was attached to it below. Featured
 #   only — the hand-picked list is untouched.)
-FEATURED_ENTRY_IDS = (5541, 5542, 5551, 5584, 5587, 5175, 4370, 5653, 5654, 5655, 5766, 5572, 5940, 6006, 116, 6084, 4932, 6085, 6087, 6088, 6086, 6090, 6089, 6091, 30, 6098, 6096, 1641, 6092, 6100, 6099, 6101, 1239, 5728, 5967, 6095, 6097, 6093, 6094, 6102, 6103, 6105, 6106, 1996)
+#   6104 + 6108 CA Chino (Oct 27: Dan's "All top 10" burst pick —
+#   Dan captioned the link "Recanted House encino CA", a garbled
+#   dictation of "haunted houses in Chino, CA": @explorewithcourt's
+#   TikTok tours TWO free Chino home haunts, posted today as two
+#   pins sharing the one video per the one-pin-per-house rule —
+#   6104 Dread Town, 6542 Germantown Ct (Dr. Dready's manor yard
+#   haunt, 8th year), and 6108 Rotten Realms, 12850 17th St
+#   (mineshaft-to-farmhouse walk-through). Featured only — the
+#   hand-picked list is untouched.)
+FEATURED_ENTRY_IDS = (5541, 5542, 5551, 5584, 5587, 5175, 4370, 5653, 5654, 5655, 5766, 5572, 5940, 6006, 116, 6084, 4932, 6085, 6087, 6088, 6086, 6090, 6089, 6091, 30, 6098, 6096, 1641, 6092, 6100, 6099, 6101, 1239, 5728, 5967, 6095, 6097, 6093, 6094, 6102, 6103, 6105, 6106, 1996, 6104, 6108)
 
 # Hand-picked pins (Dan, Oct 23): pins Dan personally sent in chat or
 # curated for posting. These lead every feed view — hand-picked first
