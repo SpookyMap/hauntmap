@@ -1,0 +1,47 @@
+{# Haunt Chat Wave 1 (Oct 27, 2026): web push opt-in panel, shared
+   by /chat and /profile/edit. Driven by /static/js/push.js — the
+   browser permission prompt fires only from the member's own tap
+   on the master switch. Guests never see this (both pages render
+   it for members only). #}
+<div class="push-panel" data-push-panel>
+  <div class="push-panel-head">
+    <span class="push-panel-title">🔔 Chat notifications</span>
+    <button type="button" class="push-close" data-push-close aria-label="Close notification settings">✕</button>
+  </div>
+  <p class="push-status" data-push-status>Loading your notification settings…</p>
+  <p class="push-ios" data-push-ios hidden>🍎 <strong>On iPhone &amp; iPad:</strong>
+    Apple only lets <em>installed</em> apps send notifications. Tap the
+    Share button, choose <strong>Add to Home Screen</strong>, open
+    HauntMap from the new icon, then flip the switch here.</p>
+  <label class="push-row push-master-row">
+    <input type="checkbox" data-push-master>
+    <span><strong>Notifications on this device</strong>
+      <small>Nothing is sent until you turn this on.</small></span>
+  </label>
+  <div class="push-types">
+    <label class="push-row">
+      <input type="checkbox" data-push-kind="mentions">
+      <span>💬 <strong>@Mentions</strong>
+        <small>Someone tags you in Haunt Chat</small></span>
+    </label>
+    <label class="push-row">
+      <input type="checkbox" data-push-kind="challenges">
+      <span>⚔️ <strong>Game challenges</strong>
+        <small>Someone challenges you to a word game</small></span>
+    </label>
+    <label class="push-row">
+      <input type="checkbox" data-push-kind="frank">
+      <span>📣 <strong>Frank announcements</strong>
+        <small>New haunts landing on the site &amp; event drops</small></span>
+    </label>
+    <label class="push-row">
+      <input type="checkbox" data-push-kind="replies">
+      <span>↩️ <strong>Replies to me</strong>
+        <small>Someone replies to one of your messages</small></span>
+    </label>
+  </div>
+  <div class="push-actions">
+    <button type="button" class="btn btn-small" data-push-test>Send a test notification</button>
+    <span class="push-msg" data-push-msg role="status"></span>
+  </div>
+</div>

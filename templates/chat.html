@@ -26,8 +26,12 @@
     <span class="chat-presence-users" id="presenceUsers"></span>
     <span class="chat-typing" id="typingLine" aria-live="polite"></span>
     <button type="button" class="chat-mention-chip" id="mentionChip" hidden>💬 <span id="mentionCount"></span></button>
+    <button type="button" class="chat-bell" data-push-open="pushSettingsWrap" title="Notification settings" aria-label="Notification settings">🔔 <span class="chat-bell-label">Notifications</span></button>
   </div>
   <div class="chat-mention-panel" id="mentionPanel" hidden></div>
+  <div id="pushSettingsWrap" data-push-wrap hidden>
+    {% include "_push_settings.html" %}
+  </div>
 
   <div class="chat-games" id="chatGames">
     <div class="chat-games-head">
@@ -140,6 +144,7 @@
   </details>
   {% endif %}
 
+  <script src="/static/js/push.js?v=20261027z198" defer></script>
   <script>
   // Every visitor gets local times (the server renders a UTC fallback
   // inside <time datetime>); the member script below re-runs this for

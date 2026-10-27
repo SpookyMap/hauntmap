@@ -166,6 +166,9 @@
     </div>
     <button class="btn btn-big" type="submit">Save profile</button>
   </form>
+  <div class="soc-upload-box" data-push-wrap>
+    {% include "_push_settings.html" %}
+  </div>
   <div class="soc-upload-box" id="profile-picture">
     <h2 class="soc-upload-head">&#x1F4F8; Your profile picture</h2>
     {% if profile.avatar_path %}
@@ -213,6 +216,7 @@
     <p class="soc-note">You're at the {{ photo_max }}-photo max — delete one to add another.</p>
     {% endif %}
   </div>
+  <script src="/static/js/push.js?v=20261027z198" defer></script>
   <script>
   (function () {
     function wireRow(row) {

@@ -5,3 +5,5 @@ pillow>=10.0
 python-multipart>=0.0.9
 requests>=2.31
 maxminddb>=1.5
+pywebpush>=2.0
+

@@ -7,7 +7,17 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Creepster&family=Fredoka:wght@500;600;700&family=Inter:wght@500;600;700;800;900&family=Nosifer&family=Rubik+Wet+Paint&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/static/css/style.css?v=20261027z197">
+<link rel="stylesheet" href="/static/css/style.css?v=20261027z198">
+{# PWA (Wave 1, Oct 27): installable HauntMap + the web-push service
+   worker. iOS needs the apple-* metas + touch icon for Add to Home
+   Screen; push on iOS works only from the installed PWA. #}
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="theme-color" content="#05080a">
+<link rel="apple-touch-icon" href="/static/img/icons/apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="HauntMap">
 {% block head %}{% endblock %}
 </head>
 <body>
@@ -859,5 +869,15 @@ hmTourSync();
 {% include "_capture_prompt.html" %}
 <script src="/static/js/retention2.js?v=20261023z92" defer></script>
 {# === Retention Wave 2, Items 3+5 END === #}
+{# PWA service worker registration (Wave 1, Oct 27): push handling +
+   a network-first fetch layer — see static/js/sw.js. Registration
+   is passive: no permission prompts, no install prompts here. #}
+<script>
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", function () {
+    navigator.serviceWorker.register("/sw.js").catch(function () {});
+  });
+}
+</script>
 </body>
 </html>

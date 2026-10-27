@@ -459,6 +459,36 @@ CREATE TABLE IF NOT EXISTS chat_game_tallies (
     losses INTEGER NOT NULL DEFAULT 0,
     PRIMARY KEY (user_id, kind)
 );
+-- Haunt Chat Wave 1 (Dan, Oct 27 — benchmark brief §4 headline #1):
+-- Web Push + PWA. One row per browser/device subscription a member
+-- has granted (endpoint is the push service's unique URL); a member
+-- can have several devices. Dead endpoints (404/410 from the push
+-- service) are pruned at send time.
+CREATE TABLE IF NOT EXISTS push_subscriptions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    endpoint TEXT NOT NULL UNIQUE,
+    p256dh TEXT NOT NULL,
+    auth TEXT NOT NULL,
+    user_agent TEXT,
+    created_at TEXT NOT NULL,
+    last_seen_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_push_subs_user
+    ON push_subscriptions(user_id);
+-- Per-member notification preferences. The master switch defaults
+-- OFF (opt-in only, brief §4); the per-type switches default ON so
+-- that turning the master on once enables the full set, and a member
+-- can then mute individual types. No row = all defaults.
+CREATE TABLE IF NOT EXISTS push_settings (
+    user_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+    enabled INTEGER NOT NULL DEFAULT 0,
+    mentions INTEGER NOT NULL DEFAULT 1,
+    challenges INTEGER NOT NULL DEFAULT 1,
+    frank INTEGER NOT NULL DEFAULT 1,
+    replies INTEGER NOT NULL DEFAULT 1,
+    updated_at TEXT NOT NULL
+);
 """
 
 

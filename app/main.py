@@ -43,6 +43,7 @@ from PIL import Image, ImageOps, UnidentifiedImageError
 
 from .db import get_conn, init_db
 from . import sms_alerts
+from . import push as push_mod
 from . import bracket as brk
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -10528,6 +10529,141 @@ def privacy_page(request: Request):
 
 # ------------------------------------------------------- hauntsocial explainer
 
+# --------------------------------------------------- PWA + Web Push
+# Haunt Chat Wave 1 (Dan, Oct 27, 2026 — benchmark brief §4 headline
+# #1): HauntMap as an installable PWA, plus opt-in web push so the
+# chat room can call members back (@mentions, game challenges,
+# replies, Frank announcements). The manifest + service worker are
+# served from ROOT paths: a service worker's scope is its own path,
+# so /sw.js must live at the root to cover the site. The SW is
+# deliberately conservative — network-first for pages, runtime
+# cache only for static assets — so it can never serve a stale
+# site. Push plumbing lives in app/push.py; keys come from env.
+
+@app.get("/manifest.webmanifest")
+def pwa_manifest():
+    return FileResponse(
+        BASE_DIR / "static" / "manifest.webmanifest",
+        media_type="application/manifest+json",
+        headers={"Cache-Control": "public, max-age=3600"})
+
+
+@app.get("/sw.js")
+def pwa_service_worker():
+    return FileResponse(
+        BASE_DIR / "static" / "js" / "sw.js",
+        media_type="application/javascript",
+        headers={"Service-Worker-Allowed": "/",
+                 "Cache-Control": "no-cache"})
+
+
+@app.get("/api/push/config")
+def push_config(request: Request):
+    return {"configured": push_mod.configured(),
+            "public_key": push_mod.public_key()}
+
+
+@app.get("/api/push/settings")
+def push_settings_get(request: Request):
+    member = current_member(request)
+    if not member:
+        return JSONResponse({"error": "members only"}, status_code=401)
+    with get_conn(DB_PATH) as conn:
+        settings = push_mod.get_settings(conn, member["id"])
+        count = push_mod.subscription_count(conn, member["id"])
+    return {"settings": settings, "subscriptions": count,
+            "configured": push_mod.configured()}
+
+
+@app.post("/api/push/settings")
+async def push_settings_save(request: Request):
+    member = current_member(request)
+    if not member:
+        return JSONResponse({"error": "members only"}, status_code=401)
+    try:
+        data = await request.json()
+    except Exception:
+        return JSONResponse({"ok": False, "error": "bad request"},
+                            status_code=400)
+    with get_conn(DB_PATH) as conn:
+        current = push_mod.get_settings(conn, member["id"])
+        for key in push_mod.KINDS + ("enabled",):
+            if key in data:
+                current[key] = 1 if data[key] else 0
+        saved = push_mod.save_settings(conn, member["id"], current)
+        conn.commit()
+    return {"ok": True, "settings": saved}
+
+
+@app.post("/api/push/subscribe")
+async def push_subscribe(request: Request):
+    member = current_member(request)
+    if not member:
+        return JSONResponse({"error": "members only"}, status_code=401)
+    try:
+        data = await request.json()
+    except Exception:
+        return JSONResponse({"ok": False, "error": "bad request"},
+                            status_code=400)
+    endpoint = str(data.get("endpoint") or "")
+    keys = data.get("keys") or {}
+    p256dh = str(keys.get("p256dh") or "")
+    auth = str(keys.get("auth") or "")
+    # Real push services only ever issue https endpoints; loopback
+    # http is allowed so a local rig can stand in for one.
+    if not (endpoint.startswith("https://")
+            or endpoint.startswith(("http://127.0.0.1",
+                                      "http://localhost"))) \
+            or not p256dh or not auth:
+        return JSONResponse(
+            {"ok": False, "error": "That subscription looks "
+                                  "incomplete."}, status_code=400)
+    with get_conn(DB_PATH) as conn:
+        push_mod.store_subscription(
+            conn, member["id"], endpoint, p256dh, auth,
+            request.headers.get("user-agent", ""))
+        conn.commit()
+        count = push_mod.subscription_count(conn, member["id"])
+    return {"ok": True, "subscriptions": count}
+
+
+@app.post("/api/push/unsubscribe")
+async def push_unsubscribe(request: Request):
+    member = current_member(request)
+    if not member:
+        return JSONResponse({"error": "members only"}, status_code=401)
+    try:
+        data = await request.json()
+    except Exception:
+        return JSONResponse({"ok": False, "error": "bad request"},
+                            status_code=400)
+    endpoint = str(data.get("endpoint") or "")
+    if endpoint:
+        with get_conn(DB_PATH) as conn:
+            push_mod.remove_subscription(conn, member["id"], endpoint)
+            conn.commit()
+    return {"ok": True}
+
+
+@app.post("/api/push/test")
+def push_test(request: Request):
+    member = current_member(request)
+    if not member:
+        return JSONResponse({"error": "members only"}, status_code=401)
+    if not push_mod.configured():
+        return JSONResponse(
+            {"ok": False, "error": "Notifications aren't switched "
+                                   "on for the site yet."},
+            status_code=503)
+    push_mod.notify_user(
+        DB_PATH, member["id"], "test",
+        "🎃 HauntMap notifications are on!",
+        "This is your test — mentions, challenges and Frank's "
+        "announcements will find you here.", url="/chat",
+        ref="test", online_ids=frozenset(), force=True)
+    return {"ok": True}
+
+
 @app.get("/hauntsocial", response_class=HTMLResponse)
 def hauntsocial_page(request: Request):
     # Dan's approved explainer copy (Oct 25) — what HauntSocial is,
@@ -10753,6 +10889,8 @@ def _chat_insert_and_fanout(member: dict, body: str, kind: str = "text",
     view (extras attached). Caller has already validated the body,
     the reply target, and the rate gate."""
     now = datetime.now(timezone.utc)
+    reply_author_id = None
+    reply_blocked = False
     with get_conn(DB_PATH) as conn:
         cur = conn.execute(
             "INSERT INTO chat_messages (user_id, body, kind, reply_to, "
@@ -10761,6 +10899,14 @@ def _chat_insert_and_fanout(member: dict, body: str, kind: str = "text",
         message_id = cur.lastrowid
         mentioned = (_record_mentions(conn, message_id, member, body)
                      if kind == "text" else [])
+        if reply_to:
+            orig = conn.execute(
+                "SELECT user_id FROM chat_messages WHERE id = ?",
+                (reply_to,)).fetchone()
+            if orig and orig["user_id"] != member["id"]:
+                reply_author_id = orig["user_id"]
+                reply_blocked = _blocked_pair(
+                    conn, member["id"], reply_author_id)
         conn.commit()
         row = conn.execute(
             _CHAT_SELECT + "WHERE m.id = ?", (message_id,)).fetchone()
@@ -10784,6 +10930,27 @@ def _chat_insert_and_fanout(member: dict, body: str, kind: str = "text",
                          "snippet": body[:80]},
              "count": _mentions_unseen_count(target["id"])},
             to_ids={target["id"]})
+    # Wave 1 web push: the same events, for members who are NOT in
+    # the room right now (notify_user skips anyone with a live
+    # socket, anyone who hasn't opted in, and repeat triggers).
+    # Blocks were already filtered by _record_mentions; the shadow
+    # rule mirrors the socket fan-out above.
+    online = set(_hub.conns)
+    for target in mentioned:
+        if muted and target["id"] != member["id"] \
+                and target["id"] not in _hub.admin_ids:
+            continue
+        push_mod.notify_user(
+            DB_PATH, target["id"], "mentions",
+            f"💬 @{member['handle']} mentioned you in Haunt Chat",
+            body[:120], url="/chat", ref=f"from-{member['id']}",
+            online_ids=online)
+    if reply_author_id and not reply_blocked and not muted:
+        push_mod.notify_user(
+            DB_PATH, reply_author_id, "replies",
+            f"↩️ @{member['handle']} replied to you in Haunt Chat",
+            body[:120], url="/chat", ref=f"from-{member['id']}",
+            online_ids=online)
     return view
 
 
@@ -12050,6 +12217,14 @@ def _frank_announce_new_listing(entry_id: int) -> None:
         _social_meta_set(FRANK_NEWS_HOUR_KEY,
                          f"{hour_key}:{hour_count + 1}")
         _frank_announce(body)
+        # Wave 1 web push: Frank's site announcements also reach
+        # opted-in members who aren't in the room (kind 'frank').
+        # The throttle above (1 per 10 min, 6 per hour) is this
+        # fan-out's rate limit too. Best-effort, like the shout.
+        push_mod.notify_frank_fans(
+            DB_PATH, "📣 New on HauntMap",
+            re.sub(r"\s*/d/\d+\s*$", "", body), f"/d/{entry_id}",
+            online_ids=set(_hub.conns))
     except Exception:
         pass
 
@@ -12382,10 +12557,23 @@ async def chat_challenge(request: Request):
         conn.commit()
         g = _game_row(conn, cur.lastrowid)
         view = _game_view(conn, g, member["id"])
+        challenger_muted = member["id"] in _shadow_muted_ids(conn)
     _hub.broadcast({"type": "game", "game": view})
     _frank_announce(
         f"⚔️ @{member['handle']} challenged @{handle} to "
         f"{GAME_KIND_LABELS[kind]}! Will they accept?")
+    # Wave 1 web push: call the challenged member back if they're
+    # away. Blocks and the challenges opt-out were enforced above
+    # (this code only runs on a created challenge); a shadow-muted
+    # challenger's invite never pushes.
+    if not challenger_muted:
+        push_mod.notify_user(
+            DB_PATH, target["id"], "challenges",
+            "⚔️ You've been challenged in Haunt Chat!",
+            f"@{member['handle']} challenged you to "
+            f"{GAME_KIND_LABELS[kind]} — it expires in two minutes!",
+            url="/chat", ref=f"from-{member['id']}",
+            online_ids=set(_hub.conns))
     return JSONResponse({"ok": True, "game": view})
 
 

@@ -6538,3 +6538,43 @@ span.chat-react-chip { cursor: default; }
   .chat-sticker-big { font-size: 2.6rem; }
   .chat-quote-snip { white-space: normal; }
 }
+
+/* ============ z198: HAUNT CHAT WAVE 1 — WEB PUSH + PWA (Oct 27) ============
+   The opt-in panel (shared by /chat and /profile/edit), driven by
+   static/js/push.js. Azure room treatment to match z192/z195/z197. */
+.chat-bell { background: rgba(143,216,255,.12); color: #8fd8ff;
+  border: 1px solid rgba(143,216,255,.5); border-radius: 999px;
+  padding: 0.15rem 0.6rem; font: inherit; font-size: 0.8rem; font-weight: 700;
+  cursor: pointer; margin-left: auto; }
+.chat-bell:hover { border-color: #8fd8ff; }
+.push-panel { background: var(--card);
+  border: 1px solid rgba(143,216,255,.4); border-radius: var(--radius);
+  padding: 0.8rem 0.9rem; margin-bottom: 0.7rem; }
+.push-panel-head { display: flex; align-items: center;
+  justify-content: space-between; gap: 0.5rem; margin-bottom: 0.3rem; }
+.push-panel-title { font-weight: 800; font-size: 1rem; color: var(--ink); }
+.push-close { background: none; border: none; color: var(--muted);
+  font-size: 1rem; cursor: pointer; padding: 0.15rem 0.35rem; }
+.push-close:hover { color: #8fd8ff; }
+.push-status { margin: 0.2rem 0 0.5rem; color: var(--muted);
+  font-size: 0.88rem; }
+.push-ios { margin: 0.2rem 0 0.6rem; padding: 0.55rem 0.7rem;
+  background: rgba(255,209,102,.12); border: 1px solid rgba(255,209,102,.45);
+  border-radius: 8px; font-size: 0.88rem; color: var(--ink); }
+.push-row { display: flex; gap: 0.6rem; align-items: flex-start;
+  padding: 0.45rem 0.3rem; cursor: pointer; border-radius: 8px; }
+.push-row:hover { background: rgba(143,216,255,.06); }
+.push-row input[type="checkbox"] { width: 1.15rem; height: 1.15rem;
+  margin-top: 0.15rem; accent-color: #35a7e8; flex: 0 0 auto; }
+.push-row span { display: flex; flex-direction: column; gap: 0.05rem; }
+.push-row small { color: var(--muted); font-size: 0.8rem; }
+.push-master-row { border: 1px solid rgba(143,216,255,.3);
+  border-radius: 8px; padding: 0.55rem 0.6rem; margin-bottom: 0.35rem; }
+.push-types { display: flex; flex-direction: column; }
+.push-actions { display: flex; align-items: center; gap: 0.7rem;
+  margin-top: 0.6rem; flex-wrap: wrap; }
+.push-msg { color: #8fd8ff; font-size: 0.85rem; font-weight: 600; }
+@media (max-width: 520px) {
+  .chat-bell-label { display: none; }
+  .chat-bell { padding: 0.15rem 0.45rem; }
+}
