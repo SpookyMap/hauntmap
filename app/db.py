@@ -71,7 +71,13 @@ from pathlib import Path
 #   (6,344 ft route, certified 2015), posted today as pin 6096 via
 #   @savannahvinsonn's TikTok. Featured only — the hand-picked
 #   list is untouched.)
-FEATURED_ENTRY_IDS = (5541, 5542, 5551, 5584, 5587, 5175, 4370, 5653, 5654, 5655, 5766, 5572, 5940, 6006, 116, 6084, 4932, 6085, 6087, 6088, 6086, 6090, 6089, 6091, 30, 6098, 6096)
+#   1641 PA Bethel Park (Oct 27: Dan's "All top 10" burst pick —
+#   Hundred Acres Manor, 2133 100 Acres Drive; the pin already
+#   existed in haunted_houses with no video, so no duplicate was
+#   posted and @dreadalertmedia's TikTok review of the manor's
+#   five attractions was attached to it below. Featured only —
+#   the hand-picked list is untouched.)
+FEATURED_ENTRY_IDS = (5541, 5542, 5551, 5584, 5587, 5175, 4370, 5653, 5654, 5655, 5766, 5572, 5940, 6006, 116, 6084, 4932, 6085, 6087, 6088, 6086, 6090, 6089, 6091, 30, 6098, 6096, 1641)
 
 # Hand-picked pins (Dan, Oct 23): pins Dan personally sent in chat or
 # curated for posting. These lead every feed view — hand-picked first
@@ -832,6 +838,22 @@ def init_db(db_path: Path) -> None:
         add_entry_video(
             conn, 30,
             "https://www.tiktok.com/@growingwithju/video/7695491140866428174",
+        )
+        # Dan-sent video attach (Oct 27): @dreadalertmedia's TikTok
+        # review of Hundred Acres Manor (video 7695878638356516127,
+        # Oct 13 2026 — a ranking of the manor's five haunted
+        # attractions) joins its one pin (1641) — the standing
+        # one-pin-per-place rule. The pin carried no video, so
+        # add_entry_video fills the empty primary mirror
+        # (fill-if-empty) and lists the video at position 0; it
+        # dedupes by video id, so repeat boots are no-ops. (The
+        # halloween-category pin 1250 carries this place's name too
+        # but at a wrong address — 2919 South Park Rd is an
+        # auto-parts store — so the video does NOT go there; 1250
+        # is left untouched for a separate merge/cleanup call.)
+        add_entry_video(
+            conn, 1641,
+            "https://www.tiktok.com/@dreadalertmedia/video/7695878638356516127",
         )
         if "is_handpicked" not in cols:
             # Hand-picked feed boost (Dan, Oct 23): pins Dan personally
