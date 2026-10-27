@@ -6099,4 +6099,42 @@ main.wrap:has(> .vt-tv-strip-bottom) { padding-bottom: 0; }
 .costume-card .ig-facade img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .costume-card .ig-facade:hover .yt-play, .costume-card .ig-facade:focus-visible .yt-play { background: #ff8c42; }
 .costume-card .ig-frame { width: 100%; max-width: 340px; height: 600px; margin: 0 auto 0.35rem; border: 0; border-radius: 10px; display: block; background: #000; }
- (DIY COSTUMES: GROOT REEL AT THE TOP (Dan, Oct 27): Dan sent Danielle | DIY + DESIGN's Instagram reel (Dew32sWMjd8) — 'New diy costumes' + 'Put at the top of page.' The reel: a full Groot built from foam pipe insulation (posted Oct 21, 2026; her caption: the homemade costume that 'broke the internet'). It is the new #1 card in a new 'Just Added' section above For Kids on /diy-costumes; nothing else moved. Pattern: first Instagram entry on the page — a click-to-play facade mirroring the YouTube one (the reel's OWN cover frame, fetched from Instagram's CDN before the signed URL expired, stored as static/img/groot_costume_reel.jpg — the video itself is never re-hosted); on tap it swaps in Instagram's official embed iframe (instagram.com/reel/<id>/embed, allow incl. fullscreen + allowfullscreen). Credit on the card: 'Danielle | DIY + DESIGN (@themindfulhaven)'; the card's tutorial link opens the reel on Instagram. Intro + credits copy now name Instagram among the official-embed sources. CSS: facade/frame rules appended (vertical 9/16 facade, 600px embed frame sized like .diy-embed's player), scoped to .costume-card.)
+/* (DIY COSTUMES: GROOT REEL AT THE TOP (Dan, Oct 27): Dan sent Danielle | DIY + DESIGN's Instagram reel (Dew32sWMjd8) — 'New diy costumes' + 'Put at the top of page.' The reel: a full Groot built from foam pipe insulation (posted Oct 21, 2026; her caption: the homemade costume that 'broke the internet'). It is the new #1 card in a new 'Just Added' section above For Kids on /diy-costumes; nothing else moved. Pattern: first Instagram entry on the page — a click-to-play facade mirroring the YouTube one (the reel's OWN cover frame, fetched from Instagram's CDN before the signed URL expired, stored as static/img/groot_costume_reel.jpg — the video itself is never re-hosted); on tap it swaps in Instagram's official embed iframe (instagram.com/reel/<id>/embed, allow incl. fullscreen + allowfullscreen). Credit on the card: 'Danielle | DIY + DESIGN (@themindfulhaven)'; the card's tutorial link opens the reel on Instagram. Intro + credits copy now name Instagram among the official-embed sources. CSS: facade/frame rules appended (vertical 9/16 facade, 600px embed frame sized like .diy-embed's player), scoped to .costume-card.) */
+
+/* ============ z189: STRIP SLIM — laptop (Dan, Oct 27) ============
+   Dan, on the z184 FILL ship: "The buttons on the laptop view for
+   Virtual Tour through Nationwide are TOO LONG — make them slimmer
+   and sleeker." FILL type (1.02rem/1.18rem labels, 0.5rem vertical
+   padding, 1.25rem icons) made ~78px chunky pills. This block keeps
+   the text easy to read (0.88rem >=1340 / 0.98rem wrap band — still
+   far above the old 0.63rem sleek-trim) but slims the silhouette:
+   line-height 1.18/1.2 -> 1.05/1.06, vertical padding 0.5rem ->
+   0.24/0.26rem, icons 1.25/1.45rem -> 1.08/1.18rem, icon-label gap
+   0.4rem -> 0.32/0.34rem. The 3-line Flea Markets label sets the
+   row height: ~78px -> ~56px single-row, wrap rows 65/88px ->
+   ~45/62px. The TOP strip keeps z156's full-page span (Dan's own
+   Oct 26 call — untouched); the BOTTOM strip's measure narrows
+   from FILL's 1400px to 1240px so its pills slim horizontally too.
+   Same selector weight as the FILL block, later in the file, so it
+   wins where it applies; laptop >=900px only, phone byte-untouched. */
+@media (min-width: 900px) and (max-width: 1339px) {
+  .vt-tv-strip.vt-tv-strip-top a,
+  .vt-tv-strip.vt-tv-strip-bottom a {
+    font-size: 0.98rem; line-height: 1.06;
+    gap: 0.34rem; padding: 0.26rem 0.35rem;
+  }
+  .vt-tv-strip.vt-tv-strip-top a .vt-ic,
+  .vt-tv-strip.vt-tv-strip-bottom a .vt-ic { font-size: 1.18rem; }
+}
+@media (min-width: 1340px) {
+  .vt-tv-strip.vt-tv-strip-bottom {
+    width: min(1240px, calc(100vw - 2rem));
+  }
+  .vt-tv-strip.vt-tv-strip-top a,
+  .vt-tv-strip.vt-tv-strip-bottom a {
+    font-size: 0.88rem; line-height: 1.05;
+    gap: 0.32rem; padding: 0.24rem 0.3rem;
+  }
+  .vt-tv-strip.vt-tv-strip-top a .vt-ic,
+  .vt-tv-strip.vt-tv-strip-bottom a .vt-ic { font-size: 1.08rem; }
+}
