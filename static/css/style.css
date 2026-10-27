@@ -521,7 +521,7 @@ a { color: var(--accent); }
    current sizes, and phone rendering is untouched. */
 @media (min-width: 900px) {
   .t100 p.muted { font-size: 1.2rem; line-height: 1.7; }
-  .t100 .cat-tabs a { font-size: 1.14rem; }
+  .t100 .cat-tabs a { font-size: 1.26rem; padding: 0.75rem 0.5rem; flex-basis: 210px; }
   .t100 .leader-list { gap: 0.9rem; }
   .t100 .leader-list li a { padding: 0.9rem; gap: 1rem; }
   .t100 .leader-list img, .t100 .leader-list video { width: 120px; height: 92px; }
@@ -529,10 +529,10 @@ a { color: var(--accent); }
   .t100 .leader-info strong { font-size: 1.3rem; line-height: 1.32; }
   .t100 .leader-list .meta { font-size: 1.1rem; line-height: 1.5; }
   .t100 .leader-list .votes { font-size: 1.15rem; }
-  .t100 .leader-list .tour-add-btn { font-size: 1.04rem; padding: 0.48rem 0.95rem; }
+  .t100 .leader-list .tour-add-btn { font-size: 1.16rem; padding: 0.55rem 1.1rem; }
   .t100 .leader-list .featured-badge { font-size: 0.92rem; padding: 0.22rem 0.7rem; }
   .t100 .leader-list .sample-badge { font-size: 0.9rem; }
-  .t100 .states-cta a { font-size: 1.18rem; line-height: 1.6; padding: 1.1rem 1.2rem; }
+  .t100 .states-cta a { font-size: 1.28rem; line-height: 1.6; padding: 1.15rem 1.25rem; }
 }
 
 /* Top 10 by State */
@@ -3030,6 +3030,7 @@ body.has-tourbar.has-radio { padding-bottom: 124px; }
   .vt-tv-strip-bottom .vt-ic { font-size: 1rem; line-height: 1; }
 }
 
+
 /* ============ z80: PHONE MODULE DIET (Dan, Oct 23) ============
    Phone only (<=760px); desktop rendering untouched. Two homepage
    modules shrink hard at phone width:
@@ -4968,6 +4969,45 @@ a.game-card-featured:hover { border-color: #ff7b1c; }
     font-size: 0.63rem; line-height: 1.12;
     padding: 0.16rem 0.2rem;
   }
+}
+/* ============ strip FILL — laptop (Dan, Oct 27, supersedes the
+   sleeker-bubbles trim above for >=900px) ============
+   "ALL the buttons in that row — make sure the text fills the
+   buttons and it's easier to read." Every copy of the strip steps
+   up from the 0.63rem fit-trim to text that fills its bubble: icons
+   scale with the labels, padding grows to suit, and the widest
+   lines ("Nationwide", "Top 100") keep measured clearance inside
+   their pills — fill, never spill. Two bands, because the 8-across
+   row is only as wide as the window: 900–1339px wraps 4-across (the
+   phone bottom strip's own even layout) so each bubble is wide
+   enough to fill; 1340px+ keeps the single row and widens the
+   strip's measure from 1060px to 1400px on the same left:50% /
+   translateX centering the block above uses. Same selector weight
+   as the trim block, later in the file, so these win where they
+   apply; phone (<=760px) is untouched. */
+@media (min-width: 900px) and (max-width: 1339px) {
+  .vt-tv-strip { flex-wrap: wrap; }
+  .vt-tv-strip a { flex: 1 1 21%; }
+  .vt-tv-strip.vt-tv-strip-top a,
+  .vt-tv-strip.vt-tv-strip-bottom a {
+    font-size: 1.18rem; line-height: 1.2;
+    gap: 0.4rem; padding: 0.5rem 0.35rem;
+  }
+  .vt-tv-strip.vt-tv-strip-top a .vt-ic,
+  .vt-tv-strip.vt-tv-strip-bottom a .vt-ic { font-size: 1.45rem; line-height: 1; }
+}
+@media (min-width: 1340px) {
+  .vt-tv-strip.vt-tv-strip-top,
+  .vt-tv-strip.vt-tv-strip-bottom {
+    width: min(1400px, calc(100vw - 2rem));
+  }
+  .vt-tv-strip.vt-tv-strip-top a,
+  .vt-tv-strip.vt-tv-strip-bottom a {
+    font-size: 1.02rem; line-height: 1.18;
+    gap: 0.4rem; padding: 0.5rem 0.3rem;
+  }
+  .vt-tv-strip.vt-tv-strip-top a .vt-ic,
+  .vt-tv-strip.vt-tv-strip-bottom a .vt-ic { font-size: 1.25rem; line-height: 1; }
 }
 @media (min-width: 761px) {
   /* (5) Top 10 by State: label sized to its own block via cqw. */
