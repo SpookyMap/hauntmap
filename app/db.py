@@ -27,7 +27,12 @@ from pathlib import Path
 #   5940 FL Orlando (Oct 26: Dan's send — @explore_orlando's TikTok
 #   live room, a Featured Live pin mirroring Ghost Manor 171, the
 #   site's original live-category pin; also hand-picked below.)
-FEATURED_ENTRY_IDS = (5541, 5542, 5551, 5584, 5587, 5175, 4370, 5653, 5654, 5655, 5766, 5572, 5940)
+#   6006 CA San Jose (Oct 27: Dan's Top 10 CA pick — the Gory
+#   Operation Theatre House, 1360 Tenaya Dr, restored today as 6006
+#   after the Oct 26 purge deleted its original pin 4566; one of the
+#   site's highest-interaction pins. Featured only — this change does
+#   not touch the hand-picked list.)
+FEATURED_ENTRY_IDS = (5541, 5542, 5551, 5584, 5587, 5175, 4370, 5653, 5654, 5655, 5766, 5572, 5940, 6006)
 
 # Hand-picked pins (Dan, Oct 23): pins Dan personally sent in chat or
 # curated for posting. These lead every feed view — hand-picked first
