@@ -29,7 +29,7 @@
     var f = document.createElement('iframe');
     f.className = 'yt-frame';
     f.src = 'https://www.youtube-nocookie.com/embed/' + b.getAttribute('data-yt') + '?autoplay=1&rel=0';
-    f.setAttribute('allow', 'autoplay; encrypted-media; picture-in-picture');
+    f.setAttribute('allow', 'autoplay; encrypted-media; fullscreen; picture-in-picture');
     f.setAttribute('allowfullscreen', '');
     f.setAttribute('title', b.getAttribute('aria-label') || 'YouTube video');
     b.replaceWith(f);
