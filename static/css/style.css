@@ -6253,7 +6253,48 @@ main.wrap:has(> .vt-tv-strip-bottom) { padding-bottom: 0; }
   .chat-send { padding: 0.7rem 0.9rem; }
 }
 
-/* ============ z193: HAUNT CHAT REAL-TIME (Dan, Oct 27) ================
+/* ============ z193: CHATROOM CAPTION FITS THE PROFILE CARD (Dan, Oct 27) ====
+   Dan: "shrink 'Join before Halloween and get access to our HauntSocial
+   Chatroom!' to fit under the profile block." At z191 the caption ran
+   the full preview half on ONE line (~500px) while Frank's card above
+   it renders ~408px wide (height-capped at 430px), so the sentence
+   stuck out past both edges of the card. The caption is now capped to
+   the card's own width — min(407px, 100%) tracks the card exactly:
+   when the half is roomy the card sits at its 407.8px cap and so does
+   the caption; when the half narrows, the card shrinks to the half and
+   the caption's 100% ceiling shrinks with it. The sentence wraps to
+   two balanced lines under the card instead of shrinking the font;
+   the laptop size even comes UP a touch (0.72rem -> 0.75rem) for
+   legibility. Eater / azure / blue-glow treatment, card, and the
+   50/50 geometry untouched; the caption stays centered on the card's
+   center (both are centered flex items in .social-promo-shot). */
+.social-promo-shot-cap { max-width: min(407px, 100%); margin-inline: auto;
+  text-wrap: balance; }
+@media (min-width: 761px) {
+  .social-promo-shot-cap { font-size: 0.75rem; }
+}
+
+/* ============ z194: CREEPY PALM WATERMARK IN THE JOIN BLOCK (Dan, Oct 27) ====
+   Dan: "add a creepy palm tree somewhere on the text side of the
+   HauntSocial block, large in the background, not so dark so the text
+   can still be read." An inline SVG silhouette (gnarled curved trunk,
+   drooping ragged fronds, a dead-frond skirt under the crown) sits
+   behind the COPY half only (.social-promo-main) — never the preview
+   half, never behind Frank's card. Soft azure-slate tint at watermark
+   opacity so every text element stays crisp over it; the tree anchors
+   to the right of the copy half, rises past the top, and its trunk
+   runs off the bottom edge (the half clips it — no layout shift, no
+   overflow anywhere). pointer-events: none; content rides above it. */
+.social-promo-main { position: relative; overflow: hidden; }
+.social-promo-palm { position: absolute; right: -16px; bottom: -18px;
+  height: 118%; width: auto; aspect-ratio: 400 / 540;
+  color: #7fb8e8; opacity: 0.16; z-index: 0; pointer-events: none; }
+.social-promo-main > *:not(.social-promo-palm) { position: relative; z-index: 1; }
+@media (max-width: 760px) {
+  .social-promo-palm { height: 112%; right: -24px; opacity: 0.13; }
+}
+
+/* ============ z195: HAUNT CHAT REAL-TIME (Dan, Oct 27) ================
    Presence bar + typing line, treat reactions, the admin mod panel,
    and the word-game strip (challenge form + game cards). Same azure
    HauntSocial treatment as the z192 room; everything level. */
@@ -6355,4 +6396,3 @@ span.chat-react-chip { cursor: default; }
   .chat-challenge-handle { width: 7.5rem; }
   .game-masked { font-size: 1.1rem; }
   .chat-presence { font-size: 0.8rem; }
-}

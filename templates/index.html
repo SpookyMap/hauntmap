@@ -559,6 +559,25 @@ function hmFullHomepage() {
    instead — no join pitch to a member. #}
 <section class="social-promo" aria-label="Join the HauntMap social network">
   <div class="social-promo-main">
+  {# Creepy palm watermark (Dan, Oct 27, z194 CSS): a large gnarled palm
+     silhouette behind the copy half only — soft azure, low opacity, so
+     every line of text stays crisp over it. Decorative; aria-hidden. #}
+  <svg class="social-promo-palm" viewBox="0 0 400 540" aria-hidden="true" focusable="false">
+    <g fill="none" stroke="currentColor" stroke-linecap="round">
+      <path d="M197 100 C 140 70, 84 66, 30 92" stroke-width="11"/>
+      <path d="M197 100 C 128 96, 64 122, 22 176" stroke-width="11"/>
+      <path d="M197 100 C 140 128, 92 176, 74 244" stroke-width="10"/>
+      <path d="M197 100 C 250 62, 310 52, 366 74" stroke-width="11"/>
+      <path d="M197 100 C 272 92, 338 118, 380 168" stroke-width="11"/>
+      <path d="M197 100 C 262 126, 312 176, 330 252" stroke-width="10"/>
+      <path d="M197 100 C 192 74, 196 54, 210 34" stroke-width="8"/>
+      <path d="M197 100 C 214 76, 232 64, 254 58" stroke-width="7"/>
+      <path d="M196 108 C 188 150, 186 190, 192 232" stroke-width="6"/>
+      <path d="M70 128 L 58 158 M110 110 L 104 140 M100 190 L 88 220 M84 224 L 78 252 M330 128 L 340 156 M292 112 L 296 140 M300 190 L 312 218 M320 230 L 330 256" stroke-width="4.5"/>
+    </g>
+    <path fill="currentColor" d="M282 540 C 276 452, 256 378, 242 306 C 230 244, 216 172, 207 118 L 189 116 C 192 172, 199 244, 207 308 C 217 384, 229 458, 232 540 Z"/>
+    <path fill="currentColor" d="M170 106 L 180 152 L 189 114 L 197 162 L 205 116 L 213 156 L 221 112 L 231 148 L 237 106 L 224 98 L 184 98 Z"/>
+  </svg>
   <div class="social-promo-top">
     <img class="social-promo-ghost" src="/static/img/hauntmap_ghost.webp" alt="" aria-hidden="true">
     <div class="social-promo-head">
