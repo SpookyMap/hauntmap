@@ -5553,10 +5553,7 @@ main.wrap:has(> .vt-tv-strip-bottom) { padding-bottom: 0; }
   .hero-split .hero-intro { padding-top: 1.15rem; padding-bottom: 1rem; }
   .hm-find { padding: 0.6rem 0.75rem; }
   .hm-find-form { margin-bottom: 0.45rem; }
-  /* Scoped to .hero-intro (z173): the desktop twin
-     .fd-rail-desk lives outside the hero panel and must stay
-     display:none on phone — only the in-panel copy shows here. */
-  .hero-intro .fd-rail { display: block; margin: 0 0 0.7rem; text-align: left; }
+  .fd-rail { display: block; margin: 0 0 0.7rem; text-align: left; }
   .fd-rail-head {
     margin: 0 0 0.35rem; padding: 0;
     font-size: 0.8rem; font-weight: 800; letter-spacing: 0.04em;
@@ -5659,61 +5656,64 @@ main.wrap:has(> .vt-tv-strip-bottom) { padding-bottom: 0; }
   .adv-strip .adv-line-b { opacity: 0; }
 }
 
-/* ============ z171: BUILD YOUR NIGHT ROUTE ART (Dan, Oct 26) ============
-   Dan's circular route badge is redrawn as an inline SVG
-   behind ONLY the existing .hook-line.alt span that contains
-   "Build Your Night." The SVG is absolutely positioned, so it adds no
-   layout width or height. Horizontal padding is cancelled by equal
-   negative margins, leaving the words' advance and every neighboring
-   header element exactly where production put them. The scene uses
-   the z160 logo palette: night-purple field, neon-green route,
-   compass-gold flag/accents, amber houses, pumpkin destination and
-   cream jack-o'-lantern face. Existing hook-letter colors are not
-   changed. A taller treatment was rejected during staging: on
-   laptop it either clips above the header band or overlaps the
-   second hook line, so this is the single text-height treatment.
-   z170 tightening (Dan, Oct 26: "a little smaller and tighter around
-   the letters and slightly more faded into the background — cleaner
-   and neater, snug around the letters"): the art box shrank from
-   spilling ~0.34em past the phrase on each side to hugging it —
-   it now starts just inside the span's padding, so the scene edges
-   sit only ~1.5px (phone) / ~2.5px (laptop) outside the letterforms
-   (phone ≈115×26, laptop ≈210×44, vs z169's 132×29 / 240×52), and
-   the whole scene is faded to 0.76 opacity so it reads as a subtle
-   backdrop. The words themselves are untouched: same size, color
-   and position, full strength.
-   z171 border removal (Dan, Oct 26: "Take away the bubble border
-   around 'build your night' — just the images in the background
-   stay"): the SVG's rounded night-purple field panel (gradient
-   rect + neon rim) and the dark center scrim band are deleted from
-   base.html, so NO boxed background sits behind the phrase at all.
-   Only the scene imagery floats on the header's own background:
-   the glowing dashed route, the three houses, the checkered flag,
-   the jack-o'-lantern and the faint free-form topo contours (they
-   never traced the panel shape). These CSS rules are unchanged —
-   same tight box, same 0.76 fade; only the stylesheet version
-   moved so browsers pick up the new base.html/SVG. */
+/* ============ z174: ROUTE ART BEHIND THE WHOLE FIRST HOOK LINE (Dan, Oct 26) ============
+   History: z169 put Dan's route-badge scene behind ONLY the words
+   "Build Your Night." (the .hook-line.alt span); z170 tightened the
+   box snug around those letters and faded the scene to 0.76; z171
+   deleted the bubble (field panel + rim + scrim) so only the imagery
+   floats on the header's own background.
+   z174 (Dan, Oct 26: "run the background image behind 'build your
+   night' behind the entire first line — put that map trail image
+   behind the entire first line"): the art moves onto .hook-l1
+   itself, so the map trail runs behind the WHOLE first hook line —
+   "The Halloween map that builds your fright night for you. Build
+   Your Night." Two borderless scene variants of the same imagery
+   (dashed neon route, amber houses, checkered flag, jack-o'-lantern
+   destination, faint topo contours), because the line's rendered
+   shape differs by breakpoint: one wide row on desktop, a wrapped
+   three-row stack on phone. The wide scene shows by default; the
+   tall scene takes over at <=760px. Motifs are spread along the
+   line's length; flag + pumpkin stay at the right end, at the
+   "Build Your Night." destination.
+   Positioning: the SVG is absolutely positioned (no layout impact).
+   On desktop the centered nowrap text spans ~82% of the .hook-l1
+   block (rig-measured 916px of 1119px at 1440), so the scene is
+   inset to the text extent (left 8.8%, width 82.8%) instead of the
+   full block; on phone the block already hugs the wrapped text
+   (~96%), so the tall scene spans 97.6% from 1.2%. The .hook-l1
+   span itself takes NO padding/margin (the z169-z171 phrase span
+   needed a padding/negative-margin pair to hold its place inline;
+   .hook-l1 is a block, so the art simply overlays it). Hook text,
+   sizes, positions, header heights and the Join pill are unchanged;
+   the whole scene keeps the z170 fade (opacity 0.76). */
 .header-band .header-hook .byn-art {
   position: relative;
   isolation: isolate;
-  padding: 0 0.24em;
-  margin: 0 -0.24em;
 }
 .header-band .header-hook .byn-route-art {
   position: absolute;
   z-index: -1;
-  top: -0.11em;
-  left: 0.16em;
-  width: calc(100% - 0.32em);
-  height: calc(100% + 0.265em);
+  top: -0.14em;
+  left: 8.8%;
+  width: 82.8%;
+  height: calc(100% + 0.3em);
   opacity: 0.76;
   overflow: visible;
   pointer-events: none;
 }
+.header-band .header-hook .byn-route-art-tall {
+  display: none;
+}
 @media (max-width: 760px) {
-  .header-band .header-hook .byn-route-art {
-    top: -0.15em;
-    height: calc(100% + 0.35em);
+  .header-band .header-hook .byn-route-art-wide {
+    display: none;
+  }
+  .header-band .header-hook .byn-route-art-tall {
+    display: block;
+    top: -0.17em;
+    left: 1.2%;
+    width: 97.6%;
+    height: calc(100% + 0.34em);
   }
 }
 /* ============ z172: LOGO CENTRED ON THE EVENTS COLUMN (Dan, Oct 26) ====
