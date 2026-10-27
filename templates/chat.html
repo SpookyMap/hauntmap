@@ -25,7 +25,9 @@
     <span class="chat-presence-count" id="presenceCount">🟢 Connecting…</span>
     <span class="chat-presence-users" id="presenceUsers"></span>
     <span class="chat-typing" id="typingLine" aria-live="polite"></span>
+    <button type="button" class="chat-mention-chip" id="mentionChip" hidden>💬 <span id="mentionCount"></span></button>
   </div>
+  <div class="chat-mention-panel" id="mentionPanel" hidden></div>
 
   <div class="chat-games" id="chatGames">
     <div class="chat-games-head">
@@ -52,13 +54,34 @@
       </div>
     </div>
 
+    <div class="chat-pinned" id="chatPinned">{% if pinned %}
+      <div class="chat-pinned-inner">
+        <span class="soc-avatar soc-avatar-sm" style="background: {{ pinned.avatar.bg }}">{% if pinned.avatar.img %}<img class="soc-avatar-img" src="{{ pinned.avatar.img }}" alt="">{% elif pinned.avatar.emoji %}<span>{{ pinned.avatar.emoji }}</span>{% else %}<span>{{ pinned.avatar.initial }}</span>{% endif %}</span>
+        <div class="chat-pinned-main">
+          <p class="chat-pin-meta">📌 Pinned · <a href="/@{{ pinned.handle }}">@{{ pinned.handle }}</a></p>
+          <button type="button" class="chat-pinned-text" data-jump="{{ pinned.id }}">{{ pinned.body }}</button>
+        </div>
+        {% if can_moderate %}<button type="button" class="chat-unpin" data-unpin="1" title="Unpin message" aria-label="Unpin message">✕</button>{% endif %}
+      </div>
+    {% endif %}</div>
+
     <div class="chat-msgs" id="chatMsgs">
       {% for m in messages %}
-      <div class="chat-msg" data-mid="{{ m.id }}">
+      <div class="chat-msg" data-mid="{{ m.id }}"{% if m.mentions %} data-mentions="{{ m.mentions|join(',') }}"{% endif %}>
         <a class="chat-ava" href="/@{{ m.handle }}" aria-label="@{{ m.handle }}'s page"><span class="soc-avatar soc-avatar-sm" style="background: {{ m.avatar.bg }}">{% if m.avatar.img %}<img class="soc-avatar-img" src="{{ m.avatar.img }}" alt="">{% elif m.avatar.emoji %}<span>{{ m.avatar.emoji }}</span>{% else %}<span>{{ m.avatar.initial }}</span>{% endif %}</span></a>
         <div class="chat-msg-main">
-          <p class="chat-meta"><a class="chat-handle" href="/@{{ m.handle }}">@{{ m.handle }}</a> <time class="chat-time" datetime="{{ m.created_at }}">{{ m.created_at[11:16] }}</time>{% if member and m.handle != member.handle %} <button type="button" class="chat-report" data-report="{{ m.id }}" title="Report message" aria-label="Report message">⚑</button>{% endif %}{% if can_moderate %} <button type="button" class="chat-del" data-del="{{ m.id }}" title="Delete message" aria-label="Delete message">✕</button>{% endif %}</p>
-          <p class="chat-text">{{ m.body }}</p>
+          <p class="chat-meta"><a class="chat-handle" href="/@{{ m.handle }}">@{{ m.handle }}</a> <time class="chat-time" datetime="{{ m.created_at }}">{{ m.created_at[11:16] }}</time>{% if member %} <button type="button" class="chat-replybtn" data-reply="{{ m.id }}" data-reply-handle="{{ m.handle }}" title="Reply to this message" aria-label="Reply to this message">↩</button>{% endif %}{% if member and m.handle != member.handle %} <button type="button" class="chat-report" data-report="{{ m.id }}" title="Report message" aria-label="Report message">⚑</button>{% endif %}{% if can_moderate %} <button type="button" class="chat-pinbtn" data-pin="{{ m.id }}" title="Pin this message" aria-label="Pin this message">📌</button> <button type="button" class="chat-del" data-del="{{ m.id }}" title="Delete message" aria-label="Delete message">✕</button>{% endif %}</p>
+          {% if m.reply %}<button type="button" class="chat-quote" data-jump="{{ m.reply.id }}">{% if m.reply.gone %}<span class="chat-quote-gone">Original message unavailable</span>{% else %}<span class="chat-quote-who">@{{ m.reply.handle }}</span> <span class="chat-quote-snip">{{ m.reply.snippet }}</span>{% endif %}</button>{% endif %}
+          {% if m.kind == 'sticker' %}<p class="chat-text chat-sticker-big">{{ m.body }}</p>
+          {% elif m.kind == 'poll' and member and m.poll %}<div class="chat-poll" data-poll="{{ m.poll.id }}" data-my-vote="{{ m.poll.my_vote if m.poll.my_vote is not none else '' }}">
+            <p class="chat-poll-q">📊 {{ m.poll.question }}</p>
+            {% for opt in m.poll.options %}<button type="button" class="chat-poll-opt{% if m.poll.my_vote == loop.index0 %} mine{% endif %}" data-poll-vote="{{ m.poll.id }}" data-idx="{{ loop.index0 }}"{% if m.poll.closed %} disabled{% endif %}><span class="chat-poll-bar" style="width: {{ (100 * opt.votes / m.poll.total) if m.poll.total else 0 }}%"></span><span class="chat-poll-opt-text">{{ opt.text }}</span><span class="chat-poll-opt-n">{{ opt.votes }}</span></button>
+            {% endfor %}<p class="chat-poll-meta">{{ m.poll.total }} vote{{ 's' if m.poll.total != 1 else '' }}{% if m.poll.closed %} · Closed{% endif %}</p>
+            {% if can_moderate and not m.poll.closed %}<button type="button" class="chat-poll-close" data-poll-close="{{ m.poll.id }}">Close poll</button>{% endif %}
+          </div>
+          {% elif m.kind == 'poll' %}<p class="chat-text">📊 Poll: {{ m.body }}</p><p class="chat-poll-teaser">Join free to vote!</p>
+          {% else %}<p class="chat-text">{{ m.body }}</p>{% endif %}
+          {% if m.link %}<p class="chat-linkrow"><a class="chat-link" href="{{ m.link }}">👉 View it on the map</a></p>{% endif %}
           <div class="chat-reacts" data-reacts="{{ m.id }}">
             {% for sticker, n in m.reactions.counts.items() %}{% if member %}<button type="button" class="chat-react-chip{% if sticker in m.reactions.mine %} mine{% endif %}" data-react="{{ m.id }}" data-sticker="{{ sticker }}">{{ sticker }} {{ n }}</button>{% else %}<span class="chat-react-chip">{{ sticker }} {{ n }}</span>{% endif %}{% endfor %}
             {% if member %}<button type="button" class="chat-react-add" data-addreact="{{ m.id }}" title="Add a treat" aria-label="Add a treat reaction">🎃+</button>{% endif %}
@@ -99,6 +122,16 @@
         <button type="submit" data-mute="0">Unmute</button>
       </form>
       <p class="chat-mod-muted">Shadow-muted now: <span id="mutedList">{{ muted_handles|join(', ') or 'nobody' }}</span></p>
+      <form class="chat-mod-row chat-poll-form" id="pollForm">
+        <label for="pollQ">Start a room poll (one open at a time)</label>
+        <input id="pollQ" type="text" placeholder="Question" maxlength="300" autocomplete="off">
+        <input id="pollO1" type="text" placeholder="Option 1" maxlength="60" autocomplete="off">
+        <input id="pollO2" type="text" placeholder="Option 2" maxlength="60" autocomplete="off">
+        <input id="pollO3" type="text" placeholder="Option 3 (optional)" maxlength="60" autocomplete="off">
+        <input id="pollO4" type="text" placeholder="Option 4 (optional)" maxlength="60" autocomplete="off">
+        <button type="submit">Start poll</button>
+      </form>
+      <p class="chat-mod-row">Pinned message: <span id="pinnedState">{% if pinned %}#{{ pinned.id }} — {{ pinned.body[:40] }}{% else %}none{% endif %}</span> <button type="button" id="unpinBtn">Unpin</button></p>
       <p class="chat-err" id="modErr" role="alert"></p>
       <ul class="chat-mod-log" id="modLog">
         {% for e in mod_log %}<li><time>{{ e.created_at[:16].replace('T', ' ') }}</time> <b>{{ e.action }}</b>{% if e.actor %} by @{{ e.actor }}{% endif %}{% if e.target %} → @{{ e.target }}{% endif %}{% if e.detail %} — {{ e.detail }}{% endif %}</li>{% endfor %}
@@ -122,9 +155,17 @@
   {% if member %}
   <form class="chat-composer" id="chatForm">
     <label class="chat-composer-label" for="chatInput">Chatting as @{{ member.handle }}</label>
+    <div class="chat-replybar" id="replyBar" hidden>
+      <span class="chat-replybar-text" id="replyBarText"></span>
+      <button type="button" class="chat-replybar-x" id="replyCancel" aria-label="Cancel reply">✕</button>
+    </div>
     <div class="chat-composer-row">
+      <button class="chat-sticker-toggle" id="stickerToggle" type="button" title="Send a treat sticker" aria-label="Send a treat sticker">🎃</button>
       <textarea id="chatInput" class="chat-input" rows="1" maxlength="{{ chat_max }}" placeholder="Say something spooky…" autocomplete="off"></textarea>
       <button class="chat-send" type="submit">Send</button>
+    </div>
+    <div class="chat-sticker-row" id="stickerRow" hidden>
+      {% for s in stickers %}<button type="button" class="chat-sticker-send" data-sticker-send="{{ s }}" aria-label="Send {{ s }} sticker">{{ s }}</button>{% endfor %}
     </div>
     <p class="chat-composer-meta"><span class="chat-err" id="chatErr" role="alert"></span><span class="chat-count" id="chatCount">0/{{ chat_max }}</span></p>
   </form>
@@ -246,16 +287,130 @@
     }
 
     // ---------------------------------------------------------- messages
-    function addMessage(m) {
-      if (msgs.querySelector('.chat-msg[data-mid="' + m.id + '"]')) {
-        if (m.id > lastId) lastId = m.id;
-        return;
+    // Wave 0: my poll votes (seeded from server cards + my vote
+    // responses; socket poll events carry the public view) and the
+    // composer's reply target.
+    var myVotes = {};
+    msgs.querySelectorAll('.chat-poll').forEach(function (n) {
+      var mv = n.getAttribute('data-my-vote');
+      if (mv !== '' && mv !== null) myVotes[n.getAttribute('data-poll')] = parseInt(mv, 10);
+    });
+    var replyTo = null;
+
+    function highlightInto(p, text, mentions) {
+      // Wrap @handles the server recorded as mentions in spans —
+      // stronger when the mention is me. Text stays textContent-safe.
+      var set = {};
+      (mentions || []).forEach(function (h) { set[h.toLowerCase()] = true; });
+      var parts = String(text).split(/(@[A-Za-z0-9_]{2,30})/g);
+      parts.forEach(function (part) {
+        if (part.charAt(0) === '@' && set[part.slice(1).toLowerCase()]) {
+          var s = document.createElement('span');
+          s.className = 'mention' + (part.slice(1).toLowerCase() === ME.toLowerCase() ? ' mention-me' : '');
+          s.textContent = part;
+          p.appendChild(s);
+        } else if (part) {
+          p.appendChild(document.createTextNode(part));
+        }
+      });
+    }
+    function highlightRow(row) {
+      var raw = row.getAttribute('data-mentions');
+      if (!raw) return;
+      var text = row.querySelector('.chat-text');
+      if (!text || text.classList.contains('chat-sticker-big')) return;
+      var body = text.textContent;
+      text.textContent = '';
+      highlightInto(text, body, raw.split(','));
+    }
+    function quoteNode(m) {
+      if (!m.reply) return null;
+      var q = document.createElement('button');
+      q.type = 'button'; q.className = 'chat-quote';
+      q.setAttribute('data-jump', m.reply.id);
+      if (m.reply.gone) {
+        var g = document.createElement('span');
+        g.className = 'chat-quote-gone';
+        g.textContent = 'Original message unavailable';
+        q.appendChild(g);
+      } else {
+        var who = document.createElement('span');
+        who.className = 'chat-quote-who';
+        who.textContent = '@' + m.reply.handle;
+        var snip = document.createElement('span');
+        snip.className = 'chat-quote-snip';
+        snip.textContent = ' ' + (m.reply.snippet || '');
+        q.appendChild(who); q.appendChild(snip);
       }
-      var empty = document.getElementById('chatEmpty');
-      if (empty) empty.remove();
-      var stick = nearBottom();
+      return q;
+    }
+    function buildPollNode(poll, mid) {
+      var wrap = document.createElement('div');
+      wrap.className = 'chat-poll';
+      wrap.setAttribute('data-poll', poll.id);
+      var mine = (mid && myVotes[poll.id] !== undefined) ? myVotes[poll.id]
+        : (poll.my_vote !== null && poll.my_vote !== undefined ? poll.my_vote : null);
+      if (mine !== null) wrap.setAttribute('data-my-vote', mine);
+      var q = document.createElement('p');
+      q.className = 'chat-poll-q'; q.textContent = '📊 ' + poll.question;
+      wrap.appendChild(q);
+      (poll.options || []).forEach(function (opt, idx) {
+        var b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'chat-poll-opt' + (mine === idx ? ' mine' : '');
+        b.setAttribute('data-poll-vote', poll.id);
+        b.setAttribute('data-idx', idx);
+        if (poll.closed) b.disabled = true;
+        var bar = document.createElement('span');
+        bar.className = 'chat-poll-bar';
+        bar.style.width = (poll.total ? (100 * opt.votes / poll.total) : 0) + '%';
+        var tx = document.createElement('span');
+        tx.className = 'chat-poll-opt-text'; tx.textContent = opt.text;
+        var n = document.createElement('span');
+        n.className = 'chat-poll-opt-n'; n.textContent = opt.votes;
+        b.appendChild(bar); b.appendChild(tx); b.appendChild(n);
+        wrap.appendChild(b);
+      });
+      var meta = document.createElement('p');
+      meta.className = 'chat-poll-meta';
+      meta.textContent = poll.total + (poll.total === 1 ? ' vote' : ' votes') +
+        (poll.closed ? ' · Closed' : '');
+      wrap.appendChild(meta);
+      if (CAN_MOD && !poll.closed) {
+        var close = document.createElement('button');
+        close.type = 'button'; close.className = 'chat-poll-close';
+        close.setAttribute('data-poll-close', poll.id);
+        close.textContent = 'Close poll';
+        wrap.appendChild(close);
+      }
+      return wrap;
+    }
+    function applyPollUpdate(poll) {
+      if (!poll) return;
+      var node = msgs.querySelector('.chat-poll[data-poll="' + poll.id + '"]');
+      if (!node) return;
+      var row = node.closest('.chat-msg');
+      node.replaceWith(buildPollNode(poll, row ? row.getAttribute('data-mid') : null));
+    }
+    function bodyNode(m) {
+      if (m.kind === 'poll' && m.poll) return buildPollNode(m.poll, m.id);
+      var text = document.createElement('p');
+      if (m.kind === 'sticker') {
+        text.className = 'chat-text chat-sticker-big';
+        text.textContent = m.body;
+      } else if (m.kind === 'poll') {
+        text.className = 'chat-text';
+        text.textContent = '📊 ' + m.body;
+      } else {
+        text.className = 'chat-text';
+        highlightInto(text, m.body, m.mentions || []);
+      }
+      return text;
+    }
+    function messageRow(m) {
       var row = document.createElement('div');
       row.className = 'chat-msg'; row.setAttribute('data-mid', m.id);
+      if (m.mentions && m.mentions.length) row.setAttribute('data-mentions', m.mentions.join(','));
       var ava = document.createElement('a');
       ava.className = 'chat-ava'; ava.href = '/@' + m.handle;
       ava.appendChild(avatarNode(m.avatar));
@@ -272,6 +427,14 @@
       meta.appendChild(h);
       meta.appendChild(document.createTextNode(' '));
       meta.appendChild(t);
+      var rb = document.createElement('button');
+      rb.type = 'button'; rb.className = 'chat-replybtn';
+      rb.setAttribute('data-reply', m.id);
+      rb.setAttribute('data-reply-handle', m.handle);
+      rb.title = 'Reply to this message'; rb.setAttribute('aria-label', 'Reply to this message');
+      rb.textContent = '↩';
+      meta.appendChild(document.createTextNode(' '));
+      meta.appendChild(rb);
       if (m.handle !== ME) {
         var rep = document.createElement('button');
         rep.type = 'button'; rep.className = 'chat-report';
@@ -282,6 +445,13 @@
         meta.appendChild(rep);
       }
       if (CAN_MOD) {
+        var pin = document.createElement('button');
+        pin.type = 'button'; pin.className = 'chat-pinbtn';
+        pin.setAttribute('data-pin', m.id);
+        pin.title = 'Pin this message'; pin.setAttribute('aria-label', 'Pin this message');
+        pin.textContent = '📌';
+        meta.appendChild(document.createTextNode(' '));
+        meta.appendChild(pin);
         var b = document.createElement('button');
         b.type = 'button'; b.className = 'chat-del';
         b.setAttribute('data-del', m.id);
@@ -290,16 +460,76 @@
         meta.appendChild(document.createTextNode(' '));
         meta.appendChild(b);
       }
-      var text = document.createElement('p');
-      text.className = 'chat-text'; text.textContent = m.body;
-      main.appendChild(meta); main.appendChild(text);
+      main.appendChild(meta);
+      var qn = quoteNode(m);
+      if (qn) main.appendChild(qn);
+      main.appendChild(bodyNode(m));
+      if (m.link) {
+        var lr = document.createElement('p');
+        lr.className = 'chat-linkrow';
+        var la = document.createElement('a');
+        la.className = 'chat-link'; la.href = m.link;
+        la.textContent = '👉 View it on the map';
+        lr.appendChild(la);
+        main.appendChild(lr);
+      }
       main.appendChild(reactsNode(m));
       main.appendChild(pickerNode(m.id));
       row.appendChild(ava); row.appendChild(main);
-      msgs.appendChild(row);
+      return row;
+    }
+    function addMessage(m) {
+      if (msgs.querySelector('.chat-msg[data-mid="' + m.id + '"]')) {
+        if (m.id > lastId) lastId = m.id;
+        return;
+      }
+      var empty = document.getElementById('chatEmpty');
+      if (empty) empty.remove();
+      var stick = nearBottom();
+      msgs.appendChild(messageRow(m));
       if (m.id > lastId) lastId = m.id;
       if (stick) scrollBottom();
     }
+    function prependMessages(list) {
+      // Older pages (quote jumps): insert in order at the top.
+      var first = msgs.querySelector('.chat-msg');
+      (list || []).forEach(function (m) {
+        if (msgs.querySelector('.chat-msg[data-mid="' + m.id + '"]')) return;
+        var rowEl = messageRow(m);
+        if (first) msgs.insertBefore(rowEl, first); else msgs.appendChild(rowEl);
+      });
+    }
+    function jumpToMessage(id) {
+      function attempt() {
+        var el = msgs.querySelector('.chat-msg[data-mid="' + id + '"]');
+        if (!el) return false;
+        el.scrollIntoView({block: 'center', behavior: 'smooth'});
+        el.classList.remove('flash');
+        void el.offsetWidth;
+        el.classList.add('flash');
+        setTimeout(function () { el.classList.remove('flash'); }, 1600);
+        return true;
+      }
+      if (attempt()) return;
+      // Not in the loaded window: page older messages in, then jump.
+      var fetches = 0;
+      (function pageIn() {
+        var oldest = msgs.querySelector('.chat-msg');
+        var before = oldest ? parseInt(oldest.getAttribute('data-mid'), 10) : 0;
+        if (!before || fetches >= 4) return;
+        fetches += 1;
+        fetch('/api/chat/messages?before=' + before, {headers: {'Accept': 'application/json'}})
+          .then(function (r) { return r.ok ? r.json() : null; })
+          .then(function (d) {
+            if (!d || !(d.messages || []).length) return;
+            prependMessages(d.messages);
+            if (!attempt()) pageIn();
+          })
+          .catch(function () {});
+      })();
+    }
+    // Server-rendered rows: apply mention highlighting in place.
+    msgs.querySelectorAll('.chat-msg').forEach(highlightRow);
 
     function applyPoll(d) {
       if (!d) return;
@@ -368,6 +598,12 @@
         var d;
         try { d = JSON.parse(ev.data); } catch (e) { return; }
         if (d.type === 'message') addMessage(d.message);
+        else if (d.type === 'mention') {
+          setMentionCount(d.count);
+          if (!mentionPanel.hidden) loadMentions();
+        }
+        else if (d.type === 'poll') applyPollUpdate(d.poll);
+        else if (d.type === 'pin') renderPin(d.pinned, d.pinned_id);
         else if (d.type === 'gone') {
           var el = msgs.querySelector('.chat-msg[data-mid="' + d.id + '"]');
           if (el) el.remove();
@@ -390,6 +626,102 @@
     }
     connect();
 
+    // ---------------------------------------------------- pin banner
+    var pinnedBox = document.getElementById('chatPinned');
+    function renderPin(pinned, pinnedId) {
+      if (!pinnedBox) return;
+      pinnedBox.textContent = '';
+      var state = document.getElementById('pinnedState');
+      if (state) state.textContent = pinned ? '#' + pinned.id + ' — ' + (pinned.body || '').slice(0, 40) : 'none';
+      if (!pinned) return;
+      var inner = document.createElement('div');
+      inner.className = 'chat-pinned-inner';
+      inner.appendChild(avatarNode(pinned.avatar));
+      var main = document.createElement('div');
+      main.className = 'chat-pinned-main';
+      var meta = document.createElement('p');
+      meta.className = 'chat-pin-meta';
+      meta.appendChild(document.createTextNode('📌 Pinned · '));
+      var who = document.createElement('a');
+      who.href = '/@' + pinned.handle;
+      who.textContent = '@' + pinned.handle;
+      meta.appendChild(who);
+      var text = document.createElement('button');
+      text.type = 'button'; text.className = 'chat-pinned-text';
+      text.setAttribute('data-jump', pinned.id);
+      text.textContent = pinned.body;
+      main.appendChild(meta); main.appendChild(text);
+      inner.appendChild(main);
+      if (CAN_MOD) {
+        var un = document.createElement('button');
+        un.type = 'button'; un.className = 'chat-unpin';
+        un.setAttribute('data-unpin', '1');
+        un.title = 'Unpin message'; un.setAttribute('aria-label', 'Unpin message');
+        un.textContent = '✕';
+        inner.appendChild(un);
+      }
+      pinnedBox.appendChild(inner);
+    }
+    function unpin() {
+      fetch('/api/chat/admin/unpin', {method: 'POST'})
+        .then(function (r) { if (r.ok) renderPin(null, null); })
+        .catch(function () {});
+    }
+    if (pinnedBox) pinnedBox.addEventListener('click', function (e) {
+      var j = e.target.closest ? e.target.closest('[data-jump]') : null;
+      if (j) { jumpToMessage(parseInt(j.getAttribute('data-jump'), 10)); return; }
+      var u = e.target.closest ? e.target.closest('[data-unpin]') : null;
+      if (u) unpin();
+    });
+
+    // ------------------------------------------------------ mentions
+    var mentionChip = document.getElementById('mentionChip');
+    var mentionCount = document.getElementById('mentionCount');
+    var mentionPanel = document.getElementById('mentionPanel');
+    function setMentionCount(n) {
+      if (!mentionChip) return;
+      mentionChip.hidden = !(n > 0);
+      mentionCount.textContent = n + (n === 1 ? ' mention' : ' mentions');
+    }
+    setMentionCount({{ mention_unseen }});
+    function loadMentions() {
+      fetch('/api/chat/mentions', {headers: {'Accept': 'application/json'}})
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (d) {
+          if (!d) return;
+          mentionPanel.textContent = '';
+          if (!(d.mentions || []).length) {
+            mentionPanel.appendChild(el('p', 'chat-mention-empty', 'No mentions yet — when a haunter @s you, it lands here.'));
+          }
+          (d.mentions || []).forEach(function (mn) {
+            var item = el('button', 'chat-mention-item' + (mn.seen ? '' : ' unseen'));
+            item.type = 'button';
+            item.setAttribute('data-jump', mn.message_id);
+            item.appendChild(el('span', 'chat-mention-from', '@' + mn.from));
+            item.appendChild(el('span', 'chat-mention-snip', ' ' + mn.snippet));
+            mentionPanel.appendChild(item);
+          });
+        })
+        .catch(function () {});
+    }
+    if (mentionChip) mentionChip.addEventListener('click', function () {
+      var opening = mentionPanel.hidden;
+      mentionPanel.hidden = !opening;
+      if (opening) {
+        loadMentions();
+        fetch('/api/chat/mentions/seen', {method: 'POST'})
+          .then(function () { setMentionCount(0); })
+          .catch(function () {});
+      }
+    });
+    mentionPanel.addEventListener('click', function (e) {
+      var j = e.target.closest ? e.target.closest('[data-jump]') : null;
+      if (j) {
+        mentionPanel.hidden = true;
+        jumpToMessage(parseInt(j.getAttribute('data-jump'), 10));
+      }
+    });
+
     // Typing: tell the room while composing (throttled), clear on send.
     var typingSent = 0, typingTimer = null;
     function sendTyping(on) {
@@ -411,16 +743,54 @@
         if (form.requestSubmit) form.requestSubmit();
       }
     });
+    // Reply/quote: the ↩ button arms the reply bar; the next send
+    // carries reply_to and the quote renders on the message.
+    var replyBar = document.getElementById('replyBar');
+    var replyBarText = document.getElementById('replyBarText');
+    function setReply(id, handle, snippet) {
+      replyTo = id ? {id: id} : null;
+      replyBar.hidden = !id;
+      if (id) replyBarText.textContent = '↩ Replying to @' + handle + ': ' + (snippet || '');
+      if (id) input.focus();
+    }
+    document.getElementById('replyCancel').addEventListener('click', function () {
+      setReply(null);
+    });
+    // Sticker sends: one tap sends the treat as its own message.
+    var stickerRow = document.getElementById('stickerRow');
+    document.getElementById('stickerToggle').addEventListener('click', function () {
+      stickerRow.hidden = !stickerRow.hidden;
+    });
+    stickerRow.addEventListener('click', function (e) {
+      var b = e.target.closest ? e.target.closest('[data-sticker-send]') : null;
+      if (!b) return;
+      err.textContent = '';
+      fetch('/api/chat/messages', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({sticker: b.getAttribute('data-sticker-send')})
+      }).then(function (r) {
+          return r.json().then(function (d) { return {ok: r.ok, d: d}; });
+        })
+        .then(function (res) {
+          if (res.ok && res.d.message) addMessage(res.d.message);
+          else err.textContent = (res.d && res.d.error) || 'Could not send that sticker.';
+        })
+        .catch(function () { err.textContent = 'Could not send that sticker.'; });
+    });
+
     form.addEventListener('submit', function (e) {
       e.preventDefault();
       var body = input.value.trim();
       if (!body) return;
       err.textContent = '';
       clearTimeout(typingTimer); sendTyping(false);
+      var payload = {body: body};
+      if (replyTo) payload.reply_to = replyTo.id;
       fetch('/api/chat/messages', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({body: body})
+        body: JSON.stringify(payload)
       })
         .then(function (r) {
           return r.json().then(function (d) { return {ok: r.ok, d: d}; });
@@ -430,6 +800,7 @@
             addMessage(res.d.message);
             input.value = '';
             count.textContent = '0/' + MAX;
+            setReply(null);
             scrollBottom();
           } else {
             err.textContent = (res.d && res.d.error) || 'Could not send — try again.';
@@ -438,10 +809,60 @@
         .catch(function () { err.textContent = 'Could not send — try again.'; });
     });
 
-    // Message actions: reactions, report, delete (admin).
+    // Message actions: reply, pin, quote jumps, polls, reactions,
+    // report, delete (admin).
     msgs.addEventListener('click', function (e) {
       var t = e.target;
       if (!t || !t.closest) return;
+      var jumpB = t.closest('[data-jump]');
+      if (jumpB) {
+        jumpToMessage(parseInt(jumpB.getAttribute('data-jump'), 10));
+        return;
+      }
+      var replyB = t.closest('[data-reply]');
+      if (replyB) {
+        var rowEl = replyB.closest('.chat-msg');
+        var snipEl = rowEl ? rowEl.querySelector('.chat-text') : null;
+        setReply(parseInt(replyB.getAttribute('data-reply'), 10),
+                 replyB.getAttribute('data-reply-handle'),
+                 snipEl ? snipEl.textContent.slice(0, 60) : '');
+        return;
+      }
+      var pinB = t.closest('[data-pin]');
+      if (pinB) {
+        fetch('/api/chat/admin/pin', {
+          method: 'POST', headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({message_id: parseInt(pinB.getAttribute('data-pin'), 10)})
+        }).then(function (r) { return r.ok ? r.json() : null; })
+          .then(function (d) { if (d) renderPin(d.pinned, d.pinned_id); })
+          .catch(function () {});
+        return;
+      }
+      var voteB = t.closest('[data-poll-vote]');
+      if (voteB) {
+        var pid = voteB.getAttribute('data-poll-vote');
+        var idx = parseInt(voteB.getAttribute('data-idx'), 10);
+        fetch('/api/chat/polls/' + pid + '/vote', {
+          method: 'POST', headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({option_idx: idx})
+        }).then(function (r) { return r.ok ? r.json() : null; })
+          .then(function (d) {
+            if (d && d.poll) {
+              myVotes[pid] = idx;
+              applyPollUpdate(d.poll);
+            }
+          })
+          .catch(function () {});
+        return;
+      }
+      var closeB = t.closest('[data-poll-close]');
+      if (closeB) {
+        fetch('/api/chat/polls/' + closeB.getAttribute('data-poll-close') + '/close', {method: 'POST'})
+          .then(function (r) { return r.ok ? r.json() : null; })
+          .then(function (d) { if (d && d.poll) applyPollUpdate(d.poll); })
+          .catch(function () {});
+        return;
+      }
       var addB = t.closest('[data-addreact]');
       if (addB) {
         var p = msgs.querySelector('[data-picker="' + addB.getAttribute('data-addreact') + '"]');
@@ -685,6 +1106,9 @@
           if (!d) return;
           document.getElementById('mutedList').textContent =
             (d.muted || []).join(', ') || 'nobody';
+          var ps = document.getElementById('pinnedState');
+          if (ps && d.pinned_id) ps.textContent = '#' + d.pinned_id;
+          else if (ps) ps.textContent = 'none';
           var ul = document.getElementById('modLog');
           ul.textContent = '';
           (d.entries || []).forEach(function (en) {
@@ -709,6 +1133,27 @@
           refreshModLog();
         }).catch(function () {});
     });
+    document.getElementById('pollForm').addEventListener('submit', function (e) {
+      e.preventDefault();
+      var opts = ['pollO1', 'pollO2', 'pollO3', 'pollO4']
+        .map(function (id) { return document.getElementById(id).value.trim(); })
+        .filter(function (v) { return v; });
+      fetch('/api/chat/polls', {
+        method: 'POST', headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({question: document.getElementById('pollQ').value.trim(), options: opts})
+      }).then(function (r) { return r.json().then(function (d) { return {ok: r.ok, d: d}; }); })
+        .then(function (res) {
+          if (res.ok && res.d.message) {
+            addMessage(res.d.message);
+            document.getElementById('pollForm').reset();
+            modErr.textContent = 'Poll is live in the room.';
+          } else {
+            modErr.textContent = (res.d && res.d.error) || 'Could not start that poll.';
+          }
+        })
+        .catch(function () { modErr.textContent = 'Could not start that poll.'; });
+    });
+    document.getElementById('unpinBtn').addEventListener('click', function () { unpin(); });
     document.getElementById('muteForm').addEventListener('submit', function (e) {
       e.preventDefault();
       var handle = document.getElementById('muteHandle').value.trim();

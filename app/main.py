@@ -5531,6 +5531,10 @@ async def upload_submit(
         }
         return templates.TemplateResponse(request, "upload.html", {"request": request, "error": error, "values": values}, status_code=400
         )
+    # Frank announces the site (brief §4): the room hears about the
+    # new listing, throttled + batched inside the helper.
+    if entry_id:
+        _frank_announce_new_listing(entry_id)
     return RedirectResponse(f"/d/{entry_id}", status_code=303)
 
 
@@ -10288,7 +10292,8 @@ FRANK_CHAT_WELCOME = (
     "music. Pull up a tombstone and say hi — just keep it friendly. 🎃")
 
 _CHAT_SELECT = (
-    "SELECT m.id, m.body, m.created_at, u.handle, "
+    "SELECT m.id, m.body, m.kind, m.reply_to, m.user_id, "
+    "m.created_at, u.handle, "
     "p.display_name, p.avatar_choice, p.avatar_path "
     "FROM chat_messages m JOIN users u ON u.id = m.user_id "
     "LEFT JOIN profiles p ON p.user_id = u.id ")
@@ -10308,7 +10313,10 @@ def _chat_view(row) -> dict:
             "avatar": _avatar_view(row["avatar_choice"],
                                    row["display_name"], row["handle"],
                                    row["avatar_path"]),
-            "body": row["body"], "created_at": row["created_at"]}
+            "body": row["body"],
+            "kind": row["kind"] or "text",
+            "reply_to": row["reply_to"],
+            "created_at": row["created_at"]}
 
 
 def _shadow_muted_ids(conn) -> set[int]:
@@ -10357,10 +10365,12 @@ def chat_page(request: Request):
            "chat_max": CHAT_MAX_CHARS}
     if member:
         msgs = _chat_recent(CHAT_ROOM_LIMIT, member)
-        _attach_reactions(msgs, member["id"])
+        _attach_chat_extras(msgs, member)
         ctx.update({"messages": msgs,
                     "can_moderate": _chat_is_admin(member),
                     "teaser": False,
+                    "pinned": _chat_pinned_view(member),
+                    "mention_unseen": _mentions_unseen_count(member["id"]),
                     "games": _chat_games_for_room(member),
                     "stickers": list(TREAT_STICKERS),
                     "game_kinds": GAME_KIND_LABELS})
@@ -10370,26 +10380,41 @@ def chat_page(request: Request):
                         "slow_mode_s": _chat_slow_mode_s()})
     else:
         msgs = _chat_recent(CHAT_TEASER_LIMIT)
-        _attach_reactions(msgs, None)
+        _attach_chat_extras(msgs, None)
         ctx.update({"messages": msgs,
-                    "can_moderate": False, "teaser": True})
+                    "can_moderate": False, "teaser": True,
+                    "pinned": None, "mention_unseen": 0})
     return templates.TemplateResponse(request, "chat.html", ctx)
 
 
 @app.get("/api/chat/messages")
-def chat_poll(request: Request, after: int = 0):
+def chat_poll(request: Request, after: int = 0, before: int = 0):
     """The polling endpoint (members only). ?after=<last id seen>
     returns just the newer live messages plus the ids of messages a
     moderator deleted in the last 30 minutes ('gone'), so open rooms
     drop them without a reload. No `after` returns the room's latest
-    CHAT_ROOM_LIMIT. Indexed id lookups only — this runs every ~4s
-    per open room and must stay cheap on the single worker."""
+    CHAT_ROOM_LIMIT. ?before=<oldest id seen> pages one window of
+    OLDER messages (quote jumps reach back past the room window).
+    Indexed id lookups only — this runs every ~4s per open room and
+    must stay cheap on the single worker."""
     member = current_member(request)
     if not member:
         return JSONResponse({"error": "members only"}, status_code=401)
     gone: list[int] = []
     with get_conn(DB_PATH) as conn:
         frag, vparams = _chat_visibility(member, _shadow_muted_ids(conn))
+        if before > 0:
+            rows = conn.execute(
+                _CHAT_SELECT + "WHERE m.deleted = 0 AND m.id < ?" + frag +
+                " ORDER BY m.id DESC LIMIT 100",
+                (before, *vparams)).fetchall()
+            msgs = [_chat_view(r) for r in reversed(rows)]
+            _attach_chat_extras(msgs, member)
+            resp = JSONResponse(
+                {"messages": msgs, "gone": [],
+                 "earliest_id": msgs[0]["id"] if msgs else before})
+            resp.headers["Cache-Control"] = "no-store"
+            return resp
         if after > 0:
             rows = conn.execute(
                 _CHAT_SELECT + "WHERE m.deleted = 0 AND m.id > ?" + frag +
@@ -10402,46 +10427,21 @@ def chat_poll(request: Request, after: int = 0):
             msgs = [_chat_view(r) for r in rows]
         else:
             msgs = _chat_recent(CHAT_ROOM_LIMIT, member)
-    _attach_reactions(msgs, member["id"])
+    _attach_chat_extras(msgs, member)
     resp = JSONResponse({"messages": msgs, "gone": gone,
                          "latest_id": msgs[-1]["id"] if msgs else after})
     resp.headers["Cache-Control"] = "no-store"
     return resp
 
 
-@app.post("/api/chat/messages")
-async def chat_post(request: Request):
-    member = current_member(request)
-    if not member:
-        return JSONResponse({"error": "members only"}, status_code=401)
-    try:
-        data = await request.json()
-    except Exception:
-        return JSONResponse({"ok": False, "error": "bad request"},
-                            status_code=400)
-    body = str(data.get("body") or "").strip()
-    if not body:
-        return JSONResponse({"ok": False,
-                             "error": "Write something first."},
-                            status_code=400)
-    if len(body) > CHAT_MAX_CHARS:
-        return JSONResponse(
-            {"ok": False,
-             "error": f"Messages cap at {CHAT_MAX_CHARS} characters."},
-            status_code=400)
-    # Word filter (brief §5): family room — a filtered word never lands,
-    # and the catch is written to the moderation audit log.
-    hit = _chat_filter_hit(body)
-    if hit:
-        _chat_mod_log(member["id"], "filter", member["id"], None,
-                      f"blocked word '{hit}' in: {body[:80]}")
-        return JSONResponse(
-            {"ok": False,
-             "error": "Let's keep it family-friendly in here — that "
-                      "one can't be posted."}, status_code=400)
+def _chat_rate_error(member: dict) -> JSONResponse | None:
+    """The shared post-pipeline rate gate (base min gap, raised by
+    admin slow mode, raised again for brand-new accounts — brief §5),
+    read off the member's own chat_messages rows. Returns the 429
+    response to send, or None when the post may proceed. Every way of
+    putting a message in the room — text, sticker sends, poll
+    creation — goes through this same gate."""
     now = datetime.now(timezone.utc)
-    # Effective rate limits: the base gap, raised by admin slow mode,
-    # and raised again for brand-new accounts (brief §5 friction).
     min_gap = max(CHAT_MIN_GAP_S, _chat_slow_mode_s())
     burst_limit = CHAT_BURST_LIMIT
     try:
@@ -10453,8 +10453,6 @@ async def chat_post(request: Request):
         min_gap = max(min_gap, CHAT_NEW_ACCOUNT_GAP_S)
         burst_limit = CHAT_NEW_ACCOUNT_BURST
     with get_conn(DB_PATH) as conn:
-        # Rate limits, server-side, read off the member's own rows:
-        # a min-gap floor between posts, plus a burst cap.
         last = conn.execute(
             "SELECT created_at FROM chat_messages WHERE user_id = ? "
             "ORDER BY id DESC LIMIT 1", (member["id"],)).fetchone()
@@ -10479,18 +10477,119 @@ async def chat_post(request: Request):
                 {"ok": False,
                  "error": "Whoa — that's a lot of messages. Take a "
                           "breather."}, status_code=429)
+    return None
+
+
+def _chat_insert_and_fanout(member: dict, body: str, kind: str = "text",
+                            reply_to: int | None = None) -> dict:
+    """Insert one room message, record its @mentions, and fan it out
+    over the sockets with the shadow-mute rule. Returns the message
+    view (extras attached). Caller has already validated the body,
+    the reply target, and the rate gate."""
+    now = datetime.now(timezone.utc)
+    with get_conn(DB_PATH) as conn:
         cur = conn.execute(
-            "INSERT INTO chat_messages (user_id, body, created_at) "
-            "VALUES (?, ?, ?)", (member["id"], body, now.isoformat()))
+            "INSERT INTO chat_messages (user_id, body, kind, reply_to, "
+            "created_at) VALUES (?, ?, ?, ?, ?)",
+            (member["id"], body, kind, reply_to, now.isoformat()))
+        message_id = cur.lastrowid
+        mentioned = (_record_mentions(conn, message_id, member, body)
+                     if kind == "text" else [])
         conn.commit()
         row = conn.execute(
-            _CHAT_SELECT + "WHERE m.id = ?", (cur.lastrowid,)).fetchone()
+            _CHAT_SELECT + "WHERE m.id = ?", (message_id,)).fetchone()
         muted = member["id"] in _shadow_muted_ids(conn)
     view = _chat_view(row)
-    view["reactions"] = {"counts": {}, "by": {}, "mine": []}
+    _attach_chat_extras([view], member)
     # Real-time fan-out. A shadow-muted author's message goes only to
     # their own sockets and to admins — everyone else never sees it.
     _hub_broadcast_message(view, author_id=member["id"], shadow=muted)
+    # Mentions that find you (brief §4): a targeted socket event to
+    # each mentioned member who is online, following the same shadow
+    # rule — an invisible message never pings its targets.
+    for target in mentioned:
+        if muted and target["id"] != member["id"] \
+                and target["id"] not in _hub.admin_ids:
+            continue
+        _hub.broadcast(
+            {"type": "mention",
+             "mention": {"message_id": message_id,
+                         "from": member["handle"],
+                         "snippet": body[:80]},
+             "count": _mentions_unseen_count(target["id"])},
+            to_ids={target["id"]})
+    return view
+
+
+@app.post("/api/chat/messages")
+async def chat_post(request: Request):
+    member = current_member(request)
+    if not member:
+        return JSONResponse({"error": "members only"}, status_code=401)
+    try:
+        data = await request.json()
+    except Exception:
+        return JSONResponse({"ok": False, "error": "bad request"},
+                            status_code=400)
+    sticker = str(data.get("sticker") or "")
+    reply_to = data.get("reply_to")
+    if sticker:
+        # Sticker send (brief §4): a treats sticker as its own
+        # message, through the same rate gate as text.
+        if sticker not in TREAT_STICKERS:
+            return JSONResponse({"ok": False, "error": "unknown sticker"},
+                                status_code=400)
+        err = _chat_rate_error(member)
+        if err:
+            return err
+        view = _chat_insert_and_fanout(member, sticker, kind="sticker")
+        return JSONResponse({"ok": True, "message": view})
+    body = str(data.get("body") or "").strip()
+    if not body:
+        return JSONResponse({"ok": False,
+                             "error": "Write something first."},
+                            status_code=400)
+    if len(body) > CHAT_MAX_CHARS:
+        return JSONResponse(
+            {"ok": False,
+             "error": f"Messages cap at {CHAT_MAX_CHARS} characters."},
+            status_code=400)
+    # Word filter (brief §5): family room — a filtered word never lands,
+    # and the catch is written to the moderation audit log.
+    hit = _chat_filter_hit(body)
+    if hit:
+        _chat_mod_log(member["id"], "filter", member["id"], None,
+                      f"blocked word '{hit}' in: {body[:80]}")
+        return JSONResponse(
+            {"ok": False,
+             "error": "Let's keep it family-friendly in here — that "
+                      "one can't be posted."}, status_code=400)
+    # Reply/quote target: must be a live message this member can see
+    # (no quoting a shadow-muted member's post into public view).
+    reply_id = None
+    if reply_to:
+        try:
+            reply_id = int(reply_to)
+        except (TypeError, ValueError):
+            reply_id = None
+        if reply_id is not None:
+            with get_conn(DB_PATH) as conn:
+                orig = conn.execute(
+                    "SELECT user_id FROM chat_messages WHERE id = ? "
+                    "AND deleted = 0", (reply_id,)).fetchone()
+                if (orig is None
+                        or (orig["user_id"] in _shadow_muted_ids(conn)
+                            and orig["user_id"] != member["id"]
+                            and not _chat_is_admin(member))):
+                    return JSONResponse(
+                        {"ok": False,
+                         "error": "That message can't be quoted."},
+                        status_code=400)
+    err = _chat_rate_error(member)
+    if err:
+        return err
+    view = _chat_insert_and_fanout(member, body, kind="text",
+                                   reply_to=reply_id)
     return JSONResponse({"ok": True, "message": view})
 
 
@@ -10847,6 +10946,241 @@ def _attach_reactions(msgs: list[dict],
     return msgs
 
 
+# ------------------------------------------ Haunt Chat Wave 0 quick wins
+# Dan (Oct 27, 2026 — benchmark brief §4/§5, STAGED for preview):
+# @mentions that find you, reply/quote, room polls, pin-a-message,
+# sticker sends, and Frank announcing new listings. Everything rides
+# the existing WS + REST model and the same visibility rules: a
+# shadow-muted author's content (mentions, quote snippets, poll
+# votes) stays invisible to everyone but themselves and admins.
+CHAT_PIN_KEY = "chat_pinned_message_id"
+CHAT_POLL_MAX_OPTIONS = 4
+CHAT_POLL_OPTION_MAX = 60
+FRANK_NEWS_MIN_GAP_S = 600      # at most one listing shout per 10 min
+FRANK_NEWS_HOURLY_CAP = 6       # ...and at most 6 per hour, batched
+FRANK_NEWS_LAST_KEY = "chat_frank_news_last"
+FRANK_NEWS_PENDING_KEY = "chat_frank_news_pending"
+FRANK_NEWS_HOUR_KEY = "chat_frank_news_hour"
+_MENTION_RE = re.compile(r"@([A-Za-z0-9_]{2,30})")
+
+
+def _blocked_pair(conn, a_id: int, b_id: int) -> bool:
+    """True when a block exists in either direction between two
+    members (the games layer's rule, reused for mentions)."""
+    try:
+        return conn.execute(
+            "SELECT 1 FROM blocks WHERE (blocker_id = ? AND "
+            "blocked_id = ?) OR (blocker_id = ? AND blocked_id = ?)",
+            (a_id, b_id, b_id, a_id)).fetchone() is not None
+    except sqlite3.OperationalError:
+        return False
+
+
+def _poll_view(conn, poll, viewer: dict | None) -> dict:
+    """A poll as the room renders it: per-option counts (shadow-mute
+    filtered for the viewer, like messages), the viewer's own vote,
+    and the closed flag. Vote rows from muted members are excluded
+    from other members' counts — a muted member still sees their own
+    vote marked, admins see true totals."""
+    try:
+        options = json.loads(poll["options"])
+    except (ValueError, TypeError):
+        options = []
+    muted = _shadow_muted_ids(conn)
+    hide: set[int] = set()
+    if muted and not _chat_is_admin(viewer):
+        hide = muted - ({viewer["id"]} if viewer else set())
+    counts = [0] * len(options)
+    total = 0
+    my_vote = None
+    try:
+        rows = conn.execute(
+            "SELECT user_id, option_idx FROM chat_poll_votes "
+            "WHERE poll_id = ?", (poll["id"],)).fetchall()
+    except sqlite3.OperationalError:
+        rows = []
+    for r in rows:
+        if viewer and r["user_id"] == viewer["id"]:
+            my_vote = r["option_idx"]
+        if r["user_id"] in hide:
+            continue
+        if 0 <= r["option_idx"] < len(options):
+            counts[r["option_idx"]] += 1
+            total += 1
+    return {"id": poll["id"], "question": poll["question"],
+            "options": [{"text": t, "votes": counts[i]}
+                        for i, t in enumerate(options)],
+            "total": total, "my_vote": my_vote,
+            "closed": bool(poll["closed"]),
+            "message_id": poll["message_id"]}
+
+
+def _attach_chat_extras(msgs: list[dict],
+                        viewer: dict | None) -> list[dict]:
+    """Everything a message render needs beyond the row itself:
+    reactions, the @handles it mentions, its reply-quote target
+    (snippet, or 'gone' when the original is deleted or invisible to
+    this viewer), its poll card, and a 👉 link on Frank's listing
+    announcements."""
+    _attach_reactions(msgs, viewer["id"] if viewer else None)
+    for m in msgs:
+        m.setdefault("mentions", [])
+        m.setdefault("reply", None)
+        m.setdefault("poll", None)
+        m.setdefault("link", None)
+    if not msgs:
+        return msgs
+    ids = [m["id"] for m in msgs]
+    marks = ", ".join("?" for _ in ids)
+    with get_conn(DB_PATH) as conn:
+        muted = _shadow_muted_ids(conn)
+        # Mentions per message (handles only — highlighting is a
+        # render concern).
+        try:
+            for r in conn.execute(
+                    "SELECT mn.message_id, u.handle FROM chat_mentions mn "
+                    "JOIN users u ON u.id = mn.mentioned_user_id "
+                    f"WHERE mn.message_id IN ({marks})", ids).fetchall():
+                for m in msgs:
+                    if m["id"] == r["message_id"]:
+                        m["mentions"].append(r["handle"])
+        except sqlite3.OperationalError:
+            pass
+        # Reply targets in one pass.
+        reply_ids = sorted({m["reply_to"] for m in msgs if m["reply_to"]})
+        if reply_ids:
+            rmarks = ", ".join("?" for _ in reply_ids)
+            originals = {}
+            for r in conn.execute(
+                    _CHAT_SELECT + f"WHERE m.id IN ({rmarks})",
+                    reply_ids).fetchall():
+                originals[r["id"]] = r
+            for m in msgs:
+                if not m["reply_to"]:
+                    continue
+                orig = originals.get(m["reply_to"])
+                gone = (
+                    orig is None
+                    or (orig["user_id"] in muted
+                        and not _chat_is_admin(viewer)
+                        and not (viewer
+                                 and viewer["id"] == orig["user_id"])))
+                if gone:
+                    m["reply"] = {"id": m["reply_to"], "gone": True}
+                else:
+                    snippet = (orig["body"] or "").strip()
+                    if orig["kind"] == "sticker":
+                        snippet = orig["body"]
+                    elif orig["kind"] == "poll":
+                        snippet = "📊 " + snippet
+                    m["reply"] = {
+                        "id": orig["id"], "handle": orig["handle"],
+                        "snippet": snippet[:80], "gone": False}
+        # Poll cards for kind='poll' messages.
+        poll_ids = [m["id"] for m in msgs if m["kind"] == "poll"]
+        if poll_ids:
+            pmarks = ", ".join("?" for _ in poll_ids)
+            try:
+                prows = conn.execute(
+                    f"SELECT * FROM chat_polls WHERE message_id IN "
+                    f"({pmarks})", poll_ids).fetchall()
+            except sqlite3.OperationalError:
+                prows = []
+            by_msg = {p["message_id"]: p for p in prows}
+            for m in msgs:
+                if m["id"] in by_msg:
+                    m["poll"] = _poll_view(conn, by_msg[m["id"]], viewer)
+        # Frank's listing announcements carry a tappable link: the
+        # body ends with the entry's /d/<id> path.
+        for m in msgs:
+            if m["handle"] == FRANK_HANDLE:
+                hit = re.search(r"(/d/\d+)\s*$", (m["body"] or "").strip())
+                if hit:
+                    m["link"] = hit.group(1)
+    return msgs
+
+
+def _record_mentions(conn, message_id: int, author: dict,
+                     body: str) -> list[dict]:
+    """Persist @mentions found in a fresh message. Skips: the author
+    themselves, unknown/inactive handles, duplicates, and any pair
+    with a block in either direction (blocking suppresses mentions,
+    brief §4). Returns the members to live-notify."""
+    handles = []
+    for h in _MENTION_RE.findall(body or ""):
+        h = h.lower()
+        if h not in handles:
+            handles.append(h)
+    out = []
+    now = _now_iso()
+    for h in handles[:5]:
+        if h == author["handle"]:
+            continue
+        row = conn.execute(
+            "SELECT id, handle FROM users WHERE handle = ? "
+            "AND status = 'active'", (h,)).fetchone()
+        if row is None or row["id"] == author["id"]:
+            continue
+        if _blocked_pair(conn, author["id"], row["id"]):
+            continue
+        try:
+            conn.execute(
+                "INSERT OR IGNORE INTO chat_mentions (message_id, "
+                "mentioned_user_id, seen, created_at) VALUES (?, ?, 0, ?)",
+                (message_id, row["id"], now))
+        except sqlite3.OperationalError:
+            continue
+        out.append({"id": row["id"], "handle": row["handle"]})
+    return out
+
+
+def _mentions_unseen_count(user_id: int) -> int:
+    try:
+        with get_conn(DB_PATH) as conn:
+            u = conn.execute(
+                "SELECT id, handle, is_admin FROM users WHERE id = ?",
+                (user_id,)).fetchone()
+            viewer = (dict(u) if u else
+                      {"id": user_id, "handle": "", "is_admin": 0})
+            frag, params = _chat_visibility(
+                viewer, _shadow_muted_ids(conn))
+            row = conn.execute(
+                "SELECT COUNT(*) AS n FROM chat_mentions mn "
+                "JOIN chat_messages m ON m.id = mn.message_id "
+                "WHERE mn.mentioned_user_id = ? AND mn.seen = 0 "
+                "AND m.deleted = 0" + frag,
+                (user_id, *params)).fetchone()
+        return row["n"] if row else 0
+    except sqlite3.OperationalError:
+        return 0
+
+
+def _chat_pinned_view(viewer: dict | None) -> dict | None:
+    """The admin-pinned message (pin-a-message), or None. Frank's
+    welcome is separate and always stands. A pinned message whose
+    author is shadow-muted shows only to the author and admins."""
+    raw = _social_meta_get(CHAT_PIN_KEY)
+    if not raw:
+        return None
+    try:
+        mid = int(raw)
+    except (TypeError, ValueError):
+        return None
+    with get_conn(DB_PATH) as conn:
+        row = conn.execute(
+            _CHAT_SELECT + "WHERE m.id = ? AND m.deleted = 0",
+            (mid,)).fetchone()
+        if row is None:
+            return None
+        if (row["user_id"] in _shadow_muted_ids(conn)
+                and not _chat_is_admin(viewer)
+                and not (viewer and viewer["id"] == row["user_id"])):
+            return None
+    view = _chat_view(row)
+    _attach_chat_extras([view], viewer)
+    return view
+
+
 @app.post("/api/chat/messages/{message_id}/react")
 async def chat_react(request: Request, message_id: int):
     """Toggle one treat sticker on a message (brief §6 #1). One row per
@@ -10924,6 +11258,263 @@ def chat_report(request: Request, message_id: int):
     return JSONResponse({"ok": True})
 
 
+# ------------------------------------------- Wave 0: mentions endpoints
+@app.get("/api/chat/mentions")
+def chat_mentions(request: Request):
+    """The mentions panel (brief §4, 'inbox-lite'): the member's
+    latest mentions on messages they can actually see, newest first,
+    plus the unseen count."""
+    member = current_member(request)
+    if not member:
+        return JSONResponse({"error": "members only"}, status_code=401)
+    with get_conn(DB_PATH) as conn:
+        frag, vparams = _chat_visibility(member, _shadow_muted_ids(conn))
+        rows = conn.execute(
+            "SELECT mn.message_id, mn.seen, mn.created_at, "
+            "u.handle AS from_handle, m.body, m.kind "
+            "FROM chat_mentions mn "
+            "JOIN chat_messages m ON m.id = mn.message_id "
+            "JOIN users u ON u.id = m.user_id "
+            "WHERE mn.mentioned_user_id = ? AND m.deleted = 0" + frag +
+            " ORDER BY mn.message_id DESC LIMIT 25",
+            (member["id"], *vparams)).fetchall()
+    items = [{"message_id": r["message_id"],
+              "from": r["from_handle"],
+              "snippet": (r["body"] or "")[:80],
+              "seen": bool(r["seen"]),
+              "created_at": r["created_at"]} for r in rows]
+    return JSONResponse(
+        {"mentions": items,
+         "unseen": _mentions_unseen_count(member["id"])})
+
+
+@app.post("/api/chat/mentions/seen")
+def chat_mentions_seen(request: Request):
+    """Opening the mentions panel marks them seen (the records stay —
+    the panel keeps listing them)."""
+    member = current_member(request)
+    if not member:
+        return JSONResponse({"error": "members only"}, status_code=401)
+    with get_conn(DB_PATH) as conn:
+        conn.execute(
+            "UPDATE chat_mentions SET seen = 1 "
+            "WHERE mentioned_user_id = ? AND seen = 0", (member["id"],))
+        conn.commit()
+    return JSONResponse({"ok": True, "unseen": 0})
+
+
+# ---------------------------------------------- Wave 0: polls endpoints
+@app.post("/api/chat/polls")
+async def chat_poll_create(request: Request):
+    """Room polls are admin/Frank-created (brief §4; the family-room
+    posture — an open poll firehose is a spam surface). The poll lives
+    in the room as a kind='poll' message so it orders, catches up,
+    and teasers like any other message."""
+    member = current_member(request)
+    if not member:
+        return JSONResponse({"error": "members only"}, status_code=401)
+    if not _chat_is_admin(member):
+        return JSONResponse({"error": "admins only"}, status_code=403)
+    try:
+        data = await request.json()
+    except Exception:
+        return JSONResponse({"ok": False, "error": "bad request"},
+                            status_code=400)
+    question = str(data.get("question") or "").strip()
+    raw_options = data.get("options") or []
+    options: list[str] = []
+    seen_opts: set[str] = set()
+    for o in raw_options:
+        o = str(o or "").strip()[:CHAT_POLL_OPTION_MAX]
+        if o and o.lower() not in seen_opts:
+            options.append(o)
+            seen_opts.add(o.lower())
+    if not question or len(question) > CHAT_MAX_CHARS:
+        return JSONResponse(
+            {"ok": False, "error": "Give the poll a question "
+                                   f"(up to {CHAT_MAX_CHARS} characters)."},
+            status_code=400)
+    if not (2 <= len(options) <= CHAT_POLL_MAX_OPTIONS):
+        return JSONResponse(
+            {"ok": False,
+             "error": f"Polls need 2–{CHAT_POLL_MAX_OPTIONS} options."},
+            status_code=400)
+    hit = _chat_filter_hit(question + " " + " ".join(options))
+    if hit:
+        _chat_mod_log(member["id"], "filter", member["id"], None,
+                      f"blocked word '{hit}' in poll: {question[:60]}")
+        return JSONResponse(
+            {"ok": False,
+             "error": "Let's keep it family-friendly in here — that "
+                      "one can't be posted."}, status_code=400)
+    # Validation errors (incl. the one-open-poll rule) outrank the
+    # rate gate; the open-poll check repeats inside the write
+    # transaction below, which stays authoritative.
+    with get_conn(DB_PATH) as conn:
+        already_open = conn.execute(
+            "SELECT id FROM chat_polls WHERE closed = 0").fetchone()
+    if already_open is not None:
+        return JSONResponse(
+            {"ok": False,
+             "error": "A poll is already open — close it before "
+                      "starting another."}, status_code=400)
+    err = _chat_rate_error(member)
+    if err:
+        return err
+    now = datetime.now(timezone.utc)
+    with get_conn(DB_PATH) as conn:
+        open_poll = conn.execute(
+            "SELECT id FROM chat_polls WHERE closed = 0").fetchone()
+        if open_poll is not None:
+            return JSONResponse(
+                {"ok": False,
+                 "error": "A poll is already open — close it before "
+                          "starting another."}, status_code=400)
+        cur = conn.execute(
+            "INSERT INTO chat_messages (user_id, body, kind, reply_to, "
+            "created_at) VALUES (?, ?, 'poll', NULL, ?)",
+            (member["id"], question, now.isoformat()))
+        message_id = cur.lastrowid
+        pcur = conn.execute(
+            "INSERT INTO chat_polls (message_id, question, options, "
+            "created_by, closed, created_at) VALUES (?, ?, ?, ?, 0, ?)",
+            (message_id, question, json.dumps(options),
+             member["id"], now.isoformat()))
+        poll_id = pcur.lastrowid
+        conn.commit()
+        row = conn.execute(
+            _CHAT_SELECT + "WHERE m.id = ?", (message_id,)).fetchone()
+        prow = conn.execute("SELECT * FROM chat_polls WHERE id = ?",
+                            (poll_id,)).fetchone()
+        poll_view = _poll_view(conn, prow, member)
+    view = _chat_view(row)
+    _attach_chat_extras([view], member)
+    view["poll"] = poll_view
+    _hub_broadcast_message(view, author_id=member["id"], shadow=False)
+    _chat_mod_log(member["id"], "poll", None, message_id,
+                  f"poll opened: {question[:60]}")
+    return JSONResponse({"ok": True, "message": view, "poll": poll_view})
+
+
+@app.post("/api/chat/polls/{poll_id}/vote")
+async def chat_poll_vote(request: Request, poll_id: int):
+    """One vote per member; voting again moves the vote. Counts ride
+    back over the socket so open rooms watch the bars move live."""
+    member = current_member(request)
+    if not member:
+        return JSONResponse({"error": "members only"}, status_code=401)
+    try:
+        data = await request.json()
+        option_idx = int(data.get("option_idx"))
+    except Exception:
+        return JSONResponse({"ok": False, "error": "bad request"},
+                            status_code=400)
+    with get_conn(DB_PATH) as conn:
+        poll = conn.execute("SELECT * FROM chat_polls WHERE id = ?",
+                            (poll_id,)).fetchone()
+        if poll is None:
+            return JSONResponse({"ok": False, "error": "no such poll"},
+                                status_code=404)
+        if poll["closed"]:
+            return JSONResponse({"ok": False,
+                                 "error": "That poll is closed."},
+                                status_code=400)
+        try:
+            n_options = len(json.loads(poll["options"]))
+        except (ValueError, TypeError):
+            n_options = 0
+        if not (0 <= option_idx < n_options):
+            return JSONResponse({"ok": False, "error": "bad option"},
+                                status_code=400)
+        conn.execute(
+            "INSERT INTO chat_poll_votes (poll_id, user_id, option_idx, "
+            "created_at) VALUES (?, ?, ?, ?) ON CONFLICT(poll_id, "
+            "user_id) DO UPDATE SET option_idx = excluded.option_idx, "
+            "created_at = excluded.created_at",
+            (poll_id, member["id"], option_idx,
+             datetime.now(timezone.utc).isoformat()))
+        conn.commit()
+        mine = _poll_view(conn, poll, member)
+        public = _poll_view(conn, poll, None)
+    _hub.broadcast({"type": "poll", "poll_id": poll_id, "poll": public})
+    return JSONResponse({"ok": True, "poll": mine})
+
+
+@app.post("/api/chat/polls/{poll_id}/close")
+def chat_poll_close(request: Request, poll_id: int):
+    member = current_member(request)
+    if not member:
+        return JSONResponse({"error": "members only"}, status_code=401)
+    if not _chat_is_admin(member):
+        return JSONResponse({"error": "admins only"}, status_code=403)
+    with get_conn(DB_PATH) as conn:
+        poll = conn.execute("SELECT * FROM chat_polls WHERE id = ?",
+                            (poll_id,)).fetchone()
+        if poll is None:
+            return JSONResponse({"ok": False, "error": "no such poll"},
+                                status_code=404)
+        conn.execute(
+            "UPDATE chat_polls SET closed = 1, closed_at = ? WHERE id = ?",
+            (datetime.now(timezone.utc).isoformat(), poll_id))
+        conn.commit()
+        poll = conn.execute("SELECT * FROM chat_polls WHERE id = ?",
+                            (poll_id,)).fetchone()
+        public = _poll_view(conn, poll, None)
+    _hub.broadcast({"type": "poll", "poll_id": poll_id, "poll": public})
+    _chat_mod_log(member["id"], "poll_close", None, poll["message_id"],
+                  f"poll closed: {(poll['question'] or '')[:60]}")
+    return JSONResponse({"ok": True, "poll": public})
+
+
+# ------------------------------------ Wave 0: pin-a-message endpoints
+@app.post("/api/chat/admin/pin")
+async def chat_admin_pin(request: Request):
+    """Pin one message under Frank's welcome (brief §4). One pin at
+    a time; pinning another replaces it."""
+    member = current_member(request)
+    if not member:
+        return JSONResponse({"error": "members only"}, status_code=401)
+    if not _chat_is_admin(member):
+        return JSONResponse({"error": "admins only"}, status_code=403)
+    try:
+        data = await request.json()
+        message_id = int(data.get("message_id"))
+    except Exception:
+        return JSONResponse({"ok": False, "error": "bad request"},
+                            status_code=400)
+    with get_conn(DB_PATH) as conn:
+        row = conn.execute(
+            "SELECT user_id, body FROM chat_messages WHERE id = ? "
+            "AND deleted = 0", (message_id,)).fetchone()
+    if row is None:
+        return JSONResponse({"ok": False, "error": "no such message"},
+                            status_code=404)
+    _social_meta_set(CHAT_PIN_KEY, str(message_id))
+    _chat_mod_log(member["id"], "pin", row["user_id"], message_id,
+                  (row["body"] or "")[:80])
+    # The broadcast carries the public view of the pin (a muted
+    # author's pin resolves to None publicly; admins see the real
+    # one on next load — the server render is authoritative).
+    _hub.broadcast({"type": "pin",
+                    "pinned": _chat_pinned_view(None),
+                    "pinned_id": message_id})
+    return JSONResponse({"ok": True, "pinned_id": message_id,
+                         "pinned": _chat_pinned_view(member)})
+
+
+@app.post("/api/chat/admin/unpin")
+def chat_admin_unpin(request: Request):
+    member = current_member(request)
+    if not member:
+        return JSONResponse({"error": "members only"}, status_code=401)
+    if not _chat_is_admin(member):
+        return JSONResponse({"error": "admins only"}, status_code=403)
+    _social_meta_set(CHAT_PIN_KEY, "")
+    _chat_mod_log(member["id"], "unpin", None, None, "pin cleared")
+    _hub.broadcast({"type": "pin", "pinned": None, "pinned_id": None})
+    return JSONResponse({"ok": True})
+
+
 # -------------------------------------------------------- admin endpoints
 @app.get("/api/chat/modlog")
 def chat_modlog(request: Request):
@@ -10932,9 +11523,12 @@ def chat_modlog(request: Request):
         return JSONResponse({"error": "members only"}, status_code=401)
     if not _chat_is_admin(member):
         return JSONResponse({"error": "admins only"}, status_code=403)
+    pinned_raw = _social_meta_get(CHAT_PIN_KEY)
     return JSONResponse({"entries": _chat_mod_log_recent(50),
                          "muted": _chat_muted_handles(),
-                         "slow_mode_s": _chat_slow_mode_s()})
+                         "slow_mode_s": _chat_slow_mode_s(),
+                         "pinned_id": int(pinned_raw) if pinned_raw
+                         and pinned_raw.isdigit() else None})
 
 
 async def _chat_admin_target(request: Request):
@@ -11120,6 +11714,77 @@ def _frank_announce(body: str) -> None:
         view["reactions"] = {"counts": {}, "by": {}, "mine": []}
         _hub.broadcast({"type": "message", "message": view})
     except sqlite3.OperationalError:
+        pass
+
+
+_FRANK_NEWS_NOUNS = {
+    "halloween": "haunt", "events": "event",
+    "halloween_stores": "Halloween store", "live": "live room",
+    "restaurants": "restaurhaunt", "coffee": "spooky coffee spot",
+    "shops": "shop", "parks": "haunted park",
+    "haunted_houses": "haunted house", "christmas": "holiday display",
+}
+
+
+def _frank_announce_new_listing(entry_id: int) -> None:
+    """Frank announces the site (brief §4): a new listing posted
+    through /upload gets a shout in the chat room — '📣 New haunt:
+    <title> (<town>) /d/<id>'. THROTTLED so a bulk-posting session
+    can't flood the room: at most one shout per
+    FRANK_NEWS_MIN_GAP_S and FRANK_NEWS_HOURLY_CAP per hour; listings
+    that arrive inside a closed window accumulate, and the next shout
+    batches them ('N new listings… the newest: …'). System-only —
+    fired from the upload path, never user-triggerable — and
+    best-effort: an announcement failure never fails an upload."""
+    try:
+        now = datetime.now(timezone.utc)
+        with get_conn(DB_PATH) as conn:
+            row = conn.execute(
+                "SELECT title, town, category FROM entries WHERE id = ?",
+                (entry_id,)).fetchone()
+        if row is None:
+            return
+        try:
+            pending = int(_social_meta_get(FRANK_NEWS_PENDING_KEY) or 0)
+        except (TypeError, ValueError):
+            pending = 0
+        hour_key = now.strftime("%Y-%m-%dT%H")
+        hour_raw = _social_meta_get(FRANK_NEWS_HOUR_KEY) or ""
+        hour_count = 0
+        if hour_raw.startswith(hour_key + ":"):
+            try:
+                hour_count = int(hour_raw.split(":", 1)[1])
+            except (TypeError, ValueError):
+                hour_count = 0
+        last_raw = _social_meta_get(FRANK_NEWS_LAST_KEY)
+        last_ts = None
+        if last_raw:
+            try:
+                last_ts = datetime.fromisoformat(last_raw)
+            except ValueError:
+                last_ts = None
+        gap_ok = (last_ts is None or (now - last_ts).total_seconds()
+                  >= FRANK_NEWS_MIN_GAP_S)
+        if not gap_ok or hour_count >= FRANK_NEWS_HOURLY_CAP:
+            _social_meta_set(FRANK_NEWS_PENDING_KEY, str(pending + 1))
+            return
+        noun = _FRANK_NEWS_NOUNS.get(row["category"], "listing")
+        town = (row["town"] or "").strip()
+        where = f" ({town})" if town else ""
+        if pending > 0:
+            total = pending + 1
+            body = (f"📣 {total} new listings just landed on HauntMap — "
+                    f"the newest: {row['title']}{where} — take a peek! "
+                    f"/d/{entry_id}")
+        else:
+            body = (f"📣 New {noun} just landed: {row['title']}{where} "
+                    f"— take a peek! /d/{entry_id}")
+        _social_meta_set(FRANK_NEWS_PENDING_KEY, "0")
+        _social_meta_set(FRANK_NEWS_LAST_KEY, now.isoformat())
+        _social_meta_set(FRANK_NEWS_HOUR_KEY,
+                         f"{hour_key}:{hour_count + 1}")
+        _frank_announce(body)
+    except Exception:
         pass
 
 

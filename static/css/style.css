@@ -6414,3 +6414,127 @@ span.chat-react-chip { cursor: default; }
 .fb-frame { width: 100%; max-width: 340px; aspect-ratio: 9 / 16;
   margin: 0 auto; border: 1px solid #274860; border-radius: var(--radius);
   display: block; background: #000; overflow: hidden; }
+
+/* ============ z197: HAUNT CHAT WAVE 0 — QUICK WINS (Oct 27) ================
+   @Mentions (chip + inbox-lite panel + in-text highlight), reply/
+   quote (quote chip + jump flash + composer reply bar), room polls
+   (tap-to-vote cards, live azure result bars, closed state), the
+   pinned-message banner, sticker sends (big treat messages + picker
+   row), and Frank's listing-announcement link. All riding the z192/
+   z195 azure room treatment. */
+.chat-mention-chip { background: rgba(255,209,102,.18); color: #ffd166;
+  border: 1px solid rgba(255,209,102,.65); border-radius: 999px;
+  padding: 0.15rem 0.6rem; font: inherit; font-size: 0.8rem; font-weight: 700;
+  cursor: pointer; }
+.chat-mention-chip:hover { border-color: #ffd166; }
+.chat-mention-panel { background: var(--card);
+  border: 1px solid rgba(255,209,102,.45); border-radius: var(--radius);
+  padding: 0.45rem; margin-bottom: 0.7rem; display: flex;
+  flex-direction: column; gap: 0.3rem; }
+.chat-mention-panel[hidden] { display: none; }
+.chat-mention-item { display: flex; gap: 0.4rem; align-items: baseline;
+  text-align: left; background: var(--bg2); color: var(--ink);
+  border: 1px solid rgba(143,216,255,.25); border-radius: 8px;
+  padding: 0.4rem 0.6rem; font: inherit; font-size: 0.85rem; cursor: pointer; }
+.chat-mention-item:hover { border-color: rgba(143,216,255,.7); }
+.chat-mention-item.unseen { border-color: rgba(255,209,102,.7); }
+.chat-mention-from { font-weight: 700; color: #8fd8ff; white-space: nowrap; }
+.chat-mention-snip { overflow-wrap: anywhere; }
+.chat-mention-empty { margin: 0.2rem 0.3rem; color: var(--muted);
+  font-size: 0.85rem; }
+.chat-text .mention { color: #8fd8ff; font-weight: 700; }
+.chat-text .mention-me { background: rgba(255,209,102,.25);
+  border-radius: 4px; padding: 0 0.2em; color: #ffe9a8; }
+.chat-msg.flash { animation: chatFlash 1.5s ease; }
+@keyframes chatFlash { 0% { background: rgba(255,209,102,.35); }
+  100% { background: transparent; } }
+.chat-replybtn, .chat-pinbtn { background: none; border: none;
+  color: var(--muted); font-size: 0.75rem; padding: 0.1rem 0.2rem;
+  cursor: pointer; opacity: 0.5; }
+.chat-replybtn:hover, .chat-replybtn:focus-visible,
+.chat-pinbtn:hover, .chat-pinbtn:focus-visible { color: #8fd8ff; opacity: 1; }
+.chat-quote { display: flex; gap: 0.35rem; align-items: baseline;
+  max-width: 100%; background: var(--bg2); color: var(--muted);
+  border: none; border-left: 3px solid #8fd8ff; border-radius: 0 8px 8px 0;
+  padding: 0.3rem 0.55rem; margin-bottom: 0.25rem; font: inherit;
+  font-size: 0.8rem; text-align: left; cursor: pointer; }
+.chat-quote:hover { color: var(--ink); }
+.chat-quote-who { font-weight: 700; color: #8fd8ff; white-space: nowrap; }
+.chat-quote-snip { overflow: hidden; text-overflow: ellipsis;
+  white-space: nowrap; }
+.chat-quote-gone { font-style: italic; }
+.chat-pinned-inner { display: flex; gap: 0.7rem; align-items: flex-start;
+  background: linear-gradient(120deg, rgba(255,209,102,.14), rgba(143,216,255,.05));
+  border: 1px solid rgba(255,209,102,.55); border-radius: var(--radius);
+  padding: 0.6rem 0.8rem; margin-bottom: 0.7rem; }
+.chat-pinned-main { flex: 1 1 auto; min-width: 0; }
+.chat-pin-meta { margin: 0 0 0.15rem; font-size: 0.78rem; font-weight: 700;
+  color: #ffd166; }
+.chat-pin-meta a { color: #8fd8ff; }
+.chat-pinned-text { background: none; border: none; color: var(--ink);
+  font: inherit; font-size: 0.92rem; text-align: left; padding: 0;
+  cursor: pointer; overflow-wrap: anywhere; }
+.chat-pinned-text:hover { text-decoration: underline; }
+.chat-unpin { background: none; border: none; color: var(--muted);
+  font-size: 0.85rem; cursor: pointer; padding: 0.1rem 0.3rem; }
+.chat-unpin:hover { color: var(--danger); }
+.chat-sticker-big { font-size: 3.2rem; line-height: 1.15; margin: 0.1rem 0; }
+.chat-sticker-row { display: flex; flex-wrap: wrap; gap: 0.4rem;
+  margin-top: 0.45rem; }
+.chat-sticker-row[hidden] { display: none; }
+.chat-sticker-send { background: var(--bg2);
+  border: 1px solid rgba(143,216,255,.35); border-radius: 10px;
+  font-size: 1.7rem; padding: 0.25rem 0.55rem; cursor: pointer;
+  line-height: 1.2; }
+.chat-sticker-send:hover { border-color: #8fd8ff;
+  background: rgba(143,216,255,.15); }
+.chat-sticker-toggle { background: var(--bg2);
+  border: 1px solid rgba(143,216,255,.35); border-radius: 10px;
+  font-size: 1.15rem; padding: 0.3rem 0.5rem; cursor: pointer;
+  line-height: 1.2; flex: 0 0 auto; }
+.chat-sticker-toggle:hover { border-color: #8fd8ff; }
+.chat-replybar { display: flex; align-items: center; gap: 0.5rem;
+  background: var(--bg2); border-left: 3px solid #8fd8ff;
+  border-radius: 0 8px 8px 0; padding: 0.35rem 0.6rem;
+  margin-bottom: 0.45rem; font-size: 0.82rem; color: var(--muted); }
+.chat-replybar[hidden] { display: none; }
+.chat-replybar-text { flex: 1 1 auto; min-width: 0; overflow: hidden;
+  text-overflow: ellipsis; white-space: nowrap; }
+.chat-replybar-x { background: none; border: none; color: var(--muted);
+  cursor: pointer; font-size: 0.85rem; padding: 0.1rem 0.25rem; }
+.chat-replybar-x:hover { color: var(--ink); }
+.chat-poll { background: var(--bg2);
+  border: 1px solid rgba(143,216,255,.4); border-radius: 10px;
+  padding: 0.55rem 0.7rem; margin: 0.15rem 0; max-width: 34rem; }
+.chat-poll-q { margin: 0 0 0.45rem; font-weight: 700; }
+.chat-poll-opt { position: relative; display: flex; align-items: center;
+  gap: 0.5rem; width: 100%; background: none; color: var(--ink);
+  border: 1px solid rgba(143,216,255,.35); border-radius: 8px;
+  padding: 0.42rem 0.6rem; margin-bottom: 0.35rem; font: inherit;
+  font-size: 0.9rem; text-align: left; cursor: pointer; overflow: hidden; }
+.chat-poll-opt:hover:not(:disabled) { border-color: #8fd8ff; }
+.chat-poll-opt:disabled { cursor: default; opacity: 0.85; }
+.chat-poll-opt.mine { border-color: #ffd166; font-weight: 700; }
+.chat-poll-bar { position: absolute; inset: 0 auto 0 0;
+  background: rgba(143,216,255,.28); z-index: 0; }
+.chat-poll-opt-text { position: relative; z-index: 1; flex: 1 1 auto;
+  overflow-wrap: anywhere; }
+.chat-poll-opt-n { position: relative; z-index: 1; font-weight: 700;
+  color: #8fd8ff; }
+.chat-poll-meta { margin: 0.15rem 0 0; font-size: 0.78rem;
+  color: var(--muted); }
+.chat-poll-close { background: none; color: var(--muted);
+  border: 1px solid rgba(143,216,255,.35); border-radius: 8px;
+  padding: 0.25rem 0.6rem; font-size: 0.78rem; cursor: pointer;
+  margin-top: 0.35rem; }
+.chat-poll-close:hover { color: var(--ink); border-color: #8fd8ff; }
+.chat-poll-teaser { margin: 0.1rem 0 0; font-size: 0.8rem;
+  color: #ffd166; }
+.chat-poll-form { flex-direction: column; align-items: stretch; }
+.chat-poll-form input { width: 100%; box-sizing: border-box; }
+.chat-linkrow { margin: 0.25rem 0 0; }
+.chat-link { color: #8fd8ff; font-weight: 700; font-size: 0.88rem; }
+@media (max-width: 520px) {
+  .chat-sticker-big { font-size: 2.6rem; }
+  .chat-quote-snip { white-space: normal; }
+}

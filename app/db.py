@@ -354,6 +354,8 @@ CREATE TABLE IF NOT EXISTS chat_messages (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     body TEXT NOT NULL,
+    kind TEXT NOT NULL DEFAULT 'text',  -- text | sticker | poll
+    reply_to INTEGER REFERENCES chat_messages(id) ON DELETE SET NULL,
     deleted INTEGER NOT NULL DEFAULT 0,
     created_at TEXT NOT NULL,
     deleted_at TEXT
@@ -406,6 +408,40 @@ CREATE TABLE IF NOT EXISTS chat_games (
     expires_at TEXT
 );
 CREATE INDEX IF NOT EXISTS idx_chat_games_status ON chat_games(status, id);
+-- Haunt Chat Wave 0 quick wins (Dan, Oct 27 — benchmark brief §4):
+-- @mentions, room polls. (Reply/quote rides chat_messages.reply_to;
+-- pin-a-message rides social_meta; sticker sends ride kind='sticker'.)
+-- Mentions persist so a member who was offline still finds them in
+-- the mentions panel; seen flips when they open it.
+CREATE TABLE IF NOT EXISTS chat_mentions (
+    message_id INTEGER NOT NULL REFERENCES chat_messages(id) ON DELETE CASCADE,
+    mentioned_user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    seen INTEGER NOT NULL DEFAULT 0,
+    created_at TEXT NOT NULL,
+    PRIMARY KEY (message_id, mentioned_user_id)
+);
+CREATE INDEX IF NOT EXISTS idx_chat_mentions_user
+    ON chat_mentions(mentioned_user_id, seen, message_id);
+-- Room polls: one row per poll; the poll also lives in the room as a
+-- chat_messages row of kind='poll' (message_id) so ordering, catch-up
+-- and the teaser treat it like any message. Options are a JSON list.
+CREATE TABLE IF NOT EXISTS chat_polls (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    message_id INTEGER REFERENCES chat_messages(id) ON DELETE CASCADE,
+    question TEXT NOT NULL,
+    options TEXT NOT NULL,
+    created_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
+    closed INTEGER NOT NULL DEFAULT 0,
+    created_at TEXT NOT NULL,
+    closed_at TEXT
+);
+CREATE TABLE IF NOT EXISTS chat_poll_votes (
+    poll_id INTEGER NOT NULL REFERENCES chat_polls(id) ON DELETE CASCADE,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    option_idx INTEGER NOT NULL,
+    created_at TEXT NOT NULL,
+    PRIMARY KEY (poll_id, user_id)
+);
 -- Per-member, per-game win/loss tally rendered on HauntSocial profiles.
 CREATE TABLE IF NOT EXISTS chat_game_tallies (
     user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -442,6 +478,17 @@ def init_db(db_path: Path) -> None:
         if "no_challenges" not in pcols:
             conn.execute(
                 "ALTER TABLE profiles ADD COLUMN no_challenges INTEGER NOT NULL DEFAULT 0"
+            )
+        # Haunt Chat Wave 0 (Oct 27): DBs created before the quick-win
+        # build gain the message kind + reply pointer in place.
+        mcols = {r["name"] for r in conn.execute("PRAGMA table_info(chat_messages)").fetchall()}
+        if mcols and "kind" not in mcols:
+            conn.execute(
+                "ALTER TABLE chat_messages ADD COLUMN kind TEXT NOT NULL DEFAULT 'text'"
+            )
+        if mcols and "reply_to" not in mcols:
+            conn.execute(
+                "ALTER TABLE chat_messages ADD COLUMN reply_to INTEGER"
             )
         # Migrate DBs created before the food-section columns existed.
         cols = {r["name"] for r in conn.execute("PRAGMA table_info(entries)").fetchall()}
