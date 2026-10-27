@@ -5356,7 +5356,7 @@ def shared_tour_page(request: Request, slug: str):
 # address, no upload. A street address = house number + street name; a
 # town or ZIP alone is not an address. The number may carry a unit letter
 # ("123A"); the street part must contain a letter (so "123 4" fails).
-_STREET_ADDRESS_RE = re.compile(r"^\d{1,6}[A-Za-z]?\s+\S+.*[A-Za-z]", re.DOTALL)
+_STREET_ADDRESS_RE = re.compile(r"^\d{1,6}(?:-\d{1,5})?[A-Za-z]?\s+\S+.*[A-Za-z]", re.DOTALL)
 
 ADDRESS_REQUIRED_MSG = ("We need the street address — e.g. 123 Main St — "
                         "so visitors can find it on the map.")
