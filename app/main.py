@@ -7371,6 +7371,12 @@ MUSIC_DJ_SETS = [
      "title": "Adam Beyer — Drumcode Halloween at Tobacco Dock",
      "meta": "Drumcode's London Halloween takeover · 2:02:17",
      "channel": "DJ Mag"},
+    # Added by Dan, Oct 27 — oEmbed-verified same day (title + channel
+    # match, embeddable).
+    {"id": "WOGat2B7Vak",
+     "title": "Spooky Vibes (2026) // Future Bass Mix - EDM Vibes Collection",
+     "meta": "A future bass Halloween mix from the EDM Vibes Collection",
+     "channel": "Timothy Caldwell"},
 ]
 # Halloween singles not already on this page (Dan, Oct 23). oEmbed-verified
 # 2026-10-23 on official/VEVO/label channels wherever they exist; where a
