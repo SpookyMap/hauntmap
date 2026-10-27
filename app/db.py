@@ -507,6 +507,16 @@ def init_db(db_path: Path) -> None:
             f"WHERE is_featured != 0 AND id NOT IN ({_ph})",
             FEATURED_ENTRY_IDS,
         )
+        # Dan-sent video attach (Oct 27): @suzebauer's TikTok of the
+        # Great Jack O'Lantern Blaze belongs on the Blaze's one pin
+        # (116) — the standing one-pin-per-place rule. Fill-if-empty
+        # only: an admin-set tiktok_url is never overwritten, and once
+        # the pin carries any video this is a no-op.
+        conn.execute(
+            "UPDATE entries SET tiktok_url = ? "
+            "WHERE id = 116 AND (tiktok_url IS NULL OR TRIM(tiktok_url) = '')",
+            ("https://www.tiktok.com/@suzebauer/video/7691338318004440350",),
+        )
         if "is_handpicked" not in cols:
             # Hand-picked feed boost (Dan, Oct 23): pins Dan personally
             # sent/curated lead every feed. Ranking data is never
