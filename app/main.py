@@ -3383,7 +3383,7 @@ def restaurhaunts(request: Request, sort: str = "new", f: str = "all",
 
 @app.get("/upload", response_class=HTMLResponse)
 def upload_form(request: Request):
-    return templates.TemplateResponse(request, "upload.html", {"request": request, "error": None})
+    return templates.TemplateResponse(request, "upload.html", {"request": request, "error": None, "values": {}})
 
 
 @app.get("/nearby", response_class=HTMLResponse)
@@ -4809,6 +4809,25 @@ def shared_tour_page(request: Request, slug: str):
 
 
 
+# Street-address gate for /upload (Dan, Oct 26): pin 5973 ("Demon Tree",
+# Maryland) went live from the public form with NO street address and NO
+# coordinates — its page existed but directions pointed at "None,None" and
+# it could not be plotted or routed to. Rule from here on: no street
+# address, no upload. A street address = house number + street name; a
+# town or ZIP alone is not an address. The number may carry a unit letter
+# ("123A"); the street part must contain a letter (so "123 4" fails).
+_STREET_ADDRESS_RE = re.compile(r"^\d{1,6}[A-Za-z]?\s+\S+.*[A-Za-z]", re.DOTALL)
+
+ADDRESS_REQUIRED_MSG = ("We need the street address — e.g. 123 Main St — "
+                        "so visitors can find it on the map.")
+ADDRESS_NOT_FOUND_MSG = ("We couldn't find that street address on the map — "
+                         "please check it and try again. " + ADDRESS_REQUIRED_MSG)
+
+
+def looks_like_street_address(address: str) -> bool:
+    return bool(_STREET_ADDRESS_RE.match((address or "").strip()))
+
+
 @app.post("/upload", response_class=HTMLResponse)
 async def upload_submit(
     request: Request,
@@ -4851,12 +4870,36 @@ async def upload_submit(
             if not (-90 <= lat_f <= 90 and -180 <= lng_f <= 180):
                 raise ValueError
         except ValueError:
-            error = "Map pin coordinates look invalid — try tapping the map again."
+            error = "Map pin coordinates look invalid — please try again."
 
     if not error and not title:
         error = "Please give your haunt a title."
     if not error and not town:
         error = "Please add a town or neighborhood."
+    # Street address is MANDATORY (Dan, Oct 26 — see _STREET_ADDRESS_RE):
+    # missing or not a street address (house number + street name) rejects.
+    if not error and not looks_like_street_address(address):
+        error = ADDRESS_REQUIRED_MSG
+    # Geocode the address at submission so the pin is born with coordinates
+    # and plots + routes immediately. The geocoded point is authoritative:
+    # it replaces any form-supplied lat/lng. An address that cannot be
+    # geocoded rejects rather than storing an unplottable pin.
+    if not error:
+        geo = geocode_nominatim(f"{address}, {town}") or geocode_nominatim(address)
+        # Nominatim fuzzy-matches: a bogus street name can resolve to a
+        # same-named street on another continent (rig test: "999999 Nowhere
+        # Lane" + Hackensack -> Nailsea, England). Anchor the result to the
+        # stated town: if the town itself geocodes and the address point
+        # lands nowhere near it, treat the address as not found.
+        if geo is not None:
+            town_geo = geocode_nominatim(town)
+            if town_geo is not None and haversine_miles(
+                    geo[0], geo[1], town_geo[0], town_geo[1]) > 60:
+                geo = None
+        if geo is None:
+            error = ADDRESS_NOT_FOUND_MSG
+        else:
+            lat_f, lng_f = geo
     if not error and (not media or not media.filename) and category not in ("events", "halloween_stores", "live"):
         error = "Please attach a photo or video."
 
@@ -4935,7 +4978,18 @@ async def upload_submit(
             error = store_error
 
     if error:
-        return templates.TemplateResponse(request, "upload.html", {"request": request, "error": error}, status_code=400
+        # Re-render with the uploader's other entries intact so a rejected
+        # address doesn't cost them the whole form (the photo/video itself
+        # cannot survive a form reload — the template says so under the
+        # alert).
+        values = {
+            "category": category, "title": title, "town": town,
+            "display_name": display_name, "uploader_email": uploader_email,
+            "address": address, "scare_level": scare_level or "",
+            "tags": set(tags.split(",")) if tags else set(),
+            "notify_votes": bool(notify_votes),
+        }
+        return templates.TemplateResponse(request, "upload.html", {"request": request, "error": error, "values": values}, status_code=400
         )
     return RedirectResponse(f"/d/{entry_id}", status_code=303)
 

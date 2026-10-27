@@ -1,47 +1,49 @@
 {% extends "base.html" %}
 {% block title %}Share your decorations &middot; {{ site_name }}{% endblock %}
-{% block head %}
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-{% endblock %}
 {% block content %}
 <h1>Share your decorations</h1>
-<p class="lede">Show off your Halloween or Christmas decorations. Photo or short video, pick your town, drop a pin if you want visitors to find it.</p>
+<p class="lede">Show off your Halloween or Christmas decorations. Photo or short video, and the street address &mdash; every haunt needs one so visitors can find it on the map.</p>
 
 {% if error %}
 <div class="alert">{{ error }}</div>
+<p><small>Your photo/video can&rsquo;t be saved when the form reloads &mdash; please re-attach it before resubmitting.</small></p>
 {% endif %}
 
 <form method="post" action="/upload" enctype="multipart/form-data" class="form">
   <label>Category <span class="req">*</span>
     <select name="category" id="category-select" required>
-      <option value="halloween">&#x1F383; Haunt Map (Halloween)</option>
-      <option value="christmas">&#x1F384; Jolly Map (Christmas)</option>
-      <option value="halloween_stores">&#x1F47B; Halloween Stores</option>
-      <option value="restaurants">&#x1F37D;&#xFE0F; Restaurhaunts</option>
-      <option value="coffee">&#x2615; Coffee & Cafes</option>
-      <option value="shops">&#x1F6CD;&#xFE0F; Shops</option>
-      <option value="parks">&#x1F333; Parks</option>
-      <option value="haunted_houses">&#x1F3DA;&#xFE0F; Haunted Houses</option>
-      <option value="events">&#x1F3AA; Events</option>
-      <option value="live">&#x1F534; Live Streams</option>
+      <option value="halloween"{% if values.get('category', 'halloween') == 'halloween' %} selected{% endif %}>&#x1F383; Haunt Map (Halloween)</option>
+      <option value="christmas"{% if values.get('category') == 'christmas' %} selected{% endif %}>&#x1F384; Jolly Map (Christmas)</option>
+      <option value="halloween_stores"{% if values.get('category') == 'halloween_stores' %} selected{% endif %}>&#x1F47B; Halloween Stores</option>
+      <option value="restaurants"{% if values.get('category') == 'restaurants' %} selected{% endif %}>&#x1F37D;&#xFE0F; Restaurhaunts</option>
+      <option value="coffee"{% if values.get('category') == 'coffee' %} selected{% endif %}>&#x2615; Coffee & Cafes</option>
+      <option value="shops"{% if values.get('category') == 'shops' %} selected{% endif %}>&#x1F6CD;&#xFE0F; Shops</option>
+      <option value="parks"{% if values.get('category') == 'parks' %} selected{% endif %}>&#x1F333; Parks</option>
+      <option value="haunted_houses"{% if values.get('category') == 'haunted_houses' %} selected{% endif %}>&#x1F3DA;&#xFE0F; Haunted Houses</option>
+      <option value="events"{% if values.get('category') == 'events' %} selected{% endif %}>&#x1F3AA; Events</option>
+      <option value="live"{% if values.get('category') == 'live' %} selected{% endif %}>&#x1F534; Live Streams</option>
     </select>
   </label>
   <label>Title <span class="req">*</span>
-    <input type="text" name="title" maxlength="120" required placeholder="e.g. The Skeleton Orchestra House">
+    <input type="text" name="title" maxlength="120" required placeholder="e.g. The Skeleton Orchestra House" value="{{ values.get('title', '') }}">
   </label>
   <label>Town / neighborhood <span class="req">*</span>
-    <input type="text" name="town" maxlength="80" required placeholder="e.g. Salem">
+    <input type="text" name="town" maxlength="80" required placeholder="e.g. Salem" value="{{ values.get('town', '') }}">
+  </label>
+  <label>Street address <span class="req">*</span>
+    <input type="text" name="address" id="address-input" maxlength="200" required autocomplete="street-address" placeholder="e.g. 123 Main St" value="{{ values.get('address', '') }}">
+    <small>Required &mdash; house number + street name. We pin your haunt on the map from this address, so visitors can route right to it. No street address, no upload.</small>
+    <small id="address-error" style="display:none"></small>
   </label>
   <label>Your display name <span class="opt">(optional)</span>
-    <input type="text" name="display_name" maxlength="40" placeholder="e.g. The Miller Family">
+    <input type="text" name="display_name" maxlength="40" placeholder="e.g. The Miller Family" value="{{ values.get('display_name', '') }}">
   </label>
   <label>Your email <span class="opt">(optional)</span>
-    <input type="email" name="uploader_email" maxlength="120" placeholder="you@email.com">
+    <input type="email" name="uploader_email" maxlength="120" placeholder="you@email.com" value="{{ values.get('uploader_email', '') }}">
     <small>Only used for your display's updates — never shared.</small>
   </label>
   <label class="check-label">
-    <input type="checkbox" name="notify_votes" value="1"> &#x1F514; Get notified when people vote on your display
+    <input type="checkbox" name="notify_votes" value="1"{% if values.get('notify_votes') %} checked{% endif %}> &#x1F514; Get notified when people vote on your display
   </label>
   <label>Photo or video <span class="req" id="media-req">*</span> <span class="opt" id="media-opt" style="display:none">(optional for events, stores &amp; live)</span>
     <input type="file" name="media" id="media-input" accept=".jpg,.jpeg,.png,.webp,.mp4" required>
@@ -50,26 +52,26 @@
   <div id="halloween-fields">
   <label>Scare level <span class="opt">(optional)</span>
     <select name="scare_level">
-      <option value="">Not specified</option>
-      <option value="family">&#x1F60A; Family-friendly</option>
-      <option value="spooky">&#x1F47B; Spooky</option>
-      <option value="creepy">&#x1F9DB; Creepy</option>
-      <option value="terrifying">&#x1F631; Terrifying</option>
-      <option value="extreme">&#x1F480; Extreme</option>
+      <option value=""{% if not values.get('scare_level') %} selected{% endif %}>Not specified</option>
+      <option value="family"{% if values.get('scare_level') == 'family' %} selected{% endif %}>&#x1F60A; Family-friendly</option>
+      <option value="spooky"{% if values.get('scare_level') == 'spooky' %} selected{% endif %}>&#x1F47B; Spooky</option>
+      <option value="creepy"{% if values.get('scare_level') == 'creepy' %} selected{% endif %}>&#x1F9DB; Creepy</option>
+      <option value="terrifying"{% if values.get('scare_level') == 'terrifying' %} selected{% endif %}>&#x1F631; Terrifying</option>
+      <option value="extreme"{% if values.get('scare_level') == 'extreme' %} selected{% endif %}>&#x1F480; Extreme</option>
     </select>
   </label>
   <label>Features <span class="opt">(optional — check all that apply)</span>
     <div class="tag-checks">
-      <label><input type="checkbox" name="tags" value="animatronics"> Animatronics</label>
-      <label><input type="checkbox" name="tags" value="inflatables"> Inflatables</label>
-      <label><input type="checkbox" name="tags" value="handmade"> Handmade/DIY</label>
-      <label><input type="checkbox" name="tags" value="walkthrough"> Walkthrough</label>
-      <label><input type="checkbox" name="tags" value="projector"> Projector show</label>
-      <label><input type="checkbox" name="tags" value="lights"> Light show</label>
-      <label><input type="checkbox" name="tags" value="music"> Music/sound</label>
-      <label><input type="checkbox" name="tags" value="street-wide"> Street-wide</label>
-      <label><input type="checkbox" name="tags" value="multi-house"> Multi-house</label>
-      <label><input type="checkbox" name="tags" value="ticketed"> Ticketed admission</label>
+      <label><input type="checkbox" name="tags" value="animatronics"{% if 'animatronics' in (values.get('tags') or []) %} checked{% endif %}> Animatronics</label>
+      <label><input type="checkbox" name="tags" value="inflatables"{% if 'inflatables' in (values.get('tags') or []) %} checked{% endif %}> Inflatables</label>
+      <label><input type="checkbox" name="tags" value="handmade"{% if 'handmade' in (values.get('tags') or []) %} checked{% endif %}> Handmade/DIY</label>
+      <label><input type="checkbox" name="tags" value="walkthrough"{% if 'walkthrough' in (values.get('tags') or []) %} checked{% endif %}> Walkthrough</label>
+      <label><input type="checkbox" name="tags" value="projector"{% if 'projector' in (values.get('tags') or []) %} checked{% endif %}> Projector show</label>
+      <label><input type="checkbox" name="tags" value="lights"{% if 'lights' in (values.get('tags') or []) %} checked{% endif %}> Light show</label>
+      <label><input type="checkbox" name="tags" value="music"{% if 'music' in (values.get('tags') or []) %} checked{% endif %}> Music/sound</label>
+      <label><input type="checkbox" name="tags" value="street-wide"{% if 'street-wide' in (values.get('tags') or []) %} checked{% endif %}> Street-wide</label>
+      <label><input type="checkbox" name="tags" value="multi-house"{% if 'multi-house' in (values.get('tags') or []) %} checked{% endif %}> Multi-house</label>
+      <label><input type="checkbox" name="tags" value="ticketed"{% if 'ticketed' in (values.get('tags') or []) %} checked{% endif %}> Ticketed admission</label>
     </div>
   </label>
   </div>
@@ -86,31 +88,33 @@
   document.getElementById('category-select').addEventListener('change', syncMediaRequired);
   syncMediaRequired();
   </script>
-  <label>Map pin <span class="opt">(optional &mdash; tap the map)</span></label>
-  <div id="map"></div>
-  <input type="hidden" name="lat" id="lat">
-  <input type="hidden" name="lng" id="lng">
+  <p><small>&#x1F4CD; Map pin: we place it on the map from your street address when you share &mdash; that&rsquo;s how visitors find your haunt and route to it.</small></p>
   <button type="submit" class="btn btn-big">&#x1F383;&#x1F384; Share my decorations</button>
 </form>
 
 <script>
+// Client-side mirror of the server's street-address rule (UX only — the
+// server is the gate): house number + street name, e.g. "123 Main St".
 (function () {
-  var map = L.map('map').setView([40.7, -74.0], 10);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 19, attribution: '&copy; OpenStreetMap contributors'
-  }).addTo(map);
-  var marker = null;
-  map.on('click', function (e) {
-    if (marker) { map.removeLayer(marker); }
-    marker = L.marker(e.latlng).addTo(map);
-    document.getElementById('lat').value = e.latlng.lat.toFixed(6);
-    document.getElementById('lng').value = e.latlng.lng.toFixed(6);
-  });
-  if (navigator.geolocation) {
-    navigator.geolocation.getCurrentPosition(function (pos) {
-      map.setView([pos.coords.latitude, pos.coords.longitude], 13);
-    }, function () {});
+  var form = document.querySelector('form.form');
+  var addr = document.getElementById('address-input');
+  var err = document.getElementById('address-error');
+  if (!form || !addr || !err) return;
+  var MSG = 'We need the street address \u2014 e.g. 123 Main St \u2014 so visitors can find it on the map.';
+  function looksLikeStreetAddress(v) {
+    return /^\d{1,6}[A-Za-z]?\s+\S+.*[A-Za-z]/.test((v || '').trim());
   }
+  form.addEventListener('submit', function (e) {
+    if (!looksLikeStreetAddress(addr.value)) {
+      e.preventDefault();
+      err.textContent = MSG;
+      err.style.display = '';
+      err.style.color = 'var(--danger)';
+      addr.focus();
+      addr.scrollIntoView({ block: 'center' });
+    }
+  });
+  addr.addEventListener('input', function () { err.style.display = 'none'; });
 })();
 </script>
 {% endblock %}
