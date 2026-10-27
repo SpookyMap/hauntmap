@@ -5828,3 +5828,39 @@ main.wrap:has(> .vt-tv-strip-bottom) { padding-bottom: 0; }
     position: relative; left: 50%; transform: translateX(-50%);
   }
 }
+
+/* ============ z175: FRANKENSTEIN CENTRED TO MIRROR THE LOGO (Dan, Oct 26) ====
+   Dan: "Let's center Frankenstein image on the right as well on the
+   top right of the banner." Frankenstein was already centred in his
+   own 130px flank zone (z68): his box IS the zone (130 x 93) and the
+   picture centres in it via object-fit (rig-measured content 99.6 x
+   93, centre = zone centre = 65px in from the band's right edge at
+   every desktop size). But z172 deliberately moved the LOGO off its
+   zone centre onto the Events column axis, so after z172 the banner
+   flanks were no longer mirror images: the logo's centre sat 91.66 /
+   83.33 / 76.66px in from the band's left edge (>=1200 / 1000-1199 /
+   761-999) while Frankenstein's sat 65px in from the right — a
+   symmetry delta of exactly the z172 shift (rig-measured on the z172
+   tree: +26.66 / +18.33 / +11.66px). The mirror fix shifts Franken-
+   stein LEFT by the same per-band amounts, putting his centre the
+   same distance in from the right edge as the logo's is from the
+   left; symmetry delta 0.00px at 1440x900, 1512x982, 1280x720,
+   1920x1080, 1100x800 and 900x700 (rig-verified). His size, the zone
+   structure, the hook band's centre, the logo's z172 position and
+   all header heights are untouched — a transform moves no layout.
+   No contact risk: his picture sits 15.2px inside his box, so after
+   the largest shift its left edge still clears the centre column by
+   ~2.9px. Vertical needs nothing: both flanks already measure 0.00px
+   off the band's vertical centre. Scoped to the same (min-width:
+   761px) and (min-height: 501px) bands as z172 — phone (<=760) and
+   compact landscape render byte-identical (phone rect dump verified
+   identical). */
+@media (min-width: 761px) and (min-height: 501px) {
+  .header-band .header-frank { transform: translateX(-11.66px); }
+}
+@media (min-width: 1000px) and (min-height: 501px) {
+  .header-band .header-frank { transform: translateX(-18.33px); }
+}
+@media (min-width: 1200px) and (min-height: 501px) {
+  .header-band .header-frank { transform: translateX(-26.66px); }
+}
