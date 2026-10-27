@@ -4,6 +4,7 @@ Schema note: votes are a plain counter; the one-vote-per-browser rule is
 enforced with cookies in main.py (a soft limit, documented there).
 """
 import sqlite3
+from datetime import datetime, timezone
 from pathlib import Path
 
 # Editor's-pick pins (Dan, Oct 23): hand-picked "feature as Top 10"
@@ -137,6 +138,18 @@ CREATE TABLE IF NOT EXISTS entries (
 );
 CREATE INDEX IF NOT EXISTS idx_entries_town ON entries(town);
 CREATE INDEX IF NOT EXISTS idx_entries_votes ON entries(votes DESC);
+CREATE TABLE IF NOT EXISTS entry_videos (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    entry_id INTEGER NOT NULL REFERENCES entries(id) ON DELETE CASCADE,
+    video_id TEXT NOT NULL,          -- TikTok video id (the dedupe key)
+    url TEXT NOT NULL,               -- canonical TikTok /video/ URL
+    creator TEXT,                    -- @handle parsed from the URL
+    cover_path TEXT,                 -- optional per-video cover frame (site path, e.g. /static/img/tt_<id>.jpg); NULL = fall back to the pin's own thumbnail
+    position INTEGER NOT NULL DEFAULT 0, -- 0 = primary; position 0 always mirrors entries.tiktok_url
+    created_at TEXT NOT NULL,
+    UNIQUE(entry_id, video_id)
+);
+CREATE INDEX IF NOT EXISTS idx_entry_videos_entry ON entry_videos(entry_id, position);
 CREATE TABLE IF NOT EXISTS page_views (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     path TEXT NOT NULL,                   -- URL path visited, e.g. "/" or "/d/5"
@@ -507,6 +520,135 @@ def get_conn(db_path: Path) -> sqlite3.Connection:
     return conn
 
 
+# ------------------------------------------------------- entry videos
+# Multi-video pins (Dan, Oct 27): every video of a place lives on that
+# place's ONE pin. entry_videos is the full ordered list; position 0 is
+# the primary and always mirrors entries.tiktok_url, which stays the
+# field boards / cards / search read (zero behaviour change for the
+# one-video pins that make up nearly the whole site).
+
+def tiktok_video_id(url: str | None) -> str | None:
+    """The numeric video id in a TikTok /video/ URL, else None."""
+    if not url or "/video/" not in url:
+        return None
+    vid = url.split("/video/", 1)[1].split("?")[0].split("/")[0].strip()
+    return vid or None
+
+
+def tiktok_creator(url: str | None) -> str | None:
+    """The @handle in a TikTok URL, else None."""
+    if not url or "/@" not in url:
+        return None
+    handle = url.split("/@", 1)[1].split("/")[0].split("?")[0].strip()
+    return handle or None
+
+
+def get_entry_videos(conn: sqlite3.Connection, entry_id: int) -> list[dict]:
+    """An entry's videos, primary first (position order)."""
+    rows = conn.execute(
+        "SELECT * FROM entry_videos WHERE entry_id = ? ORDER BY position, id",
+        (entry_id,),
+    ).fetchall()
+    return [dict(r) for r in rows]
+
+
+def _renumber_entry_videos(conn: sqlite3.Connection, entry_id: int) -> None:
+    rows = conn.execute(
+        "SELECT id FROM entry_videos WHERE entry_id = ? ORDER BY position, id",
+        (entry_id,),
+    ).fetchall()
+    for pos, r in enumerate(rows):
+        conn.execute(
+            "UPDATE entry_videos SET position = ? WHERE id = ?", (pos, r["id"])
+        )
+
+
+def _insert_entry_video(conn: sqlite3.Connection, entry_id: int, url: str,
+                        position: int, cover_path: str | None = None) -> None:
+    conn.execute(
+        "INSERT INTO entry_videos "
+        "(entry_id, video_id, url, creator, cover_path, position, created_at) "
+        "VALUES (?, ?, ?, ?, ?, ?, ?)",
+        (entry_id, tiktok_video_id(url), url, tiktok_creator(url), cover_path,
+         position, datetime.now(timezone.utc).isoformat()),
+    )
+
+
+def add_entry_video(conn: sqlite3.Connection, entry_id: int, url: str,
+                    cover_path: str | None = None) -> bool:
+    """Append a TikTok video to an entry's list. Dedupe by video id —
+    re-adding a video the pin already carries is a no-op (False).
+
+    First video of an entry whose entries.tiktok_url is empty also
+    fills that primary mirror (fill-if-empty, the pin-116 rule: an
+    existing primary is never overwritten). If the entry has a primary
+    but no list yet, the primary is seeded as position 0 before the
+    append. Appends never touch entries.tiktok_url otherwise."""
+    vid = tiktok_video_id(url)
+    if not vid:
+        return False
+    row = conn.execute(
+        "SELECT tiktok_url FROM entries WHERE id = ?", (entry_id,)
+    ).fetchone()
+    if row is None:
+        return False
+    videos = get_entry_videos(conn, entry_id)
+    if any(v["video_id"] == vid for v in videos):
+        return False
+    if not videos:
+        primary = (row["tiktok_url"] or "").strip()
+        pid = tiktok_video_id(primary)
+        if pid and pid != vid:
+            _insert_entry_video(conn, entry_id, primary, 0)
+            videos = get_entry_videos(conn, entry_id)
+        elif not pid:
+            conn.execute(
+                "UPDATE entries SET tiktok_url = ? WHERE id = ?", (url, entry_id)
+            )
+    _insert_entry_video(conn, entry_id, url, len(videos), cover_path)
+    return True
+
+
+def set_entry_primary_video(conn: sqlite3.Connection, entry_id: int,
+                            url: str | None) -> None:
+    """Re-sync entry_videos after an admin edit of entries.tiktok_url.
+
+    A /video/ URL becomes position 0 (the previous primary row is
+    replaced; the rest of the list keeps its order behind it). An
+    empty value clears the pin's whole video list — the admin-edit
+    mental model is still "the pin's TikTok", singular. Either way
+    entries.tiktok_url ends as the position-0 mirror."""
+    if url:
+        url = url.strip() or None
+    vid = tiktok_video_id(url)
+    if vid is None:
+        if url:
+            # Non-video TikTok URL (e.g. a live room): it lives only in
+            # the mirror — the video list is not embeddable-video data.
+            conn.execute(
+                "UPDATE entries SET tiktok_url = ? WHERE id = ?", (url, entry_id)
+            )
+            return
+        conn.execute("DELETE FROM entry_videos WHERE entry_id = ?", (entry_id,))
+        conn.execute(
+            "UPDATE entries SET tiktok_url = NULL WHERE id = ?", (entry_id,)
+        )
+        return
+    conn.execute(
+        "DELETE FROM entry_videos WHERE entry_id = ? AND position = 0",
+        (entry_id,),
+    )
+    conn.execute(
+        "DELETE FROM entry_videos WHERE entry_id = ? AND video_id = ?",
+        (entry_id, vid),
+    )
+    _insert_entry_video(conn, entry_id, url, 0)
+    _renumber_entry_videos(conn, entry_id)
+    conn.execute(
+        "UPDATE entries SET tiktok_url = ? WHERE id = ?", (url, entry_id)
+    )
+
+
 def init_db(db_path: Path) -> None:
     db_path.parent.mkdir(parents=True, exist_ok=True)
     with get_conn(db_path) as conn:
@@ -593,6 +735,33 @@ def init_db(db_path: Path) -> None:
             "UPDATE entries SET tiktok_url = ? "
             "WHERE id = 116 AND (tiktok_url IS NULL OR TRIM(tiktok_url) = '')",
             ("https://www.tiktok.com/@suzebauer/video/7691338318004440350",),
+        )
+        # Multi-video pins (Dan, Oct 27): backfill entry_videos from the
+        # existing primaries — every entry's current tiktok_url becomes
+        # position 0 of its list. The UNIQUE(entry_id, video_id) key +
+        # INSERT OR IGNORE make later boots no-ops; entries.tiktok_url
+        # itself is untouched (it stays the primary mirror).
+        for r in conn.execute(
+                "SELECT id, tiktok_url, created_at FROM entries "
+                "WHERE tiktok_url LIKE '%/video/%'").fetchall():
+            vid = tiktok_video_id(r["tiktok_url"])
+            if not vid:
+                continue
+            conn.execute(
+                "INSERT OR IGNORE INTO entry_videos "
+                "(entry_id, video_id, url, creator, cover_path, position, created_at) "
+                "VALUES (?, ?, ?, ?, NULL, 0, ?)",
+                (r["id"], vid, r["tiktok_url"],
+                 tiktok_creator(r["tiktok_url"]), r["created_at"]),
+            )
+        # Dan-sent video append (Oct 27): Al Chile's OWN TikTok joins
+        # its one pin (5974) as a second video — @nayecorea00's video
+        # stays primary (it was there first). add_entry_video dedupes
+        # by video id, so repeat boots are no-ops and the primary is
+        # never touched.
+        add_entry_video(
+            conn, 5974,
+            "https://www.tiktok.com/@alchilebarmexican/video/7695615821242027277",
         )
         if "is_handpicked" not in cols:
             # Hand-picked feed boost (Dan, Oct 23): pins Dan personally

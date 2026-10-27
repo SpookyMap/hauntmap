@@ -41,7 +41,8 @@ from starlette.concurrency import run_in_threadpool
 from starlette.middleware.gzip import GZipMiddleware
 from PIL import Image, ImageOps, UnidentifiedImageError
 
-from .db import get_conn, init_db
+from .db import (get_conn, init_db, add_entry_video, get_entry_videos,
+                 set_entry_primary_video, tiktok_video_id)
 from . import sms_alerts
 from . import push as push_mod
 from . import bracket as brk
@@ -5530,6 +5531,11 @@ async def upload_submit(
                      address or None, description or None, is_virtual),
                 )
                 new_id = cur.lastrowid
+                # Multi-video pins (Oct 27): the uploaded pin's TikTok
+                # becomes position 0 of its entry_videos list (the
+                # tiktok_url column set above stays the primary mirror).
+                if tiktok_url:
+                    add_entry_video(conn, new_id, tiktok_url)
                 conn.commit()
             return new_id, None
 
@@ -5777,6 +5783,15 @@ def detail(request: Request, entry_id: int):
     entry = get_entry(entry_id)
     if not entry or entry["hidden"]:
         raise HTTPException(404, "Entry not found.")
+    # Multi-video pins (Oct 27): the primary (entries.tiktok_url) plays
+    # in the hero; every OTHER video of this place renders below it in
+    # the "More videos of this place" facades. Empty for the one-video
+    # pins that make up nearly the whole site — the page is unchanged
+    # for them.
+    with get_conn(DB_PATH) as conn:
+        _all_videos = get_entry_videos(conn, entry_id)
+    _primary_vid = tiktok_video_id(entry.get("tiktok_url"))
+    extra_videos = [v for v in _all_videos if v["video_id"] != _primary_vid]
     voted = f"voted_{entry_id}" in request.cookies
     reported = f"reported_{entry_id}" in request.cookies
     with get_conn(DB_PATH) as conn:
@@ -5864,6 +5879,7 @@ def detail(request: Request, entry_id: int):
     # count on video cards.
     return templates.TemplateResponse(request, "detail.html",
         {"request": request, "entry": entry, "voted": voted, "reported": reported,
+         "extra_videos": extra_videos,
          "is_venue": entry["category"] in VENUE_CATS,
          "tips": tips, "scare_counts": scare_counts, "scare_total": scare_total,
          "scare_pick": scare_pick, "next_pin": effective_next_pin,
@@ -9547,6 +9563,14 @@ async def admin_edit(entry_id: int, request: Request):
     with get_conn(DB_PATH) as conn:
         conn.execute(f"UPDATE entries SET {set_sql} WHERE id = ?",
                      (*updates.values(), entry_id))
+        # Multi-video pins (Oct 27): keep entry_videos in sync with an
+        # edited primary — a new /video/ URL takes position 0 (the rest
+        # of the list stays as more-videos), an emptied field clears
+        # the list, a non-video URL (live room) leaves the list alone.
+        if "tiktok_url" in updates:
+            tt_new = updates["tiktok_url"]
+            if not tt_new or "/video/" in tt_new:
+                set_entry_primary_video(conn, entry_id, tt_new)
         conn.commit()
     return JSONResponse({"ok": True, "id": entry_id, "updated": updates})
 
