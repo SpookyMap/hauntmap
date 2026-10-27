@@ -5656,7 +5656,7 @@ main.wrap:has(> .vt-tv-strip-bottom) { padding-bottom: 0; }
   .adv-strip .adv-line-b { opacity: 0; }
 }
 
-/* ============ z170: BUILD YOUR NIGHT ROUTE ART (Dan, Oct 26) ============
+/* ============ z171: BUILD YOUR NIGHT ROUTE ART (Dan, Oct 26) ============
    Dan's circular route badge is redrawn as an inline SVG
    behind ONLY the existing .hook-line.alt span that contains
    "Build Your Night." The SVG is absolutely positioned, so it adds no
@@ -5678,7 +5678,18 @@ main.wrap:has(> .vt-tv-strip-bottom) { padding-bottom: 0; }
    (phone ≈115×26, laptop ≈210×44, vs z169's 132×29 / 240×52), and
    the whole scene is faded to 0.76 opacity so it reads as a subtle
    backdrop. The words themselves are untouched: same size, color
-   and position, full strength. */
+   and position, full strength.
+   z171 border removal (Dan, Oct 26: "Take away the bubble border
+   around 'build your night' — just the images in the background
+   stay"): the SVG's rounded night-purple field panel (gradient
+   rect + neon rim) and the dark center scrim band are deleted from
+   base.html, so NO boxed background sits behind the phrase at all.
+   Only the scene imagery floats on the header's own background:
+   the glowing dashed route, the three houses, the checkered flag,
+   the jack-o'-lantern and the faint free-form topo contours (they
+   never traced the panel shape). These CSS rules are unchanged —
+   same tight box, same 0.76 fade; only the stylesheet version
+   moved so browsers pick up the new base.html/SVG. */
 .header-band .header-hook .byn-art {
   position: relative;
   isolation: isolate;
