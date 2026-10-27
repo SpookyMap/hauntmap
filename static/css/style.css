@@ -6252,3 +6252,24 @@ main.wrap:has(> .vt-tv-strip-bottom) { padding-bottom: 0; }
   .chat-pin-text { font-size: 0.9rem; }
   .chat-send { padding: 0.7rem 0.9rem; }
 }
+
+/* ============ z193: CHATROOM CAPTION FITS THE PROFILE CARD (Dan, Oct 27) ====
+   Dan: "shrink 'Join before Halloween and get access to our HauntSocial
+   Chatroom!' to fit under the profile block." At z191 the caption ran
+   the full preview half on ONE line (~500px) while Frank's card above
+   it renders ~408px wide (height-capped at 430px), so the sentence
+   stuck out past both edges of the card. The caption is now capped to
+   the card's own width — min(407px, 100%) tracks the card exactly:
+   when the half is roomy the card sits at its 407.8px cap and so does
+   the caption; when the half narrows, the card shrinks to the half and
+   the caption's 100% ceiling shrinks with it. The sentence wraps to
+   two balanced lines under the card instead of shrinking the font;
+   the laptop size even comes UP a touch (0.72rem -> 0.75rem) for
+   legibility. Eater / azure / blue-glow treatment, card, and the
+   50/50 geometry untouched; the caption stays centered on the card's
+   center (both are centered flex items in .social-promo-shot). */
+.social-promo-shot-cap { max-width: min(407px, 100%); margin-inline: auto;
+  text-wrap: balance; }
+@media (min-width: 761px) {
+  .social-promo-shot-cap { font-size: 0.75rem; }
+}
