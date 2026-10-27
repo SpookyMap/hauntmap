@@ -6161,7 +6161,22 @@ main.wrap:has(> .vt-tv-strip-bottom) { padding-bottom: 0; }
    Preview card untouched (still perfectly straight). */
 .social-promo-main { justify-content: space-between; }
 
-/* ============ z191: HAUNT CHAT (Dan, Oct 27 — STAGED) ================
+/* ============ z191: CHATROOM CAPTION IN THE WORDMARK FACE (Dan, Oct 27) ============
+   Dan: "Make the text under the profile picture 'Join before Halloween
+   and get access to our HauntSocial Chatroom!' in the same font as the
+   HauntSocial font." The caption under Frank's profile preview now
+   carries the block wordmark's exact treatment — Eater, azure #8FD8FF,
+   the same blue glow stack as .social-promo-wordmark. Eater is a wide
+   drip display face, so the size is tuned (measured) to hold the long
+   sentence on ONE line across the preview half on laptop and wrap
+   tidily on phone; line-height leaves room for the drips. Card,
+   caption text and the 50/50 geometry untouched. */
+.social-promo-shot-cap { font-family: "Eater", cursive; font-weight: 400;
+  text-transform: none; letter-spacing: 0.01em; line-height: 1.35;
+  color: #8fd8ff; width: 100%;
+  text-shadow: 0 0 16px rgba(87, 168, 255, 0.55), 0 0 44px rgba(87, 168, 255, 0.30), 0 2px 0 rgba(0, 0, 0, 0.5);
+  font-size: 0.72rem; }
+/* ============ z192: HAUNT CHAT (Dan, Oct 27) ================
    /chat — the members-only HauntSocial chat room with a public teaser.
    Azure/blue-glow HauntSocial branding on the site's dark cards; the
    room is a self-contained panel (message list scrolls internally,
