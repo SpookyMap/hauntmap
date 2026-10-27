@@ -69,23 +69,26 @@ CARD_THUMB_W, CARD_THUMB_H = 480, 360
 CARD_THUMB_DIR = THUMB_DIR / "card"
 ORIG_MAX_EDGE = 1920  # stored photo originals are capped at this long edge
 
-CATEGORIES = ("halloween", "christmas", "halloween_stores", "restaurants", "coffee", "shops", "parks", "haunted_houses", "events", "live")
+CATEGORIES = ("halloween", "christmas", "halloween_stores", "restaurants", "coffee", "shops", "parks", "hotels", "haunted_houses", "events", "live")
 CAT_LABELS = {"halloween": "Halloween", "christmas": "Christmas",
               "halloween_stores": "Halloween Stores",
               "restaurants": "Restaurhaunts", "coffee": "Coffee & Cafes",
-              "shops": "Shops", "parks": "Parks",
+              "shops": "Shops", "parks": "Parks", "hotels": "Hotels",
               "haunted_houses": "Haunted Houses",
               "events": "Events", "live": "Live Streams"}
 CAT_EMOJI = {"halloween": "🎃", "christmas": "🎄", "halloween_stores": "👻",
              "restaurants": "🍽️", "coffee": "☕", "shops": "🛍️", "parks": "🌳",
+             "hotels": "🏨",
              "haunted_houses": "🏚️", "events": "🎪", "live": "🔴"}
 
 # Venue categories (Dan, Oct 25): food/drink/retail listings — the
 # Restaurhaunts set (restaurants, coffee, shops) plus Halloween stores.
+# Hotels joined Oct 27 (Dan): spooky/historic places to stay are Tour
+# Fuel too — they extend a haunt tour like any other venue stop.
 # Venues are tour stops, not haunts: their detail pages render no
 # Scare-O-Meter and no haunt vote, and the vote/scare POST endpoints
 # refuse venue entries server-side.
-VENUE_CATS = ("restaurants", "coffee", "shops", "halloween_stores")
+VENUE_CATS = ("restaurants", "coffee", "shops", "halloween_stores", "hotels")
 
 # Just-added ticker categories (Dan, Oct 26): the homepage "🆕 Just
 # Added" crawl is reserved for new haunts + events only — halloween
@@ -7822,6 +7825,7 @@ MEDIA_KIT_CATEGORY_LABELS = [
     ("coffee", "Coffee & cafes"),
     ("shops", "Shops"),
     ("parks", "Parks"),
+    ("hotels", "Hotels"),
     ("live", "Live"),
 ]
 
@@ -12706,7 +12710,7 @@ _FRANK_NEWS_NOUNS = {
     "halloween": "haunt", "events": "event",
     "halloween_stores": "Halloween store", "live": "live room",
     "restaurants": "restaurhaunt", "coffee": "spooky coffee spot",
-    "shops": "shop", "parks": "haunted park",
+    "shops": "shop", "parks": "haunted park", "hotels": "hotel",
     "haunted_houses": "haunted house", "christmas": "holiday display",
 }
 
