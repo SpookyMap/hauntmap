@@ -139,6 +139,11 @@ def _startup() -> None:
     except Exception:
         # The mascot host is a courtesy layer — never break boot over it.
         logger.exception("HauntSocial boot (Frank ensure/backfill) failed")
+    try:
+        _apply_pin_coord_fixes()
+    except Exception:
+        # One-time data correction — never break boot over it.
+        logger.exception("Pin coord fixes failed")
 
 
 @app.on_event("shutdown")
@@ -8934,6 +8939,58 @@ def _frank_follow_and_welcome(conn, new_user_id: int) -> None:
         "INSERT INTO wall_comments (profile_user_id, author_user_id, "
         "text, sticker, created_at) VALUES (?, ?, ?, ?, ?)",
         (new_user_id, frank_id, FRANK_WELCOME, "🎃", now))
+
+
+# One-time coordinate corrections (Dan approved Oct 26, 2026; from the
+# 2026-10-26 address cleanup — hidden_files/address-cleanup-2026-10-26/
+# CHANGELOG.md): these pins' stored coords plot in the wrong town while
+# their verified street addresses are correct, and /admin/edit cannot
+# write lat/lng, so the fix ships as a guarded boot-time data patch.
+# Every target was re-verified against a fresh forward geocode of the
+# pin's own address (house/street-number match in the stated town)
+# before shipping. Two more pins from the cleanup's flag list (4876,
+# 4733) were checked and deliberately EXCLUDED: their stored dots
+# proved correct (venue/source coords + address ZIP agree) — the
+# cleanup's geocoder had matched a same-named street across town.
+PIN_COORD_FIXES: dict[int, tuple[float, float]] = {
+    1998: (33.7327901, -84.373733),    # 800 Cherokee Ave SE, Atlanta, GA (dot was in Louisville, KY)
+    3873: (36.1805135, -86.2997785),   # 7040 Murfreesboro Road, Lebanon, TN 37090
+    5137: (41.5637236, -88.2993717),   # 3305 Caton Farm Rd, Joliet, IL 60431
+    5140: (39.5660658, -105.0355237),  # 7877 Elmwood St, Littleton, CO (Wolhurst segment)
+    5405: (39.610876, -75.6587366),    # 3570 Red Lion Rd, Bear, DE 19701
+    4649: (38.8524501, -104.7968836),  # 7102 Palmer Park Blvd, Colorado Springs, CO 80909
+    5582: (45.4193154, -122.4626114),  # 11740 SE Sunnyside Rd, Damascus, OR 97015
+    4276: (27.832393, -82.7593773),    # 12190 66th Ave N, Seminole, FL 33772
+    4737: (47.6855673, -122.1012804),  # 13817 180th Ave NE, Redmond, WA 98052
+    336: (40.6814933, -73.3689508),    # 417 South 1st Street, Lindenhurst, NY
+    5538: (36.111158, -86.7476142),    # 502 Thompson Ln, Nashville, TN 37211
+    3787: (34.1483499, -118.0014517),  # 223 W El Sur St, Monrovia, CA 91016
+    98: (40.7616522, -73.3902444),     # 185 Colonial Springs Rd, Wheatley Heights, NY
+    5766: (40.0696478, -74.0797665),   # 1507 River Ave, Point Pleasant, NJ 08742
+}
+
+
+def _apply_pin_coord_fixes() -> None:
+    """Move the misplaced map dots in PIN_COORD_FIXES onto their pins'
+    verified addresses. Guarded + idempotent: a row is only rewritten
+    while its stored point is still >0.3 mi from the verified point, so
+    reboots are no-ops and a future legitimate re-geocode that lands on
+    the address is never fought."""
+    applied = 0
+    with get_conn(DB_PATH) as conn:
+        for pid, (lat, lng) in PIN_COORD_FIXES.items():
+            row = conn.execute(
+                "SELECT lat, lng FROM entries WHERE id = ?", (pid,)).fetchone()
+            if not row or row["lat"] is None or row["lng"] is None:
+                continue
+            if haversine_miles(row["lat"], row["lng"], lat, lng) > 0.3:
+                conn.execute(
+                    "UPDATE entries SET lat = ?, lng = ? WHERE id = ?",
+                    (lat, lng, pid))
+                applied += 1
+        conn.commit()
+    if applied:
+        logger.info("Pin coord fixes applied to %d entries", applied)
 
 
 def _hauntsocial_boot() -> None:
