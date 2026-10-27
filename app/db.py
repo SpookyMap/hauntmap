@@ -138,7 +138,12 @@ from pathlib import Path
 #   from Oct 2022 and no 2026 operation is verified — Dan ruled
 #   to post it anyway). Featured only — the hand-picked list is
 #   untouched.)
-FEATURED_ENTRY_IDS = (5541, 5542, 5551, 5584, 5587, 5175, 4370, 5653, 5654, 5655, 5766, 5572, 5940, 6006, 116, 6084, 4932, 6085, 6087, 6088, 6086, 6090, 6089, 6091, 30, 6098, 6096, 1641, 6092, 6100, 6099, 6101, 1239, 5728, 5967, 6095, 6097, 6093, 6094, 6102, 6103, 6105, 6106)
+#   1996 KY Louisville (Oct 27: Dan's "All top 10" burst pick —
+#   Halloween on Hillcrest, 301 Hillcrest Ave; the pin already
+#   existed with no video, so no duplicate was posted and
+#   @geras88jerry's TikTok was attached to it below. Featured
+#   only — the hand-picked list is untouched.)
+FEATURED_ENTRY_IDS = (5541, 5542, 5551, 5584, 5587, 5175, 4370, 5653, 5654, 5655, 5766, 5572, 5940, 6006, 116, 6084, 4932, 6085, 6087, 6088, 6086, 6090, 6089, 6091, 30, 6098, 6096, 1641, 6092, 6100, 6099, 6101, 1239, 5728, 5967, 6095, 6097, 6093, 6094, 6102, 6103, 6105, 6106, 1996)
 
 # Hand-picked pins (Dan, Oct 23): pins Dan personally sent in chat or
 # curated for posting. These lead every feed view — hand-picked first
@@ -970,6 +975,19 @@ def init_db(db_path: Path) -> None:
         add_entry_video(
             conn, 5967,
             "https://www.tiktok.com/@dreadalertmedia/video/7688108507312311583",
+        )
+        # Dan-sent video attach (Oct 27): @geras88jerry's Halloween on
+        # Hillcrest TikTok (posted Oct 27, 2026) joins its one pin
+        # (1996, Halloween on Hillcrest, 301 Hillcrest Ave, Louisville
+        # KY) — the standing one-pin-per-place rule. The pin carried
+        # no video, so add_entry_video fills the empty primary mirror
+        # (fill-if-empty) and lists the video at position 0; it
+        # dedupes by video id, so repeat boots are no-ops. Dan also
+        # featured the pin (FEATURED_ENTRY_IDS) for the Kentucky
+        # Halloween Top 10 — his "All top 10" burst directive.
+        add_entry_video(
+            conn, 1996,
+            "https://www.tiktok.com/@geras88jerry/video/7701197521317563666",
         )
         if "is_handpicked" not in cols:
             # Hand-picked feed boost (Dan, Oct 23): pins Dan personally
