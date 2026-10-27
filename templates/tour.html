@@ -27,7 +27,18 @@
 {% block content %}
 <h2>&#x1F383; My Haunt Tour</h2>
 <p style="color: var(--muted); margin-top: -0.5rem; margin-bottom: 1rem;">Customize your haunt tour just the way you like it — pick your stops, set the order, and hit the road.</p>
-<div class="signup-strip signup-strip-slim">
+<details style="margin-bottom: 1rem; background: var(--card); border: 1px solid #33254f; border-radius: 10px; padding: 0.6rem 0.8rem;">
+  <summary style="cursor: pointer; font-weight: 600;">How Do I Build A Tour &#x2753;</summary>
+  <p style="margin: 0.5rem 0 0; font-size: 0.9rem; color: var(--muted);">
+    1. Browse haunts on the <a href="/">Haunt Map</a><br>
+    2. Tap <strong>"+ Add to my tour"</strong> on any haunt<br>
+    3. Reorder stops with ▲▼<br>
+    4. Pick <strong>Walk</strong> or <strong>Drive</strong><br>
+    5. Hit <strong>Open in Google Maps</strong> and go!
+  </p>
+</details>
+<div id="tour-map"></div>
+<div class="signup-strip signup-strip-slim" style="margin-bottom: 1rem;">
   {% if request.query_params.get('subscribed') %}
   <p class="newsletter-success">&#x1F389; You're in! First word on new haunts near your stops — and first in line for the Jolly Map &#x1F384;</p>
   {% else %}
@@ -40,17 +51,6 @@
   </form>
   {% endif %}
 </div>
-<details style="margin-bottom: 1rem; background: var(--card); border: 1px solid #33254f; border-radius: 10px; padding: 0.6rem 0.8rem;">
-  <summary style="cursor: pointer; font-weight: 600;">How Do I Build A Tour &#x2753;</summary>
-  <p style="margin: 0.5rem 0 0; font-size: 0.9rem; color: var(--muted);">
-    1. Browse haunts on the <a href="/">Haunt Map</a><br>
-    2. Tap <strong>"+ Add to my tour"</strong> on any haunt<br>
-    3. Reorder stops with ▲▼<br>
-    4. Pick <strong>Walk</strong> or <strong>Drive</strong><br>
-    5. Hit <strong>Open in Google Maps</strong> and go!
-  </p>
-</details>
-<div id="tour-map"></div>
 <div class="tour-controls">
   <div class="mode-toggle">
     <button id="mode-walk" class="active">&#x1F6B6; Walk</button>
