@@ -111,7 +111,19 @@ from pathlib import Path
 #   review as its media). Pin 1641 (Hundred Acres Manor) carries
 #   two of their videos and was featured by the burst ship above.
 #   Featured only — the hand-picked list is untouched.)
-FEATURED_ENTRY_IDS = (5541, 5542, 5551, 5584, 5587, 5175, 4370, 5653, 5654, 5655, 5766, 5572, 5940, 6006, 116, 6084, 4932, 6085, 6087, 6088, 6086, 6090, 6089, 6091, 30, 6098, 6096, 1641, 6092, 6100, 6099, 6101, 1239, 5728, 5967, 6095, 6097)
+#   6093 TN Knoxville (Oct 27: the FIRST hotels pin — Hyatt Place
+#   Knoxville/Downtown, 530 S Gay St, the historic 1919 Farragut
+#   Hotel building, via @aboveallmediasc's TikTok. Dan created the
+#   hotels Tour Fuel category for this held link. Featured alone on
+#   the brand-new Tennessee Hotels board. Hotels are venues: no
+#   Scare-O-Meter, no vote. The hand-picked list is untouched.)
+#   6094 WA Spokane (Oct 27: hotels pin #2 — The Historic Davenport
+#   Hotel, 10 S Post St, via @charliesretroreality's ghost-stories
+#   stay video; the haunting (Ellen McNamara, 1920) is genuinely
+#   documented and the hotel runs Davenport After Dark tours.
+#   Featured alone on the brand-new Washington Hotels board. The
+#   hand-picked list is untouched.)
+FEATURED_ENTRY_IDS = (5541, 5542, 5551, 5584, 5587, 5175, 4370, 5653, 5654, 5655, 5766, 5572, 5940, 6006, 116, 6084, 4932, 6085, 6087, 6088, 6086, 6090, 6089, 6091, 30, 6098, 6096, 1641, 6092, 6100, 6099, 6101, 1239, 5728, 5967, 6095, 6097, 6093, 6094)
 
 # Hand-picked pins (Dan, Oct 23): pins Dan personally sent in chat or
 # curated for posting. These lead every feed view — hand-picked first
