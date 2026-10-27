@@ -4082,6 +4082,30 @@ def haunt_or_not_page(request: Request):
 # different game), spooky-bubble-shooter (game file Access Denied),
 # halloween-match / zombie-gems (wrong gameplay / wrong game).
 # Aspect w/h per GamePix feed metadata + the verification pass.
+#
+# iPHONE GAMES RULE (Dan, Oct 27: "Don't feature games on the iPhone
+# that won't play on the iPhone"). Every embeddable game carries an
+# "iphone" flag. Audit of the 12 GamePix titles (arcade + ninja,
+# Oct 27, 2026): ALL 12 verdict PLAYS ON IPHONE — evidence per title:
+# GamePix catalog feed touch=true + responsive=true (where the title
+# appears in the feed) and GamePix's own game page JSON-LD
+# availableOnDevice includes "Mobile" with a Mobile platform line
+# (all 12 checked individually); every control scheme is pointer-
+# native (tap / drag / swipe — no keyboard-only title in the set).
+# Weakest file: chaos-zombie-tower-defense, whose How-to-Play text is
+# mouse-worded ("played entirely with the mouse", drag & drop) — it
+# still carries GamePix's Mobile platform listing and its mechanic is
+# pointer drag, which HTML5 touch handles natively. Ghost Maze (first
+# party) also PLAYS: swipe-on-stage + an on-screen D-pad (pointerdown)
+# ship in ghost_maze.js next to the keyboard controls. Because no
+# current title fails, every flag below ships True and the iOS
+# demotion in games.html (data-iphone="0" cards sink below the
+# "Plays best on a computer or tablet" divider, never featured) is
+# armed but invisible today. CLASSIFYING A NEW TITLE: set "iphone"
+# only after the same three checks (catalog touch flag, vendor page
+# Mobile listing, vendor-documented touch controls); if any check
+# fails or is unverifiable, ship the flag False — it will still list
+# on desktop and sink on iPhone.
 PORTAL_GAMES = [
     {"iphone": True, "slug": "halloween-bubble-shooter",
      "img": "https://img.gamepix.com/games/halloween-bubble-shooter/cover/halloween-bubble-shooter.png?w=512",
@@ -4531,6 +4555,106 @@ ROBLOX_GAMES = [
 ]
 
 
+# ------------------------------------------------- iphone games shelf
+# IPHONE GAMES (Dan, Oct 27, scope addition: "We'll find other games
+# for the iPhone"). Every title below passed the SAME audit the
+# iPhone Games Rule applies to the existing catalog (audit summary in
+# the comment over PORTAL_GAMES):
+#   * GamePix catalog feed: touch=true AND responsive=true;
+#   * GamePix's own game page: JSON-LD availableOnDevice includes
+#     "Mobile" and the Platform line lists Mobile;
+#   * the vendor's own How-to-Play text documents a TOUCH path
+#     (tap / touchscreen / finger / drag) -- metadata alone is NOT
+#     enough (see the rejects);
+#   * embed endpoint + cover art verified HTTP 200 on Oct 27, 2026.
+# On iPhone this shelf LEADS /games (games.html moves it above the
+# Halloween Arcade client-side); on desktop it joins the page as a
+# normal shelf and changes nothing about the existing featuring.
+#
+# REJECTED at the same bar (do not add without re-verifying a touch
+# path): moto-maniac-2 (vendor instructions are keyboard-only --
+# arrows / WASD / P -- despite a Mobile device listing),
+# boss-level-pumpkin-madness (movement is arrow keys + Z key),
+# basketball-stars (keyboard controls, shared-keyboard 2-player).
+# These rejects are the proof the audit bites: a Mobile flag in
+# metadata does not earn a slot.
+IPHONE_GAMES = [
+    {"iphone": True, "slug": "bw-pumpkin",
+     "img": "https://img.gamepix.com/games/bw-pumpkin/cover/bw-pumpkin.png?w=512",
+     "title": "BW Pumpkin",
+     "blurb": "A black-and-white endless jumper with a Halloween "
+              "heart: tap to make the pumpkin leap the gaps -- "
+              "higher, faster, longer, if your timing holds.",
+     "tag": "Arcade jumper \u00b7 tap controls", "w": 480, "h": 320},
+    {"iphone": True, "slug": "candy-bubble",
+     "img": "https://img.gamepix.com/games/candy-bubble/cover/candy-bubble.png?w=512",
+     "title": "Candy Bubble",
+     "blurb": "A sweet spin on the classic bubble shooter: aim, "
+              "fire and pop trios of candy bubbles to clear the board.",
+     "tag": "Bubble shooter \u00b7 portrait play", "w": 320, "h": 480},
+    {"iphone": True, "slug": "candy-monsters",
+     "img": "https://img.gamepix.com/games/candy-monsters/cover/candy-monsters.png?w=512",
+     "title": "Candy Monsters",
+     "blurb": "Feed each little monster the candy in its own color -- "
+              "and keep the wrong colors away from the wrong mouths.",
+     "tag": "Arcade puzzle \u00b7 portrait play", "w": 320, "h": 480},
+    {"iphone": True, "slug": "angry-monsters",
+     "img": "https://img.gamepix.com/games/angry-monsters/cover/angry-monsters.png?w=512",
+     "title": "Angry Monsters",
+     "blurb": "Physics-fling monster mayhem: topple every tower and "
+              "squash the critters across ten stages of careful chaos.",
+     "tag": "Arcade physics", "w": 480, "h": 320},
+    {"iphone": True, "slug": "candy-star-jelly-saga",
+     "img": "https://img.gamepix.com/games/candy-star-jelly-saga/cover/candy-star-jelly-saga.png?w=512",
+     "title": "Candy Star Jelly Saga",
+     "blurb": "Match-3 candy swapping across 200+ levels of "
+              "jelly-bright puzzles -- plan the swap, chase the combo.",
+     "tag": "Match-3 puzzle \u00b7 portrait play", "w": 320, "h": 480},
+    {"iphone": True, "slug": "candy-slingshot",
+     "img": "https://img.gamepix.com/games/candy-slingshot/cover/candy-slingshot.png?w=512",
+     "title": "Candy SlingShot",
+     "blurb": "Tap, drag and let fly: slingshot candies into the "
+              "targets, grab every star and dodge the hazards.",
+     "tag": "Slingshot arcade \u00b7 portrait play", "w": 320, "h": 480},
+    {"iphone": True, "slug": "block-puzzle-jewel",
+     "img": "https://img.gamepix.com/games/block-puzzle-jewel/cover/block-puzzle-jewel.png?w=512",
+     "title": "Block Puzzle Jewel",
+     "blurb": "Fit the jewel blocks, complete the lines and keep "
+              "the board from filling -- a calm, clever block puzzler.",
+     "tag": "Block puzzle \u00b7 portrait play", "w": 320, "h": 480},
+    {"iphone": True, "slug": "2048-x2-merge-blocks",
+     "img": "https://img.gamepix.com/games/2048-x2-merge-blocks/cover/2048-x2-merge-blocks.png?w=512",
+     "title": "2048 X2 Merge Blocks",
+     "blurb": "2048 meets falling blocks: tap a column, drop the "
+              "number and merge your way to bigger and bigger tiles.",
+     "tag": "Merge puzzle \u00b7 portrait play", "w": 320, "h": 480},
+    {"iphone": True, "slug": "bouncy-dunk",
+     "img": "https://img.gamepix.com/games/bouncy-dunk/cover/bouncy-dunk.png?w=512",
+     "title": "Bouncy Dunk",
+     "blurb": "One tap launches the ball -- time the bounce, swish "
+              "the moving hoop and keep the streak (and coins) coming.",
+     "tag": "Arcade sports \u00b7 portrait play", "w": 320, "h": 480},
+    {"iphone": True, "slug": "3d-darts",
+     "img": "https://img.gamepix.com/games/3d-darts/cover/3d-darts.png?w=512",
+     "title": "3D Darts",
+     "blurb": "Tap to aim, release to throw: 3D darts duels with "
+              "wind to read, opponents to beat and levels by the hundred.",
+     "tag": "Sports \u00b7 portrait play", "w": 320, "h": 480},
+    {"iphone": True, "slug": "babel-tower",
+     "img": "https://img.gamepix.com/games/babel-tower/cover/babel-tower.png?w=512",
+     "title": "Babel Tower",
+     "blurb": "Build the Tower of Babel one tap at a time -- mine, "
+              "craft and automate your crew's climb to the sky.",
+     "tag": "Strategy builder", "w": 480, "h": 320},
+    {"iphone": True, "slug": "a-mole-in-a-hole",
+     "img": "https://img.gamepix.com/games/a-mole-in-a-hole/cover/a-mole-in-a-hole.png?w=512",
+     "title": "A Mole in a Hole",
+     "blurb": "Study the map, then dig the route from memory -- a "
+              "forgetful mole needs your brain to get home for dinner.",
+     "tag": "Memory puzzle \u00b7 portrait play", "w": 320, "h": 480},
+]
+
+
 @app.get("/games", response_class=HTMLResponse)
 def games_page(request: Request):
     return templates.TemplateResponse(
@@ -4541,7 +4665,8 @@ def games_page(request: Request):
                                 "minecraft_games": MINECRAFT_GAMES,
                                 "minecraft_stores": MINECRAFT_DUNGEONS_STORES,
                                 "minecraft_trailer": MINECRAFT_TRAILER,
-                                "roblox_games": ROBLOX_GAMES})
+                                "roblox_games": ROBLOX_GAMES,
+                                "iphone_games": IPHONE_GAMES})
 
 
 # ------------------------------------------------------------- ghost maze

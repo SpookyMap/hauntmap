@@ -31,6 +31,14 @@ a.portal-facade { text-decoration: none; }
 .portal-go { position: absolute; left: 50%; bottom: 0.55rem; transform: translateX(-50%); z-index: 1; background: rgba(10, 22, 40, 0.85); border: 1.5px solid #57c84c; color: #eaf6ff; font-weight: 800; font-size: 0.82rem; padding: 0.32rem 0.8rem; border-radius: 999px; white-space: nowrap; }
 a.portal-facade:hover .portal-go, a.portal-facade:focus-visible .portal-go { background: rgba(24, 66, 20, 0.92); }
 .games-sec-intro { color: var(--muted); margin: 0.1rem 0 0.4rem; line-height: 1.45; }
+/* iPhone Games Rule (Dan, Oct 27): on iPhone, embed cards flagged
+   data-iphone="0" sink below this divider and the touch-verified
+   shelf leads the page. Both treatments are client-side only
+   (games.html footer script); desktop markup is untouched. */
+.games-demoted-divider { display: flex; align-items: center; gap: 0.7rem; margin: 1.3rem 0 0.9rem; color: var(--muted); font-weight: 700; font-size: 0.95rem; }
+.games-demoted-divider::before, .games-demoted-divider::after { content: ""; flex: 1; border-top: 1.5px dashed rgba(143, 216, 255, 0.35); }
+.games-featured-pill { display: none; margin-left: 0.55rem; vertical-align: middle; font-size: 0.72rem; font-weight: 800; letter-spacing: 0.02em; color: #06121c; background: var(--accent2); border-radius: 999px; padding: 0.18rem 0.55rem; }
+body.ios-iphone .games-featured-pill { display: inline-block; }
 /* Minecraft + Roblox shelves (Dan, Oct 27): creeper-green and
    Roblox-red glow variants of the section-nav buttons. The Minecraft
    shelf's headliner card (Dungeons, the game Dan named first) spans
@@ -103,6 +111,13 @@ a.portal-facade:hover .portal-go, a.portal-facade:focus-visible .portal-go { bac
       <span class="gnb-sub">DOORS, Piggy &amp; more &mdash; play on Roblox</span>
     </span>
   </a>
+  <a class="games-nav-btn" href="#iphone-games">
+    <span class="gnb-icon" aria-hidden="true">&#x1F4F1;</span>
+    <span class="gnb-text">
+      <span class="gnb-label">iPhone Games</span>
+      <span class="gnb-sub">Touch-verified &mdash; play right here</span>
+    </span>
+  </a>
 </div>
 
 {# PORTAL CATALOG (Dan, Oct 26) — GamePix partner games under their
@@ -116,7 +131,7 @@ a.portal-facade:hover .portal-go, a.portal-facade:focus-visible .portal-go { bac
 
 <div class="portal-grid">
   {% for g in portal_games %}
-  <div class="portal-card" data-game-slug="{{ g.slug }}" data-game-title="{{ g.title }}">
+  <div class="portal-card" data-game-slug="{{ g.slug }}" data-game-title="{{ g.title }}" data-iphone="{{ 1 if g.iphone else 0 }}">
     <div class="portal-frame" style="--pw: {{ g.w }}; --ph: {{ g.h }};">
       <button class="portal-facade" type="button" aria-label="Play {{ g.title }}">
         <img src="{{ g.img }}" alt="{{ g.title }} cover art" loading="lazy">
@@ -221,7 +236,7 @@ a.portal-facade:hover .portal-go, a.portal-facade:focus-visible .portal-go { bac
 
 <div class="portal-grid">
   {% for g in ninja_portal_games %}
-  <div class="portal-card" data-game-slug="{{ g.slug }}" data-game-title="{{ g.title }}">
+  <div class="portal-card" data-game-slug="{{ g.slug }}" data-game-title="{{ g.title }}" data-iphone="{{ 1 if g.iphone else 0 }}">
     <div class="portal-frame" style="--pw: {{ g.w }}; --ph: {{ g.h }};">
       <button class="portal-facade" type="button" aria-label="Play {{ g.title }}">
         <img src="{{ g.img }}" alt="{{ g.title }} cover art" loading="lazy">
@@ -355,6 +370,73 @@ document.addEventListener('click', function (ev) {
   f.setAttribute('title', b.getAttribute('aria-label') || 'YouTube video');
   b.replaceWith(f);
 });
+</script>
+
+{# IPHONE GAMES SHELF (Dan, Oct 27) — GamePix titles that passed the
+   iPhone audit (catalog touch flag + vendor Mobile listing + vendor-
+   documented touch controls; see IPHONE_GAMES in app/main.py). All
+   play in place via portal_games.js. On iPhone the footer script
+   moves this shelf to the top of the page as the featured set; on
+   desktop it sits here as a normal shelf. #}
+<section class="games-sec" id="iphone-games">
+<h2 class="games-sec-head">&#x1F4F1; Plays Great on iPhone<span class="games-featured-pill">Featured on iPhone</span></h2>
+<p class="games-sec-intro">Every game on this shelf is touch-verified for iPhone — tap, drag and swipe controls, no keyboard needed. They play right here, just like the Arcade.</p>
+
+<div class="portal-grid">
+  {% for g in iphone_games %}
+  <div class="portal-card" data-game-slug="{{ g.slug }}" data-game-title="{{ g.title }}" data-iphone="{{ 1 if g.iphone else 0 }}">
+    <div class="portal-frame" style="--pw: {{ g.w }}; --ph: {{ g.h }};">
+      <button class="portal-facade" type="button" aria-label="Play {{ g.title }}">
+        <img src="{{ g.img }}" alt="{{ g.title }} cover art" loading="lazy">
+        <span class="portal-playbtn" aria-hidden="true">&#x25B6;</span>
+      </button>
+    </div>
+    <h3>{{ g.title }}</h3>
+    <p>{{ g.blurb }}</p>
+    <span class="portal-tag">{{ g.tag }}</span>
+  </div>
+  {% endfor %}
+</div>
+<p class="portal-note">Partner games are hosted by GamePix and the ads inside them are theirs.</p>
+</section>
+
+<script>
+// iPHONE GAMES RULE (Dan, Oct 27) — client-side only, runs before the
+// deferred portal_games.js wires the facades (moving a card keeps its
+// listeners). On iPhone: (1) the touch-verified shelf moves above the
+// Halloween Arcade and becomes the page's featured set; (2) any
+// embedded game flagged data-iphone="0" sinks below a "Plays best on
+// a computer or tablet" divider inside its own shelf — it is never
+// featured on iPhone. Desktop / Android / iPad: nothing runs, the
+// page renders exactly as authored. Works in the installed PWA too
+// (same UA in the standalone web view).
+(function () {
+  var ua = navigator.userAgent || "";
+  var isIPhone = /iPhone|iPod/.test(ua) || navigator.platform === "iPhone";
+  if (!isIPhone) return;
+  document.body.classList.add("ios-iphone");
+  var shelf = document.getElementById("iphone-games");
+  var arcade = document.getElementById("halloween-arcade");
+  if (shelf && arcade && arcade.parentNode) {
+    arcade.parentNode.insertBefore(shelf, arcade);
+  }
+  ["halloween-arcade", "ninja-games"].forEach(function (id) {
+    var sec = document.getElementById(id);
+    if (!sec) return;
+    var grid = sec.querySelector(".portal-grid");
+    if (!grid) return;
+    var demoted = grid.querySelectorAll('.portal-card[data-iphone="0"]');
+    if (!demoted.length) return;
+    var divider = document.createElement("div");
+    divider.className = "games-demoted-divider";
+    divider.textContent = "💻 Plays best on a computer or tablet";
+    var sink = document.createElement("div");
+    sink.className = "portal-grid games-demoted";
+    sec.appendChild(divider);
+    sec.appendChild(sink);
+    demoted.forEach(function (card) { sink.appendChild(card); });
+  });
+})();
 </script>
 
 {% endblock %}
