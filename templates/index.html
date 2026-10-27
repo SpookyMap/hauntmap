@@ -133,6 +133,58 @@ function hmFullHomepage() {
 <div class="hero-intro">
   <h1 class="hero-title">Find the Best Halloween Displays <span class="hero-title-alt">Near You</span></h1>
 
+{# FRONT-DOOR PREVIEW (staged Oct 26, NOT shipped — awaiting Dan's go):
+   the homepage's quick-exit problem is a cold TikTok tap-in meeting a
+   search form before a single haunt. Two additions inside the hero
+   panel, above the find block: (1) .fd-prop — one plain line that
+   says what this place is, no jargon; the 5,000+ floor is the
+   verified sponsor-copy floor (5,515 entries in the Oct 26 backup).
+   (2) .fd-rail — PHONE ONLY (CSS hides it >=761px, where the hero
+   stack already leads with Near You + Trending): a compact snap-rail
+   of real haunt cards — Tonight's pick first with its badge, then
+   the top Trending cards, same server data the below-band sections
+   render (twin-copy pattern, exactly like the hero/below-band
+   module pairs). Value first, form second; search stays put right
+   under the rail. No new permission asks, nothing autoplays. #}
+<p class="fd-prop">&#x1F383; 5,000+ displays, real addresses &mdash; go!</p>
+{% if tonight or trending %}
+<div class="fd-rail" aria-label="Start here: tonight's pick and trending haunts">
+  <p class="fd-rail-head">&#x1F525; Start here &mdash; trending now</p>
+  <div class="fd-rail-track">
+    {% if tonight %}
+    <a class="fd-card" href="/d/{{ tonight.id }}">
+      <span class="fd-card-media">
+        <img src="{{ tonight.thumb_url }}" alt="{{ tonight.title }}" loading="lazy">
+        <span class="fd-badge">&#x1F383; Tonight</span>
+      </span>
+      <span class="fd-card-body">
+        <span class="fd-card-title">{{ tonight.title }}</span>
+        <span class="fd-card-meta">{{ tonight.town_label }}</span>
+      </span>
+    </a>
+    {% endif %}
+    {% for p in trending %}
+    {% if loop.index <= 5 and not (tonight and p.id == tonight.id) %}
+    <a class="fd-card" href="/d/{{ p.id }}">
+      <span class="fd-card-media">
+        {% if p.media_type == 'video' %}
+        {% if p.thumb_path %}<img src="{{ p.thumb_card_url or p.thumb_url }}" alt="{{ p.title }}" loading="lazy" onerror="this.onerror=null;this.src='{{ p.thumb_url }}'">{% else %}<span class="fd-card-empty">&#x1F3AC;</span>{% endif %}
+        <span class="fd-badge fd-badge-play">&#x25B6;</span>
+        {% else %}
+        <img src="{{ p.thumb_card_url or p.thumb_url }}" alt="{{ p.title }}" loading="lazy" onerror="this.onerror=null;this.src='{{ p.thumb_url }}'">
+        {% endif %}
+      </span>
+      <span class="fd-card-body">
+        <span class="fd-card-title">{{ p.title }}</span>
+        <span class="fd-card-meta">{{ p.town_label }}</span>
+      </span>
+    </a>
+    {% endif %}
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
 {# z96 (Dan, Oct 23): the find block moves INSIDE the hero photo
    panel, directly under the headline — nothing between the headline
    and the block — and its old heading line (the pumpkin one)

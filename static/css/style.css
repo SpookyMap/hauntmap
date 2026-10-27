@@ -5510,3 +5510,94 @@ main.wrap:has(> .vt-tv-strip-bottom) { padding-bottom: 0; }
    templates/index.html; the /media-kit aggregates in app/main.py
    now exclude machine paths the same way, so every sponsor-facing
    number is human page views only. No style rules in this block. */
+
+/* ================================================================
+   z167: THE FRONT DOOR (Dan, Oct 26 — staged preview approved,
+   "Ship it"; rebased over z166, nothing from z166 altered). The homepage
+   is the cold front door: 29% quick-exit, 9s median, and on phone
+   the first real haunt card (Tonight's Display) sat ~2,020px down —
+   2.4 viewports of header/ticker/buttons/promos before one haunt.
+   This block does three things, all inside the hero panel:
+   1) .fd-prop: one plain value line under the headline, both
+      viewports. A parent skimming at speed gets the whole pitch:
+      lots of displays, real addresses, tap and go.
+   2) .fd-rail: PHONE ONLY compact snap-rail of real haunt cards
+      (Tonight's pick + top Trending, markup in index.html) seated
+      BETWEEN the headline and the find block — value before the
+      form asks for a town/ZIP. Hidden >=761px: the laptop hero
+      stack already leads with Near You + Trending in-panel, and
+      its layout does not move except the prop line.
+   3) Phone tightening of the panel + find block (padding/margin
+      only — no control shrinks, input stays 1rem, action buttons
+      keep their 44px min-height): buys back part of the rail's
+      height so the VT/TV strip still peeks into the first fold.
+   Nothing locked moves: header composition, hook colors, ticker,
+   sponsor strip, HauntSocial band, ordering rules all untouched;
+   the returning-visitor state stays the full homepage + slimbar
+   (the z96 retirement of the hero collapse is preserved). */
+.hero-intro .fd-prop {
+  margin: 0.1rem 0 0.9rem; padding: 0;
+  font-size: 1rem; line-height: 1.35; font-weight: 600;
+  color: #f9e5c2; text-shadow: 0 1px 4px rgba(0, 0, 0, 0.8);
+}
+@media (min-width: 761px) {
+  /* Buy the prop line's height back so the laptop find block keeps
+     its pre-preview seat inside the first fold: the pair of trims
+     (~14px) offsets most of the line (~22px + margins). */
+  .hero-intro .fd-prop { margin-bottom: 0.45rem; }
+  .hero-split .hero-intro h1.hero-title { margin-bottom: 0.55rem; }
+}
+.fd-rail { display: none; }
+@media (max-width: 760px) {
+  .hero-intro .fd-prop { font-size: 0.86rem; margin-bottom: 0.55rem; }
+  .hero-split .hero-intro { padding-top: 1.15rem; padding-bottom: 1rem; }
+  .hm-find { padding: 0.6rem 0.75rem; }
+  .hm-find-form { margin-bottom: 0.45rem; }
+  .fd-rail { display: block; margin: 0 0 0.7rem; text-align: left; }
+  .fd-rail-head {
+    margin: 0 0 0.35rem; padding: 0;
+    font-size: 0.8rem; font-weight: 800; letter-spacing: 0.04em;
+    text-transform: uppercase; color: #ffd9a0;
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.8);
+  }
+  .fd-rail-track {
+    display: flex; gap: 0.5rem;
+    overflow-x: auto; overscroll-behavior-x: contain;
+    scroll-snap-type: x proximity;
+    padding-bottom: 0.3rem;
+    scrollbar-width: none;
+  }
+  .fd-rail-track::-webkit-scrollbar { display: none; }
+  .fd-card {
+    flex: 0 0 126px; scroll-snap-align: start;
+    display: block; text-decoration: none;
+    background: linear-gradient(160deg, #14222b, #0e1a20);
+    border: 1px solid #274860; border-radius: 12px;
+    overflow: hidden;
+  }
+  .fd-card-media { display: block; position: relative; height: 74px; background: #0b0614; }
+  .fd-card-media img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .fd-card-empty {
+    display: flex; align-items: center; justify-content: center;
+    height: 100%; font-size: 1.4rem;
+  }
+  .fd-badge {
+    position: absolute; left: 5px; bottom: 5px;
+    background: rgba(11, 6, 20, 0.82); color: #ffd9a0;
+    font-size: 0.62rem; font-weight: 800; letter-spacing: 0.03em;
+    padding: 0.14rem 0.38rem; border-radius: 999px;
+  }
+  .fd-badge-play { color: #8fd8ff; }
+  .fd-card-body { display: block; padding: 0.38rem 0.45rem 0.45rem; }
+  .fd-card-title {
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+    overflow: hidden;
+    font-size: 0.76rem; font-weight: 700; line-height: 1.22; color: #f5f2ec;
+  }
+  .fd-card-meta {
+    display: block; margin-top: 0.14rem;
+    font-size: 0.68rem; color: #94a6c0;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+}
+
