@@ -21,6 +21,9 @@
   function resetCard(card) {
     var frame = card.querySelector(".portal-frame");
     if (!frame) return;
+    // If this frame is the fullscreen element, leave fullscreen first —
+    // otherwise the visitor is stuck staring at a black fullscreen box.
+    if (window.hmExitFullscreenIf) window.hmExitFullscreenIf(frame);
     frame.innerHTML = card._facadeHTML;
     card.classList.remove("is-playing");
     wireFacade(card);
@@ -46,8 +49,20 @@
     close.setAttribute("aria-label", "Close game");
     close.textContent = "\u2715";
     close.addEventListener("click", function () { resetCard(card); });
+    // ⛶ Fullscreen (Dan, Oct 27) — same chip as the ✕, sitting just to
+    // its left; fullscreens the frame container so button + game scale
+    // together. Helper lives in game_fullscreen.js (loaded first).
+    var fsBtn = document.createElement("button");
+    fsBtn.type = "button";
+    fsBtn.className = "game-fs-btn";
+    fsBtn.setAttribute("aria-label", "Fullscreen");
+    fsBtn.textContent = "\u26F6";
+    fsBtn.addEventListener("click", function () {
+      if (window.hmToggleFullscreen) window.hmToggleFullscreen(frame);
+    });
     frame.innerHTML = "";
     frame.appendChild(iframe);
+    frame.appendChild(fsBtn);
     frame.appendChild(close);
     card.classList.add("is-playing");
     card.scrollIntoView({ block: "nearest", behavior: "smooth" });

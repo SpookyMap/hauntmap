@@ -2,6 +2,7 @@
 {% block title %}Ghost Maze &middot; {{ site_name }}{% endblock %}
 {% block head %}
 <script src="/static/js/ghost_maze.js?v=20261025z142" defer></script>
+<script src="/static/js/game_fullscreen.js?v=20261027z199" defer></script>
 {% endblock %}
 {% block content %}
 {# GHOST MAZE (Dan, Oct 25) — HauntMap's own maze-chase arcade game.
@@ -23,6 +24,7 @@
     <div class="gm-stat"><span class="gm-stat-l">Lives</span><span class="gm-stat-n" id="gm-lives">&#x1F47B;&#x1F47B;&#x1F47B;</span></div>
     <button type="button" class="gm-iconbtn" id="gm-mute" aria-label="Mute sound">&#x1F50A;</button>
     <button type="button" class="gm-iconbtn" id="gm-pause" aria-label="Pause game">&#x23F8;&#xFE0F;</button>
+    <button type="button" class="gm-iconbtn" id="gm-fs" aria-label="Fullscreen">&#x26F6;</button>
   </div>
 
   <div class="gm-stage">
