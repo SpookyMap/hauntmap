@@ -3868,8 +3868,13 @@ COSTUME_SECTIONS = [
     {
         "id": "just-added",
         "title": "&#x2B50; Just Added",
-        "sub": "The newest costume on the page — fresh from the feed, straight to the top.",
+        "sub": "The newest costumes on the page — fresh from the feed, straight to the top.",
         "ideas": [
+            {"name": "Silent Hill Nurse Costume — Full DIY Tutorial", "who": "Adults & teens", "difficulty": "Medium", "time": "An afternoon or more",
+             "materials": "A nurse dress or scrubs to distress, mask-making basics — her full tutorial walks through every piece she uses",
+             "blurb": "Eimi's start-to-finish tutorial for her Silent Hill nurse — the bandaged Dark Nurse look from the games and films, distressed and bloodied by hand. She wants to see as many Silent Hill nurses out there this Halloween as possible: tap the photo, press play, and build yours along with her.",
+             "source": "@eimi.wordt.dutchie", "url": "https://www.tiktok.com/@eimi.wordt.dutchie/video/7695321330354359584",
+             "ttf": "7695321330354359584", "ttf_thumb": "/static/img/silenthill_nurse_costume.jpg"},
             {"name": "DIY Groot Costume from Foam Pipe Insulation", "who": "Adults & teens", "difficulty": "Hard", "time": "A weekend or more",
              "materials": "Foam pipe insulation tubes, hot glue, brown and grey paint for the bark finish, moss or faux greenery for the sprouts",
              "blurb": "Danielle built a full Groot out of hardware-store foam pipe insulation — twisted foam tubes become the vine-like limbs and bark body, moss and all. Her Groot broke the internet years ago and she still calls it one of her favorite homemade costumes. Tap the photo to watch the reel.",
