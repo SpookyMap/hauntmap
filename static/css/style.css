@@ -5655,3 +5655,35 @@ main.wrap:has(> .vt-tv-strip-bottom) { padding-bottom: 0; }
   .adv-strip .adv-line-a { opacity: 1; }
   .adv-strip .adv-line-b { opacity: 0; }
 }
+
+/* ============ z169: BUILD YOUR NIGHT ROUTE ART (Dan, Oct 26) ============
+   Dan's circular route badge is redrawn as an inline SVG
+   behind ONLY the existing .hook-line.alt span that contains
+   "Build Your Night." The SVG is absolutely positioned, so it adds no
+   layout width or height. Horizontal padding is cancelled by equal
+   negative margins, leaving the words' advance and every neighboring
+   header element exactly where production put them. The scene uses
+   the z160 logo palette: night-purple field, neon-green route,
+   compass-gold flag/accents, amber houses, pumpkin destination and
+   cream jack-o'-lantern face. Existing hook-letter colors are not
+   changed. A taller treatment was rejected during staging: on
+   laptop it either clips above the header band or overlaps the
+   second hook line, so this is the single text-height treatment. */
+.header-band .header-hook .byn-art {
+  position: relative;
+  isolation: isolate;
+  padding: 0 0.24em;
+  margin: 0 -0.24em;
+}
+.header-band .header-hook .byn-route-art {
+  position: absolute;
+  z-index: -1;
+  top: -0.22em;
+  right: -0.34em;
+  bottom: -0.30em;
+  left: -0.34em;
+  width: calc(100% + 0.68em);
+  height: calc(100% + 0.52em);
+  overflow: visible;
+  pointer-events: none;
+}
