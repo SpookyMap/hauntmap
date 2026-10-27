@@ -782,6 +782,16 @@ def init_db(db_path: Path) -> None:
             conn, 4932,
             "https://www.tiktok.com/@gloomyoaksmanor/video/7699268436223905038",
         )
+        # Dan-sent video append (Oct 27): @boosandbubbly's Mortem Manor
+        # tour (posted Oct 2, 2026) joins its one pin (6085, Mortem
+        # Manor, 5770 W Irlo Bronson Memorial Hwy, Kissimmee FL) as a
+        # second video — @hiddenshorestravel's video stays primary.
+        # add_entry_video dedupes by video id, so repeat boots are
+        # no-ops and the primary is never touched.
+        add_entry_video(
+            conn, 6085,
+            "https://www.tiktok.com/@boosandbubbly/video/7692137070936018207",
+        )
         if "is_handpicked" not in cols:
             # Hand-picked feed boost (Dan, Oct 23): pins Dan personally
             # sent/curated lead every feed. Ranking data is never
