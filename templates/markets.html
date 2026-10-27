@@ -12,7 +12,12 @@
    (?lat=&lng=, the hmNearMe pattern), the Cloudflare headers the
    homepage Near You module reads, and the town chooser below as the
    fallback. Located state names the anchor area and offers a one-tap
-   reset to all markets. #}
+   reset to all markets.
+   State dropdown (Dan, Oct 27): a state select beside the town
+   dropdown, same pattern as the /events State select — picking a
+   state submits with the town cleared, reloads with the town list
+   narrowed to that state, and combines with a town pick on Show;
+   "All states" (or the reset link) clears back to the full list. #}
 <div class="ev-near-bar">
   {% if near_active %}
   <span class="ev-near-on">&#x1F4CD; Near <strong>{{ near_label }}</strong></span>
@@ -22,15 +27,22 @@
   <a class="ev-near-reset" href="/markets">&#x2715; Show all markets</a>
   {% else %}
   <form method="get" action="/markets" class="mk-town-form">
+    <select name="state" aria-label="Choose a state" onchange="this.form.town.value=''; this.form.submit()">
+      <option value="">All states</option>
+      {% for o in state_options %}
+      <option value="{{ o.value }}" {% if o.value == state %}selected{% endif %}>{{ o.label }} ({{ o.count }})</option>
+      {% endfor %}
+    </select>
     <select name="town" aria-label="Choose a city and state">
-      <option value="">&#x1F5FA;&#xFE0F; All locations</option>
+      <option value="">&#x1F5FA;&#xFE0F; All locations{% if state %} in {{ state_name }}{% endif %}</option>
       {% for o in town_options %}
-      <option value="{{ o.value }}">{{ o.value }} ({{ o.count }})</option>
+      <option value="{{ o.value }}" {% if o.value == town %}selected{% endif %}>{{ o.value }} ({{ o.count }})</option>
       {% endfor %}
     </select>
     <button type="submit" class="btn">Show</button>
   </form>
   <button type="button" class="btn ev-near-btn" onclick="hmMarketsNearMe(this)">&#x1F4CD; Markets near me</button>
+  {% if state %}<a class="ev-near-reset" href="/markets">&#x2715; Show all markets</a>{% endif %}
   {% endif %}
 </div>
 {% if near_prompt %}
@@ -75,6 +87,8 @@ function hmMarketsNearGo() {
 <p class="ev-count">{{ entries|length }} market{{ 's' if entries|length != 1 }} near {{ near_label }} &middot; <a href="/markets">show all {{ total }} markets</a></p>
 {% elif town %}
 <p class="ev-count">{{ entries|length }} market{{ 's' if entries|length != 1 }} in {{ town }} &middot; <a href="/markets">show all {{ total }} markets</a></p>
+{% elif state %}
+<p class="ev-count">{{ entries|length }} market{{ 's' if entries|length != 1 }} in {{ state_name }} &middot; <a href="/markets">show all {{ total }} markets</a></p>
 {% else %}
 <p class="ev-count">{{ total }} market{{ 's' if total != 1 }} on the map</p>
 {% endif %}
@@ -113,7 +127,7 @@ function hmMarketsNearGo() {
   {% if near_prompt %}
   <p>No markets mapped near you yet &mdash; pick a town above, or browse them all.</p>
   <p><a class="btn" href="/markets">Show all markets</a></p>
-  {% elif town or near_active %}
+  {% elif town or state or near_active %}
   <p>No markets there right now &mdash; try another town, or browse them all.</p>
   <p><a class="btn" href="/markets">Show all markets</a></p>
   {% else %}
@@ -140,8 +154,9 @@ function hmMarketsNearGo() {
 .ev-near-chooser-head { margin: 0 0 0.55rem; color: #f3eefc; font-weight: 600; }
 .ev-near-chooser-row { display: flex; flex-wrap: wrap; gap: 0.6rem; }
 .ev-near-chooser select { flex: 1 1 220px; padding: 0.55rem 0.6rem; border-radius: 10px; background: #241a44; border: 1px solid #372b5e; color: #f3eefc; font: inherit; font-size: 0.95rem; }
-.mk-town-form { display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: center; flex: 1 1 320px; max-width: 480px; margin: 0; }
+.mk-town-form { display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: center; flex: 1 1 560px; max-width: 780px; margin: 0; }
 .mk-town-form select { flex: 1 1 200px; padding: 0.6rem 0.6rem; border-radius: 10px; background: #1d1438; border: 1px solid #372b5e; color: #f3eefc; font: inherit; font-size: 0.98rem; min-height: 48px; }
+.mk-town-form select[name="state"] { flex: 1 1 170px; }
 @media (max-width: 760px) {
   .ev-near-btn { flex: 1 1 100%; min-height: 48px; font-size: 1.08rem; }
   .ev-near-on { flex: 1 1 auto; text-align: center; }

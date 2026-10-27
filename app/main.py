@@ -3349,8 +3349,9 @@ def events_page(request: Request, type: str = "", genre: str = "",
 
 
 @app.get("/markets", response_class=HTMLResponse)
-def markets_page(request: Request, town: str = "", near: str = "",
-                 area: str = "", lat: str = "", lng: str = ""):
+def markets_page(request: Request, town: str = "", state: str = "",
+                 near: str = "", area: str = "", lat: str = "",
+                 lng: str = ""):
     # Flea Markets & Pop-Ups (Dan, Oct 23): every event pin faceted
     # ev_type='Market' on one page, soonest first. Event dates live in
     # the titles, so ordering reuses parse_event_dates (the same parser
@@ -3366,14 +3367,36 @@ def markets_page(request: Request, town: str = "", near: str = "",
     # town inventory: exact town (+ neighbours within 75 mi), nearest
     # towns within 100 mi of the point, else the visitor's state, with
     # the town chooser as the fallback when nothing resolves.
+    # State dropdown (Dan, Oct 27): a state select beside the town
+    # dropdown (?state=, validated against the states the MARKET town
+    # inventory actually covers, options counted and ordered like the
+    # /events state dropdown). It filters the listing to one state,
+    # narrows the town dropdown to that state's towns, and combines
+    # with ?town= when both are given (both filters apply). "All
+    # states" (empty value) is the clear path back.
     with get_conn(DB_PATH) as conn:
         entries = [row_to_dict(r) for r in conn.execute(
             "SELECT * FROM entries WHERE hidden = 0 AND category = 'events' "
             "AND ev_type = 'Market'").fetchall()]
         inventory = _town_inventory(conn, "events", "Market")
     total = len(entries)
+    state_counts: dict[str, int] = {}
+    for t in inventory:
+        if t["state"]:
+            state_counts[t["state"]] = (state_counts.get(t["state"], 0)
+                                        + t["count"])
+    state_options = [{"value": code,
+                      "label": US_STATE_NAMES.get(code, code),
+                      "count": n}
+                     for code, n in sorted(state_counts.items(),
+                                           key=lambda kv: (-kv[1], kv[0]))]
+    state = state.strip().upper()
+    if state not in state_counts:
+        state = ""
+    state_name = US_STATE_NAMES.get(state, state)
     town_options = [{"value": t["label"], "count": t["count"]}
-                    for t in sorted(inventory, key=lambda t: t["label"])]
+                    for t in sorted(inventory, key=lambda t: t["label"])
+                    if not state or t["state"] == state]
     town = town.strip()
     if town not in {t["label"] for t in inventory}:
         town = ""
@@ -3421,9 +3444,13 @@ def markets_page(request: Request, town: str = "", near: str = "",
             near_prompt = True
             if resolved and resolved["mode"] == "nomap":
                 near_nomap_name = resolved["area_name"]
-    elif town:
-        entries = [e for e in entries
-                   if extract_city_state(e["town"] or "") == town]
+    elif state or town:
+        if state:
+            entries = [e for e in entries
+                       if extract_state(e["town"] or "") == state]
+        if town:
+            entries = [e for e in entries
+                       if extract_city_state(e["town"] or "") == town]
 
     def _soonest(e):
         span = parse_event_dates(e["title"])
@@ -3436,6 +3463,8 @@ def markets_page(request: Request, town: str = "", near: str = "",
     return templates.TemplateResponse(request, "markets.html",
         {"request": request, "entries": entries, "total": total,
          "town_options": town_options, "town": town,
+         "state": state, "state_name": state_name,
+         "state_options": state_options,
          "near_active": near_active, "near_label": near_label,
          "near_prompt": near_prompt, "near_nomap_name": near_nomap_name,
          "voted": voted})
