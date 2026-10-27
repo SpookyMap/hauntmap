@@ -5382,6 +5382,7 @@ async def upload_submit(
     address: str = Form(""),
     description: str = Form(""),
     uploader_email: str = Form(""),
+    virtual: str = Form(""),
     media: UploadFile = File(None),
 ):
     error: str | None = None
@@ -5391,6 +5392,19 @@ async def upload_submit(
     address = address.strip()[:200]
     description = description.strip()[:1000]
     category = category if category in CATEGORIES else "halloween"
+    # Virtual LIVE exemption (Dan, Oct 27): a category="live" entry that
+    # is an online-only room (e.g. a TikTok quiz stream with no physical
+    # venue) may post with NO street address and NO coordinates. The flag
+    # is honoured ONLY for live — every other category keeps the
+    # street-address mandate below, flag or not. A virtual entry's town
+    # is server-set to the display basis "Online / Virtual"; no address
+    # is stored and nothing is fabricated, so the pin carries no coords
+    # and stays out of the map, tours and Auto Tour (all of which
+    # require coordinates and/or a verified address) by construction.
+    is_virtual = 1 if (category == "live" and (virtual or "").strip()) else 0
+    if is_virtual:
+        town = "Online / Virtual"
+        address = ""
     scare_level = scare_level if scare_level in ("family", "spooky", "creepy", "terrifying", "extreme") else None
     # tags come as repeated form fields from checkboxes
     form = await request.form()
@@ -5404,7 +5418,9 @@ async def upload_submit(
                                      "multi-house", "ticketed", "2025", "market", "oddities", "witchy", "craft", "flea", "free", "flagship", "21+")})) or None
 
     lat_f = lng_f = None
-    if lat.strip() or lng.strip():
+    if is_virtual:
+        pass  # virtual LIVE rooms are coord-less by definition (see above)
+    elif lat.strip() or lng.strip():
         try:
             lat_f, lng_f = float(lat), float(lng)
             if not (-90 <= lat_f <= 90 and -180 <= lng_f <= 180):
@@ -5414,17 +5430,19 @@ async def upload_submit(
 
     if not error and not title:
         error = "Please give your haunt a title."
-    if not error and not town:
+    if not error and not is_virtual and not town:
         error = "Please add a town or neighborhood."
     # Street address is MANDATORY (Dan, Oct 26 — see _STREET_ADDRESS_RE):
     # missing or not a street address (house number + street name) rejects.
-    if not error and not looks_like_street_address(address):
+    # Sole exception: virtual LIVE rooms (is_virtual, set above) skip the
+    # address + geocode gates entirely and are born with NULL coords.
+    if not error and not is_virtual and not looks_like_street_address(address):
         error = ADDRESS_REQUIRED_MSG
     # Geocode the address at submission so the pin is born with coordinates
     # and plots + routes immediately. The geocoded point is authoritative:
     # it replaces any form-supplied lat/lng. An address that cannot be
     # geocoded rejects rather than storing an unplottable pin.
-    if not error:
+    if not error and not is_virtual:
         geo = geocode_nominatim(f"{address}, {town}") or geocode_nominatim(address)
         # Nominatim fuzzy-matches: a bogus street name can resolve to a
         # same-named street on another continent (rig test: "999999 Nowhere
@@ -5492,7 +5510,8 @@ async def upload_submit(
             now = datetime.now(timezone.utc).isoformat()
             with get_conn(DB_PATH) as conn:
                 for col, ddl in (("uploader_email", "TEXT"),
-                                 ("notify_votes", "INTEGER DEFAULT 0")):
+                                 ("notify_votes", "INTEGER DEFAULT 0"),
+                                 ("virtual", "INTEGER NOT NULL DEFAULT 0")):
                     try:
                         conn.execute(f"ALTER TABLE entries ADD COLUMN {col} {ddl}")
                     except Exception:
@@ -5502,12 +5521,12 @@ async def upload_submit(
                        (title, town, display_name, media_path, thumb_path, media_type,
                         lat, lng, votes, flagged, hidden, is_sample, category, created_at,
                         scare_level, tags, tiktok_url, uploader_email, notify_votes,
-                        address, description)
-                       VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, 0, 0, 0, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                        address, description, virtual)
+                       VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, 0, 0, 0, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
                     (title, town, display_name or None, media_rel or "", thumb_rel,
                      media_type or "none", lat_f, lng_f, category, now, scare_level, tags,
                      tiktok_url or None, uploader_email or None, notify_votes,
-                     address or None, description or None),
+                     address or None, description or None, is_virtual),
                 )
                 new_id = cur.lastrowid
                 conn.commit()
@@ -5526,6 +5545,7 @@ async def upload_submit(
             "category": category, "title": title, "town": town,
             "display_name": display_name, "uploader_email": uploader_email,
             "address": address, "scare_level": scare_level or "",
+            "virtual": bool(is_virtual),
             "tags": set(tags.split(",")) if tags else set(),
             "notify_votes": bool(notify_votes),
         }

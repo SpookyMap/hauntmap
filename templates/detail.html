@@ -116,7 +116,7 @@
      pin pages never count a day. No JS / no state -> stays hidden. #}
   <p class="fright-chip-row"><a class="fright-chip" data-fright-chip href="/daily" hidden></a></p>
 
-  {% if entry.town_label %}
+  {% if entry.town_label and not entry.virtual %}
   {# Retention Wave 3, Item 9: high-intent text-alert prompt. Placement
      decision: directly under the media/player area AND the title/meta
      block (title, town, address, votes) — the visitor has just watched
@@ -147,6 +147,12 @@
     hmSeenStrip(document.getElementById('seen-strip'), {{ town_pin_ids|tojson }}, {{ entry.town_label|tojson }});
   </script>
 
+  {% if entry.virtual %}
+  {# Virtual LIVE room (Dan, Oct 27): online-only, so no street address,
+     no coords, no directions — say so plainly instead of pointing
+     visitors at "None,None". The Watch Live button below is the way in. #}
+  <p class="entry-address">&#x1F310; Online / Virtual &mdash; this live room is online-only, so there&rsquo;s no street address or map pin. Join it from anywhere via the Watch Live button below.</p>
+  {% else %}
   <div class="directions-row">
     {% if entry.address %}
     {# Confirmed street address on file: show it (above) and route every
@@ -160,6 +166,7 @@
     <button class="btn-dir" onclick="navigator.clipboard.writeText('{{ entry.town }}');this.textContent='✓ Copied!';setTimeout(()=>this.textContent='📋 Copy address',2000)">📋 Copy address</button>
     {% endif %}
   </div>
+  {% endif %}
 
   {% if town_haunts %}
   <section class="town-rail">
@@ -375,7 +382,7 @@
   </section>
   {% endif %}
 
-  {% with map_label = entry.town_label %}{% include "_town_map_strip.html" %}{% endwith %}
+  {% if not entry.virtual %}{% with map_label = entry.town_label %}{% include "_town_map_strip.html" %}{% endwith %}{% endif %}
 
   {% if prev_pin or next_geo_pin %}
   {# Chain-nav stays GEOGRAPHIC by decision (Item 3): it is the literal

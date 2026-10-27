@@ -124,7 +124,8 @@ CREATE TABLE IF NOT EXISTS entries (
     tags TEXT,                            -- comma-separated: animatronics,inflatables,handmade,walkthrough,projector,lights,music,street-wide,multi-house
     ev_type TEXT,                         -- events facet: event type (see EVENT_TYPES in main.py)
     ev_genre TEXT,                        -- events facet: music genre (see EVENT_GENRES in main.py)
-    ev_venue TEXT                         -- events facet: venue style (see EVENT_VENUES in main.py)
+    ev_venue TEXT,                        -- events facet: venue style (see EVENT_VENUES in main.py)
+    virtual INTEGER NOT NULL DEFAULT 0    -- 1 = online/virtual LIVE room (Dan, Oct 27): no street address, no coords, town stored as "Online / Virtual"; live category only
 );
 CREATE INDEX IF NOT EXISTS idx_entries_town ON entries(town);
 CREATE INDEX IF NOT EXISTS idx_entries_votes ON entries(votes DESC);
@@ -466,6 +467,16 @@ def init_db(db_path: Path) -> None:
             # Free-text description sent by posting crews via /upload
             # (Oct 2026). NULL when not provided.
             conn.execute("ALTER TABLE entries ADD COLUMN description TEXT")
+        if "virtual" not in cols:
+            # Virtual LIVE rooms (Dan, Oct 27): a category='live' entry
+            # that is an online-only room (e.g. a TikTok quiz stream)
+            # may post with NO street address and NO coordinates; its
+            # town is stored as "Online / Virtual". The exemption is
+            # scoped to live+virtual in the /upload handler — every
+            # other category keeps the street-address mandate.
+            conn.execute(
+                "ALTER TABLE entries ADD COLUMN virtual INTEGER NOT NULL DEFAULT 0"
+            )
         if "is_featured" not in cols:
             # Editor's-pick flag (Top 10 by State staging): Dan's
             # hand-picked pins are guaranteed a slot in their state's
