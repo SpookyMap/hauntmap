@@ -83,7 +83,13 @@ from pathlib import Path
 #   America's most haunted house, posted today as pin 6092 in
 #   haunted_houses via @fablittledish's TikTok. Featured only —
 #   the hand-picked list is untouched.)
-FEATURED_ENTRY_IDS = (5541, 5542, 5551, 5584, 5587, 5175, 4370, 5653, 5654, 5655, 5766, 5572, 5940, 6006, 116, 6084, 4932, 6085, 6087, 6088, 6086, 6090, 6089, 6091, 30, 6098, 6096, 1641, 6092)
+#   6100 NV Elko (Oct 27: Dan's "All top 10" burst pick —
+#   Haunted Commercial Hotel, 345 4th St; the two-haunted-house
+#   attraction (Check In + Night Shift) inside Elko's historic
+#   Commercial Hotel from @commercial.fun's TikTok, posted
+#   today as pin 6100. Featured only — the hand-picked list
+#   is untouched.)
+FEATURED_ENTRY_IDS = (5541, 5542, 5551, 5584, 5587, 5175, 4370, 5653, 5654, 5655, 5766, 5572, 5940, 6006, 116, 6084, 4932, 6085, 6087, 6088, 6086, 6090, 6089, 6091, 30, 6098, 6096, 1641, 6092, 6100)
 
 # Hand-picked pins (Dan, Oct 23): pins Dan personally sent in chat or
 # curated for posting. These lead every feed view — hand-picked first
