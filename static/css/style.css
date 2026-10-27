@@ -6088,25 +6088,6 @@ main.wrap:has(> .vt-tv-strip-bottom) { padding-bottom: 0; }
   .hero-intro > .auto-tour-home:not(.hero-copy) { display: block; }
 }
 
-/* ============ z186: POP HAUNT CULTURE — INSTAGRAM CARD (Dan, Oct 27) ====
-   Dan: "Add to haunt pop culture?" — the viral DIY Groot reel
-   (Instagram, Danielle | DIY + DESIGN) joins /pop-haunt-culture as
-   the FIRST grid card, under the featured Brooklyn video. The grid
-   is YouTube-facade shaped and Instagram's player can't ride that
-   mechanism, so this one card is a LINK card in the same shell:
-   the reel's own still (stored locally — the video is never
-   re-hosted) with the same play badge, plus an "Instagram ↗" pill
-   so nobody mistakes it for an in-page player; the card opens the
-   reel on Instagram in a new tab. The anchor reuses .yt-facade
-   (+ --short vertical framing: the still is a 9:16 frame inside a
-   4:3 image, contain shows it whole, like the YouTube Shorts). */
-.yt-grid a.ig-facade { text-decoration: none; }
-.ig-badge { position: absolute; top: 0.5rem; right: 0.5rem; z-index: 2;
-  background: rgba(10, 6, 24, 0.82); color: #efe6ff;
-  border: 1px solid #b18cff; border-radius: 999px;
-  font-size: 0.72rem; font-weight: 700; letter-spacing: 0.02em;
-  padding: 0.22rem 0.6rem; }
-
 /* ============ z187: DIY COSTUMES INSTAGRAM REEL FACADE (Dan, Oct 27) ====
    First Instagram entry on /diy-costumes (Danielle @themindfulhaven's DIY
    Groot reel, the new #1 card): a click-to-play facade in the .yt-facade
