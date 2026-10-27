@@ -47,6 +47,18 @@
 .at-leg { color: #a9cdf5; font-size: 0.82rem; white-space: nowrap; text-align: right; }
 .at-note { color: var(--muted); font-size: 0.9rem; }
 .at-err { color: #ff9d9d; margin: 0 0 0.6rem; }
+.at-scope-row {
+  display: flex; align-items: center; gap: 0.55rem; flex-wrap: wrap;
+  margin-top: 0.7rem; padding-top: 0.7rem;
+  border-top: 1px solid #274860;
+}
+.at-scope-toggle {
+  display: inline-flex; align-items: center; gap: 0.45rem;
+  font-weight: 700; cursor: pointer;
+}
+.at-scope-toggle input { width: 1.1rem; height: 1.1rem; accent-color: var(--accent2); cursor: pointer; }
+.at-scope-toggle input:disabled { cursor: not-allowed; }
+.at-scope-note { color: var(--muted); font-size: 0.9rem; }
 </style>
 {% endblock %}
 {% block content %}
@@ -94,7 +106,7 @@ document.getElementById('at-locate').onclick = () => {
 </script>
 {% else %}
 <div class="at-panel">
-  <h2>&#x26A1; Top {{ total_stops }} near {{ center_label }}</h2>
+  <h2>&#x26A1; {% if total_stops %}Top {{ total_stops }} near {{ center_label }}{% else %}No tour stops near {{ center_label }} yet{% endif %}</h2>
   <p class="at-sub">
     {% if size == 100 %}
     Your area's most-viewed haunts, in drive order — split into {{ nights|length }} night{{ 's' if nights|length != 1 }} of up to {{ 10 }} stops. Open a night and it's a real tour: reorder it, drop stops, or send it straight to Google Maps.
@@ -107,14 +119,45 @@ document.getElementById('at-locate').onclick = () => {
     &middot; within <strong>{{ radius|int }} mi</strong> of {{ center_label }}{% if approx %} (approximate center){% endif %}
     &middot; ~<strong>{{ total_miles|round|int }} mi</strong> of driving
     {% if pool_size > total_stops %}&middot; picked from {{ pool_size }} eligible haunts nearby{% endif %}
+    {% if home_state and not multi %}&middot; all in <strong>{{ home_state_name }}</strong>{% elif multi and route_states %}&middot; stops in <strong>{{ route_states | join(' + ') }}</strong>{% endif %}
   </p>
-  {% if total_stops < size %}
-  <p class="at-note">That's every eligible haunt within {{ radius|int }} miles — a tour stop needs a verified street address, so a few map pins don't qualify. <a href="/nearby">See everything near you &rarr;</a></p>
+  <form class="at-scope-row" method="get" action="/auto-tour">
+    <input type="hidden" name="size" value="{{ size }}">
+    <input type="hidden" name="cat" value="{{ cat }}">
+    {% for k, v in center_params.items() %}<input type="hidden" name="{{ k }}" value="{{ v }}">{% endfor %}
+    <label class="at-scope-toggle">
+      <input type="checkbox" name="states" value="1" {% if multi %}checked{% endif %} {% if not home_state %}disabled{% endif %} onchange="this.form.submit()">
+      Include nearby states
+    </label>
+    <span class="at-scope-note">
+      {% if not home_state %}
+      We couldn't pin down your state, so this tour may cross state lines.
+      {% elif multi %}
+      Stops can cross state lines — turn off to keep the tour in {{ home_state_name }} only.
+      {% else %}
+      Your tour stays in {{ home_state_name }} — turn on to let stops cross state lines.
+      {% endif %}
+    </span>
+  </form>
+  {% if total_stops == 0 %}
+  <p class="at-note">
+    {% if home_state and not multi %}
+    No eligible tour stops in {{ home_state_name }} within {{ radius|int }} miles of {{ center_label }} — a tour stop needs a verified street address. Turn on <strong>Include nearby states</strong> above{% if wide_pool_size %} ({{ wide_pool_size }} eligible haunt{{ 's' if wide_pool_size != 1 }} in range across state lines){% endif %}, or <a href="/auto-tour?size={{ size }}">start over with a different starting point &rarr;</a>
+    {% else %}
+    No eligible tour stops within {{ radius|int }} miles of {{ center_label }} — a tour stop needs a verified street address. <a href="/auto-tour?size={{ size }}">Start over with a different starting point &rarr;</a>
+    {% endif %}
+  </p>
+  {% elif total_stops < size %}
+    {% if home_state and not multi %}
+    <p class="at-note">That's every eligible haunt in {{ home_state_name }} within {{ radius|int }} miles — a tour stop needs a verified street address, so a few map pins don't qualify. {% if wide_pool_size > pool_size %}There are {{ wide_pool_size }} eligible haunts in range when nearby states are included — turn on <strong>Include nearby states</strong> above to add them. {% endif %}<a href="/nearby">See everything near you &rarr;</a></p>
+    {% else %}
+    <p class="at-note">That's every eligible haunt within {{ radius|int }} miles — a tour stop needs a verified street address, so a few map pins don't qualify. <a href="/nearby">See everything near you &rarr;</a></p>
+    {% endif %}
   {% endif %}
   {% if size == 10 %}
-  <p class="at-note">Feeling ambitious? <a href="/auto-tour?size=100">Plan the Top 100 near you, night by night &rarr;</a></p>
+  <p class="at-note">Feeling ambitious? <a href="/auto-tour?size=100{% for k, v in center_params.items() %}&{{ k }}={{ v | urlencode }}{% endfor %}{% if multi %}&states=1{% endif %}">Plan the Top 100 near you, night by night &rarr;</a></p>
   {% else %}
-  <p class="at-note">Just one night? <a href="/auto-tour?size=10">Build the Top 10 instead &rarr;</a></p>
+  <p class="at-note">Just one night? <a href="/auto-tour?size=10{% for k, v in center_params.items() %}&{{ k }}={{ v | urlencode }}{% endfor %}{% if multi %}&states=1{% endif %}">Build the Top 10 instead &rarr;</a></p>
   {% endif %}
 </div>
 

@@ -6381,6 +6381,60 @@ AUTO_TOUR_NIGHT_SIZE = 10
 # (_GEO_NEAR_RADIUS_MI = 100 mi).
 AUTO_TOUR_RADIUS_MI = {10: 25.0, 100: 100.0}
 
+# Single-state by default (Dan, Oct 27): "Let's not automate the Build
+# My Tour For Me to include more than one state unless they request to
+# tour multiple states at a time… they might not want to go to NYC if
+# they live in NJ." A generated tour's pool is restricted to the
+# visitor's own state unless the visitor opts in with the panel's
+# "Include nearby states" toggle (?states=1). The visitor's state is
+# resolved per location path, cheapest first: the Cloudflare geo
+# signal already carries a state code; a town query usually names one
+# ("Hackensack, NJ"); every other center (geolocation lat/lng, ZIP
+# centroid) goes through a Nominatim reverse lookup — the same
+# geocoder the town path uses forward. A state is NEVER guessed: when
+# no source yields one, generation falls back to the radius-only pool
+# and the page says the tour may cross state lines.
+_reverse_state_cache: dict[tuple[float, float], str] = {}
+
+
+def _state_code_for_point(lat: float, lng: float) -> str:
+    """US state code for a point via Nominatim reverse geocoding, ''
+    when the lookup fails, times out, or lands outside the US.
+    Cached per ~1 km cell so repeat generations from one area cost
+    one lookup."""
+    key = (round(lat, 2), round(lng, 2))
+    if key in _reverse_state_cache:
+        return _reverse_state_cache[key]
+    code = ""
+    url = "https://nominatim.openstreetmap.org/reverse?" + urllib.parse.urlencode(
+        {"lat": lat, "lon": lng, "format": "json", "zoom": 10})
+    req = urllib.request.Request(url, headers={"User-Agent": "HauntMap/1.0"})
+    try:
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            data = json.loads(resp.read().decode())
+        addr = data.get("address") or {}
+        if (addr.get("country_code") or "").lower() == "us":
+            raw = (addr.get("state_code")
+                   or addr.get("ISO3166-2-lvl4") or "").upper()
+            if raw.startswith("US-"):
+                raw = raw[3:]
+            code = _state_code_from_region(addr.get("state") or "", raw)
+    except Exception:
+        code = ""
+    if len(_reverse_state_cache) > 512:
+        _reverse_state_cache.clear()
+    _reverse_state_cache[key] = code
+    return code
+
+
+def _state_from_place_query(q: str) -> str:
+    """State named by a town query — 'Hackensack, NJ' or 'Hackensack,
+    New Jersey' — '' when the query doesn't name one."""
+    parts = [p.strip() for p in (q or "").split(",") if p.strip()]
+    if len(parts) >= 2:
+        return _state_code_from_region(parts[-1], parts[-1])
+    return ""
+
 
 def _auto_tour_pool(conn, cat: str, clat: float, clng: float,
                     radius: float) -> list[dict]:
@@ -6450,7 +6504,8 @@ def _auto_tour_route(stops: list[dict], clat: float,
 
 @app.get("/auto-tour", response_class=HTMLResponse)
 def auto_tour(request: Request, size: int = 10, cat: str = "halloween",
-              lat: str = "", lng: str = "", zip: str = "", q: str = ""):
+              lat: str = "", lng: str = "", zip: str = "", q: str = "",
+              states: str = ""):
     """Auto Tour page: the Top 10 / Top 100 near the visitor, ranked
     like the leaderboards, ordered as a route, grouped into nights.
 
@@ -6462,39 +6517,56 @@ def auto_tour(request: Request, size: int = 10, cat: str = "halloween",
     the headers carry them, else the resolved area's anchor-town
     centroid (labeled approximate). No center at all renders the
     location picker; a wrong area is never presented as the visitor's.
+
+    The pool is single-state by default (Dan, Oct 27): restricted to
+    the visitor's own state — resolved from the CF geo state, the
+    town query's named state, or a Nominatim reverse lookup on the
+    center — unless the visitor opts into nearby states (?states=1,
+    the panel toggle). A short in-state pool never silently expands;
+    the page shows what the state has and points at the toggle.
     """
     cat = cat if cat in CATEGORIES else "halloween"
     size = 100 if size == 100 else 10
+    multi = states.strip().lower() in ("1", "true", "on", "yes")
     ctx = {"request": request, "size": size, "cat": cat,
            "cat_labels": CAT_LABELS, "cat_emoji": CAT_EMOJI,
            "need_location": False, "err": None, "nights": [],
            "center_label": "", "approx": False, "radius": 0.0,
-           "total_stops": 0, "total_miles": 0.0, "pool_size": 0}
+           "total_stops": 0, "total_miles": 0.0, "pool_size": 0,
+           "multi": multi, "home_state": "", "home_state_name": "",
+           "wide_pool_size": 0, "center_params": {}, "route_states": []}
     center: tuple[float, float] | None = None
     label = ""
     approx = False
+    center_state = ""
+    center_params: dict[str, str] = {}
     if lat.strip() and lng.strip():
         try:
             la, ln = float(lat), float(lng)
             if -90 <= la <= 90 and -180 <= ln <= 180:
                 center, label = (la, ln), "your location"
+                center_params = {"lat": lat.strip(), "lng": lng.strip()}
         except ValueError:
             pass
     if center is None and zip.strip():
         c = sms_alerts.zip_centroid(zip)
         if c is not None:
             center, label = c, f"ZIP {zip.strip()[:5]}"
+            center_params = {"zip": zip.strip()[:5]}
         else:
             ctx["err"] = f"Couldn't find ZIP {zip.strip()[:5]} — try a town instead."
     if center is None and q.strip():
         c = geocode_nominatim(q.strip())
         if c is not None:
             center, label = c, q.strip()
+            center_params = {"q": q.strip()}
+            center_state = _state_from_place_query(q)
         else:
             ctx["err"] = f"Couldn't find '{q.strip()}' — try a town or city name."
     if center is None:
         geo = _visitor_geo(request)
         if geo:
+            center_state = geo.get("state") or ""
             if geo.get("lat") is not None and geo.get("lng") is not None:
                 center = (geo["lat"], geo["lng"])
                 label = (geo.get("city") or geo.get("state")
@@ -6514,12 +6586,24 @@ def auto_tour(request: Request, size: int = 10, cat: str = "halloween",
                         center = (anchor["clat"], anchor["clng"])
                         label = resolved["area_name"]
                         approx = True
+                        if not center_state:
+                            center_state = anchor.get("state") or ""
     if center is None:
         ctx["need_location"] = True
         return templates.TemplateResponse(request, "auto_tour.html", ctx)
+    if not center_state:
+        # Geolocation point, ZIP centroid, or a town query that named
+        # no state: one reverse lookup on the center. '' = unknown —
+        # the pool then stays radius-only and the page says so.
+        center_state = _state_code_for_point(center[0], center[1])
     radius = AUTO_TOUR_RADIUS_MI[size]
     with get_conn(DB_PATH) as conn:
-        pool = _auto_tour_pool(conn, cat, center[0], center[1], radius)
+        wide_pool = _auto_tour_pool(conn, cat, center[0], center[1], radius)
+    if center_state and not multi:
+        pool = [e for e in wide_pool
+                if extract_state(e.get("town") or "") == center_state]
+    else:
+        pool = wide_pool
     picked = _rank_with_featured(pool, size)
     route = _auto_tour_route(picked, center[0], center[1])
     nights = []
@@ -6547,7 +6631,15 @@ def auto_tour(request: Request, size: int = 10, cat: str = "halloween",
                 "approx": approx, "radius": radius,
                 "total_stops": len(route),
                 "total_miles": sum(n["miles"] for n in nights),
-                "pool_size": len(pool)})
+                "pool_size": len(pool),
+                "home_state": center_state,
+                "home_state_name": US_STATE_NAMES.get(center_state,
+                                                      center_state),
+                "wide_pool_size": len(wide_pool),
+                "center_params": center_params,
+                "route_states": sorted(
+                    {extract_state(e.get("town") or "") for e in route}
+                    - {""})})
     return templates.TemplateResponse(request, "auto_tour.html", ctx)
 
 
