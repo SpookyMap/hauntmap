@@ -3146,6 +3146,12 @@ def home(request: Request, sort: str = "new", town: str = "", town_search: str =
          # of the public /updates stream — announcements + newest
          # pins mixed newest-first; the bar starts closed.
          "updates_preview": _site_update_stream(60)[:6],
+         # What's New left-margin rail (Dan, Oct 28, STAGED): the same
+         # public stream re-bucketed by kind — new haunts, new events,
+         # new live, new Tour Fuel stops, everything else, then
+         # Frank's announcements — for the grouped rail that replaces
+         # the slide-down bar on the homepage.
+         "whatsnew_groups": _whatsnew_rail_groups(),
          "bottom_tabs": _place_tabs(cat, state, region, sort, scare, tag,
                                     "1" if video.strip() == "1" else ""),
          "tier_labels": {"featured": "Featured Sponsor", "premium": "Premium Sponsor", "title": "Title Sponsor"}},
@@ -11763,6 +11769,7 @@ def _site_update_stream(pin_limit: int = 240) -> list:
         cat = e.get("category") or "halloween"
         items.append({
             "kind": "pin", "day": when.date(), "when": when,
+            "cat": cat,
             "id": e["id"], "title": e["title"],
             "town_label": e.get("town_label", ""),
             "cat_label": CAT_LABELS.get(cat, cat),
@@ -11786,6 +11793,50 @@ def _site_update_groups(pin_limit: int = 240) -> list:
             groups.append({"day": it["day"],
                            "label": _updates_day_label(it["day"], today),
                            "entries": [it]})
+    return groups
+
+
+# What's New rail groups (Dan, Oct 28, STAGED): Dan's organization
+# for the homepage left-margin rail — the flat chronological stream
+# re-bucketed by what the add IS. Order is Dan's: haunts, events,
+# live, stops, everything else, site updates last. Any pin category
+# not named in the first four buckets lands in "More" (parks,
+# christmas, and any future category), so nothing new can fall out
+# of the rail. Announcements keep their own bucket at the end.
+_WHATSNEW_RAIL_GROUPS = (
+    ("haunts", "🎃", "New Haunts", ("halloween", "haunted_houses")),
+    ("events", "🎪", "New Events", ("events",)),
+    ("live", "🔴", "New Live", ("live",)),
+    ("stops", "🍦", "New Stops",
+     ("restaurants", "coffee", "shops", "hotels", "ice_cream",
+      "halloween_stores")),
+    ("more", "🛠️", "New DIY & More", ()),
+)
+
+
+def _whatsnew_rail_groups(per_group: int = 8) -> list:
+    """The What's New stream grouped for the homepage rail:
+    [{emoji, label, items}] — non-empty groups only, newest first
+    inside each group, capped per group. One stream scan at the
+    same 240-pin depth /updates uses."""
+    known = {c: key for key, _e, _l, cats in _WHATSNEW_RAIL_GROUPS
+             for c in cats}
+    buckets: dict = {key: [] for key, _e, _l, _c in _WHATSNEW_RAIL_GROUPS}
+    announces: list = []
+    for it in _site_update_stream(240):
+        if it["kind"] == "announce":
+            if len(announces) < per_group:
+                announces.append(it)
+            continue
+        key = known.get(it.get("cat") or "", "more")
+        if len(buckets[key]) < per_group:
+            buckets[key].append(it)
+    groups = [{"emoji": emoji, "label": label, "entries": buckets[key]}
+              for key, emoji, label, _cats in _WHATSNEW_RAIL_GROUPS
+              if buckets[key]]
+    if announces:
+        groups.append({"emoji": "📣", "label": "Site Updates",
+                       "entries": announces})
     return groups
 
 
