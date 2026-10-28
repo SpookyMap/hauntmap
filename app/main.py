@@ -4007,6 +4007,10 @@ COSTUME_SECTIONS = [
         "title": "&#x2B50; Just Added",
         "sub": "The newest costumes on the page — fresh from the feed, straight to the top.",
         "ideas": [
+            {"name": "Carried Away in a Trash Can — Skeleton Garbage Man Illusion Costume", "who": "Adults & teens", "difficulty": "Medium", "time": "An afternoon",
+             "materials": "A poseable skeleton, hi-vis safety jacket, cap and sunglasses, work gloves, jeans and boots, a wheeled trash can you can cut head and arm holes in",
+             "blurb": "The garbage man is a skeleton: a poseable skeleton in a hi-vis jacket, cap and sunglasses gets mounted at the wearer's waist, its gloved hands gripping a wheeled trash can with holes cut in the side. The wearer pops his own head and arm out of the can while his legs do the walking — so a skeleton trash collector appears to be hauling him away, very much against his will. Filed by its creator under last-minute costumes, and the build really is one afternoon. Tap the video and watch the rig come together.",
+             "source": "@deedomo12", "url": "https://www.tiktok.com/@deedomo12/video/7691812628582255902", "tt": "7691812628582255902"},
             {"name": "Easy SFX Wound Makeup — Fake-Blood Cheek Gashes", "who": "Adults & teens", "difficulty": "Easy", "time": "Under 30 minutes",
              "materials": "A flesh-toned wound piece (scar wax or a stick-on appliance) for each cheek, foundation to blend the edges, dark shadow for depth, fake blood",
              "blurb": "Alexa's 13-second masterclass in fake gore: press a flesh-toned wound piece onto each cheek, blend and shade the edges until it reads as torn skin, then let the fake blood run. The finished gashes look straight out of a slasher — and the prop-hammer reveal at the end sells the joke. Her caption just says 'super easy,' and for once it's true. Tap the video and watch it come together.",
