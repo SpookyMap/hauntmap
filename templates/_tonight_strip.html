@@ -11,7 +11,14 @@
    next event day when nothing is on tonight. Events link into the
    date-filtered /events view for the anchor town; displays link into
    the town feed. Include with {% with tstrip_wide = True %} on the
-   homepage for the Tonight's-band breakout width. #}
+   homepage for the Tonight's-band breakout width.
+   z216 (Dan, Oct 28): on the homepage (tstrip_passport = True) the
+   Haunt Passport chip renders INSIDE this bar at its right end —
+   the combined countdown + Passport bar Dan asked for; the chip's
+   standalone line under the Daily Fright band is gone. The chip
+   stays hidden until the visitor has passport progress (its filler
+   script still lives in index.html). Town pages don't pass the
+   flag and render the strip exactly as before. #}
 <div class="tonight-strip{% if tstrip_wide %} ts-wide{% endif %}" aria-label="{% if tstrip.scope == 'map' %}On tonight across the map{% else %}On tonight near {{ tstrip.town_label }}{% endif %}">
   <span class="ts-count">{{ tstrip.countdown }}</span>
   {% if tstrip.scope == 'map' %}
@@ -21,5 +28,8 @@
   <a class="ts-link" href="/events?town={{ tstrip.town_label|urlencode }}&amp;on={{ tstrip.events_iso }}">&#x1F3AA; <strong class="ts-n">{{ tstrip.events_on }} event{{ 's' if tstrip.events_on != 1 }}</strong> {{ tstrip.events_when }} near {{ tstrip.town_label }}</a>
   <a class="ts-link" href="/?town={{ tstrip.town_label|urlencode }}">&#x1F383; <strong class="ts-n">{{ tstrip.displays }} display{{ 's' if tstrip.displays != 1 }}</strong> lit tonight</a>
   {% if tstrip.town_note %}<span class="ts-note">({{ tstrip.town_note }})</span>{% endif %}
+  {% endif %}
+  {% if tstrip_passport %}
+  <a class="passport-chip passport-chip--inbar" id="hm-passport-chip" href="/passport" hidden>&#x1F383; Haunt Passport &mdash; <span class="pc-text"></span> &rarr;</a>
   {% endif %}
 </div>

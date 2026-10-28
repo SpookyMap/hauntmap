@@ -7181,3 +7181,37 @@ a.wn-fbtn:hover, summary.wn-fbtn:hover { border-color: #57a8ff; }
   .top10-menu { max-height: none; }
   .top10-menu-list { max-height: 38vh; }
 }
+
+/* ============ z216: COMBINED COUNTDOWN + PASSPORT BAR & TOUR FUEL SPACING (Dan, Oct 28) ======
+   1) The Haunt Passport chip moves INSIDE the Tonight strip (homepage
+   .ts-wide variant) at the bar's right end — one combined bar instead
+   of the countdown bar plus a standalone Passport line. margin-left:
+   auto pins it right at every width; the strip's existing flex-wrap
+   lets it drop to its own right-aligned line on phone. At laptop
+   widths (>=1200px, where .ts-wide sits at its 1060px breakout) the
+   row is locked to a single line: tighter column gap, the (rare)
+   town-note is the only shrinkable item. The in-bar chip gets a
+   translucent azure tint + brighter border so it still reads as its
+   own element against the strip's identical gradient.
+   2) Tour Fuel becomes its own headed block: the drip label leaves
+   the sub-button row for its own centered line above the buttons,
+   and the block gets the longest spacing in the category stack —
+   main row -> label 0.4rem -> 0.9rem, buttons -> feed controls
+   0.8rem -> 1.5rem (phone: a smaller bump, 0.65rem / 1.1rem). */
+.tonight-strip .passport-chip--inbar {
+  margin: 0 0 0 auto; flex: 0 0 auto;
+  font-size: 0.86rem; padding: 0.36rem 0.75rem;
+  background: rgba(87, 168, 255, 0.10); border-color: #5a478a;
+}
+@media (min-width: 1200px) {
+  .tonight-strip.ts-wide { flex-wrap: nowrap; column-gap: 0.75rem; }
+  .tonight-strip.ts-wide .ts-note { min-width: 0; }
+}
+.tour-fuel-label-row { text-align: center; margin-bottom: 0.35rem; }
+.cat-tabs-main { margin-bottom: 0.9rem; }
+.cat-tabs-sub { margin-bottom: 1.5rem; }
+@media (max-width: 480px) {
+  .tour-fuel-label-row { margin-bottom: 0.3rem; }
+  .cat-tabs-main { margin-bottom: 0.65rem; }
+  .cat-tabs-sub { margin-bottom: 1.1rem; }
+}

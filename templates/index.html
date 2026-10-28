@@ -766,7 +766,7 @@ function hmFullHomepage() {
 {# Item 5 "Tonight" strip: directly above Tonight's Display band, so
    the countdown + on-tonight counts sit adjacent to the band on every
    homepage view (the band itself only renders when a pick exists). #}
-{% with tstrip_wide = True %}{% include "_tonight_strip.html" %}{% endwith %}
+{% with tstrip_wide = True, tstrip_passport = True %}{% include "_tonight_strip.html" %}{% endwith %}
 {% endif %}
 
 {% if tonight %}
@@ -847,14 +847,14 @@ function hmFullHomepage() {
    band = the canonical daily drop + streak flame. #}
 {% include "_daily_band.html" %}
 
-{# Wave 4, Item 4: Haunt Passport chip. Placement: with the homepage
-   modules in the Tonight cluster — directly under Tonight's Display
-   and the Daily Fright band, above the below-band Near-you copy; it
-   renders once, on phone and laptop alike. Client-rendered and
+{# Wave 4, Item 4: Haunt Passport chip — z216 (Dan, Oct 28): the chip
+   itself now renders INSIDE the Tonight strip at the bar's right end
+   (the combined countdown + Passport bar; see _tonight_strip.html,
+   included with tstrip_passport = True above). Its standalone line
+   under this band is removed — the Passport appears exactly once on
+   the homepage. This script still fills + unhides it: client-side,
    hidden until the visitor has at least one counted pin seen, so
-   first-timers never see an empty progress nag. No header button,
-   no nav change. #}
-<a class="passport-chip" id="hm-passport-chip" href="/passport" hidden>&#x1F383; Haunt Passport &mdash; <span class="pc-text"></span> &rarr;</a>
+   first-timers never see an empty progress nag. #}
 <script>
 (function () {
   var chip = document.getElementById('hm-passport-chip');
@@ -977,8 +977,8 @@ function hmFullHomepage() {
   <a href="/games" class="cat-btn-main">&#x1F3AE; Games</a>
   <a href="/?cat=live{% if sort != 'new' %}&sort={{ sort }}{% endif %}{% if town %}&town={{ town }}{% endif %}{% if video %}&video=1{% endif %}" class="cat-btn-main {% if cat == 'live' %}active{% endif %}">&#x1F534; Live</a>
 </div>
+<div class="tour-fuel-label-row"><span class="cat-sub-label tour-fuel-label-drip">Tour fuel:</span></div>
 <div class="cat-tabs-sub">
-  <span class="cat-sub-label tour-fuel-label-drip">Tour fuel:</span>
   {% for c in ['coffee', 'restaurants', 'shops', 'parks', 'hotels', 'ice_cream'] %}
   <a href="/?cat={{ c }}{% if sort != 'new' %}&sort={{ sort }}{% endif %}{% if town %}&town={{ town }}{% endif %}{% if video %}&video=1{% endif %}" class="cat-btn-sub {% if cat == c %}active{% endif %}">{{ cat_emoji[c] }} {{ cat_labels[c] }}</a>
   {% endfor %}
