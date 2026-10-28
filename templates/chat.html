@@ -12,27 +12,42 @@
    WebSocket (/ws/chat) for instant messages, presence and typing;
    the original 4s polling stays as the automatic fallback and the
    reconnect catch-up path. Treat reactions, the mod panel, and the
-   word-game cards all ride the same socket. #}
+   word-game cards all ride the same socket.
+   z202 RESTYLE (Oct 27, STAGED for Dan's preview): presentation only —
+   flowing chat lines with per-haunter handle colors + same-haunter
+   grouping, a Who's Here presence rail, Frank's welcome as the room
+   MOTD, typing line above a sticky auto-growing composer. Behavior,
+   data and APIs untouched; all styling lives in the z202 CSS block. #}
 <section class="chat-wrap">
   <header class="chat-head">
     <p class="soc-kicker">👻 <span class="hs-brand">HauntSocial</span></p>
-    <h1 class="chat-title">💬 The Haunt Chat</h1>
     <p class="chat-sub">The HauntMap hangout — talk haunts, events, parties, music and costumes with your fellow haunters.</p>
   </header>
 
-  {% if member %}
-  <div class="chat-presence" id="chatPresence">
+  {# z202 RESTYLE (staged): room header band — the room's name + live
+     headcount for members; a sneak-peek note for guests. Presence
+     users moved to the Who's Here rail inside .chat-layout below. #}
+  <div class="chat-roombar">
+    <h1 class="chat-roombar-title">💬 The Haunt Chat</h1>
+    {% if member %}
     <span class="chat-presence-count" id="presenceCount">🟢 Connecting…</span>
-    <span class="chat-presence-users" id="presenceUsers"></span>
-    <span class="chat-typing" id="typingLine" aria-live="polite"></span>
-    <button type="button" class="chat-mention-chip" id="mentionChip" hidden>💬 <span id="mentionCount"></span></button>
-    <button type="button" class="chat-bell" data-push-open="pushSettingsWrap" title="Notification settings" aria-label="Notification settings">🔔 <span class="chat-bell-label">Notifications</span></button>
+    <span class="chat-roombar-actions">
+      <button type="button" class="chat-mention-chip" id="mentionChip" hidden>💬 <span id="mentionCount"></span></button>
+      <button type="button" class="chat-bell" data-push-open="pushSettingsWrap" title="Notification settings" aria-label="Notification settings">🔔 <span class="chat-bell-label">Notifications</span></button>
+    </span>
+    {% else %}
+    <span class="chat-roombar-note">👀 Sneak peek — members see the whole room</span>
+    {% endif %}
   </div>
+
+  {% if member %}
   <div class="chat-mention-panel" id="mentionPanel" hidden></div>
   <div id="pushSettingsWrap" data-push-wrap hidden>
     {% include "_push_settings.html" %}
   </div>
 
+  <div class="chat-layout">
+  <div class="chat-main">
   <div class="chat-games" id="chatGames">
     <div class="chat-games-head">
       <span class="chat-games-title">🎮 Word Games</span>
@@ -74,8 +89,8 @@
       <div class="chat-msg" data-mid="{{ m.id }}"{% if m.mentions %} data-mentions="{{ m.mentions|join(',') }}"{% endif %}>
         <a class="chat-ava" href="/@{{ m.handle }}" aria-label="@{{ m.handle }}'s page"><span class="soc-avatar soc-avatar-sm" style="background: {{ m.avatar.bg }}">{% if m.avatar.img %}<img class="soc-avatar-img" src="{{ m.avatar.img }}" alt="">{% elif m.avatar.emoji %}<span>{{ m.avatar.emoji }}</span>{% else %}<span>{{ m.avatar.initial }}</span>{% endif %}</span></a>
         <div class="chat-msg-main">
-          <p class="chat-meta"><a class="chat-handle" href="/@{{ m.handle }}">@{{ m.handle }}</a> <time class="chat-time" datetime="{{ m.created_at }}">{{ m.created_at[11:16] }}</time>{% if member %} <button type="button" class="chat-replybtn" data-reply="{{ m.id }}" data-reply-handle="{{ m.handle }}" title="Reply to this message" aria-label="Reply to this message">↩</button>{% endif %}{% if member and m.handle != member.handle %} <button type="button" class="chat-report" data-report="{{ m.id }}" title="Report message" aria-label="Report message">⚑</button>{% endif %}{% if can_moderate %} <button type="button" class="chat-pinbtn" data-pin="{{ m.id }}" title="Pin this message" aria-label="Pin this message">📌</button> <button type="button" class="chat-del" data-del="{{ m.id }}" title="Delete message" aria-label="Delete message">✕</button>{% endif %}</p>
           {% if m.reply %}<button type="button" class="chat-quote" data-jump="{{ m.reply.id }}">{% if m.reply.gone %}<span class="chat-quote-gone">Original message unavailable</span>{% else %}<span class="chat-quote-who">@{{ m.reply.handle }}</span> <span class="chat-quote-snip">{{ m.reply.snippet }}</span>{% endif %}</button>{% endif %}
+          <p class="chat-line"><a class="chat-handle" href="/@{{ m.handle }}">@{{ m.handle }}</a> <time class="chat-time" datetime="{{ m.created_at }}">{{ m.created_at[11:16] }}</time>{% if member %}<span class="chat-actions">{% if member %} <button type="button" class="chat-replybtn" data-reply="{{ m.id }}" data-reply-handle="{{ m.handle }}" title="Reply to this message" aria-label="Reply to this message">↩</button>{% endif %}{% if member and m.handle != member.handle %} <button type="button" class="chat-report" data-report="{{ m.id }}" title="Report message" aria-label="Report message">⚑</button>{% endif %}{% if can_moderate %} <button type="button" class="chat-pinbtn" data-pin="{{ m.id }}" title="Pin this message" aria-label="Pin this message">📌</button> <button type="button" class="chat-del" data-del="{{ m.id }}" title="Delete message" aria-label="Delete message">✕</button>{% endif %}</span>{% endif %}{% if m.kind not in ('sticker', 'poll') %} <span class="chat-text">{{ m.body }}</span>{% endif %}</p>
           {% if m.kind == 'sticker' %}<p class="chat-text chat-sticker-big">{{ m.body }}</p>
           {% elif m.kind == 'poll' and member and m.poll %}<div class="chat-poll" data-poll="{{ m.poll.id }}" data-my-vote="{{ m.poll.my_vote if m.poll.my_vote is not none else '' }}">
             <p class="chat-poll-q">📊 {{ m.poll.question }}</p>
@@ -84,7 +99,7 @@
             {% if can_moderate and not m.poll.closed %}<button type="button" class="chat-poll-close" data-poll-close="{{ m.poll.id }}">Close poll</button>{% endif %}
           </div>
           {% elif m.kind == 'poll' %}<p class="chat-text">📊 Poll: {{ m.body }}</p><p class="chat-poll-teaser">Join free to vote!</p>
-          {% else %}<p class="chat-text">{{ m.body }}</p>{% endif %}
+          {% endif %}{# plain text rides the .chat-line above (z202) #}
           {% if m.link %}<p class="chat-linkrow"><a class="chat-link" href="{{ m.link }}">👉 View it on the map</a></p>{% endif %}
           <div class="chat-reacts" data-reacts="{{ m.id }}">
             {% for sticker, n in m.reactions.counts.items() %}{% if member %}<button type="button" class="chat-react-chip{% if sticker in m.reactions.mine %} mine{% endif %}" data-react="{{ m.id }}" data-sticker="{{ sticker }}">{{ sticker }} {{ n }}</button>{% else %}<span class="chat-react-chip">{{ sticker }} {{ n }}</span>{% endif %}{% endfor %}
@@ -110,6 +125,87 @@
     {% endif %}
   </div>
 
+  {% if member %}
+  </div>{# /.chat-main #}
+  <aside class="chat-rail" id="chatRail">
+    <div class="chat-rail-head">
+      <span class="chat-rail-title">👥 Who's here</span>
+      <span class="chat-rail-n" id="railCount"></span>
+      <button type="button" class="chat-rail-toggle" id="railToggle" aria-label="Collapse who's here list" aria-expanded="true">▾</button>
+    </div>
+    <div class="chat-presence-users chat-rail-users" id="presenceUsers"></div>
+    <p class="chat-rail-hint">Tap a haunter to challenge them to a word game ⚔️</p>
+  </aside>
+  </div>{# /.chat-layout #}
+  <div class="chat-typingbar"><span class="chat-typing" id="typingLine" aria-live="polite"></span></div>
+  {% endif %}
+
+  <script src="/static/js/push.js?v=20261027z198" defer></script>
+  <script>
+  // Every visitor gets local times (the server renders a UTC fallback
+  // inside <time datetime>); the member script below re-runs this for
+  // messages it appends itself.
+  document.querySelectorAll('time.chat-time').forEach(function (t) {
+    var d = new Date(t.getAttribute('datetime'));
+    if (!isNaN(d)) {
+      t.textContent = d.toLocaleTimeString([], {hour: 'numeric', minute: '2-digit'});
+    }
+  });
+  // z202 restyle helpers (shared by this block and the member script):
+  // a stable per-haunter handle color (IRC-style — Frank keeps the
+  // brand azure) and chat-flow grouping, where a quick follow-up line
+  // from the same haunter drops its repeated handle/avatar.
+  window.hmChatColor = function (handle) {
+    if (!handle) return '#8fd8ff';
+    if (handle.toLowerCase() === 'frank') return '#8fd8ff';
+    var palette = ['#ffd166', '#ff9de2', '#a3e635', '#fda4af', '#c4b5fd',
+                   '#67e8f9', '#fbbf24', '#86efac', '#f0abfc', '#7dd3fc'];
+    var h = 0;
+    var s = handle.toLowerCase();
+    for (var i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
+    return palette[h % palette.length];
+  };
+  window.hmChatGroup = function (msgsEl) {
+    if (!msgsEl) return;
+    var prev = null;
+    msgsEl.querySelectorAll('.chat-msg').forEach(function (row) {
+      var handleEl = row.querySelector('.chat-handle');
+      var handle = handleEl ? handleEl.textContent.replace(/^@/, '') : '';
+      if (handle) row.style.setProperty('--hc', window.hmChatColor(handle));
+      var grouped = false;
+      if (prev && handle && prev.handle === handle &&
+          !row.querySelector('.chat-poll, .chat-sticker-big, .chat-quote') &&
+          !prev.el.querySelector('.chat-poll, .chat-sticker-big, .chat-quote')) {
+        var tEl = row.querySelector('time.chat-time');
+        var gap = (tEl && prev.time)
+          ? new Date(tEl.getAttribute('datetime')) - prev.time : Infinity;
+        grouped = gap >= 0 && gap < 5 * 60 * 1000;
+      }
+      row.classList.toggle('chat-msg-cont', grouped);
+      var t2 = row.querySelector('time.chat-time');
+      prev = {el: row, handle: handle,
+              time: t2 ? new Date(t2.getAttribute('datetime')) : null};
+    });
+  };
+  window.hmChatGroup(document.getElementById('chatMsgs'));
+  </script>
+
+  {% if member %}
+  <form class="chat-composer" id="chatForm">
+    <div class="chat-replybar" id="replyBar" hidden>
+      <span class="chat-replybar-text" id="replyBarText"></span>
+      <button type="button" class="chat-replybar-x" id="replyCancel" aria-label="Cancel reply">✕</button>
+    </div>
+    <div class="chat-composer-row">
+      <button class="chat-sticker-toggle" id="stickerToggle" type="button" title="Send a treat sticker" aria-label="Send a treat sticker">🎃</button>
+      <textarea id="chatInput" class="chat-input" rows="1" maxlength="{{ chat_max }}" placeholder="Message the room…" autocomplete="off" aria-label="Message the room"></textarea>
+      <button class="chat-send" type="submit">Send</button>
+    </div>
+    <div class="chat-sticker-row" id="stickerRow" hidden>
+      {% for s in stickers %}<button type="button" class="chat-sticker-send" data-sticker-send="{{ s }}" aria-label="Send {{ s }} sticker">{{ s }}</button>{% endfor %}
+    </div>
+    <p class="chat-composer-meta"><span class="chat-err" id="chatErr" role="alert"></span><span class="chat-composer-as">chatting as @{{ member.handle }}</span><span class="chat-count" id="chatCount">0/{{ chat_max }}</span></p>
+  </form>
   {% if can_moderate %}
   <details class="chat-mod" id="chatMod">
     <summary>🛡️ Moderation</summary>
@@ -144,36 +240,6 @@
   </details>
   {% endif %}
 
-  <script src="/static/js/push.js?v=20261027z198" defer></script>
-  <script>
-  // Every visitor gets local times (the server renders a UTC fallback
-  // inside <time datetime>); the member script below re-runs this for
-  // messages it appends itself.
-  document.querySelectorAll('time.chat-time').forEach(function (t) {
-    var d = new Date(t.getAttribute('datetime'));
-    if (!isNaN(d)) {
-      t.textContent = d.toLocaleTimeString([], {hour: 'numeric', minute: '2-digit'});
-    }
-  });
-  </script>
-
-  {% if member %}
-  <form class="chat-composer" id="chatForm">
-    <label class="chat-composer-label" for="chatInput">Chatting as @{{ member.handle }}</label>
-    <div class="chat-replybar" id="replyBar" hidden>
-      <span class="chat-replybar-text" id="replyBarText"></span>
-      <button type="button" class="chat-replybar-x" id="replyCancel" aria-label="Cancel reply">✕</button>
-    </div>
-    <div class="chat-composer-row">
-      <button class="chat-sticker-toggle" id="stickerToggle" type="button" title="Send a treat sticker" aria-label="Send a treat sticker">🎃</button>
-      <textarea id="chatInput" class="chat-input" rows="1" maxlength="{{ chat_max }}" placeholder="Say something spooky…" autocomplete="off"></textarea>
-      <button class="chat-send" type="submit">Send</button>
-    </div>
-    <div class="chat-sticker-row" id="stickerRow" hidden>
-      {% for s in stickers %}<button type="button" class="chat-sticker-send" data-sticker-send="{{ s }}" aria-label="Send {{ s }} sticker">{{ s }}</button>{% endfor %}
-    </div>
-    <p class="chat-composer-meta"><span class="chat-err" id="chatErr" role="alert"></span><span class="chat-count" id="chatCount">0/{{ chat_max }}</span></p>
-  </form>
   <script>
   (function () {
     var msgs = document.getElementById('chatMsgs');
@@ -398,7 +464,16 @@
       node.replaceWith(buildPollNode(poll, row ? row.getAttribute('data-mid') : null));
     }
     function bodyNode(m) {
+      // z202: plain text returns an inline span so it flows on the
+      // chat line after the handle; stickers and poll fallbacks stay
+      // block-level under the line.
       if (m.kind === 'poll' && m.poll) return buildPollNode(m.poll, m.id);
+      if (m.kind === 'text' || !m.kind) {
+        var span = document.createElement('span');
+        span.className = 'chat-text';
+        highlightInto(span, m.body, m.mentions || []);
+        return span;
+      }
       var text = document.createElement('p');
       if (m.kind === 'sticker') {
         text.className = 'chat-text chat-sticker-big';
@@ -416,13 +491,18 @@
       var row = document.createElement('div');
       row.className = 'chat-msg'; row.setAttribute('data-mid', m.id);
       if (m.mentions && m.mentions.length) row.setAttribute('data-mentions', m.mentions.join(','));
+      if (window.hmChatColor) row.style.setProperty('--hc', window.hmChatColor(m.handle));
       var ava = document.createElement('a');
       ava.className = 'chat-ava'; ava.href = '/@' + m.handle;
       ava.appendChild(avatarNode(m.avatar));
       var main = document.createElement('div');
       main.className = 'chat-msg-main';
+      var qn = quoteNode(m);
+      if (qn) main.appendChild(qn);
+      // z202: one flowing chat line — handle + time + hover actions,
+      // with plain message text riding the same line.
       var meta = document.createElement('p');
-      meta.className = 'chat-meta';
+      meta.className = 'chat-line';
       var h = document.createElement('a');
       h.className = 'chat-handle'; h.href = '/@' + m.handle;
       h.textContent = '@' + m.handle;
@@ -432,22 +512,22 @@
       meta.appendChild(h);
       meta.appendChild(document.createTextNode(' '));
       meta.appendChild(t);
+      var actions = document.createElement('span');
+      actions.className = 'chat-actions';
       var rb = document.createElement('button');
       rb.type = 'button'; rb.className = 'chat-replybtn';
       rb.setAttribute('data-reply', m.id);
       rb.setAttribute('data-reply-handle', m.handle);
       rb.title = 'Reply to this message'; rb.setAttribute('aria-label', 'Reply to this message');
       rb.textContent = '↩';
-      meta.appendChild(document.createTextNode(' '));
-      meta.appendChild(rb);
+      actions.appendChild(rb);
       if (m.handle !== ME) {
         var rep = document.createElement('button');
         rep.type = 'button'; rep.className = 'chat-report';
         rep.setAttribute('data-report', m.id);
         rep.title = 'Report message'; rep.setAttribute('aria-label', 'Report message');
         rep.textContent = '⚑';
-        meta.appendChild(document.createTextNode(' '));
-        meta.appendChild(rep);
+        actions.appendChild(rep);
       }
       if (CAN_MOD) {
         var pin = document.createElement('button');
@@ -455,20 +535,24 @@
         pin.setAttribute('data-pin', m.id);
         pin.title = 'Pin this message'; pin.setAttribute('aria-label', 'Pin this message');
         pin.textContent = '📌';
-        meta.appendChild(document.createTextNode(' '));
-        meta.appendChild(pin);
+        actions.appendChild(pin);
         var b = document.createElement('button');
         b.type = 'button'; b.className = 'chat-del';
         b.setAttribute('data-del', m.id);
         b.title = 'Delete message'; b.setAttribute('aria-label', 'Delete message');
         b.textContent = '✕';
-        meta.appendChild(document.createTextNode(' '));
-        meta.appendChild(b);
+        actions.appendChild(b);
       }
-      main.appendChild(meta);
-      var qn = quoteNode(m);
-      if (qn) main.appendChild(qn);
-      main.appendChild(bodyNode(m));
+      meta.appendChild(actions);
+      var body = bodyNode(m);
+      if (body.tagName === 'SPAN') {
+        meta.appendChild(document.createTextNode(' '));
+        meta.appendChild(body);
+        main.appendChild(meta);
+      } else {
+        main.appendChild(meta);
+        main.appendChild(body);
+      }
       if (m.link) {
         var lr = document.createElement('p');
         lr.className = 'chat-linkrow';
@@ -492,6 +576,7 @@
       if (empty) empty.remove();
       var stick = nearBottom();
       msgs.appendChild(messageRow(m));
+      if (window.hmChatGroup) window.hmChatGroup(msgs);
       if (m.id > lastId) lastId = m.id;
       if (stick) scrollBottom();
     }
@@ -503,6 +588,7 @@
         var rowEl = messageRow(m);
         if (first) msgs.insertBefore(rowEl, first); else msgs.appendChild(rowEl);
       });
+      if (window.hmChatGroup) window.hmChatGroup(msgs);
     }
     function jumpToMessage(id) {
       function attempt() {
@@ -535,6 +621,7 @@
     }
     // Server-rendered rows: apply mention highlighting in place.
     msgs.querySelectorAll('.chat-msg').forEach(highlightRow);
+    if (window.hmChatGroup) window.hmChatGroup(msgs);
 
     function applyPoll(d) {
       if (!d) return;
@@ -543,6 +630,7 @@
         if (el) el.remove();
       });
       (d.messages || []).forEach(addMessage);
+      if ((d.gone || []).length && window.hmChatGroup) window.hmChatGroup(msgs);
     }
     function catchUp() {
       return fetch('/api/chat/messages?after=' + lastId, {headers: {'Accept': 'application/json'}})
@@ -565,6 +653,8 @@
       var pu = document.getElementById('presenceUsers');
       if (!pc || !p) return;
       pc.textContent = '🟢 ' + p.count + (p.count === 1 ? ' haunter' : ' haunters') + ' in the room';
+      var rc = document.getElementById('railCount');
+      if (rc) rc.textContent = '(' + p.count + ')';
       pu.textContent = '';
       (p.users || []).forEach(function (u) {
         var chip = document.createElement('button');
@@ -575,7 +665,12 @@
         chip.appendChild(avatarNode(u.avatar));
         var s = document.createElement('span');
         s.textContent = '@' + u.handle;
+        if (window.hmChatColor) s.style.color = window.hmChatColor(u.handle);
         chip.appendChild(s);
+        var dot = document.createElement('span');
+        dot.className = 'chat-rail-dot';
+        dot.setAttribute('aria-hidden', 'true');
+        chip.appendChild(dot);
         pu.appendChild(chip);
       });
       renderTyping(p.typing || []);
@@ -611,7 +706,7 @@
         else if (d.type === 'pin') renderPin(d.pinned, d.pinned_id);
         else if (d.type === 'gone') {
           var el = msgs.querySelector('.chat-msg[data-mid="' + d.id + '"]');
-          if (el) el.remove();
+          if (el) { el.remove(); if (window.hmChatGroup) window.hmChatGroup(msgs); }
         } else if (d.type === 'reaction') {
           renderReacts(d.message_id, d.counts, d.by);
         } else if (d.type === 'presence') renderPresence(d);
@@ -735,6 +830,9 @@
     }
     input.addEventListener('input', function () {
       count.textContent = input.value.length + '/' + MAX;
+      // Chat-style auto-grow: one line that stretches as you type.
+      input.style.height = 'auto';
+      input.style.height = Math.min(input.scrollHeight, 120) + 'px';
       var now = Date.now();
       if (input.value && now - typingSent > 2500) {
         typingSent = now; sendTyping(true);
@@ -804,6 +902,7 @@
           if (res.ok && res.d.message) {
             addMessage(res.d.message);
             input.value = '';
+            input.style.height = 'auto';
             count.textContent = '0/' + MAX;
             setReply(null);
             scrollBottom();
@@ -893,7 +992,7 @@
           .then(function (r) {
             if (r.ok) {
               var el = msgs.querySelector('.chat-msg[data-mid="' + id + '"]');
-              if (el) el.remove();
+              if (el) { el.remove(); if (window.hmChatGroup) window.hmChatGroup(msgs); }
             }
           })
           .catch(function () {});
@@ -1061,6 +1160,23 @@
       var chip = e.target.closest ? e.target.closest('[data-online-handle]') : null;
       if (chip) document.getElementById('challengeHandle').value = '@' + chip.getAttribute('data-online-handle');
     });
+    // Who's Here rail (z202): collapse toggle; phones start collapsed
+    // so the room itself leads.
+    var rail = document.getElementById('chatRail');
+    var railToggle = document.getElementById('railToggle');
+    function setRail(open) {
+      if (!rail) return;
+      rail.classList.toggle('collapsed', !open);
+      if (railToggle) {
+        railToggle.textContent = open ? '▾' : '▸';
+        railToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+        railToggle.setAttribute('aria-label', open ? "Collapse who's here list" : "Expand who's here list");
+      }
+    }
+    if (railToggle) railToggle.addEventListener('click', function () {
+      setRail(rail.classList.contains('collapsed'));
+    });
+    if (window.matchMedia && window.matchMedia('(max-width: 900px)').matches) setRail(false);
     gameCards.addEventListener('click', function (e) {
       var b = e.target.closest ? e.target.closest('[data-game-action]') : null;
       if (!b) return;

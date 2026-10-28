@@ -6634,3 +6634,170 @@ span.chat-react-chip { cursor: default; }
 .tt-frame { width: 100%; max-width: 340px; aspect-ratio: 9 / 16;
   margin: 0 auto; border: 1px solid #274860; border-radius: var(--radius);
   display: block; background: #000; overflow: hidden; }
+
+/* ============ z202: HAUNT CHAT — TRADITIONAL CHATROOM RESTYLE (Dan, Oct 27, STAGED) ====
+   Dan: "a real chatroom … where ppl really feel like they're chatting
+   not a message board." PRESENTATION ONLY — behavior, data and APIs
+   untouched. The room trades forum post-blocks for classic chatroom
+   DNA in the HauntSocial azure skin: messages flow as compact lines
+   (colored @handle + text on the same line, tiny timestamp, hover
+   actions), quick follow-ups from the same haunter group tight with
+   no repeated handle/avatar, a WHO'S HERE presence rail sits beside
+   the room like an AIM/IRC member list (collapsible strip on phone),
+   Frank's pinned welcome becomes the room MOTD bar, and the composer
+   pins to the bottom as a one-line input that grows. Handle colors
+   are per-haunter (set as --hc from the handle hash by the chat
+   scripts; Frank keeps brand azure #8fd8ff). Everything level. */
+
+/* Slimmer page head — the room header band below carries the title. */
+.chat-head { margin-bottom: 0.6rem; }
+.chat-sub { font-size: 0.92rem; }
+
+/* Room header band: "💬 The Haunt Chat — 🟢 N haunters in the room". */
+.chat-roombar { display: flex; flex-wrap: wrap; align-items: center;
+  gap: 0.35rem 0.7rem; background: var(--card);
+  border: 1px solid rgba(143,216,255,.38); border-radius: var(--radius);
+  box-shadow: 0 0 26px rgba(87,168,255,.16);
+  padding: 0.55rem 0.9rem; margin-bottom: 0.7rem; }
+.chat-roombar-title { margin: 0; font-size: 1.45rem; line-height: 1.2;
+  color: #8fd8ff; text-shadow: 0 0 14px rgba(87,168,255,.45); }
+.chat-roombar .chat-presence-count { font-size: 0.9rem; }
+.chat-roombar-actions { margin-left: auto; display: flex;
+  align-items: center; gap: 0.5rem; }
+.chat-roombar .chat-bell { margin-left: 0; }
+.chat-roombar-note { margin-left: auto; color: var(--muted);
+  font-size: 0.85rem; }
+
+/* Layout: room column + Who's Here rail (members). */
+.chat-wrap:has(> .chat-layout) { max-width: 1140px; }
+.chat-layout { display: flex; gap: 0.7rem; align-items: flex-start; }
+.chat-main { flex: 1 1 auto; min-width: 0; }
+.chat-rail { flex: 0 0 220px; background: var(--card);
+  border: 1px solid rgba(143,216,255,.30); border-radius: var(--radius);
+  box-shadow: 0 0 26px rgba(87,168,255,.10); padding: 0.6rem 0.55rem;
+  position: sticky; top: 0.6rem; }
+.chat-rail-head { display: flex; align-items: center; gap: 0.35rem;
+  padding: 0 0.3rem 0.45rem; border-bottom: 1px solid rgba(143,216,255,.22);
+  margin-bottom: 0.45rem; }
+.chat-rail-title { font-weight: 800; color: #8fd8ff; font-size: 0.92rem; }
+.chat-rail-n { color: var(--muted); font-size: 0.85rem; font-weight: 700; }
+.chat-rail-toggle { margin-left: auto; background: none; border: none;
+  color: var(--muted); font-size: 0.85rem; cursor: pointer;
+  padding: 0.1rem 0.35rem; }
+.chat-rail-toggle:hover { color: #8fd8ff; }
+.chat-rail-users { display: flex; flex-direction: column; gap: 0.12rem;
+  max-height: 46vh; overflow-y: auto; }
+.chat-rail .chat-presence-chip { display: flex; width: 100%;
+  justify-content: flex-start; background: none;
+  border: 1px solid transparent; border-radius: 8px;
+  padding: 0.28rem 0.45rem; font-size: 0.86rem; font-weight: 600; }
+.chat-rail .chat-presence-chip:hover { background: rgba(143,216,255,.09);
+  border-color: rgba(143,216,255,.35); }
+.chat-rail .chat-presence-chip .soc-avatar { width: 22px; height: 22px;
+  font-size: 0.66rem; }
+.chat-rail-dot { margin-left: auto; width: 7px; height: 7px;
+  border-radius: 50%; background: #4ade80; flex: 0 0 auto;
+  box-shadow: 0 0 6px rgba(74,222,128,.8); }
+.chat-rail-hint { margin: 0.5rem 0.3rem 0; font-size: 0.74rem;
+  color: var(--muted); line-height: 1.35; }
+.chat-rail.collapsed { flex-basis: auto; }
+.chat-rail.collapsed .chat-rail-users,
+.chat-rail.collapsed .chat-rail-hint { display: none; }
+.chat-rail.collapsed .chat-rail-head { border-bottom: none;
+  margin-bottom: 0; padding-bottom: 0; }
+
+/* MOTD: Frank's welcome as the room's topic bar, not a post. */
+.chat-pin { align-items: center; gap: 0.55rem; padding: 0.5rem 0.85rem; }
+.chat-pin .soc-avatar { width: 26px; height: 26px; font-size: 0.8rem;
+  border-width: 2px; }
+.chat-pin-main { display: flex; flex-wrap: wrap; align-items: baseline;
+  gap: 0.05rem 0.45rem; }
+.chat-pin .chat-pin-meta { margin: 0; font-size: 0.8rem;
+  white-space: nowrap; }
+.chat-pin .chat-pin-text { font-size: 0.88rem; line-height: 1.4; }
+
+/* Pinned message: a slim bar across the top of the room. */
+.chat-pinned-inner { margin: 0; border: none; border-radius: 0;
+  border-bottom: 1px solid rgba(255,209,102,.45);
+  padding: 0.45rem 0.85rem; align-items: center; gap: 0.55rem; }
+.chat-pinned-inner .soc-avatar { width: 24px; height: 24px;
+  font-size: 0.72rem; border-width: 2px; }
+.chat-pinned-main { display: flex; flex-wrap: wrap; align-items: baseline;
+  gap: 0.05rem 0.45rem; }
+.chat-pinned-inner .chat-pin-meta { margin: 0; font-size: 0.78rem;
+  white-space: nowrap; }
+.chat-pinned-text { font-size: 0.88rem; }
+
+/* Flowing chat lines. */
+.chat-msgs { gap: 0; padding: 0.55rem 0.6rem; max-height: 62vh; }
+.chat-msg { gap: 0.5rem; padding: 0.16rem 0.35rem; border-radius: 6px; }
+.chat-msg:hover { background: rgba(143,216,255,.05); }
+.chat-ava { margin-top: 0.12rem; }
+.chat-ava .soc-avatar { width: 26px; height: 26px; font-size: 0.8rem;
+  border-width: 2px; }
+.chat-line { margin: 0; line-height: 1.42; overflow-wrap: anywhere; }
+.chat-handle { color: var(--hc, #8fd8ff); }
+.chat-time { font-size: 0.68rem; margin-left: 0.15rem; }
+.chat-msg { position: relative; }
+.chat-actions { position: absolute; top: 0.02rem; right: 0.3rem;
+  display: flex; gap: 0.05rem; align-items: center;
+  background: var(--card); border: 1px solid rgba(143,216,255,.3);
+  border-radius: 999px; padding: 0.05rem 0.35rem;
+  opacity: 0; pointer-events: none; }
+.chat-msg:hover .chat-actions,
+.chat-msg:focus-within .chat-actions { opacity: 1; pointer-events: auto; }
+.chat-actions .chat-replybtn, .chat-actions .chat-pinbtn,
+.chat-actions .chat-report, .chat-actions .chat-del { opacity: 1; }
+.chat-text { margin: 0; white-space: pre-wrap; }
+.chat-quote { margin-bottom: 0.15rem; padding: 0.22rem 0.5rem; }
+.chat-poll { margin: 0.25rem 0 0.3rem; }
+.chat-linkrow { margin: 0.1rem 0 0; }
+.chat-reacts { margin-top: 0.12rem; }
+.chat-react-add { opacity: 0; }
+.chat-msg:hover .chat-react-add,
+.chat-msg:focus-within .chat-react-add { opacity: 1; }
+.chat-sticker-big { font-size: 2.6rem; }
+/* Grouped follow-ups: no repeated handle, time or avatar — the text
+   just flows on, IRC-style. */
+.chat-msg-cont { padding-top: 0.02rem; }
+.chat-msg-cont .chat-ava { visibility: hidden; }
+.chat-msg-cont .chat-line .chat-handle,
+.chat-msg-cont .chat-line .chat-time { display: none; }
+
+/* Typing line sits right above the composer, like a real chatroom. */
+.chat-typingbar { min-height: 1.3rem; padding: 0.3rem 0.25rem 0.05rem; }
+.chat-typingbar .chat-typing { min-height: 0; }
+
+/* Composer: pinned under the room, one line that grows. */
+.chat-composer { position: sticky; bottom: 0.55rem; z-index: 6;
+  margin-top: 0.15rem; padding: 0.6rem 0.7rem 0.5rem; }
+.chat-composer-as { color: var(--muted); }
+.chat-input { border-radius: 999px; padding: 0.6rem 0.95rem; }
+.chat-send { border-radius: 999px; }
+
+@media (hover: none) {
+  /* No hover on touch: the action toolbar rides the line inline,
+     dimmed, instead of floating. */
+  .chat-actions { position: static; opacity: 0.55; pointer-events: auto;
+    background: none; border: none; padding: 0; margin-left: 0.25rem; }
+  .chat-react-add { opacity: 0.6; }
+}
+@media (max-width: 900px) {
+  /* Rail becomes a collapsible strip above the room. */
+  .chat-layout { flex-direction: column; }
+  .chat-main { width: 100%; }
+  .chat-rail { order: -1; flex: none; width: 100%; position: static;
+    box-sizing: border-box; }
+  .chat-rail-users { flex-direction: row; flex-wrap: wrap;
+    max-height: none; overflow: visible; }
+  .chat-rail .chat-presence-chip { width: auto; }
+  .chat-rail-dot { display: none; }
+}
+@media (max-width: 520px) {
+  .chat-roombar { padding: 0.5rem 0.7rem; }
+  .chat-roombar-title { font-size: 1.2rem; }
+  .chat-roombar-note { margin-left: 0; width: 100%; }
+  .chat-msgs { max-height: 56vh; padding: 0.5rem 0.4rem; }
+  .chat-msg { padding: 0.14rem 0.2rem; }
+  .chat-sticker-big { font-size: 2.2rem; }
+}
