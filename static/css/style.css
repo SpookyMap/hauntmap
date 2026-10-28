@@ -6703,7 +6703,7 @@ a.wn-card:hover { border-color: #57a8ff; box-shadow: 0 0 14px rgba(87, 168, 255,
   .wn-card-thumb { width: 52px; height: 52px; }
   .wn-card-emoji { font-size: 1.5rem; }
 }
-/* z204 STRUCTURAL REPAIR (STAGED with the What's New rail): the
+/* z205 STRUCTURAL REPAIR (shipped with the What's New rail): the
    z202 block above shipped WITHOUT this closing brace (still
    missing on live z203, verified Oct 28), so the whole z203 chat
    restyle below has been nested inside this max-width:480px query
@@ -6878,7 +6878,7 @@ a.wn-card:hover { border-color: #57a8ff; box-shadow: 0 0 14px rgba(87, 168, 255,
   .chat-sticker-big { font-size: 2.2rem; }
 }
 
-/* ============ z204: WHAT'S NEW LEFT-MARGIN RAIL (Dan, Oct 28, STAGED — not shipped) ====
+/* ============ z205: WHAT'S NEW LEFT-MARGIN RAIL (Dan, Oct 28) ====
    Dan's seat for the new-listing blog: ON TOP of the @gethauntmap
    TikTok promos in the homepage's left margin column, with its own
    internal scroll through ALL the new adds, organized by kind
