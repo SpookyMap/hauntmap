@@ -26,15 +26,28 @@
     <p class="status" id="hm-conn-status" aria-live="polite"></p>
   </div>
 <script>
-/* Self-healing (Oct 28, 2026): the service worker serves this page in
-   place of the failed navigation, so this document's URL is still the
-   page the visitor asked for — location.reload() re-requests THAT
-   page once the network answers again. Probe /healthz every ~12s and
-   also reload the moment the browser reports it is back online, so
-   nobody stays parked here after a brief deploy window. */
+/* Self-healing (Oct 28, 2026; probe hardened later the same day):
+   the service worker serves this page in place of the failed
+   navigation, so this document's URL is still the page the visitor
+   asked for — location.reload() re-requests THAT page once the
+   network answers again. Probe /healthz every ~12s and reload the
+   moment the browser reports it is back online, so nobody stays
+   parked here after a brief deploy window.
+   Hardening, after Dan's laptop sat at "Checking the connection…"
+   long after the site was back: (1) every probe has a 6s abort
+   timeout — a wedged connection can leave a fetch hanging forever,
+   and an unsettled probe must never be the only thing between the
+   visitor and the live site; (2) the probe URL is cache-busted so
+   no intermediary can answer it with a stale bad response; (3)
+   after 3 straight failed probes the page reloads ANYWAY every
+   ~60s — if the site is back the navigation just works, and if it
+   isn't, the SW serves this page again (no tight loop); (4) a tab
+   coming back to the foreground probes immediately. */
 (function () {
   "use strict";
   var recovered = false;
+  var probing = false;
+  var failures = 0;
   var statusEl = document.getElementById("hm-conn-status");
   function say(msg) { if (statusEl) { statusEl.textContent = msg; } }
   function recover() {
@@ -45,17 +58,36 @@
   }
   window.addEventListener("online", recover);
   function probe() {
-    if (recovered) { return; }
+    if (recovered || probing) { return; }
+    probing = true;
     say("Checking the connection…");
-    fetch("/healthz", { cache: "no-store" })
-      .then(function (resp) { if (resp && resp.ok) { recover(); } })
-      .catch(function () { /* still unreachable — keep waiting */ });
+    var ctl = ("AbortController" in window) ? new AbortController() : null;
+    var killer = ctl ? setTimeout(function () { ctl.abort(); }, 6000) : null;
+    var opts = { cache: "no-store" };
+    if (ctl) { opts.signal = ctl.signal; }
+    fetch("/healthz?hm_probe=" + Date.now(), opts)
+      .then(function (resp) {
+        if (resp && resp.ok) { recover(); return; }
+        onFailure();
+      })
+      .catch(function () { onFailure(); })
+      .then(function () {
+        if (killer) { clearTimeout(killer); }
+        probing = false;
+      });
+    function onFailure() {
+      failures += 1;
+      if (failures >= 3 && failures % 5 === 3) { recover(); }
+    }
   }
   probe();
   var timer = setInterval(function () {
     if (recovered) { clearInterval(timer); return; }
     probe();
   }, 12000);
+  document.addEventListener("visibilitychange", function () {
+    if (!document.hidden) { probe(); }
+  });
   var link = document.getElementById("hm-retry");
   if (link) {
     link.addEventListener("click", function (e) {

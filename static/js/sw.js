@@ -9,16 +9,17 @@
       never serve a stale or wrong site. */
 "use strict";
 
-/* v3 (Oct 28, 2026): bump so installs pick up the self-healing
-   offline page (auto-reload on reconnect) — the activate handler
-   deletes the older caches, and install re-caches the fresh page.
+/* v4 (Oct 28, 2026): bump so installs pick up the hardened
+   offline page (probe timeout + cache-busted probe + periodic
+   reload-anyway fallback) — the activate handler deletes the
+   older caches, and install re-caches the fresh page.
    OFFLINE_URL carries a ?rev= revision because Cloudflare's edge
    caches /static/ for a month: the bare URL still serves the
    pre-fix page there, while the revisioned URL misses that cache
    and always fetches the current file from origin. Bump BOTH the
    cache name and the rev whenever offline.html changes. */
-var STATIC_CACHE = "hauntmap-static-v3";
-var OFFLINE_URL = "/static/offline.html?rev=3";
+var STATIC_CACHE = "hauntmap-static-v4";
+var OFFLINE_URL = "/static/offline.html?rev=4";
 
 self.addEventListener("install", function (event) {
   event.waitUntil(
