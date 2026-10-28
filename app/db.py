@@ -166,7 +166,7 @@ from pathlib import Path
 #   Village Parade on NY Events Top 10" — it joins this set for
 #   the New York events board. Featured only — the hand-picked
 #   list is untouched.)
-FEATURED_ENTRY_IDS = (5541, 5542, 5551, 5584, 5587, 5175, 4370, 5653, 5654, 5655, 5766, 5572, 5940, 6006, 116, 6084, 4932, 6085, 6087, 6088, 6086, 6090, 6089, 6091, 30, 6098, 6096, 1641, 6092, 6100, 6099, 6101, 1239, 5728, 5967, 6095, 6097, 6093, 6094, 6102, 6103, 6105, 6106, 1996, 6104, 6108, 6107, 4268, 3983, 3992, 3997, 4004, 4193, 4677, 5966, 5970, 6109, 6110, 6111, 6112, 6113, 6114, 5950)
+FEATURED_ENTRY_IDS = (5541, 5542, 5551, 5584, 5587, 5175, 4370, 5653, 5654, 5655, 5766, 5572, 5940, 6006, 116, 6084, 4932, 6085, 6087, 6088, 6086, 6090, 6089, 6091, 30, 6098, 6096, 1641, 6092, 6100, 6099, 6101, 1239, 5728, 5967, 6095, 6097, 6093, 6094, 6102, 6103, 6105, 6106, 1996, 6104, 6108, 6107, 4268, 3983, 3992, 3997, 4004, 4193, 4677, 5966, 5970, 6109, 6110, 6111, 6112, 6113, 6114, 5950, 6226)
 # Hand-picked pins (Dan, Oct 23): pins Dan personally sent in chat or
 # curated for posting. These lead every feed view — hand-picked first
 # (newest hand-picked first), then all other pins newest-first — per
