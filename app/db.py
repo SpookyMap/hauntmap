@@ -1244,6 +1244,23 @@ def init_db(db_path: Path) -> None:
             conn, 24,
             "https://www.tiktok.com/@lilroamingexplorers/video/7701720133693099295",
         )
+        # Dan-sent video append (Oct 28): @estefaniibg's Del Percio's
+        # Haunted Estates walkthrough (video 7697022753223740692,
+        # 2026 season — Spanish-language tour of the free walk-through
+        # at 1000 Robwill Pass, Cherry Hill NJ, Fri–Sun 7–9 PM) joins
+        # the place's video-carrying pin (5655, "DelPercio's Haunted
+        # Estate", same address) — Dan picked 5655 himself out of the
+        # 75/88/5655 duplicate cluster. The pin already carries
+        # @shwetharamanna's video as primary, so this appends behind
+        # it at position 1; the primary and the pin's thumbnail/title
+        # are never touched. add_entry_video dedupes by video id, so
+        # repeat boots are no-ops. Cover is the video's own frame
+        # (the red-lit dragon).
+        add_entry_video(
+            conn, 5655,
+            "https://www.tiktok.com/@estefaniibg/video/7697022753223740692",
+            "/static/img/tt_7697022753223740692.jpg",
+        )
         if "is_handpicked" not in cols:
             # Hand-picked feed boost (Dan, Oct 23): pins Dan personally
             # sent/curated lead every feed. Ranking data is never
