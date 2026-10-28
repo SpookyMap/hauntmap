@@ -7612,6 +7612,15 @@ def auto_tour(request: Request, size: int = 10, cat: str = "halloween",
            "total_stops": 0, "total_miles": 0.0, "pool_size": 0,
            "multi": multi, "home_state": "", "home_state_name": "",
            "wide_pool_size": 0, "center_params": {}, "route_states": []}
+    # Town centers for the auto-tour page's client-side safety net
+    # (bare-arrival rebuild around the visitor's saved town / browser
+    # fix — same [label, city, state, clat, clng, count] shape and
+    # halloween inventory the homepage find block's TOWNS uses).
+    ctx["town_centers"] = [
+        [t["label"], t["city"], t["state"], t["clat"], t["clng"],
+         t["count"]]
+        for t in _town_inventory(None, "halloween")
+        if t.get("clat") is not None and t.get("clng") is not None]
     center: tuple[float, float] | None = None
     label = ""
     approx = False

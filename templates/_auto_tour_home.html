@@ -34,8 +34,13 @@
     try {
       var town = (localStorage.getItem('hm_town') || '').trim();
       if (!town) return;
+      // A saved "town" can be a bare ZIP (the /nearby search box
+      // stores whatever was typed) — those ride the route's zip=
+      // path: q= geocodes a ZIP string to a useless point and the
+      // tour comes back with zero stops (rig-verified, Oct 28).
+      var key = /^\d{5}$/.test(town) ? 'zip' : 'q';
       document.querySelectorAll('.auto-tour-btn').forEach(function (a) {
-        a.href += '&q=' + encodeURIComponent(town);
+        a.href += '&' + key + '=' + encodeURIComponent(town);
       });
     } catch (e) {}
   })();

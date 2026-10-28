@@ -212,4 +212,93 @@ document.querySelectorAll('.at-open-btn').forEach(btn => {
 });
 </script>
 {% endif %}
+<script>
+// Auto Tour safety net (Dan, Oct 28 — round 2). The homepage buttons
+// carry the visitor's saved town when the homepage tab is fresh and
+// hm_town exists on that device — but a bare arrival here (stale
+// homepage tab, a browser with no saved town, a shared/bookmarked
+// link) was built from IP geolocation alone, which puts metro-edge
+// visitors across the state line (Hackensack NJ -> an all-NYC tour).
+// So on a BARE load — no q / zip / lat / lng in the URL — this page
+// resolves the visitor itself, in the site's usual order:
+//   (a) the saved town (localStorage hm_town) -> reload through the
+//       route's town path (zip= for a bare-ZIP saved value);
+//   (b) one browser-geolocation attempt per session, resolved to the
+//       nearest town center with the same haversine pick the
+//       homepage "Use my location" flow makes, saved as hm_town,
+//       then (a).
+// Explicit-place loads are never touched; the hm_from_town marker
+// and the sessionStorage flag keep it loop-free and once-per-session,
+// and any form submit / button tap on this page stands the net down
+// for the rest of the session (the visitor has taken over).
+(function () {
+  try {
+    var params = new URLSearchParams(location.search);
+    if (params.get('q') || params.get('zip') ||
+        params.get('lat') || params.get('lng')) return;
+    if (params.get('hm_from_town')) return;
+    if (params.has('states')) return;
+    var KEY = 'hm_at_net';
+    var flag = '';
+    try { flag = sessionStorage.getItem(KEY) || ''; } catch (e) {}
+    if (flag) return;
+    function mark(v) { try { sessionStorage.setItem(KEY, v); } catch (e) {} }
+    function takenOver() { return flag === 'off'; }
+    document.addEventListener('submit', function () {
+      flag = 'off'; mark('off');
+    }, true);
+    document.addEventListener('click', function (ev) {
+      var t = ev.target;
+      if (t && t.closest && t.closest('button')) { flag = 'off'; mark('off'); }
+    }, true);
+    // The scope toggle submits via form.submit(), which fires no
+    // submit event — its change event is the takeover signal.
+    document.addEventListener('change', function () {
+      flag = 'off'; mark('off');
+    }, true);
+    function rebuild(key, val) {
+      mark('done');
+      var p = new URLSearchParams(location.search);
+      p.set(key, val);
+      p.set('hm_from_town', '1');
+      location.replace('/auto-tour?' + p.toString());
+    }
+    var town = '';
+    try { town = (localStorage.getItem('hm_town') || '').trim(); } catch (e) {}
+    if (town) {
+      rebuild(/^\d{5}$/.test(town) ? 'zip' : 'q', town);
+      return;
+    }
+    var TOWNS = {{ town_centers|tojson }};
+    if (!TOWNS.length || !navigator.geolocation) return;
+    mark('done');
+    var status = document.createElement('p');
+    status.className = 'at-note';
+    status.textContent = '\u{1F4CD} Finding your area\u2026';
+    var panel = document.querySelector('.at-panel');
+    if (panel) panel.insertBefore(status, panel.firstChild);
+    function havMi(a, b, c, d) {
+      var p = Math.PI / 180, p1 = a * p, p2 = c * p;
+      var dp = (c - a) * p, dl = (d - b) * p;
+      var x = Math.sin(dp / 2) * Math.sin(dp / 2) +
+              Math.cos(p1) * Math.cos(p2) * Math.sin(dl / 2) * Math.sin(dl / 2);
+      return 2 * 3958.8 * Math.asin(Math.sqrt(x));
+    }
+    navigator.geolocation.getCurrentPosition(function (pos) {
+      var best = null, bd = Infinity, i, d;
+      for (i = 0; i < TOWNS.length; i++) {
+        d = havMi(pos.coords.latitude, pos.coords.longitude,
+                  TOWNS[i][3], TOWNS[i][4]);
+        if (d < bd) { bd = d; best = TOWNS[i]; }
+      }
+      if (takenOver()) return;
+      if (!best) { status.remove(); return; }
+      try { localStorage.setItem('hm_town', best[0]); } catch (e) {}
+      rebuild('q', best[0]);
+    }, function () {
+      status.remove();
+    }, { timeout: 10000, maximumAge: 600000 });
+  } catch (e) {}
+})();
+</script>
 {% endblock %}
