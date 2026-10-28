@@ -10005,6 +10005,204 @@ def _page_breakdown() -> list:
     return _ttl_cached("admin:page_breakdown", _page_breakdown_build)
 
 
+# ------------------------------------------ traffic tracker (Oct 28)
+# Dan's ask: WHEN are people here, and FROM WHERE — on the same stats
+# page. Three blocks, all HUMAN views only (the sponsor screen:
+# _MK_HUMAN machine paths + _machine_ua_sql machine agents, the same
+# definition Views by page and the U.S. states table use):
+#   ⏰ Busiest hours — views by hour of day in America/New_York.
+#      viewed_at is stored in UTC, so the query groups by UTC hour
+#      (indexed, ~200 rows over the reach-back) and each bucket is
+#      converted to ET in Python — zoneinfo gets DST right per bucket
+#      where a fixed SQL hour offset would not. "Today" and "last 7
+#      days" are ET calendar days, labelled as such.
+#   🔗 Where they came from — referrer classified into buckets.
+#      Empty referrer = Direct (typed / bookmark / in-app browsers
+#      that strip it, TikTok's included — its traffic mostly lands
+#      here, not under TikTok). Same-site referrers (gethauntmap.com
+#      + the hauntmap.onrender.com origin) = Internal: how people
+#      move around once here. Everything else external keeps its
+#      host in a sub-list so a new source is visible by name.
+#   🌎 Where they're from — top states/cities over the geo window.
+#      Region only exists since the location collection started
+#      (Oct 27, 2026); the window label is computed from the earliest
+#      geo row actually present, never hard-coded.
+# Aggregated SQL only (GROUP BY hour / referrer / region), TTL-cached
+# like the other admin aggregates — page_views grows ~30k rows/day.
+
+_REF_BUCKETS = ("Direct", "Internal", "Google", "TikTok", "Facebook",
+                "Instagram", "X / Twitter", "Other external")
+
+
+def _ref_bucket(referrer: str | None) -> tuple:
+    """(bucket, host) for one stored referrer. Host is only used for
+    the Other-external sub-list."""
+    if not referrer:
+        return "Direct", None
+    host = (urllib.parse.urlparse(referrer).netloc or "").lower()
+    host = host.split("@")[-1].split(":")[0]
+    if not host:
+        return "Other external", "(unreadable referrer)"
+    if host == "gethauntmap.com" or host.endswith(".gethauntmap.com") \
+            or host == "hauntmap.onrender.com" \
+            or host.endswith(".hauntmap.onrender.com"):
+        return "Internal", host
+    if "google." in host:
+        return "Google", host
+    if "tiktok" in host:
+        return "TikTok", host
+    if "facebook" in host or host == "fb.com" or host == "fb.me":
+        return "Facebook", host
+    if "instagram" in host:
+        return "Instagram", host
+    if host in ("x.com", "twitter.com") or host.endswith(".x.com") \
+            or host.endswith(".twitter.com"):
+        return "X / Twitter", host
+    return "Other external", host
+
+
+def _hour_range_label(h: int) -> str:
+    """'7–8 PM' for hour 19 — the callout line's peak-hour wording."""
+    def lab(x):
+        x %= 24
+        return f"{x % 12 or 12} {'AM' if x < 12 else 'PM'}"
+    a, b = lab(h), lab(h + 1)
+    if a.rsplit(" ", 1)[1] == b.rsplit(" ", 1)[1]:
+        return f"{a.rsplit(' ', 1)[0]}–{b}"
+    return f"{a}–{b}"
+
+
+def _traffic_tracker_build() -> dict:
+    from zoneinfo import ZoneInfo
+    et = ZoneInfo("America/New_York")
+    frag, frag_params = _machine_ua_sql()
+    human = f"{_MK_HUMAN} AND {frag}"
+    today_et = datetime.now(et).date()
+    week_start_et = today_et - timedelta(days=6)
+    out = {"hours_today": None, "hours_week": None, "sources": [],
+           "sources_hosts": [], "sources_total7": 0,
+           "states": [], "cities": [], "geo_since_label": None,
+           "geo_total": 0, "geo_outside_us": 0}
+    with get_conn(DB_PATH) as conn:
+        # --- ⏰ hours: UTC-hour buckets -> ET hour of day ---
+        today_hours = [0] * 24
+        week_hours = [0] * 24
+        for r in conn.execute(
+                "SELECT strftime('%Y-%m-%dT%H', viewed_at) AS uh, "
+                "COUNT(*) AS n FROM page_views "
+                f"WHERE {human} AND viewed_at >= datetime('now', '-9 days') "
+                "GROUP BY uh", frag_params):
+            try:
+                bucket = datetime.strptime(
+                    r["uh"], "%Y-%m-%dT%H").replace(tzinfo=timezone.utc)
+            except (TypeError, ValueError):
+                continue
+            local = bucket.astimezone(et)
+            if week_start_et <= local.date() <= today_et:
+                week_hours[local.hour] += r["n"]
+                if local.date() == today_et:
+                    today_hours[local.hour] += r["n"]
+
+        def _hours_block(counts, label):
+            peak = max(range(24), key=lambda h: counts[h])
+            top = max(counts) or 1
+            bars = [{
+                "short": f"{h % 12 or 12}{'a' if h < 12 else 'p'}",
+                "count": counts[h],
+                "count_label": (f"{counts[h] / 1000:.1f}k"
+                                if counts[h] >= 10000
+                                else f"{counts[h]:,}"),
+                "pct": round(counts[h] / top * 100, 1),
+                "peak": h == peak and counts[h] > 0,
+                "tip": f"{_hour_range_label(h)} ET — {counts[h]:,} views",
+            } for h in range(24)]
+            return {"label": label, "bars": bars, "total": sum(counts),
+                    "peak_label": _hour_range_label(peak),
+                    "peak_count": counts[peak]}
+
+        out["hours_today"] = _hours_block(
+            today_hours, f"Today — {today_et.strftime('%a %b %-d')} (ET)")
+        out["hours_week"] = _hours_block(
+            week_hours,
+            f"Last 7 days — {week_start_et.strftime('%b %-d')} – "
+            f"{today_et.strftime('%b %-d')} (ET)")
+
+        # --- 🔗 sources: grouped by raw referrer, classified here.
+        # "Today" is the ET calendar day (same as the hours block
+        # above), passed as a UTC ISO bound so the whole section
+        # agrees with itself.
+        today_start_utc = datetime.combine(
+            today_et, datetime.min.time(), tzinfo=et).astimezone(
+                timezone.utc).strftime("%Y-%m-%dT%H:%M:%S")
+        agg = {b: {"bucket": b, "n": 0, "n_today": 0}
+               for b in _REF_BUCKETS}
+        hosts: dict = {}
+        for r in conn.execute(
+                "SELECT referrer, COUNT(*) AS n, "
+                "SUM(CASE WHEN viewed_at >= ? "
+                "THEN 1 ELSE 0 END) AS n_today FROM page_views "
+                f"WHERE {human} AND viewed_at >= datetime('now', '-7 days') "
+                "GROUP BY referrer", (today_start_utc, *frag_params)):
+            bucket, host = _ref_bucket(r["referrer"])
+            agg[bucket]["n"] += r["n"]
+            agg[bucket]["n_today"] += r["n_today"] or 0
+            if bucket == "Other external" and host:
+                hosts[host] = hosts.get(host, 0) + r["n"]
+        total7 = sum(v["n"] for v in agg.values())
+        out["sources_total7"] = total7
+        out["sources"] = sorted(
+            (dict(v, share=round(v["n"] / total7 * 100, 1) if total7 else 0.0)
+             for v in agg.values()),
+            key=lambda v: -v["n"])
+        out["sources_hosts"] = sorted(
+            hosts.items(), key=lambda kv: -kv[1])[:8]
+
+        # --- 🌎 geo: states/cities over the geo window only ---
+        geo_rows = conn.execute(
+            "SELECT region, COUNT(*) AS n FROM page_views "
+            f"WHERE {human} AND country = 'US' "
+            "AND region IS NOT NULL AND region != '' "
+            "GROUP BY region ORDER BY n DESC LIMIT 10",
+            frag_params).fetchall()
+        us_geo = conn.execute(
+            "SELECT COUNT(*) FROM page_views "
+            f"WHERE {human} AND country = 'US' "
+            "AND region IS NOT NULL AND region != ''",
+            frag_params).fetchone()[0]
+        out["geo_total"] = us_geo
+        out["states"] = [{
+            "label": US_STATE_NAMES.get(r["region"], r["region"]),
+            "code": r["region"], "views": r["n"],
+            "share": round(r["n"] / us_geo * 100, 1) if us_geo else 0.0,
+        } for r in geo_rows]
+        out["geo_outside_us"] = conn.execute(
+            "SELECT COUNT(*) FROM page_views "
+            f"WHERE {human} AND country IS NOT NULL AND country != '' "
+            "AND country != 'US'", frag_params).fetchone()[0]
+        for r in conn.execute(
+                "SELECT city, region, COUNT(*) AS n FROM page_views "
+                f"WHERE {human} AND city IS NOT NULL AND city != '' "
+                "GROUP BY city, region ORDER BY n DESC LIMIT 5",
+                frag_params):
+            label = r["city"] + (f", {r['region']}" if r["region"] else "")
+            out["cities"].append({"label": label, "views": r["n"]})
+        first_geo = conn.execute(
+            "SELECT MIN(viewed_at) FROM page_views "
+            f"WHERE {human} AND region IS NOT NULL AND region != ''",
+            frag_params).fetchone()[0]
+        if first_geo:
+            try:
+                d = datetime.fromisoformat(first_geo).astimezone(et).date()
+                out["geo_since_label"] = d.strftime("%b %-d, %Y")
+            except ValueError:
+                out["geo_since_label"] = None
+    return out
+
+
+def _traffic_tracker() -> dict:
+    return _ttl_cached("admin:traffic_tracker", _traffic_tracker_build)
+
+
 # ------------------------------------------------- US states (Oct 27)
 # Dan's ask: which U.S. states are visiting — the whole map, not a
 # top-20. Built from page_views geography: country has flowed from
@@ -10306,6 +10504,7 @@ def admin_stats(request: Request):
          "top_referrers": top_referrers, "by_device": by_device,
          "duration": duration, "engagement": engagement,
          "geo": geo, "geo_since": _GEO_COLLECTING_SINCE,
+         "tracker": _traffic_tracker(),
          "us_states": _us_states_stats(),
          "ip_geo_since": _IP_GEO_COLLECTING_SINCE,
          "page_time": _page_time_stats()})
