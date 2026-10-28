@@ -8944,30 +8944,32 @@ def movies_page(request: Request):
 # Episode" by Friends Keep Secrets. Display titles drop the
 # hashtags/emoji the raw oEmbed titles carry; the words are the
 # creators' own.
-# New lead (Dan, 2026-10-28): cadenmcdonald's flying-ghost reel,
-# sent as a facebook.com/share/r link and resolved via the Facebook
-# connector (canonical reel 1131678265990324, public, posted
-# Oct 21, 2026; caption "I need this for Halloween"). First
-# Facebook FEATURED entry: it carries "platform" + "url" + "thumb"
-# like the grid's non-YouTube entries — the still is the reel's own
-# cover frame from Facebook's plugin page, stored locally as
-# static/img/cadenmcdonald_flying_ghost.jpg (the video itself is
-# never re-hosted — tap swaps in Facebook's official embedded
-# player). Display title is the caption's own words, emoji dropped.
-# The Brooklyn walk that led the page until now heads the grid
-# below instead.
+# New lead (Dan, 2026-10-28): @themeparkmom's 2026 Jurassic Park
+# Halloween show, sent as a tiktok.com/t short link (canonical
+# video 7701544192211684639, public; caption "It's FINALLY time
+# to share this year's Jurassic Park Halloween show!"). First
+# TikTok FEATURED entry: it carries "platform" + "url" + "thumb"
+# like the grid's non-YouTube entries — the still is the video's
+# own frame (the T. rex at the paddock fence), stored locally as
+# static/img/themeparkmom_jurassic_park.jpg (the video itself is
+# never re-hosted — tap swaps in TikTok's official embed/v2
+# player). Display title is the caption's own words, trimmed.
+# The cadenmcdonald flying-ghost reel that led the page until
+# now heads the grid below instead.
 POP_CULTURE_FEATURED = {
-    "id": "1131678265990324",
-    "platform": "facebook",
-    "url": "https://www.facebook.com/reel/1131678265990324/",
-    "thumb": "/static/img/cadenmcdonald_flying_ghost.jpg",
-    "title": "I need this for Halloween",
-    "channel": "cadenmcdonald",
-    "kind": "Facebook Reel", "short": True,
-    "blurb": "Remote in hand, cadenmcdonald sends a flying ghost "
-             "drone out over the neighborhood — a sheet ghost on a "
-             "drone, swooping at anyone in range — and his verdict "
-             "is instant: he needs one for Halloween. Ten, ideally.",
+    "id": "7701544192211684639",
+    "platform": "tiktok",
+    "url": "https://www.tiktok.com/@themeparkmom/video/7701544192211684639",
+    "thumb": "/static/img/themeparkmom_jurassic_park.jpg",
+    "title": "It's FINALLY Time to Share This Year's Jurassic "
+             "Park Halloween Show!",
+    "channel": "themeparkmom",
+    "kind": "TikTok", "short": True,
+    "blurb": "Weeks of building, painting and editing, and "
+             "themeparkmom's Jurassic Park Halloween show is "
+             "finally open: the gates, the paddock fence, the "
+             "tour — and a T. rex on the loose. Welcome to "
+             "Jurassic Park… just watch out for the T. rex!",
 }
 # The collection grid. Dan feeds entries one at a time; append dicts of
 # {"id", "title", "channel", "kind", "blurb"} — the template renders
@@ -8978,6 +8980,21 @@ POP_CULTURE_FEATURED = {
 # cover-frame file in static/img/): the template renders the local
 # still and the click handler swaps in that platform's official embed.
 POP_CULTURE_GRID: list[dict] = [
+    # The page's second lead (Dan, 2026-10-28): cadenmcdonald's
+    # flying-ghost Facebook reel — moved to the head of the grid
+    # on 2026-10-28 when @themeparkmom's Jurassic Park TikTok
+    # took the featured slot.
+    {"id": "1131678265990324",
+     "platform": "facebook",
+     "url": "https://www.facebook.com/reel/1131678265990324/",
+     "thumb": "/static/img/cadenmcdonald_flying_ghost.jpg",
+     "title": "I need this for Halloween",
+     "channel": "cadenmcdonald",
+     "kind": "Facebook Reel", "short": True,
+     "blurb": "Remote in hand, cadenmcdonald sends a flying ghost "
+              "drone out over the neighborhood — a sheet ghost on a "
+              "drone, swooping at anyone in range — and his verdict "
+              "is instant: he needs one for Halloween. Ten, ideally."},
     # The page's original lead (Dan, 2026-10-27, oEmbed-verified):
     # moved to the head of the grid on 2026-10-28 when
     # cadenmcdonald's Facebook reel took the featured slot.

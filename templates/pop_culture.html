@@ -17,6 +17,11 @@
     <img src="{{ featured.thumb }}" alt="" loading="lazy">
     <span class="yt-play" aria-hidden="true">&#9654;</span>
   </button>
+  {% elif featured.platform == 'tiktok' %}
+  <button type="button" class="yt-facade yt-facade--tt" data-ttv="{{ featured.id }}" aria-label="Play {{ featured.title }}">
+    <img src="{{ featured.thumb }}" alt="" loading="lazy">
+    <span class="yt-play" aria-hidden="true">&#9654;</span>
+  </button>
   {% else %}
   <button type="button" class="yt-facade" data-yt="{{ featured.id }}" aria-label="Play {{ featured.title }}">
     <img src="https://i.ytimg.com/vi/{{ featured.id }}/hqdefault.jpg" alt="" loading="lazy">

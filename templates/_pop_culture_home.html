@@ -1,8 +1,9 @@
 {# Pop Haunt Culture — homepage feature (Dan, Oct 27): Dan asked for
    a Pop Haunt Culture feature RIGHT BELOW the top search bar,
    leading with whatever video the section page leads with (the
-   best-of-Brooklyn walk at launch; a Facebook reel since Oct 28 —
-   the facade below branches on the lead's platform). The block lives inside .hero-intro directly under the
+   best-of-Brooklyn walk at launch; a Facebook reel, then a TikTok
+   lead since Oct 28 — the facade below branches on the lead's
+   platform). The block lives inside .hero-intro directly under the
    .hm-find block, so ONE copy serves both viewports (exactly like
    .hm-find itself): on laptop it heads the hero panel above the
    .hero-stack (Near You and everything after keep their order);
@@ -14,6 +15,11 @@
   <h2>&#x1F4FA; Pop Haunt Culture</h2>
   {% if pop_featured.platform == 'facebook' %}
   <button type="button" class="yt-facade yt-facade--fb" data-fb="{{ pop_featured.url }}" aria-label="Play {{ pop_featured.title }}">
+    <img src="{{ pop_featured.thumb }}" alt="" loading="lazy">
+    <span class="yt-play" aria-hidden="true">&#9654;</span>
+  </button>
+  {% elif pop_featured.platform == 'tiktok' %}
+  <button type="button" class="yt-facade yt-facade--tt" data-ttv="{{ pop_featured.id }}" aria-label="Play {{ pop_featured.title }}">
     <img src="{{ pop_featured.thumb }}" alt="" loading="lazy">
     <span class="yt-play" aria-hidden="true">&#9654;</span>
   </button>
@@ -31,15 +37,24 @@
   // /music and /movies): the real player only loads when a visitor
   // taps the cover — no autoplay, no third-party requests before it.
   // Facebook leads (data-fb) swap in Facebook's official embedded
-  // player, exactly as on the section page; anything else is a
-  // YouTube lead.
+  // player and TikTok leads (data-ttv) swap in TikTok's official
+  // embed/v2 player, exactly as on the section page; anything else
+  // is a YouTube lead.
   document.addEventListener('click', function (ev) {
     var b = ev.target.closest && ev.target.closest('.pop-home .yt-facade');
     if (!b || b.dataset.loaded) return;
     b.dataset.loaded = '1';
     var f = document.createElement('iframe');
     var fb = b.getAttribute('data-fb');
-    if (fb) {
+    var tt = b.getAttribute('data-ttv');
+    if (tt) {
+      f.className = 'tt-frame';
+      f.src = 'https://www.tiktok.com/embed/v2/' + tt;
+      f.setAttribute('allow', 'autoplay; encrypted-media; fullscreen; picture-in-picture');
+      f.setAttribute('allowfullscreen', '');
+      f.setAttribute('scrolling', 'no');
+      f.setAttribute('title', b.getAttribute('aria-label') || 'TikTok video');
+    } else if (fb) {
       f.className = 'fb-frame';
       f.src = 'https://www.facebook.com/plugins/video.php?href=' +
         encodeURIComponent(fb) + '&show_text=false&autoplay=true';
