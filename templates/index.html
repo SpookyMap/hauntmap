@@ -965,7 +965,7 @@ function hmFullHomepage() {
 </div>
 <div class="cat-tabs-sub">
   <span class="cat-sub-label tour-fuel-label-drip">Tour fuel:</span>
-  {% for c in ['coffee', 'restaurants', 'shops', 'parks', 'hotels'] %}
+  {% for c in ['coffee', 'restaurants', 'shops', 'parks', 'hotels', 'ice_cream'] %}
   <a href="/?cat={{ c }}{% if sort != 'new' %}&sort={{ sort }}{% endif %}{% if town %}&town={{ town }}{% endif %}{% if video %}&video=1{% endif %}" class="cat-btn-sub {% if cat == c %}active{% endif %}">{{ cat_emoji[c] }} {{ cat_labels[c] }}</a>
   {% endfor %}
 </div>
