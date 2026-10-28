@@ -1115,6 +1115,72 @@ def init_db(db_path: Path) -> None:
             conn, 4268,
             "https://www.tiktok.com/@ninjamomm/video/7700668531167350047",
         )
+        # batch02 backlog appends (Oct 28): Dan's "post the 153 batch"
+        # run — second videos of places whose pins already carry a
+        # primary join their one pin (the standing one-pin-per-place
+        # rule). Primaries were filled first via /admin/edit where the
+        # pin had none (33, 45, 49, 331, 337, 1967); pins 30 and 174
+        # already had primaries. add_entry_video dedupes by video id,
+        # so repeat boots are no-ops and primaries are never touched.
+        add_entry_video(
+            conn, 30,
+            "https://www.tiktok.com/@lilroamingexplorers/video/7695744716171726111",
+        )
+        add_entry_video(
+            conn, 33,
+            "https://www.tiktok.com/@lilroamingexplorers/video/7693949903176879391",
+        )
+        add_entry_video(
+            conn, 45,
+            "https://www.tiktok.com/@holiday.houses.on.li/video/7698220441479007502",
+        )
+        add_entry_video(
+            conn, 49,
+            "https://www.tiktok.com/@holiday.houses.on.li/video/7695028746406874398",
+        )
+        add_entry_video(
+            conn, 174,
+            "https://www.tiktok.com/@palmeravenuehaunt/video/7698864687143849247",
+        )
+        add_entry_video(
+            conn, 331,
+            "https://www.tiktok.com/@holiday.houses.on.li/video/7692603341339135246",
+        )
+        add_entry_video(
+            conn, 337,
+            "https://www.tiktok.com/@5thstreethaunt/video/7696003645413838094",
+        )
+        add_entry_video(
+            conn, 337,
+            "https://www.tiktok.com/@5thstreethaunt/video/7697738366917365006",
+        )
+        add_entry_video(
+            conn, 1967,
+            "https://www.tiktok.com/@roroaming/video/7699565270209269022",
+        )
+        # batch02 appends behind SHORT-LINK primaries (Oct 28): pins
+        # 177 and 813 store their primary as a tiktok.com/t/ short
+        # link, which has no /video/ id — add_entry_video would treat
+        # the pin as video-less and replace the mirror. Seed the
+        # resolved primary first (same video: 177 = @thekaylamurphy
+        # 7693715642515557645 via t/ZPLAe91oE; 813 = @anniedoescomedy
+        # 7698211947409444110 via t/ZPLARyN9E), then append.
+        add_entry_video(
+            conn, 177,
+            "https://www.tiktok.com/@thekaylamurphy/video/7693715642515557645",
+        )
+        add_entry_video(
+            conn, 177,
+            "https://www.tiktok.com/@holiday.houses.on.li/video/7700334366261595405",
+        )
+        add_entry_video(
+            conn, 813,
+            "https://www.tiktok.com/@anniedoescomedy/video/7698211947409444110",
+        )
+        add_entry_video(
+            conn, 813,
+            "https://www.tiktok.com/@afrazexplores/video/7695873448731528461",
+        )
         if "is_handpicked" not in cols:
             # Hand-picked feed boost (Dan, Oct 23): pins Dan personally
             # sent/curated lead every feed. Ranking data is never
