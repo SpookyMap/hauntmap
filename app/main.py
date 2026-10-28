@@ -8837,6 +8837,27 @@ POP_CULTURE_FEATURED = {
 # cover-frame file in static/img/): the template renders the local
 # still and the click handler swaps in that platform's official embed.
 POP_CULTURE_GRID: list[dict] = [
+    # First TikTok entry (Dan, 2026-10-27): LoopCuties' "tiny
+    # gangster" Nyx clip — a tiny marmoset in a tinier ski mask,
+    # viewed 6.9M times. Public video (posted Oct 21, 2026); the
+    # still is the video's own cover frame, stored locally as
+    # static/img/loopcuties_nyx_tiny_gangster.jpg (the video
+    # itself is never re-hosted — tap swaps in TikTok's official
+    # embed/v2 player). Display title drops the caption's
+    # hashtags/emoji; the words are the creator's own.
+    {"id": "7698867083244817686",
+     "platform": "tiktok",
+     "url": "https://www.tiktok.com/@loopcuties.official/video/7698867083244817686",
+     "thumb": "/static/img/loopcuties_nyx_tiny_gangster.jpg",
+     "title": "POV: Strawberries Aren't Free Anymore",
+     "channel": "LoopCuties",
+     "kind": "TikTok", "short": True,
+     "blurb": "Nyx, a tiny marmoset who rides around on his "
+              "human's thumb, is done asking nicely: on goes the "
+              "tiny black ski mask, out comes the tiniest toy "
+              "water pistol, and the villain era begins — all "
+              "over strawberries. LoopCuties' 'tiny gangster' "
+              "clip has been viewed 6.9 million times."},
     # First Facebook entry (Dan, 2026-10-27): Dude Dad's couples-costume
     # reel, shared by Dan as a facebook.com/share/r link and resolved
     # via the Facebook connector. Public reel (posted Oct 26, 2026);

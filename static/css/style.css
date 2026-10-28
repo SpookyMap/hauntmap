@@ -6617,3 +6617,20 @@ span.chat-react-chip { cursor: default; }
 .costume-card .tt-facade { display: block; width: 100%; max-width: 300px; aspect-ratio: 9 / 16; margin: 0 auto 0.35rem; border: 1px solid #274860; border-radius: var(--radius); overflow: hidden; background: #000; }
 .costume-card .tt-facade img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .costume-card .tt-facade:hover .tt-play, .costume-card .tt-facade:focus-visible .tt-play { background: #ff8c42; }
+
+/* ============ z201: POP HAUNT CULTURE — FIRST TIKTOK ENTRY (Dan, Oct 27) ====
+   LoopCuties' "tiny gangster" Nyx clip joins the /pop-haunt-culture
+   grid as its first TikTok entry and its new lead card. Facade
+   mirrors the z196 Facebook pattern — vertical 9/16, the video's
+   own cover frame stored locally as
+   static/img/loopcuties_nyx_tiny_gangster.jpg (signed CDN URLs
+   expire) under the shared .yt-facade chrome, centered in the grid
+   column; on tap the template's handler swaps in TikTok's official
+   embed/v2 player (.tt-frame, the fan-art construction — allow
+   incl. fullscreen). Scoped to the pop page's classes so nothing
+   else moves. */
+.yt-facade--tt { aspect-ratio: 9 / 16; max-width: 300px; margin: 0 auto; }
+.yt-facade--tt img { object-fit: cover; }
+.tt-frame { width: 100%; max-width: 340px; aspect-ratio: 9 / 16;
+  margin: 0 auto; border: 1px solid #274860; border-radius: var(--radius);
+  display: block; background: #000; overflow: hidden; }
