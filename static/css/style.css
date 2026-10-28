@@ -7144,3 +7144,40 @@ a.wn-fbtn:hover, summary.wn-fbtn:hover { border-color: #57a8ff; }
   .wn-fbtn { font-size: 0.82rem; padding: 0.38rem 0.7rem; }
   .wn-slist { min-width: 200px; }
 }
+
+/* ============ z215: TOP10 PICKER — SCROLL WINDOW + ALL STATES (Dan, Oct 28) ======
+   The picker's 46-board state list moves into its own scroll window
+   (.top10-menu-list) so the panel itself stays compact: the panel no
+   longer scrolls as one tall sheet (the z207 max-height/overflow on
+   .top10-menu is lifted — hero-stack and phone overrides included);
+   the list scrolls inside a fixed window with the panel's themed
+   thin scrollbar. overscroll-behavior: contain keeps an end-of-list
+   flick from chaining into page scroll; touch scroll stays native.
+   The "🌎 All States" button pins at the panel top (above the
+   "↩ Your state" reset), accent-lit like the reset, and loads the
+   combined nationwide Top 10 via /api/top10?state=ALL. */
+.top10-menu { max-height: none; overflow: visible; }
+.hero-stack .top10-menu { max-height: none; }
+.top10-menu-list {
+  max-height: 264px; overflow-y: auto; overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin; scrollbar-color: #2b5878 transparent;
+}
+.top10-menu-list::-webkit-scrollbar { width: 8px; }
+.top10-menu-list::-webkit-scrollbar-thumb { background: #2b5878; border-radius: 6px; }
+.top10-menu-list::-webkit-scrollbar-track { background: transparent; }
+.hero-stack .top10-menu-list { max-height: 240px; }
+.top10-menu-all {
+  display: flex; align-items: center; gap: 0.5rem; width: 100%;
+  appearance: none; cursor: pointer; text-align: left;
+  font: inherit; font-size: 0.92rem; font-weight: 800; color: var(--accent2);
+  background: rgba(87, 168, 255, 0.10);
+  border: 0; border-bottom: 1px solid #274860; border-radius: 8px 8px 0 0;
+  padding: 0.5rem 0.55rem; margin-bottom: 0.3rem;
+}
+.top10-menu-all:hover { background: rgba(87, 168, 255, 0.16); }
+.top10-menu-all.is-active { background: rgba(87, 168, 255, 0.22); }
+@media (max-width: 760px) {
+  .top10-menu { max-height: none; }
+  .top10-menu-list { max-height: 38vh; }
+}

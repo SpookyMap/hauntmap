@@ -7361,9 +7361,32 @@ def api_top10(state: str = "", cat: str = "halloween"):
     /leaderboard/states via _state_boards; fetched lazily when a
     visitor picks a state so the homepage itself stays fast. A state
     with no board in the category 404s — the menu only ever offers
-    states that have one."""
+    states that have one.
+
+    state=ALL (z215, Dan Oct 28) serves the COMBINED board: every
+    pin that belongs to some state's board (parseable state in the
+    town label — the union of all state boards), ranked with the
+    same _rank_with_featured mechanic; its "see them all" target is
+    the nationwide Top 100 page."""
     cat = cat if cat in CATEGORIES else "halloween"
     code = (state or "").strip().upper()
+    if code == "ALL":
+        with get_conn(DB_PATH) as conn:
+            entries = _entries_with_views(conn, cat)
+        rows = [e for e in entries
+                if extract_state(e.get("town") or "")]
+        top = _rank_with_featured(rows, 10)
+        return {
+            "ok": True, "code": "ALL", "name": "All States",
+            "count": len(rows), "cat": cat,
+            "board_url": f"/leaderboard/top-100?cat={cat}",
+            "entries": [{"id": e["id"], "title": e["title"],
+                         "town": (e.get("town_label") or e.get("town")
+                                  or ""),
+                         "views": e.get("_views") or 0,
+                         "featured": bool(e.get("is_featured"))}
+                        for e in top],
+        }
     board = next((b for b in _state_boards(cat) if b["code"] == code),
                  None)
     if board is None:

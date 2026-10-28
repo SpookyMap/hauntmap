@@ -11,14 +11,17 @@
    banner (Dan, Oct 23 ~21:33) — with CSS keeping exactly one copy
    visible per viewport.
 
-   STATE PICKER MENU (top10-menu-staged, Dan Oct 28 — STAGED for his
-   preview, do not ship): a "Top 10 by State ▾" dropdown in the block
-   header lists every state/province board in the category (top10_menu,
-   server-rendered) in a scrollable panel; picking one swaps the block
-   in place to that state's FULL Top 10 via /api/top10. The DEFAULT
-   stays the visitor's own state (near-me state rule) — the menu is
-   an explicit visitor pick, with a "↩ Your state" reset once a
-   different state is showing. #}
+   STATE PICKER MENU (top10-menu-staged, Dan Oct 28; shipped z207):
+   a "Top 10 by State ▾" dropdown in the block header lists every
+   state/province board in the category (top10_menu, server-rendered);
+   picking one swaps the block in place to that state's FULL Top 10
+   via /api/top10. The DEFAULT stays the visitor's own state (near-me
+   state rule) — the menu is an explicit visitor pick, with a
+   "↩ Your state" reset once a different state is showing.
+   z215 (Dan, Oct 28): the state list now sits in its own scroll
+   window (.top10-menu-list) so the panel stays compact, and an
+   "🌎 All States" button pinned at the panel top loads the combined
+   nationwide Top 10 via /api/top10?state=ALL. #}
 <section class="top10-home{% if hero %} hero-copy{% endif %}{% if not home_top10 %} top10-home--cta{% endif %}" aria-label="Top 10 by state"{% if home_top10 %} data-top10-block data-home-state="{{ home_top10.code }}" data-cat="{{ cat }}" data-cat-label="{{ cat_labels[cat]|lower }}"{% endif %}>
   {% if home_top10 %}
   <div class="top10-head">
@@ -27,10 +30,13 @@
     <div class="top10-menu-wrap">
       <button type="button" class="top10-menu-btn" aria-haspopup="true" aria-expanded="false">Top 10 by State <span class="top10-menu-caret" aria-hidden="true">&#x25BE;</span></button>
       <div class="top10-menu" hidden role="menu" aria-label="Pick a state Top 10">
+        <button type="button" class="top10-menu-all" data-top10-all role="menuitem"><span class="top10-menu-item-name">&#x1F30E; All States</span><span class="top10-menu-count">{{ top10_menu | sum(attribute='count') }}</span></button>
         <button type="button" class="top10-menu-reset" data-top10-reset hidden>&#x21A9; Your state &mdash; {{ home_top10.name }}</button>
+        <div class="top10-menu-list">
         {% for s in top10_menu %}
         <button type="button" class="top10-menu-item{% if s.code == home_top10.code %} is-home is-active{% endif %}" data-state="{{ s.code }}" role="menuitem"><span class="top10-menu-item-name">{{ s.name }}</span>{% if s.code == home_top10.code %}<span class="top10-menu-you">Your state</span>{% endif %}<span class="top10-menu-count">{{ s.count }}</span></button>
         {% endfor %}
+        </div>
       </div>
     </div>
     {% endif %}
@@ -87,8 +93,11 @@
           var sub = sec.querySelector("[data-top10-sub]");
           sub.textContent = (d.code === home)
             ? sub.getAttribute("data-own-sub")
-            : ("The most-viewed " + (sec.getAttribute("data-cat-label") || "halloween") +
-               " haunts in " + d.name);
+            : (d.code === "ALL")
+              ? ("The most-viewed " + (sec.getAttribute("data-cat-label") || "halloween") +
+                 " haunts across all states")
+              : ("The most-viewed " + (sec.getAttribute("data-cat-label") || "halloween") +
+                 " haunts in " + d.name);
           list.innerHTML = d.entries.map(function (e, i) {
             return '<li><a href="/d/' + e.id + '">' +
               '<span class="t10-rank">#' + (i + 1) + "</span>" +
@@ -106,6 +115,8 @@
             it.classList.toggle("is-active",
               it.getAttribute("data-state") === d.code);
           });
+          var allBtn = sec.querySelector("[data-top10-all]");
+          if (allBtn) allBtn.classList.toggle("is-active", d.code === "ALL");
         })
         .catch(function () { list.style.opacity = ""; });
     }
@@ -117,6 +128,12 @@
         closeAll(menu);
         menu.hidden = !opening;
         btn.setAttribute("aria-expanded", String(opening));
+        return;
+      }
+      var all = ev.target.closest("[data-top10-all]");
+      if (all) {
+        load(all.closest("[data-top10-block]"), "ALL");
+        closeAll(null);
         return;
       }
       var reset = ev.target.closest("[data-top10-reset]");
