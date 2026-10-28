@@ -4007,6 +4007,10 @@ COSTUME_SECTIONS = [
         "title": "&#x2B50; Just Added",
         "sub": "The newest costumes on the page — fresh from the feed, straight to the top.",
         "ideas": [
+            {"name": "Michael Myers × Jason Mashup Mask — Half-and-Half Slasher Build", "who": "Adults & teens", "difficulty": "Medium", "time": "An afternoon",
+             "materials": "A Michael Myers mask, a Jason-style hockey mask, painter's tape, a craft knife, paint for the weathered finish — the video shows every cut and join",
+             "blurb": "What if Michael Myers was Jason? This build answers it with a craft knife: a Myers mask and a hockey mask, each cut down and fused into a single half-and-half face — Haddonfield on one side, Camp Crystal Lake on the other — then taped off and weathered until the seam looks like it was always there. Tap the video and watch the two slashers become one mask.",
+             "source": "@lydia_mary_ivy", "url": "https://www.tiktok.com/@lydia_mary_ivy/video/7686704472973708558", "tt": "7686704472973708558"},
             {"name": "Silent Hill Nurse Mask — Freestyle Bandage Build", "who": "Adults & teens", "difficulty": "Medium", "time": "An afternoon",
              "materials": "Gauze bandage wrap over a head form or mask base, a plain nurse cap you can mark with the red cross, dark red paint or fake blood for the weathering",
              "blurb": "Ekaterina freestyled the Dark Nurse her own way: a head wrapped in layer after layer of bandage gauze, stained and darkened until it turns fleshy and wrong, then crowned with the blood-flecked nurse cap and its red cross. No pattern and no plan — her whole caption is 'It was a lot of freestyle, but I love the way it came out,' and the finished mask backs her up. Tap the video and watch the wrap come together.",
