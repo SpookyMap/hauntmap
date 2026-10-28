@@ -6707,6 +6707,11 @@ a.wn-mini:hover strong { color: #ffd9a8; }
 .wn-kicker { color: #8FD8FF; font-weight: 800; letter-spacing: 0.08em;
   text-transform: uppercase; font-size: 0.78rem; margin: 0.4rem 0 0;
   text-shadow: 0 0 12px rgba(87, 168, 255, 0.5); }
+/* "New" wordmark treatment (Dan, Oct 28, z213): azure #8FD8FF + blue
+   glow wherever "New" leads "New on the Map" / the /updates kicker;
+   on the kicker it also takes the rail title's Eater display font. */
+.wn-new { color: #8FD8FF; text-shadow: 0 0 14px rgba(87, 168, 255, 0.65); }
+.wn-kicker-new { font-family: "Eater", cursive; font-weight: 400; }
 .wn-title { margin: 0.2rem 0 0.4rem; font-size: 2rem; }
 .wn-title-accent { color: #8FD8FF; text-shadow: 0 0 16px rgba(87, 168, 255, 0.6); }
 .wn-intro { color: var(--muted); margin: 0 0 0.6rem; }
