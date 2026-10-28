@@ -39,6 +39,30 @@
     <p class="art-feature-desc">Shot on the Nikon Z9 and lit with Nanlite Pavotubes, both available at the Adorama online store. #Adorama #Nanlite #Nikon</p>
   </section>
 
+  {# Art in Motion (Dan, Oct 27): @chorenkids_events' Halloween 2026
+     character run — giant mascot costumes from a Paris events crew.
+     Same facade pattern as the @olesamhain section below; the shared
+     click handler lives in that section's script. #}
+  {% if art_videos_choren %}
+  <section class="art-videos">
+    <h2 class="art-videos-title">🎬 Art in Motion — <a class="fanart-source" href="https://www.tiktok.com/@chorenkids_events" target="_blank" rel="noopener">@chorenkids_events</a></h2>
+    <p class="art-videos-sub">Giant Halloween character mascots from a Paris events crew — Frankenstein's monster, Jack the Skeleton, zombies and one enormous skull — sculpted costumes in motion. Tap a cover to play; {{ art_videos_choren|length }} videos, newest first.</p>
+    <div class="art-videos-grid">
+      {% for v in art_videos_choren %}
+      <article class="art-video-card">
+        <button type="button" class="ttv-facade" data-ttv="{{ v.video_id }}" aria-label="Play {{ v.title }}">
+          <img src="{{ v.cover }}" alt="{{ v.title }} — by @chorenkids_events on TikTok" loading="lazy">
+          <span class="tt-play" aria-hidden="true">&#x25B6;</span>
+          <span class="tt-facade-label">&#x1F3B5; Tap to play video</span>
+        </button>
+        <p class="art-video-caption"><strong>{{ v.title }}</strong><br>
+          <span class="contest-by">by <a class="fanart-source" href="https://www.tiktok.com/@chorenkids_events" target="_blank" rel="noopener">@chorenkids_events</a> on TikTok · {{ v.posted }} · <a class="fanart-source" href="{{ v.url }}" target="_blank" rel="noopener">Watch on TikTok &#x2197;</a></span></p>
+      </article>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
   {# Art in Motion (Dan, Oct 27): @olesamhain's full TikTok catalogue —
      handmade Halloween props and displays. Embed-only click-to-play
      facades in the /pop-haunt-culture pattern: each poster is the
