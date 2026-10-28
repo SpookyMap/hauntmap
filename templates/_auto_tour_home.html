@@ -20,3 +20,23 @@
     </a>
   </div>
 </section>
+<script>
+  // State-loyal taps (Dan, Oct 28): when the visitor has a saved town
+  // (localStorage hm_town — set by "Use my location" / choosing a town,
+  // the same declared-home-town signal Near You runs on), send the tap
+  // through /auto-tour's town path (?q=) so the tour is built around
+  // THAT town and scoped to its state. Without this the buttons are
+  // bare links and the route falls back to IP geolocation, which puts
+  // metro-edge visitors across the state line (a Hackensack NJ home
+  // geolocates to New York City and got an all-NYC tour). No saved
+  // town = hrefs untouched, today's behaviour.
+  (function () {
+    try {
+      var town = (localStorage.getItem('hm_town') || '').trim();
+      if (!town) return;
+      document.querySelectorAll('.auto-tour-btn').forEach(function (a) {
+        a.href += '&q=' + encodeURIComponent(town);
+      });
+    } catch (e) {}
+  })();
+</script>
