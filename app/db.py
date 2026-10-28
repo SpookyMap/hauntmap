@@ -1181,6 +1181,24 @@ def init_db(db_path: Path) -> None:
             conn, 813,
             "https://www.tiktok.com/@afrazexplores/video/7695873448731528461",
         )
+        # Dan-sent video append (Oct 28): @kikegonzaleznj's Clinton
+        # Place street tour (video 7701136015599127822, posted Oct 26
+        # ET 2026 — a Spanish-language walk down Clinton Place,
+        # Hackensack NJ: giant skeletons, clowns and full yard scenes
+        # house after house) joins the street's roundup pin (32,
+        # "Clinton Place — 2 Blocks of Houses", anchored 14 Clinton
+        # Place) — the video tours the whole street, so it rides the
+        # street pin, not the single-house pins (551/552) and not the
+        # second street pin (666). The pin carried no video, so
+        # add_entry_video fills the empty primary mirror
+        # (fill-if-empty) and lists the video at position 0; it
+        # dedupes by video id, so repeat boots are no-ops. Cover is
+        # the video's own frame.
+        add_entry_video(
+            conn, 32,
+            "https://www.tiktok.com/@kikegonzaleznj/video/7701136015599127822",
+            "/static/img/tt_7701136015599127822.jpg",
+        )
         if "is_handpicked" not in cols:
             # Hand-picked feed boost (Dan, Oct 23): pins Dan personally
             # sent/curated lead every feed. Ranking data is never
