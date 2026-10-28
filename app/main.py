@@ -3142,6 +3142,10 @@ def home(request: Request, sort: str = "new", town: str = "", town_search: str =
                           and t["clng"] is not None],
          "sponsors": sponsors,
          "ticker_items": ticker_items,
+         # What's New slide-down bar (Dan, Oct 27): the latest slice
+         # of the public /updates stream — announcements + newest
+         # pins mixed newest-first; the bar starts closed.
+         "updates_preview": _site_update_stream(60)[:6],
          "bottom_tabs": _place_tabs(cat, state, region, sort, scare, tag,
                                     "1" if video.strip() == "1" else ""),
          "tier_labels": {"featured": "Featured Sponsor", "premium": "Premium Sponsor", "title": "Title Sponsor"}},
@@ -7898,7 +7902,7 @@ def sitemap():
     base = "https://gethauntmap.com"
     urls = ["/", "/map", "/nearby", "/tour", "/diy", "/diy-costumes", "/games", "/games/ghost-maze", "/leaderboard", "/leaderboard/states", "/leaderboard/top-100",
             "/towns", "/passport", "/daily", "/advertise", "/media-kit", "/about", "/hauntsocial", "/chat", "/costume-contest", "/trivia", "/haunt-or-not", "/fan-art",
-            "/restaurhaunts"]
+            "/restaurhaunts", "/updates"]
     for t in _towns_with_counts():
         urls.append(f"/towns/{t['slug']}")
     body = ['<?xml version="1.0" encoding="UTF-8"?>',
@@ -9718,6 +9722,7 @@ _PAGE_TIME_LABELS = {
     "/tours": "Tours", "/watch": "Watch", "/leaderboard": "Top Haunts",
     "/leaderboard/states": "Top 10 by State",
     "/restaurhaunts": "Restaurhaunts", "/hauntsocial": "HauntSocial",
+    "/updates": "What's New",
     "/chat": "Haunt Chat",
     "/games": "Games", "/diy": "DIY", "/diy-costumes": "DIY Costumes",
     "/movies": "Movies", "/music": "Music", "/markets": "Markets",
@@ -11578,6 +11583,130 @@ def push_test(request: Request):
         "announcements will find you here.", url="/chat",
         ref="test", online_ids=frozenset(), force=True)
     return {"ok": True}
+
+
+# --------------------------------------------------------- What's New blog
+# Public update blog (Dan, Oct 27): "Update blog public with a slide
+# down bar to keep up with every new addition to the site" — /updates
+# is HauntMap's public logbook: NO login, newest first, grouped BY DAY
+# (the site's standing grouping rule, on the ET season clock). It
+# stays fresh with ZERO manual work — new pins flow straight from the
+# entries table (hidden pins and is_sample demo pins excluded: samples
+# are seeded placeholders, not additions). Feature drops ride as
+# Frank announcements from the code-defined SITE_ANNOUNCEMENTS list:
+# when a feature ships, add one dict here and it leads its day's
+# group on the blog and slides into the homepage bar's latest mix.
+# Frank-voiced, honest, no counts anywhere in the copy.
+SITE_ANNOUNCEMENTS = [
+    {"date": "2026-10-27", "emoji": "🍦",
+     "title": "Ice Cream joins Tour Fuel",
+     "body": "Tour Fuel just got sweeter — Ice Cream is now a stop on "
+             "your haunt tour! First scoop: I Scream, a self-serve "
+             "soft-serve bar in Sleepy Hollow, NY. Yes, THAT Sleepy "
+             "Hollow. 🐴",
+     "href": "/?cat=ice_cream"},
+    {"date": "2026-10-27", "emoji": "💬",
+     "title": "Haunt Chat went real-time",
+     "body": "The HauntSocial chat room got its real-time upgrade — "
+             "messages land the second they're sent, and you can see "
+             "who's in the room with you. Members jump in free; "
+             "everybody else can peek through the door. 👻",
+     "href": "/chat"},
+    {"date": "2026-10-27", "emoji": "🧭",
+     "title": "Near You stays in your state",
+     "body": "You asked, we fixed it: Near You now keeps to your own "
+             "state instead of wandering across the river. Want the "
+             "neighbors too? Flip on “Include nearby states” — your "
+             "call, not ours.",
+     "href": "/nearby"},
+    {"date": "2026-10-27", "emoji": "🏨",
+     "title": "Hotels join Tour Fuel",
+     "body": "Spooky places to STAY joined Tour Fuel — historic, "
+             "haunted and just-plain-creepy hotels now sit alongside "
+             "the restaurhaunts, cafes and shops on your route. Sleep "
+             "tight. 🛎️",
+     "href": "/?cat=hotels"},
+]
+
+
+def _updates_day_label(d, today) -> str:
+    if d == today:
+        return "Today"
+    if d == today - timedelta(days=1):
+        return "Yesterday"
+    return f"{d.strftime('%A, %B')} {d.day}"
+
+
+def _site_update_stream(pin_limit: int = 240) -> list:
+    """The merged What's New stream, newest first: Frank feature
+    announcements + new pins from the entries table. Every item
+    carries its ET datetime ('when') and ET calendar date ('day');
+    announcements sort at the END of their day so a feature drop
+    leads the day it shipped on. One bounded query — the homepage
+    bar calls this with a small pin_limit, /updates with a big one."""
+    from zoneinfo import ZoneInfo
+    et = ZoneInfo("America/New_York")
+    items: list = []
+    for a in SITE_ANNOUNCEMENTS:
+        try:
+            d = datetime.strptime(a["date"], "%Y-%m-%d").date()
+        except (KeyError, ValueError):
+            continue
+        when = datetime(d.year, d.month, d.day, 23, 59, tzinfo=et)
+        items.append({"kind": "announce", "day": d, "when": when,
+                      "emoji": a.get("emoji", "🆕"), "title": a["title"],
+                      "body": a.get("body", ""), "href": a.get("href", "")})
+    with get_conn(DB_PATH) as conn:
+        rows = conn.execute(
+            "SELECT * FROM entries WHERE hidden = 0 AND is_sample = 0 "
+            "ORDER BY created_at DESC, id DESC LIMIT ?",
+            (pin_limit,)).fetchall()
+    for r in rows:
+        e = row_to_dict(r)
+        try:
+            created = datetime.fromisoformat(
+                str(e["created_at"]).replace("Z", "+00:00"))
+            if created.tzinfo is None:
+                created = created.replace(tzinfo=timezone.utc)
+        except (KeyError, ValueError):
+            continue
+        when = created.astimezone(et)
+        cat = e.get("category") or "halloween"
+        items.append({
+            "kind": "pin", "day": when.date(), "when": when,
+            "id": e["id"], "title": e["title"],
+            "town_label": e.get("town_label", ""),
+            "cat_label": CAT_LABELS.get(cat, cat),
+            "noun": _FRANK_NEWS_NOUNS.get(cat, "listing"),
+            "emoji": CAT_EMOJI.get(cat, "🎃"),
+            "thumb": e.get("thumb_card_url") or e.get("thumb_url") or "",
+            "href": f"/d/{e['id']}"})
+    items.sort(key=lambda it: it["when"], reverse=True)
+    return items
+
+
+def _site_update_groups(pin_limit: int = 240) -> list:
+    """The stream grouped by ET day: [{day, label, entries}], days
+    and entries newest-first — the /updates page body."""
+    today = _today_et()
+    groups: list = []
+    for it in _site_update_stream(pin_limit):
+        if groups and groups[-1]["day"] == it["day"]:
+            groups[-1]["entries"].append(it)
+        else:
+            groups.append({"day": it["day"],
+                           "label": _updates_day_label(it["day"], today),
+                           "entries": [it]})
+    return groups
+
+
+@app.get("/updates", response_class=HTMLResponse)
+def updates_page(request: Request):
+    # Public — no member gate (Dan, Oct 27). The blog IS the pitch:
+    # anyone can watch the site grow; joining HauntSocial is how you
+    # get into the chat about it.
+    return templates.TemplateResponse(request, "updates.html",
+        {"request": request, "groups": _site_update_groups(150)})
 
 
 @app.get("/hauntsocial", response_class=HTMLResponse)

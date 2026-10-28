@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}What's New at HauntMap · {{ site_name }}{% endblock %}
+{% block head %}<meta name="description" content="What's New at HauntMap — every new haunt, event and feature, posted as it lands. The public logbook of America's Halloween map, kept by Frank.">{% endblock %}
+{% block content %}
+{# What's New — the public update blog (Dan, Oct 27). Fed straight
+   from the entries table + SITE_ANNOUNCEMENTS in main.py, grouped by
+   ET day, newest first. No login: this page is the front door; the
+   closing band sells HauntSocial + the Haunt Chat. #}
+<section class="wn-page">
+  <p class="wn-kicker">🆕 The HauntMap Logbook</p>
+  <h1 class="wn-title">What's New at <span class="wn-title-accent">HauntMap</span></h1>
+  <p class="wn-intro">Every new haunt, event and feature — posted here the moment it lands, by Frank, your host. No account needed to keep up. Ever.</p>
+
+  {% for g in groups %}
+  <h2 class="wn-day">{{ g.label }}</h2>
+  <div class="wn-feed">
+    {% for u in g.entries %}
+    {% if u.kind == "announce" %}
+    {% if u.href %}<a class="wn-card wn-card-announce" href="{{ u.href }}">{% else %}<div class="wn-card wn-card-announce">{% endif %}
+      <span class="wn-card-emoji" aria-hidden="true">{{ u.emoji }}</span>
+      <span class="wn-card-main">
+        <span class="wn-card-tag">New feature</span>
+        <span class="wn-card-title">{{ u.title }}</span>
+        <span class="wn-card-body">{{ u.body }}</span>
+      </span>
+    {% if u.href %}</a>{% else %}</div>{% endif %}
+    {% else %}
+    <a class="wn-card wn-card-pin" href="{{ u.href }}">
+      {% if u.thumb %}<img class="wn-card-thumb" src="{{ u.thumb }}" alt="" loading="lazy" onerror="this.remove()">{% endif %}
+      <span class="wn-card-main">
+        <span class="wn-card-tag">{{ u.emoji }} New {{ u.noun }}</span>
+        <span class="wn-card-title">{{ u.title }}</span>
+        {% if u.town_label %}<span class="wn-card-body">{{ u.town_label }}</span>{% endif %}
+      </span>
+      <span class="wn-card-arrow" aria-hidden="true">&rarr;</span>
+    </a>
+    {% endif %}
+    {% endfor %}
+  </div>
+  {% else %}
+  <p class="wn-intro">Nothing here yet — check back tonight. Something always lands. 🎃</p>
+  {% endfor %}
+
+  <div class="wn-join">
+    <p class="wn-join-line">Like what you see? <span class="hs-brand">HauntSocial</span> is where the haunters hang out — your own page, your anthem, your Top 8, and the 💬 Haunt Chat, live.</p>
+    <div class="wn-join-cta">
+      {% if request.state.member %}
+      <a class="social-promo-btn" href="/chat">💬 Jump into the Haunt Chat</a>
+      {% else %}
+      <a class="social-promo-btn" href="/signup"><span class="hs-brand promo-join-first">Join</span> <span class="hs-brand">HauntSocial</span> — free</a>
+      <a class="social-promo-alt" href="/chat">Peek at the Haunt Chat &rarr;</a>
+      {% endif %}
+    </div>
+  </div>
+</section>
+{% endblock %}

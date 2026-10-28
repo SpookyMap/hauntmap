@@ -6634,3 +6634,72 @@ span.chat-react-chip { cursor: default; }
 .tt-frame { width: 100%; max-width: 340px; aspect-ratio: 9 / 16;
   margin: 0 auto; border: 1px solid #274860; border-radius: var(--radius);
   display: block; background: #000; overflow: hidden; }
+
+/* ============ z202: WHAT'S NEW — PUBLIC UPDATE BLOG + HOMEPAGE SLIDE-DOWN BAR (Dan, Oct 27) ====
+   Dan: "Update blog public with a slide down bar to keep up with
+   every new addition to the site" — /updates is the public logbook
+   (Frank announcements from SITE_ANNOUNCEMENTS + new pins straight
+   from the entries table, grouped by ET day), and the homepage
+   .wn-bar slides that stream's latest slice open under the ticker.
+   Azure #8FD8FF + blue glow per the HauntSocial brand treatment;
+   body copy stays in the readable house faces. All classes are
+   wn-prefixed so nothing else moves. */
+.wn-bar { margin: 0 0 0.55rem; background: linear-gradient(90deg, #0b2237, #081826);
+  border: 1px solid #274860; border-radius: 12px; overflow: hidden;
+  box-shadow: 0 0 18px rgba(87, 168, 255, 0.18); }
+.wn-toggle { display: flex; align-items: center; gap: 0.6rem; width: 100%;
+  padding: 0.55rem 0.8rem; background: none; border: 0; color: var(--ink);
+  font: inherit; cursor: pointer; text-align: left; }
+.wn-toggle-label { font-weight: 800; letter-spacing: 0.02em; color: #8FD8FF;
+  text-shadow: 0 0 12px rgba(87, 168, 255, 0.65); white-space: nowrap; }
+.wn-toggle-sub { color: var(--muted); font-size: 0.82rem; flex: 1; }
+.wn-toggle-chev { color: #8FD8FF; font-size: 1.05rem; line-height: 1;
+  transition: transform 0.35s ease; }
+.wn-bar.wn-open .wn-toggle-chev { transform: rotate(180deg); }
+.wn-panel { max-height: 0; overflow: hidden; transition: max-height 0.45s ease; }
+.wn-panel-inner { padding: 0.15rem 0.8rem 0.7rem; border-top: 1px solid #1d3448; }
+.wn-mini-list { list-style: none; margin: 0; padding: 0; }
+.wn-mini { display: flex; gap: 0.6rem; align-items: center; padding: 0.45rem 0.2rem;
+  color: var(--ink); text-decoration: none; border-bottom: 1px solid rgba(39, 72, 96, 0.5); }
+.wn-mini-list li:last-child .wn-mini { border-bottom: 0; }
+a.wn-mini:hover strong { color: #ffd9a8; }
+.wn-mini-thumb { width: 46px; height: 46px; object-fit: cover; border-radius: 8px; flex: none; }
+.wn-mini-emoji { font-size: 1.5rem; width: 46px; text-align: center; flex: none; }
+.wn-mini-main { display: flex; flex-direction: column; min-width: 0; }
+.wn-mini-main strong { font-size: 0.92rem; }
+.wn-mini-body { color: var(--muted); font-size: 0.8rem; display: -webkit-box;
+  -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.wn-all { display: inline-block; margin-top: 0.45rem; font-weight: 700; color: #8FD8FF; }
+.wn-page { max-width: 760px; margin: 0 auto; }
+.wn-kicker { color: #8FD8FF; font-weight: 800; letter-spacing: 0.08em;
+  text-transform: uppercase; font-size: 0.78rem; margin: 0.4rem 0 0;
+  text-shadow: 0 0 12px rgba(87, 168, 255, 0.5); }
+.wn-title { margin: 0.2rem 0 0.4rem; font-size: 2rem; }
+.wn-title-accent { color: #8FD8FF; text-shadow: 0 0 16px rgba(87, 168, 255, 0.6); }
+.wn-intro { color: var(--muted); margin: 0 0 0.6rem; }
+.wn-day { margin: 1.4rem 0 0.55rem; font-size: 1.05rem; color: #ffd9a8;
+  border-bottom: 1px solid #274860; padding-bottom: 0.3rem; }
+.wn-feed { display: flex; flex-direction: column; gap: 0.55rem; }
+.wn-card { display: flex; gap: 0.7rem; align-items: center; background: var(--card);
+  border: 1px solid #274860; border-radius: var(--radius);
+  padding: 0.6rem 0.75rem; color: var(--ink); text-decoration: none; }
+a.wn-card:hover { border-color: #57a8ff; box-shadow: 0 0 14px rgba(87, 168, 255, 0.25); }
+.wn-card-announce { background: linear-gradient(135deg, #10283e, #16232b); border-color: #3d6a94; }
+.wn-card-emoji { font-size: 1.9rem; flex: none; }
+.wn-card-thumb { width: 64px; height: 64px; object-fit: cover; border-radius: 10px; flex: none; }
+.wn-card-main { display: flex; flex-direction: column; min-width: 0; flex: 1; }
+.wn-card-tag { font-size: 0.68rem; font-weight: 800; letter-spacing: 0.07em;
+  text-transform: uppercase; color: #8FD8FF; }
+.wn-card-title { font-weight: 800; font-size: 1.02rem; }
+.wn-card-body { color: var(--muted); font-size: 0.86rem; }
+.wn-card-arrow { color: #8FD8FF; font-size: 1.2rem; flex: none; }
+.wn-join { margin: 1.8rem 0 0.6rem; background: linear-gradient(135deg, #0b2237, #101c26);
+  border: 1px solid #3d6a94; border-radius: var(--radius); padding: 1rem;
+  box-shadow: 0 0 18px rgba(87, 168, 255, 0.15); }
+.wn-join-line { margin: 0 0 0.7rem; }
+.wn-join-cta { display: flex; gap: 0.8rem; align-items: center; flex-wrap: wrap; }
+@media (max-width: 480px) {
+  .wn-toggle-sub { display: none; }
+  .wn-card-thumb { width: 52px; height: 52px; }
+  .wn-card-emoji { font-size: 1.5rem; }
+}
