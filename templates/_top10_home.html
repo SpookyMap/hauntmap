@@ -21,7 +21,14 @@
    z215 (Dan, Oct 28): the state list now sits in its own scroll
    window (.top10-menu-list) so the panel stays compact, and an
    "🌎 All States" button pinned at the panel top loads the combined
-   nationwide Top 10 via /api/top10?state=ALL. #}
+   nationwide Top 10 via /api/top10?state=ALL.
+   z218 (Dan, Oct 28): BOTH pickers live — alongside the dropdown
+   panel, an always-visible state scroll window (.top10-side with
+   .top10-inline-list) sits in the section itself, no button tap
+   needed. It reuses the panel's item/all/reset markup + classes, so
+   the one delegated handler drives both and load() syncs the
+   active highlight + reset visibility across every copy in the
+   section. #}
 <section class="top10-home{% if hero %} hero-copy{% endif %}{% if not home_top10 %} top10-home--cta{% endif %}" aria-label="Top 10 by state"{% if home_top10 %} data-top10-block data-home-state="{{ home_top10.code }}" data-cat="{{ cat }}" data-cat-label="{{ cat_labels[cat]|lower }}"{% endif %}>
   {% if home_top10 %}
   <div class="top10-head">
@@ -42,19 +49,35 @@
     {% endif %}
   </div>
   <p class="top10-home-sub" data-top10-sub data-own-sub="The most-viewed {{ cat_labels[cat]|lower }} haunts in your state">The most-viewed {{ cat_labels[cat]|lower }} haunts in your state</p>
-  <ol class="top10-home-list" data-top10-list>
-    {% for e in home_top10.entries[:5] %}
-    <li>
-      <a href="/d/{{ e.id }}">
-        <span class="t10-rank">#{{ loop.index }}</span>
-        <span class="t10-title">{{ e.title }}</span>
-        {% if e.is_featured %}<span class="featured-badge">&#x2B50; Featured</span>{% endif %}
-        <span class="t10-meta">{{ e.town_label or e.town }} &middot; &#x1F441;&#xFE0F; {{ e._views }} view{{ 's' if e._views != 1 }}</span>
-      </a>
-    </li>
-    {% endfor %}
-  </ol>
-  <a class="top10-home-more" data-top10-more href="/leaderboard/states?cat={{ cat }}#state-{{ home_top10.code|lower }}">Let&rsquo;s see them all &rarr;</a>
+  <div class="top10-body">
+    <div class="top10-main">
+      <ol class="top10-home-list" data-top10-list>
+        {% for e in home_top10.entries[:5] %}
+        <li>
+          <a href="/d/{{ e.id }}">
+            <span class="t10-rank">#{{ loop.index }}</span>
+            <span class="t10-title">{{ e.title }}</span>
+            {% if e.is_featured %}<span class="featured-badge">&#x2B50; Featured</span>{% endif %}
+            <span class="t10-meta">{{ e.town_label or e.town }} &middot; &#x1F441;&#xFE0F; {{ e._views }} view{{ 's' if e._views != 1 }}</span>
+          </a>
+        </li>
+        {% endfor %}
+      </ol>
+      <a class="top10-home-more" data-top10-more href="/leaderboard/states?cat={{ cat }}#state-{{ home_top10.code|lower }}">Let&rsquo;s see them all &rarr;</a>
+    </div>
+    {% if top10_menu %}
+    <aside class="top10-side" data-top10-inline aria-label="Browse Top 10 boards by state">
+      <p class="top10-side-label">Pick a state</p>
+      <button type="button" class="top10-menu-all" data-top10-all><span class="top10-menu-item-name">&#x1F30E; All States</span><span class="top10-menu-count">{{ top10_menu | sum(attribute='count') }}</span></button>
+      <button type="button" class="top10-menu-reset" data-top10-reset hidden>&#x21A9; Your state &mdash; {{ home_top10.name }}</button>
+      <div class="top10-inline-list">
+        {% for s in top10_menu %}
+        <button type="button" class="top10-menu-item{% if s.code == home_top10.code %} is-home is-active{% endif %}" data-state="{{ s.code }}"><span class="top10-menu-item-name">{{ s.name }}</span>{% if s.code == home_top10.code %}<span class="top10-menu-you">Your state</span>{% endif %}<span class="top10-menu-count">{{ s.count }}</span></button>
+        {% endfor %}
+      </div>
+    </aside>
+    {% endif %}
+  </div>
   <script>
   (function () {
     if (window.__hmTop10Menu) return;
@@ -109,14 +132,20 @@
           }).join("");
           var more = sec.querySelector("[data-top10-more]");
           more.setAttribute("href", d.board_url);
-          var reset = sec.querySelector("[data-top10-reset]");
-          if (reset) reset.hidden = (d.code === home);
+          /* z218: the section carries TWO pickers (dropdown panel +
+             always-visible side window) — sync the reset visibility
+             and the All States highlight across every copy, the same
+             way the item loop below already syncs both lists. */
+          sec.querySelectorAll("[data-top10-reset]").forEach(function (reset) {
+            reset.hidden = (d.code === home);
+          });
           sec.querySelectorAll(".top10-menu-item").forEach(function (it) {
             it.classList.toggle("is-active",
               it.getAttribute("data-state") === d.code);
           });
-          var allBtn = sec.querySelector("[data-top10-all]");
-          if (allBtn) allBtn.classList.toggle("is-active", d.code === "ALL");
+          sec.querySelectorAll("[data-top10-all]").forEach(function (allBtn) {
+            allBtn.classList.toggle("is-active", d.code === "ALL");
+          });
         })
         .catch(function () { list.style.opacity = ""; });
     }
@@ -155,6 +184,32 @@
     document.addEventListener("keydown", function (ev) {
       if (ev.key === "Escape") closeAll(null);
     });
+    /* z218: the always-visible window starts scrolled so the
+       visitor's own state row is in view (vertical lists scroll
+       down to it, the phone strip scrolls across to it). The
+       dropdown panel's list keeps its z215 top-start — untouched.
+       Hidden per-viewport copies measure 0 and no-op. */
+    function positionInline() {
+      document.querySelectorAll("[data-top10-block]").forEach(function (sec) {
+        var list = sec.querySelector(".top10-inline-list");
+        if (!list) return;
+        var item = list.querySelector(".top10-menu-item.is-home");
+        if (!item) return;
+        if (list.scrollHeight > list.clientHeight) {
+          list.scrollTop = Math.max(0,
+            item.offsetTop - list.offsetTop - 6);
+        }
+        if (list.scrollWidth > list.clientWidth) {
+          list.scrollLeft = Math.max(0,
+            item.offsetLeft - list.offsetLeft - 6);
+        }
+      });
+    }
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", positionInline);
+    } else {
+      positionInline();
+    }
   })();
   </script>
   {% else %}
