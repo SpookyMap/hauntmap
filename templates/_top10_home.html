@@ -48,7 +48,7 @@
     </li>
     {% endfor %}
   </ol>
-  <a class="top10-home-more" data-top10-more href="/leaderboard/states?cat={{ cat }}#state-{{ home_top10.code|lower }}">See the full Top 10 in <span data-top10-more-name>{{ home_top10.name }}</span> &rarr;</a>
+  <a class="top10-home-more" data-top10-more href="/leaderboard/states?cat={{ cat }}#state-{{ home_top10.code|lower }}">Let&rsquo;s see them all &rarr;</a>
   <script>
   (function () {
     if (window.__hmTop10Menu) return;
@@ -100,7 +100,6 @@
           }).join("");
           var more = sec.querySelector("[data-top10-more]");
           more.setAttribute("href", d.board_url);
-          more.querySelector("[data-top10-more-name]").textContent = d.name;
           var reset = sec.querySelector("[data-top10-reset]");
           if (reset) reset.hidden = (d.code === home);
           sec.querySelectorAll(".top10-menu-item").forEach(function (it) {
