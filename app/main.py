@@ -4007,6 +4007,10 @@ COSTUME_SECTIONS = [
         "title": "&#x2B50; Just Added",
         "sub": "The newest costumes on the page — fresh from the feed, straight to the top.",
         "ideas": [
+            {"name": "Easy SFX Wound Makeup — Fake-Blood Cheek Gashes", "who": "Adults & teens", "difficulty": "Easy", "time": "Under 30 minutes",
+             "materials": "A flesh-toned wound piece (scar wax or a stick-on appliance) for each cheek, foundation to blend the edges, dark shadow for depth, fake blood",
+             "blurb": "Alexa's 13-second masterclass in fake gore: press a flesh-toned wound piece onto each cheek, blend and shade the edges until it reads as torn skin, then let the fake blood run. The finished gashes look straight out of a slasher — and the prop-hammer reveal at the end sells the joke. Her caption just says 'super easy,' and for once it's true. Tap the video and watch it come together.",
+             "source": "Alexa (@aleee.rbb)", "url": "https://www.tiktok.com/@aleee.rbb/video/7696632427116170526", "tt": "7696632427116170526"},
             {"name": "Hello Kitty × Ghostface Custom Mask — V02", "who": "Adults & teens", "difficulty": "Hard", "time": "A weekend or more",
              "materials": "A sculpted mask base, white paint, black for the eyes and whiskers, yellow for the nose, and one big red bow — the finished piece is all in the video",
              "blurb": "The sweetest face in horror: mask maker CartoonDeadwork's Hello Kitty × Ghostface custom mask, brought back from the dead as V02 — red bow, whiskers and all. He even hid a Golden Coin out there somewhere: find it and you claim a custom mask of your own. Tap the video and watch it come back to life.",
