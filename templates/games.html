@@ -52,6 +52,35 @@ body.ios-iphone .games-featured-pill { display: inline-block; }
 .games-nav-btn--minecraft:hover { box-shadow: 0 0 16px rgba(61, 220, 61, 0.55), inset 0 0 8px rgba(61, 220, 61, 0.18); }
 .games-nav-btn--roblox { border-color: #e2231a; box-shadow: 0 0 10px rgba(226, 35, 26, 0.35), inset 0 0 8px rgba(226, 35, 26, 0.12); }
 .games-nav-btn--roblox:hover { box-shadow: 0 0 16px rgba(226, 35, 26, 0.55), inset 0 0 8px rgba(226, 35, 26, 0.18); }
+/* ============ games-nav sleek strip (Dan, Oct 28) ============
+   Dan, after seeing the z204 wrap fix live on his MacBook: "Make
+   the bubbles like the virtual tour through Top 100 Nationwide —
+   nice sleek at the top under the top banner menu buttons, nicely
+   spaced from one side to the other [of] the page." That strip is
+   .vt-tv-strip (style.css): equal-flex full-round pills spanning
+   their row edge to edge, tight 0.4rem gap, slim padding, 2px
+   borders, stacked centered label lines. Mirrored here:
+   >=761px all seven bubbles sit in ONE row distributed across the
+   full content column (flex: 1 1 0, nowrap), each pill stacking
+   its icon over centered label + sub lines (the .vt-tv-strip-phone
+   pattern) so no word truncates; 521-760px wraps 3-across with the
+   same 2px/slim treatment; <=520px keeps the phone block at the
+   end of this sheet byte-identical. */
+@media (min-width: 761px) {
+  .games-nav { flex-wrap: nowrap; gap: 0.4rem; margin: 0.25rem 0 1.2rem; }
+  .games-nav-btn {
+    flex: 1 1 0; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center; gap: 0.18rem; padding: 0.4rem 0.2rem; border-width: 2px;
+  }
+  .gnb-icon { font-size: 1.05rem; }
+  .gnb-text { align-items: center; }
+  .gnb-label { font-size: 0.78rem; line-height: 1.15; text-wrap: balance; }
+  .gnb-sub { font-size: 0.62rem; line-height: 1.2; text-wrap: balance; }
+}
+@media (min-width: 521px) and (max-width: 760px) {
+  .games-nav { gap: 0.4rem; }
+  .games-nav-btn { flex: 1 1 30%; padding: 0.5rem 0.5rem; border-width: 2px; }
+}
 .portal-card--featured { border-color: #3ddc3d; box-shadow: 0 0 14px rgba(61, 220, 61, 0.25); }
 @media (min-width: 700px) {
   .portal-card--featured { grid-column: span 2; }
