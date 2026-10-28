@@ -34,7 +34,34 @@
   </div>
   <p class="town-dd-empty" id="town-dd-empty" hidden>No town on the map matches that yet — tap Search to look it up anyway.</p>
 </div>
+{# State-scope row (Dan, Oct 27): the Auto Tour panel's toggle,
+   mirrored — same classes, same values, same copy pattern. #}
+{% if q %}
+<form class="at-scope-row" method="get" action="/nearby">
+  {% for k, v in center_params.items() %}<input type="hidden" name="{{ k }}" value="{{ v }}">{% endfor %}
+  <input type="hidden" name="miles" value="{{ miles }}">
+  <input type="hidden" name="cat" value="{{ cat }}">
+  <input type="hidden" name="sort" value="{{ sort }}">
+  <label class="at-scope-toggle">
+    <input type="checkbox" name="states" value="1" {% if multi %}checked{% endif %} {% if not center_state %}disabled{% endif %} onchange="this.form.submit()">
+    Include nearby states
+  </label>
+  <span class="at-scope-note">{% if not center_state %}We couldn't pin down the state for this area, so results may cross state lines.{% elif multi %}Results can cross state lines — turn off to keep them in {{ center_state_name }} only.{% else %}Results stay in {{ center_state_name }} — turn on to include nearby states.{% endif %}</span>
+</form>
+{% endif %}
 <style>
+.at-scope-row {
+  display: flex; align-items: center; gap: 0.55rem; flex-wrap: wrap;
+  margin-top: 0.7rem; padding-top: 0.7rem;
+  border-top: 1px solid #274860;
+}
+.at-scope-toggle {
+  display: inline-flex; align-items: center; gap: 0.45rem;
+  font-weight: 700; cursor: pointer;
+}
+.at-scope-toggle input { width: 1.1rem; height: 1.1rem; accent-color: var(--accent2); cursor: pointer; }
+.at-scope-toggle input:disabled { cursor: not-allowed; }
+.at-scope-note { color: var(--muted); font-size: 0.9rem; }
 .town-dd { border: 1px solid #33254f; border-radius: 12px; background: var(--bg2); padding: 0.6rem; margin: -0.4rem 0 1rem; }
 .town-dd-head { margin: 0 0 0.45rem; color: var(--muted); font-size: 0.85rem; font-weight: 600; }
 .town-dd-list { max-height: 264px; overflow-y: auto; display: flex; flex-direction: column; }
@@ -92,7 +119,9 @@ document.getElementById('btn-near-me').onclick = function() {
   const miles = document.querySelector('select[name="miles"]').value;
   const cat = document.querySelector('input[name="cat"]').value;
   navigator.geolocation.getCurrentPosition(pos => {
-    location.href = `/nearby?lat=${pos.coords.latitude}&lng=${pos.coords.longitude}&miles=${miles}&cat=${cat}`;
+    const scope = document.querySelector('.at-scope-toggle input');
+    const states = (scope && scope.checked) ? '&states=1' : '';
+    location.href = `/nearby?lat=${pos.coords.latitude}&lng=${pos.coords.longitude}&miles=${miles}&cat=${cat}${states}`;
   }, () => { alert('Could not get your location'); this.textContent = '\u{1F4CD} Near me'; });
 };
 </script>
@@ -100,7 +129,7 @@ document.getElementById('btn-near-me').onclick = function() {
 {% if err %}
 <div class="empty"><p>{{ err }}</p></div>
 {% elif q %}
-  <p class="nearby-count">{{ entries|length }} haunt{{ 's' if entries|length != 1 }} within {{ miles }} mi of "{{ q }}"</p>
+  <p class="nearby-count">{{ entries|length }} haunt{{ 's' if entries|length != 1 }} within {{ miles }} mi of "{{ q }}"{% if center_state and not multi %} &middot; in {{ center_state_name }} only{% if wide_count > entries|length %} ({{ wide_count - entries|length }} more across state lines — turn on <strong>Include nearby states</strong> above to see them){% endif %}{% endif %}</p>
   {% if entries %}
   <div class="grid">
     {% for e in entries %}
@@ -129,8 +158,12 @@ document.getElementById('btn-near-me').onclick = function() {
   {% else %}
   <div class="empty">
     <p class="empty-emoji">&#x1F47B;</p>
+    {% if center_state and not multi and wide_count %}
+    <p>No haunts in {{ center_state_name }} within {{ miles }} miles of "{{ q }}" yet — {{ wide_count }} across state lines. Turn on <strong>Include nearby states</strong> above to see them.</p>
+    {% else %}
     <p>No haunts within {{ miles }} miles of "{{ q }}" yet.</p>
     <p><a class="btn" href="/upload">Be the first to add one</a></p>
+    {% endif %}
   </div>
   {% endif %}
 {% endif %}

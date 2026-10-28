@@ -33,7 +33,7 @@ import urllib.parse
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-from fastapi import BackgroundTasks, FastAPI, Form, HTTPException, Request, UploadFile, File, WebSocket, WebSocketDisconnect
+from fastapi import BackgroundTasks, FastAPI, Form, HTTPException, Query, Request, UploadFile, File, WebSocket, WebSocketDisconnect
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse, Response, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -340,8 +340,10 @@ async def _shed_load(request: Request, call_next):
 #     cf-ipregion, cf-ipregion-code, cf-iplatitude, cf-iplongitude)
 #     bypasses: with the geo transform on, the homepage re-leads its
 #     feed and Top-10 block by the visitor's area. (cf-ipcountry alone
-#     can never produce a geo — _visitor_geo returns None without
-#     city/region/coords — so it is not a bypass trigger.);
+#     is not a bypass trigger: behind Cloudflare it always arrives
+#     WITH the headers above, and off-CF the GeoLite state fallback in
+#     _visitor_geo can at most produce the state-level render, which
+#     is the generic case this cache exists to serve.);
 #   * an Authorization header bypasses; only 200 text/html is stored;
 #   * Set-Cookie is never stored and never replayed (home() sets
 #     tonight_last on its own response — that cookie goes only to the
@@ -1229,6 +1231,19 @@ def _visitor_geo(request: Request) -> dict | None:
     city = (h.get("cf-ipcity") or "").strip()
     state = _state_code_from_region(h.get("cf-ipregion") or "",
                                     h.get("cf-ipregion-code") or "")
+    if not state:
+        # State-loyal near-me (Dan, Oct 27): the CF region headers only
+        # arrive with the zone's visitor-location transform; when they
+        # are absent the state still matters (it is the near-me default
+        # boundary), so fall back to the bundled GeoLite2-City lookup
+        # on the connecting IP — the same offline source the analytics
+        # writer uses for its state table. US only, state granularity
+        # only; a miss leaves the state unknown, never guessed.
+        ip = _pv_ip(request)
+        if ip:
+            ip_country, ip_state = _geoip_lookup(ip)
+            if ip_country == "US" and ip_state:
+                state = ip_state
     lat = lng = None
     try:
         lat = float(h.get("cf-iplatitude") or "")
@@ -1240,6 +1255,13 @@ def _visitor_geo(request: Request) -> dict | None:
     if not city and not state and lat is None:
         return None
     return {"city": city, "state": state, "lat": lat, "lng": lng}
+
+
+def _states_opt_in(raw: str) -> bool:
+    """The 'Include nearby states' opt-in (?states=1) shared by every
+    near-me surface — the same values the Auto Tour toggle accepts.
+    Absent/garbled = False: same-state is the default everywhere."""
+    return (raw or "").strip().lower() in ("1", "true", "on", "yes")
 
 
 def _town_inventory_uncached(conn, category: str = "halloween",
@@ -1293,7 +1315,8 @@ def _town_inventory(conn=None, category: str = "halloween",
     return [dict(t) for t in base]
 
 
-def _resolve_visitor_area(inventory: list[dict], geo: dict | None) -> dict:
+def _resolve_visitor_area(inventory: list[dict], geo: dict | None,
+                          multi: bool = False) -> dict:
     """Resolve the visitor's area against the town inventory.
 
     Resolution order (Item 1 spec):
@@ -1303,6 +1326,15 @@ def _resolve_visitor_area(inventory: list[dict], geo: dict | None) -> dict:
           _GEO_NEAR_RADIUS_MI;
       (c) biggest towns in the visitor's state;
       (d) today's behaviour — biggest towns site-wide ("fallback").
+
+    State-loyal default (Dan, Oct 27): when the visitor's state is
+    known and the visitor has NOT opted into nearby states (multi —
+    the module's "Include nearby states" toggle, ?states=1), the
+    exact/near town sets are restricted to the visitor's OWN state:
+    living <25 mi from NYC does not make an NJ visitor a New York
+    visitor. multi=True restores the cross-state radius behaviour
+    verbatim. A state with no in-radius supply falls through to (c);
+    a state with no supply at all still lands in "nomap" below.
     A visitor whose area is known but has NO mapped supply at all (no
     exact/near/state town) resolves to mode "nomap": the module names
     their area honestly and shows the fallback towns rather than
@@ -1320,7 +1352,8 @@ def _resolve_visitor_area(inventory: list[dict], geo: dict | None) -> dict:
             "heading": "Near you tonight",
             "sub": "The biggest haunt towns on the map right now — "
                    "tap yours, or jump straight to what's around you.",
-            "chips": fallback_chips, "area_labels": set()}
+            "chips": fallback_chips, "area_labels": set(),
+            "state": "", "multi": multi}
     if not geo:
         return base
     city = (geo.get("city") or "").strip()
@@ -1328,6 +1361,8 @@ def _resolve_visitor_area(inventory: list[dict], geo: dict | None) -> dict:
     vlat, vlng = geo.get("lat"), geo.get("lng")
     city_disp = _smart_case_city(city) if city else ""
     state_name = US_STATE_NAMES.get(state, state)
+    # State-loyal default: a known state + no opt-in = own state only.
+    loyal = bool(state) and not multi
 
     def chips_of(towns: list[dict]) -> list[dict]:
         return [{"label": t["label"], "count": t["count"]} for t in towns[:8]]
@@ -1347,6 +1382,11 @@ def _resolve_visitor_area(inventory: list[dict], geo: dict | None) -> dict:
                 cands = in_state
         if cands:
             exact = sorted(cands, key=lambda t: -t["count"])[0]
+    if exact is not None and loyal and exact["state"] != state:
+        # The header city and header state disagree across a state
+        # line; under the state-loyal default the city anchor loses —
+        # near/state resolution below speaks for the visitor's state.
+        exact = None
     if exact is not None:
         alat = vlat if vlat is not None else exact["clat"]
         alng = vlng if vlng is not None else exact["clng"]
@@ -1356,6 +1396,8 @@ def _resolve_visitor_area(inventory: list[dict], geo: dict | None) -> dict:
             for t in inventory:
                 if t["label"] == exact["label"]:
                     continue
+                if loyal and t["state"] != state:
+                    continue  # own state only — the toggle opts back in
                 d = dist_to(t, alat, alng)
                 if d is not None and d <= _GEO_EXACT_FILL_RADIUS_MI:
                     scored.append((d, t))
@@ -1374,9 +1416,13 @@ def _resolve_visitor_area(inventory: list[dict], geo: dict | None) -> dict:
         return {"mode": "exact",
                 "area_name": f"{city_disp} area",
                 "heading": f"Near You — {city_disp} area",
-                "sub": f"Closest haunt towns to {city_disp} first — "
-                       "tap a town to see its haunts, or change your area.",
-                "chips": chips_of(chips), "area_labels": area}
+                "sub": (f"Closest haunt towns to {city_disp} in "
+                        f"{state_name} first — tap a town to see its "
+                        "haunts, or change your area." if loyal else
+                        f"Closest haunt towns to {city_disp} first — "
+                        "tap a town to see its haunts, or change your area."),
+                "chips": chips_of(chips), "area_labels": area,
+                "state": state, "multi": multi}
     # (b) nearest towns to the header coordinates
     if vlat is not None and vlng is not None:
         scored = []
@@ -1385,26 +1431,56 @@ def _resolve_visitor_area(inventory: list[dict], geo: dict | None) -> dict:
             if d is not None and d <= _GEO_NEAR_RADIUS_MI:
                 scored.append((d, t))
         if scored:
-            near = [t for _d, t in sorted(
+            ranked_all = [t for _d, t in sorted(
                 scored, key=lambda x: (x[0], -x[1]["count"], x[1]["label"]))]
-            chips = list(near)
-            if len(chips) < 8 and state:
-                have = {t["label"] for t in chips}
-                for t in biggest:
-                    if len(chips) >= 8:
-                        break
-                    if t["state"] == state and t["label"] not in have:
-                        chips.append(t)
-                        have.add(t["label"])
-            area_name = (f"{city_disp} area" if city_disp
-                         else (state_name or "your area"))
-            return {"mode": "near",
-                    "area_name": area_name,
-                    "heading": f"Near You — {area_name}",
-                    "sub": f"Closest haunt towns to {area_name} first — "
-                           "tap a town to see its haunts, or change your area.",
-                    "chips": chips_of(chips),
-                    "area_labels": {t["label"] for t in near}}
+            near = ranked_all
+            if loyal:
+                # Own state only: an in-radius town across the line is
+                # the toggle's business, not the default's. No in-state
+                # town in radius = fall through to the state list (c).
+                near = [t for t in near if t["state"] == state]
+            if near:
+                chips = list(near)
+                if len(chips) < 8 and state:
+                    have = {t["label"] for t in chips}
+                    for t in biggest:
+                        if len(chips) >= 8:
+                            break
+                        if t["state"] == state and t["label"] not in have:
+                            chips.append(t)
+                            have.add(t["label"])
+                # Label rule: the header city can name the foreign
+                # metro across the line (a Hackensack NJ fix resolving
+                # as "New York City") — keep the header-city label
+                # only when that city actually exists as a town in the
+                # visitor's own state; otherwise label the module by
+                # the visitor's nearest in-state town, never by the
+                # foreign metro.
+                label_city = city_disp
+                if loyal and city_disp and not any(
+                        t["state"] == state
+                        and t["city"].lower() == city_disp.lower()
+                        for t in inventory):
+                    label_city = near[0]["city"]
+                area_name = (f"{label_city} area" if label_city
+                             else (state_name or "your area"))
+                return {"mode": "near",
+                        "area_name": area_name,
+                        "heading": f"Near You — {area_name}",
+                        "sub": (f"Closest haunt towns in {state_name} "
+                                "first — tap a town to see its haunts, "
+                                "or change your area."
+                                if loyal and not city_disp else
+                                f"Closest haunt towns to {area_name} in "
+                                f"{state_name} first — tap a town to see "
+                                "its haunts, or change your area."
+                                if loyal else
+                                f"Closest haunt towns to {area_name} "
+                                "first — tap a town to see its haunts, or "
+                                "change your area."),
+                        "chips": chips_of(chips),
+                        "area_labels": {t["label"] for t in near},
+                        "state": state, "multi": multi}
     # (c) biggest towns in the visitor's state
     if state:
         in_state = [t for t in biggest if t["state"] == state]
@@ -1415,7 +1491,8 @@ def _resolve_visitor_area(inventory: list[dict], geo: dict | None) -> dict:
                     "sub": f"Biggest haunt towns in {state_name} — "
                            "tap a town to see its haunts, or change your area.",
                     "chips": chips_of(in_state),
-                    "area_labels": {t["label"] for t in in_state}}
+                    "area_labels": {t["label"] for t in in_state},
+                    "state": state, "multi": multi}
     # Known area, zero mapped supply: name it honestly, show fallback towns.
     if city or state:
         area_name = f"{city_disp} area" if city_disp else state_name
@@ -1425,7 +1502,8 @@ def _resolve_visitor_area(inventory: list[dict], geo: dict | None) -> dict:
                 "sub": f"No haunts mapped near {area_name} yet — add yours "
                        "or request your town below. Meanwhile, the biggest "
                        "haunt towns on the map:",
-                "chips": fallback_chips, "area_labels": set()}
+                "chips": fallback_chips, "area_labels": set(),
+                "state": state, "multi": multi}
     return base
 
 
@@ -2638,7 +2716,10 @@ LONG_ISLAND_TERMS = ["wantagh", "bellmore", "merrick", "levittown", "east meadow
 @app.get("/", response_class=HTMLResponse)
 def home(request: Request, sort: str = "new", town: str = "", town_search: str = "",
          state: str = "", region: str = "", cat: str = "halloween", scare: str = "", tag: str = "",
-         video: str = ""):
+         video: str = "", states_q: str = Query("", alias="states")):
+    # states_q is the ?states=1 near-me opt-in; the alias keeps the
+    # URL identical to the Auto Tour toggle's, and the distinct Python
+    # name leaves the module-level states() helper callable below.
     cat = cat if cat in CATEGORIES else "halloween"
     # Feed-order rule (Dan, Oct 23): the default view is newest-first,
     # with Dan's hand-picked pins boosted to the very top. "Top" stays
@@ -2805,7 +2886,13 @@ def home(request: Request, sort: str = "new", town: str = "", town_search: str =
     # exactly today's biggest-towns-site-wide behaviour.
     with get_conn(DB_PATH) as conn:
         halloween_inventory = _town_inventory(conn, "halloween")
-    resolved_area = _resolve_visitor_area(halloween_inventory, geo)
+    # State-loyal near-me (Dan, Oct 27): the Near-you resolution —
+    # and with it the feed lead below — stays inside the visitor's own
+    # state unless the module's "Include nearby states" toggle opted
+    # into cross-state results (?states=1).
+    near_multi = _states_opt_in(states_q)
+    resolved_area = _resolve_visitor_area(halloween_inventory, geo,
+                                          multi=near_multi)
     if geo and resolved_area["area_labels"]:
         # Lead the default feed with the visitor's area: area pins first
         # (in normal feed order), then the regular feed de-duped behind
@@ -2814,7 +2901,8 @@ def home(request: Request, sort: str = "new", town: str = "", town_search: str =
         if cat != "halloween":
             with get_conn(DB_PATH) as conn:
                 cat_inventory = _town_inventory(conn, cat)
-            area_labels = _resolve_visitor_area(cat_inventory, geo)["area_labels"]
+            area_labels = _resolve_visitor_area(
+                cat_inventory, geo, multi=near_multi)["area_labels"]
         if area_labels:
             area_entries = _fetch_area_feed(cat, area_labels, scare, tag,
                                             video, sort)
@@ -3030,6 +3118,12 @@ def home(request: Request, sort: str = "new", town: str = "", town_search: str =
          "near_sub": resolved_area["sub"],
          "geo_mode": resolved_area["mode"],
          "geo_area": resolved_area["area_name"],
+         # State-loyal near-me toggle state for the Near-you module
+         # (mirrors the Auto Tour panel's scope row).
+         "near_multi": near_multi,
+         "near_state": resolved_area.get("state", ""),
+         "near_state_name": US_STATE_NAMES.get(
+             resolved_area.get("state", ""), resolved_area.get("state", "")),
          # Retention Wave 2, Item 1: town centroids for the homepage
          # one-tap locate prompt, in EXACTLY the row format detail
          # pages embed for the video chain ([label, city, state,
@@ -3715,11 +3809,16 @@ def upload_form(request: Request):
 
 @app.get("/nearby", response_class=HTMLResponse)
 def nearby(request: Request, q: str = "", miles: float = 10, cat: str = "halloween",
-           sort: str = "new", lat: str = "", lng: str = ""):
+           sort: str = "new", lat: str = "", lng: str = "", states: str = ""):
     cat = cat if cat in CATEGORIES else "halloween"
     # Default sort is newest per Dan's Oct 23 feed-order rule (it is the
     # within-distance tiebreak here; distance always stays primary).
     sort = sort if sort in ("top", "new") else "new"
+    # State-loyal default (Dan, Oct 27): results stay inside the
+    # search center's state unless the visitor opts into nearby
+    # states with the page's toggle (?states=1) — the same rule and
+    # the same toggle as the Auto Tour panel.
+    multi = _states_opt_in(states)
     try:
         miles = max(1, min(float(miles), 500))
     except (TypeError, ValueError):
@@ -3765,6 +3864,33 @@ def nearby(request: Request, q: str = "", miles: float = 10, cat: str = "hallowe
             # Halloween venues lead; the chain above (distance, then
             # the chosen sort) breaks ties (stable sort).
             entries.sort(key=lambda e: -decked_score(e))
+    # State-loyal filter: the center's state, cheapest source first —
+    # a state the query itself names ("Hackensack, NJ"), then the
+    # visitor-geo state when this center IS the visitor (a Near-me
+    # fix near the CF point), then a reverse lookup on the center.
+    # No state from any source = radius-only, exactly as before.
+    center_state = ""
+    wide_count = len(entries)
+    if center is not None:
+        if q and q != "your location":
+            center_state = _state_from_place_query(q)
+        if not center_state:
+            geo = _visitor_geo(request)
+            if geo and geo.get("state") and geo.get("lat") is not None \
+                    and geo.get("lng") is not None and haversine_miles(
+                        center[0], center[1], geo["lat"], geo["lng"]) <= 25.0:
+                center_state = geo["state"]
+        if not center_state:
+            center_state = _state_code_for_point(center[0], center[1])
+        if center_state and not multi:
+            entries = [e for e in entries
+                       if extract_state(e.get("town") or "")
+                       == center_state]
+    center_params: dict[str, str] = {}
+    if q and q != "your location":
+        center_params = {"q": q}
+    elif center is not None:
+        center_params = {"lat": str(center[0]), "lng": str(center[1])}
     voted = {k[6:] for k in request.cookies if k.startswith("voted_")}
     return templates.TemplateResponse(request, "nearby.html",
         {"request": request, "entries": entries, "q": q, "miles": miles,
@@ -3772,7 +3898,12 @@ def nearby(request: Request, q: str = "", miles: float = 10, cat: str = "hallowe
          "cat_emoji": CAT_EMOJI, "sort": sort,
          # Town dropdown options for the search field — the same
          # 'City, ST' labels the homepage town filter offers.
-         "town_options": towns(cat)},
+         "town_options": towns(cat),
+         # State-loyal scope row (mirrors the Auto Tour panel).
+         "multi": multi, "center_state": center_state,
+         "center_state_name": US_STATE_NAMES.get(center_state,
+                                                 center_state),
+         "wide_count": wide_count, "center_params": center_params},
     )
 
 
@@ -7313,7 +7444,7 @@ def auto_tour(request: Request, size: int = 10, cat: str = "halloween",
     """
     cat = cat if cat in CATEGORIES else "halloween"
     size = 100 if size == 100 else 10
-    multi = states.strip().lower() in ("1", "true", "on", "yes")
+    multi = _states_opt_in(states)
     ctx = {"request": request, "size": size, "cat": cat,
            "cat_labels": CAT_LABELS, "cat_emoji": CAT_EMOJI,
            "need_location": False, "err": None, "nights": [],
@@ -7358,10 +7489,27 @@ def auto_tour(request: Request, size: int = 10, cat: str = "halloween",
                 label = (geo.get("city") or geo.get("state")
                          or "your area")
                 label = f"{label} area" if label != "your area" else label
+                if center_state and geo.get("city"):
+                    # Same foreign-metro label rule as Near You: the
+                    # header city can name the metro across the state
+                    # line (Hackensack NJ resolving as "New York
+                    # City") — when that city is not a town in the
+                    # visitor's own state, label the tour by the
+                    # visitor's resolved in-state area instead.
+                    with get_conn(DB_PATH) as conn:
+                        inv = _town_inventory(conn, "halloween")
+                    if not any(t["state"] == center_state
+                               and t["city"].lower()
+                               == _smart_case_city(geo["city"]).lower()
+                               for t in inv):
+                        resolved = _resolve_visitor_area(
+                            inv, geo, multi=multi)
+                        if resolved["mode"] in ("exact", "near", "state"):
+                            label = resolved["area_name"]
             elif geo.get("city") or geo.get("state"):
                 with get_conn(DB_PATH) as conn:
                     inv = _town_inventory(conn, "halloween")
-                resolved = _resolve_visitor_area(inv, geo)
+                resolved = _resolve_visitor_area(inv, geo, multi=multi)
                 if resolved["mode"] in ("exact", "near") \
                         and resolved["chips"]:
                     anchor = next(

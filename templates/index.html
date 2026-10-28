@@ -226,12 +226,26 @@ function hmFullHomepage() {
     // chips to the visitor's actual fix (nearest first, count breaking
     // ties — the server Near-you ordering), the heading/sub copy, and
     // the "Your town" line the modules' own load script maintains.
-    var ranked = TOWNS.map(function (t) {
+    // State-loyal default (Dan, Oct 27): unless the module's
+    // "Include nearby states" toggle is on, the chips stay inside the
+    // anchor town's state — the saved town IS the visitor's declared
+    // home town, so its state is the visitor's state for this fix.
+    var rankedAll = TOWNS.map(function (t) {
       return { t: t, d: havMi(lat, lng, t[3], t[4]) };
     }).sort(function (a, b) {
       return (a.d - b.d) || (b.t[5] - a.t[5]) || a.t[0].localeCompare(b.t[0]);
-    }).slice(0, 8);
+    });
+    var anchorState = '';
+    for (var i = 0; i < TOWNS.length; i++) {
+      if (TOWNS[i][0] === label) { anchorState = TOWNS[i][2]; break; }
+    }
     document.querySelectorAll('.near-you').forEach(function (box) {
+      var cb = box.querySelector('.at-scope-toggle input');
+      var multi = !cb || cb.checked || !anchorState;
+      var ranked = (multi ? rankedAll : rankedAll.filter(function (r) {
+        return r.t[2] === anchorState;
+      })).slice(0, 8);
+      if (!ranked.length) ranked = rankedAll.slice(0, 8);
       var heading = box.querySelector('.near-you-head h2');
       if (heading) heading.textContent = '\u{1F4CD} Near You \u2014 ' + ranked[0].t[1] + ' area';
       var sub = box.querySelector('.near-you-sub');
@@ -329,6 +343,23 @@ function hmFullHomepage() {
    display:none below 761px and the original below-band copies are
    hidden at >=761px, so every viewport sees exactly one copy of each
    module: phones keep theirs below Tonight's band, untouched. #}
+<style>
+/* Near-you state-scope toggle (Dan, Oct 27): same row pattern as the
+   Auto Tour panel's .at-scope-* — the values are mirrored verbatim so
+   every near-me surface's toggle looks and reads identical. */
+.at-scope-row {
+  display: flex; align-items: center; gap: 0.55rem; flex-wrap: wrap;
+  margin-top: 0.7rem; padding-top: 0.7rem;
+  border-top: 1px solid #274860;
+}
+.at-scope-toggle {
+  display: inline-flex; align-items: center; gap: 0.45rem;
+  font-weight: 700; cursor: pointer;
+}
+.at-scope-toggle input { width: 1.1rem; height: 1.1rem; accent-color: var(--accent2); cursor: pointer; }
+.at-scope-toggle input:disabled { cursor: not-allowed; }
+.at-scope-note { color: var(--muted); font-size: 0.9rem; }
+</style>
 <div class="hero-stack">
   {% if near_towns %}
   <section class="near-you hero-copy" aria-label="Near you tonight">
@@ -337,6 +368,13 @@ function hmFullHomepage() {
       <a class="near-you-change" href="/nearby">Change area</a>
     </div>
     <p class="near-you-sub">{{ near_sub }}</p>
+    <form class="at-scope-row" method="get" action="/">
+      <label class="at-scope-toggle">
+        <input type="checkbox" name="states" value="1" {% if near_multi %}checked{% endif %} {% if not near_state %}disabled{% endif %} onchange="this.form.submit()">
+        Include nearby states
+      </label>
+      <span class="at-scope-note">{% if not near_state %}We couldn't pin down your state, so Near You may cross state lines.{% elif near_multi %}Towns can cross state lines — turn off to keep Near You in {{ near_state_name }} only.{% else %}Near You stays in {{ near_state_name }} — turn on to include nearby states.{% endif %}</span>
+    </form>
     <p class="near-you-mine" hidden>&#x1F4CD; Your town: <a class="js-town-link" href="/nearby"></a> — <a href="/nearby">see what's near it &rarr;</a></p>
     <div class="town-chips">
       {% for t in near_towns %}
@@ -851,6 +889,13 @@ function hmFullHomepage() {
     <a class="near-you-change" href="/nearby">Change area</a>
   </div>
   <p class="near-you-sub">{{ near_sub }}</p>
+  <form class="at-scope-row" method="get" action="/">
+    <label class="at-scope-toggle">
+      <input type="checkbox" name="states" value="1" {% if near_multi %}checked{% endif %} {% if not near_state %}disabled{% endif %} onchange="this.form.submit()">
+      Include nearby states
+    </label>
+    <span class="at-scope-note">{% if not near_state %}We couldn't pin down your state, so Near You may cross state lines.{% elif near_multi %}Towns can cross state lines — turn off to keep Near You in {{ near_state_name }} only.{% else %}Near You stays in {{ near_state_name }} — turn on to include nearby states.{% endif %}</span>
+  </form>
   <p class="near-you-mine" hidden>&#x1F4CD; Your town: <a class="js-town-link" href="/nearby"></a> — <a href="/nearby">see what's near it &rarr;</a></p>
   <div class="town-chips">
     {% for t in near_towns %}
