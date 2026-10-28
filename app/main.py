@@ -4007,6 +4007,10 @@ COSTUME_SECTIONS = [
         "title": "&#x2B50; Just Added",
         "sub": "The newest costumes on the page — fresh from the feed, straight to the top.",
         "ideas": [
+            {"name": "Hello Kitty × Ghostface Custom Mask — V02", "who": "Adults & teens", "difficulty": "Hard", "time": "A weekend or more",
+             "materials": "A sculpted mask base, white paint, black for the eyes and whiskers, yellow for the nose, and one big red bow — the finished piece is all in the video",
+             "blurb": "The sweetest face in horror: mask maker CartoonDeadwork's Hello Kitty × Ghostface custom mask, brought back from the dead as V02 — red bow, whiskers and all. He even hid a Golden Coin out there somewhere: find it and you claim a custom mask of your own. Tap the video and watch it come back to life.",
+             "source": "CartoonDeadwork (@k2theministry)", "url": "https://www.tiktok.com/@k2theministry/video/7688545412717825293", "tt": "7688545412717825293"},
             {"name": "Silent Hill Nurse Costume — Full DIY Tutorial", "who": "Adults & teens", "difficulty": "Medium", "time": "An afternoon or more",
              "materials": "A nurse dress or scrubs to distress, mask-making basics — her full tutorial walks through every piece she uses",
              "blurb": "Eimi's start-to-finish tutorial for her Silent Hill nurse — the bandaged Dark Nurse look from the games and films, distressed and bloodied by hand. She wants to see as many Silent Hill nurses out there this Halloween as possible: tap the photo, press play, and build yours along with her.",
