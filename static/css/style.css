@@ -6711,7 +6711,7 @@ a.wn-mini:hover strong { color: #ffd9a8; }
    glow wherever "New" leads "New on the Map" / the /updates kicker;
    on the kicker it also takes the rail title's Eater display font. */
 .wn-new { color: #8FD8FF; text-shadow: 0 0 14px rgba(87, 168, 255, 0.65); }
-.wn-kicker-new { font-family: "Eater", cursive; font-weight: 400; }
+.wn-kicker-new { font-family: "Eater", cursive; font-weight: 400; font-size: 1.5em; }
 .wn-title { margin: 0.2rem 0 0.4rem; font-size: 2rem; }
 .wn-title-accent { color: #8FD8FF; text-shadow: 0 0 16px rgba(87, 168, 255, 0.6); }
 .wn-intro { color: var(--muted); margin: 0 0 0.6rem; }
