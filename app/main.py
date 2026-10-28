@@ -4013,6 +4013,10 @@ COSTUME_SECTIONS = [
         "title": "&#x2B50; Just Added",
         "sub": "The newest costumes on the page — fresh from the feed, straight to the top.",
         "ideas": [
+            {"name": "Zipper Face SFX Makeup — the Cute-Meets-Gore Unzip", "who": "Adults & teens", "difficulty": "Medium", "time": "About 1–2 hours",
+             "materials": "Scar wax, a real zipper, fake blood and chunky gore for the exposed flesh, glam eye makeup, a long wig and bows for the cutesy finish",
+             "blurb": "SCL Beauty glues a real zipper straight down the center of her face, seals the edges in scar wax, then unzips the lower half and packs the opening with raw, textured gore — fake blood and chunky 'exposed flesh' running from nose to neck. Then the twist her caption promises — 'a cutesy Halloween tutorial': full glam on the skin that's left, a black pigtail wig and white bows on top. Adorable from across the room, horrifying up close. Her honest review: 'I need practice with scar wax' — so give yourself a trial run before Halloween night. Tap the video and watch the face unzip.",
+             "source": "@sclbeauty", "url": "https://www.tiktok.com/@sclbeauty/video/7693066020348513558", "tt": "7693066020348513558"},
             {"name": "Michael Myers × Jason Mashup Mask — Half-and-Half Slasher Build", "who": "Adults & teens", "difficulty": "Medium", "time": "An afternoon",
              "materials": "A Michael Myers mask, a Jason-style hockey mask, painter's tape, a craft knife, paint for the weathered finish — the video shows every cut and join",
              "blurb": "What if Michael Myers was Jason? This build answers it with a craft knife: a Myers mask and a hockey mask, each cut down and fused into a single half-and-half face — Haddonfield on one side, Camp Crystal Lake on the other — then taped off and weathered until the seam looks like it was always there. Tap the video and watch the two slashers become one mask.",
