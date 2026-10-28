@@ -8965,11 +8965,7 @@ POP_CULTURE_FEATURED = {
              "Park Halloween Show!",
     "channel": "themeparkmom",
     "kind": "TikTok", "short": True,
-    "blurb": "Weeks of building, painting and editing, and "
-             "themeparkmom's Jurassic Park Halloween show is "
-             "finally open: the gates, the paddock fence, the "
-             "tour — and a T. rex on the loose. Welcome to "
-             "Jurassic Park… just watch out for the T. rex!",
+    "blurb": "Most cinematic haunt this year goes to..",
 }
 # The collection grid. Dan feeds entries one at a time; append dicts of
 # {"id", "title", "channel", "kind", "blurb"} — the template renders
