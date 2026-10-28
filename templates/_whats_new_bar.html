@@ -1,0 +1,56 @@
+{# What's New slide-down bar (Dan, Oct 27): homepage only, seated
+   directly under the Just Added ticker. Starts CLOSED; the toggle
+   slides the panel open (measured max-height transition, so no
+   layout jank) revealing the latest slice of the public /updates
+   stream — Frank announcements + newest pins — plus the door to the
+   full blog. Content is server-rendered; with JS off the toggle is
+   simply inert and the ticker above still crawls the newest adds. #}
+{% if updates_preview %}
+<div class="wn-bar" id="wn-bar">
+  <button type="button" class="wn-toggle" id="wn-toggle" aria-expanded="false" aria-controls="wn-panel">
+    <span class="wn-toggle-label">&#x1F195; What&#x27;s New</span>
+    <span class="wn-toggle-sub">every new haunt, event &amp; feature</span>
+    <span class="wn-toggle-chev" aria-hidden="true">&#x25BE;</span>
+  </button>
+  <div class="wn-panel" id="wn-panel">
+    <div class="wn-panel-inner">
+      <ul class="wn-mini-list">
+        {% for u in updates_preview %}
+        <li>
+          {% if u.kind == "announce" %}
+          {% if u.href %}<a class="wn-mini wn-mini-announce" href="{{ u.href }}">{% else %}<span class="wn-mini wn-mini-announce">{% endif %}
+            <span class="wn-mini-emoji" aria-hidden="true">{{ u.emoji }}</span>
+            <span class="wn-mini-main"><strong>{{ u.title }}</strong><span class="wn-mini-body">{{ u.body }}</span></span>
+          {% if u.href %}</a>{% else %}</span>{% endif %}
+          {% else %}
+          <a class="wn-mini" href="{{ u.href }}">
+            {% if u.thumb %}<img class="wn-mini-thumb" src="{{ u.thumb }}" alt="" loading="lazy" onerror="this.remove()">{% else %}<span class="wn-mini-emoji" aria-hidden="true">{{ u.emoji }}</span>{% endif %}
+            <span class="wn-mini-main"><strong>{{ u.title }}</strong>{% if u.town_label %}<span class="wn-mini-body">{{ u.town_label }} &middot; new {{ u.noun }}</span>{% endif %}</span>
+          </a>
+          {% endif %}
+        </li>
+        {% endfor %}
+      </ul>
+      <a class="wn-all" href="/updates">See all updates &rarr;</a>
+    </div>
+  </div>
+</div>
+<script>
+(function () {
+  var bar = document.getElementById("wn-bar");
+  var btn = document.getElementById("wn-toggle");
+  var panel = document.getElementById("wn-panel");
+  if (!bar || !btn || !panel) return;
+  btn.addEventListener("click", function () {
+    var open = bar.classList.toggle("wn-open");
+    btn.setAttribute("aria-expanded", open ? "true" : "false");
+    panel.style.maxHeight = open ? panel.scrollHeight + "px" : "0px";
+  });
+  window.addEventListener("resize", function () {
+    if (bar.classList.contains("wn-open")) {
+      panel.style.maxHeight = panel.scrollHeight + "px";
+    }
+  });
+})();
+</script>
+{% endif %}

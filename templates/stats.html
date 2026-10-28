@@ -122,13 +122,14 @@
   {% endfor %}
 </table>
 
-<h3>Top pages</h3>
-<table style="width:100%;border-collapse:collapse;margin-bottom:24px;">
-  <tr><th style="text-align:left;padding:8px;">Page</th><th style="text-align:right;padding:8px;">Views</th></tr>
-  {% for row in top_pages %}
-  <tr><td style="padding:8px;"><a href="{{ row["path"] }}">{{ row["path"] }}</a></td><td style="text-align:right;padding:8px;">{{ row["views"] }}</td></tr>
+<h3>📄 Views by page <span style="font-size:0.75em;color:#888;">(human views only — every page on the site)</span></h3>
+<table style="width:100%;border-collapse:collapse;margin-bottom:8px;">
+  <tr><th style="text-align:left;padding:8px;">Page</th><th style="text-align:right;padding:8px;">Views</th><th style="text-align:right;padding:8px;">Last 7 days</th><th style="text-align:right;padding:8px;">Share</th></tr>
+  {% for row in pages %}
+  <tr><td style="padding:8px;">{% if row.link %}<a href="{{ row.link }}">{{ row.label }}</a>{% else %}{{ row.label }}{% endif %}{% if row.label != row.key %} <span style="color:#888;">({{ row.key }})</span>{% endif %}</td><td style="text-align:right;padding:8px;">{{ row.views }}</td><td style="text-align:right;padding:8px;">{{ row.views7 }}</td><td style="text-align:right;padding:8px;">{{ row.share }}%</td></tr>
   {% endfor %}
 </table>
+<p style="color:#888;font-size:0.85em;margin-bottom:24px;">Every page a visitor can open, counted from the human page-view tracker: machine paths (/healthz, /api/*, sitemap) and known bot / health-check / crawler user agents are excluded. (The old Top pages table counted raw hits, which put the /healthz health check at #1 and let individual pins crowd out whole sections.) User agents are recorded since Oct 27, 2026, so earlier views are screened by path only. Parameterized families are combined into one row each &mdash; every pin&rsquo;s detail page under <strong>Listing pages</strong>, every town under <strong>Town pages</strong> &mdash; per-pin detail lives in Time on each page and Top pins by interactions above. Category browsing is recorded under its base page: the tracker stores paths without query strings, so the Tour Fuel shelves (Ice Cream, Hotels, &hellip; at /?cat=&hellip;) count toward <strong>Home</strong> and the state category boards toward <strong>Top 10 by State</strong>. A page added tomorrow appears here on its own &mdash; until it gets a friendly name it shows its raw path.</p>
 
 <h3>Top referrers</h3>
 <table style="width:100%;border-collapse:collapse;margin-bottom:24px;">

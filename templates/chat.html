@@ -13,18 +13,18 @@
    the original 4s polling stays as the automatic fallback and the
    reconnect catch-up path. Treat reactions, the mod panel, and the
    word-game cards all ride the same socket.
-   z202 RESTYLE (Oct 27, STAGED for Dan's preview): presentation only —
+   z203 RESTYLE (Oct 27; shipped Oct 28): presentation only —
    flowing chat lines with per-haunter handle colors + same-haunter
    grouping, a Who's Here presence rail, Frank's welcome as the room
    MOTD, typing line above a sticky auto-growing composer. Behavior,
-   data and APIs untouched; all styling lives in the z202 CSS block. #}
+   data and APIs untouched; all styling lives in the z203 CSS block. #}
 <section class="chat-wrap">
   <header class="chat-head">
     <p class="soc-kicker">👻 <span class="hs-brand">HauntSocial</span></p>
     <p class="chat-sub">The HauntMap hangout — talk haunts, events, parties, music and costumes with your fellow haunters.</p>
   </header>
 
-  {# z202 RESTYLE (staged): room header band — the room's name + live
+  {# z203 RESTYLE (staged): room header band — the room's name + live
      headcount for members; a sneak-peek note for guests. Presence
      users moved to the Who's Here rail inside .chat-layout below. #}
   <div class="chat-roombar">
@@ -99,7 +99,7 @@
             {% if can_moderate and not m.poll.closed %}<button type="button" class="chat-poll-close" data-poll-close="{{ m.poll.id }}">Close poll</button>{% endif %}
           </div>
           {% elif m.kind == 'poll' %}<p class="chat-text">📊 Poll: {{ m.body }}</p><p class="chat-poll-teaser">Join free to vote!</p>
-          {% endif %}{# plain text rides the .chat-line above (z202) #}
+          {% endif %}{# plain text rides the .chat-line above (z203) #}
           {% if m.link %}<p class="chat-linkrow"><a class="chat-link" href="{{ m.link }}">👉 View it on the map</a></p>{% endif %}
           <div class="chat-reacts" data-reacts="{{ m.id }}">
             {% for sticker, n in m.reactions.counts.items() %}{% if member %}<button type="button" class="chat-react-chip{% if sticker in m.reactions.mine %} mine{% endif %}" data-react="{{ m.id }}" data-sticker="{{ sticker }}">{{ sticker }} {{ n }}</button>{% else %}<span class="chat-react-chip">{{ sticker }} {{ n }}</span>{% endif %}{% endfor %}
@@ -151,7 +151,7 @@
       t.textContent = d.toLocaleTimeString([], {hour: 'numeric', minute: '2-digit'});
     }
   });
-  // z202 restyle helpers (shared by this block and the member script):
+  // z203 restyle helpers (shared by this block and the member script):
   // a stable per-haunter handle color (IRC-style — Frank keeps the
   // brand azure) and chat-flow grouping, where a quick follow-up line
   // from the same haunter drops its repeated handle/avatar.
@@ -464,7 +464,7 @@
       node.replaceWith(buildPollNode(poll, row ? row.getAttribute('data-mid') : null));
     }
     function bodyNode(m) {
-      // z202: plain text returns an inline span so it flows on the
+      // z203: plain text returns an inline span so it flows on the
       // chat line after the handle; stickers and poll fallbacks stay
       // block-level under the line.
       if (m.kind === 'poll' && m.poll) return buildPollNode(m.poll, m.id);
@@ -499,7 +499,7 @@
       main.className = 'chat-msg-main';
       var qn = quoteNode(m);
       if (qn) main.appendChild(qn);
-      // z202: one flowing chat line — handle + time + hover actions,
+      // z203: one flowing chat line — handle + time + hover actions,
       // with plain message text riding the same line.
       var meta = document.createElement('p');
       meta.className = 'chat-line';
@@ -1160,7 +1160,7 @@
       var chip = e.target.closest ? e.target.closest('[data-online-handle]') : null;
       if (chip) document.getElementById('challengeHandle').value = '@' + chip.getAttribute('data-online-handle');
     });
-    // Who's Here rail (z202): collapse toggle; phones start collapsed
+    // Who's Here rail (z203): collapse toggle; phones start collapsed
     // so the room itself leads.
     var rail = document.getElementById('chatRail');
     var railToggle = document.getElementById('railToggle');

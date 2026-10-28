@@ -3142,6 +3142,10 @@ def home(request: Request, sort: str = "new", town: str = "", town_search: str =
                           and t["clng"] is not None],
          "sponsors": sponsors,
          "ticker_items": ticker_items,
+         # What's New slide-down bar (Dan, Oct 27): the latest slice
+         # of the public /updates stream — announcements + newest
+         # pins mixed newest-first; the bar starts closed.
+         "updates_preview": _site_update_stream(60)[:6],
          "bottom_tabs": _place_tabs(cat, state, region, sort, scare, tag,
                                     "1" if video.strip() == "1" else ""),
          "tier_labels": {"featured": "Featured Sponsor", "premium": "Premium Sponsor", "title": "Title Sponsor"}},
@@ -7898,7 +7902,7 @@ def sitemap():
     base = "https://gethauntmap.com"
     urls = ["/", "/map", "/nearby", "/tour", "/diy", "/diy-costumes", "/games", "/games/ghost-maze", "/leaderboard", "/leaderboard/states", "/leaderboard/top-100",
             "/towns", "/passport", "/daily", "/advertise", "/media-kit", "/about", "/hauntsocial", "/chat", "/costume-contest", "/trivia", "/haunt-or-not", "/fan-art",
-            "/restaurhaunts"]
+            "/restaurhaunts", "/updates"]
     for t in _towns_with_counts():
         urls.append(f"/towns/{t['slug']}")
     body = ['<?xml version="1.0" encoding="UTF-8"?>',
@@ -9715,16 +9719,30 @@ def admin_fanart_delete(fid: int, request: Request):
 # the analytics tables inline.
 _PAGE_TIME_LABELS = {
     "/": "Home", "/events": "Events", "/map": "Map", "/nearby": "Nearby",
-    "/tours": "Tours", "/watch": "Watch", "/leaderboard": "Top Haunts",
+    "/tours": "Tours", "/tour": "Tours", "/auto-tour": "Auto Tour",
+    "/virtual-tour": "Virtual Tour",
+    "/watch": "Watch", "/leaderboard": "Top Haunts",
     "/leaderboard/states": "Top 10 by State",
+    "/leaderboard/top-100": "Top 100 Haunts",
     "/restaurhaunts": "Restaurhaunts", "/hauntsocial": "HauntSocial",
+    "/updates": "What's New",
     "/chat": "Haunt Chat",
-    "/games": "Games", "/diy": "DIY", "/diy-costumes": "DIY Costumes",
+    "/games": "Games", "/games/ghost-maze": "Ghost Maze",
+    "/diy": "DIY", "/diy-costumes": "DIY Costumes",
+    "/fan-art": "Fan Art",
     "/movies": "Movies", "/music": "Music", "/markets": "Markets",
     "/pop-haunt-culture": "Pop Haunt Culture",
     "/passport": "Haunt Passport", "/daily": "Daily Fright",
+    "/towns": "All Towns", "/haunt-or-not": "Haunt or Not",
+    "/costume-contest": "Costume Contest", "/bracket": "Haunt Bracket",
+    "/trivia": "Trivia", "/upload": "Add a Haunt",
     "/about": "About Us", "/advertise": "Advertise",
+    "/media-kit": "Media Kit",
     "/signup": "Sign Up", "/login": "Log In",
+    "/forgot-password": "Forgot Password", "/profile/edit": "Edit Profile",
+    "/feedback": "Feedback", "/privacy": "Privacy Policy",
+    "/terms": "Terms of Service",
+    "/embed-test": "Embed Test (diagnostic)",
 }
 
 
@@ -9816,6 +9834,85 @@ def _fmt_dur_admin(sec: float) -> str:
 
 def _page_time_stats() -> list:
     return _ttl_cached("admin:page_time", _page_time_build)
+
+
+# ------------------------------------------ views by page (Oct 27)
+# Dan's ask: admin analytics must include ALL the new pages. The old
+# Top pages table grouped RAW page_views paths (LIMIT 20), so the
+# /healthz health-check flood held the #1 slot, /api/* JSON endpoints
+# took rows, and thousands of individual /d/<id> pin paths crowded
+# out whole sections — /chat, /hauntsocial, /fan-art,
+# /pop-haunt-culture and /media-kit never appeared at all. This build
+# replaces it: HUMAN views only (the sponsor screen — _MK_HUMAN
+# machine paths plus the _machine_ua_sql machine-agent screen, the
+# same definition the U.S. states table uses), grouped by NORMALIZED
+# path so parameterized families collapse into one honest bucket each
+# instead of thousands of rows. Known pages get friendly names from
+# _PAGE_TIME_LABELS (shared with the time-on-page table); anything
+# unmapped falls back to its raw path, so a page shipped tomorrow
+# appears here on its own with no code change.
+# Category note: the tracker stores the path WITHOUT its query
+# string, so category browsing (/?cat=ice_cream, the Tour Fuel
+# shelves; /leaderboard/states?cat=hotels, the state category
+# boards) is recorded under the base page — Home and Top 10 by State
+# carry those views. No per-category split exists in the stored data
+# to recover; the template note says so on the page.
+
+def _stats_page_bucket(path: str):
+    """(group key, label) for parameterized path families, else None.
+    The key is display-only (an ellipsis marks the collapsed tail);
+    single pages keep their real path as key and stay linkable."""
+    if path.startswith("/d/") and path[3:].isdigit():
+        return "/d/…", "Listing pages — all pins combined"
+    if path.startswith("/towns/"):
+        return "/towns/…", "Town pages — all towns combined"
+    if path.startswith("/@"):
+        return "/@…", "HauntSocial profiles — all members combined"
+    if path.startswith("/bracket/card/"):
+        return "/bracket/card/…", "Bracket share cards"
+    if path.startswith("/t/"):
+        return "/t/…", "Shared tour links"
+    if path.startswith("/sponsor/click/"):
+        return "/sponsor/click/…", "Sponsor link clicks"
+    return None
+
+
+def _page_breakdown_build() -> list:
+    frag, frag_params = _machine_ua_sql()
+    human = (f"{_MK_HUMAN} AND {frag} "
+             "AND path NOT IN ('/favicon.ico', '/robots.txt')")
+    win7 = "viewed_at >= datetime('now', '-7 days')"
+    with get_conn(DB_PATH) as conn:
+        total = conn.execute(
+            f"SELECT COUNT(*) FROM page_views WHERE {human}",
+            frag_params).fetchone()[0]
+        groups: dict = {}
+        for r in conn.execute(
+                "SELECT path, COUNT(*) AS views, "
+                f"SUM(CASE WHEN {win7} THEN 1 ELSE 0 END) AS views7 "
+                f"FROM page_views WHERE {human} GROUP BY path",
+                frag_params):
+            bucket = _stats_page_bucket(r["path"])
+            if bucket:
+                key, label = bucket
+                link = None
+            else:
+                key = r["path"]
+                label = _PAGE_TIME_LABELS.get(key, key)
+                link = key
+            g = groups.setdefault(key, {"key": key, "label": label,
+                                        "link": link,
+                                        "views": 0, "views7": 0})
+            g["views"] += r["views"]
+            g["views7"] += r["views7"] or 0
+    rows = sorted(groups.values(), key=lambda g: (-g["views"], g["label"]))
+    for g in rows:
+        g["share"] = round(g["views"] / total * 100, 1) if total else 0.0
+    return rows
+
+
+def _page_breakdown() -> list:
+    return _ttl_cached("admin:page_breakdown", _page_breakdown_build)
 
 
 # ------------------------------------------------- US states (Oct 27)
@@ -9978,9 +10075,6 @@ def admin_stats(request: Request):
         by_day = conn.execute(
             "SELECT date(viewed_at) AS day, COUNT(*) AS views "
             "FROM page_views GROUP BY day ORDER BY day DESC LIMIT 14").fetchall()
-        top_pages = conn.execute(
-            "SELECT path, COUNT(*) AS views FROM page_views "
-            "GROUP BY path ORDER BY views DESC LIMIT 20").fetchall()
         top_referrers = conn.execute(
             "SELECT CASE WHEN referrer = '' OR referrer IS NULL THEN '(direct)' "
             "ELSE referrer END AS ref, COUNT(*) AS views FROM page_views "
@@ -10118,7 +10212,7 @@ def admin_stats(request: Request):
                     "bounce": 0, "avg_pages": 0, "buckets": []}
     return templates.TemplateResponse(request, "stats.html",
         {"request": request, "total": total, "today": today, "week": week,
-         "by_day": by_day, "top_pages": top_pages,
+         "by_day": by_day, "pages": _page_breakdown(),
          "top_referrers": top_referrers, "by_device": by_device,
          "duration": duration, "engagement": engagement,
          "geo": geo, "geo_since": _GEO_COLLECTING_SINCE,
@@ -11578,6 +11672,130 @@ def push_test(request: Request):
         "announcements will find you here.", url="/chat",
         ref="test", online_ids=frozenset(), force=True)
     return {"ok": True}
+
+
+# --------------------------------------------------------- What's New blog
+# Public update blog (Dan, Oct 27): "Update blog public with a slide
+# down bar to keep up with every new addition to the site" — /updates
+# is HauntMap's public logbook: NO login, newest first, grouped BY DAY
+# (the site's standing grouping rule, on the ET season clock). It
+# stays fresh with ZERO manual work — new pins flow straight from the
+# entries table (hidden pins and is_sample demo pins excluded: samples
+# are seeded placeholders, not additions). Feature drops ride as
+# Frank announcements from the code-defined SITE_ANNOUNCEMENTS list:
+# when a feature ships, add one dict here and it leads its day's
+# group on the blog and slides into the homepage bar's latest mix.
+# Frank-voiced, honest, no counts anywhere in the copy.
+SITE_ANNOUNCEMENTS = [
+    {"date": "2026-10-27", "emoji": "🍦",
+     "title": "Ice Cream joins Tour Fuel",
+     "body": "Tour Fuel just got sweeter — Ice Cream is now a stop on "
+             "your haunt tour! First scoop: I Scream, a self-serve "
+             "soft-serve bar in Sleepy Hollow, NY. Yes, THAT Sleepy "
+             "Hollow. 🐴",
+     "href": "/?cat=ice_cream"},
+    {"date": "2026-10-27", "emoji": "💬",
+     "title": "Haunt Chat went real-time",
+     "body": "The HauntSocial chat room got its real-time upgrade — "
+             "messages land the second they're sent, and you can see "
+             "who's in the room with you. Members jump in free; "
+             "everybody else can peek through the door. 👻",
+     "href": "/chat"},
+    {"date": "2026-10-27", "emoji": "🧭",
+     "title": "Near You stays in your state",
+     "body": "You asked, we fixed it: Near You now keeps to your own "
+             "state instead of wandering across the river. Want the "
+             "neighbors too? Flip on “Include nearby states” — your "
+             "call, not ours.",
+     "href": "/nearby"},
+    {"date": "2026-10-27", "emoji": "🏨",
+     "title": "Hotels join Tour Fuel",
+     "body": "Spooky places to STAY joined Tour Fuel — historic, "
+             "haunted and just-plain-creepy hotels now sit alongside "
+             "the restaurhaunts, cafes and shops on your route. Sleep "
+             "tight. 🛎️",
+     "href": "/?cat=hotels"},
+]
+
+
+def _updates_day_label(d, today) -> str:
+    if d == today:
+        return "Today"
+    if d == today - timedelta(days=1):
+        return "Yesterday"
+    return f"{d.strftime('%A, %B')} {d.day}"
+
+
+def _site_update_stream(pin_limit: int = 240) -> list:
+    """The merged What's New stream, newest first: Frank feature
+    announcements + new pins from the entries table. Every item
+    carries its ET datetime ('when') and ET calendar date ('day');
+    announcements sort at the END of their day so a feature drop
+    leads the day it shipped on. One bounded query — the homepage
+    bar calls this with a small pin_limit, /updates with a big one."""
+    from zoneinfo import ZoneInfo
+    et = ZoneInfo("America/New_York")
+    items: list = []
+    for a in SITE_ANNOUNCEMENTS:
+        try:
+            d = datetime.strptime(a["date"], "%Y-%m-%d").date()
+        except (KeyError, ValueError):
+            continue
+        when = datetime(d.year, d.month, d.day, 23, 59, tzinfo=et)
+        items.append({"kind": "announce", "day": d, "when": when,
+                      "emoji": a.get("emoji", "🆕"), "title": a["title"],
+                      "body": a.get("body", ""), "href": a.get("href", "")})
+    with get_conn(DB_PATH) as conn:
+        rows = conn.execute(
+            "SELECT * FROM entries WHERE hidden = 0 AND is_sample = 0 "
+            "ORDER BY created_at DESC, id DESC LIMIT ?",
+            (pin_limit,)).fetchall()
+    for r in rows:
+        e = row_to_dict(r)
+        try:
+            created = datetime.fromisoformat(
+                str(e["created_at"]).replace("Z", "+00:00"))
+            if created.tzinfo is None:
+                created = created.replace(tzinfo=timezone.utc)
+        except (KeyError, ValueError):
+            continue
+        when = created.astimezone(et)
+        cat = e.get("category") or "halloween"
+        items.append({
+            "kind": "pin", "day": when.date(), "when": when,
+            "id": e["id"], "title": e["title"],
+            "town_label": e.get("town_label", ""),
+            "cat_label": CAT_LABELS.get(cat, cat),
+            "noun": _FRANK_NEWS_NOUNS.get(cat, "listing"),
+            "emoji": CAT_EMOJI.get(cat, "🎃"),
+            "thumb": e.get("thumb_card_url") or e.get("thumb_url") or "",
+            "href": f"/d/{e['id']}"})
+    items.sort(key=lambda it: it["when"], reverse=True)
+    return items
+
+
+def _site_update_groups(pin_limit: int = 240) -> list:
+    """The stream grouped by ET day: [{day, label, entries}], days
+    and entries newest-first — the /updates page body."""
+    today = _today_et()
+    groups: list = []
+    for it in _site_update_stream(pin_limit):
+        if groups and groups[-1]["day"] == it["day"]:
+            groups[-1]["entries"].append(it)
+        else:
+            groups.append({"day": it["day"],
+                           "label": _updates_day_label(it["day"], today),
+                           "entries": [it]})
+    return groups
+
+
+@app.get("/updates", response_class=HTMLResponse)
+def updates_page(request: Request):
+    # Public — no member gate (Dan, Oct 27). The blog IS the pitch:
+    # anyone can watch the site grow; joining HauntSocial is how you
+    # get into the chat about it.
+    return templates.TemplateResponse(request, "updates.html",
+        {"request": request, "groups": _site_update_groups(150)})
 
 
 @app.get("/hauntsocial", response_class=HTMLResponse)
