@@ -8976,6 +8976,19 @@ POP_CULTURE_FEATURED = {
 # cover-frame file in static/img/): the template renders the local
 # still and the click handler swaps in that platform's official embed.
 POP_CULTURE_GRID: list[dict] = [
+    # Grid lead (Dan, 2026-10-28, oEmbed-verified): BusinessWire's
+    # report on Derry Halloween — Europe's largest Halloween
+    # festival, marking 40 years in the birthplace of Halloween.
+    {"id": "LysWD1io_xA",
+     "title": "Europe's Largest Halloween Festival Marks 40 Years "
+              "in the Birthplace of Halloween",
+     "channel": "BusinessWire",
+     "kind": "Video",
+     "blurb": "Halloween was born in Ireland, out of Samhain — "
+              "and Derry throws Europe's largest Halloween "
+              "festival to prove it. BusinessWire reports as the "
+              "festival marks 40 years in the holiday's "
+              "birthplace."},
     # The page's second lead (Dan, 2026-10-28): cadenmcdonald's
     # flying-ghost Facebook reel — moved to the head of the grid
     # on 2026-10-28 when @themeparkmom's Jurassic Park TikTok
