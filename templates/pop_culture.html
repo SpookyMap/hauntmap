@@ -12,10 +12,17 @@
 
 <h2 class="music-h2" id="featured">&#x2B50; Featured</h2>
 <div class="yt-feature">
+  {% if featured.platform == 'facebook' %}
+  <button type="button" class="yt-facade yt-facade--fb" data-fb="{{ featured.url }}" aria-label="Play {{ featured.title }}">
+    <img src="{{ featured.thumb }}" alt="" loading="lazy">
+    <span class="yt-play" aria-hidden="true">&#9654;</span>
+  </button>
+  {% else %}
   <button type="button" class="yt-facade" data-yt="{{ featured.id }}" aria-label="Play {{ featured.title }}">
     <img src="https://i.ytimg.com/vi/{{ featured.id }}/hqdefault.jpg" alt="" loading="lazy">
     <span class="yt-play" aria-hidden="true">&#9654;</span>
   </button>
+  {% endif %}
   <p class="yt-cap">{{ featured.title }} &middot; {{ featured.channel }}</p>
   <p class="movie-blurb">{{ featured.blurb }}</p>
 </div>

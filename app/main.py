@@ -8935,15 +8935,30 @@ def movies_page(request: Request):
 # Episode" by Friends Keep Secrets. Display titles drop the
 # hashtags/emoji the raw oEmbed titles carry; the words are the
 # creators' own.
+# New lead (Dan, 2026-10-28): cadenmcdonald's flying-ghost reel,
+# sent as a facebook.com/share/r link and resolved via the Facebook
+# connector (canonical reel 1131678265990324, public, posted
+# Oct 21, 2026; caption "I need this for Halloween"). First
+# Facebook FEATURED entry: it carries "platform" + "url" + "thumb"
+# like the grid's non-YouTube entries — the still is the reel's own
+# cover frame from Facebook's plugin page, stored locally as
+# static/img/cadenmcdonald_flying_ghost.jpg (the video itself is
+# never re-hosted — tap swaps in Facebook's official embedded
+# player). Display title is the caption's own words, emoji dropped.
+# The Brooklyn walk that led the page until now heads the grid
+# below instead.
 POP_CULTURE_FEATURED = {
-    "id": "aG-2lzbCf30",
-    "title": "NYC Halloween 2026 Decorations in Brooklyn New York "
-             "BEST Halloween Outdoor Yard Decorations 4K",
-    "channel": "The NYC Walking Show",
-    "kind": "Video",
-    "blurb": "Dan's top feature: a 4K walk through Brooklyn's most "
-             "decorated Halloween houses — porches stacked with "
-             "skeletons, clowns and color.",
+    "id": "1131678265990324",
+    "platform": "facebook",
+    "url": "https://www.facebook.com/reel/1131678265990324/",
+    "thumb": "/static/img/cadenmcdonald_flying_ghost.jpg",
+    "title": "I need this for Halloween",
+    "channel": "cadenmcdonald",
+    "kind": "Facebook Reel", "short": True,
+    "blurb": "Remote in hand, cadenmcdonald sends a flying ghost "
+             "drone out over the neighborhood — a sheet ghost on a "
+             "drone, swooping at anyone in range — and his verdict "
+             "is instant: he needs one for Halloween. Ten, ideally.",
 }
 # The collection grid. Dan feeds entries one at a time; append dicts of
 # {"id", "title", "channel", "kind", "blurb"} — the template renders
@@ -8954,6 +8969,17 @@ POP_CULTURE_FEATURED = {
 # cover-frame file in static/img/): the template renders the local
 # still and the click handler swaps in that platform's official embed.
 POP_CULTURE_GRID: list[dict] = [
+    # The page's original lead (Dan, 2026-10-27, oEmbed-verified):
+    # moved to the head of the grid on 2026-10-28 when
+    # cadenmcdonald's Facebook reel took the featured slot.
+    {"id": "aG-2lzbCf30",
+     "title": "NYC Halloween 2026 Decorations in Brooklyn New York "
+              "BEST Halloween Outdoor Yard Decorations 4K",
+     "channel": "The NYC Walking Show",
+     "kind": "Video",
+     "blurb": "A 4K walk through Brooklyn's most decorated "
+              "Halloween houses — porches stacked with "
+              "skeletons, clowns and color."},
     # First TikTok entry (Dan, 2026-10-27): LoopCuties' "tiny
     # gangster" Nyx clip — a tiny marmoset in a tinier ski mask,
     # viewed 6.9M times. Public video (posted Oct 21, 2026); the
