@@ -2972,6 +2972,15 @@ def home(request: Request, sort: str = "new", town: str = "", town_search: str =
                     "count": len(state_rows),
                     "entries": _rank_with_featured(state_rows, 10),
                 }
+    # Top 10 by State MENU (top10-menu-staged, Dan Oct 28): the
+    # homepage block's state picker — every board in this category
+    # (code, name, pin count) rendered server-side into the dropdown;
+    # the lists themselves load lazily from /api/top10 so the
+    # homepage payload stays flat. The block's DEFAULT is untouched:
+    # still the visitor's own state (near-me state rule) — the menu
+    # is an explicit visitor pick.
+    top10_menu = [{"code": b["code"], "name": b["name"],
+                   "count": b["count"]} for b in _state_boards(cat)]
     # Retention Wave 3, Item 5: the "Tonight" strip's anchor town.
     # Resolution: the visitor's explicit ?town= context first (their
     # chosen town, as-is). With a geo-resolved area (exact/near/state),
@@ -3117,6 +3126,7 @@ def home(request: Request, sort: str = "new", town: str = "", town_search: str =
          "pop_featured": POP_CULTURE_FEATURED,
          "trending": trending, "near_towns": near_towns,
          "home_top10": home_top10,
+         "top10_menu": top10_menu,
          "near_heading": resolved_area["heading"],
          "near_sub": resolved_area["sub"],
          "geo_mode": resolved_area["mode"],
@@ -7198,6 +7208,36 @@ def _rank_with_featured(entries: list[dict], limit: int) -> list[dict]:
     return (featured + rest)[:limit]
 
 
+def _state_boards(cat: str) -> list[dict]:
+    """Every state/province board in a category — the same grouping
+    /leaderboard/states renders (extract_state over the town labels,
+    _rank_with_featured Top 10, counts never altered), ordered like
+    that page: most pins first, then most views, then name. Built for
+    the homepage Top-10-by-State menu (top10-menu-staged): index()
+    renders the board list into the dropdown and /api/top10 serves
+    one board's rows on demand, both from this single grouping so
+    the menu can never drift from the boards page."""
+    with get_conn(DB_PATH) as conn:
+        entries = _entries_with_views(conn, cat)
+    by_state: dict[str, list[dict]] = {}
+    for e in entries:
+        code = extract_state(e.get("town") or "")
+        if not code:
+            continue  # no parseable state — no board, same as /leaderboard/states
+        by_state.setdefault(code, []).append(e)
+    boards = []
+    for code, rows in by_state.items():
+        boards.append({
+            "code": code,
+            "name": US_STATE_NAMES.get(code, code),
+            "count": len(rows),
+            "total_views": sum(e["_views"] for e in rows),
+            "entries": _rank_with_featured(rows, 10),
+        })
+    boards.sort(key=lambda s: (-s["count"], -s["total_views"], s["name"]))
+    return boards
+
+
 @app.get("/leaderboard", response_class=HTMLResponse)
 def leaderboard(request: Request, cat: str = "halloween"):
     cat = cat if cat in CATEGORIES else "halloween"
@@ -7291,6 +7331,35 @@ def leaderboard_states(request: Request, cat: str = "halloween"):
         {"request": request, "states": states, "metros": metros,
          "cat": cat, "cat_labels": CAT_LABELS, "cat_emoji": CAT_EMOJI}
     )
+
+
+@app.get("/api/top10")
+def api_top10(state: str = "", cat: str = "halloween"):
+    """One state's Top 10 as JSON for the homepage Top-10-by-State
+    menu (top10-menu-staged, Dan Oct 28). Same grouping + ranking as
+    /leaderboard/states via _state_boards; fetched lazily when a
+    visitor picks a state so the homepage itself stays fast. A state
+    with no board in the category 404s — the menu only ever offers
+    states that have one."""
+    cat = cat if cat in CATEGORIES else "halloween"
+    code = (state or "").strip().upper()
+    board = next((b for b in _state_boards(cat) if b["code"] == code),
+                 None)
+    if board is None:
+        return JSONResponse({"ok": False, "code": code, "entries": []},
+                            status_code=404)
+    return {
+        "ok": True, "code": board["code"], "name": board["name"],
+        "count": board["count"], "cat": cat,
+        "board_url": (f"/leaderboard/states?cat={cat}"
+                      f"#state-{code.lower()}"),
+        "entries": [{"id": e["id"], "title": e["title"],
+                     "town": (e.get("town_label") or e.get("town")
+                              or ""),
+                     "views": e.get("_views") or 0,
+                     "featured": bool(e.get("is_featured"))}
+                    for e in board["entries"]],
+    }
 
 
 # ------------------------------------------- Top 100 Nationwide

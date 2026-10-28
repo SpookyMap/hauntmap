@@ -9,12 +9,34 @@
    copy inside .hero-stack (laptop) and a phone copy inside
    .hero-split, under the TikTok videos and above the Follow-us
    banner (Dan, Oct 23 ~21:33) — with CSS keeping exactly one copy
-   visible per viewport. #}
-<section class="top10-home{% if hero %} hero-copy{% endif %}{% if not home_top10 %} top10-home--cta{% endif %}" aria-label="Top 10 by state">
+   visible per viewport.
+
+   STATE PICKER MENU (top10-menu-staged, Dan Oct 28 — STAGED for his
+   preview, do not ship): a "Top 10 by State ▾" dropdown in the block
+   header lists every state/province board in the category (top10_menu,
+   server-rendered) in a scrollable panel; picking one swaps the block
+   in place to that state's FULL Top 10 via /api/top10. The DEFAULT
+   stays the visitor's own state (near-me state rule) — the menu is
+   an explicit visitor pick, with a "↩ Your state" reset once a
+   different state is showing. #}
+<section class="top10-home{% if hero %} hero-copy{% endif %}{% if not home_top10 %} top10-home--cta{% endif %}" aria-label="Top 10 by state"{% if home_top10 %} data-top10-block data-home-state="{{ home_top10.code }}" data-cat="{{ cat }}" data-cat-label="{{ cat_labels[cat]|lower }}"{% endif %}>
   {% if home_top10 %}
-  <h2>&#x1F3C6; Top {{ home_top10.entries|length }} in {{ home_top10.name }}</h2>
-  <p class="top10-home-sub">The most-viewed {{ cat_labels[cat]|lower }} haunts in your state</p>
-  <ol class="top10-home-list">
+  <div class="top10-head">
+    <h2>&#x1F3C6; Top <span data-top10-n>{{ home_top10.entries|length }}</span> in <span data-top10-state>{{ home_top10.name }}</span></h2>
+    {% if top10_menu %}
+    <div class="top10-menu-wrap">
+      <button type="button" class="top10-menu-btn" aria-haspopup="true" aria-expanded="false">Top 10 by State <span class="top10-menu-caret" aria-hidden="true">&#x25BE;</span></button>
+      <div class="top10-menu" hidden role="menu" aria-label="Pick a state Top 10">
+        <button type="button" class="top10-menu-reset" data-top10-reset hidden>&#x21A9; Your state &mdash; {{ home_top10.name }}</button>
+        {% for s in top10_menu %}
+        <button type="button" class="top10-menu-item{% if s.code == home_top10.code %} is-home is-active{% endif %}" data-state="{{ s.code }}" role="menuitem"><span class="top10-menu-item-name">{{ s.name }}</span>{% if s.code == home_top10.code %}<span class="top10-menu-you">Your state</span>{% endif %}<span class="top10-menu-count">{{ s.count }}</span></button>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+  </div>
+  <p class="top10-home-sub" data-top10-sub data-own-sub="The most-viewed {{ cat_labels[cat]|lower }} haunts in your state">The most-viewed {{ cat_labels[cat]|lower }} haunts in your state</p>
+  <ol class="top10-home-list" data-top10-list>
     {% for e in home_top10.entries[:5] %}
     <li>
       <a href="/d/{{ e.id }}">
@@ -26,7 +48,99 @@
     </li>
     {% endfor %}
   </ol>
-  <a class="top10-home-more" href="/leaderboard/states?cat={{ cat }}#state-{{ home_top10.code|lower }}">See the full Top 10 in {{ home_top10.name }} &rarr;</a>
+  <a class="top10-home-more" data-top10-more href="/leaderboard/states?cat={{ cat }}#state-{{ home_top10.code|lower }}">See the full Top 10 in <span data-top10-more-name>{{ home_top10.name }}</span> &rarr;</a>
+  <script>
+  (function () {
+    if (window.__hmTop10Menu) return;
+    window.__hmTop10Menu = true;
+    function esc(s) {
+      return String(s).replace(/[&<>"']/g, function (c) {
+        return {"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"}[c];
+      });
+    }
+    function closeAll(except) {
+      document.querySelectorAll(".top10-menu").forEach(function (m) {
+        if (m !== except) m.hidden = true;
+      });
+      document.querySelectorAll(".top10-menu-btn").forEach(function (b) {
+        var wrap = b.closest(".top10-menu-wrap");
+        if (!except || !wrap || !wrap.contains(except)) {
+          b.setAttribute("aria-expanded", "false");
+        }
+      });
+    }
+    function load(sec, code) {
+      var cat = sec.getAttribute("data-cat") || "halloween";
+      var list = sec.querySelector("[data-top10-list]");
+      if (!list) return;
+      list.style.opacity = "0.45";
+      fetch("/api/top10?state=" + encodeURIComponent(code) +
+            "&cat=" + encodeURIComponent(cat),
+            {headers: {"Accept": "application/json"}})
+        .then(function (r) { return r.json(); })
+        .then(function (d) {
+          list.style.opacity = "";
+          if (!d || !d.ok) return;
+          var home = sec.getAttribute("data-home-state");
+          sec.querySelector("[data-top10-n]").textContent = d.entries.length;
+          sec.querySelector("[data-top10-state]").textContent = d.name;
+          var sub = sec.querySelector("[data-top10-sub]");
+          sub.textContent = (d.code === home)
+            ? sub.getAttribute("data-own-sub")
+            : ("The most-viewed " + (sec.getAttribute("data-cat-label") || "halloween") +
+               " haunts in " + d.name);
+          list.innerHTML = d.entries.map(function (e, i) {
+            return '<li><a href="/d/' + e.id + '">' +
+              '<span class="t10-rank">#' + (i + 1) + "</span>" +
+              '<span class="t10-title">' + esc(e.title) + "</span>" +
+              (e.featured ? '<span class="featured-badge">⭐ Featured</span>' : "") +
+              '<span class="t10-meta">' + esc(e.town) +
+              " &middot; 👁️ " + e.views +
+              " view" + (e.views === 1 ? "" : "s") + "</span></a></li>";
+          }).join("");
+          var more = sec.querySelector("[data-top10-more]");
+          more.setAttribute("href", d.board_url);
+          more.querySelector("[data-top10-more-name]").textContent = d.name;
+          var reset = sec.querySelector("[data-top10-reset]");
+          if (reset) reset.hidden = (d.code === home);
+          sec.querySelectorAll(".top10-menu-item").forEach(function (it) {
+            it.classList.toggle("is-active",
+              it.getAttribute("data-state") === d.code);
+          });
+        })
+        .catch(function () { list.style.opacity = ""; });
+    }
+    document.addEventListener("click", function (ev) {
+      var btn = ev.target.closest(".top10-menu-btn");
+      if (btn) {
+        var menu = btn.closest(".top10-menu-wrap").querySelector(".top10-menu");
+        var opening = menu.hidden;
+        closeAll(menu);
+        menu.hidden = !opening;
+        btn.setAttribute("aria-expanded", String(opening));
+        return;
+      }
+      var reset = ev.target.closest("[data-top10-reset]");
+      if (reset) {
+        var rsec = reset.closest("[data-top10-block]");
+        load(rsec, rsec.getAttribute("data-home-state"));
+        closeAll(null);
+        return;
+      }
+      var item = ev.target.closest(".top10-menu-item");
+      if (item) {
+        load(item.closest("[data-top10-block]"),
+             item.getAttribute("data-state"));
+        closeAll(null);
+        return;
+      }
+      if (!ev.target.closest(".top10-menu-wrap")) closeAll(null);
+    });
+    document.addEventListener("keydown", function (ev) {
+      if (ev.key === "Escape") closeAll(null);
+    });
+  })();
+  </script>
   {% else %}
   <div class="states-cta">
     <a href="/leaderboard/states?cat={{ cat }}"><img class="states-cta-img" src="/static/img/pumpkin_jack.svg" alt="" width="36" height="36"><strong>Top 10 by state</strong></a>
