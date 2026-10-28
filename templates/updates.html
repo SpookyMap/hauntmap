@@ -1,6 +1,6 @@
 {% extends "base.html" %}
-{% block title %}The Haunt Log · {{ site_name }}{% endblock %}
-{% block head %}<meta name="description" content="The Haunt Log — every new haunt, event and feature, posted as it lands. The public logbook of America's Halloween map, kept by Frank.">{% endblock %}
+{% block title %}Fresh From the Crypt · {{ site_name }}{% endblock %}
+{% block head %}<meta name="description" content="Fresh From the Crypt — every new haunt, event and feature, posted as it lands. The public logbook of America's Halloween map, kept by Frank.">{% endblock %}
 {% block content %}
 {# What's New — the public update blog (Dan, Oct 27). Fed straight
    from the entries table + SITE_ANNOUNCEMENTS in main.py, grouped by
@@ -8,7 +8,10 @@
    closing band sells HauntSocial + the Haunt Chat. #}
 <section class="wn-page">
   <p class="wn-kicker">🆕 The HauntMap Logbook</p>
-  <h1 class="wn-title">The Haunt <span class="wn-title-accent">Log</span></h1>
+  <div class="wn-head">
+    <img class="wn-head-badge" src="/static/img/map-icon-sitecolors.jpg" alt="" width="384" height="384">
+    <h1 class="wn-title">Fresh From the <span class="wn-title-accent">Crypt</span></h1>
+  </div>
   <p class="wn-intro">Every new haunt, event and feature — posted here the moment it lands, by Frank, your host. No account needed to keep up. Ever.</p>
 
   {% for g in groups %}

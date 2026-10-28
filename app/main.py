@@ -9815,7 +9815,7 @@ _PAGE_TIME_LABELS = {
     "/leaderboard/states": "Top 10 by State",
     "/leaderboard/top-100": "Top 100 Haunts",
     "/restaurhaunts": "Restaurhaunts", "/hauntsocial": "HauntSocial",
-    "/updates": "The Haunt Log",
+    "/updates": "Fresh From the Crypt",
     "/chat": "Haunt Chat",
     "/games": "Games", "/games/ghost-maze": "Ghost Maze",
     "/diy": "DIY", "/diy-costumes": "DIY Costumes",
