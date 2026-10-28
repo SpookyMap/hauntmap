@@ -7328,3 +7328,40 @@ a.wn-fbtn:hover, summary.wn-fbtn:hover { border-color: #57a8ff; }
   .top10-inline-list .top10-menu-item { width: auto; flex: 0 0 auto; }
   .top10-inline-list::-webkit-scrollbar { width: auto; height: 6px; }
 }
+
+/* ============ z219: /games NAV — SPREAD OUT, LONGER + SLEEKER (Dan, Oct 28) ======
+   Photo-verified on Dan's laptop: the z217 row rendered cramped in
+   the middle of the page — <main class="wrap"> caps the content
+   column at 720px, so the seven nowrap pills shared ~688px at ANY
+   viewport, gaps were 0.4rem, and "THE HALLOWEEN" (the Arcade
+   button's top label line) could not fit its pill. Fix, /games nav
+   only (.wrap itself is untouched): at >=761px the row breaks out
+   of the 720px column to the hero's breakout width (min(1240px,
+   100vw - 2rem), centered), gaps open to 1rem, and the pills get
+   taller/longer (padding 0.5rem 0.55rem, medallion 1.6rem, label
+   stepped up). One nowrap row only where the longest label truly
+   fits (>=1150px, label 0.76rem — measured ~96px of text against
+   ~102px of label room at a 1180px viewport); 761-1149px wraps
+   4 + 3 at flex 1 1 21% with the label at 0.78rem, where each pill
+   is far wider than the one-row share ever was. Phone rules
+   (<=760px 3-across, <=520px 2-across, tighter spacing) are the
+   z217 ones, unchanged. Hrefs, accent rings, two-line labels and
+   the medallion look are all as z217 shipped them. */
+@media (min-width: 761px) {
+  .games-nav {
+    width: min(1240px, calc(100vw - 2rem));
+    position: relative; left: 50%; transform: translateX(-50%);
+    gap: 1rem;
+  }
+  .games-nav-btn { padding: 0.5rem 0.55rem; }
+  .gnb-ic { width: 1.6rem; height: 1.6rem; font-size: 0.92rem; }
+}
+@media (min-width: 761px) and (max-width: 1149px) {
+  .games-nav { flex-wrap: wrap; }
+  .games-nav-btn { flex: 1 1 21%; }
+  .gnb-label { font-size: 0.78rem; }
+}
+@media (min-width: 1150px) {
+  .games-nav { flex-wrap: nowrap; }
+  .gnb-label { font-size: 0.76rem; }
+}
