@@ -5280,9 +5280,21 @@ a.game-card-featured:hover { border-color: #ff7b1c; }
    layout are pixel-identical to before (verified: rows, sponsor
    and town tops match to 0.03px). If the sponsor panel's height
    ever changes, re-derive: row = panel height + 44.88px.
-   Phone (<1000px) is not in this block and renders as before. */
+   Phone (<1000px) is not in this block and renders as before.
+   z211 CORRECTION (Dan, Oct 28): z205's What's New rail added a
+   row ABOVE the video row in both desktop templates, moving the
+   sponsor from row 3 to row 4 — but this pin stayed on row 3,
+   which is now the VIDEO row. The three 248px facades need 744px;
+   frozen at 376.63px their stack overflowed ~367px and the
+   sponsor panel (row 4, centered) painted over the last facade's
+   bottom ~282px (Dan's MacBook photo; measured overlap 282.2px at
+   1440 + 1280, Chromium). The pin now sits on row 4 (the sponsor
+   row) in both definite-rows rules (this block + the z161 block
+   below), restoring z152's design exactly: video row auto-sized
+   again, sponsor row definite at panel + 44.88px, visible gap
+   36.84px above and below the panel at every desktop width. */
 @media (min-width: 1000px) {
-  .hero-split { grid-template-rows: auto auto 376.63px auto; }
+  .hero-split { grid-template-rows: auto auto auto 376.63px auto; }
 }
 
 /* ============ z153: BOTTOM STRIP — EVEN AIR ABOVE AND BELOW (Dan, Oct 26) ============
@@ -5473,9 +5485,30 @@ main.wrap:has(> .vt-tv-strip-bottom) { padding-bottom: 0; }
 /* Phone copy: under Tonight's Display, hidden once the rail exists. */
 .adv-strip-phone { margin: 0.9rem 0 0; font-size: 0.88rem; }
 @media (min-width: 1000px) {
-  .hero-split { grid-template-rows: auto auto 376.63px auto auto; }
+  .hero-split { grid-template-rows: auto auto auto 376.63px auto auto; }
   .hero-split .adv-strip-rail { display: block; }
   .adv-strip-phone { display: none; }
+}
+
+/* ============ z211: VIDEO ROW PINNED TOO (Dan, Oct 28) ============
+   Companion to the z152/z211 sponsor-row pin above. With the
+   sponsor row definite again, the headline's span deficit at
+   >=1200px still pooled in the auto VIDEO row (+32.9px measured),
+   leaving 69.7px of air between the last facade and the sponsor
+   panel vs 36.84px below it — the uneven air Dan keeps flagging
+   in this column. Pin the video row definite at exactly its
+   content height so no slack can pool in it either: >=1200px the
+   three stacked facades are 248px each (the >=1000px hero rule)
+   = 744px; at 1000–1199px the three-across facades are capped at
+   400px (z106). The deficit now lands in the whatsnew row (the
+   rail stretches to fill it, z208) and the advstrip/townreq rows
+   below the sponsor, per z152's design. If the facade height or
+   the promo count ever changes, re-derive both numbers. */
+@media (min-width: 1200px) {
+  .hero-split { grid-template-rows: auto auto 744px 376.63px auto auto; }
+}
+@media (min-width: 1000px) and (max-width: 1199px) {
+  .hero-split { grid-template-rows: auto auto 400px 376.63px auto auto; }
 }
 
 /* ============ z162: PHONE JOIN PILL — A LITTLE SLIMMER STILL (Dan, Oct 26) ============
