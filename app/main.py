@@ -11785,6 +11785,12 @@ def _site_update_stream(pin_limit: int = 240) -> list:
         items.append({
             "kind": "pin", "day": when.date(), "when": when,
             "cat": cat,
+            # State the same way the state boards derive it
+            # (extract_state over the town field) — the /updates
+            # state filter buckets pins by this, never a second
+            # derivation. "" when the town carries no state
+            # (virtual rooms, unparseable towns).
+            "state": extract_state(e.get("town") or ""),
             "id": e["id"], "title": e["title"],
             "town_label": e.get("town_label", ""),
             "cat_label": CAT_LABELS.get(cat, cat),
@@ -11855,13 +11861,134 @@ def _whatsnew_rail_groups(per_group: int = 8) -> list:
     return groups
 
 
+# /updates filters (Dan, Oct 28, STAGED for his preview): "what's
+# new page search by state button and a button for events haunts
+# etc" — server-side via query params (?cat=events&state=TX), so a
+# filtered view is a plain link that works with no JS. Category
+# buckets are the rail's (_WHATSNEW_RAIL_GROUPS, announcements as
+# their own "updates" bucket) so this page and the homepage rail
+# bucket a pin the same way — one language across the site.
+# Announcements are global: they carry no state, so a state view is
+# pins-only, and the Site Updates view ignores the state param.
+_UPDATES_FILTER_CATS = (
+    ("haunts", "🎃", "Haunts"),
+    ("events", "🎪", "Events"),
+    ("live", "🔴", "Live"),
+    ("stops", "🍦", "Stops"),
+    ("more", "🛠️", "DIY & More"),
+    ("updates", "📣", "Site Updates"),
+)
+_WHATSNEW_CAT_GROUP = {c: key for key, _e, _l, cats in
+                       _WHATSNEW_RAIL_GROUPS for c in cats}
+
+
+def _updates_item_group(it: dict) -> str:
+    if it["kind"] == "announce":
+        return "updates"
+    return _WHATSNEW_CAT_GROUP.get(it.get("cat") or "", "more")
+
+
+def _updates_qs(cat: str = "", state: str = "") -> str:
+    parts = []
+    if cat:
+        parts.append("cat=" + cat)
+    if state:
+        parts.append("state=" + state)
+    return "/updates" + ("?" + "&".join(parts) if parts else "")
+
+
+def _site_update_groups_filtered(pin_limit: int = 150, cat: str = "",
+                                 state: str = "") -> dict:
+    """The /updates view model: the stream day-grouped AFTER the
+    filters, plus the facet counts the filter bar renders. Counts
+    come from the same single stream scan (the newest pin_limit
+    pins + the announcements), so the buttons and the state list
+    always describe the window the page can actually show — no
+    second query pass."""
+    items = _site_update_stream(pin_limit)
+    cat_counts: dict = {}
+    state_counts: dict = {}
+    for it in items:
+        g = _updates_item_group(it)
+        cat_counts[g] = cat_counts.get(g, 0) + 1
+        if it["kind"] == "pin" and it.get("state"):
+            state_counts[it["state"]] = \
+                state_counts.get(it["state"], 0) + 1
+    kept: list = []
+    for it in items:
+        if cat:
+            if _updates_item_group(it) != cat:
+                continue
+        if state:
+            # A state view is pins-only: announcements are global
+            # and carry no state to match.
+            if it["kind"] != "pin" or it.get("state") != state:
+                continue
+        kept.append(it)
+    today = _today_et()
+    groups: list = []
+    for it in kept:
+        if groups and groups[-1]["day"] == it["day"]:
+            groups[-1]["entries"].append(it)
+        else:
+            groups.append({"day": it["day"],
+                           "label": _updates_day_label(it["day"], today),
+                           "entries": [it]})
+    state_options = [{"code": code,
+                      "name": US_STATE_NAMES.get(code, code),
+                      "count": n}
+                     for code, n in state_counts.items()]
+    state_options.sort(key=lambda s: (-s["count"], s["name"]))
+    return {"groups": groups, "total": len(kept),
+            "all_count": len(items), "cat_counts": cat_counts,
+            "state_options": state_options}
+
+
 @app.get("/updates", response_class=HTMLResponse)
-def updates_page(request: Request):
+def updates_page(request: Request, cat: str = "", state: str = ""):
     # Public — no member gate (Dan, Oct 27). The blog IS the pitch:
     # anyone can watch the site grow; joining HauntSocial is how you
     # get into the chat about it.
+    # Filters (Dan, Oct 28, STAGED): ?cat= validated against the
+    # known buckets, ?state= against a state-code shape; Site
+    # Updates is global, so it drops the state filter outright.
+    cat = (cat or "").strip().lower()
+    if cat not in {k for k, _e, _l in _UPDATES_FILTER_CATS}:
+        cat = ""
+    state = (state or "").strip().upper()
+    if not re.fullmatch(r"[A-Z]{2,3}", state or ""):
+        state = ""
+    if cat == "updates":
+        state = ""
+    view = _site_update_groups_filtered(150, cat, state)
+    cat_buttons = [{"key": "", "emoji": "🆕", "label": "All",
+                    "count": view["all_count"], "active": not cat,
+                    "href": _updates_qs("", state)}]
+    for key, emoji, label in _UPDATES_FILTER_CATS:
+        cat_buttons.append(
+            {"key": key, "emoji": emoji, "label": label,
+             "count": view["cat_counts"].get(key, 0),
+             "active": cat == key,
+             "href": _updates_qs(key, "" if key == "updates" else state)})
+    for opt in view["state_options"]:
+        opt["active"] = state == opt["code"]
+        opt["href"] = _updates_qs(cat, opt["code"])
+    summary = []
+    if cat:
+        _k, cemoji, clabel = next(t for t in _UPDATES_FILTER_CATS
+                                  if t[0] == cat)
+        summary.append(f"{cemoji} {clabel}")
+    if state:
+        summary.append(US_STATE_NAMES.get(state, state))
     return templates.TemplateResponse(request, "updates.html",
-        {"request": request, "groups": _site_update_groups(150)})
+        {"request": request, "groups": view["groups"],
+         "total": view["total"], "cat_buttons": cat_buttons,
+         "state_options": view["state_options"],
+         "all_states_href": _updates_qs(cat, ""),
+         "fcat": cat, "fstate": state,
+         "fstate_name": US_STATE_NAMES.get(state, state),
+         "filtered": bool(cat or state),
+         "filter_summary": " · ".join(summary)})
 
 
 @app.get("/hauntsocial", response_class=HTMLResponse)
