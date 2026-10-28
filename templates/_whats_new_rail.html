@@ -9,10 +9,10 @@
    renders only the groups that have adds. Item markup mirrors the
    bar's .wn-mini rows so the two surfaces read as one family. #}
 {% if whatsnew_groups %}
-<aside class="wn-rail" aria-label="What's New at HauntMap">
+<aside class="wn-rail" aria-label="New on the Map — The Haunt Log">
   <a class="wn-rail-head" href="/updates">
-    <span class="wn-rail-title">&#x1F195; What&#x27;s <span class="wn-rail-accent">New</span></span>
-    <span class="wn-rail-sub">the newest adds, grouped &mdash; scroll the list</span>
+    <span class="wn-rail-title">&#x1F195; New on the <span class="wn-rail-accent">Map</span></span>
+    <span class="wn-rail-sub wn-rail-tagline">Fresh From the Crypt</span>
   </a>
   <div class="wn-rail-scroll">
     {% for g in whatsnew_groups %}
@@ -36,6 +36,6 @@
     </ul>
     {% endfor %}
   </div>
-  <a class="wn-rail-all" href="/updates">See all updates &rarr;</a>
+  <a class="wn-rail-all" href="/updates">See The Haunt Log &rarr;</a>
 </aside>
 {% endif %}

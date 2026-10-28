@@ -7031,3 +7031,11 @@ a.wn-card:hover { border-color: #57a8ff; box-shadow: 0 0 14px rgba(87, 168, 255,
   .hero-split .wn-rail { align-self: stretch; min-height: 526px; }
   .hero-split .wn-rail-scroll { flex: 1 1 0; min-height: 0; max-height: none; }
 }
+/* ============ z209: RAIL NAMING — NEW ON THE MAP (Dan, Oct 28) ==
+   Dan picked the blog's names from a 25-option list: the homepage
+   rail is titled "New on the Map" with the tagline "Fresh From
+   the Crypt" under it, and the /updates page is "The Haunt Log".
+   Only new rule here: the tagline takes the rail's azure accent
+   (#8FD8FF, same as .wn-rail-accent) so it reads as a tagline
+   against the muted helper line it replaced. */
+.wn-rail-tagline { color: #8FD8FF; letter-spacing: 0.05em; }
