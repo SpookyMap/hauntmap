@@ -86,9 +86,12 @@ function hmFullHomepage() {
 })();
 </script>
 {% endif %}
-{# What's New slide-down bar (Dan, Oct 27): under the ticker, above
-   the slimbar — the engagement door into the public /updates blog. #}
-{% include "_whats_new_bar.html" %}
+{# What's New slide-down bar (Dan, Oct 27) — REPLACED on the
+   homepage by the grouped left-margin rail (Dan, Oct 28, STAGED):
+   the include is removed here only; _whats_new_bar.html, its CSS,
+   the updates_preview context and the /updates page are untouched,
+   so the bar can come back with one line. The rail itself is
+   included inside .hero-split, directly above the TikTok promos. #}
 {# Welcome-back slimbar sits UNDER the VT/TV strip (Dan, Oct 23).
    Events segment (Dan, Oct 23): server-rendered from slim_events,
    which the homepage route builds out of the SAME Tonight-strip
@@ -509,6 +512,13 @@ function hmFullHomepage() {
   <a class="markets-btn" href="/markets"><span class="vt-ic">&#x1F6D2;</span><span class="vt-label"><span class="vt-l1">Flea</span> <span class="vt-l2">Markets</span> <span class="vt-l3">&amp; Pop-Ups</span></span></a>
   <a class="top100-btn" href="/leaderboard/top-100"><span class="vt-ic">&#x1F3C6;</span><span class="vt-label"><span class="vt-l1">Top 100</span> <span class="vt-l2">Nationwide</span></span></a>
 </div>
+
+{# What's New rail (Dan, Oct 28, STAGED): grid area "whatsnew" —
+   the top of the left margin column on laptop, directly above the
+   TikTok promos below; a full-width grouped block right under the
+   headline in the stacked phone layout. Its own internal scroll
+   carries every group; see _whats_new_rail.html. #}
+{% include "_whats_new_rail.html" %}
 
 {# Item 7 audit (Oct 23): these three featured facades are @gethauntmap
    PROMO posts (Scare-O-Meter launch, 40-hours, Northeast coverage).

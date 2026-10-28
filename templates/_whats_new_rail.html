@@ -1,0 +1,41 @@
+{# What's New left-margin rail (Dan, Oct 28, STAGED — not shipped):
+   the public /updates stream re-bucketed by kind into a grouped,
+   internally-scrolling rail at the TOP of the homepage's left
+   margin column — above the @gethauntmap TikTok promos (.tt-featured)
+   in the same column. It REPLACES the Oct 27 slide-down bar on the
+   homepage (the bar include is gone from index.html; the bar
+   template, its CSS and the /updates page are untouched). Grouping
+   and caps live in _whatsnew_rail_groups() (app/main.py); the rail
+   renders only the groups that have adds. Item markup mirrors the
+   bar's .wn-mini rows so the two surfaces read as one family. #}
+{% if whatsnew_groups %}
+<aside class="wn-rail" aria-label="What's New at HauntMap">
+  <a class="wn-rail-head" href="/updates">
+    <span class="wn-rail-title">&#x1F195; What&#x27;s <span class="wn-rail-accent">New</span></span>
+    <span class="wn-rail-sub">the newest adds, grouped &mdash; scroll the list</span>
+  </a>
+  <div class="wn-rail-scroll">
+    {% for g in whatsnew_groups %}
+    <h3 class="wn-rail-group">{{ g.emoji }} {{ g.label }}</h3>
+    <ul class="wn-mini-list">
+      {% for u in g.entries %}
+      <li>
+        {% if u.kind == "announce" %}
+        {% if u.href %}<a class="wn-mini wn-mini-announce" href="{{ u.href }}">{% else %}<span class="wn-mini wn-mini-announce">{% endif %}
+          <span class="wn-mini-emoji" aria-hidden="true">{{ u.emoji }}</span>
+          <span class="wn-mini-main"><strong>{{ u.title }}</strong><span class="wn-mini-body">{{ u.body }}</span></span>
+        {% if u.href %}</a>{% else %}</span>{% endif %}
+        {% else %}
+        <a class="wn-mini" href="{{ u.href }}">
+          {% if u.thumb %}<img class="wn-mini-thumb" src="{{ u.thumb }}" alt="" loading="lazy" onerror="this.remove()">{% else %}<span class="wn-mini-emoji" aria-hidden="true">{{ u.emoji }}</span>{% endif %}
+          <span class="wn-mini-main"><strong>{{ u.title }}</strong>{% if u.town_label %}<span class="wn-mini-body">{{ u.town_label }} &middot; new {{ u.noun }}</span>{% endif %}</span>
+        </a>
+        {% endif %}
+      </li>
+      {% endfor %}
+    </ul>
+    {% endfor %}
+  </div>
+  <a class="wn-rail-all" href="/updates">See all updates &rarr;</a>
+</aside>
+{% endif %}

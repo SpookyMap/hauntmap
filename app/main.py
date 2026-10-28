@@ -3156,6 +3156,12 @@ def home(request: Request, sort: str = "new", town: str = "", town_search: str =
          # of the public /updates stream — announcements + newest
          # pins mixed newest-first; the bar starts closed.
          "updates_preview": _site_update_stream(60)[:6],
+         # What's New left-margin rail (Dan, Oct 28, STAGED): the same
+         # public stream re-bucketed by kind — new haunts, new events,
+         # new live, new Tour Fuel stops, everything else, then
+         # Frank's announcements — for the grouped rail that replaces
+         # the slide-down bar on the homepage.
+         "whatsnew_groups": _whatsnew_rail_groups(),
          "bottom_tabs": _place_tabs(cat, state, region, sort, scare, tag,
                                     "1" if video.strip() == "1" else ""),
          "tier_labels": {"featured": "Featured Sponsor", "premium": "Premium Sponsor", "title": "Title Sponsor"}},
@@ -4548,6 +4554,18 @@ NINJA_LINK_GAMES = [
 # official pages only, official art only, nothing hosted or ripped.
 # Mojang/Microsoft does not offer a browser-playable Dungeons, so no
 # card here pretends to embed a game; the one playable card is
+# OCT 28 FIX (Dan: "All the Minecraft and Roblox games don't have
+# thumbnails"): every image URL below still answered HTTP 200 with
+# real bytes from the build network, yet the cards rendered empty on
+# Dan's machines — the two shelves' art was the only game art on the
+# page hotlinked from minecraft.net / education.minecraft.net /
+# store CDNs / tr.rbxcdn.com, so the hotlink path itself was the
+# fragile link. The SAME official art is now self-hosted under
+# static/img/games/ (downloaded from the official sources below on
+# Oct 28, 2026; originals: Mojang DAM, Steam/Microsoft/PlayStation
+# store CDNs, YouTube for the trailer cover) and the cards point at
+# the local files. If art is ever refreshed, re-download from the
+# official page/store listing, never a fan source.
 # Minecraft Classic, Mojang's own free browser version, linked out
 # (its tiny Azure shell serves no framing grant we rely on, and a
 # keyboard WebGL game belongs full-screen anyway). Card art is each
@@ -4565,7 +4583,7 @@ NINJA_LINK_GAMES = [
 MINECRAFT_GAMES = [
     {"title": "Minecraft Dungeons",
      "url": "https://www.minecraft.net/en-us/about-dungeons",
-     "img": "https://www.minecraft.net/content/dam/minecraftnet/games/dungeons/key-art/Dungeons-PMP_Hero-Art_ParallaxB_1920x1080.jpg",
+     "img": "/static/img/games/game-minecraft-dungeons.jpg",
      "blurb": "The headliner: an action-RPG dungeon crawler set in "
               "the Minecraft world. Brave treasure-stuffed dungeons "
               "solo or with up to three friends, gear up with dozens "
@@ -4575,7 +4593,7 @@ MINECRAFT_GAMES = [
      "go": "Official page", "w": 1920, "h": 1080, "featured": True},
     {"title": "Minecraft Dungeons II",
      "url": "https://www.minecraft.net/en-us/about-dungeons-ii",
-     "img": "https://www.minecraft.net/content/dam/minecraftnet/games/spicewood/logos/Global-Header_Image-Tile_Dungeons-II_570x321.jpg",
+     "img": "/static/img/games/game-minecraft-dungeons-2.jpg",
      "blurb": "The brand-new sequel: drop the pickaxe, grab a sword. "
               "A new evil threatens two worlds at once and the "
               "dungeons are tougher than ever — charge in solo or "
@@ -4584,7 +4602,7 @@ MINECRAFT_GAMES = [
      "go": "Official page", "w": 570, "h": 321},
     {"title": "Minecraft",
      "url": "https://www.minecraft.net/en-us/about-minecraft",
-     "img": "https://www.minecraft.net/content/dam/minecraftnet/games/minecraft/key-art/About-Minecraft_Featured-Image-0_570x321.jpg",
+     "img": "/static/img/games/game-minecraft.jpg",
      "blurb": "The one that started it all: build anything you can "
               "imagine block by block in Creative, or craft, gear up "
               "and survive the night in Survival. Java & Bedrock "
@@ -4593,7 +4611,7 @@ MINECRAFT_GAMES = [
      "go": "Official page", "w": 570, "h": 321},
     {"title": "Minecraft Classic",
      "url": "https://classic.minecraft.net/",
-     "img": "https://www.minecraft.net/content/dam/minecraftnet/games/minecraft/key-art/Global-Header_Image-Tile_Build-Worlds-Shape-Play_570x321.jpg.jpg",
+     "img": "/static/img/games/game-minecraft-classic.png",
      "blurb": "Mojang's freebie: the original 2009 Creative mode, "
               "playable free right in your browser — 32 classic "
               "blocks and pure nostalgia. You will need a keyboard.",
@@ -4601,7 +4619,7 @@ MINECRAFT_GAMES = [
      "go": "Play free", "w": 570, "h": 321},
     {"title": "Minecraft Legends",
      "url": "https://www.minecraft.net/en-us/about-legends",
-     "img": "https://www.minecraft.net/content/dam/minecraftnet/games/badger/key-art/Global-Header_Image-Tile_MC-Legends_570x321.jpg",
+     "img": "/static/img/games/game-minecraft-legends.jpg",
      "blurb": "Action-strategy in the Overworld: unite your allies, "
               "raise your banners and lead the charge to save the "
               "Overworld from the piglin invasion.",
@@ -4609,12 +4627,12 @@ MINECRAFT_GAMES = [
      "go": "Official page", "w": 570, "h": 321},
     {"title": "Minecraft Education",
      "url": "https://education.minecraft.net/en-us",
-     "img": "https://education.minecraft.net/content/dam/education-edition/key-art/MCEDU_PropArt_15_1080x1080-1.png",
+     "img": "/static/img/games/game-minecraft-education.jpg",
      "blurb": "The classroom edition: game-based learning with "
               "coding, chemistry and 600+ ready-made lessons, built "
               "for schools, camps and clubs.",
      "tag": "For classrooms · Official site",
-     "go": "Official site", "w": 1080, "h": 1080},
+     "go": "Official site", "w": 800, "h": 600},
 ]
 
 # GET MINECRAFT DUNGEONS — the official store listings for the
@@ -4624,27 +4642,27 @@ MINECRAFT_GAMES = [
 MINECRAFT_DUNGEONS_STORES = [
     {"title": "Dungeons on Steam",
      "url": "https://store.steampowered.com/app/1672970/Minecraft_Dungeons/",
-     "img": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/1672970/capsule_616x353.jpg?t=1787063807",
+     "img": "/static/img/games/game-minecraft-dungeons-steam.jpg",
      "blurb": "For PC on Steam: the base game, plus the Ultimate "
               "Edition with all six DLCs and the Ultimate DLC Bundle.",
      "tag": "PC · Steam", "go": "Steam store", "w": 616, "h": 353},
     {"title": "Dungeons on Xbox",
      "url": "https://www.xbox.com/en-us/games/store/minecraft-dungeons/9n8nj74fztg9",
-     "img": "https://store-images.s-microsoft.com/image/apps.39985.14045794648370014.2229d39b-90c3-496e-8fac-9987450ca4d8.6db84bdb-2341-470a-88b0-0f119b204065",
+     "img": "/static/img/games/game-minecraft-dungeons-xbox.jpg",
      "blurb": "For Xbox Series X|S, Xbox One and Windows — also "
               "included with Xbox Game Pass, cloud play and all.",
      "tag": "Xbox · Windows · Game Pass", "go": "Xbox store",
      "w": 1920, "h": 1080},
     {"title": "Dungeons on Nintendo Switch",
      "url": "https://www.nintendo.com/us/store/products/minecraft-dungeons-switch/",
-     "img": "https://www.minecraft.net/content/dam/minecraftnet/games/dungeons/key-art/MinecraftDungeons_Ultimate_Net_640x384.jpg",
+     "img": "/static/img/games/game-minecraft-dungeons-switch.jpg",
      "blurb": "For Nintendo Switch: dungeon-crawling on the go, in "
               "TV, tabletop and handheld modes.",
      "tag": "Nintendo Switch", "go": "Nintendo store",
      "w": 640, "h": 384},
     {"title": "Dungeons on PlayStation",
      "url": "https://www.playstation.com/en-us/games/minecraft-dungeons/",
-     "img": "https://image.api.playstation.com/gs2-sec/appkgo/prod/CUSA18779_00/4/i_c7b0467e8d83d7fa53d63d40a50e65e5da0edc39e07306e356cf5a6f2aba1977/i/icon0.png",
+     "img": "/static/img/games/game-minecraft-dungeons-playstation.jpg",
      "blurb": "For PS4 (playable on PS5): Sony's official Dungeons "
               "page, with the PlayStation Store editions.",
      "tag": "PlayStation · PS4", "go": "PlayStation",
@@ -4659,7 +4677,7 @@ MINECRAFT_DUNGEONS_STORES = [
 MINECRAFT_TRAILER = {"yt": "CoZ2V7XsSYk",
                      "title": "Minecraft Dungeons: Ultimate Edition "
                               "Trailer",
-                     "img": "https://i.ytimg.com/vi/CoZ2V7XsSYk/hqdefault.jpg"}
+                     "img": "/static/img/games/game-minecraft-dungeons-trailer.jpg"}
 
 
 # ------------------------------------------------- roblox shelf
@@ -4670,7 +4688,10 @@ MINECRAFT_TRAILER = {"yt": "CoZ2V7XsSYk",
 # canonical URL and Roblox's official content-maturity label) — no
 # fan wikis as the source of record. Art is each experience's own
 # icon from Roblox's thumbnail CDN (tr.rbxcdn.com, curl-verified
-# HTTP 200 with a gethauntmap.com Referer for every card).
+# HTTP 200 with a gethauntmap.com Referer for every card). OCT 28:
+# the icons are now SELF-HOSTED under static/img/games/ (downloaded
+# from those same tr.rbxcdn.com URLs) after Dan reported the whole
+# shelf rendering without thumbnails — see the Minecraft shelf note.
 #
 # Curation: the platform's giants with a Halloween lean first.
 # Maturity labels are Roblox's own, printed on every card. Murder
@@ -4681,7 +4702,7 @@ MINECRAFT_TRAILER = {"yt": "CoZ2V7XsSYk",
 ROBLOX_GAMES = [
     {"title": "DOORS",
      "url": "https://www.roblox.com/games/6516141723/DOORS",
-     "img": "https://tr.rbxcdn.com/180DAY-6d72472d3b2a47c5441194c8cf9f002c/512/512/Image/Png/noFilter",
+     "img": "/static/img/games/game-roblox-doors.png",
      "blurb": "Roblox's haunted-hotel phenomenon: work through 100 "
               "doors, grab loot and outrun the entities hunting the "
               "halls — every death teaches you something. Loud sounds "
@@ -4689,7 +4710,7 @@ ROBLOX_GAMES = [
      "tag": "Adventure · Maturity: Mild", "byline": "by LSPLASH"},
     {"title": "The Mimic",
      "url": "https://www.roblox.com/games/6243699076/The-Mimic",
-     "img": "https://tr.rbxcdn.com/180DAY-2035f6e350e78ced10a0b001dce70eae/512/512/Image/Png/noFilter",
+     "img": "/static/img/games/game-roblox-the-mimic.png",
      "blurb": "Four spooky storybooks drawn from Japanese history "
               "and urban legends: explore, solve and survive the "
               "things that mimic our world. Flashing lights, loud "
@@ -4697,7 +4718,7 @@ ROBLOX_GAMES = [
      "tag": "Horror · Maturity: Mild", "byline": "by CTStudio"},
     {"title": "Piggy",
      "url": "https://www.roblox.com/games/4623386862/Piggy",
-     "img": "https://tr.rbxcdn.com/180DAY-027355d999aa09c6b486ad39dd8a48d2/512/512/Image/Png/noFilter",
+     "img": "/static/img/games/game-roblox-piggy.png",
      "blurb": "The survival-horror classic: solve the puzzles and "
               "escape the map before Piggy finds you — or be the "
               "Piggy and hunt your friends.",
@@ -4705,7 +4726,7 @@ ROBLOX_GAMES = [
      "byline": "by Piggy Dev Team"},
     {"title": "Rainbow Friends",
      "url": "https://www.roblox.com/games/7991339063/Rainbow-Friends",
-     "img": "https://tr.rbxcdn.com/180DAY-52711cf678d6a095888b0d4c8f893809/512/512/Image/Png/noFilter",
+     "img": "/static/img/games/game-roblox-rainbow-friends.png",
      "blurb": "A field trip to the Odd World amusement park goes "
               "very wrong: survive nights of tasks while Blue, "
               "Green, Orange and Purple hunt you down.",
@@ -4713,7 +4734,7 @@ ROBLOX_GAMES = [
      "byline": "by Roy & Charcle"},
     {"title": "Murder Mystery 2",
      "url": "https://www.roblox.com/games/142823291/Murder-Mystery-2",
-     "img": "https://tr.rbxcdn.com/180DAY-ab1484ff8063476d413da09dd25df93f/512/512/Image/Png/noFilter",
+     "img": "/static/img/games/game-roblox-murder-mystery-2.png",
      "blurb": "The giant whodunit party game: Innocents run and "
               "hide, the Sheriff protects them, and one secret "
               "Murderer is on the loose. Collect and trade hundreds "
@@ -4721,7 +4742,7 @@ ROBLOX_GAMES = [
      "tag": "Horror · Maturity: Moderate", "byline": "by Nikilis"},
     {"title": "Brookhaven RP",
      "url": "https://www.roblox.com/games/4924922222/Brookhaven-RP",
-     "img": "https://tr.rbxcdn.com/180DAY-577f3f78d1f056c80db7d2a54c8d384d/512/512/Image/Png/noFilter",
+     "img": "/static/img/games/game-roblox-brookhaven-rp.png",
      "blurb": "Roblox's biggest hangout: claim a house, grab a car, "
               "pick a job and roleplay your own stories across a "
               "whole city — a Halloween candy-corn event is running "
@@ -4730,14 +4751,14 @@ ROBLOX_GAMES = [
      "byline": "by Brookhaven by Voldex"},
     {"title": "Adopt Me!",
      "url": "https://www.roblox.com/games/920587237/Adopt-Me",
-     "img": "https://tr.rbxcdn.com/180DAY-4dd71502e99ee8c47cbafec4c95c442d/512/512/Image/Png/noFilter",
+     "img": "/static/img/games/game-roblox-adopt-me.png",
      "blurb": "Raise pets, build your dream home and trade with "
               "friends in Roblox's beloved roleplay world — its "
               "Halloween event is on right now.",
      "tag": "RPG · Maturity: Minimal", "byline": "by Uplift Games"},
     {"title": "Tower of Hell",
      "url": "https://www.roblox.com/games/1962086868/Tower-of-Hell",
-     "img": "https://tr.rbxcdn.com/180DAY-9704151d9c8a70e7ebe0ced8cb2b95c1/512/512/Image/Png/noFilter",
+     "img": "/static/img/games/game-roblox-tower-of-hell.png",
      "blurb": "The famous rage tower: race up a randomly built obby "
               "tower against the clock — no checkpoints, no mercy, "
               "endless bragging rights.",
@@ -4745,7 +4766,7 @@ ROBLOX_GAMES = [
      "byline": "by YXceptional Studios"},
     {"title": "Welcome to Bloxburg",
      "url": "https://www.roblox.com/games/185655149/Welcome-to-Bloxburg",
-     "img": "https://tr.rbxcdn.com/180DAY-b6e76b3760f566e5b97b339609d72284/512/512/Image/Png/noFilter",
+     "img": "/static/img/games/game-roblox-bloxburg.png",
      "blurb": "Build and decorate the house of your dreams, work a "
               "job, level up your skills and live a whole second "
               "life in the town of Bloxburg.",
@@ -11832,6 +11853,7 @@ def _site_update_stream(pin_limit: int = 240) -> list:
         cat = e.get("category") or "halloween"
         items.append({
             "kind": "pin", "day": when.date(), "when": when,
+            "cat": cat,
             "id": e["id"], "title": e["title"],
             "town_label": e.get("town_label", ""),
             "cat_label": CAT_LABELS.get(cat, cat),
@@ -11855,6 +11877,50 @@ def _site_update_groups(pin_limit: int = 240) -> list:
             groups.append({"day": it["day"],
                            "label": _updates_day_label(it["day"], today),
                            "entries": [it]})
+    return groups
+
+
+# What's New rail groups (Dan, Oct 28, STAGED): Dan's organization
+# for the homepage left-margin rail — the flat chronological stream
+# re-bucketed by what the add IS. Order is Dan's: haunts, events,
+# live, stops, everything else, site updates last. Any pin category
+# not named in the first four buckets lands in "More" (parks,
+# christmas, and any future category), so nothing new can fall out
+# of the rail. Announcements keep their own bucket at the end.
+_WHATSNEW_RAIL_GROUPS = (
+    ("haunts", "🎃", "New Haunts", ("halloween", "haunted_houses")),
+    ("events", "🎪", "New Events", ("events",)),
+    ("live", "🔴", "New Live", ("live",)),
+    ("stops", "🍦", "New Stops",
+     ("restaurants", "coffee", "shops", "hotels", "ice_cream",
+      "halloween_stores")),
+    ("more", "🛠️", "New DIY & More", ()),
+)
+
+
+def _whatsnew_rail_groups(per_group: int = 8) -> list:
+    """The What's New stream grouped for the homepage rail:
+    [{emoji, label, items}] — non-empty groups only, newest first
+    inside each group, capped per group. One stream scan at the
+    same 240-pin depth /updates uses."""
+    known = {c: key for key, _e, _l, cats in _WHATSNEW_RAIL_GROUPS
+             for c in cats}
+    buckets: dict = {key: [] for key, _e, _l, _c in _WHATSNEW_RAIL_GROUPS}
+    announces: list = []
+    for it in _site_update_stream(240):
+        if it["kind"] == "announce":
+            if len(announces) < per_group:
+                announces.append(it)
+            continue
+        key = known.get(it.get("cat") or "", "more")
+        if len(buckets[key]) < per_group:
+            buckets[key].append(it)
+    groups = [{"emoji": emoji, "label": label, "entries": buckets[key]}
+              for key, emoji, label, _cats in _WHATSNEW_RAIL_GROUPS
+              if buckets[key]]
+    if announces:
+        groups.append({"emoji": "📣", "label": "Site Updates",
+                       "entries": announces})
     return groups
 
 
