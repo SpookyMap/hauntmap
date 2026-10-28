@@ -4007,6 +4007,10 @@ COSTUME_SECTIONS = [
         "title": "&#x2B50; Just Added",
         "sub": "The newest costumes on the page — fresh from the feed, straight to the top.",
         "ideas": [
+            {"name": "Silent Hill Nurse Mask — Freestyle Bandage Build", "who": "Adults & teens", "difficulty": "Medium", "time": "An afternoon",
+             "materials": "Gauze bandage wrap over a head form or mask base, a plain nurse cap you can mark with the red cross, dark red paint or fake blood for the weathering",
+             "blurb": "Ekaterina freestyled the Dark Nurse her own way: a head wrapped in layer after layer of bandage gauze, stained and darkened until it turns fleshy and wrong, then crowned with the blood-flecked nurse cap and its red cross. No pattern and no plan — her whole caption is 'It was a lot of freestyle, but I love the way it came out,' and the finished mask backs her up. Tap the video and watch the wrap come together.",
+             "source": "@eka_herself", "url": "https://www.tiktok.com/@eka_herself/video/7698457826687044886", "tt": "7698457826687044886"},
             {"name": "Carried Away in a Trash Can — Skeleton Garbage Man Illusion Costume", "who": "Adults & teens", "difficulty": "Medium", "time": "An afternoon",
              "materials": "A poseable skeleton, hi-vis safety jacket, cap and sunglasses, work gloves, jeans and boots, a wheeled trash can you can cut head and arm holes in",
              "blurb": "The garbage man is a skeleton: a poseable skeleton in a hi-vis jacket, cap and sunglasses gets mounted at the wearer's waist, its gloved hands gripping a wheeled trash can with holes cut in the side. The wearer pops his own head and arm out of the can while his legs do the walking — so a skeleton trash collector appears to be hauling him away, very much against his will. Filed by its creator under last-minute costumes, and the build really is one afternoon. Tap the video and watch the rig come together.",
