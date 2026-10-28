@@ -7274,61 +7274,6 @@ a.wn-fbtn:hover, summary.wn-fbtn:hover { border-color: #57a8ff; }
   .gnb-label { font-size: 0.74rem; }
 }
 
-/* ============ z218: TOP10 — ALWAYS-VISIBLE STATE SCROLL WINDOW (Dan, Oct 28) ======
-   Dan: "I want both options live." Beside the z207/z215 dropdown
-   panel (unchanged), the Top 10 section itself now carries a
-   permanent state picker: a compact sidebar scroll box (.top10-side)
-   beside the board on laptop, holding the same 🌎 All States button
-   (pinned at its top), the same ↩ Your state reset and the same 46
-   board rows (counts + Your state badge) in its own scroll window
-   (.top10-inline-list, 264px — hero-stack copy 240px, mirroring the
-   panel's .top10-menu-list: themed thin scrollbar, overscroll
-   contained, native touch scroll). Items reuse .top10-menu-item /
-   .top10-menu-all / .top10-menu-reset, so the one delegated handler
-   drives both pickers and load() syncs highlight + reset across
-   every copy in the section. The window opens scrolled to the
-   visitor's own state (JS in _top10_home.html); the page-load board
-   stays the visitor's own state (near-me rule untouched). Phone:
-   the box stacks under the section header as a horizontal scroll
-   strip so the section gains ~one row of height, not a tall sheet. */
-.top10-body { display: flex; gap: 0.9rem; align-items: flex-start; }
-.top10-main { flex: 1 1 auto; min-width: 0; }
-.top10-side {
-  flex: 0 0 232px; min-width: 0;
-  background: linear-gradient(165deg, #16242e, #0d171d);
-  border: 1px solid #2b5878; border-radius: 12px;
-  box-shadow: 0 0 14px rgba(87, 168, 255, 0.15);
-  padding: 0.35rem;
-}
-.top10-side-label {
-  margin: 0.25rem 0.35rem 0.4rem;
-  font-size: 0.78rem; font-weight: 800;
-  text-transform: uppercase; letter-spacing: 0.06em; color: var(--accent2);
-}
-.top10-inline-list {
-  position: relative;
-  max-height: 264px; overflow-y: auto; overscroll-behavior: contain;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: thin; scrollbar-color: #2b5878 transparent;
-}
-.top10-inline-list::-webkit-scrollbar { width: 8px; }
-.top10-inline-list::-webkit-scrollbar-thumb { background: #2b5878; border-radius: 6px; }
-.top10-inline-list::-webkit-scrollbar-track { background: transparent; }
-.hero-stack .top10-inline-list { max-height: 240px; }
-.hero-stack .top10-inline-list .top10-menu-item { font-size: 0.85rem; padding: 0.42rem 0.5rem; }
-.hero-stack .top10-side { flex-basis: 218px; }
-@media (max-width: 760px) {
-  .top10-body { flex-direction: column; }
-  .top10-side { order: -1; flex: none; width: 100%; box-sizing: border-box; }
-  .top10-inline-list {
-    display: flex; flex-direction: row; gap: 0.35rem;
-    max-height: none; overflow-x: auto; overflow-y: hidden;
-    padding-bottom: 0.25rem;
-  }
-  .top10-inline-list .top10-menu-item { width: auto; flex: 0 0 auto; }
-  .top10-inline-list::-webkit-scrollbar { width: auto; height: 6px; }
-}
-
 /* ============ z219: /games NAV — SPREAD OUT, LONGER + SLEEKER (Dan, Oct 28) ======
    Photo-verified on Dan's laptop: the z217 row rendered cramped in
    the middle of the page — <main class="wrap"> caps the content
@@ -7365,3 +7310,31 @@ a.wn-fbtn:hover, summary.wn-fbtn:hover { border-color: #57a8ff; }
   .games-nav { flex-wrap: nowrap; }
   .gnb-label { font-size: 0.76rem; }
 }
+
+/* ============ z220: TOP10 — HAUNTS SCROLL WINDOW; STATE SIDEBAR REMOVED; SAVED-TOWN HOME STATE (Dan, Oct 28) ======
+   Photo correction from Dan: "The scroll down feature was meant
+   for the haunts themselves, not the states. The button does that
+   just fine." Three parts: (1) the z218 always-visible .top10-side
+   state sidebar is GONE — its rules were deleted with this ship
+   and _top10_home.html renders no sidebar markup; the board is
+   full section width again and the z207/z215 dropdown panel is
+   the only state picker. (2) The scroll window moves to the BOARD:
+   .top10-home-list now renders ALL TEN haunts (the template's old
+   [:5] slice is gone — the server rows and the /api/top10 swaps
+   carry the same ten) inside a fixed-height window sized to
+   roughly the old five-row footprint, with the panel's themed
+   thin scrollbar, overscroll contained and native touch scroll;
+   rows keep their full-row <a href="/d/<id>"> in every render
+   path. The hero-stack copy's rows are smaller, so its window is
+   shorter. (3) No CSS for the saved-town home-state adoption —
+   that is JS in _top10_home.html riding the existing load() path. */
+.top10-home-list {
+  max-height: 12.75rem; overflow-y: auto; overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin; scrollbar-color: #2b5878 transparent;
+  padding-right: 0.3rem;
+}
+.top10-home-list::-webkit-scrollbar { width: 8px; }
+.top10-home-list::-webkit-scrollbar-thumb { background: #2b5878; border-radius: 6px; }
+.top10-home-list::-webkit-scrollbar-track { background: transparent; }
+.hero-stack .top10-home-list { max-height: 10.9rem; }
