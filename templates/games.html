@@ -3,35 +3,24 @@
 <script src="/static/js/game_fullscreen.js?v=20261027z201" defer></script>
 <script src="/static/js/portal_games.js?v=20261027z199" defer></script>
 <style>
-/* /games section-nav buttons (Dan, Oct 26): the two full-width banner
-   panels (HauntMap Games / The Halloween Arcade) become one compact
-   pair of side-by-side buttons that jump to their sections. Page-scoped
-   on purpose — do not move to style.css. */
+/* /games page sheet: section/card rules stay page-scoped here; the
+   section-nav button component moved to style.css at z217 (Dan's
+   sleek-strip restyle) — see the pointer note below. */
 html { scroll-behavior: smooth; }
 .games-sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
-/* Bubble squeeze fix (Dan, Oct 28): the row was built for TWO buttons
-   with flex: 1 1 0% and no wrap; at seven buttons the ~690px content
-   column crushed each pill to ~88px wide / 192px tall and truncated
-   the labels. Wrap the row and give each pill a content-sized basis —
-   pills now flow 3-across on laptop and stay horizontal. */
-.games-nav { display: flex; flex-wrap: wrap; gap: 0.75rem; margin: 0.375rem 0 1.4rem; }
-.games-nav-btn { flex: 0 1 13rem; min-width: 0; display: flex; align-items: center; gap: 0.6rem; padding: 0.6rem 0.8rem; border-radius: 999px; text-decoration: none; background: linear-gradient(180deg, #10222e, #0a161d); border: 1.5px solid var(--accent2); color: var(--ink); box-shadow: 0 0 10px rgba(87, 168, 255, 0.35), inset 0 0 8px rgba(87, 168, 255, 0.12); transition: transform .15s, box-shadow .15s; }
-.games-nav-btn:hover { transform: translateY(-1px); box-shadow: 0 0 16px rgba(87, 168, 255, 0.55), inset 0 0 8px rgba(87, 168, 255, 0.18); }
-.games-nav-btn--arcade { border-color: var(--accent); box-shadow: 0 0 10px rgba(255, 123, 28, 0.35), inset 0 0 8px rgba(255, 123, 28, 0.12); }
-.games-nav-btn--arcade:hover { box-shadow: 0 0 16px rgba(255, 123, 28, 0.55), inset 0 0 8px rgba(255, 123, 28, 0.18); }
-.gnb-icon { font-size: 1.35rem; line-height: 1; flex: 0 0 auto; }
-.gnb-text { display: flex; flex-direction: column; min-width: 0; }
-.gnb-label { font-weight: 800; font-size: 0.98rem; line-height: 1.2; color: var(--ink); }
-.gnb-sub { font-size: 0.74rem; line-height: 1.25; color: var(--muted); }
+/* The section-nav button component itself (row, pills, medallions,
+   per-category accents, responsive sizing) lives in style.css as of
+   z217 — Dan asked for the homepage .vt-btn sleek component there so
+   the served stylesheet carries it; this sheet keeps only the
+   /games-page section/card rules. */
 .games-sec { scroll-margin-top: 76px; }
 .games-sec-head { font-size: 1.3rem; margin: 1.55rem 0 0.2rem; color: var(--ink); }
-/* Ninja shelves (Dan, Oct 27): green-glow nav variants for the LEGO
-   Ninjago + Ninja Games sections, and link-out facades (an <a> wearing
+/* Ninja shelves (Dan, Oct 27): link-out facades (an <a> wearing
    the portal facade's clothes — LEGO blocks iframing with
    X-Frame-Options: SAMEORIGIN, and the itch picks ship link-out too,
-   so these cards travel to the official page instead of embedding). */
-.games-nav-btn--ninjago { border-color: #57c84c; box-shadow: 0 0 10px rgba(87, 200, 76, 0.35), inset 0 0 8px rgba(87, 200, 76, 0.12); }
-.games-nav-btn--ninjago:hover { box-shadow: 0 0 16px rgba(87, 200, 76, 0.55), inset 0 0 8px rgba(87, 200, 76, 0.18); }
+   so these cards travel to the official page instead of embedding).
+   The nav buttons' green Ninjago glow moved to style.css z217 with
+   the rest of the nav component. */
 a.portal-facade { text-decoration: none; }
 .portal-go { position: absolute; left: 50%; bottom: 0.55rem; transform: translateX(-50%); z-index: 1; background: rgba(10, 22, 40, 0.85); border: 1.5px solid #57c84c; color: #eaf6ff; font-weight: 800; font-size: 0.82rem; padding: 0.32rem 0.8rem; border-radius: 999px; white-space: nowrap; }
 a.portal-facade:hover .portal-go, a.portal-facade:focus-visible .portal-go { background: rgba(24, 66, 20, 0.92); }
@@ -44,114 +33,35 @@ a.portal-facade:hover .portal-go, a.portal-facade:focus-visible .portal-go { bac
 .games-demoted-divider::before, .games-demoted-divider::after { content: ""; flex: 1; border-top: 1.5px dashed rgba(143, 216, 255, 0.35); }
 .games-featured-pill { display: none; margin-left: 0.55rem; vertical-align: middle; font-size: 0.72rem; font-weight: 800; letter-spacing: 0.02em; color: #06121c; background: var(--accent2); border-radius: 999px; padding: 0.18rem 0.55rem; }
 body.ios-iphone .games-featured-pill { display: inline-block; }
-/* Minecraft + Roblox shelves (Dan, Oct 27): creeper-green and
-   Roblox-red glow variants of the section-nav buttons. The Minecraft
-   shelf's headliner card (Dungeons, the game Dan named first) spans
-   two grid columns on wide screens with a green ring. */
-.games-nav-btn--minecraft { border-color: #3ddc3d; box-shadow: 0 0 10px rgba(61, 220, 61, 0.35), inset 0 0 8px rgba(61, 220, 61, 0.12); }
-.games-nav-btn--minecraft:hover { box-shadow: 0 0 16px rgba(61, 220, 61, 0.55), inset 0 0 8px rgba(61, 220, 61, 0.18); }
-.games-nav-btn--roblox { border-color: #e2231a; box-shadow: 0 0 10px rgba(226, 35, 26, 0.35), inset 0 0 8px rgba(226, 35, 26, 0.12); }
-.games-nav-btn--roblox:hover { box-shadow: 0 0 16px rgba(226, 35, 26, 0.55), inset 0 0 8px rgba(226, 35, 26, 0.18); }
-/* ============ games-nav sleek strip (Dan, Oct 28) ============
-   Dan, after seeing the z204 wrap fix live on his MacBook: "Make
-   the bubbles like the virtual tour through Top 100 Nationwide —
-   nice sleek at the top under the top banner menu buttons, nicely
-   spaced from one side to the other [of] the page." That strip is
-   .vt-tv-strip (style.css): equal-flex full-round pills spanning
-   their row edge to edge, tight 0.4rem gap, slim padding, 2px
-   borders, stacked centered label lines. Mirrored here:
-   >=761px all seven bubbles sit in ONE row distributed across the
-   full content column (flex: 1 1 0, nowrap), each pill stacking
-   its icon over centered label + sub lines (the .vt-tv-strip-phone
-   pattern) so no word truncates; 521-760px wraps 3-across with the
-   same 2px/slim treatment; <=520px keeps the phone block at the
-   end of this sheet byte-identical. */
-@media (min-width: 761px) {
-  .games-nav { flex-wrap: nowrap; gap: 0.4rem; margin: 0.25rem 0 1.2rem; }
-  .games-nav-btn {
-    flex: 1 1 0; flex-direction: column; align-items: center; justify-content: center;
-    text-align: center; gap: 0.18rem; padding: 0.4rem 0.2rem; border-width: 2px;
-  }
-  .gnb-icon { font-size: 1.05rem; }
-  .gnb-text { align-items: center; }
-  .gnb-label { font-size: 0.78rem; line-height: 1.15; text-wrap: balance; }
-  .gnb-sub { font-size: 0.62rem; line-height: 1.2; text-wrap: balance; }
-}
-@media (min-width: 521px) and (max-width: 760px) {
-  .games-nav { gap: 0.4rem; }
-  .games-nav-btn { flex: 1 1 30%; padding: 0.5rem 0.5rem; border-width: 2px; }
-}
+/* Minecraft shelf (Dan, Oct 27): the headliner card (Dungeons, the
+   game Dan named first) spans two grid columns on wide screens with
+   a green ring. The nav buttons' Minecraft/Roblox glow variants
+   moved to style.css z217 with the rest of the nav component. */
 .portal-card--featured { border-color: #3ddc3d; box-shadow: 0 0 14px rgba(61, 220, 61, 0.25); }
 @media (min-width: 700px) {
   .portal-card--featured { grid-column: span 2; }
 }
 .games-sub-head { font-size: 1.08rem; margin: 1.3rem 0 0.2rem; color: var(--ink); }
-@media (max-width: 520px) {
-  .games-nav { flex-wrap: wrap; }
-  .games-nav-btn { padding: 0.55rem 0.6rem; gap: 0.45rem; flex: 1 1 42%; }
-  .gnb-icon { font-size: 1.15rem; }
-  .gnb-label { font-size: 0.86rem; }
-  .gnb-sub { font-size: 0.68rem; }
-}
 </style>
 {% endblock %}
 {% block content %}
 <h1 class="games-sr-only">HauntMap Games</h1>
 
-{# SECTION NAV (Dan, Oct 26) — two compact buttons side by side replace
-   the old full-width banner panels. Each jumps to its section below:
-   the partner arcade shelf (first on the page, per Dan's order) and
-   HauntMap's own games under it. #}
+{# SECTION NAV (Dan, Oct 26; sleek restyle z217, Oct 28) — the seven
+   category buttons now wear the homepage VT/TV strip's sleek
+   component (style.css z217): slim pill, circular icon medallion,
+   name split over two label lines, each category keeping its accent
+   color as the pill's ring/glow. The old description lines are
+   dropped — name only. Every href/anchor is unchanged; each button
+   jumps to its section below. #}
 <div class="games-nav">
-  <a class="games-nav-btn" href="#hauntmap-games">
-    <span class="gnb-icon" aria-hidden="true">&#x1F3AE;</span>
-    <span class="gnb-text">
-      <span class="gnb-label">HauntMap Games</span>
-      <span class="gnb-sub">Ghost Maze &amp; our own games</span>
-    </span>
-  </a>
-  <a class="games-nav-btn games-nav-btn--arcade" href="#halloween-arcade">
-    <span class="gnb-icon" aria-hidden="true">&#x1F383;</span>
-    <span class="gnb-text">
-      <span class="gnb-label">The Halloween Arcade</span>
-      <span class="gnb-sub">Free partner games &mdash; tap &amp; play</span>
-    </span>
-  </a>
-  <a class="games-nav-btn games-nav-btn--ninjago" href="#lego-ninjago">
-    <span class="gnb-icon" aria-hidden="true">&#x1F977;</span>
-    <span class="gnb-text">
-      <span class="gnb-label">LEGO Ninjago</span>
-      <span class="gnb-sub">Official games on LEGO.com</span>
-    </span>
-  </a>
-  <a class="games-nav-btn games-nav-btn--ninjago" href="#ninja-games">
-    <span class="gnb-icon" aria-hidden="true">&#x1F977;</span>
-    <span class="gnb-text">
-      <span class="gnb-label">Ninja Games</span>
-      <span class="gnb-sub">More ninja games &mdash; play here &amp; on itch.io</span>
-    </span>
-  </a>
-  <a class="games-nav-btn games-nav-btn--minecraft" href="#minecraft-games">
-    <span class="gnb-icon" aria-hidden="true">&#x26CF;</span>
-    <span class="gnb-text">
-      <span class="gnb-label">Minecraft Games</span>
-      <span class="gnb-sub">Dungeons &amp; the whole family &mdash; official pages</span>
-    </span>
-  </a>
-  <a class="games-nav-btn games-nav-btn--roblox" href="#roblox-games">
-    <span class="gnb-icon" aria-hidden="true">&#x1F7E5;</span>
-    <span class="gnb-text">
-      <span class="gnb-label">Roblox Games</span>
-      <span class="gnb-sub">DOORS, Piggy &amp; more &mdash; play on Roblox</span>
-    </span>
-  </a>
-  <a class="games-nav-btn" href="#iphone-games">
-    <span class="gnb-icon" aria-hidden="true">&#x1F4F1;</span>
-    <span class="gnb-text">
-      <span class="gnb-label">iPhone Games</span>
-      <span class="gnb-sub">Touch-verified &mdash; play right here</span>
-    </span>
-  </a>
+  <a class="games-nav-btn" href="#hauntmap-games"><span class="gnb-ic" aria-hidden="true">&#x1F3AE;</span><span class="gnb-label"><span class="gnb-l1">HauntMap</span> <span class="gnb-l2">Games</span></span></a>
+  <a class="games-nav-btn games-nav-btn--arcade" href="#halloween-arcade"><span class="gnb-ic" aria-hidden="true">&#x1F383;</span><span class="gnb-label"><span class="gnb-l1">The Halloween</span> <span class="gnb-l2">Arcade</span></span></a>
+  <a class="games-nav-btn games-nav-btn--ninjago" href="#lego-ninjago"><span class="gnb-ic" aria-hidden="true">&#x1F977;</span><span class="gnb-label"><span class="gnb-l1">LEGO</span> <span class="gnb-l2">Ninjago</span></span></a>
+  <a class="games-nav-btn games-nav-btn--ninjago" href="#ninja-games"><span class="gnb-ic" aria-hidden="true">&#x1F977;</span><span class="gnb-label"><span class="gnb-l1">Ninja</span> <span class="gnb-l2">Games</span></span></a>
+  <a class="games-nav-btn games-nav-btn--minecraft" href="#minecraft-games"><span class="gnb-ic" aria-hidden="true">&#x26CF;</span><span class="gnb-label"><span class="gnb-l1">Minecraft</span> <span class="gnb-l2">Games</span></span></a>
+  <a class="games-nav-btn games-nav-btn--roblox" href="#roblox-games"><span class="gnb-ic" aria-hidden="true">&#x1F7E5;</span><span class="gnb-label"><span class="gnb-l1">Roblox</span> <span class="gnb-l2">Games</span></span></a>
+  <a class="games-nav-btn" href="#iphone-games"><span class="gnb-ic" aria-hidden="true">&#x1F4F1;</span><span class="gnb-label"><span class="gnb-l1">iPhone</span> <span class="gnb-l2">Games</span></span></a>
 </div>
 
 {# PORTAL CATALOG (Dan, Oct 26) — GamePix partner games under their

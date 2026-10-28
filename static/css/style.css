@@ -7215,3 +7215,61 @@ a.wn-fbtn:hover, summary.wn-fbtn:hover { border-color: #57a8ff; }
   .cat-tabs-main { margin-bottom: 0.65rem; }
   .cat-tabs-sub { margin-bottom: 1.1rem; }
 }
+
+/* ============ z217: /games NAV — SLEEK STRIP BUTTONS (Dan, Oct 28) ======
+   The /games category row trades its big oval bubbles (icon + name +
+   a paragraph of description) for the homepage VT/TV strip's sleek
+   component (.vt-tv-strip a): slim full-round pill, tight padding,
+   a circular icon medallion, and the category name split over two
+   stacked label lines in the strip's game font — descriptions gone.
+   Each category keeps its accent identity as the pill's 2px ring +
+   glow and the medallion's ring, via the --gnb custom properties
+   (azure base, orange Arcade, Ninjago green, Minecraft green,
+   Roblox red — the same colors the bubbles carried). One row of
+   seven across at laptop widths (equal flex, nowrap, with a small
+   type step-down under 1000px so "THE HALLOWEEN" fits its pill);
+   wraps 3-across on small tablets and 2-across on phones. The rules
+   lived in games.html's page sheet until now; they move here so the
+   component sits next to the strip it mirrors. */
+.games-nav { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0.25rem 0 1.2rem; }
+.games-nav-btn {
+  --gnb: var(--accent2); --gnb-glow: rgba(87, 168, 255, 0.35); --gnb-glow-hi: rgba(87, 168, 255, 0.55);
+  flex: 1 1 0; min-width: 0; box-sizing: border-box;
+  display: flex; align-items: center; justify-content: center; gap: 0.3rem;
+  padding: 0.3rem 0.25rem; border-radius: 999px;
+  background: linear-gradient(180deg, #10222e, #0a161d);
+  border: 2px solid var(--gnb); color: var(--ink);
+  text-decoration: none; text-align: center;
+  box-shadow: 0 0 10px var(--gnb-glow), inset 0 0 8px var(--gnb-glow);
+  transition: transform .15s, box-shadow .15s;
+}
+.games-nav-btn:hover { transform: translateY(-1px); box-shadow: 0 0 16px var(--gnb-glow-hi), inset 0 0 8px var(--gnb-glow); }
+.games-nav-btn--arcade { --gnb: var(--accent); --gnb-glow: rgba(255, 123, 28, 0.35); --gnb-glow-hi: rgba(255, 123, 28, 0.55); }
+.games-nav-btn--ninjago { --gnb: #57c84c; --gnb-glow: rgba(87, 200, 76, 0.35); --gnb-glow-hi: rgba(87, 200, 76, 0.55); }
+.games-nav-btn--minecraft { --gnb: #3ddc3d; --gnb-glow: rgba(61, 220, 61, 0.35); --gnb-glow-hi: rgba(61, 220, 61, 0.55); }
+.games-nav-btn--roblox { --gnb: #e2231a; --gnb-glow: rgba(226, 35, 26, 0.35); --gnb-glow-hi: rgba(226, 35, 26, 0.55); }
+.gnb-ic {
+  flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center;
+  width: 1.55rem; height: 1.55rem; border-radius: 50%;
+  background: rgba(255, 255, 255, 0.07); border: 1.5px solid var(--gnb);
+  font-size: 0.88rem; line-height: 1;
+}
+.gnb-label {
+  font-family: var(--font-game); text-transform: uppercase; letter-spacing: 0.03em;
+  font-weight: 800; font-size: 0.7rem; line-height: 1.18; color: #f9e5c2; min-width: 0;
+}
+.gnb-l1, .gnb-l2 { display: block; white-space: nowrap; }
+@media (min-width: 761px) {
+  .games-nav { flex-wrap: nowrap; }
+}
+@media (min-width: 761px) and (max-width: 1000px) {
+  .gnb-label { font-size: 0.64rem; }
+  .gnb-ic { width: 1.4rem; height: 1.4rem; font-size: 0.8rem; }
+}
+@media (max-width: 760px) {
+  .games-nav-btn { flex: 1 1 30%; }
+}
+@media (max-width: 520px) {
+  .games-nav-btn { flex: 1 1 42%; }
+  .gnb-label { font-size: 0.74rem; }
+}
