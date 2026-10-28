@@ -7072,3 +7072,25 @@ a.wn-card:hover { border-color: #57a8ff; box-shadow: 0 0 14px rgba(87, 168, 255,
    (#8FD8FF, same as .wn-rail-accent) so it reads as a tagline
    against the muted helper line it replaced. */
 .wn-rail-tagline { color: #8FD8FF; letter-spacing: 0.05em; }
+/* ============ z210: MAP BADGE + BLOG IS "FRESH FROM THE CRYPT" (Dan, Oct 28) ==
+   Dan's branding tweaks on the z209 naming: the rail header gains
+   his map artwork (azure map + pumpkin pin in a glowing ring on
+   deep navy, recolored to site colors) as a circular badge centered
+   above the title — the art is a ring composition, so a 50% radius
+   crop is exact — and the 🆕 glyph leaves the rail title. The blog
+   itself is renamed once more: every "The Haunt Log" surface (the
+   /updates H1/title/meta, the rail + bar footers, the HauntSocial
+   and Join-block blurbs, the admin label) now reads "Fresh From
+   the Crypt", and the /updates header carries the same badge
+   beside its title so the two surfaces brand as one. */
+.wn-rail-head { align-items: center; text-align: center; }
+.wn-rail-badge { width: 88px; height: 88px; border-radius: 50%;
+  object-fit: cover; margin: 0.15rem 0 0.3rem;
+  box-shadow: 0 0 16px rgba(87, 168, 255, 0.55), 0 0 3px rgba(87, 168, 255, 0.8); }
+.wn-head { display: flex; align-items: center; gap: 0.9rem; }
+.wn-head-badge { width: 64px; height: 64px; border-radius: 50%;
+  object-fit: cover; flex: 0 0 auto;
+  box-shadow: 0 0 14px rgba(87, 168, 255, 0.5), 0 0 3px rgba(87, 168, 255, 0.75); }
+@media (max-width: 999px) {
+  .wn-rail-badge { width: 64px; height: 64px; }
+}
