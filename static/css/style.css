@@ -7095,13 +7095,14 @@ a.wn-card:hover { border-color: #57a8ff; box-shadow: 0 0 14px rgba(87, 168, 255,
   .wn-rail-badge { width: 64px; height: 64px; }
 }
 /* z212 UPDATES FILTERS (Dan, Oct 28, STAGED): the /updates filter
-   bar — category pills + a <details> state dropdown, all plain
-   links. Pill language follows .town-search-inline / .sort-toggle:
+   bar — category pills + a <details> state dropdown + time
+   buttons (All Time / Today / Yesterday / This Week), plain links. Pill language follows .town-search-inline / .sort-toggle:
    var(--bg2) fill, #274860 border, 999px radius. The active pill
    takes the What's New azure (#8FD8FF text, #57a8ff border + glow —
    the same treatment as a .wn-card hover), counts ride as chips. */
 .wn-filters { margin: 0.9rem 0 0.2rem; }
 .wn-frow { display: flex; flex-wrap: wrap; gap: 0.45rem; align-items: center; }
+.wn-frow-time { margin-top: 0.45rem; }
 .wn-fbtn { display: inline-flex; align-items: center; gap: 0.35rem;
   background: var(--bg2); color: var(--ink); text-decoration: none;
   border: 1px solid #274860; border-radius: 999px;

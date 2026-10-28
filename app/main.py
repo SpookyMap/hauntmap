@@ -11932,8 +11932,9 @@ def _whatsnew_rail_groups(per_group: int = 8) -> list:
 
 # /updates filters (Dan, Oct 28, STAGED for his preview): "what's
 # new page search by state button and a button for events haunts
-# etc" — server-side via query params (?cat=events&state=TX), so a
-# filtered view is a plain link that works with no JS. Category
+# etc" + "a search button for this week today and yesterday" —
+# server-side via query params (?cat=events&state=TX&when=week),
+# so a filtered view is a plain link that works with no JS. Category
 # buckets are the rail's (_WHATSNEW_RAIL_GROUPS, announcements as
 # their own "updates" bucket) so this page and the homepage rail
 # bucket a pin the same way — one language across the site.
@@ -11950,6 +11951,27 @@ _UPDATES_FILTER_CATS = (
 _WHATSNEW_CAT_GROUP = {c: key for key, _e, _l, cats in
                        _WHATSNEW_RAIL_GROUPS for c in cats}
 
+# Time buttons (Dan, Oct 28): "a search button for this week today
+# and yesterday" — by the entry's ET posted day. This Week = the
+# current ET week TO DATE, Monday-start (date.weekday() convention:
+# Mon=0), so on a Wednesday it covers Mon–Wed.
+_UPDATES_FILTER_WHEN = (
+    ("today", "Today"),
+    ("yesterday", "Yesterday"),
+    ("week", "This Week"),
+)
+_UPDATES_WHEN_LABELS = dict(_UPDATES_FILTER_WHEN)
+
+
+def _updates_when_match(day, when: str, today) -> bool:
+    if when == "today":
+        return day == today
+    if when == "yesterday":
+        return day == today - timedelta(days=1)
+    if when == "week":
+        return today - timedelta(days=today.weekday()) <= day <= today
+    return True
+
 
 def _updates_item_group(it: dict) -> str:
     if it["kind"] == "announce":
@@ -11957,17 +11979,19 @@ def _updates_item_group(it: dict) -> str:
     return _WHATSNEW_CAT_GROUP.get(it.get("cat") or "", "more")
 
 
-def _updates_qs(cat: str = "", state: str = "") -> str:
+def _updates_qs(cat: str = "", state: str = "", when: str = "") -> str:
     parts = []
     if cat:
         parts.append("cat=" + cat)
     if state:
         parts.append("state=" + state)
+    if when:
+        parts.append("when=" + when)
     return "/updates" + ("?" + "&".join(parts) if parts else "")
 
 
 def _site_update_groups_filtered(pin_limit: int = 150, cat: str = "",
-                                 state: str = "") -> dict:
+                                 state: str = "", when: str = "") -> dict:
     """The /updates view model: the stream day-grouped AFTER the
     filters, plus the facet counts the filter bar renders. Counts
     come from the same single stream scan (the newest pin_limit
@@ -11975,14 +11999,19 @@ def _site_update_groups_filtered(pin_limit: int = 150, cat: str = "",
     always describe the window the page can actually show — no
     second query pass."""
     items = _site_update_stream(pin_limit)
+    today = _today_et()
     cat_counts: dict = {}
     state_counts: dict = {}
+    when_counts: dict = {}
     for it in items:
         g = _updates_item_group(it)
         cat_counts[g] = cat_counts.get(g, 0) + 1
         if it["kind"] == "pin" and it.get("state"):
             state_counts[it["state"]] = \
                 state_counts.get(it["state"], 0) + 1
+        for wkey, _wl in _UPDATES_FILTER_WHEN:
+            if _updates_when_match(it["day"], wkey, today):
+                when_counts[wkey] = when_counts.get(wkey, 0) + 1
     kept: list = []
     for it in items:
         if cat:
@@ -11993,8 +12022,9 @@ def _site_update_groups_filtered(pin_limit: int = 150, cat: str = "",
             # and carry no state to match.
             if it["kind"] != "pin" or it.get("state") != state:
                 continue
+        if when and not _updates_when_match(it["day"], when, today):
+            continue
         kept.append(it)
-    today = _today_et()
     groups: list = []
     for it in kept:
         if groups and groups[-1]["day"] == it["day"]:
@@ -12010,17 +12040,20 @@ def _site_update_groups_filtered(pin_limit: int = 150, cat: str = "",
     state_options.sort(key=lambda s: (-s["count"], s["name"]))
     return {"groups": groups, "total": len(kept),
             "all_count": len(items), "cat_counts": cat_counts,
+            "when_counts": when_counts,
             "state_options": state_options}
 
 
 @app.get("/updates", response_class=HTMLResponse)
-def updates_page(request: Request, cat: str = "", state: str = ""):
+def updates_page(request: Request, cat: str = "", state: str = "",
+                 when: str = ""):
     # Public — no member gate (Dan, Oct 27). The blog IS the pitch:
     # anyone can watch the site grow; joining HauntSocial is how you
     # get into the chat about it.
     # Filters (Dan, Oct 28, STAGED): ?cat= validated against the
-    # known buckets, ?state= against a state-code shape; Site
-    # Updates is global, so it drops the state filter outright.
+    # known buckets, ?state= against a state-code shape, ?when=
+    # against the time buttons; all three combine. Site Updates is
+    # global, so it drops the state filter outright.
     cat = (cat or "").strip().lower()
     if cat not in {k for k, _e, _l in _UPDATES_FILTER_CATS}:
         cat = ""
@@ -12029,19 +12062,32 @@ def updates_page(request: Request, cat: str = "", state: str = ""):
         state = ""
     if cat == "updates":
         state = ""
-    view = _site_update_groups_filtered(150, cat, state)
+    when = (when or "").strip().lower()
+    if when not in _UPDATES_WHEN_LABELS:
+        when = ""
+    view = _site_update_groups_filtered(150, cat, state, when)
     cat_buttons = [{"key": "", "emoji": "🆕", "label": "All",
                     "count": view["all_count"], "active": not cat,
-                    "href": _updates_qs("", state)}]
+                    "href": _updates_qs("", state, when)}]
     for key, emoji, label in _UPDATES_FILTER_CATS:
         cat_buttons.append(
             {"key": key, "emoji": emoji, "label": label,
              "count": view["cat_counts"].get(key, 0),
              "active": cat == key,
-             "href": _updates_qs(key, "" if key == "updates" else state)})
+             "href": _updates_qs(key, "" if key == "updates" else state,
+                                 when)})
     for opt in view["state_options"]:
         opt["active"] = state == opt["code"]
-        opt["href"] = _updates_qs(cat, opt["code"])
+        opt["href"] = _updates_qs(cat, opt["code"], when)
+    when_buttons = [{"key": "", "label": "All Time",
+                     "count": view["all_count"], "active": not when,
+                     "href": _updates_qs(cat, state, "")}]
+    for wkey, wlabel in _UPDATES_FILTER_WHEN:
+        when_buttons.append(
+            {"key": wkey, "label": wlabel,
+             "count": view["when_counts"].get(wkey, 0),
+             "active": when == wkey,
+             "href": _updates_qs(cat, state, wkey)})
     summary = []
     if cat:
         _k, cemoji, clabel = next(t for t in _UPDATES_FILTER_CATS
@@ -12049,14 +12095,17 @@ def updates_page(request: Request, cat: str = "", state: str = ""):
         summary.append(f"{cemoji} {clabel}")
     if state:
         summary.append(US_STATE_NAMES.get(state, state))
+    if when:
+        summary.append(_UPDATES_WHEN_LABELS[when])
     return templates.TemplateResponse(request, "updates.html",
         {"request": request, "groups": view["groups"],
          "total": view["total"], "cat_buttons": cat_buttons,
+         "when_buttons": when_buttons,
          "state_options": view["state_options"],
-         "all_states_href": _updates_qs(cat, ""),
-         "fcat": cat, "fstate": state,
+         "all_states_href": _updates_qs(cat, "", when),
+         "fcat": cat, "fstate": state, "fwhen": when,
          "fstate_name": US_STATE_NAMES.get(state, state),
-         "filtered": bool(cat or state),
+         "filtered": bool(cat or state or when),
          "filter_summary": " · ".join(summary)})
 
 

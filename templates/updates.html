@@ -15,9 +15,10 @@
   <p class="wn-intro">Just landed — the Freshest Frights on the map. New haunts, events and features, updated daily. Everything new on HauntMap, the second it rises from the grave. Frank tracks every new haunt so you can plan your next scare.</p>
 
   {# Filter bar (Dan, Oct 28, STAGED): category buttons + a state
-     dropdown, all plain links (?cat= / ?state=) so a filtered view
-     is shareable and works with no JS — <details> opens the state
-     list. Counts describe the newest-150 window this page shows. #}
+     dropdown + time buttons, all plain links (?cat= / ?state= /
+     ?when=) so a filtered view is shareable and works with no JS —
+     <details> opens the state list. Counts describe the newest-150
+     window this page shows. #}
   <div class="wn-filters">
     <div class="wn-frow">
       {% for b in cat_buttons %}
@@ -32,6 +33,11 @@
           {% endfor %}
         </div>
       </details>
+    </div>
+    <div class="wn-frow wn-frow-time">
+      {% for b in when_buttons %}
+      <a class="wn-fbtn{% if b.active %} wn-fbtn-on{% endif %}" href="{{ b.href }}">{{ b.label }} <span class="wn-fcount">{{ b.count }}</span></a>
+      {% endfor %}
     </div>
     {% if filtered %}
     <p class="wn-fsummary">Showing {{ total }} update{{ "" if total == 1 else "s" }} · {{ filter_summary }} · <a href="/updates">Clear filters ✕</a></p>
