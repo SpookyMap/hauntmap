@@ -9719,17 +9719,30 @@ def admin_fanart_delete(fid: int, request: Request):
 # the analytics tables inline.
 _PAGE_TIME_LABELS = {
     "/": "Home", "/events": "Events", "/map": "Map", "/nearby": "Nearby",
-    "/tours": "Tours", "/watch": "Watch", "/leaderboard": "Top Haunts",
+    "/tours": "Tours", "/tour": "Tours", "/auto-tour": "Auto Tour",
+    "/virtual-tour": "Virtual Tour",
+    "/watch": "Watch", "/leaderboard": "Top Haunts",
     "/leaderboard/states": "Top 10 by State",
+    "/leaderboard/top-100": "Top 100 Haunts",
     "/restaurhaunts": "Restaurhaunts", "/hauntsocial": "HauntSocial",
     "/updates": "What's New",
     "/chat": "Haunt Chat",
-    "/games": "Games", "/diy": "DIY", "/diy-costumes": "DIY Costumes",
+    "/games": "Games", "/games/ghost-maze": "Ghost Maze",
+    "/diy": "DIY", "/diy-costumes": "DIY Costumes",
+    "/fan-art": "Fan Art",
     "/movies": "Movies", "/music": "Music", "/markets": "Markets",
     "/pop-haunt-culture": "Pop Haunt Culture",
     "/passport": "Haunt Passport", "/daily": "Daily Fright",
+    "/towns": "All Towns", "/haunt-or-not": "Haunt or Not",
+    "/costume-contest": "Costume Contest", "/bracket": "Haunt Bracket",
+    "/trivia": "Trivia", "/upload": "Add a Haunt",
     "/about": "About Us", "/advertise": "Advertise",
+    "/media-kit": "Media Kit",
     "/signup": "Sign Up", "/login": "Log In",
+    "/forgot-password": "Forgot Password", "/profile/edit": "Edit Profile",
+    "/feedback": "Feedback", "/privacy": "Privacy Policy",
+    "/terms": "Terms of Service",
+    "/embed-test": "Embed Test (diagnostic)",
 }
 
 
@@ -9821,6 +9834,85 @@ def _fmt_dur_admin(sec: float) -> str:
 
 def _page_time_stats() -> list:
     return _ttl_cached("admin:page_time", _page_time_build)
+
+
+# ------------------------------------------ views by page (Oct 27)
+# Dan's ask: admin analytics must include ALL the new pages. The old
+# Top pages table grouped RAW page_views paths (LIMIT 20), so the
+# /healthz health-check flood held the #1 slot, /api/* JSON endpoints
+# took rows, and thousands of individual /d/<id> pin paths crowded
+# out whole sections — /chat, /hauntsocial, /fan-art,
+# /pop-haunt-culture and /media-kit never appeared at all. This build
+# replaces it: HUMAN views only (the sponsor screen — _MK_HUMAN
+# machine paths plus the _machine_ua_sql machine-agent screen, the
+# same definition the U.S. states table uses), grouped by NORMALIZED
+# path so parameterized families collapse into one honest bucket each
+# instead of thousands of rows. Known pages get friendly names from
+# _PAGE_TIME_LABELS (shared with the time-on-page table); anything
+# unmapped falls back to its raw path, so a page shipped tomorrow
+# appears here on its own with no code change.
+# Category note: the tracker stores the path WITHOUT its query
+# string, so category browsing (/?cat=ice_cream, the Tour Fuel
+# shelves; /leaderboard/states?cat=hotels, the state category
+# boards) is recorded under the base page — Home and Top 10 by State
+# carry those views. No per-category split exists in the stored data
+# to recover; the template note says so on the page.
+
+def _stats_page_bucket(path: str):
+    """(group key, label) for parameterized path families, else None.
+    The key is display-only (an ellipsis marks the collapsed tail);
+    single pages keep their real path as key and stay linkable."""
+    if path.startswith("/d/") and path[3:].isdigit():
+        return "/d/…", "Listing pages — all pins combined"
+    if path.startswith("/towns/"):
+        return "/towns/…", "Town pages — all towns combined"
+    if path.startswith("/@"):
+        return "/@…", "HauntSocial profiles — all members combined"
+    if path.startswith("/bracket/card/"):
+        return "/bracket/card/…", "Bracket share cards"
+    if path.startswith("/t/"):
+        return "/t/…", "Shared tour links"
+    if path.startswith("/sponsor/click/"):
+        return "/sponsor/click/…", "Sponsor link clicks"
+    return None
+
+
+def _page_breakdown_build() -> list:
+    frag, frag_params = _machine_ua_sql()
+    human = (f"{_MK_HUMAN} AND {frag} "
+             "AND path NOT IN ('/favicon.ico', '/robots.txt')")
+    win7 = "viewed_at >= datetime('now', '-7 days')"
+    with get_conn(DB_PATH) as conn:
+        total = conn.execute(
+            f"SELECT COUNT(*) FROM page_views WHERE {human}",
+            frag_params).fetchone()[0]
+        groups: dict = {}
+        for r in conn.execute(
+                "SELECT path, COUNT(*) AS views, "
+                f"SUM(CASE WHEN {win7} THEN 1 ELSE 0 END) AS views7 "
+                f"FROM page_views WHERE {human} GROUP BY path",
+                frag_params):
+            bucket = _stats_page_bucket(r["path"])
+            if bucket:
+                key, label = bucket
+                link = None
+            else:
+                key = r["path"]
+                label = _PAGE_TIME_LABELS.get(key, key)
+                link = key
+            g = groups.setdefault(key, {"key": key, "label": label,
+                                        "link": link,
+                                        "views": 0, "views7": 0})
+            g["views"] += r["views"]
+            g["views7"] += r["views7"] or 0
+    rows = sorted(groups.values(), key=lambda g: (-g["views"], g["label"]))
+    for g in rows:
+        g["share"] = round(g["views"] / total * 100, 1) if total else 0.0
+    return rows
+
+
+def _page_breakdown() -> list:
+    return _ttl_cached("admin:page_breakdown", _page_breakdown_build)
 
 
 # ------------------------------------------------- US states (Oct 27)
@@ -9983,9 +10075,6 @@ def admin_stats(request: Request):
         by_day = conn.execute(
             "SELECT date(viewed_at) AS day, COUNT(*) AS views "
             "FROM page_views GROUP BY day ORDER BY day DESC LIMIT 14").fetchall()
-        top_pages = conn.execute(
-            "SELECT path, COUNT(*) AS views FROM page_views "
-            "GROUP BY path ORDER BY views DESC LIMIT 20").fetchall()
         top_referrers = conn.execute(
             "SELECT CASE WHEN referrer = '' OR referrer IS NULL THEN '(direct)' "
             "ELSE referrer END AS ref, COUNT(*) AS views FROM page_views "
@@ -10123,7 +10212,7 @@ def admin_stats(request: Request):
                     "bounce": 0, "avg_pages": 0, "buckets": []}
     return templates.TemplateResponse(request, "stats.html",
         {"request": request, "total": total, "today": today, "week": week,
-         "by_day": by_day, "top_pages": top_pages,
+         "by_day": by_day, "pages": _page_breakdown(),
          "top_referrers": top_referrers, "by_device": by_device,
          "duration": duration, "engagement": engagement,
          "geo": geo, "geo_since": _GEO_COLLECTING_SINCE,
