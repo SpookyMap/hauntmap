@@ -1641,7 +1641,7 @@ def parse_event_dates(title: str):
 
 
 def _parse_event_dates(title: str):
-    s = (title.replace("\u2013", "-").replace("\u2014", "-")
+    s = (title.replace("\u2013", "-").replace("—", "-")
               .replace("\u2212", "-"))
     # ISO dates / ranges first (unambiguous).
     m = re.search(r"(\d{4})-(\d{2})-(\d{2})\s*(?:to|-)\s*"
@@ -1780,7 +1780,7 @@ def _event_start_minutes(title: str):
     the standard way these titles are written)."""
     if not title:
         return None
-    s = title.replace("\u2013", "-").replace("\u2014", "-")
+    s = title.replace("\u2013", "-").replace("—", "-")
     if re.search(r"\bnoon\s*-", s, re.I):
         return 12 * 60  # a range that starts at noon, e.g. 'noon-5pm'
     m = re.search(r"(\d{1,2})(?::(\d{2}))?\s*(am|pm)?\s*-\s*"
@@ -1803,9 +1803,9 @@ def _ev_day_label(d, today) -> str:
     if d.year != today.year:
         base += d.strftime(", %Y")
     if d == today:
-        return "Tonight \u2014 " + base
+        return "Tonight — " + base
     if d == today + timedelta(days=1):
-        return "Tomorrow \u2014 " + base
+        return "Tomorrow — " + base
     return base
 
 
@@ -3455,7 +3455,7 @@ def events_page(request: Request, type: str = "", genre: str = "",
                 "entries": _ev_sort_day(by_day[d], sort)})
         if undated:
             day_groups.append({
-                "label": "More events \u2014 see the listing for dates",
+                "label": "More events — see the listing for dates",
                 "anchor": "day-more",
                 "date": None,
                 "entries": _ev_sort_day(undated, sort)})
@@ -3922,6 +3922,7 @@ def map_view(request: Request, cat: str = "halloween"):
 
 
 DIY_VIDEOS = [
+    {"title": "One Kid, Three Trick-or-Treaters — Mannequin Illusion Costume DIY", "creator": "@justinflom", "url": "https://www.tiktok.com/@justinflom/video/7693946321501179166", "video_id": "7693946321501179166", "blurb": "Justin Flom builds his daughter a wearable rig carrying two mannequin 'friends' — Ghostface on one side, a sheet ghost on the other — so one kid in a blue wig and yellow raincoat shows up looking like three trick-or-treaters, each holding its own pumpkin bucket. When she turns around and shows the costume, the illusion lands."},
     {"title": "Fun House Sign DIY — CarnEVIL Carnival Tutorial", "creator": "@bananabread_94", "url": "https://www.tiktok.com/@bananabread_94/video/7701188355186330911", "video_id": "7701188355186330911", "blurb": "A step-by-step build of a carnival Fun House sign — she says the letters were the hardest part of the whole project, but they definitely paid off. Prime entrance signage for a carnEVIL-themed setup."},
     {"title": "Michael Myers Cleaver Serving Board DIY", "creator": "@bowerbirdworkshop", "url": "https://www.tiktok.com/@bowerbirdworkshop/video/7701472320233164063", "video_id": "7701472320233164063", "blurb": "Followers asked for it, so they built it — a handmade serving board shaped like a butcher's cleaver, with Michael Myers' mask set into the black resin river down the middle, blood drip and all. A little horror for the serving table."},
     {"title": "Monster-in-a-Box Optical Illusion Costume DIY", "creator": "@wyldwoodsdiy", "url": "https://www.tiktok.com/@wyldwoodsdiy/video/7700739541933493517", "video_id": "7700739541933493517", "blurb": "It looks like she's holding a terrifying monster that's literally bursting out of a box — but it's all an optical illusion, built from scratch. She pieces together the structure and materials, then walks through how every detail sells the trick."},
@@ -4255,7 +4256,7 @@ PORTAL_GAMES = [
      "img": "https://img.gamepix.com/games/halloween-bubble-shooter/cover/halloween-bubble-shooter.png?w=512",
      "title": "Halloween Bubble Shooter",
      "blurb": "Aim, match and pop the monster bubbles. Tap, drag, "
-              "release \u2014 pure Halloween candy for your brain.",
+              "release — pure Halloween candy for your brain.",
      "tag": "Bubble shooter \u00b7 all ages", "w": 600, "h": 800},
     {"iphone": True, "slug": "knife-hit",
      "img": "https://img.gamepix.com/games/knife-hit/cover/knife-hit.png?w=512",
@@ -4273,19 +4274,19 @@ PORTAL_GAMES = [
      "img": "https://img.gamepix.com/games/spooky-merge/cover/spooky-merge.png?w=512",
      "title": "Spooky Merge",
      "blurb": "Drop the spooky pieces and merge your way up the "
-              "chain \u2014 pumpkins, ghosts and monsters combine into "
+              "chain — pumpkins, ghosts and monsters combine into "
               "bigger and bigger haunts.",
      "tag": "Merge puzzle \u00b7 portrait play", "w": 600, "h": 800},
     {"iphone": True, "slug": "jewel-monsters",
      "img": "https://img.gamepix.com/games/jewel-monsters/cover/jewel-monsters.png?w=512",
      "title": "Jewel Monsters",
-     "blurb": "Match-3 with a monstrous twist \u2014 line up the "
+     "blurb": "Match-3 with a monstrous twist — line up the "
               "jewel monsters and chain the combos.",
      "tag": "Match-3 puzzle \u00b7 portrait play", "w": 600, "h": 800},
     {"iphone": True, "slug": "halloween-matching",
      "img": "https://img.gamepix.com/games/halloween-matching/cover/halloween-matching.png?w=512",
      "title": "Halloween Matching",
-     "blurb": "Flip the tiles and match the monsters \u2014 "
+     "blurb": "Flip the tiles and match the monsters — "
               "concentration candy for sharp little ghouls.",
      "tag": "Memory \u00b7 kids love it", "w": 800, "h": 600},
     {"iphone": True, "slug": "spooky-halloween-hidden-pumpkin",
@@ -4297,7 +4298,7 @@ PORTAL_GAMES = [
     {"iphone": True, "slug": "halloween-coloring-book-for-kids",
      "img": "https://img.gamepix.com/games/halloween-coloring-book-for-kids/cover/halloween-coloring-book-for-kids.png?w=512",
      "title": "Halloween Coloring Book",
-     "blurb": "Color the witches, cats and jack-o\u2019-lanterns \u2014 "
+     "blurb": "Color the witches, cats and jack-o\u2019-lanterns — "
               "the calm corner of the arcade.",
      "tag": "Coloring \u00b7 all ages", "w": 800, "h": 600},
 ]
