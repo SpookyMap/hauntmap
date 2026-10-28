@@ -3945,70 +3945,70 @@ def map_view(request: Request, cat: str = "halloween"):
 
 
 DIY_VIDEOS = [
-    {"title": "Origami Halloween Bats — 5-Step Paper Bat Tutorial", "creator": "@letsgotograndmashouse", "url": "https://www.tiktok.com/@letsgotograndmashouse/video/7700338934164884766", "video_id": "7700338934164884766", "blurb": "One square of black paper is all it takes. The whole tutorial fits on a single chart: fold the square diagonally into a triangle, fold the top corners in to form the body, tip the top corners down into pointed ears, then fold each side down to shape the wings. String a whole colony together as a garland, pin them up a wall, or perch them on a shelf — a bone folder keeps the creases crisp."},
-    {"title": "Edible Amputated Hand — Creepy Charcuterie Hand DIY", "creator": "@chefgenevieve", "url": "https://www.tiktok.com/@chefgenevieve/video/7691861036768529678", "video_id": "7691861036768529678", "blurb": "Finger food, taken literally. Chef Genevieve traces her own hand and arm as the template, builds the fingers from prosciutto-wrapped breadsticks, molds a herbed-cheese hand over them, then drapes prosciutto slices across the whole thing as skin. Purple almond-slice fingernails finish the illusion, and she serves it severed at the wrist on a cracker board. Episode 31 of her 50-part Halloween recipe series — and yes, it's completely edible, fingernails and all."},
-    {"title": "Wednesday Thing Light — Glowing Severed-Hand Wall Lamp DIY", "creator": "@saga_tay", "url": "https://www.tiktok.com/@saga_tay/video/7687233600844074261", "video_id": "7687233600844074261", "blurb": "Thing gets his own lamp. She forms the Addams Family's famous severed hand over a glove, builds it up with layers of glue-soaked paper until it holds its shape, then draws on Thing's signature stitches with a black marker. Mounted on the wall and lit from inside, the finished hand glows warm orange between the spiderwebs — Wednesday decor that earns its wall space."},
-    {"title": "Hot Glue Ghost — Light-Up Hanging Ghost DIY", "creator": "@diy.creation2", "url": "https://www.tiktok.com/@diy.creation2/video/7685840941822774541", "video_id": "7685840941822774541", "blurb": "Sibgha traces a drippy ghost face on parchment paper and pipes the whole thing in hot glue — every swirl has to touch the next glue line or it falls apart when you peel it free. Then she threads fairy lights through the lattice (never glue the bulbs!) and hangs them glowing purple, blue, green and orange in the doorway. The whole ghost is nothing but glue sticks, parchment and string lights."},
-    {"title": "DIY Concrete Pumpkins — Cast Once, Keep Them Forever", "creator": "@organizedandsimplified4u", "url": "https://www.tiktok.com/@organizedandsimplified4u/video/7689115065081023774", "video_id": "7689115065081023774", "blurb": "Stop buying pumpkins that rot: she pours wet concrete into a plastic jack-o'-lantern pail, lets it set, and demolds a grinning pumpkin built to last season after season. Her best trick comes after Halloween — turn the face to the wall and the same pumpkin moonlights as a flower pot."},
-    {"title": "Custom Chucky Air Jordan 1s — Hand-Painted Sneaker DIY", "creator": "@thekickfix", "url": "https://www.tiktok.com/@thekickfix/video/7695269928751992095", "video_id": "7695269928751992095", "blurb": "The Kick Fix turns a plain pair of Air Jordan 1 Retro Highs into Chucky himself: denim-blue overall panels and the Good Guys striped-shirt colors hand-painted on, a flesh-tone toe box scarred with real hand-stitched thread, and bright orange laces to finish the killer-doll look. A wearable Child's Play tribute, built entirely by hand."},
-    {"title": "Circus Ticket Booth DIY — Cardboard Carnival Build", "creator": "@arielviewtravelvlog", "url": "https://www.tiktok.com/@arielviewtravelvlog/video/7682846593799703821", "video_id": "7682846593799703821", "blurb": "Erica turns a plain cardboard cabinet box into a full circus ticket booth — gold TICKETS marquee, red velvet curtains, a grinning clown manning the window, and printed 'come one, come all' tickets fanned out on the counter. She admits she got so into the project she forgot to film half of it — the finished booth speaks for itself."},
-    {"title": "Creepy Cotton Candy — Freak Show Concession Stand DIY", "creator": "@itgirlchay", "url": "https://www.tiktok.com/@itgirlchay/video/7695462926676659470", "video_id": "7695462926676659470", "blurb": "Part 4 of her porch-to-freak-show transformation: concession stand item #3 is a giant fake cotton candy — a pink spun-sugar puff on a cone, crawling with plastic spiders. It joins her fake popcorn buckets (rat garnish included) in the creepiest carnival snack lineup on the block."},
-    {"title": "One Kid, Three Trick-or-Treaters — Mannequin Illusion Costume DIY", "creator": "@justinflom", "url": "https://www.tiktok.com/@justinflom/video/7693946321501179166", "video_id": "7693946321501179166", "blurb": "Justin Flom builds his daughter a wearable rig carrying two mannequin 'friends' — Ghostface on one side, a sheet ghost on the other — so one kid in a blue wig and yellow raincoat shows up looking like three trick-or-treaters, each holding its own pumpkin bucket. When she turns around and shows the costume, the illusion lands."},
-    {"title": "Fun House Sign DIY — CarnEVIL Carnival Tutorial", "creator": "@bananabread_94", "url": "https://www.tiktok.com/@bananabread_94/video/7701188355186330911", "video_id": "7701188355186330911", "blurb": "A step-by-step build of a carnival Fun House sign — she says the letters were the hardest part of the whole project, but they definitely paid off. Prime entrance signage for a carnEVIL-themed setup."},
-    {"title": "Michael Myers Cleaver Serving Board DIY", "creator": "@bowerbirdworkshop", "url": "https://www.tiktok.com/@bowerbirdworkshop/video/7701472320233164063", "video_id": "7701472320233164063", "blurb": "Followers asked for it, so they built it — a handmade serving board shaped like a butcher's cleaver, with Michael Myers' mask set into the black resin river down the middle, blood drip and all. A little horror for the serving table."},
-    {"title": "Monster-in-a-Box Optical Illusion Costume DIY", "creator": "@wyldwoodsdiy", "url": "https://www.tiktok.com/@wyldwoodsdiy/video/7700739541933493517", "video_id": "7700739541933493517", "blurb": "It looks like she's holding a terrifying monster that's literally bursting out of a box — but it's all an optical illusion, built from scratch. She pieces together the structure and materials, then walks through how every detail sells the trick."},
-    {"title": "5-Foot Chucky Doll Box DIY", "creator": "@darkhousedesigns", "url": "https://www.tiktok.com/@darkhousedesigns/video/7695179364945644831", "video_id": "7695179364945644831", "blurb": "Build a life-size Good Guys toy box for a Home Depot Chucky doll — 5 x 3 x 2 feet, framed with 2x2s and half-inch foam, finished with printed banners for the full Child's Play look."},
-    {"title": "DIY Circus Tent — Halloween Party Build", "creator": "Taylor Booth (@theballoonchickaz)", "url": "https://www.tiktok.com/@theballoonchickaz/video/7698864214865087775", "video_id": "7698864214865087775", "blurb": "A full-size circus tent, built from scratch for a Halloween party — Taylor's whole process in 85 seconds. 229K views and counting, and you'll see why."},
-    {"title": "Fog Chiller DIY — Maiden Voyage", "creator": "@theblackirishouse", "url": "https://www.tiktok.com/@theblackirishouse/video/7693254709972372767", "video_id": "7693254709972372767", "blurb": "Chill your fog machine's output and the fog hugs the ground like a graveyard at dawn. This build's first run shows exactly how it's done."},
-    {"title": "Fog Chiller v2.0 — The Upgrades", "creator": "@theblackirishouse", "url": "https://www.tiktok.com/@theblackirishouse/video/7694109884777893150", "video_id": "7694109884777893150", "blurb": "Version two of the chiller: a legit spider web and frozen water bottles join the build for thicker, lower fog."},
-    {"title": "Low-Lying Fog Setup — Full Rundown", "creator": "@theblackirishouse", "url": "https://www.tiktok.com/@theblackirishouse/video/7696612187141360926", "video_id": "7696612187141360926", "blurb": "Everyone asked, so here's the quick rundown of the whole low-lying fog setup — how the chiller is plumbed and why it works."},
-    {"title": "Fog Chiller at Full Send", "creator": "@theblackirishouse", "url": "https://www.tiktok.com/@theblackirishouse/video/7699253873872997662", "video_id": "7699253873872997662", "blurb": "Less than a minute of ideal conditions — and the chiller was RIPPIN'. The maiden-voyage build, proven in the wild."},
-    {"title": "The Junk-Drawer Glow Trick", "creator": "@wyldwoodsdiy", "url": "https://www.tiktok.com/@wyldwoodsdiy/video/7700009652347587854", "video_id": "7700009652347587854", "blurb": "One simple trick hiding in your junk drawer turns ordinary specimen jars into glowing, radioactive-looking decor. You already own everything you need."},
-    {"title": "Radioactive Specimen Jar DIY", "creator": "@wyldwoodsdiy", "url": "https://www.tiktok.com/@wyldwoodsdiy/video/7699612887765028109", "video_id": "7699612887765028109", "blurb": "This spooky specimen jar looks like it's glowing from the inside — the radioactive lab piece your mad-scientist corner was missing."},
-    {"title": "Jar of Moving Eyeballs DIY", "creator": "@wyldwoodsdiy", "url": "https://www.tiktok.com/@wyldwoodsdiy/video/7698888739572976910", "video_id": "7698888739572976910", "blurb": "She made a jar of eyeballs that MOVE. Creepy, clever, and impossible to stop watching."},
-    {"title": "Pirate Skeleton DIY", "creator": "@wyldwoodsdiy", "url": "https://www.tiktok.com/@wyldwoodsdiy/video/7698131249034005774", "video_id": "7698131249034005774", "blurb": "Another Halloween DIY — and it might be her favorite yet. Pirate bones done right."},
-    {"title": "Witch's Cauldron DIY", "creator": "@wyldwoodsdiy", "url": "https://www.tiktok.com/@wyldwoodsdiy/video/7698064196147236109", "video_id": "7698064196147236109", "blurb": "Every witch needs a cauldron — and this one may have gotten a little carried away."},
-    {"title": "Best Halloween DIYs in 20 Seconds", "creator": "@wyldwoodsdiy", "url": "https://www.tiktok.com/@wyldwoodsdiy/video/7698024441569234190", "video_id": "7698024441569234190", "blurb": "Months of crafting, creativity and chaos in one rapid-fire highlight reel."},
-    {"title": "Boo-zy Bones Drinking Skeletons", "creator": "@wyldwoodsdiy", "url": "https://www.tiktok.com/@wyldwoodsdiy/video/7697775692141890829", "video_id": "7697775692141890829", "blurb": "These skeletons have been drinking for centuries…"},
-    {"title": "Peeing Skeleton Dog DIY", "creator": "@wyldwoodsdiy", "url": "https://www.tiktok.com/@wyldwoodsdiy/video/7697651205543169294", "video_id": "7697651205543169294", "blurb": "Even in the afterlife, dogs still gotta go."},
-    {"title": "Haunted Dollhouse DIY", "creator": "@wyldwoodsdiy", "url": "https://www.tiktok.com/@wyldwoodsdiy/video/7697030306649492749", "video_id": "7697030306649492749", "blurb": "Who knew a 1991 Playskool dollhouse could turn into something so creepy?"},
-    {"title": "The Boo-zy Skeleton Fountain", "creator": "@wyldwoodsdiy", "url": "https://www.tiktok.com/@wyldwoodsdiy/video/7696649206160837902", "video_id": "7696649206160837902", "blurb": "A skeleton chilling in a bubbling green fountain — the porch centerpiece your neighbors will copy next year."},
-    {"title": "Slimed House DIY", "creator": "@wyldwoodsdiy", "url": "https://www.tiktok.com/@wyldwoodsdiy/video/7693296146705403149", "video_id": "7693296146705403149", "blurb": "She slimed her whole house for Halloween — gutters and all — and it turned out amazing."},
-    {"title": "I Slimed My House — The Full Build", "creator": "@wyldwoodsdiy", "url": "https://www.tiktok.com/@wyldwoodsdiy/video/7692867820584996110", "video_id": "7692867820584996110", "blurb": "The full start-to-finish build behind the slime house: expanding foam sprayed over pool noodles, painted radioactive neon green, then hung all along the gutters so the house looks like it's oozing goo. By night the drips glow under the Halloween lights."},
-    {"title": "Pendant-Light Skeleton Club", "creator": "@wyldwoodsdiy", "url": "https://www.tiktok.com/@wyldwoodsdiy/video/7694066781580758285", "video_id": "7694066781580758285", "blurb": "She posed mini skeletons on her kitchen pendant lights — heels and all — and 3 million viewers agree it's the hottest Halloween club in town. Proof decor doesn't have to be scary."},
-    {"title": "Easiest Halloween DIY of the Year", "creator": "@wyldwoodsdiy", "url": "https://www.tiktok.com/@wyldwoodsdiy/video/7690324637577710862", "video_id": "7690324637577710862", "blurb": "Quite possibly the easiest Halloween DIY she's made all year."},
-    {"title": "Disgusting Dollar Tree Eyeballs", "creator": "@wyldwoodsdiy", "url": "https://www.tiktok.com/@wyldwoodsdiy/video/7689903755977837837", "video_id": "7689903755977837837", "blurb": "Dollar Tree eyeballs… but make them DISGUSTING."},
-    {"title": "Spooky Sparkly Eyeball DIY", "creator": "@wyldwoodsdiy", "url": "https://www.tiktok.com/@wyldwoodsdiy/video/7687246122758278413", "video_id": "7687246122758278413", "blurb": "Spooky, sparkly, and just the right amount of creepy."},
-    {"title": "Pumpkin Wine Server DIY", "creator": "@wyldwoodsdiy", "url": "https://www.tiktok.com/@wyldwoodsdiy/video/7687019977131543821", "video_id": "7687019977131543821", "blurb": "Why serve wine from a boring bottle when you can serve it from a pumpkin?"},
-    {"title": "Real Pumpkin Drink Dispenser", "creator": "@wyldwoodsdiy", "url": "https://www.tiktok.com/@wyldwoodsdiy/video/7686647862247132429", "video_id": "7686647862247132429", "blurb": "A REAL pumpkin turned into a drink dispenser — a favorite fall DIY."},
-    {"title": "Creepy Specimen Jar DIY", "creator": "@wyldwoodsdiy", "url": "https://www.tiktok.com/@wyldwoodsdiy/video/7684805348368141581", "video_id": "7684805348368141581", "blurb": "The creepiest little specimen jar — a preserved hand in a jar."},
-    {"title": "Floating Eyeball DIY", "creator": "@wyldwoodsdiy", "url": "https://www.tiktok.com/@wyldwoodsdiy/video/7684008356431908110", "video_id": "7684008356431908110", "blurb": "This floating eyeball DIY is WAY easier than it looks."},
-    {"title": "Garden Fence Glow-Up", "creator": "@wyldwoodsdiy", "url": "https://www.tiktok.com/@wyldwoodsdiy/video/7683645655490841869", "video_id": "7683645655490841869", "blurb": "Wait until you see what she turned a cheap plastic garden fence into."},
-    {"title": "Simplest DIY Ever", "creator": "@wyldwoodsdiy", "url": "https://www.tiktok.com/@wyldwoodsdiy/video/7683271607695002893", "video_id": "7683271607695002893", "blurb": "Quite possibly the simplest DIY she's ever done — starting from a found plate."},
-    {"title": "$3 DIY That Looks Expensive", "creator": "@wyldwoodsdiy", "url": "https://www.tiktok.com/@wyldwoodsdiy/video/7683255523625487629", "video_id": "7683255523625487629", "blurb": "A stylish $3 DIY that looks WAY more expensive than it is."},
-    {"title": "Preserved Specimen DIY", "creator": "@wyldwoodsdiy", "url": "https://www.tiktok.com/@wyldwoodsdiy/video/7682907699306155278", "video_id": "7682907699306155278", "blurb": "Her favorite creepy DIY yet — a preserved specimen straight out of a mad lab."},
-    {"title": "Looks Complicated, Isn't DIY", "creator": "@wyldwoodsdiy", "url": "https://www.tiktok.com/@wyldwoodsdiy/video/7682859305539734797", "video_id": "7682859305539734797", "blurb": "This Halloween DIY looks WAY more complicated than it actually is."},
-    {"title": "Glowing Gate Tutorial", "creator": "@wyldwoodsdiy", "url": "https://www.tiktok.com/@wyldwoodsdiy/video/7560463323624443150", "video_id": "7560463323624443150", "blurb": "A HUGE 10-foot gate that glows — a true statement piece for your haunt entrance, and the full tutorial walks the whole build."},
+    {"added": "2026-10-27", "title": "Origami Halloween Bats — 5-Step Paper Bat Tutorial", "creator": "@letsgotograndmashouse", "url": "https://www.tiktok.com/@letsgotograndmashouse/video/7700338934164884766", "video_id": "7700338934164884766", "blurb": "One square of black paper is all it takes. The whole tutorial fits on a single chart: fold the square diagonally into a triangle, fold the top corners in to form the body, tip the top corners down into pointed ears, then fold each side down to shape the wings. String a whole colony together as a garland, pin them up a wall, or perch them on a shelf — a bone folder keeps the creases crisp."},
+    {"added": "2026-10-27", "title": "Edible Amputated Hand — Creepy Charcuterie Hand DIY", "creator": "@chefgenevieve", "url": "https://www.tiktok.com/@chefgenevieve/video/7691861036768529678", "video_id": "7691861036768529678", "blurb": "Finger food, taken literally. Chef Genevieve traces her own hand and arm as the template, builds the fingers from prosciutto-wrapped breadsticks, molds a herbed-cheese hand over them, then drapes prosciutto slices across the whole thing as skin. Purple almond-slice fingernails finish the illusion, and she serves it severed at the wrist on a cracker board. Episode 31 of her 50-part Halloween recipe series — and yes, it's completely edible, fingernails and all."},
+    {"added": "2026-10-27", "title": "Wednesday Thing Light — Glowing Severed-Hand Wall Lamp DIY", "creator": "@saga_tay", "url": "https://www.tiktok.com/@saga_tay/video/7687233600844074261", "video_id": "7687233600844074261", "blurb": "Thing gets his own lamp. She forms the Addams Family's famous severed hand over a glove, builds it up with layers of glue-soaked paper until it holds its shape, then draws on Thing's signature stitches with a black marker. Mounted on the wall and lit from inside, the finished hand glows warm orange between the spiderwebs — Wednesday decor that earns its wall space."},
+    {"added": "2026-10-27", "title": "Hot Glue Ghost — Light-Up Hanging Ghost DIY", "creator": "@diy.creation2", "url": "https://www.tiktok.com/@diy.creation2/video/7685840941822774541", "video_id": "7685840941822774541", "blurb": "Sibgha traces a drippy ghost face on parchment paper and pipes the whole thing in hot glue — every swirl has to touch the next glue line or it falls apart when you peel it free. Then she threads fairy lights through the lattice (never glue the bulbs!) and hangs them glowing purple, blue, green and orange in the doorway. The whole ghost is nothing but glue sticks, parchment and string lights."},
+    {"added": "2026-10-27", "title": "DIY Concrete Pumpkins — Cast Once, Keep Them Forever", "creator": "@organizedandsimplified4u", "url": "https://www.tiktok.com/@organizedandsimplified4u/video/7689115065081023774", "video_id": "7689115065081023774", "blurb": "Stop buying pumpkins that rot: she pours wet concrete into a plastic jack-o'-lantern pail, lets it set, and demolds a grinning pumpkin built to last season after season. Her best trick comes after Halloween — turn the face to the wall and the same pumpkin moonlights as a flower pot."},
+    {"added": "2026-10-27", "title": "Custom Chucky Air Jordan 1s — Hand-Painted Sneaker DIY", "creator": "@thekickfix", "url": "https://www.tiktok.com/@thekickfix/video/7695269928751992095", "video_id": "7695269928751992095", "blurb": "The Kick Fix turns a plain pair of Air Jordan 1 Retro Highs into Chucky himself: denim-blue overall panels and the Good Guys striped-shirt colors hand-painted on, a flesh-tone toe box scarred with real hand-stitched thread, and bright orange laces to finish the killer-doll look. A wearable Child's Play tribute, built entirely by hand."},
+    {"added": "2026-10-27", "title": "Circus Ticket Booth DIY — Cardboard Carnival Build", "creator": "@arielviewtravelvlog", "url": "https://www.tiktok.com/@arielviewtravelvlog/video/7682846593799703821", "video_id": "7682846593799703821", "blurb": "Erica turns a plain cardboard cabinet box into a full circus ticket booth — gold TICKETS marquee, red velvet curtains, a grinning clown manning the window, and printed 'come one, come all' tickets fanned out on the counter. She admits she got so into the project she forgot to film half of it — the finished booth speaks for itself."},
+    {"added": "2026-10-27", "title": "Creepy Cotton Candy — Freak Show Concession Stand DIY", "creator": "@itgirlchay", "url": "https://www.tiktok.com/@itgirlchay/video/7695462926676659470", "video_id": "7695462926676659470", "blurb": "Part 4 of her porch-to-freak-show transformation: concession stand item #3 is a giant fake cotton candy — a pink spun-sugar puff on a cone, crawling with plastic spiders. It joins her fake popcorn buckets (rat garnish included) in the creepiest carnival snack lineup on the block."},
+    {"added": "2026-10-27", "title": "One Kid, Three Trick-or-Treaters — Mannequin Illusion Costume DIY", "creator": "@justinflom", "url": "https://www.tiktok.com/@justinflom/video/7693946321501179166", "video_id": "7693946321501179166", "blurb": "Justin Flom builds his daughter a wearable rig carrying two mannequin 'friends' — Ghostface on one side, a sheet ghost on the other — so one kid in a blue wig and yellow raincoat shows up looking like three trick-or-treaters, each holding its own pumpkin bucket. When she turns around and shows the costume, the illusion lands."},
+    {"added": "2026-10-27", "title": "Fun House Sign DIY — CarnEVIL Carnival Tutorial", "creator": "@bananabread_94", "url": "https://www.tiktok.com/@bananabread_94/video/7701188355186330911", "video_id": "7701188355186330911", "blurb": "A step-by-step build of a carnival Fun House sign — she says the letters were the hardest part of the whole project, but they definitely paid off. Prime entrance signage for a carnEVIL-themed setup."},
+    {"added": "2026-10-27", "title": "Michael Myers Cleaver Serving Board DIY", "creator": "@bowerbirdworkshop", "url": "https://www.tiktok.com/@bowerbirdworkshop/video/7701472320233164063", "video_id": "7701472320233164063", "blurb": "Followers asked for it, so they built it — a handmade serving board shaped like a butcher's cleaver, with Michael Myers' mask set into the black resin river down the middle, blood drip and all. A little horror for the serving table."},
+    {"added": "2026-10-26", "title": "Monster-in-a-Box Optical Illusion Costume DIY", "creator": "@wyldwoodsdiy", "url": "https://www.tiktok.com/@wyldwoodsdiy/video/7700739541933493517", "video_id": "7700739541933493517", "blurb": "It looks like she's holding a terrifying monster that's literally bursting out of a box — but it's all an optical illusion, built from scratch. She pieces together the structure and materials, then walks through how every detail sells the trick."},
+    {"added": "2026-10-26", "title": "5-Foot Chucky Doll Box DIY", "creator": "@darkhousedesigns", "url": "https://www.tiktok.com/@darkhousedesigns/video/7695179364945644831", "video_id": "7695179364945644831", "blurb": "Build a life-size Good Guys toy box for a Home Depot Chucky doll — 5 x 3 x 2 feet, framed with 2x2s and half-inch foam, finished with printed banners for the full Child's Play look."},
+    {"added": "2026-10-22", "title": "DIY Circus Tent — Halloween Party Build", "creator": "Taylor Booth (@theballoonchickaz)", "url": "https://www.tiktok.com/@theballoonchickaz/video/7698864214865087775", "video_id": "7698864214865087775", "blurb": "A full-size circus tent, built from scratch for a Halloween party — Taylor's whole process in 85 seconds. 229K views and counting, and you'll see why."},
+    {"added": "2026-10-21", "title": "Fog Chiller DIY — Maiden Voyage", "creator": "@theblackirishouse", "url": "https://www.tiktok.com/@theblackirishouse/video/7693254709972372767", "video_id": "7693254709972372767", "blurb": "Chill your fog machine's output and the fog hugs the ground like a graveyard at dawn. This build's first run shows exactly how it's done."},
+    {"added": "2026-10-26", "title": "Fog Chiller v2.0 — The Upgrades", "creator": "@theblackirishouse", "url": "https://www.tiktok.com/@theblackirishouse/video/7694109884777893150", "video_id": "7694109884777893150", "blurb": "Version two of the chiller: a legit spider web and frozen water bottles join the build for thicker, lower fog."},
+    {"added": "2026-10-26", "title": "Low-Lying Fog Setup — Full Rundown", "creator": "@theblackirishouse", "url": "https://www.tiktok.com/@theblackirishouse/video/7696612187141360926", "video_id": "7696612187141360926", "blurb": "Everyone asked, so here's the quick rundown of the whole low-lying fog setup — how the chiller is plumbed and why it works."},
+    {"added": "2026-10-26", "title": "Fog Chiller at Full Send", "creator": "@theblackirishouse", "url": "https://www.tiktok.com/@theblackirishouse/video/7699253873872997662", "video_id": "7699253873872997662", "blurb": "Less than a minute of ideal conditions — and the chiller was RIPPIN'. The maiden-voyage build, proven in the wild."},
+    {"added": "2026-10-26", "title": "The Junk-Drawer Glow Trick", "creator": "@wyldwoodsdiy", "url": "https://www.tiktok.com/@wyldwoodsdiy/video/7700009652347587854", "video_id": "7700009652347587854", "blurb": "One simple trick hiding in your junk drawer turns ordinary specimen jars into glowing, radioactive-looking decor. You already own everything you need."},
+    {"added": "2026-10-26", "title": "Radioactive Specimen Jar DIY", "creator": "@wyldwoodsdiy", "url": "https://www.tiktok.com/@wyldwoodsdiy/video/7699612887765028109", "video_id": "7699612887765028109", "blurb": "This spooky specimen jar looks like it's glowing from the inside — the radioactive lab piece your mad-scientist corner was missing."},
+    {"added": "2026-10-26", "title": "Jar of Moving Eyeballs DIY", "creator": "@wyldwoodsdiy", "url": "https://www.tiktok.com/@wyldwoodsdiy/video/7698888739572976910", "video_id": "7698888739572976910", "blurb": "She made a jar of eyeballs that MOVE. Creepy, clever, and impossible to stop watching."},
+    {"added": "2026-10-20", "title": "Pirate Skeleton DIY", "creator": "@wyldwoodsdiy", "url": "https://www.tiktok.com/@wyldwoodsdiy/video/7698131249034005774", "video_id": "7698131249034005774", "blurb": "Another Halloween DIY — and it might be her favorite yet. Pirate bones done right."},
+    {"added": "2026-10-20", "title": "Witch's Cauldron DIY", "creator": "@wyldwoodsdiy", "url": "https://www.tiktok.com/@wyldwoodsdiy/video/7698064196147236109", "video_id": "7698064196147236109", "blurb": "Every witch needs a cauldron — and this one may have gotten a little carried away."},
+    {"added": "2026-10-20", "title": "Best Halloween DIYs in 20 Seconds", "creator": "@wyldwoodsdiy", "url": "https://www.tiktok.com/@wyldwoodsdiy/video/7698024441569234190", "video_id": "7698024441569234190", "blurb": "Months of crafting, creativity and chaos in one rapid-fire highlight reel."},
+    {"added": "2026-10-20", "title": "Boo-zy Bones Drinking Skeletons", "creator": "@wyldwoodsdiy", "url": "https://www.tiktok.com/@wyldwoodsdiy/video/7697775692141890829", "video_id": "7697775692141890829", "blurb": "These skeletons have been drinking for centuries…"},
+    {"added": "2026-10-20", "title": "Peeing Skeleton Dog DIY", "creator": "@wyldwoodsdiy", "url": "https://www.tiktok.com/@wyldwoodsdiy/video/7697651205543169294", "video_id": "7697651205543169294", "blurb": "Even in the afterlife, dogs still gotta go."},
+    {"added": "2026-10-20", "title": "Haunted Dollhouse DIY", "creator": "@wyldwoodsdiy", "url": "https://www.tiktok.com/@wyldwoodsdiy/video/7697030306649492749", "video_id": "7697030306649492749", "blurb": "Who knew a 1991 Playskool dollhouse could turn into something so creepy?"},
+    {"added": "2026-10-20", "title": "The Boo-zy Skeleton Fountain", "creator": "@wyldwoodsdiy", "url": "https://www.tiktok.com/@wyldwoodsdiy/video/7696649206160837902", "video_id": "7696649206160837902", "blurb": "A skeleton chilling in a bubbling green fountain — the porch centerpiece your neighbors will copy next year."},
+    {"added": "2026-10-20", "title": "Slimed House DIY", "creator": "@wyldwoodsdiy", "url": "https://www.tiktok.com/@wyldwoodsdiy/video/7693296146705403149", "video_id": "7693296146705403149", "blurb": "She slimed her whole house for Halloween — gutters and all — and it turned out amazing."},
+    {"added": "2026-10-27", "title": "I Slimed My House — The Full Build", "creator": "@wyldwoodsdiy", "url": "https://www.tiktok.com/@wyldwoodsdiy/video/7692867820584996110", "video_id": "7692867820584996110", "blurb": "The full start-to-finish build behind the slime house: expanding foam sprayed over pool noodles, painted radioactive neon green, then hung all along the gutters so the house looks like it's oozing goo. By night the drips glow under the Halloween lights."},
+    {"added": "2026-10-26", "title": "Pendant-Light Skeleton Club", "creator": "@wyldwoodsdiy", "url": "https://www.tiktok.com/@wyldwoodsdiy/video/7694066781580758285", "video_id": "7694066781580758285", "blurb": "She posed mini skeletons on her kitchen pendant lights — heels and all — and 3 million viewers agree it's the hottest Halloween club in town. Proof decor doesn't have to be scary."},
+    {"added": "2026-10-20", "title": "Easiest Halloween DIY of the Year", "creator": "@wyldwoodsdiy", "url": "https://www.tiktok.com/@wyldwoodsdiy/video/7690324637577710862", "video_id": "7690324637577710862", "blurb": "Quite possibly the easiest Halloween DIY she's made all year."},
+    {"added": "2026-10-20", "title": "Disgusting Dollar Tree Eyeballs", "creator": "@wyldwoodsdiy", "url": "https://www.tiktok.com/@wyldwoodsdiy/video/7689903755977837837", "video_id": "7689903755977837837", "blurb": "Dollar Tree eyeballs… but make them DISGUSTING."},
+    {"added": "2026-10-20", "title": "Spooky Sparkly Eyeball DIY", "creator": "@wyldwoodsdiy", "url": "https://www.tiktok.com/@wyldwoodsdiy/video/7687246122758278413", "video_id": "7687246122758278413", "blurb": "Spooky, sparkly, and just the right amount of creepy."},
+    {"added": "2026-10-20", "title": "Pumpkin Wine Server DIY", "creator": "@wyldwoodsdiy", "url": "https://www.tiktok.com/@wyldwoodsdiy/video/7687019977131543821", "video_id": "7687019977131543821", "blurb": "Why serve wine from a boring bottle when you can serve it from a pumpkin?"},
+    {"added": "2026-10-20", "title": "Real Pumpkin Drink Dispenser", "creator": "@wyldwoodsdiy", "url": "https://www.tiktok.com/@wyldwoodsdiy/video/7686647862247132429", "video_id": "7686647862247132429", "blurb": "A REAL pumpkin turned into a drink dispenser — a favorite fall DIY."},
+    {"added": "2026-10-20", "title": "Creepy Specimen Jar DIY", "creator": "@wyldwoodsdiy", "url": "https://www.tiktok.com/@wyldwoodsdiy/video/7684805348368141581", "video_id": "7684805348368141581", "blurb": "The creepiest little specimen jar — a preserved hand in a jar."},
+    {"added": "2026-10-20", "title": "Floating Eyeball DIY", "creator": "@wyldwoodsdiy", "url": "https://www.tiktok.com/@wyldwoodsdiy/video/7684008356431908110", "video_id": "7684008356431908110", "blurb": "This floating eyeball DIY is WAY easier than it looks."},
+    {"added": "2026-10-20", "title": "Garden Fence Glow-Up", "creator": "@wyldwoodsdiy", "url": "https://www.tiktok.com/@wyldwoodsdiy/video/7683645655490841869", "video_id": "7683645655490841869", "blurb": "Wait until you see what she turned a cheap plastic garden fence into."},
+    {"added": "2026-10-20", "title": "Simplest DIY Ever", "creator": "@wyldwoodsdiy", "url": "https://www.tiktok.com/@wyldwoodsdiy/video/7683271607695002893", "video_id": "7683271607695002893", "blurb": "Quite possibly the simplest DIY she's ever done — starting from a found plate."},
+    {"added": "2026-10-20", "title": "$3 DIY That Looks Expensive", "creator": "@wyldwoodsdiy", "url": "https://www.tiktok.com/@wyldwoodsdiy/video/7683255523625487629", "video_id": "7683255523625487629", "blurb": "A stylish $3 DIY that looks WAY more expensive than it is."},
+    {"added": "2026-10-20", "title": "Preserved Specimen DIY", "creator": "@wyldwoodsdiy", "url": "https://www.tiktok.com/@wyldwoodsdiy/video/7682907699306155278", "video_id": "7682907699306155278", "blurb": "Her favorite creepy DIY yet — a preserved specimen straight out of a mad lab."},
+    {"added": "2026-10-20", "title": "Looks Complicated, Isn't DIY", "creator": "@wyldwoodsdiy", "url": "https://www.tiktok.com/@wyldwoodsdiy/video/7682859305539734797", "video_id": "7682859305539734797", "blurb": "This Halloween DIY looks WAY more complicated than it actually is."},
+    {"added": "2026-10-26", "title": "Glowing Gate Tutorial", "creator": "@wyldwoodsdiy", "url": "https://www.tiktok.com/@wyldwoodsdiy/video/7560463323624443150", "video_id": "7560463323624443150", "blurb": "A HUGE 10-foot gate that glows — a true statement piece for your haunt entrance, and the full tutorial walks the whole build."},
 ]
 
 DIY_VIDEOS_NICK = [
-    {"title": "Who's Hungry!? — One-Hour DIY", "creator": "@nicksnightmarefac", "url": "https://www.tiktok.com/@nicksnightmarefac/video/7699008843090595085", "video_id": "7699008843090595085", "blurb": "A fun, easy DIY that took less than an hour to build — fresh off the Nightmare Factory workbench."},
-    {"title": "Gravestone Crawler DIY Tutorial", "creator": "@nicksnightmarefac", "url": "https://www.tiktok.com/@nicksnightmarefac/video/7684419946595552526", "video_id": "7684419946595552526", "blurb": "Their first full tutorial — a fun, easy Gravestone Crawler you can build along with, step by step."},
-    {"title": "Meet the Gravestone Crawler", "creator": "@nicksnightmarefac", "url": "https://www.tiktok.com/@nicksnightmarefac/video/7684153715183439118", "video_id": "7684153715183439118", "blurb": "The Gravestone Creeper got a friend — meet the Crawler, the prop reveal that kicked off the tutorials."},
-    {"title": "Gravestone Creeper DIY Tutorial", "creator": "@nicksnightmarefac", "url": "https://www.tiktok.com/@nicksnightmarefac/video/7685645350278860046", "video_id": "7685645350278860046", "blurb": "Tutorial number two: create your very own Gravestone Creeper."},
-    {"title": "DIY Gravestone Creeper — Home Depot Upgrade", "creator": "@nicksnightmarefac", "url": "https://www.tiktok.com/@nicksnightmarefac/video/7680823981682789646", "video_id": "7680823981682789646", "blurb": "A quick and easy prop upgrade — a DIY Gravestone Creeper built from Home Depot's 2026 Halloween decor."},
-    {"title": "Tree Thrashing Maniac DIY Tutorial", "creator": "@nicksnightmarefac", "url": "https://www.tiktok.com/@nicksnightmarefac/video/7696416899118140686", "video_id": "7696416899118140686", "blurb": "You asked for it — the Tree Thrashing Maniac build, straight from the Nightmare Factory."},
-    {"title": "Budget-Friendly DIY Build", "creator": "@nicksnightmarefac", "url": "https://www.tiktok.com/@nicksnightmarefac/video/7688189975849946381", "video_id": "7688189975849946381", "blurb": "A fun, budget-friendly build from just a few hardware-store and dollar-store items — an easy home-haunt upgrade."},
-    {"title": "Melting-Flesh Skeleton Wrap", "creator": "@nicksnightmarefac", "url": "https://www.tiktok.com/@nicksnightmarefac/video/7685274761705852173", "video_id": "7685274761705852173", "blurb": "Stretch film plus a heat gun equals melting flesh — a genius glow-up for that old skeleton in the garage."},
-    {"title": "Haunted Circus Room Transformation", "creator": "@nicksnightmarefac", "url": "https://www.tiktok.com/@nicksnightmarefac/video/7696984421970365709", "video_id": "7696984421970365709", "blurb": "One room at a time toward a haunted circus Halloween party — a cheap, easy DIY transformation."},
-    {"title": "Make a Store-Bought Skeleton Your Own", "creator": "@nicksnightmarefac", "url": "https://www.tiktok.com/@nicksnightmarefac/video/7682201723997277454", "video_id": "7682201723997277454", "blurb": "Endless ways to bring a basic store-bought skeleton to life and make it unmistakably yours."},
+    {"added": "2026-10-26", "title": "Who's Hungry!? — One-Hour DIY", "creator": "@nicksnightmarefac", "url": "https://www.tiktok.com/@nicksnightmarefac/video/7699008843090595085", "video_id": "7699008843090595085", "blurb": "A fun, easy DIY that took less than an hour to build — fresh off the Nightmare Factory workbench."},
+    {"added": "2026-10-20", "title": "Gravestone Crawler DIY Tutorial", "creator": "@nicksnightmarefac", "url": "https://www.tiktok.com/@nicksnightmarefac/video/7684419946595552526", "video_id": "7684419946595552526", "blurb": "Their first full tutorial — a fun, easy Gravestone Crawler you can build along with, step by step."},
+    {"added": "2026-10-20", "title": "Meet the Gravestone Crawler", "creator": "@nicksnightmarefac", "url": "https://www.tiktok.com/@nicksnightmarefac/video/7684153715183439118", "video_id": "7684153715183439118", "blurb": "The Gravestone Creeper got a friend — meet the Crawler, the prop reveal that kicked off the tutorials."},
+    {"added": "2026-10-20", "title": "Gravestone Creeper DIY Tutorial", "creator": "@nicksnightmarefac", "url": "https://www.tiktok.com/@nicksnightmarefac/video/7685645350278860046", "video_id": "7685645350278860046", "blurb": "Tutorial number two: create your very own Gravestone Creeper."},
+    {"added": "2026-10-20", "title": "DIY Gravestone Creeper — Home Depot Upgrade", "creator": "@nicksnightmarefac", "url": "https://www.tiktok.com/@nicksnightmarefac/video/7680823981682789646", "video_id": "7680823981682789646", "blurb": "A quick and easy prop upgrade — a DIY Gravestone Creeper built from Home Depot's 2026 Halloween decor."},
+    {"added": "2026-10-20", "title": "Tree Thrashing Maniac DIY Tutorial", "creator": "@nicksnightmarefac", "url": "https://www.tiktok.com/@nicksnightmarefac/video/7696416899118140686", "video_id": "7696416899118140686", "blurb": "You asked for it — the Tree Thrashing Maniac build, straight from the Nightmare Factory."},
+    {"added": "2026-10-20", "title": "Budget-Friendly DIY Build", "creator": "@nicksnightmarefac", "url": "https://www.tiktok.com/@nicksnightmarefac/video/7688189975849946381", "video_id": "7688189975849946381", "blurb": "A fun, budget-friendly build from just a few hardware-store and dollar-store items — an easy home-haunt upgrade."},
+    {"added": "2026-10-20", "title": "Melting-Flesh Skeleton Wrap", "creator": "@nicksnightmarefac", "url": "https://www.tiktok.com/@nicksnightmarefac/video/7685274761705852173", "video_id": "7685274761705852173", "blurb": "Stretch film plus a heat gun equals melting flesh — a genius glow-up for that old skeleton in the garage."},
+    {"added": "2026-10-20", "title": "Haunted Circus Room Transformation", "creator": "@nicksnightmarefac", "url": "https://www.tiktok.com/@nicksnightmarefac/video/7696984421970365709", "video_id": "7696984421970365709", "blurb": "One room at a time toward a haunted circus Halloween party — a cheap, easy DIY transformation."},
+    {"added": "2026-10-20", "title": "Make a Store-Bought Skeleton Your Own", "creator": "@nicksnightmarefac", "url": "https://www.tiktok.com/@nicksnightmarefac/video/7682201723997277454", "video_id": "7682201723997277454", "blurb": "Endless ways to bring a basic store-bought skeleton to life and make it unmistakably yours."},
 ]
 
 
 DIY_VIDEOS_BROOKLYN = [
-    {"title": "Spinning Jack-o'-Lantern", "creator": "@heybrooklynb", "url": "https://www.tiktok.com/@heybrooklynb/video/7696976404730137887", "video_id": "7696976404730137887", "blurb": "She made her jack-o'-lantern SPIN — the carved-pumpkin hack your porch needs this year."},
-    {"title": "Skeleton Tombstone Pop-Up Craft", "creator": "@heybrooklynb", "url": "https://www.tiktok.com/@heybrooklynb/video/7692588485563239711", "video_id": "7692588485563239711", "blurb": "A DIY skeleton craft that pops out of its tombstone — wait until you see it lit up at night."},
-    {"title": "Glow-in-the-Dark Sorting Hat", "creator": "@heybrooklynb", "url": "https://www.tiktok.com/@heybrooklynb/video/7694068054950546719", "video_id": "7694068054950546719", "blurb": "A handmade Sorting Hat that glows in the dark — part prop, part costume, all magic."},
+    {"added": "2026-10-26", "title": "Spinning Jack-o'-Lantern", "creator": "@heybrooklynb", "url": "https://www.tiktok.com/@heybrooklynb/video/7696976404730137887", "video_id": "7696976404730137887", "blurb": "She made her jack-o'-lantern SPIN — the carved-pumpkin hack your porch needs this year."},
+    {"added": "2026-10-26", "title": "Skeleton Tombstone Pop-Up Craft", "creator": "@heybrooklynb", "url": "https://www.tiktok.com/@heybrooklynb/video/7692588485563239711", "video_id": "7692588485563239711", "blurb": "A DIY skeleton craft that pops out of its tombstone — wait until you see it lit up at night."},
+    {"added": "2026-10-26", "title": "Glow-in-the-Dark Sorting Hat", "creator": "@heybrooklynb", "url": "https://www.tiktok.com/@heybrooklynb/video/7694068054950546719", "video_id": "7694068054950546719", "blurb": "A handmade Sorting Hat that glows in the dark — part prop, part costume, all magic."},
 ]
 
 
@@ -4039,40 +4039,40 @@ COSTUME_SECTIONS = [
         "title": "&#x2B50; Just Added",
         "sub": "The newest costumes on the page — fresh from the feed, straight to the top.",
         "ideas": [
-            {"name": "DIY Muppet-Style Character Head — Foam Clay Over a Lifecast", "who": "Adults & teens", "difficulty": "Hard", "time": "A weekend or more",
+            {"added": "2026-10-27", "name": "DIY Muppet-Style Character Head — Foam Clay Over a Lifecast", "who": "Adults & teens", "difficulty": "Hard", "time": "A weekend or more",
              "materials": "A lifecast of your own face (plastic wrap and tape), a foil armature, foam clay by the tub, fleece for the skin, mesh for the see-through eyes, paint",
              "blurb": "This is puppet-building the Henson way, done in a bathroom: she starts with a lifecast of her own face — plastic wrap and tape — then builds a foil armature and sculpts the character's big-mouthed head over it in foam clay (a commenter jokes about how much foam clay she goes through, and her answer is basically: yes). Fleece skin goes on, the mesh eyes get painted into wide blue cartoon eyes you can see straight through, and she finishes with a tall sculpted foam headpiece, foam glasses and a chin tuft, all test-worn as she goes. Her caption says it all: 'officially my favourite thing I've made' — 1.1 million plays later, the internet agrees. Tap the video and watch the head come to life.",
              "source": "@alus.irjortorgrav", "url": "https://www.tiktok.com/@alus.irjortorgrav/video/7686802134486093070", "tt": "7686802134486093070"},
-            {"name": "Zipper Face SFX Makeup — the Cute-Meets-Gore Unzip", "who": "Adults & teens", "difficulty": "Medium", "time": "About 1–2 hours",
+            {"added": "2026-10-27", "name": "Zipper Face SFX Makeup — the Cute-Meets-Gore Unzip", "who": "Adults & teens", "difficulty": "Medium", "time": "About 1–2 hours",
              "materials": "Scar wax, a real zipper, fake blood and chunky gore for the exposed flesh, glam eye makeup, a long wig and bows for the cutesy finish",
              "blurb": "SCL Beauty glues a real zipper straight down the center of her face, seals the edges in scar wax, then unzips the lower half and packs the opening with raw, textured gore — fake blood and chunky 'exposed flesh' running from nose to neck. Then the twist her caption promises — 'a cutesy Halloween tutorial': full glam on the skin that's left, a black pigtail wig and white bows on top. Adorable from across the room, horrifying up close. Her honest review: 'I need practice with scar wax' — so give yourself a trial run before Halloween night. Tap the video and watch the face unzip.",
              "source": "@sclbeauty", "url": "https://www.tiktok.com/@sclbeauty/video/7693066020348513558", "tt": "7693066020348513558"},
-            {"name": "Michael Myers × Jason Mashup Mask — Half-and-Half Slasher Build", "who": "Adults & teens", "difficulty": "Medium", "time": "An afternoon",
+            {"added": "2026-10-27", "name": "Michael Myers × Jason Mashup Mask — Half-and-Half Slasher Build", "who": "Adults & teens", "difficulty": "Medium", "time": "An afternoon",
              "materials": "A Michael Myers mask, a Jason-style hockey mask, painter's tape, a craft knife, paint for the weathered finish — the video shows every cut and join",
              "blurb": "What if Michael Myers was Jason? This build answers it with a craft knife: a Myers mask and a hockey mask, each cut down and fused into a single half-and-half face — Haddonfield on one side, Camp Crystal Lake on the other — then taped off and weathered until the seam looks like it was always there. Tap the video and watch the two slashers become one mask.",
              "source": "@lydia_mary_ivy", "url": "https://www.tiktok.com/@lydia_mary_ivy/video/7686704472973708558", "tt": "7686704472973708558"},
-            {"name": "Silent Hill Nurse Mask — Freestyle Bandage Build", "who": "Adults & teens", "difficulty": "Medium", "time": "An afternoon",
+            {"added": "2026-10-27", "name": "Silent Hill Nurse Mask — Freestyle Bandage Build", "who": "Adults & teens", "difficulty": "Medium", "time": "An afternoon",
              "materials": "Gauze bandage wrap over a head form or mask base, a plain nurse cap you can mark with the red cross, dark red paint or fake blood for the weathering",
              "blurb": "Ekaterina freestyled the Dark Nurse her own way: a head wrapped in layer after layer of bandage gauze, stained and darkened until it turns fleshy and wrong, then crowned with the blood-flecked nurse cap and its red cross. No pattern and no plan — her whole caption is 'It was a lot of freestyle, but I love the way it came out,' and the finished mask backs her up. Tap the video and watch the wrap come together.",
              "source": "@eka_herself", "url": "https://www.tiktok.com/@eka_herself/video/7698457826687044886", "tt": "7698457826687044886"},
-            {"name": "Carried Away in a Trash Can — Skeleton Garbage Man Illusion Costume", "who": "Adults & teens", "difficulty": "Medium", "time": "An afternoon",
+            {"added": "2026-10-27", "name": "Carried Away in a Trash Can — Skeleton Garbage Man Illusion Costume", "who": "Adults & teens", "difficulty": "Medium", "time": "An afternoon",
              "materials": "A poseable skeleton, hi-vis safety jacket, cap and sunglasses, work gloves, jeans and boots, a wheeled trash can you can cut head and arm holes in",
              "blurb": "The garbage man is a skeleton: a poseable skeleton in a hi-vis jacket, cap and sunglasses gets mounted at the wearer's waist, its gloved hands gripping a wheeled trash can with holes cut in the side. The wearer pops his own head and arm out of the can while his legs do the walking — so a skeleton trash collector appears to be hauling him away, very much against his will. Filed by its creator under last-minute costumes, and the build really is one afternoon. Tap the video and watch the rig come together.",
              "source": "@deedomo12", "url": "https://www.tiktok.com/@deedomo12/video/7691812628582255902", "tt": "7691812628582255902"},
-            {"name": "Easy SFX Wound Makeup — Fake-Blood Cheek Gashes", "who": "Adults & teens", "difficulty": "Easy", "time": "Under 30 minutes",
+            {"added": "2026-10-27", "name": "Easy SFX Wound Makeup — Fake-Blood Cheek Gashes", "who": "Adults & teens", "difficulty": "Easy", "time": "Under 30 minutes",
              "materials": "A flesh-toned wound piece (scar wax or a stick-on appliance) for each cheek, foundation to blend the edges, dark shadow for depth, fake blood",
              "blurb": "Alexa's 13-second masterclass in fake gore: press a flesh-toned wound piece onto each cheek, blend and shade the edges until it reads as torn skin, then let the fake blood run. The finished gashes look straight out of a slasher — and the prop-hammer reveal at the end sells the joke. Her caption just says 'super easy,' and for once it's true. Tap the video and watch it come together.",
              "source": "Alexa (@aleee.rbb)", "url": "https://www.tiktok.com/@aleee.rbb/video/7696632427116170526", "tt": "7696632427116170526"},
-            {"name": "Hello Kitty × Ghostface Custom Mask — V02", "who": "Adults & teens", "difficulty": "Hard", "time": "A weekend or more",
+            {"added": "2026-10-27", "name": "Hello Kitty × Ghostface Custom Mask — V02", "who": "Adults & teens", "difficulty": "Hard", "time": "A weekend or more",
              "materials": "A sculpted mask base, white paint, black for the eyes and whiskers, yellow for the nose, and one big red bow — the finished piece is all in the video",
              "blurb": "The sweetest face in horror: mask maker CartoonDeadwork's Hello Kitty × Ghostface custom mask, brought back from the dead as V02 — red bow, whiskers and all. He even hid a Golden Coin out there somewhere: find it and you claim a custom mask of your own. Tap the video and watch it come back to life.",
              "source": "CartoonDeadwork (@k2theministry)", "url": "https://www.tiktok.com/@k2theministry/video/7688545412717825293", "tt": "7688545412717825293"},
-            {"name": "Silent Hill Nurse Costume — Full DIY Tutorial", "who": "Adults & teens", "difficulty": "Medium", "time": "An afternoon or more",
+            {"added": "2026-10-27", "name": "Silent Hill Nurse Costume — Full DIY Tutorial", "who": "Adults & teens", "difficulty": "Medium", "time": "An afternoon or more",
              "materials": "A nurse dress or scrubs to distress, mask-making basics — her full tutorial walks through every piece she uses",
              "blurb": "Eimi's start-to-finish tutorial for her Silent Hill nurse — the bandaged Dark Nurse look from the games and films, distressed and bloodied by hand. She wants to see as many Silent Hill nurses out there this Halloween as possible: tap the photo, press play, and build yours along with her.",
              "source": "@eimi.wordt.dutchie", "url": "https://www.tiktok.com/@eimi.wordt.dutchie/video/7695321330354359584",
              "ttf": "7695321330354359584", "ttf_thumb": "/static/img/silenthill_nurse_costume.jpg"},
-            {"name": "DIY Groot Costume from Foam Pipe Insulation", "who": "Adults & teens", "difficulty": "Hard", "time": "A weekend or more",
+            {"added": "2026-10-27", "name": "DIY Groot Costume from Foam Pipe Insulation", "who": "Adults & teens", "difficulty": "Hard", "time": "A weekend or more",
              "materials": "Foam pipe insulation tubes, hot glue, brown and grey paint for the bark finish, moss or faux greenery for the sprouts",
              "blurb": "Danielle built a full Groot out of hardware-store foam pipe insulation — twisted foam tubes become the vine-like limbs and bark body, moss and all. Her Groot broke the internet years ago and she still calls it one of her favorite homemade costumes. Tap the photo to watch the reel.",
              "source": "Danielle | DIY + DESIGN (@themindfulhaven)", "url": "https://www.instagram.com/reel/Dew32sWMjd8/",
@@ -4084,27 +4084,27 @@ COSTUME_SECTIONS = [
         "title": "&#x1F383; For Kids",
         "sub": "Weekend projects and after-school builds — cardboard, felt and a glue gun go a long way.",
         "ideas": [
-            {"name": "Cardboard Robot", "who": "Kids 5–10", "difficulty": "Easy", "time": "About 2 hours",
+            {"added": "2026-10-22", "name": "Cardboard Robot", "who": "Kids 5–10", "difficulty": "Easy", "time": "About 2 hours",
              "materials": "Two cardboard boxes, foil or silver tape, bottle caps, dryer ducting, glow sticks",
              "blurb": "The classic box robot, upgraded: light-up trim, a LEGO-style control panel and glow-in-the-dark cuffs so your little bot stays visible after dark.",
              "source": "Goodnight Fox", "url": "https://www.goodnightfox.com/blog/robot-costume", "pin": "862580134928461179"},
-            {"name": "Umbrella Jellyfish", "who": "Kids 4+", "difficulty": "Easy", "time": "About 30 minutes",
+            {"added": "2026-10-22", "name": "Umbrella Jellyfish", "who": "Kids 4+", "difficulty": "Easy", "time": "About 30 minutes",
              "materials": "Clear or white umbrella, bubble wrap, ribbon scraps, light-colored outfit",
              "blurb": "A clear umbrella becomes the jellyfish bell and the ribbons do the floating — a showstopper that weighs almost nothing and needs zero sewing.",
              "source": "PSECU", "url": "https://www.psecu.com/learn/6-easy-diy-halloween-costumes-for-kids", "pin": "755619643778031009"},
-            {"name": "Lion Rainsuit Costume", "who": "Toddlers & kids", "difficulty": "Easy", "time": "About 45 minutes",
+            {"added": "2026-10-22", "name": "Lion Rainsuit Costume", "who": "Toddlers & kids", "difficulty": "Easy", "time": "About 45 minutes",
              "materials": "Yellow rainsuit or sweatsuit, brown or tan fleece for the mane, a hood or hat, hot glue or safety pins",
              "blurb": "A roar you can wear in the rain: a yellow rain set turns into a lion with a fluffy fleece mane on the hood. No-sew, puddle-proof, and the pin photo above is the real finished costume.",
              "source": "Jan & Jul", "url": "https://janandjul.com/easy-halloween-costumes/", "pin": "867928159436914451"},
-            {"name": "Astronaut Space Suit", "who": "Kids 4–9", "difficulty": "Easy", "time": "About 1–2 hours",
+            {"added": "2026-10-22", "name": "Astronaut Space Suit", "who": "Kids 4–9", "difficulty": "Easy", "time": "About 1–2 hours",
              "materials": "Clear plastic globe or bucket for the helmet, white sweats, two recycled bottles, cardboard, silver tape and paint",
              "blurb": "Goodnight Fox's no-sew space suit — a globe helmet, a recycled-bottle jetpack and hand-drawn mission patches. The same creator as the robot above, and just as cardboard-friendly.",
              "source": "Goodnight Fox", "url": "https://sprout.goodnightfox.com/activity/astronaut-costume", "pin": "695454367515339795"},
-            {"name": "Pink Light-Up Witch", "who": "Kids 3–7", "difficulty": "Medium", "time": "An afternoon",
+            {"added": "2026-10-22", "name": "Pink Light-Up Witch", "who": "Kids 3–7", "difficulty": "Medium", "time": "An afternoon",
              "materials": "Pink and silver fabric, tulle for the skirt, elastic waistband, a witch hat, battery string lights",
              "blurb": "Not every witch wears black: this one layers a shimmery pink-and-silver skirt and lights it up for after-dark visibility. Sweet, spooky, and very easy to spot in a crowd.",
              "source": "Goodnight Fox", "url": "https://sprout.goodnightfox.com/activities/pink-witch-costume", "pin": "416442296825062489"},
-            {"name": "Cute Clown Costumes (Under $10)", "who": "Kids & adults", "difficulty": "Easy", "time": "About 30 minutes",
+            {"added": "2026-10-22", "name": "Cute Clown Costumes (Under $10)", "who": "Kids & adults", "difficulty": "Easy", "time": "About 30 minutes",
              "materials": "Bright closet basics, pom-poms, suspenders or a bow tie, face paint, a yarn wig or party hat",
              "blurb": "Melanie from Simple Made Pretty builds a whole clown look for under ten bucks — thrift finds, pom-pom buttons and face paint. Tap the video and she walks you through it.",
              "source": "Simple Made Pretty", "url": "https://www.youtube.com/watch?v=7-wB3hUV1s0", "yt": "7-wB3hUV1s0"},
@@ -4115,19 +4115,19 @@ COSTUME_SECTIONS = [
         "title": "&#x1F9DB; For Adults",
         "sub": "Closet-first costumes and pun costumes that land at the party — most start with clothes you already own.",
         "ideas": [
-            {"name": "Wednesday Addams", "who": "Adults & teens", "difficulty": "Easy", "time": "Under 1 hour",
+            {"added": "2026-10-22", "name": "Wednesday Addams", "who": "Adults & teens", "difficulty": "Easy", "time": "Under 1 hour",
              "materials": "Black dress with white collar (or layered shirt), pale makeup, black eyeliner, braids or a wig",
              "blurb": "From London Mums' budget homemade-outfits roundup: deadpan is the whole costume. Pale base, a widow's-peak eyeliner flick, two braids, and your most miserable expression.",
              "source": "London Mums Magazine", "url": "https://www.londonmumsmagazine.com/whats-on/activities/get-creative/simple-homemade-halloween-outfits-hairdos-on-a-budget/", "pin": "169377635982127789"},
-            {"name": "Cereal Killer", "who": "Adults", "difficulty": "Easy", "time": "About 1 hour",
+            {"added": "2026-10-22", "name": "Cereal Killer", "who": "Adults", "difficulty": "Easy", "time": "About 1 hour",
              "materials": "White tee, mini cereal boxes, cardboard knives, red paint, duct tape, marker",
              "blurb": "The pun costume that never dies: cereal boxes and cardboard cutlery taped to a tee, finished with a tasteful amount of 'blood' splatter. Marc and Mandy demo it in their video segment.",
              "source": "Marc and Mandy", "url": "https://marcandmandy.com/easy-cheap-diy-halloween-costumes/", "yt": "FuPT1SYOyi0"},
-            {"name": "Gumball Machine Costume", "who": "Adults & teens", "difficulty": "Easy", "time": "About 1 hour",
+            {"added": "2026-10-22", "name": "Gumball Machine Costume", "who": "Adults & teens", "difficulty": "Easy", "time": "About 1 hour",
              "materials": "Pom-pom balls, a strap top or tank, red skirt, headband, cardstock for the 25¢ slot",
              "blurb": "DIY Joy's candy-machine classic: pom-poms glued over a top, a red skirt as the machine base, and a hand-drawn quarter slot to finish it. Insert coin, become the costume.",
              "source": "DIY Joy", "url": "https://diyjoy.com/easy-diy-gumball-machine-costume/", "pin": "292593307067691850"},
-            {"name": "Optical-Illusion Costume", "who": "Adults & teens", "difficulty": "Medium", "time": "An afternoon",
+            {"added": "2026-10-26", "name": "Optical-Illusion Costume", "who": "Adults & teens", "difficulty": "Medium", "time": "An afternoon",
              "materials": "A base outfit to build the illusion on — her video walks through the whole rig and lists every piece she uses",
              "blurb": "Wyld Woods DIY's brand-new optical-illusion build: the kind of costume that makes people look twice, then ask how you did it. Tap the video and she walks the whole trick, start to finish.",
              "source": "Wyld Woods DIY (@wyldwoodsdiy)", "url": "https://www.tiktok.com/@wyldwoodsdiy/video/7700739541933493517", "tt": "7700739541933493517"},
@@ -4138,23 +4138,23 @@ COSTUME_SECTIONS = [
         "title": "&#x1F491; Couples & Groups",
         "sub": "Matching looks that are twice the fun and (mostly) half the effort each.",
         "ideas": [
-            {"name": "Harry & Hermione", "who": "Couples", "difficulty": "Easy", "time": "A day or two of gathering pieces",
+            {"added": "2026-10-22", "name": "Harry & Hermione", "who": "Couples", "difficulty": "Easy", "time": "A day or two of gathering pieces",
              "materials": "White collared shirts, gray sweaters, house ties and patches, wands, round glasses, eyeliner (for the scar)",
              "blurb": "The closet-cosplay classic that once won a Best Couple Costume prize — uniforms from your own wardrobe plus a few cheap accessories.",
              "source": "Journey With J", "url": "https://www.journeywithjblog.com/harry-hermione-diy-halloween-costumes/", "pin": "763360205581479639"},
-            {"name": "Scarecrow Couple", "who": "Couples & families", "difficulty": "Easy", "time": "About 1–2 hours",
+            {"added": "2026-10-22", "name": "Scarecrow Couple", "who": "Couples & families", "difficulty": "Easy", "time": "About 1–2 hours",
              "materials": "Flannel shirts, jeans or a dress, raffia or straw, burlap patches, straw hats, rope belt",
              "blurb": "Cozy fall energy for two: patched flannel, raffia 'straw' at the cuffs, and a sunflower or faux-corn prop to sell the harvest look.",
              "source": "Simple Made Pretty", "url": "https://simplemadepretty.com/halloween-couples-costumes/", "pin": "507710558016966696"},
-            {"name": "Giant Waffle & Eleven", "who": "Couples, siblings, parent + kid", "difficulty": "Medium", "time": "An afternoon",
+            {"added": "2026-10-22", "name": "Giant Waffle & Eleven", "who": "Couples, siblings, parent + kid", "difficulty": "Medium", "time": "An afternoon",
              "materials": "Cardboard, yellow paint, yellow pool noodle, straps, red foam sheet",
              "blurb": "One of you is a giant Eggo — pool-noodle strips make the waffle grid — and the other just needs a pink dress and a box of the real thing.",
              "source": "See Kate Sew", "url": "https://seekatesew.com/how-to-make-a-waffle-costume-diy-eggo-costume/", "pin": "20055160832141638"},
-            {"name": "Piñata & Candy Duo", "who": "Couples & friends", "difficulty": "Medium", "time": "About 2 hours",
+            {"added": "2026-10-22", "name": "Piñata & Candy Duo", "who": "Couples & friends", "difficulty": "Medium", "time": "About 2 hours",
              "materials": "Crepe paper or streamers in rainbow colors, a plain outfit to cover, cardboard, a toy bat, candy props",
              "blurb": "One of you is the piñata — layered crepe-paper fringe over a base outfit — and the other is the candy, toy bat optional. DIY Joy's duo is a party photo waiting to happen.",
              "source": "DIY Joy", "url": "https://diyjoy.com/easy-diy-pinata-and-candy-costume/", "pin": "292593307067588946"},
-            {"name": "Aladdin & Genie Family Costumes", "who": "Couples & families", "difficulty": "Easy", "time": "An afternoon of gathering pieces",
+            {"added": "2026-10-22", "name": "Aladdin & Genie Family Costumes", "who": "Couples & families", "difficulty": "Easy", "time": "An afternoon of gathering pieces",
              "materials": "Blue outfit with a gold sash and a lamp prop (genie), vest, white pants and a cap (Aladdin)",
              "blurb": "Jenn Hallak's family let their daughter pick the theme and she chose a whole new world: a genie in blue and gold, an Aladdin, and a magic lamp to finish the story.",
              "source": "Jenn Hallak", "url": "https://jennhallak.com/blog/family-halloween-costumes-aladdin-jasmine", "pin": "266345765460225348"},
@@ -4165,15 +4165,15 @@ COSTUME_SECTIONS = [
         "title": "&#x23F0; Last-Minute & No-Sew",
         "sub": "It's October 31st and you have a glue gun (or not even that). Start here.",
         "ideas": [
-            {"name": "No-Sew Felt Strawberry", "who": "Kids & adults", "difficulty": "Easy", "time": "About 1 hour",
+            {"added": "2026-10-22", "name": "No-Sew Felt Strawberry", "who": "Kids & adults", "difficulty": "Easy", "time": "About 1 hour",
              "materials": "Red and green felt, fabric glue, a plain tee, fabric scissors, ruler",
              "blurb": "Felt, glue, zero stitches: a poncho-style berry body with a leafy collar and seed details, sized off a T-shirt you already have.",
              "source": "DIY Joy", "url": "https://diyjoy.com/easy-diy-halloween-costume-ideas/", "pin": "292593307067646357"},
-            {"name": "50s Statement Costume", "who": "Adults", "difficulty": "Easy", "time": "About 30 minutes",
+            {"added": "2026-10-22", "name": "50s Statement Costume", "who": "Adults", "difficulty": "Easy", "time": "About 30 minutes",
              "materials": "Thrifted dress or tee-and-jeans, a bandana, red lipstick, cat-eye liner",
              "blurb": "DIY Joy's retro standby: a tight front roll in your hair, a bandana, red lips and cat-eye liner — most of it is already in your closet or one thrift bin away.",
              "source": "DIY Joy", "url": "https://diyjoy.com/50s-costume/", "pin": "292593307067660073"},
-            {"name": "36 Last-Minute Costume Ideas", "who": "Kids, adults & couples", "difficulty": "Easy", "time": "5–60 minutes each",
+            {"added": "2026-10-22", "name": "36 Last-Minute Costume Ideas", "who": "Kids, adults & couples", "difficulty": "Easy", "time": "5–60 minutes each",
              "materials": "Whatever the closet gives you — the runaway bride in the photo started as a dress and a veil",
              "blurb": "Thirty-six closet-first rescues from DIY Joy, from a runaway bride to five-minute pun costumes. When it's October 31st at 4 p.m., start here.",
              "source": "DIY Joy", "url": "https://diyjoy.com/last-minute-diy-halloween-costumes/", "pin": "292593307047942812"},
@@ -4184,15 +4184,15 @@ COSTUME_SECTIONS = [
         "title": "&#x1F9DF; Scary & Makeup-Led",
         "sub": "The costume is the makeup: wounds, bites and face paint that do the heavy lifting.",
         "ideas": [
-            {"name": "Half-Zombie Makeup", "who": "Adults & teens", "difficulty": "Medium", "time": "About 45 minutes",
+            {"added": "2026-10-22", "name": "Half-Zombie Makeup", "who": "Adults & teens", "difficulty": "Medium", "time": "About 45 minutes",
              "materials": "Pale foundation, liquid latex or tissue-and-glue, fake blood, dark eyeshadow",
              "blurb": "Half beauty, half bitten: one side stays glam while the other side rots. From DIY Joy's Halloween makeup tutorials collection — the split-face contrast is what makes it terrifying.",
              "source": "DIY Joy", "url": "https://diyjoy.com/best-halloween-makeup-tutorials", "pin": "292593307067525168"},
-            {"name": "Creepy Doll Makeup", "who": "Adults & teens", "difficulty": "Medium", "time": "About 45 minutes",
+            {"added": "2026-10-22", "name": "Creepy Doll Makeup", "who": "Adults & teens", "difficulty": "Medium", "time": "About 45 minutes",
              "materials": "Foundation, white eyeliner, false lashes, heavy blush, heart-shaped lipstick, a lace dress or collar",
              "blurb": "Big round eyes, rosy cheeks and tiny heart lips — the makeup IS the costume. DIY Joy's doll look is pretty until you hold the stare a second too long.",
              "source": "DIY Joy", "url": "https://diyjoy.com/diy-doll-halloween-makeup/", "pin": "292593307067659575"},
-            {"name": "Full Face of Googly Eyes", "who": "Adults & teens", "difficulty": "Medium", "time": "About 30–45 minutes",
+            {"added": "2026-10-22", "name": "Full Face of Googly Eyes", "who": "Adults & teens", "difficulty": "Medium", "time": "About 30–45 minutes",
              "materials": "Craft googly eyes in mixed sizes, skin-safe adhesive or lash glue, black base makeup or a dark hood",
              "blurb": "Julia at Cuckoo4Design glued real googly eyes over her whole face — and it gets creepier when she moves and they all shift. Simple, unforgettable, mildly upsetting.",
              "source": "Cuckoo4Design", "url": "https://cuckoo4design.com/diy-full-face-of-googly-eyes-makeup/", "pin": "228065168626114409"},
@@ -12015,13 +12015,19 @@ def _updates_day_label(d, today) -> str:
     return f"{d.strftime('%A, %B')} {d.day}"
 
 
-def _site_update_stream(pin_limit: int = 240) -> list:
+def _site_update_stream(pin_limit: int = 240, since=None) -> list:
     """The merged What's New stream, newest first: Frank feature
-    announcements + new pins from the entries table. Every item
-    carries its ET datetime ('when') and ET calendar date ('day');
+    announcements + new pins from the entries table + the curated
+    /diy and /diy-costumes adds (code lists, merged on their 'added'
+    dates — the pin query can never see them). Every item carries
+    its ET datetime ('when') and ET calendar date ('day');
     announcements sort at the END of their day so a feature drop
     leads the day it shipped on. One bounded query — the homepage
-    bar calls this with a small pin_limit, /updates with a big one."""
+    bar calls this with a small pin_limit, /updates with a big one.
+    'since' (an aware datetime) lower-bounds the pin query by
+    created_at instead of relying on the newest-pin_limit window —
+    the /updates time buttons pass the current ET week's start so a
+    flood day can't push a whole day out of the window."""
     from zoneinfo import ZoneInfo
     et = ZoneInfo("America/New_York")
     items: list = []
@@ -12035,10 +12041,18 @@ def _site_update_stream(pin_limit: int = 240) -> list:
                       "emoji": a.get("emoji", "🆕"), "title": a["title"],
                       "body": a.get("body", ""), "href": a.get("href", "")})
     with get_conn(DB_PATH) as conn:
-        rows = conn.execute(
-            "SELECT * FROM entries WHERE hidden = 0 AND is_sample = 0 "
-            "ORDER BY created_at DESC, id DESC LIMIT ?",
-            (pin_limit,)).fetchall()
+        if since is not None:
+            rows = conn.execute(
+                "SELECT * FROM entries WHERE hidden = 0 AND is_sample = 0 "
+                "AND created_at >= ? "
+                "ORDER BY created_at DESC, id DESC LIMIT ?",
+                (since.astimezone(timezone.utc).isoformat(),
+                 pin_limit)).fetchall()
+        else:
+            rows = conn.execute(
+                "SELECT * FROM entries WHERE hidden = 0 AND is_sample = 0 "
+                "ORDER BY created_at DESC, id DESC LIMIT ?",
+                (pin_limit,)).fetchall()
     for r in rows:
         e = row_to_dict(r)
         try:
@@ -12066,6 +12080,49 @@ def _site_update_stream(pin_limit: int = 240) -> list:
             "emoji": CAT_EMOJI.get(cat, "🎃"),
             "thumb": e.get("thumb_card_url") or e.get("thumb_url") or "",
             "href": f"/d/{e['id']}"})
+    # DIY + DIY Costumes adds (Dan, Oct 28 fix): /diy and /diy-costumes
+    # are curated lists in this file, not entries rows, so the pin
+    # query above can never surface them — Dan's Oct 27 DIY wave was
+    # invisible on /updates under every filter. Merge them in on
+    # their 'added' dates; the "diy"/"diy_costumes" cats are named in
+    # no rail bucket, so both fall through to 🛠️ DIY & More exactly
+    # like christmas/parks pins do. Midday ET placement: inside their
+    # day, below the evening announcements, mixed with the day's pins.
+    for v in DIY_VIDEOS + DIY_VIDEOS_NICK + DIY_VIDEOS_BROOKLYN:
+        try:
+            d = datetime.strptime(v.get("added") or "",
+                                  "%Y-%m-%d").date()
+        except ValueError:
+            continue
+        items.append({
+            "kind": "pin", "day": d,
+            "when": datetime(d.year, d.month, d.day, 12, 0, tzinfo=et),
+            "cat": "diy", "state": "", "title": v["title"],
+            "town_label": f"by {v.get('creator', '')}",
+            "cat_label": "DIY", "noun": "DIY video", "emoji": "🛠️",
+            "thumb": "", "href": "/diy"})
+    for sec in COSTUME_SECTIONS:
+        for c in sec["ideas"]:
+            try:
+                d = datetime.strptime(c.get("added") or "",
+                                      "%Y-%m-%d").date()
+            except ValueError:
+                continue
+            # Same thumbnail the /diy-costumes card shows: the local
+            # cover frame for TikTok-facade/Instagram items, the
+            # YouTube hqdefault for YouTube items; Pinterest and
+            # plain-embed items show no still there, so none here.
+            thumb = (c.get("ttf_thumb") or c.get("ig_thumb") or
+                     (f"https://i.ytimg.com/vi/{c['yt']}/hqdefault.jpg"
+                      if c.get("yt") else ""))
+            items.append({
+                "kind": "pin", "day": d,
+                "when": datetime(d.year, d.month, d.day, 12, 0,
+                                 tzinfo=et),
+                "cat": "diy_costumes", "state": "", "title": c["name"],
+                "town_label": f"by {c.get('source', '')}",
+                "cat_label": "DIY Costumes", "noun": "costume idea",
+                "emoji": "✂️", "thumb": thumb, "href": "/diy-costumes"})
     items.sort(key=lambda it: it["when"], reverse=True)
     return items
 
@@ -12197,8 +12254,24 @@ def _site_update_groups_filtered(pin_limit: int = 150, cat: str = "",
     pins + the announcements), so the buttons and the state list
     always describe the window the page can actually show — no
     second query pass."""
-    items = _site_update_stream(pin_limit)
     today = _today_et()
+    if when in _UPDATES_WHEN_LABELS:
+        # Time buttons (Dan, Oct 28 fix): under the newest-pin_limit
+        # cap a flood day silently empties the older days — Oct 28's
+        # 200+ EDM pins pushed ALL of Oct 27 out of the 150 window,
+        # so Yesterday showed zero pins. A time view instead pulls
+        # every pin since the start of the current ET week (Monday),
+        # the earliest day any time button can ask about, so Today /
+        # Yesterday / This Week — and their button counts — all read
+        # real data. All-Time keeps the newest-pin_limit window.
+        from zoneinfo import ZoneInfo
+        _et = ZoneInfo("America/New_York")
+        _wk = today - timedelta(days=today.weekday())
+        items = _site_update_stream(
+            8000, since=datetime(_wk.year, _wk.month, _wk.day,
+                                 tzinfo=_et))
+    else:
+        items = _site_update_stream(pin_limit)
     cat_counts: dict = {}
     state_counts: dict = {}
     when_counts: dict = {}

@@ -17,8 +17,9 @@
   {# Filter bar (Dan, Oct 28, STAGED): category buttons + a state
      dropdown + time buttons, all plain links (?cat= / ?state= /
      ?when=) so a filtered view is shareable and works with no JS —
-     <details> opens the state list. Counts describe the newest-150
-     window this page shows. #}
+     <details> opens the state list. Counts describe the window this
+     page shows: the newest 150 pins for All Time, or every pin since
+     Monday ET when a time button is active. #}
   <div class="wn-filters">
     <div class="wn-frow">
       {% for b in cat_buttons %}
