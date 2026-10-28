@@ -131,6 +131,62 @@
 </table>
 <p style="color:#888;font-size:0.85em;margin-bottom:24px;">Every page a visitor can open, counted from the human page-view tracker: machine paths (/healthz, /api/*, sitemap) and known bot / health-check / crawler user agents are excluded. (The old Top pages table counted raw hits, which put the /healthz health check at #1 and let individual pins crowd out whole sections.) User agents are recorded since Oct 27, 2026, so earlier views are screened by path only. Parameterized families are combined into one row each &mdash; every pin&rsquo;s detail page under <strong>Listing pages</strong>, every town under <strong>Town pages</strong> &mdash; per-pin detail lives in Time on each page and Top pins by interactions above. Category browsing is recorded under its base page: the tracker stores paths without query strings, so the Tour Fuel shelves (Ice Cream, Hotels, &hellip; at /?cat=&hellip;) count toward <strong>Home</strong> and the state category boards toward <strong>Top 10 by State</strong>. A page added tomorrow appears here on its own &mdash; until it gets a friendly name it shows its raw path.</p>
 
+<h3>🧭 Traffic Tracker <span style="font-size:0.75em;color:#888;">(human views only — same screen as Views by page)</span></h3>
+
+<h4 style="margin-bottom:8px;">⏰ Busiest hours <span style="font-size:0.8em;color:#888;">(Eastern Time)</span></h4>
+{% for block in [tracker.hours_today, tracker.hours_week] %}
+<p style="margin:12px 0 4px;"><strong>{{ block.label }}</strong> — {{ "{:,}".format(block.total) }} views. <strong style="color:#f5c542;">Busiest: {{ block.peak_label }} ET</strong> ({{ "{:,}".format(block.peak_count) }} views)</p>
+<div style="display:flex;align-items:stretch;gap:2px;height:118px;margin-bottom:16px;">
+  {% for b in block.bars %}
+  <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;min-width:0;" title="{{ b.tip }}">
+    <div style="font-size:0.6em;color:#aaa;white-space:nowrap;">{% if b.count %}{{ b.count_label }}{% endif %}</div>
+    <div style="width:100%;height:{{ b.pct }}%;min-height:2px;border-radius:2px 2px 0 0;background:{% if b.peak %}#f5c542{% else %}#4f7ecf{% endif %};"></div>
+    <div style="font-size:0.58em;color:#888;padding-top:3px;">{{ b.short }}</div>
+  </div>
+  {% endfor %}
+</div>
+{% endfor %}
+<p style="color:#888;font-size:0.85em;margin-bottom:24px;">Hours are Eastern — when the audience actually lives and haunts. The gold bar is each window&rsquo;s peak hour. &ldquo;Today&rdquo; runs to right now, so its later hours fill in as the day goes.</p>
+
+<h4 style="margin-bottom:8px;">🔗 Where they came from <span style="font-size:0.8em;color:#888;">(last 7 days, with today broken out)</span></h4>
+<table style="width:100%;border-collapse:collapse;margin-bottom:8px;">
+  <tr><th style="text-align:left;padding:8px;">Source</th><th style="text-align:right;padding:8px;">Today</th><th style="text-align:right;padding:8px;">Last 7 days</th><th style="text-align:right;padding:8px;">Share</th></tr>
+  {% for row in tracker.sources %}
+  <tr><td style="padding:8px;">{{ row.bucket }}</td><td style="text-align:right;padding:8px;">{{ "{:,}".format(row.n_today) }}</td><td style="text-align:right;padding:8px;">{{ "{:,}".format(row.n) }}</td><td style="text-align:right;padding:8px;">{{ row.share }}%</td></tr>
+  {% endfor %}
+</table>
+{% if tracker.sources_hosts %}
+<p style="color:#888;font-size:0.85em;">Other external, by site: {% for host, n in tracker.sources_hosts %}{{ host }} ({{ "{:,}".format(n) }}){% if not loop.last %} · {% endif %}{% endfor %}</p>
+{% endif %}
+<p style="color:#888;font-size:0.85em;margin-bottom:24px;"><strong>Direct</strong> = no referrer sent: typed-in / bookmarked visits AND in-app browsers that strip referrals (TikTok&rsquo;s in-app browser mostly lands here, which is why TikTok reads low even when it&rsquo;s driving traffic). <strong>Internal</strong> = they were already on HauntMap and kept moving — a sign of people building a night, not bouncing.</p>
+
+<h4 style="margin-bottom:8px;">🌎 Where they&rsquo;re from <span style="font-size:0.8em;color:#888;">(top states{% if tracker.geo_since_label %} — location collecting since {{ tracker.geo_since_label }}{% endif %})</span></h4>
+{% if tracker.states %}
+<div style="display:flex;gap:24px;flex-wrap:wrap;margin-bottom:8px;">
+  <div style="flex:1;min-width:280px;">
+    <table style="width:100%;border-collapse:collapse;">
+      <tr><th style="text-align:left;padding:8px;">State</th><th style="text-align:right;padding:8px;">Views</th><th style="text-align:right;padding:8px;">Share</th></tr>
+      {% for row in tracker.states %}
+      <tr><td style="padding:8px;">{{ row.label }} <span style="color:#888;">({{ row.code }})</span></td><td style="text-align:right;padding:8px;">{{ "{:,}".format(row.views) }}</td><td style="text-align:right;padding:8px;">{{ row.share }}%</td></tr>
+      {% endfor %}
+    </table>
+    <p style="color:#888;font-size:0.85em;">Shares are of the {{ "{:,}".format(tracker.geo_total) }} U.S. views with a state recorded{% if tracker.geo_since_label %} since {{ tracker.geo_since_label }}{% endif %} — the full state-by-state table with visitor counts is in Visitors by geography below. Plus {{ "{:,}".format(tracker.geo_outside_us) }} views from outside the U.S. with a country recorded.</p>
+  </div>
+  {% if tracker.cities %}
+  <div style="flex:1;min-width:280px;">
+    <table style="width:100%;border-collapse:collapse;">
+      <tr><th style="text-align:left;padding:8px;">Top cities</th><th style="text-align:right;padding:8px;">Views</th></tr>
+      {% for row in tracker.cities %}
+      <tr><td style="padding:8px;">{{ row.label }}</td><td style="text-align:right;padding:8px;">{{ "{:,}".format(row.views) }}</td></tr>
+      {% endfor %}
+    </table>
+  </div>
+  {% endif %}
+</div>
+{% else %}
+<p style="color:#888;margin-bottom:24px;">No state data yet — location is recorded only on recent views, so states appear here as they come in.</p>
+{% endif %}
+
 <h3>Top referrers</h3>
 <table style="width:100%;border-collapse:collapse;margin-bottom:24px;">
   <tr><th style="text-align:left;padding:8px;">Referrer</th><th style="text-align:right;padding:8px;">Views</th></tr>

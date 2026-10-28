@@ -10005,6 +10005,204 @@ def _page_breakdown() -> list:
     return _ttl_cached("admin:page_breakdown", _page_breakdown_build)
 
 
+# ------------------------------------------ traffic tracker (Oct 28)
+# Dan's ask: WHEN are people here, and FROM WHERE — on the same stats
+# page. Three blocks, all HUMAN views only (the sponsor screen:
+# _MK_HUMAN machine paths + _machine_ua_sql machine agents, the same
+# definition Views by page and the U.S. states table use):
+#   ⏰ Busiest hours — views by hour of day in America/New_York.
+#      viewed_at is stored in UTC, so the query groups by UTC hour
+#      (indexed, ~200 rows over the reach-back) and each bucket is
+#      converted to ET in Python — zoneinfo gets DST right per bucket
+#      where a fixed SQL hour offset would not. "Today" and "last 7
+#      days" are ET calendar days, labelled as such.
+#   🔗 Where they came from — referrer classified into buckets.
+#      Empty referrer = Direct (typed / bookmark / in-app browsers
+#      that strip it, TikTok's included — its traffic mostly lands
+#      here, not under TikTok). Same-site referrers (gethauntmap.com
+#      + the hauntmap.onrender.com origin) = Internal: how people
+#      move around once here. Everything else external keeps its
+#      host in a sub-list so a new source is visible by name.
+#   🌎 Where they're from — top states/cities over the geo window.
+#      Region only exists since the location collection started
+#      (Oct 27, 2026); the window label is computed from the earliest
+#      geo row actually present, never hard-coded.
+# Aggregated SQL only (GROUP BY hour / referrer / region), TTL-cached
+# like the other admin aggregates — page_views grows ~30k rows/day.
+
+_REF_BUCKETS = ("Direct", "Internal", "Google", "TikTok", "Facebook",
+                "Instagram", "X / Twitter", "Other external")
+
+
+def _ref_bucket(referrer: str | None) -> tuple:
+    """(bucket, host) for one stored referrer. Host is only used for
+    the Other-external sub-list."""
+    if not referrer:
+        return "Direct", None
+    host = (urllib.parse.urlparse(referrer).netloc or "").lower()
+    host = host.split("@")[-1].split(":")[0]
+    if not host:
+        return "Other external", "(unreadable referrer)"
+    if host == "gethauntmap.com" or host.endswith(".gethauntmap.com") \
+            or host == "hauntmap.onrender.com" \
+            or host.endswith(".hauntmap.onrender.com"):
+        return "Internal", host
+    if "google." in host:
+        return "Google", host
+    if "tiktok" in host:
+        return "TikTok", host
+    if "facebook" in host or host == "fb.com" or host == "fb.me":
+        return "Facebook", host
+    if "instagram" in host:
+        return "Instagram", host
+    if host in ("x.com", "twitter.com") or host.endswith(".x.com") \
+            or host.endswith(".twitter.com"):
+        return "X / Twitter", host
+    return "Other external", host
+
+
+def _hour_range_label(h: int) -> str:
+    """'7–8 PM' for hour 19 — the callout line's peak-hour wording."""
+    def lab(x):
+        x %= 24
+        return f"{x % 12 or 12} {'AM' if x < 12 else 'PM'}"
+    a, b = lab(h), lab(h + 1)
+    if a.rsplit(" ", 1)[1] == b.rsplit(" ", 1)[1]:
+        return f"{a.rsplit(' ', 1)[0]}–{b}"
+    return f"{a}–{b}"
+
+
+def _traffic_tracker_build() -> dict:
+    from zoneinfo import ZoneInfo
+    et = ZoneInfo("America/New_York")
+    frag, frag_params = _machine_ua_sql()
+    human = f"{_MK_HUMAN} AND {frag}"
+    today_et = datetime.now(et).date()
+    week_start_et = today_et - timedelta(days=6)
+    out = {"hours_today": None, "hours_week": None, "sources": [],
+           "sources_hosts": [], "sources_total7": 0,
+           "states": [], "cities": [], "geo_since_label": None,
+           "geo_total": 0, "geo_outside_us": 0}
+    with get_conn(DB_PATH) as conn:
+        # --- ⏰ hours: UTC-hour buckets -> ET hour of day ---
+        today_hours = [0] * 24
+        week_hours = [0] * 24
+        for r in conn.execute(
+                "SELECT strftime('%Y-%m-%dT%H', viewed_at) AS uh, "
+                "COUNT(*) AS n FROM page_views "
+                f"WHERE {human} AND viewed_at >= datetime('now', '-9 days') "
+                "GROUP BY uh", frag_params):
+            try:
+                bucket = datetime.strptime(
+                    r["uh"], "%Y-%m-%dT%H").replace(tzinfo=timezone.utc)
+            except (TypeError, ValueError):
+                continue
+            local = bucket.astimezone(et)
+            if week_start_et <= local.date() <= today_et:
+                week_hours[local.hour] += r["n"]
+                if local.date() == today_et:
+                    today_hours[local.hour] += r["n"]
+
+        def _hours_block(counts, label):
+            peak = max(range(24), key=lambda h: counts[h])
+            top = max(counts) or 1
+            bars = [{
+                "short": f"{h % 12 or 12}{'a' if h < 12 else 'p'}",
+                "count": counts[h],
+                "count_label": (f"{counts[h] / 1000:.1f}k"
+                                if counts[h] >= 10000
+                                else f"{counts[h]:,}"),
+                "pct": round(counts[h] / top * 100, 1),
+                "peak": h == peak and counts[h] > 0,
+                "tip": f"{_hour_range_label(h)} ET — {counts[h]:,} views",
+            } for h in range(24)]
+            return {"label": label, "bars": bars, "total": sum(counts),
+                    "peak_label": _hour_range_label(peak),
+                    "peak_count": counts[peak]}
+
+        out["hours_today"] = _hours_block(
+            today_hours, f"Today — {today_et.strftime('%a %b %-d')} (ET)")
+        out["hours_week"] = _hours_block(
+            week_hours,
+            f"Last 7 days — {week_start_et.strftime('%b %-d')} – "
+            f"{today_et.strftime('%b %-d')} (ET)")
+
+        # --- 🔗 sources: grouped by raw referrer, classified here.
+        # "Today" is the ET calendar day (same as the hours block
+        # above), passed as a UTC ISO bound so the whole section
+        # agrees with itself.
+        today_start_utc = datetime.combine(
+            today_et, datetime.min.time(), tzinfo=et).astimezone(
+                timezone.utc).strftime("%Y-%m-%dT%H:%M:%S")
+        agg = {b: {"bucket": b, "n": 0, "n_today": 0}
+               for b in _REF_BUCKETS}
+        hosts: dict = {}
+        for r in conn.execute(
+                "SELECT referrer, COUNT(*) AS n, "
+                "SUM(CASE WHEN viewed_at >= ? "
+                "THEN 1 ELSE 0 END) AS n_today FROM page_views "
+                f"WHERE {human} AND viewed_at >= datetime('now', '-7 days') "
+                "GROUP BY referrer", (today_start_utc, *frag_params)):
+            bucket, host = _ref_bucket(r["referrer"])
+            agg[bucket]["n"] += r["n"]
+            agg[bucket]["n_today"] += r["n_today"] or 0
+            if bucket == "Other external" and host:
+                hosts[host] = hosts.get(host, 0) + r["n"]
+        total7 = sum(v["n"] for v in agg.values())
+        out["sources_total7"] = total7
+        out["sources"] = sorted(
+            (dict(v, share=round(v["n"] / total7 * 100, 1) if total7 else 0.0)
+             for v in agg.values()),
+            key=lambda v: -v["n"])
+        out["sources_hosts"] = sorted(
+            hosts.items(), key=lambda kv: -kv[1])[:8]
+
+        # --- 🌎 geo: states/cities over the geo window only ---
+        geo_rows = conn.execute(
+            "SELECT region, COUNT(*) AS n FROM page_views "
+            f"WHERE {human} AND country = 'US' "
+            "AND region IS NOT NULL AND region != '' "
+            "GROUP BY region ORDER BY n DESC LIMIT 10",
+            frag_params).fetchall()
+        us_geo = conn.execute(
+            "SELECT COUNT(*) FROM page_views "
+            f"WHERE {human} AND country = 'US' "
+            "AND region IS NOT NULL AND region != ''",
+            frag_params).fetchone()[0]
+        out["geo_total"] = us_geo
+        out["states"] = [{
+            "label": US_STATE_NAMES.get(r["region"], r["region"]),
+            "code": r["region"], "views": r["n"],
+            "share": round(r["n"] / us_geo * 100, 1) if us_geo else 0.0,
+        } for r in geo_rows]
+        out["geo_outside_us"] = conn.execute(
+            "SELECT COUNT(*) FROM page_views "
+            f"WHERE {human} AND country IS NOT NULL AND country != '' "
+            "AND country != 'US'", frag_params).fetchone()[0]
+        for r in conn.execute(
+                "SELECT city, region, COUNT(*) AS n FROM page_views "
+                f"WHERE {human} AND city IS NOT NULL AND city != '' "
+                "GROUP BY city, region ORDER BY n DESC LIMIT 5",
+                frag_params):
+            label = r["city"] + (f", {r['region']}" if r["region"] else "")
+            out["cities"].append({"label": label, "views": r["n"]})
+        first_geo = conn.execute(
+            "SELECT MIN(viewed_at) FROM page_views "
+            f"WHERE {human} AND region IS NOT NULL AND region != ''",
+            frag_params).fetchone()[0]
+        if first_geo:
+            try:
+                d = datetime.fromisoformat(first_geo).astimezone(et).date()
+                out["geo_since_label"] = d.strftime("%b %-d, %Y")
+            except ValueError:
+                out["geo_since_label"] = None
+    return out
+
+
+def _traffic_tracker() -> dict:
+    return _ttl_cached("admin:traffic_tracker", _traffic_tracker_build)
+
+
 # ------------------------------------------------- US states (Oct 27)
 # Dan's ask: which U.S. states are visiting — the whole map, not a
 # top-20. Built from page_views geography: country has flowed from
@@ -10306,6 +10504,7 @@ def admin_stats(request: Request):
          "top_referrers": top_referrers, "by_device": by_device,
          "duration": duration, "engagement": engagement,
          "geo": geo, "geo_since": _GEO_COLLECTING_SINCE,
+         "tracker": _traffic_tracker(),
          "us_states": _us_states_stats(),
          "ip_geo_since": _IP_GEO_COLLECTING_SINCE,
          "page_time": _page_time_stats()})
@@ -11854,6 +12053,12 @@ def _site_update_stream(pin_limit: int = 240) -> list:
         items.append({
             "kind": "pin", "day": when.date(), "when": when,
             "cat": cat,
+            # State the same way the state boards derive it
+            # (extract_state over the town field) — the /updates
+            # state filter buckets pins by this, never a second
+            # derivation. "" when the town carries no state
+            # (virtual rooms, unparseable towns).
+            "state": extract_state(e.get("town") or ""),
             "id": e["id"], "title": e["title"],
             "town_label": e.get("town_label", ""),
             "cat_label": CAT_LABELS.get(cat, cat),
@@ -11924,13 +12129,183 @@ def _whatsnew_rail_groups(per_group: int = 8) -> list:
     return groups
 
 
+# /updates filters (Dan, Oct 28, STAGED for his preview): "what's
+# new page search by state button and a button for events haunts
+# etc" + "a search button for this week today and yesterday" —
+# server-side via query params (?cat=events&state=TX&when=week),
+# so a filtered view is a plain link that works with no JS. Category
+# buckets are the rail's (_WHATSNEW_RAIL_GROUPS, announcements as
+# their own "updates" bucket) so this page and the homepage rail
+# bucket a pin the same way — one language across the site.
+# Announcements are global: they carry no state, so a state view is
+# pins-only, and the Site Updates view ignores the state param.
+_UPDATES_FILTER_CATS = (
+    ("haunts", "🎃", "Haunts"),
+    ("events", "🎪", "Events"),
+    ("live", "🔴", "Live"),
+    ("stops", "🍦", "Stops"),
+    ("more", "🛠️", "DIY & More"),
+    ("updates", "📣", "Site Updates"),
+)
+_WHATSNEW_CAT_GROUP = {c: key for key, _e, _l, cats in
+                       _WHATSNEW_RAIL_GROUPS for c in cats}
+
+# Time buttons (Dan, Oct 28): "a search button for this week today
+# and yesterday" — by the entry's ET posted day. This Week = the
+# current ET week TO DATE, Monday-start (date.weekday() convention:
+# Mon=0), so on a Wednesday it covers Mon–Wed.
+_UPDATES_FILTER_WHEN = (
+    ("today", "Today"),
+    ("yesterday", "Yesterday"),
+    ("week", "This Week"),
+)
+_UPDATES_WHEN_LABELS = dict(_UPDATES_FILTER_WHEN)
+
+
+def _updates_when_match(day, when: str, today) -> bool:
+    if when == "today":
+        return day == today
+    if when == "yesterday":
+        return day == today - timedelta(days=1)
+    if when == "week":
+        return today - timedelta(days=today.weekday()) <= day <= today
+    return True
+
+
+def _updates_item_group(it: dict) -> str:
+    if it["kind"] == "announce":
+        return "updates"
+    return _WHATSNEW_CAT_GROUP.get(it.get("cat") or "", "more")
+
+
+def _updates_qs(cat: str = "", state: str = "", when: str = "") -> str:
+    parts = []
+    if cat:
+        parts.append("cat=" + cat)
+    if state:
+        parts.append("state=" + state)
+    if when:
+        parts.append("when=" + when)
+    return "/updates" + ("?" + "&".join(parts) if parts else "")
+
+
+def _site_update_groups_filtered(pin_limit: int = 150, cat: str = "",
+                                 state: str = "", when: str = "") -> dict:
+    """The /updates view model: the stream day-grouped AFTER the
+    filters, plus the facet counts the filter bar renders. Counts
+    come from the same single stream scan (the newest pin_limit
+    pins + the announcements), so the buttons and the state list
+    always describe the window the page can actually show — no
+    second query pass."""
+    items = _site_update_stream(pin_limit)
+    today = _today_et()
+    cat_counts: dict = {}
+    state_counts: dict = {}
+    when_counts: dict = {}
+    for it in items:
+        g = _updates_item_group(it)
+        cat_counts[g] = cat_counts.get(g, 0) + 1
+        if it["kind"] == "pin" and it.get("state"):
+            state_counts[it["state"]] = \
+                state_counts.get(it["state"], 0) + 1
+        for wkey, _wl in _UPDATES_FILTER_WHEN:
+            if _updates_when_match(it["day"], wkey, today):
+                when_counts[wkey] = when_counts.get(wkey, 0) + 1
+    kept: list = []
+    for it in items:
+        if cat:
+            if _updates_item_group(it) != cat:
+                continue
+        if state:
+            # A state view is pins-only: announcements are global
+            # and carry no state to match.
+            if it["kind"] != "pin" or it.get("state") != state:
+                continue
+        if when and not _updates_when_match(it["day"], when, today):
+            continue
+        kept.append(it)
+    groups: list = []
+    for it in kept:
+        if groups and groups[-1]["day"] == it["day"]:
+            groups[-1]["entries"].append(it)
+        else:
+            groups.append({"day": it["day"],
+                           "label": _updates_day_label(it["day"], today),
+                           "entries": [it]})
+    state_options = [{"code": code,
+                      "name": US_STATE_NAMES.get(code, code),
+                      "count": n}
+                     for code, n in state_counts.items()]
+    state_options.sort(key=lambda s: (-s["count"], s["name"]))
+    return {"groups": groups, "total": len(kept),
+            "all_count": len(items), "cat_counts": cat_counts,
+            "when_counts": when_counts,
+            "state_options": state_options}
+
+
 @app.get("/updates", response_class=HTMLResponse)
-def updates_page(request: Request):
+def updates_page(request: Request, cat: str = "", state: str = "",
+                 when: str = ""):
     # Public — no member gate (Dan, Oct 27). The blog IS the pitch:
     # anyone can watch the site grow; joining HauntSocial is how you
     # get into the chat about it.
+    # Filters (Dan, Oct 28, STAGED): ?cat= validated against the
+    # known buckets, ?state= against a state-code shape, ?when=
+    # against the time buttons; all three combine. Site Updates is
+    # global, so it drops the state filter outright.
+    cat = (cat or "").strip().lower()
+    if cat not in {k for k, _e, _l in _UPDATES_FILTER_CATS}:
+        cat = ""
+    state = (state or "").strip().upper()
+    if not re.fullmatch(r"[A-Z]{2,3}", state or ""):
+        state = ""
+    if cat == "updates":
+        state = ""
+    when = (when or "").strip().lower()
+    if when not in _UPDATES_WHEN_LABELS:
+        when = ""
+    view = _site_update_groups_filtered(150, cat, state, when)
+    cat_buttons = [{"key": "", "emoji": "🆕", "label": "All",
+                    "count": view["all_count"], "active": not cat,
+                    "href": _updates_qs("", state, when)}]
+    for key, emoji, label in _UPDATES_FILTER_CATS:
+        cat_buttons.append(
+            {"key": key, "emoji": emoji, "label": label,
+             "count": view["cat_counts"].get(key, 0),
+             "active": cat == key,
+             "href": _updates_qs(key, "" if key == "updates" else state,
+                                 when)})
+    for opt in view["state_options"]:
+        opt["active"] = state == opt["code"]
+        opt["href"] = _updates_qs(cat, opt["code"], when)
+    when_buttons = [{"key": "", "label": "All Time",
+                     "count": view["all_count"], "active": not when,
+                     "href": _updates_qs(cat, state, "")}]
+    for wkey, wlabel in _UPDATES_FILTER_WHEN:
+        when_buttons.append(
+            {"key": wkey, "label": wlabel,
+             "count": view["when_counts"].get(wkey, 0),
+             "active": when == wkey,
+             "href": _updates_qs(cat, state, wkey)})
+    summary = []
+    if cat:
+        _k, cemoji, clabel = next(t for t in _UPDATES_FILTER_CATS
+                                  if t[0] == cat)
+        summary.append(f"{cemoji} {clabel}")
+    if state:
+        summary.append(US_STATE_NAMES.get(state, state))
+    if when:
+        summary.append(_UPDATES_WHEN_LABELS[when])
     return templates.TemplateResponse(request, "updates.html",
-        {"request": request, "groups": _site_update_groups(150)})
+        {"request": request, "groups": view["groups"],
+         "total": view["total"], "cat_buttons": cat_buttons,
+         "when_buttons": when_buttons,
+         "state_options": view["state_options"],
+         "all_states_href": _updates_qs(cat, "", when),
+         "fcat": cat, "fstate": state, "fwhen": when,
+         "fstate_name": US_STATE_NAMES.get(state, state),
+         "filtered": bool(cat or state or when),
+         "filter_summary": " · ".join(summary)})
 
 
 @app.get("/hauntsocial", response_class=HTMLResponse)

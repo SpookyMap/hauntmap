@@ -7094,3 +7094,48 @@ a.wn-card:hover { border-color: #57a8ff; box-shadow: 0 0 14px rgba(87, 168, 255,
 @media (max-width: 999px) {
   .wn-rail-badge { width: 64px; height: 64px; }
 }
+/* z212 UPDATES FILTERS (Dan, Oct 28, STAGED): the /updates filter
+   bar — category pills + a <details> state dropdown + time
+   buttons (All Time / Today / Yesterday / This Week), plain links. Pill language follows .town-search-inline / .sort-toggle:
+   var(--bg2) fill, #274860 border, 999px radius. The active pill
+   takes the What's New azure (#8FD8FF text, #57a8ff border + glow —
+   the same treatment as a .wn-card hover), counts ride as chips. */
+.wn-filters { margin: 0.9rem 0 0.2rem; }
+.wn-frow { display: flex; flex-wrap: wrap; gap: 0.45rem; align-items: center; }
+.wn-frow-time { margin-top: 0.45rem; }
+.wn-fbtn { display: inline-flex; align-items: center; gap: 0.35rem;
+  background: var(--bg2); color: var(--ink); text-decoration: none;
+  border: 1px solid #274860; border-radius: 999px;
+  padding: 0.42rem 0.85rem; font-size: 0.88rem; font-weight: 700;
+  white-space: nowrap; cursor: pointer; }
+summary.wn-fbtn { list-style: none; }
+summary.wn-fbtn::-webkit-details-marker { display: none; }
+a.wn-fbtn:hover, summary.wn-fbtn:hover { border-color: #57a8ff; }
+.wn-fbtn-on { color: #8FD8FF; border-color: #57a8ff;
+  box-shadow: 0 0 12px rgba(87, 168, 255, 0.35); }
+.wn-fcount { background: rgba(255, 255, 255, 0.07); color: var(--muted);
+  border-radius: 999px; padding: 0.05rem 0.45rem; font-size: 0.72rem;
+  font-weight: 800; }
+.wn-fbtn-on .wn-fcount { background: rgba(87, 168, 255, 0.16); color: #8FD8FF; }
+.wn-sdd { position: relative; }
+.wn-sdd-caret { color: #8FD8FF; font-size: 0.75rem; }
+.wn-slist { position: absolute; z-index: 30; top: calc(100% + 0.4rem); left: 0;
+  min-width: 230px; max-width: 86vw; max-height: 300px; overflow-y: auto;
+  background: #101c26; border: 1px solid #3d6a94; border-radius: 12px;
+  padding: 0.35rem; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.55);
+  scrollbar-width: thin; scrollbar-color: #57a8ff #101c26; }
+.wn-slist::-webkit-scrollbar { width: 8px; }
+.wn-slist::-webkit-scrollbar-thumb { background: #2c5f8f; border-radius: 4px; }
+.wn-slist::-webkit-scrollbar-track { background: #101c26; }
+.wn-slist a { display: flex; justify-content: space-between; align-items: center;
+  gap: 1rem; padding: 0.45rem 0.6rem; border-radius: 8px;
+  color: var(--ink); text-decoration: none; font-size: 0.9rem; font-weight: 600; }
+.wn-slist a:hover { background: rgba(87, 168, 255, 0.12); }
+.wn-slist a.wn-son { color: #8FD8FF; background: rgba(87, 168, 255, 0.14); }
+.wn-fsummary { color: var(--muted); font-size: 0.88rem; margin: 0.6rem 0 0; }
+.wn-fsummary a { color: #8FD8FF; font-weight: 700; text-decoration: none; }
+.wn-fsummary a:hover { color: #ffd9a8; }
+@media (max-width: 480px) {
+  .wn-fbtn { font-size: 0.82rem; padding: 0.38rem 0.7rem; }
+  .wn-slist { min-width: 200px; }
+}
