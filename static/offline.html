@@ -14,6 +14,7 @@
   h1 { font-size: 1.4rem; margin: 1rem 0 0.5rem; }
   p { color: #9fc6e8; line-height: 1.55; }
   a { color: #8fd8ff; font-weight: 700; }
+  .status { font-size: 0.85rem; color: #5f87a6; min-height: 1.3em; }
 </style>
 </head>
 <body>
@@ -21,7 +22,48 @@
     <img src="/static/img/icons/icon-192.png" alt="HauntMap ghost">
     <h1>👻 The connection vanished…</h1>
     <p>You're offline, so the haunts can't load right now. Check your
-       connection and <a href="/">try again</a> — they'll be waiting.</p>
+       connection and <a href="/" id="hm-retry">try again</a> — they'll be waiting.</p>
+    <p class="status" id="hm-conn-status" aria-live="polite"></p>
   </div>
+<script>
+/* Self-healing (Oct 28, 2026): the service worker serves this page in
+   place of the failed navigation, so this document's URL is still the
+   page the visitor asked for — location.reload() re-requests THAT
+   page once the network answers again. Probe /healthz every ~12s and
+   also reload the moment the browser reports it is back online, so
+   nobody stays parked here after a brief deploy window. */
+(function () {
+  "use strict";
+  var recovered = false;
+  var statusEl = document.getElementById("hm-conn-status");
+  function say(msg) { if (statusEl) { statusEl.textContent = msg; } }
+  function recover() {
+    if (recovered) { return; }
+    recovered = true;
+    say("You're back — bringing the haunts in…");
+    location.reload();
+  }
+  window.addEventListener("online", recover);
+  function probe() {
+    if (recovered) { return; }
+    say("Checking the connection…");
+    fetch("/healthz", { cache: "no-store" })
+      .then(function (resp) { if (resp && resp.ok) { recover(); } })
+      .catch(function () { /* still unreachable — keep waiting */ });
+  }
+  probe();
+  var timer = setInterval(function () {
+    if (recovered) { clearInterval(timer); return; }
+    probe();
+  }, 12000);
+  var link = document.getElementById("hm-retry");
+  if (link) {
+    link.addEventListener("click", function (e) {
+      e.preventDefault();
+      recover();
+    });
+  }
+})();
+</script>
 </body>
 </html>

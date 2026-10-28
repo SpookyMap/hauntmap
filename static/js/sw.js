@@ -9,7 +9,10 @@
       never serve a stale or wrong site. */
 "use strict";
 
-var STATIC_CACHE = "hauntmap-static-v1";
+/* v2 (Oct 28, 2026): bump so installs pick up the self-healing
+   offline page (auto-reload on reconnect) — the activate handler
+   deletes the v1 cache, and install re-caches the fresh page. */
+var STATIC_CACHE = "hauntmap-static-v2";
 var OFFLINE_URL = "/static/offline.html";
 
 self.addEventListener("install", function (event) {
