@@ -1199,6 +1199,51 @@ def init_db(db_path: Path) -> None:
             "https://www.tiktok.com/@kikegonzaleznj/video/7701136015599127822",
             "/static/img/tt_7701136015599127822.jpg",
         )
+        # Dan-sent video appends (Oct 28): @lilroamingexplorers'
+        # "7 North Jersey Halloween Houses" roundup (video
+        # 7701720133693099295, posted Oct 28, 2026) names seven free
+        # displays; five of them already have their one pin, so the
+        # video joins those pins (standing one-pin-per-place rule)
+        # instead of creating duplicates:
+        #   340 — 47 Glenmere Terrace, Mahwah (the earlier of the
+        #         340/624 duplicate pair; twin left for Dan's cleanup)
+        #   691 — 499 Island Way, Franklin Lakes (earlier of 691/719)
+        #   322 — 27 Brooklake Rd, Florham Park (earlier of 322/588)
+        #   3213 — Hallows Gate Cemetery, 28 Esplanade Drive,
+        #         Hillsdale (the caption's street-only "Esplanade
+        #         Drive, Hillsdale" entry — the street's listed
+        #         display; the number is confirmed by the pin itself)
+        #   24 — Morse Avenue Manor, 41 Morse Ave, Bloomfield (the
+        #         caption's "Morse Ave Manor"; number confirmed by
+        #         the pin; appends behind the existing
+        #         @joanowholidaydisplays primary)
+        # The two roundup houses with no pin (162 Lake Ave, Clifton
+        # and 92 Monroe Street, Cedar Grove) were posted fresh via
+        # /upload as pins 6621/6622 with the video as primary.
+        # Pins 340/691/322/3213 carried no video, so add_entry_video
+        # fills each empty primary mirror (fill-if-empty) and lists
+        # the video at position 0; it dedupes by video id, so
+        # repeat boots are no-ops.
+        add_entry_video(
+            conn, 340,
+            "https://www.tiktok.com/@lilroamingexplorers/video/7701720133693099295",
+        )
+        add_entry_video(
+            conn, 691,
+            "https://www.tiktok.com/@lilroamingexplorers/video/7701720133693099295",
+        )
+        add_entry_video(
+            conn, 322,
+            "https://www.tiktok.com/@lilroamingexplorers/video/7701720133693099295",
+        )
+        add_entry_video(
+            conn, 3213,
+            "https://www.tiktok.com/@lilroamingexplorers/video/7701720133693099295",
+        )
+        add_entry_video(
+            conn, 24,
+            "https://www.tiktok.com/@lilroamingexplorers/video/7701720133693099295",
+        )
         if "is_handpicked" not in cols:
             # Hand-picked feed boost (Dan, Oct 23): pins Dan personally
             # sent/curated lead every feed. Ranking data is never
