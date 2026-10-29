@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+{% block title %}Haunted Makeup &middot; {{ site_name }}{% endblock %}
+{% block head %}<meta name="description" content="Haunted Makeup — Halloween makeup looks, illusions and tutorials for the girlies: candy skulls, clown illusions, SFX smiles and the trends worth saving, ready to play right here.">{% endblock %}
+{% block content %}
+<h1>&#x1F484; Haunted Makeup</h1>
+<p class="lede">For the girlies &#x1F485;&#x1F383; — Halloween makeup looks, illusions and inspo, from candy skulls to full transformations. Tap any cover to watch right here, save your favorites, and walk into Halloween night already haunted.</p>
+
+<nav class="movies-subnav" aria-label="Haunted Makeup shelves">
+  <a href="#featured">&#x2B50; Featured Look</a>
+  <a href="#looks">&#x1F4FC; The Looks</a>
+</nav>
+
+<h2 class="music-h2" id="featured">&#x2B50; Featured Look</h2>
+<div class="yt-feature">
+  {% if featured.platform == 'facebook' %}
+  <button type="button" class="yt-facade yt-facade--fb" data-fb="{{ featured.url }}" aria-label="Play {{ featured.title }}">
+    <img src="{{ featured.thumb }}" alt="" loading="lazy">
+    <span class="yt-play" aria-hidden="true">&#9654;</span>
+  </button>
+  {% elif featured.platform == 'tiktok' %}
+  <button type="button" class="yt-facade yt-facade--tt" data-ttv="{{ featured.id }}" aria-label="Play {{ featured.title }}">
+    <img src="{{ featured.thumb }}" alt="" loading="lazy">
+    <span class="yt-play" aria-hidden="true">&#9654;</span>
+  </button>
+  {% else %}
+  <button type="button" class="yt-facade" data-yt="{{ featured.id }}" aria-label="Play {{ featured.title }}">
+    <img src="https://i.ytimg.com/vi/{{ featured.id }}/hqdefault.jpg" alt="" loading="lazy">
+    <span class="yt-play" aria-hidden="true">&#9654;</span>
+  </button>
+  {% endif %}
+  <p class="yt-cap">{{ featured.title }} &middot; {{ featured.channel }}</p>
+  <p class="movie-blurb">{{ featured.blurb }}</p>
+</div>
+
+<h2 class="music-h2" id="looks">&#x1F4FC; The Looks</h2>
+<p>The shelf where the season's best Halloween makeup collects — illusions, rankings and throwback-vs-now inspo.</p>
+{% if grid %}
+<div class="yt-grid">
+  {% for v in grid %}
+  <article class="yt-item movie-card">
+    {% if v.platform == 'facebook' %}
+    <button type="button" class="yt-facade yt-facade--fb" data-fb="{{ v.url }}" aria-label="Play {{ v.title }}">
+      <img src="{{ v.thumb }}" alt="" loading="lazy">
+      <span class="yt-play" aria-hidden="true">&#9654;</span>
+    </button>
+    {% elif v.platform == 'tiktok' %}
+    <button type="button" class="yt-facade yt-facade--tt" data-ttv="{{ v.id }}" aria-label="Play {{ v.title }}">
+      <img src="{{ v.thumb }}" alt="" loading="lazy">
+      <span class="yt-play" aria-hidden="true">&#9654;</span>
+    </button>
+    {% else %}
+    <button type="button" class="yt-facade{% if v.short %} yt-facade--short{% endif %}" data-yt="{{ v.id }}" aria-label="Play {{ v.title }}">
+      <img src="https://i.ytimg.com/vi/{{ v.id }}/hqdefault.jpg" alt="" loading="lazy">
+      <span class="yt-play" aria-hidden="true">&#9654;</span>
+    </button>
+    {% endif %}
+    <h3 class="movie-title">{{ v.title }}</h3>
+    <p class="movie-blurb">{{ v.blurb }}</p>
+    <p class="yt-cap">{{ v.kind }} &middot; {{ v.channel }}</p>
+  </article>
+  {% endfor %}
+</div>
+{% endif %}
+<div class="pop-more">
+  <p><strong>&#x1F484; New looks on the way.</strong><br>
+  Haunted Makeup just opened — it grows one hand-picked look at a time, all season long. Check back as the shelf fills up.</p>
+</div>
+
+<p class="music-events-cta">Complete the look: <a href="/diy-costumes">DIY Costumes &rarr;</a> &middot; <a href="/pop-haunt-culture">Pop Haunt Culture &rarr;</a></p>
+
+<script>
+// Click-to-play facades (same pattern as /pop-haunt-culture, /music and
+// /movies): the real player only loads when a visitor taps a cover — no
+// autoplay, no third-party requests before the tap. YouTube entries swap
+// in the YouTube iframe; Facebook entries (data-fb) swap in Facebook's
+// official embedded player; TikTok entries (data-ttv) swap in TikTok's
+// official embed/v2 player — never re-hosted.
+document.addEventListener('click', function (ev) {
+  var b = ev.target.closest && ev.target.closest('.yt-facade');
+  if (!b || b.dataset.loaded) return;
+  b.dataset.loaded = '1';
+  var f = document.createElement('iframe');
+  var fb = b.getAttribute('data-fb');
+  var tt = b.getAttribute('data-ttv');
+  if (tt) {
+    f.className = 'tt-frame';
+    f.src = 'https://www.tiktok.com/embed/v2/' + tt;
+    f.setAttribute('allow', 'autoplay; encrypted-media; fullscreen; picture-in-picture');
+    f.setAttribute('allowfullscreen', '');
+    f.setAttribute('scrolling', 'no');
+    f.setAttribute('title', b.getAttribute('aria-label') || 'TikTok video');
+  } else if (fb) {
+    f.className = 'fb-frame';
+    f.src = 'https://www.facebook.com/plugins/video.php?href=' +
+      encodeURIComponent(fb) + '&show_text=false&autoplay=true';
+    f.setAttribute('allow', 'autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture; web-share');
+    f.setAttribute('allowfullscreen', '');
+    f.setAttribute('scrolling', 'no');
+    f.setAttribute('title', b.getAttribute('aria-label') || 'Facebook video');
+  } else {
+    f.className = 'yt-frame';
+    f.src = 'https://www.youtube-nocookie.com/embed/' + b.getAttribute('data-yt') + '?autoplay=1&rel=0';
+    f.setAttribute('allow', 'autoplay; encrypted-media; fullscreen; picture-in-picture');
+    f.setAttribute('allowfullscreen', '');
+    f.setAttribute('title', b.getAttribute('aria-label') || 'YouTube video');
+  }
+  b.replaceWith(f);
+});
+</script>
+{% endblock %}

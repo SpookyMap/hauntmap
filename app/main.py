@@ -9147,42 +9147,18 @@ POP_CULTURE_GRID: list[dict] = [
      "kind": "Video",
      "blurb": "The Halloween episode from Friends Keep Secrets — "
               "the video that opened Pop Haunt Culture."},
-    {"id": "gssmks0iCAQ",
-     "title": "Crazy Halloween Makeup Illusion",
-     "channel": "Leah Comptonn",
-     "kind": "YouTube Short", "short": True,
-     "blurb": "A clown makeup illusion in under a minute — the face "
-              "melts into a grin that isn't hers."},
-    {"id": "0xl5AKjy99c",
-     "title": "Ranking the Most Unexpected Halloween Makeup, Pt. 1",
-     "channel": "Ranked Looks",
-     "kind": "YouTube Short", "short": True,
-     "blurb": "Ranked Looks counts down the Halloween makeup looks "
-              "nobody saw coming."},
     {"id": "yT_3qDBL8FE",
      "title": "I Ranked New Halloween Costume Trend of 2026 (Part 8)",
      "channel": "Thalynea",
      "kind": "YouTube Short", "short": True,
      "blurb": "Thalynea ranks the new Halloween costume trends of "
               "2026 — part 8 of the series."},
-    {"id": "_51_XhE32C4",
-     "title": "Ranking the Best Halloween Makeup Trend",
-     "channel": "Mind Forge",
-     "kind": "YouTube Short", "short": True,
-     "blurb": "Mind Forge ranks the best Halloween makeup trends, "
-              "from a scary smile to the Venom couple."},
     {"id": "2gYHYNUTqlk",
      "title": "Best Halloween Costume Trend of 2026! Got Ranked (Part 9)",
      "channel": "Thalynea",
      "kind": "YouTube Short", "short": True,
      "blurb": "Thalynea's costume-trend rankings roll on — part 9 "
               "of the series."},
-    {"id": "hSsUwFuDhPY",
-     "title": "2010 vs 2026 Halloween Makeup — Save This for Inspo",
-     "channel": "Ella Nysss",
-     "kind": "YouTube Short", "short": True,
-     "blurb": "Ella Nysss puts 2010 Halloween makeup side by side "
-              "with 2026's take on the same look."},
     {"id": "Hkg98AnpeaI",
      "title": "Top 5 Halloween Costumes You'll See Everywhere in 2026",
      "channel": "Trey Eversman",
@@ -9198,6 +9174,66 @@ def pop_culture_page(request: Request):
         request, "pop_culture.html",
         {"site_name": SITE_NAME, "featured": POP_CULTURE_FEATURED,
          "grid": POP_CULTURE_GRID},
+    )
+
+
+# /makeup (Dan, Oct 29): Haunted Makeup — the makeup videos moved OUT of
+# Pop Haunt Culture into their own room, targeted for girls specifically.
+# The grid's four entries lived on /pop-haunt-culture until today (same
+# dicts, moved verbatim); the featured pick is new: @chloeannabellle's
+# candy skull / Catrina TikTok (7702133748476759318, sent by Dan as a
+# tiktok.com/t short link; her bio: "Makeup and lip combos for the
+# girlies" — the page's audience in her own words). The still is the
+# video's own frame (the look nearly finished, brush mid-line), stored
+# locally; the video itself is never re-hosted — tap swaps in TikTok's
+# official embed/v2 player, same construction as Pop Haunt Culture.
+MAKEUP_FEATURED = {
+    "id": "7702133748476759318",
+    "platform": "tiktok",
+    "url": "https://www.tiktok.com/@chloeannabellle/video/7702133748476759318",
+    "thumb": "/static/img/chloeannabellle_candy_skull.jpg",
+    "title": "Easy Candy Skull / Catrina Makeup",
+    "channel": "chloeannabellle",
+    "kind": "TikTok", "short": True,
+    "blurb": "Chloe paints an easy candy skull (Catrina) look — "
+             "red-and-black dot work, a bold red lip, and the stitched "
+             "smile drawn on in the final seconds. Made for the "
+             "girlies, perfect for Halloween night.",
+}
+MAKEUP_GRID: list[dict] = [
+    {"id": "gssmks0iCAQ",
+     "title": "Crazy Halloween Makeup Illusion",
+     "channel": "Leah Comptonn",
+     "kind": "YouTube Short", "short": True,
+     "blurb": "A clown makeup illusion in under a minute — the face "
+              "melts into a grin that isn't hers."},
+    {"id": "0xl5AKjy99c",
+     "title": "Ranking the Most Unexpected Halloween Makeup, Pt. 1",
+     "channel": "Ranked Looks",
+     "kind": "YouTube Short", "short": True,
+     "blurb": "Ranked Looks counts down the Halloween makeup looks "
+              "nobody saw coming."},
+    {"id": "_51_XhE32C4",
+     "title": "Ranking the Best Halloween Makeup Trend",
+     "channel": "Mind Forge",
+     "kind": "YouTube Short", "short": True,
+     "blurb": "Mind Forge ranks the best Halloween makeup trends, "
+              "from a scary smile to the Venom couple."},
+    {"id": "hSsUwFuDhPY",
+     "title": "2010 vs 2026 Halloween Makeup — Save This for Inspo",
+     "channel": "Ella Nysss",
+     "kind": "YouTube Short", "short": True,
+     "blurb": "Ella Nysss puts 2010 Halloween makeup side by side "
+              "with 2026's take on the same look."},
+]
+
+
+@app.get("/makeup", response_class=HTMLResponse)
+def makeup_page(request: Request):
+    return templates.TemplateResponse(
+        request, "makeup.html",
+        {"site_name": SITE_NAME, "featured": MAKEUP_FEATURED,
+         "grid": MAKEUP_GRID},
     )
 
 
@@ -9984,6 +10020,7 @@ _PAGE_TIME_LABELS = {
     "/fan-art": "Fan Art",
     "/movies": "Movies", "/music": "Music", "/markets": "Markets",
     "/pop-haunt-culture": "Pop Haunt Culture",
+    "/makeup": "Haunted Makeup",
     "/passport": "Haunt Passport", "/daily": "Daily Fright",
     "/towns": "All Towns", "/haunt-or-not": "Haunt or Not",
     "/costume-contest": "Costume Contest", "/bracket": "Haunt Bracket",

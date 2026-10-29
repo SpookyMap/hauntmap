@@ -6050,6 +6050,10 @@ main.wrap:has(> .vt-tv-strip-bottom) { padding-bottom: 0; }
 .vt-tv-strip a.pop-btn::before, .vt-tv-strip a.pop-btn::after {
   background: #b18cff; box-shadow: 0 0 6px 2px rgba(177, 140, 255, 0.50);
 }
+.vt-tv-strip .makeup-btn { background: #2e0a1e; border: 2px solid #ff8fc7; color: #ffe6f4; }
+.vt-tv-strip a.makeup-btn::before, .vt-tv-strip a.makeup-btn::after {
+  background: #ff8fc7; box-shadow: 0 0 6px 2px rgba(255, 143, 199, 0.50);
+}
 
 /* ============ z182: PROFILE PREVIEW BESIDE THE JOIN BLOCK (Dan, Oct 27) ============
    A real screenshot of the host @frank's profile page sits NEXT TO the
