@@ -4063,6 +4063,10 @@ COSTUME_SECTIONS = [
         "title": "&#x2B50; Just Added",
         "sub": "The newest costumes on the page — fresh from the feed, straight to the top.",
         "ideas": [
+            {"added": "2026-10-29", "name": "Ripped-Smile SFX Makeup — the Painted-Teeth Grin", "who": "Adults & teens", "difficulty": "Medium", "time": "About 30–60 minutes",
+             "materials": "Liquid latex or scar wax for the torn skin edges, black and white face paint for the mouth and teeth, fake blood for the finish",
+             "blurb": "Molchanova paints the grin from ear to ear: torn-skin edges built across both cheeks, the mouth blacked out, then two rows of teeth painted in across her cheeks so the smile keeps going long after it should stop — fake blood worked along the cuts to finish. 11.8 million plays and counting. Tap the video and watch the grin get painted on.",
+             "source": "@makeup.molchanova", "url": "https://www.tiktok.com/@makeup.molchanova/video/7696172362558901537", "tt": "7696172362558901537"},
             {"added": "2026-10-27", "name": "DIY Muppet-Style Character Head — Foam Clay Over a Lifecast", "who": "Adults & teens", "difficulty": "Hard", "time": "A weekend or more",
              "materials": "A lifecast of your own face (plastic wrap and tape), a foil armature, foam clay by the tub, fleece for the skin, mesh for the see-through eyes, paint",
              "blurb": "This is puppet-building the Henson way, done in a bathroom: she starts with a lifecast of her own face — plastic wrap and tape — then builds a foil armature and sculpts the character's big-mouthed head over it in foam clay (a commenter jokes about how much foam clay she goes through, and her answer is basically: yes). Fleece skin goes on, the mesh eyes get painted into wide blue cartoon eyes you can see straight through, and she finishes with a tall sculpted foam headpiece, foam glasses and a chin tuft, all test-worn as she goes. Her caption says it all: 'officially my favourite thing I've made' — 1.1 million plays later, the internet agrees. Tap the video and watch the head come to life.",
