@@ -3945,13 +3945,6 @@ def map_view(request: Request, cat: str = "halloween"):
 
 
 DIY_VIDEOS = [
-    # Dan-sent (Oct 29): @wyldwoodsdiy's crystal ball — she is
-    # authorized in full for /diy, and this (posted Oct 28, 2026)
-    # is her newest build. Leads the list newest-first. The
-    # "thumb" is the video's own frame — the finished ball glowing
-    # in the skeleton hands — stored locally; TikTok cards render
-    # via the embed/v2 iframe like every other entry here.
-    {"added": "2026-10-29", "title": "DIY Crystal Ball — Skeleton Hands Fortune Teller", "creator": "@wyldwoodsdiy", "url": "https://www.tiktok.com/@wyldwoodsdiy/video/7701486355385306382", "video_id": "7701486355385306382", "thumb": "/static/img/tt_7701486355385306382.jpg", "blurb": "A little witchy magic, Dollar Tree style. She cradles a glowing crystal ball in skeleton hands with long, creepy fingernails — the colorful lights dance inside the ball like there's real magic happening in there. Spooky, elegant and a little extra: the fortune-teller centerpiece your Halloween table was missing."},
     # First Facebook entry on /diy (Dan, 2026-10-28): Dude Dad's
     # giant-skull mailbox build (Facebook Reel, public, posted
     # Oct 27, 2026; 266 comments). "platform": "facebook" marks it —
@@ -3973,13 +3966,45 @@ DIY_VIDEOS = [
     {"added": "2026-10-27", "title": "One Kid, Three Trick-or-Treaters — Mannequin Illusion Costume DIY", "creator": "@justinflom", "url": "https://www.tiktok.com/@justinflom/video/7693946321501179166", "video_id": "7693946321501179166", "blurb": "Justin Flom builds his daughter a wearable rig carrying two mannequin 'friends' — Ghostface on one side, a sheet ghost on the other — so one kid in a blue wig and yellow raincoat shows up looking like three trick-or-treaters, each holding its own pumpkin bucket. When she turns around and shows the costume, the illusion lands."},
     {"added": "2026-10-27", "title": "Fun House Sign DIY — CarnEVIL Carnival Tutorial", "creator": "@bananabread_94", "url": "https://www.tiktok.com/@bananabread_94/video/7701188355186330911", "video_id": "7701188355186330911", "blurb": "A step-by-step build of a carnival Fun House sign — she says the letters were the hardest part of the whole project, but they definitely paid off. Prime entrance signage for a carnEVIL-themed setup."},
     {"added": "2026-10-27", "title": "Michael Myers Cleaver Serving Board DIY", "creator": "@bowerbirdworkshop", "url": "https://www.tiktok.com/@bowerbirdworkshop/video/7701472320233164063", "video_id": "7701472320233164063", "blurb": "Followers asked for it, so they built it — a handmade serving board shaped like a butcher's cleaver, with Michael Myers' mask set into the black resin river down the middle, blood drip and all. A little horror for the serving table."},
-    {"added": "2026-10-26", "title": "Monster-in-a-Box Optical Illusion Costume DIY", "creator": "@wyldwoodsdiy", "url": "https://www.tiktok.com/@wyldwoodsdiy/video/7700739541933493517", "video_id": "7700739541933493517", "blurb": "It looks like she's holding a terrifying monster that's literally bursting out of a box — but it's all an optical illusion, built from scratch. She pieces together the structure and materials, then walks through how every detail sells the trick."},
     {"added": "2026-10-26", "title": "5-Foot Chucky Doll Box DIY", "creator": "@darkhousedesigns", "url": "https://www.tiktok.com/@darkhousedesigns/video/7695179364945644831", "video_id": "7695179364945644831", "blurb": "Build a life-size Good Guys toy box for a Home Depot Chucky doll — 5 x 3 x 2 feet, framed with 2x2s and half-inch foam, finished with printed banners for the full Child's Play look."},
     {"added": "2026-10-22", "title": "DIY Circus Tent — Halloween Party Build", "creator": "Taylor Booth (@theballoonchickaz)", "url": "https://www.tiktok.com/@theballoonchickaz/video/7698864214865087775", "video_id": "7698864214865087775", "blurb": "A full-size circus tent, built from scratch for a Halloween party — Taylor's whole process in 85 seconds. 229K views and counting, and you'll see why."},
     {"added": "2026-10-21", "title": "Fog Chiller DIY — Maiden Voyage", "creator": "@theblackirishouse", "url": "https://www.tiktok.com/@theblackirishouse/video/7693254709972372767", "video_id": "7693254709972372767", "blurb": "Chill your fog machine's output and the fog hugs the ground like a graveyard at dawn. This build's first run shows exactly how it's done."},
     {"added": "2026-10-26", "title": "Fog Chiller v2.0 — The Upgrades", "creator": "@theblackirishouse", "url": "https://www.tiktok.com/@theblackirishouse/video/7694109884777893150", "video_id": "7694109884777893150", "blurb": "Version two of the chiller: a legit spider web and frozen water bottles join the build for thicker, lower fog."},
     {"added": "2026-10-26", "title": "Low-Lying Fog Setup — Full Rundown", "creator": "@theblackirishouse", "url": "https://www.tiktok.com/@theblackirishouse/video/7696612187141360926", "video_id": "7696612187141360926", "blurb": "Everyone asked, so here's the quick rundown of the whole low-lying fog setup — how the chiller is plumbed and why it works."},
     {"added": "2026-10-26", "title": "Fog Chiller at Full Send", "creator": "@theblackirishouse", "url": "https://www.tiktok.com/@theblackirishouse/video/7699253873872997662", "video_id": "7699253873872997662", "blurb": "Less than a minute of ideal conditions — and the chiller was RIPPIN'. The maiden-voyage build, proven in the wild."},
+]
+
+DIY_VIDEOS_NICK = [
+    {"added": "2026-10-26", "title": "Who's Hungry!? — One-Hour DIY", "creator": "@nicksnightmarefac", "url": "https://www.tiktok.com/@nicksnightmarefac/video/7699008843090595085", "video_id": "7699008843090595085", "blurb": "A fun, easy DIY that took less than an hour to build — fresh off the Nightmare Factory workbench."},
+    {"added": "2026-10-20", "title": "Gravestone Crawler DIY Tutorial", "creator": "@nicksnightmarefac", "url": "https://www.tiktok.com/@nicksnightmarefac/video/7684419946595552526", "video_id": "7684419946595552526", "blurb": "Their first full tutorial — a fun, easy Gravestone Crawler you can build along with, step by step."},
+    {"added": "2026-10-20", "title": "Meet the Gravestone Crawler", "creator": "@nicksnightmarefac", "url": "https://www.tiktok.com/@nicksnightmarefac/video/7684153715183439118", "video_id": "7684153715183439118", "blurb": "The Gravestone Creeper got a friend — meet the Crawler, the prop reveal that kicked off the tutorials."},
+    {"added": "2026-10-20", "title": "Gravestone Creeper DIY Tutorial", "creator": "@nicksnightmarefac", "url": "https://www.tiktok.com/@nicksnightmarefac/video/7685645350278860046", "video_id": "7685645350278860046", "blurb": "Tutorial number two: create your very own Gravestone Creeper."},
+    {"added": "2026-10-20", "title": "DIY Gravestone Creeper — Home Depot Upgrade", "creator": "@nicksnightmarefac", "url": "https://www.tiktok.com/@nicksnightmarefac/video/7680823981682789646", "video_id": "7680823981682789646", "blurb": "A quick and easy prop upgrade — a DIY Gravestone Creeper built from Home Depot's 2026 Halloween decor."},
+    {"added": "2026-10-20", "title": "Tree Thrashing Maniac DIY Tutorial", "creator": "@nicksnightmarefac", "url": "https://www.tiktok.com/@nicksnightmarefac/video/7696416899118140686", "video_id": "7696416899118140686", "blurb": "You asked for it — the Tree Thrashing Maniac build, straight from the Nightmare Factory."},
+    {"added": "2026-10-20", "title": "Budget-Friendly DIY Build", "creator": "@nicksnightmarefac", "url": "https://www.tiktok.com/@nicksnightmarefac/video/7688189975849946381", "video_id": "7688189975849946381", "blurb": "A fun, budget-friendly build from just a few hardware-store and dollar-store items — an easy home-haunt upgrade."},
+    {"added": "2026-10-20", "title": "Melting-Flesh Skeleton Wrap", "creator": "@nicksnightmarefac", "url": "https://www.tiktok.com/@nicksnightmarefac/video/7685274761705852173", "video_id": "7685274761705852173", "blurb": "Stretch film plus a heat gun equals melting flesh — a genius glow-up for that old skeleton in the garage."},
+    {"added": "2026-10-20", "title": "Haunted Circus Room Transformation", "creator": "@nicksnightmarefac", "url": "https://www.tiktok.com/@nicksnightmarefac/video/7696984421970365709", "video_id": "7696984421970365709", "blurb": "One room at a time toward a haunted circus Halloween party — a cheap, easy DIY transformation."},
+    {"added": "2026-10-20", "title": "Make a Store-Bought Skeleton Your Own", "creator": "@nicksnightmarefac", "url": "https://www.tiktok.com/@nicksnightmarefac/video/7682201723997277454", "video_id": "7682201723997277454", "blurb": "Endless ways to bring a basic store-bought skeleton to life and make it unmistakably yours."},
+]
+
+
+DIY_VIDEOS_BROOKLYN = [
+    {"added": "2026-10-26", "title": "Spinning Jack-o'-Lantern", "creator": "@heybrooklynb", "url": "https://www.tiktok.com/@heybrooklynb/video/7696976404730137887", "video_id": "7696976404730137887", "blurb": "She made her jack-o'-lantern SPIN — the carved-pumpkin hack your porch needs this year."},
+    {"added": "2026-10-26", "title": "Skeleton Tombstone Pop-Up Craft", "creator": "@heybrooklynb", "url": "https://www.tiktok.com/@heybrooklynb/video/7692588485563239711", "video_id": "7692588485563239711", "blurb": "A DIY skeleton craft that pops out of its tombstone — wait until you see it lit up at night."},
+    {"added": "2026-10-26", "title": "Glow-in-the-Dark Sorting Hat", "creator": "@heybrooklynb", "url": "https://www.tiktok.com/@heybrooklynb/video/7694068054950546719", "video_id": "7694068054950546719", "blurb": "A handmade Sorting Hat that glows in the dark — part prop, part costume, all magic."},
+]
+
+
+# Featured creator (Dan, Oct 29): @wyldwoodsdiy gets the same
+# credited-section treatment as Nick's Nightmare Factory above —
+# her builds moved out of the mixed DIY_VIDEOS list into her own
+# list so /diy groups them under her credited heading, profile
+# linked. She is authorized in full for /diy. Her crystal ball
+# (added 2026-10-29, posted Oct 28) leads her list newest-first;
+# its "thumb" is the video's own frame, stored locally.
+DIY_VIDEOS_WYLD = [
+    {"added": "2026-10-29", "title": "DIY Crystal Ball — Skeleton Hands Fortune Teller", "creator": "@wyldwoodsdiy", "url": "https://www.tiktok.com/@wyldwoodsdiy/video/7701486355385306382", "video_id": "7701486355385306382", "thumb": "/static/img/tt_7701486355385306382.jpg", "blurb": "A little witchy magic, Dollar Tree style. She cradles a glowing crystal ball in skeleton hands with long, creepy fingernails — the colorful lights dance inside the ball like there's real magic happening in there. Spooky, elegant and a little extra: the fortune-teller centerpiece your Halloween table was missing."},
+    {"added": "2026-10-26", "title": "Monster-in-a-Box Optical Illusion Costume DIY", "creator": "@wyldwoodsdiy", "url": "https://www.tiktok.com/@wyldwoodsdiy/video/7700739541933493517", "video_id": "7700739541933493517", "blurb": "It looks like she's holding a terrifying monster that's literally bursting out of a box — but it's all an optical illusion, built from scratch. She pieces together the structure and materials, then walks through how every detail sells the trick."},
     {"added": "2026-10-26", "title": "The Junk-Drawer Glow Trick", "creator": "@wyldwoodsdiy", "url": "https://www.tiktok.com/@wyldwoodsdiy/video/7700009652347587854", "video_id": "7700009652347587854", "blurb": "One simple trick hiding in your junk drawer turns ordinary specimen jars into glowing, radioactive-looking decor. You already own everything you need."},
     {"added": "2026-10-26", "title": "Radioactive Specimen Jar DIY", "creator": "@wyldwoodsdiy", "url": "https://www.tiktok.com/@wyldwoodsdiy/video/7699612887765028109", "video_id": "7699612887765028109", "blurb": "This spooky specimen jar looks like it's glowing from the inside — the radioactive lab piece your mad-scientist corner was missing."},
     {"added": "2026-10-26", "title": "Jar of Moving Eyeballs DIY", "creator": "@wyldwoodsdiy", "url": "https://www.tiktok.com/@wyldwoodsdiy/video/7698888739572976910", "video_id": "7698888739572976910", "blurb": "She made a jar of eyeballs that MOVE. Creepy, clever, and impossible to stop watching."},
@@ -4008,33 +4033,14 @@ DIY_VIDEOS = [
     {"added": "2026-10-26", "title": "Glowing Gate Tutorial", "creator": "@wyldwoodsdiy", "url": "https://www.tiktok.com/@wyldwoodsdiy/video/7560463323624443150", "video_id": "7560463323624443150", "blurb": "A HUGE 10-foot gate that glows — a true statement piece for your haunt entrance, and the full tutorial walks the whole build."},
 ]
 
-DIY_VIDEOS_NICK = [
-    {"added": "2026-10-26", "title": "Who's Hungry!? — One-Hour DIY", "creator": "@nicksnightmarefac", "url": "https://www.tiktok.com/@nicksnightmarefac/video/7699008843090595085", "video_id": "7699008843090595085", "blurb": "A fun, easy DIY that took less than an hour to build — fresh off the Nightmare Factory workbench."},
-    {"added": "2026-10-20", "title": "Gravestone Crawler DIY Tutorial", "creator": "@nicksnightmarefac", "url": "https://www.tiktok.com/@nicksnightmarefac/video/7684419946595552526", "video_id": "7684419946595552526", "blurb": "Their first full tutorial — a fun, easy Gravestone Crawler you can build along with, step by step."},
-    {"added": "2026-10-20", "title": "Meet the Gravestone Crawler", "creator": "@nicksnightmarefac", "url": "https://www.tiktok.com/@nicksnightmarefac/video/7684153715183439118", "video_id": "7684153715183439118", "blurb": "The Gravestone Creeper got a friend — meet the Crawler, the prop reveal that kicked off the tutorials."},
-    {"added": "2026-10-20", "title": "Gravestone Creeper DIY Tutorial", "creator": "@nicksnightmarefac", "url": "https://www.tiktok.com/@nicksnightmarefac/video/7685645350278860046", "video_id": "7685645350278860046", "blurb": "Tutorial number two: create your very own Gravestone Creeper."},
-    {"added": "2026-10-20", "title": "DIY Gravestone Creeper — Home Depot Upgrade", "creator": "@nicksnightmarefac", "url": "https://www.tiktok.com/@nicksnightmarefac/video/7680823981682789646", "video_id": "7680823981682789646", "blurb": "A quick and easy prop upgrade — a DIY Gravestone Creeper built from Home Depot's 2026 Halloween decor."},
-    {"added": "2026-10-20", "title": "Tree Thrashing Maniac DIY Tutorial", "creator": "@nicksnightmarefac", "url": "https://www.tiktok.com/@nicksnightmarefac/video/7696416899118140686", "video_id": "7696416899118140686", "blurb": "You asked for it — the Tree Thrashing Maniac build, straight from the Nightmare Factory."},
-    {"added": "2026-10-20", "title": "Budget-Friendly DIY Build", "creator": "@nicksnightmarefac", "url": "https://www.tiktok.com/@nicksnightmarefac/video/7688189975849946381", "video_id": "7688189975849946381", "blurb": "A fun, budget-friendly build from just a few hardware-store and dollar-store items — an easy home-haunt upgrade."},
-    {"added": "2026-10-20", "title": "Melting-Flesh Skeleton Wrap", "creator": "@nicksnightmarefac", "url": "https://www.tiktok.com/@nicksnightmarefac/video/7685274761705852173", "video_id": "7685274761705852173", "blurb": "Stretch film plus a heat gun equals melting flesh — a genius glow-up for that old skeleton in the garage."},
-    {"added": "2026-10-20", "title": "Haunted Circus Room Transformation", "creator": "@nicksnightmarefac", "url": "https://www.tiktok.com/@nicksnightmarefac/video/7696984421970365709", "video_id": "7696984421970365709", "blurb": "One room at a time toward a haunted circus Halloween party — a cheap, easy DIY transformation."},
-    {"added": "2026-10-20", "title": "Make a Store-Bought Skeleton Your Own", "creator": "@nicksnightmarefac", "url": "https://www.tiktok.com/@nicksnightmarefac/video/7682201723997277454", "video_id": "7682201723997277454", "blurb": "Endless ways to bring a basic store-bought skeleton to life and make it unmistakably yours."},
-]
-
-
-DIY_VIDEOS_BROOKLYN = [
-    {"added": "2026-10-26", "title": "Spinning Jack-o'-Lantern", "creator": "@heybrooklynb", "url": "https://www.tiktok.com/@heybrooklynb/video/7696976404730137887", "video_id": "7696976404730137887", "blurb": "She made her jack-o'-lantern SPIN — the carved-pumpkin hack your porch needs this year."},
-    {"added": "2026-10-26", "title": "Skeleton Tombstone Pop-Up Craft", "creator": "@heybrooklynb", "url": "https://www.tiktok.com/@heybrooklynb/video/7692588485563239711", "video_id": "7692588485563239711", "blurb": "A DIY skeleton craft that pops out of its tombstone — wait until you see it lit up at night."},
-    {"added": "2026-10-26", "title": "Glow-in-the-Dark Sorting Hat", "creator": "@heybrooklynb", "url": "https://www.tiktok.com/@heybrooklynb/video/7694068054950546719", "video_id": "7694068054950546719", "blurb": "A handmade Sorting Hat that glows in the dark — part prop, part costume, all magic."},
-]
-
 
 @app.get("/diy", response_class=HTMLResponse)
 def diy_page(request: Request):
     return templates.TemplateResponse(
         request, "diy.html",
         {"videos": DIY_VIDEOS, "nick_videos": DIY_VIDEOS_NICK,
-         "brooklyn_videos": DIY_VIDEOS_BROOKLYN},
+         "brooklyn_videos": DIY_VIDEOS_BROOKLYN,
+         "wyld_videos": DIY_VIDEOS_WYLD},
     )
 
 
@@ -12189,7 +12195,8 @@ def _site_update_stream(pin_limit: int = 240, since=None) -> list:
     # no rail bucket, so both fall through to 🛠️ DIY & More exactly
     # like christmas/parks pins do. Midday ET placement: inside their
     # day, below the evening announcements, mixed with the day's pins.
-    for v in DIY_VIDEOS + DIY_VIDEOS_NICK + DIY_VIDEOS_BROOKLYN:
+    for v in DIY_VIDEOS + DIY_VIDEOS_NICK + DIY_VIDEOS_BROOKLYN \
+            + DIY_VIDEOS_WYLD:
         try:
             d = datetime.strptime(v.get("added") or "",
                                   "%Y-%m-%d").date()

@@ -36,6 +36,23 @@
   <p class="diy-watch"><a href="/diy-costumes">Browse DIY Costumes &#x2192;</a></p>
 </div>
 
+<h2 class="diy-section-title">&#x1F332; Wyld Woods DIY — <a href="https://www.tiktok.com/@wyldwoodsdiy" target="_blank" rel="noopener">@wyldwoodsdiy</a></h2>
+<p class="diy-section-sub">Dollar Tree Halloween magic from Wyld Woods DIY — a glowing crystal ball in skeleton hands, specimen jars, the slimed house and the famous Monster-in-a-Box costume. Our most prolific DIY creator: every one of her builds lives here.</p>
+
+<div class="diy-grid">
+  {% for v in wyld_videos %}
+  <div class="diy-card">
+    <h3>{{ v.title }}</h3>
+    <p class="diy-creator">by {{ v.creator }}</p>
+    <p class="diy-blurb">{{ v.blurb }}</p>
+    <div class="diy-embed">
+      <iframe src="https://www.tiktok.com/embed/v2/{{ v.video_id }}" allowfullscreen scrolling="no" allow="encrypted-media; picture-in-picture" loading="lazy" title="{{ v.title }}"></iframe>
+    </div>
+    <p class="diy-watch"><a href="{{ v.url }}" target="_blank" rel="noopener">Watch on TikTok &#x2197;</a></p>
+  </div>
+  {% endfor %}
+</div>
+
 <h2 class="diy-section-title">&#x1F3ED; Nick's Nightmare Factory — <a href="https://www.tiktok.com/@nicksnightmarefac" target="_blank" rel="noopener">@nicksnightmarefac</a></h2>
 <p class="diy-section-sub">Prop builds and haunt tutorials from the Nightmare Factory — gravestone crawlers, creepers and budget builds you can make at home.</p>
 
