@@ -1261,6 +1261,31 @@ def init_db(db_path: Path) -> None:
             "https://www.tiktok.com/@estefaniibg/video/7697022753223740692",
             "/static/img/tt_7697022753223740692.jpg",
         )
+        # Dan-sent video append + retitle (Oct 29): @lilroamingexplorers'
+        # "Zombie House" (video 7691547861640695070, posted Oct 1, 2026 —
+        # Part 3 of their Free Halloween Houses series: a yard packed
+        # with more zombie figures than you can count at 193 Lafayette
+        # Ave, Hawthorne NJ; parking is on the side streets) joins the
+        # address's one pin (1, ex-"Spooky Ghost Yard — Hawthorne") —
+        # the standing one-pin-per-place rule. The pin carried no
+        # TikTok video (its own media is an uploaded MP4, untouched),
+        # so add_entry_video fills the empty primary mirror
+        # (fill-if-empty) and lists the video at position 0; it dedupes
+        # by video id, so repeat boots are no-ops. Cover is the video's
+        # own frame (the red-lit zombie crowd). Dan also approved the
+        # retitle — the house's 2026 display IS the Zombie House — so
+        # the guarded update below renames the pin to match (no-op once
+        # the title is set).
+        add_entry_video(
+            conn, 1,
+            "https://www.tiktok.com/@lilroamingexplorers/video/7691547861640695070",
+            "/static/img/tt_7691547861640695070.jpg",
+        )
+        conn.execute(
+            "UPDATE entries SET title = ? "
+            "WHERE id = 1 AND title != ?",
+            ("Zombie House — Hawthorne", "Zombie House — Hawthorne"),
+        )
         if "is_handpicked" not in cols:
             # Hand-picked feed boost (Dan, Oct 23): pins Dan personally
             # sent/curated lead every feed. Ranking data is never
