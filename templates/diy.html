@@ -12,10 +12,20 @@
     <h3>{{ v.title }}</h3>
     <p class="diy-creator">by {{ v.creator }}</p>
     <p class="diy-blurb">{{ v.blurb }}</p>
+    {% if v.platform == 'facebook' %}
+    <div class="diy-embed">
+      <button type="button" class="yt-facade yt-facade--fb" data-fb="{{ v.url }}" aria-label="Play {{ v.title }}">
+        <img src="{{ v.thumb }}" alt="" loading="lazy">
+        <span class="yt-play" aria-hidden="true">&#9654;</span>
+      </button>
+    </div>
+    <p class="diy-watch"><a href="{{ v.url }}" target="_blank" rel="noopener">Watch on Facebook &#x2197;</a></p>
+    {% else %}
     <div class="diy-embed">
       <iframe src="https://www.tiktok.com/embed/v2/{{ v.video_id }}" allowfullscreen scrolling="no" allow="encrypted-media; picture-in-picture" loading="lazy" title="{{ v.title }}"></iframe>
     </div>
     <p class="diy-watch"><a href="{{ v.url }}" target="_blank" rel="noopener">Watch on TikTok &#x2197;</a></p>
+    {% endif %}
   </div>
   {% endfor %}
 </div>
@@ -59,4 +69,27 @@
   </div>
   {% endfor %}
 </div>
+
+<script>
+// Facebook entries (Dude Dad's mailbox build, the page's first):
+// the cover is the reel's own frame — on tap, swap in Facebook's
+// official embedded player (same pattern as /pop-haunt-culture).
+// The video itself is never re-hosted, and no third-party request
+// fires before the tap. TikTok cards above are plain iframes and
+// don't use this handler.
+document.addEventListener('click', function (ev) {
+  var b = ev.target.closest && ev.target.closest('.yt-facade--fb');
+  if (!b || b.dataset.loaded) return;
+  b.dataset.loaded = '1';
+  var f = document.createElement('iframe');
+  f.className = 'fb-frame';
+  f.src = 'https://www.facebook.com/plugins/video.php?href=' +
+    encodeURIComponent(b.getAttribute('data-fb')) + '&show_text=false&autoplay=true';
+  f.setAttribute('allow', 'autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture; web-share');
+  f.setAttribute('allowfullscreen', '');
+  f.setAttribute('scrolling', 'no');
+  f.setAttribute('title', b.getAttribute('aria-label') || 'Facebook video');
+  b.replaceWith(f);
+});
+</script>
 {% endblock %}
