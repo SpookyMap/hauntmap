@@ -4063,6 +4063,10 @@ COSTUME_SECTIONS = [
         "title": "&#x2B50; Just Added",
         "sub": "The newest costumes on the page — fresh from the feed, straight to the top.",
         "ideas": [
+            {"added": "2026-10-29", "name": "Pierrot Clown Hat — Easy Sewn Cone Hat Tutorial", "who": "Adults & teens", "difficulty": "Easy", "time": "About an hour",
+             "materials": "Fabric for the cone, a stiff layer to give the cone structure, felt stars, tulle for the ruffle, yarn for the pom-pom, elastic to secure it",
+             "blurb": "Keiko Lynn sews the finishing piece of her Pierrot-inspired clown costume: a powder-blue cone hat with stitched yellow felt stars, a ruffled tulle brim and a big yarn pom-pom on top, held on with elastic at the sides. She posted the costume and the makeup separately — this video is the hat, start to finish. Tap the video and sew yours.",
+             "source": "@keikolynn", "url": "https://www.tiktok.com/@keikolynn/video/7698839279824342303", "tt": "7698839279824342303"},
             {"added": "2026-10-29", "name": "Ripped-Smile SFX Makeup — the Painted-Teeth Grin", "who": "Adults & teens", "difficulty": "Medium", "time": "About 30–60 minutes",
              "materials": "Liquid latex or scar wax for the torn skin edges, black and white face paint for the mouth and teeth, fake blood for the finish",
              "blurb": "Molchanova paints the grin from ear to ear: torn-skin edges built across both cheeks, the mouth blacked out, then two rows of teeth painted in across her cheeks so the smile keeps going long after it should stop — fake blood worked along the cuts to finish. 11.8 million plays and counting. Tap the video and watch the grin get painted on.",
