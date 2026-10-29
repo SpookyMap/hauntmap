@@ -3945,6 +3945,13 @@ def map_view(request: Request, cat: str = "halloween"):
 
 
 DIY_VIDEOS = [
+    # Dan-sent (Oct 29): @wyldwoodsdiy's crystal ball — she is
+    # authorized in full for /diy, and this (posted Oct 28, 2026)
+    # is her newest build. Leads the list newest-first. The
+    # "thumb" is the video's own frame — the finished ball glowing
+    # in the skeleton hands — stored locally; TikTok cards render
+    # via the embed/v2 iframe like every other entry here.
+    {"added": "2026-10-29", "title": "DIY Crystal Ball — Skeleton Hands Fortune Teller", "creator": "@wyldwoodsdiy", "url": "https://www.tiktok.com/@wyldwoodsdiy/video/7701486355385306382", "video_id": "7701486355385306382", "thumb": "/static/img/tt_7701486355385306382.jpg", "blurb": "A little witchy magic, Dollar Tree style. She cradles a glowing crystal ball in skeleton hands with long, creepy fingernails — the colorful lights dance inside the ball like there's real magic happening in there. Spooky, elegant and a little extra: the fortune-teller centerpiece your Halloween table was missing."},
     # First Facebook entry on /diy (Dan, 2026-10-28): Dude Dad's
     # giant-skull mailbox build (Facebook Reel, public, posted
     # Oct 27, 2026; 266 comments). "platform": "facebook" marks it —
