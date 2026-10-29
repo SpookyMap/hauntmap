@@ -69,18 +69,20 @@ CARD_THUMB_W, CARD_THUMB_H = 480, 360
 CARD_THUMB_DIR = THUMB_DIR / "card"
 ORIG_MAX_EDGE = 1920  # stored photo originals are capped at this long edge
 
-CATEGORIES = ("halloween", "christmas", "halloween_stores", "restaurants", "coffee", "shops", "parks", "hotels", "ice_cream", "haunted_houses", "events", "live")
+CATEGORIES = ("halloween", "christmas", "halloween_stores", "restaurants", "coffee", "shops", "parks", "hotels", "ice_cream", "haunted_houses", "escape_rooms", "events", "live")
 CAT_LABELS = {"halloween": "Halloween", "christmas": "Christmas",
               "halloween_stores": "Halloween Stores",
               "restaurants": "Restaurhaunts", "coffee": "Coffee & Cafes",
               "shops": "Shops", "parks": "Parks", "hotels": "Hotels",
               "ice_cream": "Ice Cream",
               "haunted_houses": "Haunted Houses",
+              "escape_rooms": "Haunted Escape Rooms",
               "events": "Events", "live": "Live Streams"}
 CAT_EMOJI = {"halloween": "🎃", "christmas": "🎄", "halloween_stores": "👻",
              "restaurants": "🍽️", "coffee": "☕", "shops": "🛍️", "parks": "🌳",
              "hotels": "🏨", "ice_cream": "🍦",
-             "haunted_houses": "🏚️", "events": "🎪", "live": "🔴"}
+             "haunted_houses": "🏚️", "escape_rooms": "🔐",
+             "events": "🎪", "live": "🔴"}
 
 # Venue categories (Dan, Oct 25): food/drink/retail listings — the
 # Restaurhaunts set (restaurants, coffee, shops) plus Halloween stores.
@@ -98,7 +100,7 @@ VENUE_CATS = ("restaurants", "coffee", "shops", "halloween_stores", "hotels", "i
 # displays, haunted houses and events. Venue listings (the VENUE_CATS
 # set), christmas, parks and live never appear in the ticker, however
 # recent they are.
-TICKER_CATS = ("halloween", "haunted_houses", "events")
+TICKER_CATS = ("halloween", "haunted_houses", "events", "escape_rooms")
 
 # Events facets (Dan, Oct 22): /events is searchable by event type, music
 # genre and venue style. Stored values stay short (they ride in URLs);
@@ -8219,6 +8221,7 @@ MEDIA_KIT_CATEGORY_LABELS = [
     ("halloween", "Halloween displays"),
     ("christmas", "Christmas displays (Jolly Map)"),
     ("haunted_houses", "Haunted houses"),
+    ("escape_rooms", "Haunted escape rooms"),
     ("events", "Events"),
     ("halloween_stores", "Halloween stores"),
     ("restaurants", "Restaurhaunts"),
@@ -12309,7 +12312,7 @@ def _site_update_groups(pin_limit: int = 240) -> list:
 # christmas, and any future category), so nothing new can fall out
 # of the rail. Announcements keep their own bucket at the end.
 _WHATSNEW_RAIL_GROUPS = (
-    ("haunts", "🎃", "New Haunts", ("halloween", "haunted_houses")),
+    ("haunts", "🎃", "New Haunts", ("halloween", "haunted_houses", "escape_rooms")),
     ("events", "🎪", "New Events", ("events",)),
     ("live", "🔴", "New Live", ("live",)),
     ("stops", "🍦", "New Stops",
@@ -14033,6 +14036,7 @@ _FRANK_NEWS_NOUNS = {
     "shops": "shop", "parks": "haunted park", "hotels": "hotel",
     "ice_cream": "ice cream shop",
     "haunted_houses": "haunted house", "christmas": "holiday display",
+    "escape_rooms": "haunted escape room",
 }
 
 
