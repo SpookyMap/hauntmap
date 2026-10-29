@@ -8456,6 +8456,46 @@ MUSIC_SPOTLIGHT_NEXT = {
     "channel": "Timothy Caldwell",
     "meta": "A future bass Halloween mix from the EDM Vibes Collection",
 }
+# Trending This Halloween 2026 (Dan, Oct 29): what the charts and TikTok
+# say the season actually sounds like this year, researched and added the
+# night before Halloween Eve. Every ID verified via YouTube oEmbed on
+# 2026-10-29 (title + author match, embeddable). Chart/TikTok facts from
+# the Oct 27–28 Spotify daily charts, Billboard's Halloween streaming
+# coverage and TikTok trend roundups. The classics already on this page
+# (Thriller, Ghostbusters, Monster Mash, This Is Halloween, Disturbia,
+# Bloody Mary) are charting too — this section is the NEW heat only.
+MUSIC_TRENDING = [
+    {"id": "0UPDBODtxzw",
+     "title": "Tame Impala & JENNIE — Dracula (JENNIE Remix)",
+     "meta": "2026's Halloween hit — a Hot 100 top-10 all year, surging "
+             "again into Halloween week · Official lyric video",
+     "channel": "tameimpalaVEVO"},
+    {"id": "bmSpn3EnsE0",
+     "title": "China Anne McClain — Calling All the Monsters",
+     "meta": "800,000+ TikTok creations this season — the Disney Channel "
+             "anthem just went Platinum",
+     "channel": "DisneyMusicVEVO"},
+    {"id": "YuGe533mWiA",
+     "title": "Róisín Murphy — Ramalama (Bang Bang)",
+     "meta": "The Ramalama Costume Walk — TikTok's costume-reveal sound "
+             "of Halloween 2026 · Official audio",
+     "channel": "Róisín Murphy - Topic"},
+    {"id": "2mKN6PDZTmc",
+     "title": "Andrew Gold — Spooky, Scary Skeletons (Undead Tombstone Remix)",
+     "meta": "Back on the US Spotify chart this week — the remix behind "
+             "a million skeleton dances · Official lyric video",
+     "channel": "Craft Recordings"},
+    {"id": "6Ejga4kJUts",
+     "title": "The Cranberries — Zombie",
+     "meta": "Top 70 on Spotify's global chart this week — 1.5M streams "
+             "a day heading into Halloween",
+     "channel": "TheCranberriesVEVO"},
+    {"id": "PLolag3YSYU",
+     "title": "Nelly Furtado — Maneater",
+     "meta": "Surging up the US Spotify chart this week — the 2006 hit "
+             "is a Halloween staple now",
+     "channel": "NellyFurtadoVEVO"},
+]
 MUSIC_YOUTUBE_FEATURED = {
     "id": "sOnqjkJTMaA",
     "title": "Michael Jackson — Thriller (Official 4K Video)",
@@ -8685,6 +8725,7 @@ def music_page(request: Request):
          "hiphop_stations": MUSIC_HIPHOP_STATIONS,
          "yt_spotlight": MUSIC_SPOTLIGHT,
          "yt_spotlight_next": MUSIC_SPOTLIGHT_NEXT,
+         "yt_trending": MUSIC_TRENDING,
          "yt_featured": MUSIC_YOUTUBE_FEATURED, "yt_grid": MUSIC_YOUTUBE_GRID,
          "yt_performances": MUSIC_PERFORMANCES, "yt_dj_sets": MUSIC_DJ_SETS,
          "yt_singles": MUSIC_SINGLES,

@@ -25,8 +25,24 @@
   <p class="yt-meta">{{ yt_spotlight_next.meta }}</p>
 </div>
 
+<h2 class="music-h2" id="trending">&#x1F525; Trending This Halloween</h2>
+<p>What the season actually sounds like in 2026 — the new heat from the charts and TikTok, next to the classics surging back up them. Tap any cover to play.</p>
+<div class="yt-grid">
+  {% for v in yt_trending %}
+  <div class="yt-item">
+    <button type="button" class="yt-facade" data-yt="{{ v.id }}" aria-label="Play {{ v.title }}">
+      <img src="https://i.ytimg.com/vi/{{ v.id }}/hqdefault.jpg" alt="" loading="lazy">
+      <span class="yt-play" aria-hidden="true">&#9654;</span>
+    </button>
+    <p class="yt-cap">{{ v.title }} &middot; {{ v.channel }}</p>
+    <p class="yt-meta">{{ v.meta }}</p>
+  </div>
+  {% endfor %}
+</div>
+
 <nav class="movies-subnav" aria-label="Music sections">
   <a href="#featured">&#x2B50; Featured Set</a>
+  <a href="#trending">&#x1F525; Trending</a>
   <a href="#edm">&#x26A1; EDM Channels</a>
   <a href="#hiphop">&#x1F3A4; Hip Hop Stations</a>
   <a href="#spotify">&#x1F3A7; Spotify Playlists</a>
