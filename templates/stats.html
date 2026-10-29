@@ -134,12 +134,23 @@
 <h3>🧭 Traffic Tracker <span style="font-size:0.75em;color:#888;">(human views only — same screen as Views by page)</span></h3>
 
 <h4 style="margin-bottom:8px;">⏰ Busiest hours <span style="font-size:0.8em;color:#888;">(Eastern Time)</span></h4>
+<style>
+/* Traffic Tracker charts on phones (Dan, Oct 29): a value label over
+   all 24 bars overlaps into unreadable jumble at phone width — on
+   narrow screens only the peak (gold) bar keeps its label. Bar values
+   are compact (4.3k) at every width; full counts stay in the summary
+   line above each chart and in each bar's title tooltip. */
+@media (max-width: 640px) {
+  .tt-chart .tt-val { visibility: hidden; }
+  .tt-chart .tt-val.tt-peak { visibility: visible; }
+}
+</style>
 {% for block in [tracker.hours_today, tracker.hours_week] %}
 <p style="margin:12px 0 4px;"><strong>{{ block.label }}</strong> — {{ "{:,}".format(block.total) }} views. <strong style="color:#f5c542;">Busiest: {{ block.peak_label }} ET</strong> ({{ "{:,}".format(block.peak_count) }} views)</p>
-<div style="display:flex;align-items:stretch;gap:2px;height:118px;margin-bottom:16px;">
+<div class="tt-chart" style="display:flex;align-items:stretch;gap:2px;height:118px;margin-bottom:16px;">
   {% for b in block.bars %}
   <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;min-width:0;" title="{{ b.tip }}">
-    <div style="font-size:0.6em;color:#aaa;white-space:nowrap;">{% if b.count %}{{ b.count_label }}{% endif %}</div>
+    <div class="tt-val{% if b.peak %} tt-peak{% endif %}" style="font-size:0.6em;color:#aaa;white-space:nowrap;">{% if b.count %}{{ b.count_label }}{% endif %}</div>
     <div style="width:100%;height:{{ b.pct }}%;min-height:2px;border-radius:2px 2px 0 0;background:{% if b.peak %}#f5c542{% else %}#4f7ecf{% endif %};"></div>
     <div style="font-size:0.58em;color:#888;padding-top:3px;">{{ b.short }}</div>
   </div>

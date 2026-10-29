@@ -10217,7 +10217,7 @@ def _traffic_tracker_build() -> dict:
                 "short": f"{h % 12 or 12}{'a' if h < 12 else 'p'}",
                 "count": counts[h],
                 "count_label": (f"{counts[h] / 1000:.1f}k"
-                                if counts[h] >= 10000
+                                if counts[h] >= 1000
                                 else f"{counts[h]:,}"),
                 "pct": round(counts[h] / top * 100, 1),
                 "peak": h == peak and counts[h] > 0,
