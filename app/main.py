@@ -8278,7 +8278,7 @@ MEDIA_KIT_CATEGORY_LABELS = [
     ("shops", "Shops"),
     ("parks", "Parks"),
     ("hotels", "Hotels"),
-    ("ice_cream", "Spooky Ice Cream Parlor"),
+    ("ice_cream", "Spooky Ice Cream Parlors"),
     ("live", "Live"),
 ]
 
