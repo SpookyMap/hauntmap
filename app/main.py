@@ -9065,6 +9065,26 @@ POP_CULTURE_FEATURED = {
 # cover-frame file in static/img/): the template renders the local
 # still and the click handler swaps in that platform's official embed.
 POP_CULTURE_GRID: list[dict] = [
+    # Grid top (Dan, 2026-10-31): SportsCenter's Halloween-morning
+    # share of the Pennywise storm-drain candy setup (FB reel
+    # 1604954497532391, via Drinking Buddy; posted Oct 31, 18K+
+    # likes in its first hours). The still is the video's own
+    # frame — Pennywise grinning out of the red-lit drain; tap
+    # swaps in Facebook's official player, never re-hosted.
+    {"id": "1604954497532391",
+     "platform": "facebook",
+     "url": "https://www.facebook.com/reel/1604954497532391/",
+     "thumb": "/static/img/sportscenter_pennywise_drain.jpg",
+     "title": "Pennywise Lives in the Storm Drain",
+     "channel": "SportsCenter",
+     "kind": "Facebook Reel", "short": True,
+     "blurb": "The candy setup of Halloween Day: a hand-painted "
+              "CANDY arrow points at the curb, the drain cover "
+              "lifts, a red balloon goes down on a string — and "
+              "Pennywise himself grins up out of the red-lit storm "
+              "drain. \"Do you want a balloon too, Georgie?\" "
+              "SportsCenter shared it this morning (via Drinking "
+              "Buddy) and it exploded. If you know, you know. 🎈"},
     # Halloween Day adds (Dan, 2026-10-31): the Ghostface bucket
     # and the Nun chihuahua lead the grid (Bonnie's subway ghoul
     # took the featured slot at Dan's final call); the Jurassic
