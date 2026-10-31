@@ -3956,6 +3956,7 @@ DIY_VIDEOS = [
     # official embedded player on tap. The video itself is never
     # re-hosted; every other entry here is a TikTok embed by
     # default (no "platform" key).
+    {"added": "2026-10-31", "title": "DIY Window Silhouettes — Poster Board & Projector Trick", "creator": "@yerdoingit", "url": "https://www.tiktok.com/@yerdoingit/video/7701894365890825486", "video_id": "7701894365890825486", "blurb": "Big window impact for poster-board money: project your design onto black poster board, trace it with a white grease pencil and cut it out, tape twinkle lights to the back, then mount the panels inside the window with glass-safe double-sided tape — so the silhouettes glow for the whole street (Dolly Parton makes her cut). No paint on the glass, no damage, all renter-friendly."},
     {"added": "2026-10-31", "title": "Clown Mouth Entrance — DIY Circus Haunt Facade", "creator": "@bananabread_94", "url": "https://www.tiktok.com/@bananabread_94/video/7702630596044016926", "video_id": "7702630596044016926", "blurb": "A first-time foam build with a killer payoff: she sketches, hot-wire-cuts and paints a giant clown face — green tuft, red nose, a full row of fangs — and mounts it as the entrance to her circus haunt, so guests walk in through the clown's mouth. Her honest lessons ride along: go thicker board (the teeth snap on thin stock) and paint before you cut."},
     {"added": "2026-10-29", "title": "Moving Eyeball Spellbook — Dollar Tree Poster Board DIY", "creator": "@bargain.bethany", "url": "https://www.tiktok.com/@bargain.bethany/video/7681448809406188830", "video_id": "7681448809406188830", "blurb": "A spellbook that watches you back. Bargain Bethany builds a stitched, aged-leather Book of Spells out of Dollar Tree poster board and tissue paper, with a giant eyeball set into the cover that actually moves. No device handy? Her budget version — the Dollar Tree eyeball on its own — still lands the effect. 393K plays."},
     {"added": "2026-10-29", "title": "Audrey II — Little Shop of Horrors Papier-Mâché Plant DIY", "creator": "@bahrooke", "url": "https://www.tiktok.com/@bahrooke/video/7702193026713570591", "video_id": "7702193026713570591", "blurb": "Feed me, Seymour. She builds Audrey II from the ground up — a tape-and-papier-mâché pod form, big veined green leaves, and a purple maw lined with pointed teeth behind fat red lips. A hand-lettered FEED ME! sign and a terracotta pot finish the Little Shop of Horrors tribute — hers is headed into a pumpkin painting contest."},
@@ -9248,6 +9249,17 @@ MAKEUP_FEATURED = {
              "girlies, perfect for Halloween night.",
 }
 MAKEUP_GRID: list[dict] = [
+    {"id": "7702485713400368391", "platform": "tiktok",
+     "url": "https://www.tiktok.com/@mubyalexia/video/7702485713400368391",
+     "thumb": "/static/img/mubyalexia_creepy_clown.jpg",
+     "title": "Creepy Clown Makeup — But Make It Creepier",
+     "channel": "mubyalexia",
+     "kind": "TikTok", "short": True,
+     "blurb": "Alexia Elharrar takes clown makeup past cute and "
+              "straight into creepy — a full special-FX clown look "
+              "in 38 seconds, set to Disturbia. Her own caption says "
+              "it best: creepy clown makeup, but make it creepier. "
+              "263K plays."},
     {"id": "gssmks0iCAQ",
      "title": "Crazy Halloween Makeup Illusion",
      "channel": "Leah Comptonn",
