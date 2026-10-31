@@ -5190,6 +5190,11 @@ def _bracket_teaser() -> dict:
             winners = brk.get_winners(conn)
         if "F" in winners:
             champ = get_entry(winners["F"])
+        if brk.phase(now) == "crowned" and champ is None:
+            # Bracket closed with no champion (Dan, 2026-10-31:
+            # 0 votes cast, no round ever resolved — he closed it
+            # quietly). No homepage band at all after crowning time.
+            return None
         label, when = brk.next_milestone(now)
         return {"phase": brk.phase(now), "champion": champ,
                 "milestone_label": label, "milestone_at": when,
