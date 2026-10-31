@@ -9091,28 +9091,29 @@ def movies_page(request: Request):
 # The cadenmcdonald flying-ghost reel that led the page until
 # now heads the grid below instead.
 POP_CULTURE_FEATURED = {
-    # Halloween night, later (Dan, 2026-10-31 ~19:29-19:33):
-    # "Top live feature" + "feature on homepage" + "Put it on
-    # where the haunt culture feature is in the homepage" — the
-    # DinomiteTwins LIVE stream takes the Pop Haunt Culture
-    # featured slot (homepage hero + this page; the shared dict
-    # keeps them in step). "platform": "live" renders a tap-out
-    # facade (no in-place embed for a live room) linking to the
-    # TikTok live room; Autumn's Titanic Ghosts head the grid.
-    "id": "8826",
+    # Halloween night, latest (Dan, 2026-10-31 ~19:50):
+    # "Feature this with Halloween parade in haunt culture on
+    # the homepage as live trick or treating" — Colleen
+    # Elizabeth's LIVE Midtown Manhattan stream takes the Pop
+    # Haunt Culture featured slot (homepage hero + this page;
+    # the shared dict keeps them in step). "platform": "live"
+    # renders a tap-out facade (no in-place embed for a live
+    # room) linking to the TikTok live room; the DinomiteTwins
+    # and the Village Parade video head the grid below.
+    "id": "9020",
     "platform": "live",
-    "url": "https://www.tiktok.com/@dinomitetwins/live",
-    "thumb": "/static/img/dinomitetwins_live.jpg",
-    "title": "DinomiteTwins — LIVE from NYC Halloween Night",
-    "channel": "dinomitetwins",
+    "url": "https://www.tiktok.com/@colleenelizabethnyc/live",
+    "thumb": "/static/img/colleenelizabethnyc_live.jpg",
+    "title": "Live Trick-or-Treating — NYC Halloween Night",
+    "channel": "colleenelizabethnyc",
     "kind": "TikTok LIVE", "short": True,
-    "blurb": "🔴 LIVE right now: Ali & Lexi, the DinomiteTwins, "
-             "are streaming New York City's Halloween night in "
-             "real time — the identical-twin IRL streamers "
-             "(140K+ followers) taking you through the parades, "
-             "the costumes and the chaos as it happens. Tap the "
-             "cover to watch live on TikTok — and find them at "
-             "#1 on HauntMap's Live board tonight.",
+    "blurb": "🔴 LIVE right now: Colleen Elizabeth is "
+             "streaming Midtown Manhattan on Halloween night "
+             "— live trick-or-treating, city style. She walks "
+             "NYC live every day for her 132K followers; "
+             "tonight it's costumes, candy and parade-night "
+             "energy in the heart of the city. Tap the cover "
+             "to watch live on TikTok and walk with her.",
 }
 # The collection grid. Dan feeds entries one at a time; append dicts of
 # {"id", "title", "channel", "kind", "blurb"} — the template renders
@@ -9123,12 +9124,35 @@ POP_CULTURE_FEATURED = {
 # cover-frame file in static/img/): the template renders the local
 # still and the click handler swaps in that platform's official embed.
 POP_CULTURE_GRID: list[dict] = [
-    # Grid #1: Bonnie's subway ghoul — Halloween Day's featured
-    # pick, moved to the grid top when Autumn's Titanic ghosts
-    # took the featured slot on Halloween night (Dan, 2026-10-31).
-    # Grid #1: Autumn's Titanic Ghosts — the Halloween-night
-    # feature until the DinomiteTwins live stream took the slot
-    # (Dan, 2026-10-31 ~19:33); heads the grid, Bonnie follows.
+    # Grid #1: DinomiteTwins LIVE — the homepage feature until
+    # Colleen Elizabeth's live trick-or-treating took the slot
+    # (Dan, 2026-10-31 ~19:50); still #1 on the Live board.
+    {"id": "8826",
+     "platform": "live",
+     "url": "https://www.tiktok.com/@dinomitetwins/live",
+     "thumb": "/static/img/dinomitetwins_live.jpg",
+     "title": "DinomiteTwins — LIVE from NYC Halloween Night",
+     "channel": "dinomitetwins",
+     "kind": "TikTok LIVE", "short": True,
+     "blurb": "🔴 Ali &amp; Lexi, the identical-twin IRL "
+              "streamers (140K+ followers, Twitch Partners), "
+              "live from New York City for Halloween night — "
+              "parades, costumes and chaos in real time. Tap "
+              "out to their TikTok live room."},
+    # Grid #2: the Village Halloween Parade video — Dan paired
+    # it with the live trick-or-treating feature (2026-10-31).
+    {"id": "7702873779386453278",
+     "platform": "tiktok",
+     "url": "https://www.tiktok.com/@mija.en.ny/video/7702873779386453278",
+     "thumb": "/static/img/mija_parade.jpg",
+     "title": "NYC Village Halloween Parade — Thriller in Greenwich",
+     "channel": "mija.en.ny",
+     "kind": "TikTok", "short": True,
+     "blurb": "The Village Halloween Parade in full flow: "
+              "hundreds of Thriller dancers owning the street, "
+              "floats rolling through Greenwich Village at "
+              "peak Halloween. Mija caught the night as it "
+              "happened. 🎃"},
     {"id": "7696173852589690143",
      "platform": "tiktok",
      "url": "https://www.tiktok.com/@autumntiktok2/video/7696173852589690143",
