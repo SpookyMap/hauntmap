@@ -8312,7 +8312,8 @@ def about(request: Request):
         _intl.append("Canada (%s)" % ", ".join(_b["ca_provinces"]))
     if _b["has_uk"]:
         _intl.append("the United Kingdom")
-    stats["intl_note"] = (" — plus " + " and ".join(_intl)) if _intl else ""
+    stats["intl_note"] = (" — and the map now reaches "
+                          + " and ".join(_intl) + ", too") if _intl else ""
     return templates.TemplateResponse(
         request, "about.html", {"stats": stats, "site_name": SITE_NAME},
     )
