@@ -215,6 +215,13 @@ HANDPICKED_ENTRY_IDS = (
     5599, 5600, 5601, 5602, 5603, 5604, 5605, 5606, 5607, 5608, 5609,
     5610, 5611, 5612, 5613, 5614, 5615, 5616, 5617, 5618, 5766, 5940,
     6005,
+    # Oct 31 (Halloween night) additions: 8537 — Rock Cauldron
+    # Cabaret LIVE (Salem), Dan-sent ("post live, feature on the
+    # homepage"); as the newest live hand-picked pin it leads the
+    # Live board tonight, 6005 follows at #2. 8685 — NYC Village
+    # Halloween Parade event, Dan-sent ("feature event on the
+    # homepage"); newest hand-picked overall, leads the feed.
+    8537, 8685,
 )
 
 SCHEMA = """
