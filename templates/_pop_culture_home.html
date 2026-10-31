@@ -23,6 +23,11 @@
     <img src="{{ pop_featured.thumb }}" alt="" loading="lazy">
     <span class="yt-play" aria-hidden="true">&#9654;</span>
   </button>
+  {% elif pop_featured.platform == 'instagram' %}
+  <button type="button" class="yt-facade yt-facade--tt" data-ig="{{ pop_featured.id }}" aria-label="Play {{ pop_featured.title }}">
+    <img src="{{ pop_featured.thumb }}" alt="" loading="lazy">
+    <span class="yt-play" aria-hidden="true">&#9654;</span>
+  </button>
   {% else %}
   <button type="button" class="yt-facade" data-yt="{{ pop_featured.id }}" aria-label="Play {{ pop_featured.title }}">
     <img src="https://i.ytimg.com/vi/{{ pop_featured.id }}/hqdefault.jpg" alt="" loading="lazy">
@@ -47,7 +52,15 @@
     var f = document.createElement('iframe');
     var fb = b.getAttribute('data-fb');
     var tt = b.getAttribute('data-ttv');
-    if (tt) {
+    var ig = b.getAttribute('data-ig');
+    if (ig) {
+      f.className = 'tt-frame';
+      f.src = 'https://www.instagram.com/reel/' + ig + '/embed';
+      f.setAttribute('allow', 'autoplay; encrypted-media; fullscreen; picture-in-picture');
+      f.setAttribute('allowfullscreen', '');
+      f.setAttribute('scrolling', 'no');
+      f.setAttribute('title', b.getAttribute('aria-label') || 'Instagram reel');
+    } else if (tt) {
       f.className = 'tt-frame';
       f.src = 'https://www.tiktok.com/embed/v2/' + tt;
       f.setAttribute('allow', 'autoplay; encrypted-media; fullscreen; picture-in-picture');

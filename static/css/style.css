@@ -7342,3 +7342,13 @@ a.wn-fbtn:hover, summary.wn-fbtn:hover { border-color: #57a8ff; }
 .top10-home-list::-webkit-scrollbar-thumb { background: #2b5878; border-radius: 6px; }
 .top10-home-list::-webkit-scrollbar-track { background: transparent; }
 .hero-stack .top10-home-list { max-height: 10.9rem; }
+
+/* Halloween Day feature (z222, Dan Oct 31 2026): homepage editorial
+   block inside .hero-intro, above the hero stack / HauntSocial. */
+.hw-day { margin: 1.1rem auto 0; max-width: 880px; background: linear-gradient(180deg, #0B1116, #05080A); border: 1px solid #2b5878; border-radius: 18px; padding: 1.25rem 1.35rem 1.35rem; text-align: center; box-shadow: 0 0 24px rgba(143, 216, 255, .18); }
+.hw-day-kicker { color: #8FD8FF; letter-spacing: .14em; font-size: .78rem; font-weight: 700; text-transform: uppercase; margin: 0 0 .35rem; }
+.hw-day-title { font-family: "Playfair Display", Georgia, serif; color: #F2EAD8; font-size: clamp(1.7rem, 4.5vw, 2.6rem); margin: .1rem 0 .6rem; }
+.hw-day p { color: #E7DFCB; line-height: 1.55; margin: 0 auto .7rem; max-width: 62ch; }
+.hw-day-ctas { display: flex; gap: .6rem; justify-content: center; flex-wrap: wrap; margin-top: .95rem; }
+.hw-day-btn { background: #8FD8FF; color: #05080A; font-weight: 700; padding: .65rem 1.15rem; border-radius: 30px; text-decoration: none; }
+.hw-day-btn.ghost { background: transparent; color: #8FD8FF; border: 1.5px solid #8FD8FF; }
