@@ -9291,6 +9291,19 @@ MAKEUP_FEATURED = {
              "girlies, perfect for Halloween night.",
 }
 MAKEUP_GRID: list[dict] = [
+    # New #1 (Dan, 2026-10-31 evening): Denisse Vizcarra's easy
+    # skull — the last-minute Halloween-night look.
+    {"id": "7702829833373437197", "platform": "tiktok",
+     "url": "https://www.tiktok.com/@denissevizcarraa/video/7702829833373437197",
+     "thumb": "/static/img/denissevizcarraa_skull_makeup.jpg",
+     "title": "Easy Skull Makeup — the 25-Second Calavera",
+     "channel": "denissevizcarraa",
+     "kind": "TikTok", "short": True,
+     "blurb": "The Halloween-night lifesaver: Denisse Vizcarra "
+              "builds a full calavera skull — hollow black eyes, "
+              "stitched lips, contoured cheekbones — in 25 "
+              "seconds with liner and a brush. Maquillaje de "
+              "calavera fácil, and it really is. 417K plays."},
     {"id": "7702485713400368391", "platform": "tiktok",
      "url": "https://www.tiktok.com/@mubyalexia/video/7702485713400368391",
      "thumb": "/static/img/mubyalexia_creepy_clown.jpg",
