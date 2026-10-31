@@ -3164,6 +3164,11 @@ def home(request: Request, sort: str = "new", town: str = "", town_search: str =
          # Pop Haunt Culture homepage feature (Dan, Oct 27): the
          # section page's lead dict, shared so they can't drift.
          "pop_featured": POP_CULTURE_FEATURED,
+         # Homepage companions (Dan, Oct 31 ~19:57): the live
+         # feature sits NEXT TO the top collection picks on the
+         # homepage — tonight that's the DinomiteTwins live room
+         # and the Village Halloween Parade video.
+         "pop_home_grid": POP_CULTURE_GRID[:2],
          "trending": trending, "near_towns": near_towns,
          "home_top10": home_top10,
          "top10_menu": top10_menu,

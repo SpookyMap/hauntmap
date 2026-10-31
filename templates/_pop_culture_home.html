@@ -41,6 +41,41 @@
   {% endif %}
   <p class="yt-cap">{{ pop_featured.title }} &middot; {{ pop_featured.channel }}</p>
   <p class="pop-home-blurb">{{ pop_featured.blurb }}</p>
+  {% if pop_home_grid %}
+  <div class="pop-home-duo">
+    {% for v in pop_home_grid %}
+    <div class="pop-home-duo-item">
+      {% if v.platform == 'live' %}
+      <a class="yt-facade yt-facade--live" href="{{ v.url }}" target="_blank" rel="noopener" aria-label="Watch live: {{ v.title }}">
+        <img src="{{ v.thumb }}" alt="" loading="lazy">
+        <span class="yt-play" aria-hidden="true">&#x1F534;</span>
+      </a>
+      {% elif v.platform == 'facebook' %}
+      <button type="button" class="yt-facade yt-facade--fb" data-fb="{{ v.url }}" aria-label="Play {{ v.title }}">
+        <img src="{{ v.thumb }}" alt="" loading="lazy">
+        <span class="yt-play" aria-hidden="true">&#9654;</span>
+      </button>
+      {% elif v.platform == 'tiktok' %}
+      <button type="button" class="yt-facade yt-facade--tt" data-ttv="{{ v.id }}" aria-label="Play {{ v.title }}">
+        <img src="{{ v.thumb }}" alt="" loading="lazy">
+        <span class="yt-play" aria-hidden="true">&#9654;</span>
+      </button>
+      {% elif v.platform == 'instagram' %}
+      <button type="button" class="yt-facade yt-facade--tt" data-ig="{{ v.id }}" aria-label="Play {{ v.title }}">
+        <img src="{{ v.thumb }}" alt="" loading="lazy">
+        <span class="yt-play" aria-hidden="true">&#9654;</span>
+      </button>
+      {% else %}
+      <button type="button" class="yt-facade" data-yt="{{ v.id }}" aria-label="Play {{ v.title }}">
+        <img src="https://i.ytimg.com/vi/{{ v.id }}/hqdefault.jpg" alt="" loading="lazy">
+        <span class="yt-play" aria-hidden="true">&#9654;</span>
+      </button>
+      {% endif %}
+      <p class="yt-cap">{{ v.title }} &middot; {{ v.channel }}</p>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
   <p class="pop-home-more"><a href="/pop-haunt-culture">See all of Pop Haunt Culture &rarr;</a></p>
   <script>
   // Click-to-play facade (same pattern as /pop-haunt-culture,

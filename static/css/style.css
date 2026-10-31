@@ -6135,6 +6135,9 @@ main.wrap:has(> .vt-tv-strip-bottom) { padding-bottom: 0; }
 .pop-home p.pop-home-more { margin: 0.6rem 0 0; text-shadow: none; line-height: 1.45; }
 .pop-home-more a { font-weight: 700; color: #b18cff; }
 .pop-home-more a:hover { color: #d3bcff; }
+.pop-home-duo { display: grid; grid-template-columns: 1fr; gap: 0.7rem; margin-top: 0.85rem; }
+@media (min-width: 620px) { .pop-home-duo { grid-template-columns: 1fr 1fr; } }
+.pop-home-duo .yt-cap { font-size: 0.82rem; }
 
 /* Auto Tour's move under the search bar (Dan, Oct 27 — order
    update): the panel's single copy now lives inside .hero-intro
