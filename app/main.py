@@ -9091,25 +9091,28 @@ def movies_page(request: Request):
 # The cadenmcdonald flying-ghost reel that led the page until
 # now heads the grid below instead.
 POP_CULTURE_FEATURED = {
-    # Halloween night top feature (Dan, 2026-10-31 evening — he
-    # replaced Bonnie's subway ghoul, now grid #1, with Autumn's
-    # frozen Titanic couple). TikTok lead: the templates branch
-    # on platform and swap in TikTok's official embed on tap.
-    "id": "7696173852589690143",
-    "platform": "tiktok",
-    "url": "https://www.tiktok.com/@autumntiktok2/video/7696173852589690143",
-    "thumb": "/static/img/autumntiktok2_titanic_ghosts.jpg",
-    "title": "The Titanic Ghosts — Frozen Since 1912",
-    "channel": "autumntiktok2",
-    "kind": "TikTok", "short": True,
-    "blurb": "The Halloween-night feature: Autumn and her Jack "
-             "as the Titanic's frozen ghosts — frost-caked hats, "
-             "icicles on the brim, whiteout eyes, Edwardian dress "
-             "and pearls under a layer of North Atlantic ice. "
-             "A costume idea she waited years to do (credit "
-             "@rachelthefifi) — 740K plays and a whole party "
-             "blown away. Near, far, wherever you are… they're "
-             "still on that ship. 🚢🧊",
+    # Halloween night, later (Dan, 2026-10-31 ~19:29-19:33):
+    # "Top live feature" + "feature on homepage" + "Put it on
+    # where the haunt culture feature is in the homepage" — the
+    # DinomiteTwins LIVE stream takes the Pop Haunt Culture
+    # featured slot (homepage hero + this page; the shared dict
+    # keeps them in step). "platform": "live" renders a tap-out
+    # facade (no in-place embed for a live room) linking to the
+    # TikTok live room; Autumn's Titanic Ghosts head the grid.
+    "id": "8826",
+    "platform": "live",
+    "url": "https://www.tiktok.com/@dinomitetwins/live",
+    "thumb": "/static/img/dinomitetwins_live.jpg",
+    "title": "DinomiteTwins — LIVE from NYC Halloween Night",
+    "channel": "dinomitetwins",
+    "kind": "TikTok LIVE", "short": True,
+    "blurb": "🔴 LIVE right now: Ali & Lexi, the DinomiteTwins, "
+             "are streaming New York City's Halloween night in "
+             "real time — the identical-twin IRL streamers "
+             "(140K+ followers) taking you through the parades, "
+             "the costumes and the chaos as it happens. Tap the "
+             "cover to watch live on TikTok — and find them at "
+             "#1 on HauntMap's Live board tonight.",
 }
 # The collection grid. Dan feeds entries one at a time; append dicts of
 # {"id", "title", "channel", "kind", "blurb"} — the template renders
@@ -9123,6 +9126,24 @@ POP_CULTURE_GRID: list[dict] = [
     # Grid #1: Bonnie's subway ghoul — Halloween Day's featured
     # pick, moved to the grid top when Autumn's Titanic ghosts
     # took the featured slot on Halloween night (Dan, 2026-10-31).
+    # Grid #1: Autumn's Titanic Ghosts — the Halloween-night
+    # feature until the DinomiteTwins live stream took the slot
+    # (Dan, 2026-10-31 ~19:33); heads the grid, Bonnie follows.
+    {"id": "7696173852589690143",
+     "platform": "tiktok",
+     "url": "https://www.tiktok.com/@autumntiktok2/video/7696173852589690143",
+     "thumb": "/static/img/autumntiktok2_titanic_ghosts.jpg",
+     "title": "The Titanic Ghosts — Frozen Since 1912",
+     "channel": "autumntiktok2",
+     "kind": "TikTok", "short": True,
+     "blurb": "Autumn and her Jack as the Titanic's frozen "
+              "ghosts — frost-caked hats, icicles on the brim, "
+              "whiteout eyes, Edwardian dress and pearls under "
+              "a layer of North Atlantic ice. A costume idea "
+              "she waited years to do (credit @rachelthefifi) "
+              "— 740K plays and a whole party blown away. "
+              "Near, far, wherever you are… they're still on "
+              "that ship. 🚢🧊"},
     {"id": "DfBDgREuIBC",
      "platform": "instagram",
      "url": "https://www.instagram.com/reel/DfBDgREuIBC/",

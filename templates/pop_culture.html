@@ -12,7 +12,12 @@
 
 <h2 class="music-h2" id="featured">&#x2B50; Featured</h2>
 <div class="yt-feature">
-  {% if featured.platform == 'facebook' %}
+  {% if featured.platform == 'live' %}
+  <a class="yt-facade yt-facade--live" href="{{ featured.url }}" target="_blank" rel="noopener" aria-label="Watch live: {{ featured.title }}">
+    <img src="{{ featured.thumb }}" alt="" loading="lazy">
+    <span class="yt-play" aria-hidden="true">&#x1F534;</span>
+  </a>
+  {% elif featured.platform == 'facebook' %}
   <button type="button" class="yt-facade yt-facade--fb" data-fb="{{ featured.url }}" aria-label="Play {{ featured.title }}">
     <img src="{{ featured.thumb }}" alt="" loading="lazy">
     <span class="yt-play" aria-hidden="true">&#9654;</span>
@@ -96,6 +101,7 @@ document.addEventListener('click', function (ev) {
   var fb = b.getAttribute('data-fb');
   var tt = b.getAttribute('data-ttv');
   var ig = b.getAttribute('data-ig');
+  if (!fb && !tt && !ig && !b.hasAttribute('data-yt')) return; // live tap-out facade: follow the link
   if (ig) {
     f.className = 'tt-frame';
     f.src = 'https://www.instagram.com/reel/' + ig + '/embed';

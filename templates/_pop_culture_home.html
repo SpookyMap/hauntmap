@@ -13,7 +13,12 @@
    homepage feature and the section page can never drift. #}
 <section class="pop-home" aria-label="Pop Haunt Culture feature">
   <h2>&#x1F4FA; Pop Haunt Culture</h2>
-  {% if pop_featured.platform == 'facebook' %}
+  {% if pop_featured.platform == 'live' %}
+  <a class="yt-facade yt-facade--live" href="{{ pop_featured.url }}" target="_blank" rel="noopener" aria-label="Watch live: {{ pop_featured.title }}">
+    <img src="{{ pop_featured.thumb }}" alt="" loading="lazy">
+    <span class="yt-play" aria-hidden="true">&#x1F534;</span>
+  </a>
+  {% elif pop_featured.platform == 'facebook' %}
   <button type="button" class="yt-facade yt-facade--fb" data-fb="{{ pop_featured.url }}" aria-label="Play {{ pop_featured.title }}">
     <img src="{{ pop_featured.thumb }}" alt="" loading="lazy">
     <span class="yt-play" aria-hidden="true">&#9654;</span>
@@ -53,6 +58,7 @@
     var fb = b.getAttribute('data-fb');
     var tt = b.getAttribute('data-ttv');
     var ig = b.getAttribute('data-ig');
+    if (!fb && !tt && !ig && !b.hasAttribute('data-yt')) return; // live tap-out facade: follow the link
     if (ig) {
       f.className = 'tt-frame';
       f.src = 'https://www.instagram.com/reel/' + ig + '/embed';
