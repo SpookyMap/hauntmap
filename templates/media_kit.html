@@ -19,14 +19,15 @@
 <div class="mk-stats">
   <div class="mk-stat"><strong>{{ '{:,}'.format(kit.total_pins) }}</strong><span>total listings</span></div>
   <div class="mk-stat"><strong>{{ kit.town_count }}</strong><span>towns covered</span></div>
-  <div class="mk-stat"><strong>{{ kit.state_count }}{% if kit.has_dc %} + DC{% endif %}</strong><span>states covered</span></div>
+  <div class="mk-stat"><strong>{{ kit.state_count }}{% if kit.has_dc %} + DC{% endif %}</strong><span>US states covered</span></div>
+  <div class="mk-stat"><strong>{{ kit.country_count }}</strong><span>countries — US, Canada &amp; the UK</span></div>
 </div>
 {% if kit.categories %}
 <ul class="mk-cats">
   {% for c in kit.categories %}<li><strong>{{ '{:,}'.format(c.count) }}</strong> {{ c.label }}</li>{% endfor %}
 </ul>
 {% endif %}
-{% if kit.states %}<p class="mk-note">Coverage: {{ kit.states|join(', ') }} — and growing weekly through the season.</p>{% endif %}
+{% if kit.states %}<p class="mk-note">Coverage: {{ kit.state_count }} US states{% if kit.has_dc %} + DC{% endif %}{% if kit.ca_count %} · Canada: {{ kit.ca_provinces|join(', ') }}{% endif %}{% if kit.has_uk %} · United Kingdom{% endif %} — and growing weekly through the season.</p>{% endif %}
 
 <h2 class="mk-h2">More than a map</h2>
 <ul class="mk-list">

@@ -2157,6 +2157,44 @@ def extract_state(town: str) -> str:
     return ""
 
 
+# Region classification for coverage stats (Dan, 2026-10-31): the
+# media kit's "states covered" counted every trailing region token
+# extract_state returns — Canadian provinces and the UK included —
+# and read "55 + DC" in a 50-state country. Coverage is now
+# bucketed honestly: US states, Canadian provinces, UK.
+US_STATE_CODES_50 = {
+    "AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DE", "FL", "GA",
+    "HI", "ID", "IL", "IN", "IA", "KS", "KY", "LA", "ME", "MD",
+    "MA", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ",
+    "NM", "NY", "NC", "ND", "OH", "OK", "OR", "PA", "RI", "SC",
+    "SD", "TN", "TX", "UT", "VT", "VA", "WA", "WV", "WI", "WY",
+}
+CA_PROVINCE_NAMES = {
+    "AB": "Alberta", "BC": "British Columbia", "MB": "Manitoba",
+    "NB": "New Brunswick", "NL": "Newfoundland & Labrador",
+    "NS": "Nova Scotia", "NT": "Northwest Territories",
+    "NU": "Nunavut", "ON": "Ontario", "PE": "Prince Edward Island",
+    "QC": "Quebec", "SK": "Saskatchewan", "YT": "Yukon",
+}
+
+
+def _coverage_buckets(state_set: set) -> dict:
+    """Split extracted region codes into honest coverage buckets."""
+    us = sorted(c for c in state_set if c in US_STATE_CODES_50)
+    ca = sorted(CA_PROVINCE_NAMES[c] for c in state_set
+                if c in CA_PROVINCE_NAMES)
+    countries = ["United States"]
+    if ca:
+        countries.append("Canada")
+    if "UK" in state_set:
+        countries.append("United Kingdom")
+    return {"us_count": len(us), "us_states": us,
+            "has_dc": "DC" in state_set,
+            "ca_provinces": ca, "ca_count": len(ca),
+            "has_uk": "UK" in state_set,
+            "countries": countries, "country_count": len(countries)}
+
+
 CITY_FIXES = {
     "port jefferson statiom": "Port Jefferson Station",
 }
@@ -8266,8 +8304,15 @@ def about(request: Request):
         if st:
             state_set.add(st)
     stats["town_count"] = len(labels)
-    stats["state_count"] = len(state_set - {"DC"})
-    stats["has_dc"] = "DC" in state_set
+    _b = _coverage_buckets(state_set)
+    stats["state_count"] = _b["us_count"]
+    stats["has_dc"] = _b["has_dc"]
+    _intl = []
+    if _b["ca_count"]:
+        _intl.append("Canada (%s)" % ", ".join(_b["ca_provinces"]))
+    if _b["has_uk"]:
+        _intl.append("the United Kingdom")
+    stats["intl_note"] = (" — plus " + " and ".join(_intl)) if _intl else ""
     return templates.TemplateResponse(
         request, "about.html", {"stats": stats, "site_name": SITE_NAME},
     )
@@ -9407,9 +9452,13 @@ def _mk_geo() -> dict:
             st = extract_state(r["town"] or "")
             if st:
                 state_set.add(st)
+        b = _coverage_buckets(state_set)
         return {"town_count": len(labels), "states": sorted(state_set),
-                "state_count": len(state_set - {"DC"}),
-                "has_dc": "DC" in state_set}
+                "state_count": b["us_count"], "has_dc": b["has_dc"],
+                "ca_provinces": b["ca_provinces"],
+                "ca_count": b["ca_count"], "has_uk": b["has_uk"],
+                "countries": b["countries"],
+                "country_count": b["country_count"]}
     b = _ttl_cached("mkgeo", build)
     return {**b, "states": list(b["states"])}
 
@@ -9458,6 +9507,11 @@ def media_kit(request: Request):
     kit["states"] = geo["states"]
     kit["state_count"] = geo["state_count"]
     kit["has_dc"] = geo["has_dc"]
+    kit["ca_provinces"] = geo["ca_provinces"]
+    kit["ca_count"] = geo["ca_count"]
+    kit["has_uk"] = geo["has_uk"]
+    kit["countries"] = geo["countries"]
+    kit["country_count"] = geo["country_count"]
     return templates.TemplateResponse(
         request, "media_kit.html", {"kit": kit, "site_name": SITE_NAME},
     )
