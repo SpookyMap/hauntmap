@@ -48,7 +48,12 @@
 <div class="yt-grid">
   {% for v in grid %}
   <article class="yt-item movie-card">
-    {% if v.platform == 'facebook' %}
+    {% if v.platform == 'live' %}
+    <a class="yt-facade yt-facade--tt" href="{{ v.url }}" target="_blank" rel="noopener" aria-label="Watch {{ v.title }} live">
+      <img src="{{ v.thumb }}" alt="" loading="lazy">
+      <span class="yt-play" aria-hidden="true">&#128308;</span>
+    </a>
+    {% elif v.platform == 'facebook' %}
     <button type="button" class="yt-facade yt-facade--fb" data-fb="{{ v.url }}" aria-label="Play {{ v.title }}">
       <img src="{{ v.thumb }}" alt="" loading="lazy">
       <span class="yt-play" aria-hidden="true">&#9654;</span>

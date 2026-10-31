@@ -11240,6 +11240,31 @@ async def admin_edit(entry_id: int, request: Request):
     return JSONResponse({"ok": True, "id": entry_id, "updated": updates})
 
 
+@app.post("/admin/video/{entry_id}")
+async def admin_add_video(entry_id: int, request: Request):
+    """Append a TikTok video to an entry's video list (admin).
+
+    Dan's multi-video rule (Oct 26): every video of the same place
+    lives on that place's ONE pin. Until now the only write path
+    was /admin/edit's primary swap, which displaces the old video
+    whenever the pin's list was never seeded. This route appends
+    via db.add_entry_video (dedupes by video id, seeds the current
+    primary as position 0 first when the list is empty, and never
+    touches the primary otherwise).
+    """
+    _require_admin(request)
+    form = await request.form()
+    url = str(form.get("url", "")).strip()
+    if not url or "tiktok.com" not in url or "/video/" not in url:
+        return JSONResponse({"error": "url must be a TikTok video URL"}, status_code=400)
+    if not get_entry(entry_id):
+        return JSONResponse({"error": "No such entry"}, status_code=404)
+    with get_conn(DB_PATH) as conn:
+        added = add_entry_video(conn, entry_id, url)
+        conn.commit()
+    return JSONResponse({"ok": True, "id": entry_id, "added": added})
+
+
 @app.post("/admin/media/{entry_id}")
 async def admin_media(entry_id: int, request: Request, media: UploadFile = File(None)):
     """Attach/replace media for an entry (admin)."""
