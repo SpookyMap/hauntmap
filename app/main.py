@@ -9037,22 +9037,23 @@ def movies_page(request: Request):
 # The cadenmcdonald flying-ghost reel that led the page until
 # now heads the grid below instead.
 POP_CULTURE_FEATURED = {
-    # Halloween Day top feature (Dan, 2026-10-31 — his pick over
-    # the Nun chihuahua, which moved to the grid): the Ghostface
-    # door popcorn bucket from Scream's 30th anniversary.
-    "id": "7702586753080773908",
-    "platform": "tiktok",
-    "url": "https://www.tiktok.com/@ivangranados11_/video/7702586753080773908",
-    "thumb": "/static/img/ghostface_door_bucket.jpg",
-    "title": "Ghostface at the Door — the Scream 30th Popcorn Bucket",
-    "channel": "ivangranados11_",
-    "kind": "TikTok", "short": True,
-    "blurb": "Hello, Sidney. 📞 The top feature for the big day: "
-             "the concession grail of Scream's 30th anniversary, "
-             "unboxed at Cinemex — a popcorn bucket built as the "
-             "front door, chained and scratched, with Ghostface "
-             "himself bursting through it, knife in hand. The US "
-             "chains' versions sold out in days.",
+    # Halloween Day top feature (Dan, 2026-10-31 — his final pick:
+    # Bonnie B.'s subway ghoul, over the Ghostface bucket and the
+    # Nun chihuahua, both now in the grid). Instagram lead: the
+    # templates branch on platform "instagram" (data-ig) and swap
+    # in Instagram's official /reel/<id>/embed player on tap.
+    "id": "DfBDgREuIBC",
+    "platform": "instagram",
+    "url": "https://www.instagram.com/reel/DfBDgREuIBC/",
+    "thumb": "/static/img/callme_bonniee_subway_ghoul.jpg",
+    "title": "Another Day Disturbing the Peace in NYC",
+    "channel": "callme_bonniee",
+    "kind": "Instagram Reel", "short": True,
+    "blurb": "The top feature for the big day: NYC makeup artist "
+             "Bonnie B. rides the subway in full ghoul — rotting "
+             "skin, purple hood, iced coffee in hand, phone out, "
+             "just trying to get home. 403K likes. This is "
+             "Halloween in New York.",
 }
 # The collection grid. Dan feeds entries one at a time; append dicts of
 # {"id", "title", "channel", "kind", "blurb"} — the template renders
@@ -9063,11 +9064,23 @@ POP_CULTURE_FEATURED = {
 # cover-frame file in static/img/): the template renders the local
 # still and the click handler swaps in that platform's official embed.
 POP_CULTURE_GRID: list[dict] = [
-    # Halloween Day adds (Dan, 2026-10-31): the Nun chihuahua and
-    # Bonnie B.'s subway ghoul lead the grid (Ghostface took the
-    # featured slot at Dan's call); the Jurassic Park show
-    # (featured until today) takes the third seat with its
-    # original caption.
+    # Halloween Day adds (Dan, 2026-10-31): the Ghostface bucket
+    # and the Nun chihuahua lead the grid (Bonnie's subway ghoul
+    # took the featured slot at Dan's final call); the Jurassic
+    # Park show (featured until today) takes the third seat with
+    # its original caption.
+    {"id": "7702586753080773908",
+     "platform": "tiktok",
+     "url": "https://www.tiktok.com/@ivangranados11_/video/7702586753080773908",
+     "thumb": "/static/img/ghostface_door_bucket.jpg",
+     "title": "Ghostface at the Door — the Scream 30th Popcorn Bucket",
+     "channel": "ivangranados11_",
+     "kind": "TikTok", "short": True,
+     "blurb": "The concession grail of Scream's 30th anniversary, "
+              "unboxed at Cinemex: a popcorn bucket built as the "
+              "front door — chained, scratched, and Ghostface "
+              "himself bursting through it, knife in hand. The US "
+              "chains' versions sold out in days. Hello, Sidney. 📞"},
     {"id": "De9S7RvhMtW",
      "platform": "instagram",
      "url": "https://www.instagram.com/reel/De9S7RvhMtW/",
@@ -9079,17 +9092,6 @@ POP_CULTURE_GRID: list[dict] = [
               "followers), IS Valak now — full Nun habit, yellow "
               "cross, and a snarl scarier than the movie. 491K "
               "likes. The tiniest demon on the internet."},
-    {"id": "DfBDgREuIBC",
-     "platform": "instagram",
-     "url": "https://www.instagram.com/reel/DfBDgREuIBC/",
-     "thumb": "/static/img/callme_bonniee_subway_ghoul.jpg",
-     "title": "Another Day Disturbing the Peace in NYC",
-     "channel": "callme_bonniee",
-     "kind": "Instagram Reel", "short": True,
-     "blurb": "NYC makeup artist Bonnie B. commutes in full ghoul "
-              "— rotting skin, purple hood, iced coffee in hand, "
-              "just trying to get home on the subway. 403K likes. "
-              "Halloween in the city, perfected."},
     {"id": "7701544192211684639",
      "platform": "tiktok",
      "url": "https://www.tiktok.com/@themeparkmom/video/7701544192211684639",
