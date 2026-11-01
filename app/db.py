@@ -227,6 +227,10 @@ HANDPICKED_ENTRY_IDS = (
     # homepage"); newest live hand-picked, leads the Live board,
     # 8537 follows at #2.
     8826,
+    # Oct 31: 9137 — Witch City Today LIVE (Winston-Salem
+    # NC; Dan corrected "Salem NC"). Its hand-picked flag was
+    # lost in a later tuple edit — restored 2026-10-31 21:5x.
+    9137,
     # Oct 31, late: 9469 — Get It CornDog LIVE, Broadway
     # Nashville; Dan made him the homepage Haunt Culture
     # feature, so he leads the Live board too.
