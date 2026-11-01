@@ -3999,6 +3999,7 @@ DIY_VIDEOS = [
     # official embedded player on tap. The video itself is never
     # re-hosted; every other entry here is a TikTok embed by
     # default (no "platform" key).
+    {"added": "2026-10-31", "title": "DIY GIANT Snake — Trash Bags & Poly-Fil", "creator": "@macy.blackwell", "url": "https://www.tiktok.com/@macy.blackwell/video/7676457789052456222", "video_id": "7676457789052456222", "blurb": "Macy Blackwell's giant yard snake — 1.3 million plays and counting — is built from six 42-gallon trash bags stuffed with poly-fil, duct tape, and construction-paper eyes and tongue. Cheap, easy, and big enough to stop traffic: cut the bag bottoms, stuff, tape the segments together and coil it across the lawn. The oversized-decor blueprint every haunt yard wants."},
     {"added": "2026-10-31", "title": "DIY Rapunzel — the Tower-Hair Costume Build", "creator": "@hayesandjames", "url": "https://www.tiktok.com/@hayesandjames/video/7700361613194333470", "video_id": "7700361613194333470", "blurb": "Kristen builds Rapunzel from the hair down — the cascade is the costume, and she wears the tower's worth of blonde like she was born in it. Eighteen seconds, 192K plays, and a comment section full of people asking the only question that matters: how did she DO that with the hair? Watch and learn."},
     {"added": "2026-10-31", "title": "Bloody Ice Cubes — the Gummy Worm Halloween Drink", "creator": "@itstartswithwonder", "url": "https://www.tiktok.com/@itstartswithwonder/video/7702952740934176030", "video_id": "7702952740934176030", "blurb": "Tonight's party trick: freeze gummy worms inside red ice cubes, drop them in a glass of clear soda, and watch the drink bleed red as the cubes melt and the worms escape. Twenty seconds of prep, zero skill required, maximum gross-out at the punch bowl."},
     {"added": "2026-10-31", "title": "The Ceiling Creature — Cardboard Body Build in 8 Seconds", "creator": "@rianwahl", "url": "https://www.tiktok.com/@rianwahl/video/7692742233207999751", "video_id": "7692742233207999751", "blurb": "Rian speedruns the body of her ceiling creature — a full cardboard-craft monster built to live above your head. Eight seconds of pure maker energy: cut, fold, shape, haunt. 135K plays and over a thousand saves from people already clearing their ceilings."},
@@ -9194,6 +9195,25 @@ POP_CULTURE_GRID: list[dict] = [
               "night — inside the dark, in real time, with "
               "whatever answers back. Tap out to his TikTok "
               "live room."},
+    # Grid #5: Exterior Magic AI — Dan sent it flagged
+    # "Feature on Pop haunt culture" (2026-10-31). NOTE: the
+    # video is an ad for the exteriormagicai.com AI design app
+    # (180 plays at posting). Placed top of the open grid; the
+    # homepage FEATURE swap is Dan's explicit call (asked
+    # 2026-10-31, awaiting his word).
+    {"id": "7702947457130351885",
+     "platform": "tiktok",
+     "url": "https://www.tiktok.com/@exteriormagicai/video/7702947457130351885",
+     "thumb": "/static/img/exteriormagicai.jpg",
+     "title": "The Boring House Gets a Halloween Glow-Up — by AI",
+     "channel": "exteriormagicai",
+     "kind": "TikTok video",
+     "blurb": "Every trick-or-treater skipped his house — so "
+              "he snapped one photo and let an AI design the "
+              "Halloween exterior. Say what you want about the "
+              "robots: the glow-up is real, and every haunter "
+              "watching is quietly wondering what it would do "
+              "to THEIR house."},
     # Grid #3: Moonbeamsmama's Furby costume — Dan's
     # Halloween-night culture add (2026-10-31); sits under the
     # two live/parade picks so the homepage duo stays put.
