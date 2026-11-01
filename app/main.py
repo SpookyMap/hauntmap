@@ -3168,7 +3168,7 @@ def home(request: Request, sort: str = "new", town: str = "", town_search: str =
          # feature sits NEXT TO the top collection picks on the
          # homepage — tonight that's the DinomiteTwins live room
          # and the Village Halloween Parade video.
-         "pop_home_grid": POP_CULTURE_GRID[:6],
+         "pop_home_grid": POP_CULTURE_GRID[:7],
          "trending": trending, "near_towns": near_towns,
          "home_top10": home_top10,
          "top10_menu": top10_menu,
@@ -9247,6 +9247,22 @@ POP_CULTURE_GRID: list[dict] = [
               "Halloween is 24/7 and scary movies are 99% of "
               "her personality. Spooky hangs and horror talk, "
               "live on Halloween night — tap out to her room."},
+    # Ethan's Adventures LIVE, Walt Disney World — Dan
+    # re-sent his live 2026-10-31 (fresh pin 9475; the old
+    # Oct 22 pin had vanished) and put him in the homepage
+    # Haunt Culture live group.
+    {"id": "9475",
+     "platform": "live",
+     "url": "https://www.tiktok.com/@ethansadventuress/live",
+     "thumb": "/static/img/ethansadventuress_live.jpg",
+     "title": "Ethan's Adventures — LIVE from Walt Disney World",
+     "channel": "ethansadventuress",
+     "kind": "TikTok LIVE", "short": True,
+     "blurb": "\U0001F534 LIVE from Walt Disney World: Ethan "
+              "streams the parks in real time for his 174K "
+              "followers — rides, parades and the Magic "
+              "Kingdom after dark on Halloween night. Tap out "
+              "to his live room."},
     # Grid #5: Exterior Magic AI — Dan sent it flagged
     # "Feature on Pop haunt culture" (2026-10-31). NOTE: the
     # video is an ad for the exteriormagicai.com AI design app
