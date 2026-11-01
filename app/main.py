@@ -9105,29 +9105,26 @@ def movies_page(request: Request):
 # The cadenmcdonald flying-ghost reel that led the page until
 # now heads the grid below instead.
 POP_CULTURE_FEATURED = {
-    # Halloween night, latest (Dan, 2026-10-31 ~19:50):
-    # "Feature this with Halloween parade in haunt culture on
-    # the homepage as live trick or treating" — Colleen
-    # Elizabeth's LIVE Midtown Manhattan stream takes the Pop
-    # Haunt Culture featured slot (homepage hero + this page;
-    # the shared dict keeps them in step). "platform": "live"
-    # renders a tap-out facade (no in-place embed for a live
-    # room) linking to the TikTok live room; the DinomiteTwins
-    # and the Village Parade video head the grid below.
-    "id": "9020",
+    # Halloween night (Dan, 2026-10-31 ~21:44, explicit:
+    # "Feature on homepage haunt culture") — Get It CornDog's
+    # LIVE Broadway, Nashville stream takes the featured slot
+    # from Colleen Elizabeth's NYC live, which rotates to the
+    # head of the grid below (the DinomiteTwins precedent).
+    # "platform": "live" renders a tap-out facade linking to
+    # the TikTok live room.
+    "id": "9469",
     "platform": "live",
-    "url": "https://www.tiktok.com/@colleenelizabethnyc/live",
-    "thumb": "/static/img/colleenelizabethnyc_live.jpg",
-    "title": "Live Trick-or-Treating — NYC Halloween Night",
-    "channel": "colleenelizabethnyc",
+    "url": "https://www.tiktok.com/@getitcorndog/live",
+    "thumb": "/static/img/getitcorndog_live.jpg",
+    "title": "Get It CornDog — LIVE from Broadway, Nashville",
+    "channel": "getitcorndog",
     "kind": "TikTok LIVE", "short": True,
-    "blurb": "🔴 LIVE right now: Colleen Elizabeth is "
-             "streaming Midtown Manhattan on Halloween night "
-             "— live trick-or-treating, city style. She walks "
-             "NYC live every day for her 132K followers; "
-             "tonight it's costumes, candy and parade-night "
-             "energy in the heart of the city. Tap the cover "
-             "to watch live on TikTok and walk with her.",
+    "blurb": "\U0001F525 LIVE right now: Nashville's CornDog "
+             "Man is streaming Halloween night from 307 "
+             "Broadway — food, music and the full honky-tonk "
+             "street party, right by Jason Aldean's. Music "
+             "City in costume, streamed from the middle of "
+             "it. Tap the cover to watch live on TikTok.",
 }
 # The collection grid. Dan feeds entries one at a time; append dicts of
 # {"id", "title", "channel", "kind", "blurb"} — the template renders
@@ -9138,6 +9135,20 @@ POP_CULTURE_FEATURED = {
 # cover-frame file in static/img/): the template renders the local
 # still and the click handler swaps in that platform's official embed.
 POP_CULTURE_GRID: list[dict] = [
+    # Grid #1: Colleen Elizabeth's NYC live — the featured
+    # pick until CornDog took the slot (Dan, 2026-10-31
+    # ~21:44); rotates to the head of the grid, still live.
+    {"id": "9020",
+     "platform": "live",
+     "url": "https://www.tiktok.com/@colleenelizabethnyc/live",
+     "thumb": "/static/img/colleenelizabethnyc_live.jpg",
+     "title": "Live Trick-or-Treating — NYC Halloween Night",
+     "channel": "colleenelizabethnyc",
+     "kind": "TikTok LIVE", "short": True,
+     "blurb": "\U0001F534 LIVE: Colleen Elizabeth streams "
+              "Midtown Manhattan on Halloween night — live "
+              "trick-or-treating, city style, for her 132K "
+              "followers. Tap out to her live room."},
     # Grid #1: DinomiteTwins LIVE — the homepage feature until
     # Colleen Elizabeth's live trick-or-treating took the slot
     # (Dan, 2026-10-31 ~19:50); still #1 on the Live board.
@@ -9208,19 +9219,6 @@ POP_CULTURE_GRID: list[dict] = [
               "Halloween is 24/7 and scary movies are 99% of "
               "her personality. Spooky hangs and horror talk, "
               "live on Halloween night — tap out to her room."},
-    # Grid #6: Get It CornDog LIVE from Broadway, Nashville
-    # — Dan: "Add to the live pop haunt culture" (2026-10-31).
-    {"id": "9469",
-     "platform": "live",
-     "url": "https://www.tiktok.com/@getitcorndog/live",
-     "thumb": "/static/img/getitcorndog_live.jpg",
-     "title": "Get It CornDog — LIVE from Broadway, Nashville",
-     "channel": "getitcorndog",
-     "kind": "TikTok LIVE", "short": True,
-     "blurb": "\U0001F534 Nashville's CornDog Man is LIVE "
-              "from 307 Broadway — food, music and the whole "
-              "Halloween street party by Jason Aldean's. Tap "
-              "out to his live room."},
     # Grid #5: Exterior Magic AI — Dan sent it flagged
     # "Feature on Pop haunt culture" (2026-10-31). NOTE: the
     # video is an ad for the exteriormagicai.com AI design app
