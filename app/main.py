@@ -3168,7 +3168,7 @@ def home(request: Request, sort: str = "new", town: str = "", town_search: str =
          # feature sits NEXT TO the top collection picks on the
          # homepage — tonight that's the DinomiteTwins live room
          # and the Village Halloween Parade video.
-         "pop_home_grid": POP_CULTURE_GRID[:2],
+         "pop_home_grid": POP_CULTURE_GRID[:3],
          "trending": trending, "near_towns": near_towns,
          "home_top10": home_top10,
          "top10_menu": top10_menu,
@@ -9161,6 +9161,20 @@ POP_CULTURE_GRID: list[dict] = [
               "floats rolling through Greenwich Village at "
               "peak Halloween. Mija caught the night as it "
               "happened. 🎃"},
+    # Grid #3: Brian Really Chicago LIVE — Dan put the
+    # Chicago live in the homepage feature group with the
+    # NYC lives and the parade (2026-10-31 ~20:29).
+    {"id": "9185",
+     "platform": "live",
+     "url": "https://www.tiktok.com/@brianreallychicago/live",
+     "thumb": "/static/img/brianreallychicago_live.jpg",
+     "title": "Brian Really Chicago — LIVE Halloween Night",
+     "channel": "brianreallychicago",
+     "kind": "TikTok LIVE", "short": True,
+     "blurb": "\U0001F534 Chicago's own IRL streamer is live "
+              "for Halloween night — downtown crowds, "
+              "costumes and chaos in real time. Tap out to "
+              "his TikTok live room."},
     # Grid #3: Moonbeamsmama's Furby costume — Dan's
     # Halloween-night culture add (2026-10-31); sits under the
     # two live/parade picks so the homepage duo stays put.
