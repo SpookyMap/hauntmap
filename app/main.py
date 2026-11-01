@@ -9133,26 +9133,26 @@ def movies_page(request: Request):
 # The cadenmcdonald flying-ghost reel that led the page until
 # now heads the grid below instead.
 POP_CULTURE_FEATURED = {
-    # Halloween night (Dan, 2026-10-31 ~21:44, explicit:
-    # "Feature on homepage haunt culture") — Get It CornDog's
-    # LIVE Broadway, Nashville stream takes the featured slot
-    # from Colleen Elizabeth's NYC live, which rotates to the
-    # head of the grid below (the DinomiteTwins precedent).
-    # "platform": "live" renders a tap-out facade linking to
-    # the TikTok live room.
-    "id": "9469",
+    # Halloween night (Dan, 2026-10-31 ~22:17, explicit:
+    # "Top of the feature") — Ethan's Adventures LIVE from
+    # Walt Disney World takes the featured slot; CornDog
+    # rotates to the head of the grid (the established
+    # rotation). Ethan's original Oct 22 live pin had
+    # vanished from production; fresh pin 9475 posted
+    # tonight. "platform": "live" = tap-out facade.
+    "id": "9475",
     "platform": "live",
-    "url": "https://www.tiktok.com/@getitcorndog/live",
-    "thumb": "/static/img/getitcorndog_live.jpg",
-    "title": "Get It CornDog — LIVE from Broadway, Nashville",
-    "channel": "getitcorndog",
+    "url": "https://www.tiktok.com/@ethansadventuress/live",
+    "thumb": "/static/img/ethansadventuress_live.jpg",
+    "title": "Ethan's Adventures — LIVE from Walt Disney World",
+    "channel": "ethansadventuress",
     "kind": "TikTok LIVE", "short": True,
-    "blurb": "\U0001F525 LIVE right now: Nashville's CornDog "
-             "Man is streaming Halloween night from 307 "
-             "Broadway — food, music and the full honky-tonk "
-             "street party, right by Jason Aldean's. Music "
-             "City in costume, streamed from the middle of "
-             "it. Tap the cover to watch live on TikTok.",
+    "blurb": "\U0001F534 LIVE right now: Ethan is streaming "
+             "Walt Disney World on Halloween night for his "
+             "174K followers — rides, parades, characters and "
+             "the Magic Kingdom after dark, when the Halloween "
+             "party takes over the park. Tap the cover to "
+             "watch live on TikTok and walk the park with him.",
 }
 # The collection grid. Dan feeds entries one at a time; append dicts of
 # {"id", "title", "channel", "kind", "blurb"} — the template renders
@@ -9163,6 +9163,20 @@ POP_CULTURE_FEATURED = {
 # cover-frame file in static/img/): the template renders the local
 # still and the click handler swaps in that platform's official embed.
 POP_CULTURE_GRID: list[dict] = [
+    # Grid #1: Get It CornDog LIVE, Broadway Nashville —
+    # the featured pick until Ethan took the top (Dan,
+    # 2026-10-31 ~22:17); rotates to the head of the grid.
+    {"id": "9469",
+     "platform": "live",
+     "url": "https://www.tiktok.com/@getitcorndog/live",
+     "thumb": "/static/img/getitcorndog_live.jpg",
+     "title": "Get It CornDog — LIVE from Broadway, Nashville",
+     "channel": "getitcorndog",
+     "kind": "TikTok LIVE", "short": True,
+     "blurb": "\U0001F534 Nashville's CornDog Man is LIVE "
+              "from 307 Broadway — food, music and the whole "
+              "Halloween street party by Jason Aldean's. Tap "
+              "out to his live room."},
     # Grid #1: Colleen Elizabeth's NYC live — the featured
     # pick until CornDog took the slot (Dan, 2026-10-31
     # ~21:44); rotates to the head of the grid, still live.
@@ -9247,22 +9261,6 @@ POP_CULTURE_GRID: list[dict] = [
               "Halloween is 24/7 and scary movies are 99% of "
               "her personality. Spooky hangs and horror talk, "
               "live on Halloween night — tap out to her room."},
-    # Ethan's Adventures LIVE, Walt Disney World — Dan
-    # re-sent his live 2026-10-31 (fresh pin 9475; the old
-    # Oct 22 pin had vanished) and put him in the homepage
-    # Haunt Culture live group.
-    {"id": "9475",
-     "platform": "live",
-     "url": "https://www.tiktok.com/@ethansadventuress/live",
-     "thumb": "/static/img/ethansadventuress_live.jpg",
-     "title": "Ethan's Adventures — LIVE from Walt Disney World",
-     "channel": "ethansadventuress",
-     "kind": "TikTok LIVE", "short": True,
-     "blurb": "\U0001F534 LIVE from Walt Disney World: Ethan "
-              "streams the parks in real time for his 174K "
-              "followers — rides, parades and the Magic "
-              "Kingdom after dark on Halloween night. Tap out "
-              "to his live room."},
     # Grid #5: Exterior Magic AI — Dan sent it flagged
     # "Feature on Pop haunt culture" (2026-10-31). NOTE: the
     # video is an ad for the exteriormagicai.com AI design app
