@@ -9174,6 +9174,20 @@ POP_CULTURE_GRID: list[dict] = [
               "up, zero fear. The 90s toy that blinked at you "
               "from the shelf is now trick-or-treating. "
               "Happy Halloween, indeed. \U0001F383"},
+    # Grid #4: Dezzy's viral Fortnite-emote moment — Dan's
+    # Halloween-night culture add (2026-10-31), under Furby.
+    {"id": "7702730132716260638",
+     "platform": "tiktok",
+     "url": "https://www.tiktok.com/@dezabaeeee/video/7702730132716260638",
+     "thumb": "/static/img/dezabaeeee_fortnite_emote.jpg",
+     "title": "Don't @ Me — the Fortnite Emote, IRL",
+     "channel": "dezabaeeee",
+     "kind": "TikTok", "short": True,
+     "blurb": "Six seconds, 5.2 MILLION plays: NYC creator "
+              "Dezzy hits the Fortnite Zany emote in full "
+              "Adventure Time cosplay and the internet loses "
+              "it — 2 million likes. The costume is the "
+              "emote now. Don\u2019t @ her. \U0001F3AE"},
     {"id": "7696173852589690143",
      "platform": "tiktok",
      "url": "https://www.tiktok.com/@autumntiktok2/video/7696173852589690143",
