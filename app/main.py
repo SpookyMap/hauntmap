@@ -9189,6 +9189,21 @@ POP_CULTURE_GRID: list[dict] = [
               "Adventure Time cosplay and the internet loses "
               "it — 2 million likes. The costume is the "
               "emote now. Don\u2019t @ her. \U0001F3AE"},
+    # Grid #5: the refrigerator costume — Dan's Halloween-
+    # night culture add (2026-10-31), under the emote.
+    {"id": "7701133009101081869",
+     "platform": "tiktok",
+     "url": "https://www.tiktok.com/@thelittlemakerspace/video/7701133009101081869",
+     "thumb": "/static/img/thelittlemakerspace_fridge.jpg",
+     "title": "The Refrigerator Costume — Fully Stocked, Working Dispenser",
+     "channel": "thelittlemakerspace",
+     "kind": "TikTok", "short": True,
+     "blurb": "A New Jersey maker built her son a fully-"
+              "stocked refrigerator costume — milk, eggs, "
+              "takeout, broccoli — with a WORKING water and "
+              "ice dispenser in the door. \u201cWorth every "
+              "second,\u201d she says, for the pure joy on his "
+              "face. 120K plays agree. \U0001F9CA"},
     {"id": "7696173852589690143",
      "platform": "tiktok",
      "url": "https://www.tiktok.com/@autumntiktok2/video/7696173852589690143",
