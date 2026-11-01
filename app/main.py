@@ -4148,7 +4148,11 @@ COSTUME_SECTIONS = [
         "title": "&#x2B50; Just Added",
         "sub": "The newest costumes on the page — fresh from the feed, straight to the top.",
         "ideas": [
-                        {"added": "2026-10-31", "name": "\u26A0\uFE0F SFX Fake-Blood Makeup — Viewer Discretion", "who": "Adults (graphic SFX)", "difficulty": "Intermediate", "time": "Watch the full tutorial",
+                        {"added": "2026-10-31", "name": "The Spookiest Toddler Hairstyle — Easy Halloween Hair", "who": "Toddlers & little girls (styled by a parent)", "difficulty": "Easy", "time": "Minutes",
+             "materials": "A brush, small hair elastics, bobby pins and a spooky little hair accessory",
+             "blurb": "The finishing touch for the cutest costume on the block: Adelia's spooky Halloween hairstyle for toddler girls — 641K plays because it really is that easy. A few elastics and pins turn everyday hair into a Halloween look that photographs like a dream next to the costume. Tap the video and try it on your littlest haunter.",
+             "source": "@hairbyadelia", "url": "https://www.tiktok.com/@hairbyadelia/video/7702905607312968973", "tt": "7702905607312968973"},
+            {"added": "2026-10-31", "name": "\u26A0\uFE0F SFX Fake-Blood Makeup — Viewer Discretion", "who": "Adults (graphic SFX)", "difficulty": "Intermediate", "time": "Watch the full tutorial",
              "materials": "Fake blood and SFX makeup basics — she flags it herself: TRIGGER WARNING, FAKE BLOOD",
              "blurb": "\u26A0\uFE0F VIEWER DISCRETION: this is realistic special-effects gore makeup (all fake). Alison Gay's Halloween SFX tutorial — 488K plays — walks through a fake-blood look step by step. Incredible artistry, genuinely graphic results: skip it if blood isn't your thing, study it if you're building a serious gore costume.",
              "source": "@alisongaymakeup", "url": "https://www.tiktok.com/@alisongaymakeup/video/7700258824577404182", "tt": "7700258824577404182"},
