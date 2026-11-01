@@ -9258,6 +9258,28 @@ POP_CULTURE_GRID: list[dict] = [
               "live room."},
     # Grid #5: A Haunting Dear LIVE — Dan: "Feature on live
     # haunt culture homepage" (2026-10-31).
+    # Page stack head (Dan, 2026-10-31 ~22:55): Heidi Klum's
+    # ARRIVAL at her own annual NYC Halloween party, shot by
+    # The Hollywood Reporter minutes ago (FB reel
+    # 2581182989054707; 89K views in its first half hour) —
+    # the Medusa look on the carpet, photographers calling
+    # for the tongue. Sits at the head of the page stack,
+    # under the homepage group. Still is the reel's own
+    # frame; tap swaps in Facebook's player.
+    {"id": "2581182989054707",
+     "platform": "facebook",
+     "url": "https://www.facebook.com/reel/2581182989054707/",
+     "thumb": "/static/img/heidi_klum_thr_arrival.jpg",
+     "title": "Heidi Klum Arrives at Her Own Party — Medusa",
+     "channel": "The Hollywood Reporter",
+     "kind": "Facebook Reel", "short": True,
+     "blurb": "The queen of Halloween arrives at her own "
+              "annual party in NYC, and The Hollywood "
+              "Reporter's camera is on the carpet: the full "
+              "Medusa look in motion, snakes and all, while a "
+              "wall of photographers begs for the forked "
+              "tongue. 89K views in the first half hour. You "
+              "saw the reveal — this is the arrival."},
     {"id": "9462",
      "platform": "live",
      "url": "https://www.tiktok.com/@ahauntingdear/live",
