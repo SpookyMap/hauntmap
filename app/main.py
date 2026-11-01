@@ -4148,6 +4148,10 @@ COSTUME_SECTIONS = [
         "title": "&#x2B50; Just Added",
         "sub": "The newest costumes on the page — fresh from the feed, straight to the top.",
         "ideas": [
+                        {"added": "2026-11-01", "name": "DIY Monster Claw Fingers — Rolled Paper, Painted Black", "who": "Adults & teens", "difficulty": "Easy", "time": "About 30 minutes",
+             "materials": "Paper rolled into long tapered tubes, tape or glue for the finger joints, black paint and a brush",
+             "blurb": "Sanrio Craftiz rolls plain paper into long tapered tubes, joints them like knuckles and paints the whole set black — five spider-leg claws, one for every finger, blended onto the hand with a final coat of paint so they look grown, not glued. Twelve seconds, 1.1 million plays, and the cheapest monster hands on the internet. Tap the video and build a pair.",
+             "source": "@sanriocraftiz", "url": "https://www.tiktok.com/@sanriocraftiz/video/7702530247736003872", "tt": "7702530247736003872"},
                         {"added": "2026-10-31", "name": "The Spookiest Toddler Hairstyle — Easy Halloween Hair", "who": "Toddlers & little girls (styled by a parent)", "difficulty": "Easy", "time": "Minutes",
              "materials": "A brush, small hair elastics, bobby pins and a spooky little hair accessory",
              "blurb": "The finishing touch for the cutest costume on the block: Adelia's spooky Halloween hairstyle for toddler girls — 641K plays because it really is that easy. A few elastics and pins turn everyday hair into a Halloween look that photographs like a dream next to the costume. Tap the video and try it on your littlest haunter.",
@@ -9141,26 +9145,30 @@ def movies_page(request: Request):
 # The cadenmcdonald flying-ghost reel that led the page until
 # now heads the grid below instead.
 POP_CULTURE_FEATURED = {
-    # Halloween night (Dan, 2026-10-31 ~22:17, explicit:
-    # "Top of the feature") — Ethan's Adventures LIVE from
-    # Walt Disney World takes the featured slot; CornDog
-    # rotates to the head of the grid (the established
-    # rotation). Ethan's original Oct 22 live pin had
-    # vanished from production; fresh pin 9475 posted
-    # tonight. "platform": "live" = tap-out facade.
-    "id": "9475",
-    "platform": "live",
-    "url": "https://www.tiktok.com/@ethansadventuress/live",
-    "thumb": "/static/img/ethansadventuress_live.jpg",
-    "title": "Ethan's Adventures — LIVE from Walt Disney World",
-    "channel": "ethansadventuress",
-    "kind": "TikTok LIVE", "short": True,
-    "blurb": "\U0001F534 LIVE right now: Ethan is streaming "
-             "Walt Disney World on Halloween night for his "
-             "174K followers — rides, parades, characters and "
-             "the Magic Kingdom after dark, when the Halloween "
-             "party takes over the park. Tap the cover to "
-             "watch live on TikTok and walk the park with him.",
+    # Featured (Dan, 2026-11-01): Heidi Klum's 2026 party
+    # entrance — Variety's video of her arrival at her own
+    # NYC Halloween party as a giant severed human hand,
+    # delivered by biohazard truck and unloaded by a hazmat
+    # crew (16.9M plays in a day). Dan's same instruction
+    # removed every LIVE card from the homepage feature:
+    # live rooms live on the Live board only now. The still
+    # is the video's own frame (the hand, mid-unload),
+    # stored locally; tap swaps in TikTok's embed player.
+    "id": "7703024884800146702",
+    "platform": "tiktok",
+    "url": "https://www.tiktok.com/@varietymagazine/video/7703024884800146702",
+    "thumb": "/static/img/heidi_klum_variety_hand.jpg",
+    "title": "Heidi Klum Arrives as a Severed Human Hand",
+    "channel": "Variety",
+    "kind": "TikTok", "short": True,
+    "blurb": "16.9 MILLION plays in a day. Heidi Klum's "
+             "2026 entrance at her own NYC Halloween party: "
+             "delivered in a biohazard truck and unloaded by "
+             "a hazmat crew — a giant severed hand, wedding "
+             "ring, red nails and all, with Heidi inside. "
+             "Variety's camera caught the whole unload. The "
+             "queen of Halloween doesn't walk the carpet "
+             "anymore; she arrives as evidence.",
 }
 # The collection grid. Dan feeds entries one at a time; append dicts of
 # {"id", "title", "channel", "kind", "blurb"} — the template renders
@@ -9171,49 +9179,31 @@ POP_CULTURE_FEATURED = {
 # cover-frame file in static/img/): the template renders the local
 # still and the click handler swaps in that platform's official embed.
 POP_CULTURE_GRID: list[dict] = [
-    # Grid #1: Get It CornDog LIVE, Broadway Nashville —
-    # the featured pick until Ethan took the top (Dan,
-    # 2026-10-31 ~22:17); rotates to the head of the grid.
-    {"id": "9469",
-     "platform": "live",
-     "url": "https://www.tiktok.com/@getitcorndog/live",
-     "thumb": "/static/img/getitcorndog_live.jpg",
-     "title": "Get It CornDog — LIVE from Broadway, Nashville",
-     "channel": "getitcorndog",
-     "kind": "TikTok LIVE", "short": True,
-     "blurb": "\U0001F534 Nashville's CornDog Man is LIVE "
-              "from 307 Broadway — food, music and the whole "
-              "Halloween street party by Jason Aldean's. Tap "
-              "out to his live room."},
-    # Grid #1: Colleen Elizabeth's NYC live — the featured
-    # pick until CornDog took the slot (Dan, 2026-10-31
-    # ~21:44); rotates to the head of the grid, still live.
-    {"id": "9020",
-     "platform": "live",
-     "url": "https://www.tiktok.com/@colleenelizabethnyc/live",
-     "thumb": "/static/img/colleenelizabethnyc_live.jpg",
-     "title": "Live Trick-or-Treating — NYC Halloween Night",
-     "channel": "colleenelizabethnyc",
-     "kind": "TikTok LIVE", "short": True,
-     "blurb": "\U0001F534 LIVE: Colleen Elizabeth streams "
-              "Midtown Manhattan on Halloween night — live "
-              "trick-or-treating, city style, for her 132K "
-              "followers. Tap out to her live room."},
-    # Grid #1: DinomiteTwins LIVE — the homepage feature until
-    # Colleen Elizabeth's live trick-or-treating took the slot
-    # (Dan, 2026-10-31 ~19:50); still #1 on the Live board.
-    {"id": "8826",
-     "platform": "live",
-     "url": "https://www.tiktok.com/@dinomitetwins/live",
-     "thumb": "/static/img/dinomitetwins_live.jpg",
-     "title": "DinomiteTwins — LIVE from NYC Halloween Night",
-     "channel": "dinomitetwins",
-     "kind": "TikTok LIVE", "short": True,
-     "blurb": "🔴 Ali &amp; Lexi, the identical-twin IRL "
-              "streamers (140K+ followers, Twitch Partners), "
-              "live from New York City for Halloween night — "
-              "parades, costumes and chaos in real time. Tap "
-              "out to their TikTok live room."},
+
+    # Grid head (Dan, 2026-11-01): "Helsinki evening vibe!"
+    # from the I love Finland Facebook group, posted by
+    # Dimon Lugansk on Halloween afternoon — Helsinki after
+    # dark in late autumn. The video's own poster frame is
+    # pure black (it fades in from darkness), so the card
+    # art is a real Helsinki evening photograph (Wikimedia
+    # Commons) of the same subject, NOT a frame from the
+    # video. Tap swaps in Facebook's player on the group
+    # permalink (public post).
+    {"id": "2208711869717262",
+     "platform": "facebook",
+     "url": "https://www.facebook.com/groups/1318914188697039/permalink/2208711869717262/",
+     "thumb": "/static/img/helsinki_evening.jpg",
+     "title": "Helsinki Evening Vibe",
+     "channel": "I love Finland",
+     "kind": "Facebook Video", "short": True,
+     "blurb": "Shared in the I love Finland group on "
+              "Halloween afternoon: Helsinki after dark, "
+              "where in late autumn the evening lands in "
+              "the middle of the day and the city glows "
+              "against a night that lasts most of the "
+              "clock. No costumes, no jump scares — just "
+              "the real-world capital of haunting-season "
+              "mood, all winter long."},
     # Grid #2: the Village Halloween Parade video — Dan paired
     # it with the live trick-or-treating feature (2026-10-31).
     {"id": "7702873779386453278",
@@ -9228,34 +9218,6 @@ POP_CULTURE_GRID: list[dict] = [
               "floats rolling through Greenwich Village at "
               "peak Halloween. Mija caught the night as it "
               "happened. 🎃"},
-    # Grid #3: Brian Really Chicago LIVE — Dan put the
-    # Chicago live in the homepage feature group with the
-    # NYC lives and the parade (2026-10-31 ~20:29).
-    {"id": "9185",
-     "platform": "live",
-     "url": "https://www.tiktok.com/@brianreallychicago/live",
-     "thumb": "/static/img/brianreallychicago_live.jpg",
-     "title": "Brian Really Chicago — LIVE Halloween Night",
-     "channel": "brianreallychicago",
-     "kind": "TikTok LIVE", "short": True,
-     "blurb": "\U0001F534 Chicago's own IRL streamer is live "
-              "for Halloween night — downtown crowds, "
-              "costumes and chaos in real time. Tap out to "
-              "his TikTok live room."},
-    # Grid #4: Steve Brodt LIVE — Dan added him to the
-    # homepage Haunt Culture feature group (2026-10-31).
-    {"id": "9447",
-     "platform": "live",
-     "url": "https://www.tiktok.com/@stevebrodt/live",
-     "thumb": "/static/img/stevebrodt_live.jpg",
-     "title": "Steve Brodt — LIVE Paranormal Investigation",
-     "channel": "stevebrodt",
-     "kind": "TikTok LIVE", "short": True,
-     "blurb": "\U0001F534 Paranormal investigator Steve "
-              "Brodt (Haunted Nights) is live on Halloween "
-              "night — inside the dark, in real time, with "
-              "whatever answers back. Tap out to his TikTok "
-              "live room."},
     # Grid #5: A Haunting Dear LIVE — Dan: "Feature on live
     # haunt culture homepage" (2026-10-31).
     # Page stack head (Dan, 2026-10-31 ~22:55): Heidi Klum's
@@ -9280,17 +9242,6 @@ POP_CULTURE_GRID: list[dict] = [
               "wall of photographers begs for the forked "
               "tongue. 89K views in the first half hour. You "
               "saw the reveal — this is the arrival."},
-    {"id": "9462",
-     "platform": "live",
-     "url": "https://www.tiktok.com/@ahauntingdear/live",
-     "thumb": "/static/img/ahauntingdear_live.jpg",
-     "title": "A Haunting Dear — LIVE Halloween Night",
-     "channel": "ahauntingdear",
-     "kind": "TikTok LIVE", "short": True,
-     "blurb": "\U0001F534 LIVE: for this final ghoul, "
-              "Halloween is 24/7 and scary movies are 99% of "
-              "her personality. Spooky hangs and horror talk, "
-              "live on Halloween night — tap out to her room."},
     # Grid #5: Exterior Magic AI — Dan sent it flagged
     # "Feature on Pop haunt culture" (2026-10-31). NOTE: the
     # video is an ad for the exteriormagicai.com AI design app
