@@ -36,6 +36,23 @@
   <p class="diy-watch"><a href="/diy-costumes">Browse DIY Costumes &#x2192;</a></p>
 </div>
 
+<h2 class="diy-section-title" id="txg">&#x267B; TxGOLDEN: STUDIO — <a href="https://www.tiktok.com/@txgldn" target="_blank" rel="noopener">@txgldn</a></h2>
+<p class="diy-section-sub">Everything he makes is rubbish — literally. TxGOLDEN builds Halloween props and animatronics out of cardboard, plastic bottles, expanding foam and whatever's lying around: a 550K-play cardboard coffin, a mutated-rose animatronic, monster arms with endless uses. Fifteen of his builds live here.</p>
+
+<div class="diy-grid">
+  {% for v in txg_videos %}
+  <div class="diy-card">
+    <h3>{{ v.title }}</h3>
+    <p class="diy-creator">by {{ v.creator }}</p>
+    <p class="diy-blurb">{{ v.blurb }}</p>
+    <div class="diy-embed">
+      <iframe src="https://www.tiktok.com/embed/v2/{{ v.video_id }}" allowfullscreen scrolling="no" allow="encrypted-media; picture-in-picture" loading="lazy" title="{{ v.title }}"></iframe>
+    </div>
+    <p class="diy-watch"><a href="{{ v.url }}" target="_blank" rel="noopener">Watch on TikTok &#x2197;</a></p>
+  </div>
+  {% endfor %}
+</div>
+
 <h2 class="diy-section-title">&#x1F332; Wyld Woods DIY — <a href="https://www.tiktok.com/@wyldwoodsdiy" target="_blank" rel="noopener">@wyldwoodsdiy</a></h2>
 <p class="diy-section-sub">Dollar Tree Halloween magic from Wyld Woods DIY — a glowing crystal ball in skeleton hands, specimen jars, the slimed house and the famous Monster-in-a-Box costume. Our most prolific DIY creator: every one of her builds lives here.</p>
 
