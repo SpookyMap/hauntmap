@@ -4118,6 +4118,10 @@ COSTUME_SECTIONS = [
         "title": "&#x2B50; Just Added",
         "sub": "The newest costumes on the page — fresh from the feed, straight to the top.",
         "ideas": [
+            {"added": "2026-10-31", "name": "The Porta-Potty Costume — a Full Bathroom, Worn", "who": "Adults & teens", "difficulty": "Medium", "time": "A weekend",
+             "materials": "A big cardboard or foam-board shell you can step inside, porta-potty blue paint, printed door signage and vent details, shoulder straps to carry it",
+             "blurb": "The costume nobody else at the party will be wearing: a full porta-potty, built to walk around in — the blue shell, the door, the little details all faithfully recreated, and the wearer inside it. Valladolid Angle's showcase walks through the finished build and why it lands so hard: it's instantly readable from across the street and it commits completely. Tap the video and take the tour.",
+             "source": "@valladolid.angle", "url": "https://www.tiktok.com/@valladolid.angle/video/7702801234037705998", "tt": "7702801234037705998"},
             {"added": "2026-10-29", "name": "Pierrot Clown Hat — Easy Sewn Cone Hat Tutorial", "who": "Adults & teens", "difficulty": "Easy", "time": "About an hour",
              "materials": "Fabric for the cone, a stiff layer to give the cone structure, felt stars, tulle for the ruffle, yarn for the pom-pom, elastic to secure it",
              "blurb": "Keiko Lynn sews the finishing piece of her Pierrot-inspired clown costume: a powder-blue cone hat with stitched yellow felt stars, a ruffled tulle brim and a big yarn pom-pom on top, held on with elastic at the sides. She posted the costume and the makeup separately — this video is the hat, start to finish. Tap the video and sew yours.",
