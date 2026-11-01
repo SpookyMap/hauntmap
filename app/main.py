@@ -3168,7 +3168,7 @@ def home(request: Request, sort: str = "new", town: str = "", town_search: str =
          # feature sits NEXT TO the top collection picks on the
          # homepage — tonight that's the DinomiteTwins live room
          # and the Village Halloween Parade video.
-         "pop_home_grid": POP_CULTURE_GRID[:3],
+         "pop_home_grid": POP_CULTURE_GRID[:4],
          "trending": trending, "near_towns": near_towns,
          "home_top10": home_top10,
          "top10_menu": top10_menu,
@@ -9180,6 +9180,20 @@ POP_CULTURE_GRID: list[dict] = [
               "for Halloween night — downtown crowds, "
               "costumes and chaos in real time. Tap out to "
               "his TikTok live room."},
+    # Grid #4: Steve Brodt LIVE — Dan added him to the
+    # homepage Haunt Culture feature group (2026-10-31).
+    {"id": "9447",
+     "platform": "live",
+     "url": "https://www.tiktok.com/@stevebrodt/live",
+     "thumb": "/static/img/stevebrodt_live.jpg",
+     "title": "Steve Brodt — LIVE Paranormal Investigation",
+     "channel": "stevebrodt",
+     "kind": "TikTok LIVE", "short": True,
+     "blurb": "\U0001F534 Paranormal investigator Steve "
+              "Brodt (Haunted Nights) is live on Halloween "
+              "night — inside the dark, in real time, with "
+              "whatever answers back. Tap out to his TikTok "
+              "live room."},
     # Grid #3: Moonbeamsmama's Furby costume — Dan's
     # Halloween-night culture add (2026-10-31); sits under the
     # two live/parade picks so the homepage duo stays put.

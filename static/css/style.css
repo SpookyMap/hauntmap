@@ -6136,8 +6136,7 @@ main.wrap:has(> .vt-tv-strip-bottom) { padding-bottom: 0; }
 .pop-home-more a { font-weight: 700; color: #b18cff; }
 .pop-home-more a:hover { color: #d3bcff; }
 .pop-home-duo { display: grid; grid-template-columns: 1fr; gap: 0.7rem; margin-top: 0.85rem; }
-@media (min-width: 620px) { .pop-home-duo { grid-template-columns: 1fr 1fr; } }
-@media (min-width: 980px) { .pop-home-duo { grid-template-columns: 1fr 1fr 1fr; } }
+@media (min-width: 620px) { .pop-home-duo { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); } }
 .pop-home-duo .yt-cap { font-size: 0.82rem; }
 
 /* Auto Tour's move under the search bar (Dan, Oct 27 — order
