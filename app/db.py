@@ -227,6 +227,10 @@ HANDPICKED_ENTRY_IDS = (
     # homepage"); newest live hand-picked, leads the Live board,
     # 8537 follows at #2.
     8826,
+    # Oct 31, late: 9469 — Get It CornDog LIVE, Broadway
+    # Nashville; Dan made him the homepage Haunt Culture
+    # feature, so he leads the Live board too.
+    9469,
 )
 
 SCHEMA = """
