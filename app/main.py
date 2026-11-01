@@ -9254,6 +9254,26 @@ POP_CULTURE_GRID: list[dict] = [
               "the reminder as the clock ran out — 284K "
               "plays of pure handover energy. Halloween "
               "bows out; the Jolly Map era begins. \U0001F384"},
+    # Grid #8: Heidi Klum's Medusa — Dan sent Fox News'
+    # iconic-transformations post on Halloween night
+    # (2026-10-31); the Fox post is a photo carousel, so
+    # the shelf carries ET's video of the same moment.
+    {"id": "7567605313101171999",
+     "platform": "tiktok",
+     "url": "https://www.tiktok.com/@entertainmenttonight/video/7567605313101171999",
+     "thumb": "/static/img/heidiklum_medusa.jpg",
+     "title": "Heidi Klum's Medusa — the Queen of Halloween",
+     "channel": "entertainmenttonight",
+     "kind": "TikTok", "short": True,
+     "blurb": "Every Halloween has one costume that ends "
+              "the conversation. Heidi Klum's Medusa — ten "
+              "hours of hand-painted scales, animatronic "
+              "snakes writhing in her hair, a split serpent "
+              "tongue, and husband Tom Kaulitz turned to "
+              "stone beside her — is the one the others get "
+              "measured against. ET caught the reveal; "
+              "4.5 million plays watched her slither in. "
+              "\U0001F40D"},
     {"id": "7696173852589690143",
      "platform": "tiktok",
      "url": "https://www.tiktok.com/@autumntiktok2/video/7696173852589690143",
