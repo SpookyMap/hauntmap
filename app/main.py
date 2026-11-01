@@ -3168,7 +3168,7 @@ def home(request: Request, sort: str = "new", town: str = "", town_search: str =
          # feature sits NEXT TO the top collection picks on the
          # homepage — tonight that's the DinomiteTwins live room
          # and the Village Halloween Parade video.
-         "pop_home_grid": POP_CULTURE_GRID[:5],
+         "pop_home_grid": POP_CULTURE_GRID[:6],
          "trending": trending, "near_towns": near_towns,
          "home_top10": home_top10,
          "top10_menu": top10_menu,
@@ -9208,6 +9208,19 @@ POP_CULTURE_GRID: list[dict] = [
               "Halloween is 24/7 and scary movies are 99% of "
               "her personality. Spooky hangs and horror talk, "
               "live on Halloween night — tap out to her room."},
+    # Grid #6: Get It CornDog LIVE from Broadway, Nashville
+    # — Dan: "Add to the live pop haunt culture" (2026-10-31).
+    {"id": "9469",
+     "platform": "live",
+     "url": "https://www.tiktok.com/@getitcorndog/live",
+     "thumb": "/static/img/getitcorndog_live.jpg",
+     "title": "Get It CornDog — LIVE from Broadway, Nashville",
+     "channel": "getitcorndog",
+     "kind": "TikTok LIVE", "short": True,
+     "blurb": "\U0001F534 Nashville's CornDog Man is LIVE "
+              "from 307 Broadway — food, music and the whole "
+              "Halloween street party by Jason Aldean's. Tap "
+              "out to his live room."},
     # Grid #5: Exterior Magic AI — Dan sent it flagged
     # "Feature on Pop haunt culture" (2026-10-31). NOTE: the
     # video is an ad for the exteriormagicai.com AI design app
