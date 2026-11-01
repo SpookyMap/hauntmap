@@ -3168,7 +3168,7 @@ def home(request: Request, sort: str = "new", town: str = "", town_search: str =
          # feature sits NEXT TO the top collection picks on the
          # homepage — tonight that's the DinomiteTwins live room
          # and the Village Halloween Parade video.
-         "pop_home_grid": POP_CULTURE_GRID[:4],
+         "pop_home_grid": POP_CULTURE_GRID[:5],
          "trending": trending, "near_towns": near_towns,
          "home_top10": home_top10,
          "top10_menu": top10_menu,
@@ -9195,6 +9195,19 @@ POP_CULTURE_GRID: list[dict] = [
               "night — inside the dark, in real time, with "
               "whatever answers back. Tap out to his TikTok "
               "live room."},
+    # Grid #5: A Haunting Dear LIVE — Dan: "Feature on live
+    # haunt culture homepage" (2026-10-31).
+    {"id": "9462",
+     "platform": "live",
+     "url": "https://www.tiktok.com/@ahauntingdear/live",
+     "thumb": "/static/img/ahauntingdear_live.jpg",
+     "title": "A Haunting Dear — LIVE Halloween Night",
+     "channel": "ahauntingdear",
+     "kind": "TikTok LIVE", "short": True,
+     "blurb": "\U0001F534 LIVE: for this final ghoul, "
+              "Halloween is 24/7 and scary movies are 99% of "
+              "her personality. Spooky hangs and horror talk, "
+              "live on Halloween night — tap out to her room."},
     # Grid #5: Exterior Magic AI — Dan sent it flagged
     # "Feature on Pop haunt culture" (2026-10-31). NOTE: the
     # video is an ad for the exteriormagicai.com AI design app
@@ -9214,6 +9227,20 @@ POP_CULTURE_GRID: list[dict] = [
               "robots: the glow-up is real, and every haunter "
               "watching is quietly wondering what it would do "
               "to THEIR house."},
+    # Britt's Wicked Manor's Thriller show night — Dan
+    # sent it for Pop Haunt Culture 2026-10-31.
+    {"id": "7692862460897889567",
+     "platform": "tiktok",
+     "url": "https://www.tiktok.com/@brittswicked_manor/video/7692862460897889567",
+     "thumb": "/static/img/brittswicked_thriller.jpg",
+     "title": "Britt's Wicked Manor Does Thriller — Live Show Night",
+     "channel": "brittswicked_manor",
+     "kind": "TikTok video",
+     "blurb": "A home haunt that doesn't just decorate — it "
+              "performs. Britt's Wicked Manor put on Thriller "
+              "for the whole street, zombies and all, and the "
+              "crowd came out for the show. This is the "
+              "difference between a display and a destination."},
     # Grid #3: Moonbeamsmama's Furby costume — Dan's
     # Halloween-night culture add (2026-10-31); sits under the
     # two live/parade picks so the homepage duo stays put.
