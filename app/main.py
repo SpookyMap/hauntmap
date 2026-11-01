@@ -9219,6 +9219,20 @@ POP_CULTURE_GRID: list[dict] = [
               "ice dispenser in the door. \u201cWorth every "
               "second,\u201d she says, for the pure joy on his "
               "face. 120K plays agree. \U0001F9CA"},
+    # Grid #6: the flying Superman costume — Dan's
+    # Halloween-night culture add (2026-10-31).
+    {"id": "7701875762495753502",
+     "platform": "tiktok",
+     "url": "https://www.tiktok.com/@bensonbros/video/7701875762495753502",
+     "thumb": "/static/img/bensonbros_superman.jpg",
+     "title": "The Flying Superman Costume — a DIY Illusion",
+     "channel": "bensonbros",
+     "kind": "TikTok", "short": True,
+     "blurb": "The Benson Bros built a Superman costume "
+              "that actually flies — a forced-perspective "
+              "rig that sends him soaring up to the porch "
+              "for trick-or-treat. Two minutes of build, "
+              "179K plays, one perfect landing. \U0001F9B8"},
     {"id": "7696173852589690143",
      "platform": "tiktok",
      "url": "https://www.tiktok.com/@autumntiktok2/video/7696173852589690143",
