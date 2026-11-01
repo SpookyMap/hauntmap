@@ -9237,6 +9237,22 @@ POP_CULTURE_GRID: list[dict] = [
               "rig that sends him soaring up to the porch "
               "for trick-or-treat. Two minutes of build, "
               "179K plays, one perfect landing. \U0001F9B8"},
+    # Grid #7: Mariah defrosting — the season-turn meme,
+    # Dan's Halloween-night culture add (2026-10-31), timed
+    # to the Jolly Map gear-shift that starts Nov 1.
+    {"id": "7702798175953767711",
+     "platform": "tiktok",
+     "url": "https://www.tiktok.com/@santiadoptmexwz/video/7702798175953767711",
+     "thumb": "/static/img/santi_mariah_defrosting.jpg",
+     "title": "She's Defrosting — the Season Turns",
+     "channel": "santiadoptmexwz",
+     "kind": "TikTok", "short": True,
+     "blurb": "The most reliable sign of the season: at "
+              "midnight on Halloween, somewhere deep in the "
+              "vault, Mariah begins to thaw. Santi posted "
+              "the reminder as the clock ran out — 284K "
+              "plays of pure handover energy. Halloween "
+              "bows out; the Jolly Map era begins. \U0001F384"},
     {"id": "7696173852589690143",
      "platform": "tiktok",
      "url": "https://www.tiktok.com/@autumntiktok2/video/7696173852589690143",
