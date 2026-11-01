@@ -4148,7 +4148,11 @@ COSTUME_SECTIONS = [
         "title": "&#x2B50; Just Added",
         "sub": "The newest costumes on the page — fresh from the feed, straight to the top.",
         "ideas": [
-            {"added": "2026-10-31", "name": "The Porta-Potty Costume — a Full Bathroom, Worn", "who": "Adults & teens", "difficulty": "Medium", "time": "A weekend",
+                        {"added": "2026-10-31", "name": "\u26A0\uFE0F SFX Fake-Blood Makeup — Viewer Discretion", "who": "Adults (graphic SFX)", "difficulty": "Intermediate", "time": "Watch the full tutorial",
+             "materials": "Fake blood and SFX makeup basics — she flags it herself: TRIGGER WARNING, FAKE BLOOD",
+             "blurb": "\u26A0\uFE0F VIEWER DISCRETION: this is realistic special-effects gore makeup (all fake). Alison Gay's Halloween SFX tutorial — 488K plays — walks through a fake-blood look step by step. Incredible artistry, genuinely graphic results: skip it if blood isn't your thing, study it if you're building a serious gore costume.",
+             "source": "@alisongaymakeup", "url": "https://www.tiktok.com/@alisongaymakeup/video/7700258824577404182", "tt": "7700258824577404182"},
+{"added": "2026-10-31", "name": "The Porta-Potty Costume — a Full Bathroom, Worn", "who": "Adults & teens", "difficulty": "Medium", "time": "A weekend",
              "materials": "A big cardboard or foam-board shell you can step inside, porta-potty blue paint, printed door signage and vent details, shoulder straps to carry it",
              "blurb": "The costume nobody else at the party will be wearing: a full porta-potty, built to walk around in — the blue shell, the door, the little details all faithfully recreated, and the wearer inside it. Valladolid Angle's showcase walks through the finished build and why it lands so hard: it's instantly readable from across the street and it commits completely. Tap the video and take the tour.",
              "source": "@valladolid.angle", "url": "https://www.tiktok.com/@valladolid.angle/video/7702801234037705998", "tt": "7702801234037705998"},
