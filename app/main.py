@@ -9159,6 +9159,21 @@ POP_CULTURE_GRID: list[dict] = [
               "floats rolling through Greenwich Village at "
               "peak Halloween. Mija caught the night as it "
               "happened. 🎃"},
+    # Grid #3: Moonbeamsmama's Furby costume — Dan's
+    # Halloween-night culture add (2026-10-31); sits under the
+    # two live/parade picks so the homepage duo stays put.
+    {"id": "7702947650215185677",
+     "platform": "tiktok",
+     "url": "https://www.tiktok.com/@moonbeamsmama/video/7702947650215185677",
+     "thumb": "/static/img/moonbeamsmama_furby.jpg",
+     "title": "The Furby Costume — DIY Halloween",
+     "channel": "moonbeamsmama",
+     "kind": "TikTok", "short": True,
+     "blurb": "A homemade Furby costume, built by hand and "
+              "worn with total commitment — wide eyes, ears "
+              "up, zero fear. The 90s toy that blinked at you "
+              "from the shelf is now trick-or-treating. "
+              "Happy Halloween, indeed. \U0001F383"},
     {"id": "7696173852589690143",
      "platform": "tiktok",
      "url": "https://www.tiktok.com/@autumntiktok2/video/7696173852589690143",
