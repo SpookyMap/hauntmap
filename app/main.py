@@ -8330,7 +8330,7 @@ MEDIA_KIT_CATEGORY_LABELS = [
     ("events", "Events"),
     ("halloween_stores", "Halloween stores"),
     ("restaurants", "Restaurhaunts"),
-    ("coffee", "Coffee & cafes"),
+    ("coffee", "Coffee Shops and Cafes"),
     ("shops", "Shops"),
     ("parks", "Parks"),
     ("hotels", "Hotels"),
