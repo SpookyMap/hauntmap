@@ -9180,6 +9180,31 @@ POP_CULTURE_FEATURED = {
 # still and the click handler swaps in that platform's official embed.
 POP_CULTURE_GRID: list[dict] = [
 
+    # Grid head (Dan, 2026-11-01): WASTED's meme clip from
+    # Scouts Guide to the Zombie Apocalypse (2015) — the
+    # Scout leader serenading a zombie with Britney Spears.
+    # Card art is the reel's own poster frame as-is —
+    # the letterboxed meme still with its caption ("Me
+    # when the zombie apocalypse happens"), which is the
+    # joke itself. (A caption-free cropped scene still
+    # exists if Dan prefers it.) Tap swaps in Facebook's
+    # player.
+    {"id": "1427294076242475",
+     "platform": "facebook",
+     "url": "https://www.facebook.com/reel/1427294076242475/",
+     "thumb": "/static/img/wasted_scouts_serenade.jpg",
+     "title": "Serenading a Zombie with Britney Spears",
+     "channel": "WASTED",
+     "kind": "Facebook Reel", "short": True,
+     "blurb": "\"Me when the zombie apocalypse happens.\" "
+              "WASTED dug up the greatest scene from "
+              "Scouts Guide to the Zombie Apocalypse "
+              "(2015): a Scout leader face to face with a "
+              "bloodied zombie, choosing the one weapon "
+              "nobody expects — an earnest, full-volume "
+              "serenade of Britney Spears' \"...Baby One "
+              "More Time.\" The zombie growls back. He "
+              "keeps singing. Be prepared."},
     # Grid head (Dan, 2026-11-01): Hannah Stocking's
     # "A Perfect Match (part 28)" Halloween reel — she
     # plays Catwoman to Adam W's Batman, and the Batmobile
