@@ -8333,7 +8333,7 @@ MEDIA_KIT_CATEGORY_LABELS = [
     ("parks", "Parks"),
     ("hotels", "Hotels"),
     ("ice_cream", "Spooky Ice Cream Parlors"),
-    ("live", "Live"),
+    ("live", "Live Screams"),
 ]
 
 MEDIA_KIT_GAMES = ["The Halloween Arcade (8 free games)", "Ghost Maze", "Haunt or Not", "Haunt Bracket", "Scare-O-Meter", "Daily Halloween Trivia", "Costume Contest"]
