@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{ town }} Town Pack · HauntMap Plus</title>
+<style>
+  body{font-family:Georgia,serif;color:#181410;margin:28px;max-width:760px}
+  h1{margin:0 0 2px} .sub{color:#5a5148;margin:0 0 18px}
+  h2{border-bottom:2px solid #E6B16D;padding-bottom:4px;margin:22px 0 8px}
+  .stop{margin:0 0 10px} .stop strong{font-size:1.05rem}
+  .addr{color:#3d362e} .votes{color:#8a7a5c;font-size:.85rem}
+  button{background:#E6B16D;border:0;border-radius:8px;padding:10px 16px;
+    font-weight:700;cursor:pointer}
+  @media print{button{display:none}}
+</style>
+</head>
+<body>
+  <h1>&#x1F5FA;&#xFE0F; {{ town }}{% if state %}, {{ state }}{% endif %} — Town Pack</h1>
+  <p class="sub">{{ total }} stops · Built by HauntMap Plus · Print or save as PDF for the road.</p>
+  <button onclick="window.print()">&#x1F5A8;&#xFE0F; Print / Save as PDF</button>
+  {% for cat, stops in groups.items() %}
+  <h2>{{ labels.get(cat, cat) }}</h2>
+  {% for e in stops %}
+  <p class="stop"><strong>{{ e.title }}</strong>
+    {% if e.votes %}<span class="votes">· {{ e.votes }} votes</span>{% endif %}<br>
+    <span class="addr">{{ e.address or e.town }}</span>
+    {% if e.description %}<br>{{ e.description[:180] }}{% endif %}</p>
+  {% endfor %}
+  {% endfor %}
+  <p class="sub" style="margin-top:26px">Made with HauntMap Plus — gethauntmap.com/plus</p>
+</body>
+</html>

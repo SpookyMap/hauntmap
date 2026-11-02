@@ -671,7 +671,7 @@ function hmFullHomepage() {
   </a>
 </section>
 
-{% if sponsors %}
+{% if sponsors and not is_plus %}
 <div class="sponsor-section">
   <h2>&#x2B50; Featured Sponsors</h2>
   <p class="sponsor-sub">Support the local businesses that keep HauntMap free.</p>

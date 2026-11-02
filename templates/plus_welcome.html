@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}Welcome to Plus · {{ site_name }}{% endblock %}
+{% block content %}
+<section class="soc-auth" style="text-align:center">
+  {% if is_plus %}
+  <h1>&#x1F451; You're in!</h1>
+  <p>HauntMap Plus is on for your account{% if plus_row.plan %} ({{ plus_row.plan }}){% endif %}.
+     Optimized tours, priority alerts, town packs, ad-free browsing and your Gold Pin
+     theme are all live.</p>
+  <p><a class="btn" href="/plus">See your perks</a> &nbsp; <a class="btn" href="/tour">Build tonight's tour</a></p>
+  {% else %}
+  <h1>One moment…</h1>
+  <p>Stripe is confirming your checkout — your Plus perks usually switch on within
+     a few seconds. Refresh this page in a moment.</p>
+  <p><a class="btn" href="/plus/welcome">Refresh</a> &nbsp; <a class="btn" href="/plus">Back to Plus</a></p>
+  {% endif %}
+</section>
+{% endblock %}

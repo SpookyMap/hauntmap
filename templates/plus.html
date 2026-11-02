@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+{% block title %}HauntMap Plus · {{ site_name }}{% endblock %}
+{% block content %}
+<style>
+  .plus-wrap{max-width:880px;margin:0 auto;padding:8px 4px 40px}
+  .plus-hero{text-align:center;padding:26px 10px 6px}
+  .plus-hero h1{font-size:2rem;line-height:1.15;margin:0 0 10px}
+  .plus-hero h1 .gold{color:#E6B16D}
+  .plus-hero p{opacity:.92;max-width:560px;margin:0 auto}
+  .plus-pill{display:inline-block;border:1px solid #E6B16D;color:#F9E5C2;
+    border-radius:999px;padding:3px 12px;font-size:.85rem;margin-bottom:12px}
+  .plus-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+    gap:14px;margin:24px 0}
+  .plus-card{background:var(--card,#1d1430);border:1px solid rgba(230,177,109,.35);
+    border-radius:14px;padding:16px}
+  .plus-card h3{margin:0 0 6px;font-size:1.05rem}
+  .plus-card p{margin:0;opacity:.88;font-size:.95rem}
+  .plus-price{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+    gap:14px;margin:10px 0 6px}
+  .price-card{text-align:center}
+  .price-card .amt{font-size:1.9rem;font-weight:800;color:#E6B16D}
+  .price-card .per{opacity:.75;font-size:.9rem}
+  .plus-btn{display:inline-block;margin-top:12px;background:#E6B16D;color:#171106;
+    font-weight:700;border-radius:10px;padding:11px 18px;text-decoration:none;border:0;cursor:pointer}
+  .plus-btn.disabled{background:#4a4237;color:#cfc4ae;pointer-events:none}
+  .plus-note{text-align:center;opacity:.75;font-size:.88rem;margin:6px 0 22px}
+  .plus-status{border:1px solid #77DFB8;color:#c9f5e4;border-radius:12px;
+    padding:12px 16px;margin:18px 0;text-align:center}
+  .plus-form{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+  .plus-form input{background:#120c20;border:1px solid rgba(230,177,109,.4);
+    color:#fff;border-radius:8px;padding:9px 10px;flex:1;min-width:110px}
+  .plus-faq{max-width:680px;margin:26px auto 0}
+  .plus-faq h2{text-align:center}
+  .plus-faq p{opacity:.88}
+</style>
+<div class="plus-wrap">
+  <div class="plus-hero">
+    <span class="plus-pill">&#x1F451; HAUNTMAP PLUS</span>
+    <h1>Your best night out, <span class="gold">built for you.</span></h1>
+    <p>The map stays free — it always will. Plus builds the perfect night on top of it:
+       the best route, first alerts when new displays land near you, and packs you can
+       take on the road. One membership covers <strong>HauntMap and Jolly Map</strong> —
+       Halloween, Christmas, and every spotlight in between.</p>
+  </div>
+
+  {% if is_plus %}
+  <div class="plus-status">
+    &#x2705; You're a Plus member{% if plus_row.plan %} ({{ plus_row.plan }}){% endif %}
+    {% if plus_row.status == "trialing" %} — free trial{% if plus_row.trial_end %} runs through {{ plus_row.trial_end[:10] }}{% endif %}{% endif %}.
+    Every perk below is on.
+  </div>
+  {% endif %}
+
+  <div class="plus-grid">
+    <div class="plus-card">
+      <h3>&#x1F5FA;&#xFE0F; Perfect Night, auto-built</h3>
+      <p>Unlimited optimized tours — best order, best route, drive time handled.
+         You pick the stops; Plus plans the night.</p>
+    </div>
+    <div class="plus-card">
+      <h3>&#x1F514; Never miss a new one</h3>
+      <p>First alerts when a new display lands in your ZIP. In season, new pins
+         drop daily — Plus members hear about them first.</p>
+    </div>
+    <div class="plus-card">
+      <h3>&#x1F392; Take it with you</h3>
+      <p>Printable town packs for every town — the night's stops and addresses
+         on one sheet, no signal required.</p>
+    </div>
+    <div class="plus-card">
+      <h3>&#x2728; Your season, your way</h3>
+      <p>Ad-free browsing, the &#x1F451; Plus badge on HauntSocial, and the
+         exclusive Gold Pin profile theme.</p>
+    </div>
+  </div>
+
+  {% if is_plus %}
+  <div class="plus-card" style="margin-bottom:14px">
+    <h3>&#x1F514; Your priority alerts</h3>
+    {% if alerts_set %}<p>&#x2705; Saved — you're first in line for your town.</p>{% endif %}
+    <p>Plus members' towns are texted first when new displays drop. Set yours:</p>
+    <form class="plus-form" method="post" action="/api/plus/priority-alerts">
+      <input name="phone" placeholder="Cell phone" inputmode="tel" required>
+      <input name="zip" placeholder="ZIP" inputmode="numeric" required>
+      <input name="town" placeholder="Town">
+      <input name="state" placeholder="ST" maxlength="2">
+      <button class="plus-btn" type="submit">Save my town</button>
+    </form>
+  </div>
+  <div class="plus-card" style="margin-bottom:14px">
+    <h3>&#x1F392; Build a town pack</h3>
+    <p>Every listing in a town, with addresses, on one printable sheet.</p>
+    <form class="plus-form" method="get" action="/plus/town-pack">
+      <input name="town" placeholder="Town (e.g. Hackensack)" required>
+      <input name="state" placeholder="ST" maxlength="2">
+      <button class="plus-btn" type="submit">Make my pack</button>
+    </form>
+  </div>
+  {% endif %}
+
+  {% if creator %}
+  <div class="plus-card" style="margin-bottom:14px">
+    <h3>&#x1F383; Your displays, creator view</h3>
+    <p>You have <strong>{{ creator.count }}</strong> live display{{ "s" if creator.count != 1 }}
+       with <strong>{{ creator.votes }}</strong> total votes, featured in
+       <strong>{{ creator.in_tours }}</strong> shared tour{{ "s" if creator.in_tours != 1 }}.
+       Top display: <strong>{{ creator.top_title }}</strong> ({{ creator.top_town }}).
+       {% if not is_plus %}Plus adds your &#x2714;&#xFE0F; verified haunter badge and first alerts when tours include you.{% endif %}</p>
+  </div>
+  {% endif %}
+
+  {% if not is_plus %}
+  <div class="plus-price">
+    <div class="plus-card price-card">
+      <h3>Monthly</h3>
+      <div class="amt">$3.99</div>
+      <div class="per">per month</div>
+      {% if links.monthly %}
+      <a class="plus-btn" href="{{ links.monthly }}">Start 7 days free</a>
+      {% elif member %}
+      <span class="plus-btn disabled">Checkout opens at launch</span>
+      {% else %}
+      <a class="plus-btn" href="/login">Sign in to start free</a>
+      {% endif %}
+    </div>
+    <div class="plus-card price-card" style="border-color:#E6B16D">
+      <h3>Yearly &#x2B50; Best value</h3>
+      <div class="amt">$29.99</div>
+      <div class="per">per year — two seasons, one price</div>
+      {% if links.yearly %}
+      <a class="plus-btn" href="{{ links.yearly }}">Start 7 days free</a>
+      {% elif member %}
+      <span class="plus-btn disabled">Checkout opens at launch</span>
+      {% else %}
+      <a class="plus-btn" href="/login">Sign in to start free</a>
+      {% endif %}
+    </div>
+    <div class="plus-card price-card">
+      <h3>Lifetime</h3>
+      <div class="amt">$59.99</div>
+      <div class="per">once — yours forever</div>
+      {% if links.lifetime %}
+      <a class="plus-btn" href="{{ links.lifetime }}">Get lifetime Plus</a>
+      {% elif member %}
+      <span class="plus-btn disabled">Checkout opens at launch</span>
+      {% else %}
+      <a class="plus-btn" href="/login">Sign in to get Plus</a>
+      {% endif %}
+    </div>
+  </div>
+  <p class="plus-note">Subscriptions start with a 7-day free trial — no charge until it ends.
+     Cancel anytime. FrightMaps charges $8.99/mo for less; Plus is $3.99 and covers two maps.</p>
+  {% endif %}
+
+  <div class="plus-faq">
+    <h2>Good questions</h2>
+    <p><strong>Does the map stay free?</strong> Yes — the map, pins, basic tours, games and
+       HauntSocial are free forever. Plus is the layer that plans the night for you.</p>
+    <p><strong>Does Plus work on Jolly Map?</strong> Yes. One membership, both maps,
+       all year — Halloween, Christmas, Halfway to Halloween and the August 13 mini-Halloween.</p>
+    <p><strong>How do I cancel?</strong> Anytime, in two taps from your Stripe receipt —
+       you keep Plus until the period you paid for ends.</p>
+    <p><strong>Do I need the app?</strong> No. Plus bought here works on the website
+       today and in the apps the day they launch — just sign in.</p>
+  </div>
+</div>
+{% endblock %}

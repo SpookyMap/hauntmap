@@ -3149,8 +3149,10 @@ def home(request: Request, sort: str = "new", town: str = "", town_search: str =
     else:
         slim_events = {"text": "\U0001F3AA Events near you \u2192",
                        "href": "/events"}
+    _hm = current_member(request)
     response = templates.TemplateResponse(request, "index.html",
         {"request": request, "entries": entries, "sort": sort,
+         "is_plus": _plus_active(_hm["id"]) if _hm else False,
          "town": town, "towns": towns(cat, state), "states": states(cat),
          "state": state, "region": region, "voted": voted,
          "cat": cat, "cat_labels": CAT_LABELS, "cat_emoji": CAT_EMOJI,
@@ -11781,6 +11783,11 @@ PROFILE_THEMES = {
                            "--card": "#1e1e28", "--bg2": "#12121a"},
                   "panel": "radial-gradient(120% 90% at 50% 0%, "
                            "rgba(154,140,255,.14), transparent 62%)"},
+    "goldpin": {"label": "Gold Pin (Plus)",
+                "vars": {"--accent": "#E6B16D", "--accent2": "#F9E5C2",
+                         "--card": "#241b08", "--bg2": "#171106"},
+                "panel": "radial-gradient(120% 90% at 50% 0%, "
+                         "rgba(230,177,109,.18), transparent 62%)"},
 }
 DEFAULT_THEME = "midnight"
 
@@ -15359,6 +15366,7 @@ def _profile_context(request: Request, handle: str, member: dict | None,
     return {
         "request": request,
         "member": member,
+        "profile_plus": _plus_active(user["id"]),
         "user": user,
         "profile": profile,
         "display_name": display,
@@ -15690,6 +15698,8 @@ async def profile_edit_submit(request: Request,
         return fail("Pick a banner from the set.")
     if theme and theme not in PROFILE_THEMES:
         return fail("Pick a theme from the set.")
+    if theme == "goldpin" and not _plus_active(member["id"]):
+        return fail("The Gold Pin theme is a HauntMap Plus perk.")
     # "Get to know me" bundle: free texts cap like town/bio do; picks
     # must come from the preset sets (or stay blank).
     gtk_cap_msgs = {
@@ -15986,3 +15996,339 @@ def profile_photo_delete(request: Request, photo_id: int):
         if row["thumb_path"]:
             (UPLOAD_DIR / row["thumb_path"]).unlink(missing_ok=True)
     return RedirectResponse("/profile/edit#photos", status_code=303)
+
+
+# ---------------------------------------------------------------- HauntMap Plus
+# (Dan, Nov 2, 2026 — "Let's do it all": the full value prop with a 7-day
+# free trial and creator perks in v1. ONE membership covers HauntMap AND
+# Jolly Map; the map, pins, basic tours, games and HauntSocial stay free
+# forever. Checkout is Stripe Payment Links (env PLUS_LINK_*); status
+# syncs via the /stripe/webhook endpoint (env STRIPE_WEBHOOK_SECRET).
+# Activation also lands on the checkout return page as a fallback.)
+
+PLUS_LINKS = {
+    "monthly": os.environ.get("PLUS_LINK_MONTHLY", ""),
+    "yearly": os.environ.get("PLUS_LINK_YEARLY", ""),
+    "lifetime": os.environ.get("PLUS_LINK_LIFETIME", ""),
+}
+PLUS_PLAN_BY_AMOUNT = {399: "monthly", 2999: "yearly", 5999: "lifetime"}
+_plus_ready = False
+
+
+def _plus_ensure():
+    global _plus_ready
+    if _plus_ready:
+        return
+    with get_conn(DB_PATH) as conn:
+        conn.execute(
+            "CREATE TABLE IF NOT EXISTS plus_memberships ("
+            "user_id INTEGER PRIMARY KEY, plan TEXT, status TEXT, "
+            "stripe_customer TEXT, stripe_subscription TEXT, "
+            "trial_end TEXT, current_period_end TEXT, "
+            "created_at TEXT, updated_at TEXT)")
+        cols = [r[1] for r in conn.execute("PRAGMA table_info(sms_subscribers)")]
+        if "priority" not in cols:
+            conn.execute(
+                "ALTER TABLE sms_subscribers ADD COLUMN priority INTEGER DEFAULT 0")
+        conn.commit()
+    _plus_ready = True
+
+
+def _plus_row(user_id):
+    if not user_id:
+        return None
+    _plus_ensure()
+    with get_conn(DB_PATH) as conn:
+        row = conn.execute(
+            "SELECT * FROM plus_memberships WHERE user_id = ?",
+            (user_id,)).fetchone()
+    return dict(row) if row else None
+
+
+def _plus_active(user_id) -> bool:
+    row = _plus_row(user_id)
+    return bool(row and row["status"] in ("trialing", "active"))
+
+
+def _plus_upsert(user_id, **fields):
+    _plus_ensure()
+    now = datetime.now(timezone.utc).isoformat()
+    fields["updated_at"] = now
+    with get_conn(DB_PATH) as conn:
+        existing = conn.execute(
+            "SELECT user_id FROM plus_memberships WHERE user_id = ?",
+            (user_id,)).fetchone()
+        if existing:
+            sets = ", ".join(f"{k} = ?" for k in fields)
+            conn.execute(
+                f"UPDATE plus_memberships SET {sets} WHERE user_id = ?",
+                (*fields.values(), user_id))
+        else:
+            fields.setdefault("created_at", now)
+            cols = ", ".join(["user_id", *fields.keys()])
+            marks = ", ".join("?" for _ in range(len(fields) + 1))
+            conn.execute(
+                f"INSERT INTO plus_memberships ({cols}) VALUES ({marks})",
+                (user_id, *fields.values()))
+        conn.commit()
+
+
+def _plus_user_by_customer(customer_id):
+    if not customer_id:
+        return None
+    _plus_ensure()
+    with get_conn(DB_PATH) as conn:
+        row = conn.execute(
+            "SELECT user_id FROM plus_memberships WHERE stripe_customer = ?",
+            (customer_id,)).fetchone()
+    return row["user_id"] if row else None
+
+
+def _plus_creator_stats(member):
+    """Creator perks (v1): a member's own displays and how they're doing —
+    live count, total votes, and how many shared tours include them."""
+    if not member:
+        return None
+    with get_conn(DB_PATH) as conn:
+        rows = conn.execute(
+            "SELECT id, title, town, votes FROM entries "
+            "WHERE (owner_user_id = ? OR uploader_email = ?) "
+            "AND (hidden IS NULL OR hidden = 0)",
+            (member["id"], member["email"])).fetchall()
+        tours = conn.execute("SELECT pin_ids FROM shared_tours").fetchall()
+    if not rows:
+        return None
+    my_ids = {str(r["id"]) for r in rows}
+    in_tours = sum(
+        1 for t in tours
+        if my_ids & {p.strip() for p in (t["pin_ids"] or "").split(",")})
+    top = max(rows, key=lambda r: r["votes"] or 0)
+    return {"count": len(rows),
+            "votes": sum(r["votes"] or 0 for r in rows),
+            "in_tours": in_tours,
+            "top_title": top["title"], "top_town": top["town"]}
+
+
+@app.get("/plus", response_class=HTMLResponse)
+def plus_page(request: Request):
+    member = current_member(request)
+    row = _plus_row(member["id"]) if member else None
+    from urllib.parse import quote as _q
+    links = {}
+    for plan, url in PLUS_LINKS.items():
+        if url and member:
+            sep = "&" if "?" in url else "?"
+            url = (f"{url}{sep}client_reference_id={member['id']}"
+                   f"&prefilled_email={_q(member['email'])}")
+        links[plan] = url
+    return templates.TemplateResponse(request, "plus.html", {
+        "member": member, "plus_row": row,
+        "is_plus": bool(row and row["status"] in ("trialing", "active")),
+        "links": links,
+        "creator": _plus_creator_stats(member) if member else None,
+        "alerts_set": request.query_params.get("alerts") == "1",
+    })
+
+
+@app.get("/plus/welcome", response_class=HTMLResponse)
+def plus_welcome(request: Request):
+    member = current_member(request)
+    row = _plus_row(member["id"]) if member else None
+    return templates.TemplateResponse(request, "plus_welcome.html", {
+        "member": member, "plus_row": row,
+        "is_plus": bool(row and row["status"] in ("trialing", "active")),
+    })
+
+
+@app.post("/api/plus/priority-alerts")
+async def plus_priority_alerts(request: Request):
+    member = current_member(request)
+    if not member or not _plus_active(member["id"]):
+        return RedirectResponse("/plus", status_code=303)
+    form = await request.form()
+    phone = re.sub(r"\D", "", str(form.get("phone", "")))
+    if len(phone) == 10:
+        phone = "1" + phone
+    zip_code = str(form.get("zip", "")).strip()[:10]
+    town = str(form.get("town", "")).strip()[:80]
+    state = str(form.get("state", "")).strip()[:2].upper()
+    if len(phone) >= 11 and zip_code:
+        _plus_ensure()
+        now = datetime.now(timezone.utc).isoformat()
+        with get_conn(DB_PATH) as conn:
+            existing = conn.execute(
+                "SELECT id FROM sms_subscribers WHERE phone = ?",
+                (phone,)).fetchone()
+            if existing:
+                conn.execute(
+                    "UPDATE sms_subscribers SET priority = 1, zip = ?, "
+                    "town = ?, state = ?, source = 'plus', updated_at = ? "
+                    "WHERE phone = ?",
+                    (zip_code, town, state, now, phone))
+            else:
+                conn.execute(
+                    "INSERT INTO sms_subscribers (phone, zip, town, state, "
+                    "radius_miles, interests, consent_at, status, source, "
+                    "priority, created_at, updated_at) VALUES "
+                    "(?, ?, ?, ?, 25, 'new haunts,events', ?, 'pending', "
+                    "'plus', 1, ?, ?)",
+                    (phone, zip_code, town, state, now, now, now))
+            conn.commit()
+    return RedirectResponse("/plus?alerts=1", status_code=303)
+
+
+@app.post("/api/tours/optimize")
+async def tours_optimize(request: Request):
+    member = current_member(request)
+    if not member:
+        return JSONResponse({"error": "login_required"}, status_code=401)
+    if not _plus_active(member["id"]):
+        return JSONResponse({"error": "plus_required"}, status_code=403)
+    body = await request.json()
+    pin_ids = [int(p) for p in body.get("pin_ids", [])][:30]
+    if len(pin_ids) < 3:
+        return JSONResponse({"error": "need_at_least_3_pins"}, status_code=400)
+    with get_conn(DB_PATH) as conn:
+        rows = conn.execute(
+            "SELECT id, lat, lng FROM entries WHERE id IN (%s)"
+            % ",".join("?" for _ in pin_ids), pin_ids).fetchall()
+    pts = {r["id"]: (r["lat"], r["lng"]) for r in rows
+           if r["lat"] is not None and r["lng"] is not None}
+    order_ids = [p for p in pin_ids if p in pts]
+    if len(order_ids) < 3:
+        return JSONResponse({"error": "pins_missing_coords"}, status_code=400)
+
+    def hav(a, b):
+        la1, lo1 = math.radians(a[0]), math.radians(a[1])
+        la2, lo2 = math.radians(b[0]), math.radians(b[1])
+        h = (math.sin((la2 - la1) / 2) ** 2
+             + math.cos(la1) * math.cos(la2) * math.sin((lo2 - lo1) / 2) ** 2)
+        return 6371.0 * 2 * math.asin(math.sqrt(h))
+
+    start = None
+    if body.get("start_lat") is not None and body.get("start_lng") is not None:
+        start = (float(body["start_lat"]), float(body["start_lng"]))
+    # Nearest neighbour from the start (or the first pin), then 2-opt.
+    remaining = order_ids[:]
+    route = []
+    cur = start
+    if cur is None:
+        first = remaining.pop(0)
+        route.append(first)
+        cur = pts[first]
+    while remaining:
+        nxt = min(remaining, key=lambda pid: hav(cur, pts[pid]))
+        route.append(nxt)
+        remaining.remove(nxt)
+        cur = pts[nxt]
+
+    def route_len(r):
+        total, prev = 0.0, start
+        for pid in r:
+            if prev is not None:
+                total += hav(prev, pts[pid])
+            prev = pts[pid]
+        return total
+
+    improved = True
+    while improved:
+        improved = False
+        for i in range(len(route) - 1):
+            for j in range(i + 1, len(route)):
+                cand = route[:i] + route[i:j + 1][::-1] + route[j + 1:]
+                if route_len(cand) < route_len(route) - 1e-9:
+                    route, improved = cand, True
+                    break
+            if improved:
+                break
+    return JSONResponse({"order": route,
+                         "distance_km": round(route_len(route), 1)})
+
+
+@app.get("/plus/town-pack", response_class=HTMLResponse)
+def plus_town_pack(request: Request, town: str = "", state: str = ""):
+    member = current_member(request)
+    if not member or not _plus_active(member["id"]):
+        return RedirectResponse("/plus", status_code=303)
+    town = town.strip()
+    if not town:
+        return RedirectResponse("/plus", status_code=303)
+    with get_conn(DB_PATH) as conn:
+        rows = conn.execute(
+            "SELECT * FROM entries WHERE town LIKE ? "
+            "AND (hidden IS NULL OR hidden = 0) "
+            "ORDER BY category, votes DESC", (f"%{town}%",)).fetchall()
+    groups = {}
+    for r in rows:
+        d = row_to_dict(r)
+        groups.setdefault(d["category"], []).append(d)
+    return templates.TemplateResponse(request, "town_pack.html", {
+        "member": member, "town": town, "state": state.strip(),
+        "groups": groups, "labels": CAT_LABELS,
+        "total": len(rows),
+    })
+
+
+def _stripe_sig_ok(payload: bytes, header: str, secret: str) -> bool:
+    try:
+        parts = dict(p.split("=", 1) for p in header.split(",") if "=" in p)
+        ts = int(parts["t"])
+        if abs(int(datetime.now(timezone.utc).timestamp()) - ts) > 300:
+            return False
+        signed = str(ts).encode() + b"." + payload
+        expect = hmac.new(secret.encode(), signed, hashlib.sha256).hexdigest()
+        sigs = [p[3:] for p in header.split(",") if p.startswith("v1=")]
+        return any(hmac.compare_digest(expect, s) for s in sigs)
+    except Exception:
+        return False
+
+
+@app.post("/stripe/webhook")
+async def stripe_webhook(request: Request):
+    payload = await request.body()
+    secret = os.environ.get("STRIPE_WEBHOOK_SECRET", "")
+    if secret and not _stripe_sig_ok(
+            payload, request.headers.get("stripe-signature", ""), secret):
+        return JSONResponse({"error": "bad signature"}, status_code=400)
+    try:
+        event = json.loads(payload)
+    except Exception:
+        return JSONResponse({"error": "bad json"}, status_code=400)
+    etype = event.get("type", "")
+    obj = (event.get("data") or {}).get("object") or {}
+    now = datetime.now(timezone.utc).isoformat()
+    if etype == "checkout.session.completed":
+        uid = obj.get("client_reference_id")
+        if not uid:
+            email = (obj.get("customer_details") or {}).get("email")
+            if email:
+                with get_conn(DB_PATH) as conn:
+                    u = conn.execute(
+                        "SELECT id FROM users WHERE email = ?",
+                        (email,)).fetchone()
+                uid = u["id"] if u else None
+        if uid:
+            plan = PLUS_PLAN_BY_AMOUNT.get(obj.get("amount_total"))
+            _plus_upsert(
+                int(uid),
+                plan=plan,
+                status="active" if obj.get("mode") == "payment" else "trialing",
+                stripe_customer=obj.get("customer"),
+                stripe_subscription=obj.get("subscription"))
+    elif etype in ("customer.subscription.created",
+                   "customer.subscription.updated",
+                   "customer.subscription.deleted"):
+        uid = _plus_user_by_customer(obj.get("customer"))
+        if uid:
+            fields = {"stripe_subscription": obj.get("id")}
+            if etype == "customer.subscription.deleted":
+                fields["status"] = "canceled"
+            else:
+                fields["status"] = obj.get("status") or "active"
+                for key, col in (("trial_end", "trial_end"),
+                                 ("current_period_end", "current_period_end")):
+                    if obj.get(key):
+                        fields[col] = datetime.fromtimestamp(
+                            obj[key], timezone.utc).isoformat()
+            _plus_upsert(uid, **fields)
+    return JSONResponse({"received": True})
