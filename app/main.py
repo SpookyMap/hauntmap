@@ -9180,6 +9180,27 @@ POP_CULTURE_FEATURED = {
 # still and the click handler swaps in that platform's official embed.
 POP_CULTURE_GRID: list[dict] = [
 
+    # Grid head (Dan, 2026-11-01): Hannah Stocking's
+    # "A Perfect Match (part 28)" Halloween reel — she
+    # plays Catwoman to Adam W's Batman, and the Batmobile
+    # is a homemade costume with her head poking through
+    # the front (24K likes in a day; they drive it onto a
+    # highway). Still is the reel's own poster frame; tap
+    # swaps in Facebook's player.
+    {"id": "1639544941286349",
+     "platform": "facebook",
+     "url": "https://www.facebook.com/reel/1639544941286349/",
+     "thumb": "/static/img/hannah_stocking_batmobile.jpg",
+     "title": "Hannah Stocking IS the Batmobile",
+     "channel": "Hannah Stocking",
+     "kind": "Facebook Reel", "short": True,
+     "blurb": "\"A Perfect Match\" — Hannah Stocking is "
+              "Catwoman, Adam W is Batman, and the "
+              "Batmobile is a homemade costume with "
+              "Hannah's head poking through the front. "
+              "Part 28 of their Halloween series, 24,000 "
+              "likes in a day — and they don't just pose "
+              "in it. They drive it onto the highway."},
     # Grid head (Dan, 2026-11-01): "Helsinki evening vibe!"
     # from the I love Finland Facebook group, posted by
     # Dimon Lugansk on Halloween afternoon — Helsinki after
