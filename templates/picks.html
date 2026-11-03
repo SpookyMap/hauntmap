@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% block title %}HauntMart · {{ site_name }}{% endblock %}
 {% block content %}
 <style>
   .pick-cover { font-size: 64px; line-height: 1; text-align: center; padding: 26px 0 10px; }
@@ -7,9 +8,44 @@
               background: #f90; color: #111; font-weight: 700; text-decoration: none; }
   .pick-btn:hover { filter: brightness(1.1); }
   .pick-note { opacity: .75; font-size: .92em; }
+  .pick-thumb { display: block; width: 100%; padding: 0; border: 0; background: none; cursor: pointer; }
+  .pick-thumb img { width: 100%; height: 200px; object-fit: cover; border-radius: 12px; display: block;
+                    border: 1px solid rgba(143,216,255,.35); }
+  .pick-thumb:hover img { border-color: rgba(143,216,255,.8); }
+  .pick-photos { display: inline-block; margin-top: 8px; font-size: .85em; font-weight: 700;
+                 color: #8fd8ff; background: rgba(91,141,238,.16); border: 1px solid rgba(143,216,255,.4);
+                 padding: 3px 10px; border-radius: 999px; }
+  #hm-lightbox { position: fixed; inset: 0; z-index: 9999; display: none;
+                 background: rgba(3,6,10,.9); backdrop-filter: blur(4px);
+                 align-items: center; justify-content: center; padding: 14px; }
+  #hm-lightbox.open { display: flex; }
+  .hm-lb-panel { width: min(880px, 100%); max-height: 94vh; overflow-y: auto; border-radius: 18px;
+                 background: linear-gradient(135deg, rgba(10,30,36,.97), rgba(5,8,10,.99));
+                 border: 1px solid rgba(143,216,255,.5);
+                 box-shadow: 0 0 26px rgba(91,141,238,.4), 0 18px 50px rgba(0,0,0,.6);
+                 padding: 16px; position: relative; }
+  .hm-lb-close { position: absolute; top: 10px; right: 10px; z-index: 3; width: 40px; height: 40px;
+                 border-radius: 50%; border: 1px solid rgba(143,216,255,.5); cursor: pointer;
+                 background: rgba(5,8,10,.85); color: #fff; font-size: 20px; line-height: 1; }
+  .hm-lb-stage { position: relative; text-align: center; }
+  .hm-lb-main { max-width: 100%; max-height: 60vh; border-radius: 12px; object-fit: contain;
+                background: rgba(0,0,0,.35); }
+  .hm-lb-nav { position: absolute; top: 50%; transform: translateY(-50%); width: 44px; height: 44px;
+               border-radius: 50%; border: 1px solid rgba(143,216,255,.5); cursor: pointer;
+               background: rgba(5,8,10,.8); color: #fff; font-size: 24px; line-height: 1; }
+  .hm-lb-prev { left: 6px; } .hm-lb-next { right: 6px; }
+  .hm-lb-thumbs { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-top: 12px; }
+  .hm-lb-thumbs img { width: 62px; height: 62px; object-fit: cover; border-radius: 8px; cursor: pointer;
+                      border: 2px solid transparent; opacity: .65; }
+  .hm-lb-thumbs img.on { border-color: #e6b16d; opacity: 1; }
+  .hm-lb-meta { display: flex; align-items: center; justify-content: space-between; gap: 12px;
+                flex-wrap: wrap; margin-top: 14px; }
+  .hm-lb-meta h3 { margin: 0; font-size: 1.05rem; }
+  .hm-lb-count { opacity: .7; font-size: .85em; font-weight: 400; }
+  @media (max-width: 640px) { .hm-lb-main { max-height: 52vh; } .pick-thumb img { height: 180px; } }
 </style>
 <div class="hero-intro">
-  <h1>&#x1F383; HauntMap Picks</h1>
+  <h1>&#x1F383; HauntMart</h1>
   <p>Horror comics to read by porch light, and the gear that turns a yard into a destination — hand-picked by the HauntMap crew. This page is how the map pays its bills: buy through these links and you support the map at no extra cost.</p>
 </div>
 
@@ -19,7 +55,14 @@
 <div class="diy-grid">
   {% for b in books %}
   <div class="diy-card">
+    {% if b.imgs %}
+    <button type="button" class="pick-thumb" data-gal="book-{{ loop.index0 }}" aria-label="View photos of {{ b.title }}">
+      <img src="/static/img/picks/{{ b.imgs[0] }}" alt="{{ b.title }}" loading="lazy">
+      <span class="pick-photos">&#x1F4F7; {{ b.imgs|length }} photo{{ 's' if b.imgs|length > 1 }} — tap to view</span>
+    </button>
+    {% else %}
     <div class="pick-cover" aria-hidden="true">{{ b.glyph }}</div>
+    {% endif %}
     <h3>{{ b.title }}</h3>
     <p class="diy-creator">by {{ b.by }}</p>
     <p class="diy-blurb">{{ b.pitch }}</p>
@@ -36,7 +79,14 @@
 <div class="diy-grid">
   {% for g in gear %}
   <div class="diy-card">
+    {% if g.imgs %}
+    <button type="button" class="pick-thumb" data-gal="gear-{{ loop.index0 }}" aria-label="View photos of {{ g.title }}">
+      <img src="/static/img/picks/{{ g.imgs[0] }}" alt="{{ g.title }}" loading="lazy">
+      <span class="pick-photos">&#x1F4F7; {{ g.imgs|length }} photo{{ 's' if g.imgs|length > 1 }} — tap to view</span>
+    </button>
+    {% else %}
     <div class="pick-cover" aria-hidden="true">{{ g.glyph }}</div>
+    {% endif %}
     <h3>{{ g.title }}</h3>
     <p class="diy-blurb">{{ g.pitch }}</p>
     <!-- ASSOCIATES SLOT: replace gethauntmap-20 with Dan's real Associates ID before shipping -->
@@ -46,4 +96,82 @@
 </div>
 
 <p class="pick-note">As an Amazon Associate, HauntMap earns from qualifying purchases made through links on this page — at no extra cost to you. Thank you for keeping the map free.</p>
+
+<div id="hm-lightbox" role="dialog" aria-modal="true" aria-label="Product photos">
+  <div class="hm-lb-panel">
+    <button type="button" class="hm-lb-close" id="hm-lb-close" aria-label="Close gallery">&#x2715;</button>
+    <div class="hm-lb-stage">
+      <img class="hm-lb-main" id="hm-lb-main" src="" alt="">
+      <button type="button" class="hm-lb-nav hm-lb-prev" id="hm-lb-prev" aria-label="Previous photo">&#x2039;</button>
+      <button type="button" class="hm-lb-nav hm-lb-next" id="hm-lb-next" aria-label="Next photo">&#x203A;</button>
+    </div>
+    <div class="hm-lb-thumbs" id="hm-lb-thumbs"></div>
+    <div class="hm-lb-meta">
+      <h3><span id="hm-lb-title"></span> <span class="hm-lb-count" id="hm-lb-count"></span></h3>
+      <a class="pick-btn" id="hm-lb-buy" href="#" target="_blank" rel="noopener sponsored">View on Amazon &#x2197;</a>
+    </div>
+  </div>
+</div>
+
+<script>
+  const HM_GALLERIES = {
+    {% for b in books %}{% if b.imgs %}"book-{{ loop.index0 }}": {"title": {{ b.title|tojson }}, "imgs": {{ b.imgs|tojson }}, "buy": "https://www.amazon.com/s?k={{ b.q }}&tag=gethauntmap-20"},{% endif %}{% endfor %}
+    {% for g in gear %}{% if g.imgs %}"gear-{{ loop.index0 }}": {"title": {{ g.title|tojson }}, "imgs": {{ g.imgs|tojson }}, "buy": "https://www.amazon.com/s?k={{ g.q }}&tag=gethauntmap-20"},{% endif %}{% endfor %}
+  };
+  (function () {
+    const lb = document.getElementById('hm-lightbox');
+    const main = document.getElementById('hm-lb-main');
+    const thumbs = document.getElementById('hm-lb-thumbs');
+    const titleEl = document.getElementById('hm-lb-title');
+    const countEl = document.getElementById('hm-lb-count');
+    const buyEl = document.getElementById('hm-lb-buy');
+    const prevBtn = document.getElementById('hm-lb-prev');
+    const nextBtn = document.getElementById('hm-lb-next');
+    let cur = null, idx = 0;
+    function show(n) {
+      if (!cur) return;
+      idx = (n + cur.imgs.length) % cur.imgs.length;
+      main.src = '/static/img/picks/' + cur.imgs[idx];
+      main.alt = cur.title;
+      countEl.textContent = '(' + (idx + 1) + ' of ' + cur.imgs.length + ')';
+      thumbs.querySelectorAll('img').forEach(function (t, i) { t.classList.toggle('on', i === idx); });
+      const multi = cur.imgs.length > 1;
+      prevBtn.style.display = multi ? '' : 'none';
+      nextBtn.style.display = multi ? '' : 'none';
+    }
+    function open(key) {
+      cur = HM_GALLERIES[key]; if (!cur) return;
+      titleEl.textContent = cur.title;
+      buyEl.href = cur.buy;
+      thumbs.innerHTML = '';
+      cur.imgs.forEach(function (f, i) {
+        const t = document.createElement('img');
+        t.src = '/static/img/picks/' + f; t.alt = cur.title + ' photo ' + (i + 1); t.loading = 'lazy';
+        t.addEventListener('click', function () { show(i); });
+        thumbs.appendChild(t);
+      });
+      lb.classList.add('open');
+      document.body.style.overflow = 'hidden';
+      show(0);
+    }
+    function close() {
+      lb.classList.remove('open');
+      document.body.style.overflow = '';
+      cur = null; main.src = '';
+    }
+    document.querySelectorAll('.pick-thumb').forEach(function (b) {
+      b.addEventListener('click', function () { open(b.getAttribute('data-gal')); });
+    });
+    document.getElementById('hm-lb-close').addEventListener('click', close);
+    prevBtn.addEventListener('click', function () { show(idx - 1); });
+    nextBtn.addEventListener('click', function () { show(idx + 1); });
+    lb.addEventListener('click', function (e) { if (e.target === lb) close(); });
+    document.addEventListener('keydown', function (e) {
+      if (!lb.classList.contains('open')) return;
+      if (e.key === 'Escape') close();
+      else if (e.key === 'ArrowLeft') show(idx - 1);
+      else if (e.key === 'ArrowRight') show(idx + 1);
+    });
+  })();
+</script>
 {% endblock %}

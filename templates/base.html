@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Creepster&family=Fredoka:wght@500;600;700&family=Inter:wght@500;600;700;800;900&family=Nosifer&family=Rubik+Wet+Paint&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/static/css/style.css?v=20261103z233">
+<link rel="stylesheet" href="/static/css/style.css?v=20261103z236">
 {# PWA (Wave 1, Oct 27): installable HauntMap + the web-push service
    worker. iOS needs the apple-* metas + touch icon for Add to Home
    Screen; push on iOS works only from the installed PWA. #}
@@ -49,6 +49,7 @@
     <a class="navbtn" href="/nearby"><img src="/static/img/nav2_nearby.webp" alt="Nearby"><span>Nearby</span></a>
     <a class="navbtn" href="/tour"><img src="/static/img/nav2_tours.webp" alt="Tours"><span>Tours</span></a>
     <a class="navbtn" href="/plus"><img src="/static/img/nav2_plus.webp" alt="HauntMap Plus"><span>Plus</span></a>
+    <a class="navbtn" href="/picks"><img src="/static/img/nav2_shop.webp" alt="HauntMart shop"><span>Shop</span></a>
     <a class="navbtn" href="/diy"><img src="/static/img/nav2_diy.webp" alt="DIY"><span>DIY</span></a>
     <a class="navbtn" href="/diy-costumes"><img src="/static/img/nav2_costumes.webp" alt="DIY Costumes"><span>DIY Costumes</span></a>
     <a class="navbtn" href="/games"><img src="/static/img/nav2_games.webp" alt="Games"><span>Games</span></a>
@@ -67,6 +68,7 @@
     <a href="/watch"><span class="mini-ic" aria-hidden="true">&#x25B6;&#xFE0F;</span> Watch</a>
     <a href="/tour"><span class="mini-ic" aria-hidden="true">&#x1F9ED;</span> Tours</a>
     <a href="/plus">&#x2B50; Plus</a>
+    <a class="mini-shop" href="/picks"><span class="mini-ic" aria-hidden="true">&#x1F6D2;</span> Shop</a>
     <a class="mini-x" href="/diy"><span class="mini-ic" aria-hidden="true">&#x1F528;</span> DIY</a>
     <a class="mini-x" href="/diy-costumes"><span class="mini-ic" aria-hidden="true">&#x1F3AD;</span> DIY Costumes</a>
     <a class="mini-x" href="/games"><span class="mini-ic" aria-hidden="true">&#x1F47E;</span> Games</a>
@@ -397,7 +399,7 @@ function hmFrightTouch() {
   {% endif %}
 </main>
 <footer class="site-footer">
-  <p>{{ site_name }} &middot; Show Off Your Halloween Decorations &middot; Be Kind, Keep It Spooky<br><a href="mailto:gethauntmap@gmail.com">gethauntmap@gmail.com</a> &middot; <a href="/watch">Watch</a> &middot; <a href="/map">Map</a> &middot; <a href="/nearby">Nearby</a> &middot; <a href="/tour">Tours</a> &middot; <a href="/plus">Plus</a> &middot; <a href="/diy">DIY</a> &middot; <a href="/diy-costumes">DIY Costumes</a> &middot; <a href="/games">Games</a> &middot; <a href="/leaderboard">Top Haunts</a> &middot; <a href="/upload">Add Yours</a> &middot; <a href="/about">About Us</a> &middot; <a href="/towns">Browse towns</a> &middot; <a href="/advertise">Advertise</a> &middot; <a href="/media-kit">Media kit</a> &middot; <a href="/feedback">Feedback</a></p>
+  <p>{{ site_name }} &middot; Show Off Your Halloween Decorations &middot; Be Kind, Keep It Spooky<br><a href="mailto:gethauntmap@gmail.com">gethauntmap@gmail.com</a> &middot; <a href="/watch">Watch</a> &middot; <a href="/map">Map</a> &middot; <a href="/nearby">Nearby</a> &middot; <a href="/tour">Tours</a> &middot; <a href="/plus">Plus</a> &middot; <a href="/picks">HauntMart</a> &middot; <a href="/diy">DIY</a> &middot; <a href="/diy-costumes">DIY Costumes</a> &middot; <a href="/games">Games</a> &middot; <a href="/leaderboard">Top Haunts</a> &middot; <a href="/upload">Add Yours</a> &middot; <a href="/about">About Us</a> &middot; <a href="/towns">Browse towns</a> &middot; <a href="/advertise">Advertise</a> &middot; <a href="/media-kit">Media kit</a> &middot; <a href="/feedback">Feedback</a></p>
   <p class="footer-social"><a href="https://www.tiktok.com/@gethauntmap" target="_blank" rel="noopener" class="social-btn tiktok-btn">&#x1F3B5; Follow us on TikTok @GetHauntmap</a></p>
 </footer>
 <script>

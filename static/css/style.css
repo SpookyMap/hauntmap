@@ -7398,9 +7398,9 @@ a.wn-fbtn:hover, summary.wn-fbtn:hover { border-color: #57a8ff; }
   /* v2 (2026-11-03): v1 still overflowed a 360px screen by ~21px and
      left only 8px spare at 390px — tighten once more so all six
      links (Search/Map/Watch/Tours/Plus/Add Yours) fit every phone. */
-  .mini-bar { gap: 0.3rem; padding: 0 0.4rem; }
-  .mini-bar .mini-links { gap: 0.3rem; }
-  .mini-bar a { font-size: 0.66rem; }
+  .mini-bar { gap: 0.22rem; padding: 0 0.3rem; }
+  .mini-bar .mini-links { gap: 0.2rem; }
+  .mini-bar a { font-size: 0.64rem; }
   .mini-bar img { height: 24px; width: 24px; }
 }
 
@@ -7425,4 +7425,31 @@ a.wn-fbtn:hover, summary.wn-fbtn:hover { border-color: #57a8ff; }
 .mini-bar .mini-ic { display: none; }
 @media (min-width: 1024px) {
   .mini-bar .mini-ic { display: inline; }
+}
+/* Shop in the scroll bar (Dan, 2026-11-03, staged for preview):
+   the short "Shop" label (a.mini-shop, no display rules — it rides
+   as a core link at every width) fits the 13-item laptop bar
+   (31.8px gaps at 1440, 20.4px at 1280, a tight-but-even 2.1px at
+   1024, no overflow) and the phone bar at 390px as-is; the <=480px
+   compression below is what makes room for it at 360px. Like every
+   other bar icon, its .mini-ic cart renders only at >=1024px. */
+
+/* HauntMart homepage banner (Dan, 2026-11-03, staged for preview):
+   takes the hero-split "social" grid seat vacated by the demoted
+   HauntSocial promo. Glassy dark panel + blue glow, matching the
+   re-skinned mini-bar and homepage panels. */
+.hero-split > .hm-shop-banner { grid-area: social; margin: 0; min-width: 0; }
+.hm-shop-banner { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; padding: 1rem 1.2rem; border-radius: 14px; background: linear-gradient(180deg, rgba(10, 30, 36, 0.96), rgba(5, 8, 10, 0.98)); border: 1px solid rgba(143, 216, 255, 0.5); box-shadow: 0 2px 14px rgba(0, 0, 0, 0.55), 0 1px 12px rgba(87, 168, 255, 0.22); }
+.hm-shop-banner-badge { width: 54px; height: 54px; border-radius: 50%; display: block; }
+.hm-shop-banner-copy { flex: 1 1 260px; min-width: 0; }
+.hm-shop-banner-title { margin: 0; font-size: 1.45rem; line-height: 1.15; color: #f9e5c2; }
+.hm-shop-banner-sub { margin: 0.3rem 0 0; font-size: 0.98rem; opacity: 0.88; }
+.hm-shop-banner-btn { background: #f90; color: #111; font-weight: 700; text-decoration: none; padding: 0.7rem 1.35rem; border-radius: 999px; white-space: nowrap; }
+.hm-shop-banner-btn:hover { filter: brightness(1.1); }
+@media (max-width: 640px) {
+  .hm-shop-banner { padding: 0.85rem 0.9rem; gap: 0.75rem; }
+  .hm-shop-banner-badge { width: 44px; height: 44px; }
+  .hm-shop-banner-title { font-size: 1.18rem; }
+  .hm-shop-banner-sub { font-size: 0.9rem; }
+  .hm-shop-banner-btn { flex: 1 1 100%; text-align: center; }
 }
