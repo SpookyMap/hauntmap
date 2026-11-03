@@ -7496,3 +7496,26 @@ a.wn-fbtn:hover, summary.wn-fbtn:hover { border-color: #57a8ff; }
 @media (max-width: 1240px) {
   .site-header.v2 .header-nav { justify-content: center; gap: 0.55rem 1.05rem; }
 }
+
+/* ============ Phone header buttons: clean 4-across x 3 rows (Dan, 2026-11-03 — STAGED for preview, NOT shipped) ============
+   Dan: "clean up the buttons on the iPhone — 4 across and three rows
+   down, clean and neat." The phone-portrait nav grid (z64 seat, line
+   ~2389) ran auto + repeat(5, 1fr): the 12 buttons flowed 5 / 5 / 2,
+   leaving Add Yours + About Us ragged on their own row. Same grid,
+   same events column in its left seat (already stretched over all
+   three rows by the Nov 2 cleanup), one change: the button tracks
+   drop to repeat(4, 1fr) so the twelve buttons land exactly
+   4 x 3 — Watch Map Nearby Tours / Plus Shop DIY DIY Costumes /
+   Games Top Haunts Add Yours About Us — equal 1fr columns, no
+   ragged row. grid-auto-rows: 1fr evens the three row heights
+   (two-line labels like DIY COSTUMES no longer make their row
+   taller than the others). Scoped to the same phone-portrait query
+   as the grid itself: desktop/laptop and landscape are untouched.
+   Appended last so it wins the cascade over the z64 template at
+   equal specificity. */
+@media (max-width: 760px) and (orientation: portrait) {
+  .site-header.v2 .header-nav {
+    grid-template-columns: auto repeat(4, 1fr);
+    grid-auto-rows: 1fr;
+  }
+}
