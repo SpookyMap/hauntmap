@@ -7378,3 +7378,24 @@ a.wn-fbtn:hover, summary.wn-fbtn:hover { border-color: #57a8ff; }
 
 /* Halloween Day feature (z222, Dan Oct 31 2026): homepage editorial
    block inside .hero-intro, above the hero stack / HauntSocial. */
+
+/* Nav spacing cleanup (Dan, 2026-11-02 — after the Plus button made
+   11 nav buttons): the base row used space-between, which stretched
+   unevenly around mixed-width labels, the phone wrap left the last
+   button hanging at the left edge, and the scroll mini-bar clipped
+   "⭐ Plus / Add Yours" off the right on phones. One rhythm
+   everywhere: even spacing, centered wraps, tighter mini-bar. */
+.site-header .header-nav { justify-content: space-evenly; gap: 0.55rem 0.7rem; }
+@media (max-width: 760px) {
+  .site-header .header-nav { justify-content: center; gap: 0.5rem 0.65rem; }
+  /* The phone nav is a 6-col grid (events col 120px + 5 button cols).
+     Stretch the events col down all three rows so the 11th button
+     (About Us) slots in under Watch instead of sitting alone in the
+     wide first column on its own row. */
+  .site-header.v2 .header-nav .header-events-col { grid-row: 1 / span 3; }
+}
+@media (max-width: 480px) {
+  .mini-bar { gap: 0.4rem; padding: 0 0.5rem; }
+  .mini-bar .mini-links { gap: 0.4rem; }
+  .mini-bar a { font-size: 0.7rem; }
+}
