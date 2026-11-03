@@ -4132,14 +4132,14 @@ DIY_VIDEOS_WYLD = [
 # are labeled as such on the page; gear cards carry no
 # prices until ship-time verification.)
 PICKS_BOOKS = [
-    {"title": "Locke & Key Vol. 1: Welcome to Lovecraft", "by": "Joe Hill & Gabriel Rodr\u00edguez", "price": "~$10.48", "q": "Locke+and+Key+Vol+1+Welcome+to+Lovecraft", "glyph": "\U0001F5DD\uFE0F", "pitch": "A haunted house full of keys that unlock powers — and doors that should stay shut. The graphic novel every haunter wishes their house was based on.", "imgs": ["locke-key-vol1-1.jpg", "locke-key-vol1-2.jpg", "locke-key-vol1-3.jpg"]},
+    {"title": "Locke & Key Vol. 1: Welcome to Lovecraft", "by": "Joe Hill & Gabriel Rodr\u00edguez", "price": "~$10.48", "q": "Locke+and+Key+Vol+1+Welcome+to+Lovecraft", "glyph": "\U0001F5DD\uFE0F", "pitch": "A haunted house full of keys that unlock powers — and doors that should stay shut. The graphic novel every haunter wishes their house was based on.", "imgs": ["locke-key-vol1-cover.jpg", "locke-key-vol1-1.jpg", "locke-key-vol1-2.jpg", "locke-key-vol1-3.jpg"]},
     {"title": "Uzumaki — Deluxe Edition", "by": "Junji Ito", "price": "~$19.99", "q": "Uzumaki+Deluxe+Edition+Junji+Ito", "glyph": "\U0001F300", "pitch": "The spiral curse that eats a whole town. Ito's masterpiece in a hardcover deluxe edition that looks as good on the shelf as it is horrifying inside.", "imgs": ["uzumaki-1.jpg"]},
     {"title": "Something Is Killing the Children Vol. 1", "by": "James Tynion IV & Werther Dell'Edera", "price": "~$11.18", "q": "Something+Is+Killing+the+Children+Vol+1", "glyph": "\U0001FA78", "pitch": "Monsters are eating children in a small town, and the only one who can see them is a drifter with secrets. Modern horror comics at their very best.", "imgs": ["siktc-vol1-1.jpg", "siktc-vol1-2.jpg", "siktc-vol1-3.jpg"]},
     {"title": "The Walking Dead — Compendium One", "by": "Robert Kirkman", "price": "~$29.34", "q": "The+Walking+Dead+Compendium+One", "glyph": "\U0001F9DF", "pitch": "The first 48 issues in one brick of a book — the zombie saga as it was before TV got to it: gorier, meaner and better in print.", "imgs": ["twd-compendium1-1.jpg"]},
-    {"title": "Locke & Key — The Keyhouse Compendium", "by": "Joe Hill & Gabriel Rodr\u00edguez", "price": "$80.85", "q": "Locke+and+Key+Keyhouse+Compendium", "glyph": "\U0001F3DA\uFE0F", "pitch": "The whole saga — all six volumes, a thousand pages — for the reader who finished Volume 1 at 2 AM and needs the rest tonight.", "imgs": ["locke-key-keyhouse-1.jpg", "locke-key-keyhouse-2.jpg", "locke-key-keyhouse-3.jpg", "locke-key-keyhouse-4.jpg"]},
+    {"title": "Locke & Key — The Keyhouse Compendium", "by": "Joe Hill & Gabriel Rodr\u00edguez", "price": "$80.85", "q": "Locke+and+Key+Keyhouse+Compendium", "glyph": "\U0001F3DA\uFE0F", "pitch": "The whole saga — all six volumes, a thousand pages — for the reader who finished Volume 1 at 2 AM and needs the rest tonight.", "imgs": ["locke-key-keyhouse-cover.jpg", "locke-key-keyhouse-1.jpg", "locke-key-keyhouse-2.jpg", "locke-key-keyhouse-3.jpg", "locke-key-keyhouse-4.jpg"]},
 ]
 PICKS_GEAR = [
-    {"title": "12-Foot Giant Skeleton", "q": "12+foot+giant+skeleton+Halloween", "glyph": "\U0001F480", "pitch": "The yard anchor that started the giant-prop era. One of these on the lawn and your house IS the neighborhood destination."},
+    {"title": "12-Foot Giant Skeleton", "q": "12+foot+giant+skeleton+Halloween", "glyph": "\U0001F480", "pitch": "The yard anchor that started the giant-prop era. One of these on the lawn and your house IS the neighborhood destination.", "imgs": ["skeleton-1.jpg", "skeleton-2.jpg", "skeleton-3.jpg", "skeleton-4.jpg"]},
     {"title": "Fog Machine + Fog Juice", "q": "fog+machine+Halloween+low+lying", "glyph": "\U0001F32B\uFE0F", "pitch": "Low-lying fog is the cheapest atmosphere money can buy — it makes a $20 display look like a $200 one.", "imgs": ["fog-machine-1.jpg", "fog-machine-2.jpg", "fog-machine-3.jpg", "fog-machine-4.jpg"]},
     {"title": "Halloween Window Projector Kit", "q": "Halloween+window+projector+kit", "glyph": "\U0001F4FD\uFE0F", "pitch": "Ten minutes to turn any window into a haunted scene — ghosts, zombies and apparitions included. Renter-friendly, zero construction.", "imgs": ["projector-kit-1.jpg", "projector-kit-2.jpg", "projector-kit-3.jpg", "projector-kit-4.jpg"]},
     {"title": "Purple & Orange String Lights", "q": "purple+orange+Halloween+string+lights", "glyph": "\U0001F49C", "pitch": "The two-color glow that reads Halloween from a block away. Outline the roofline and the porch and you're on the tour.", "imgs": ["string-lights-1.jpg", "string-lights-2.jpg", "string-lights-3.jpg", "string-lights-4.jpg"]},
@@ -4148,12 +4148,19 @@ PICKS_GEAR = [
 ]
 
 
-@app.get("/picks", response_class=HTMLResponse)
+@app.get("/shop", response_class=HTMLResponse)
 def picks_page(request: Request):
     return templates.TemplateResponse(
         request, "picks.html",
         {"books": PICKS_BOOKS, "gear": PICKS_GEAR},
     )
+
+
+@app.get("/picks")
+def picks_redirect():
+    # HauntMart moved from /picks to /shop (Dan, 2026-11-03) —
+    # permanent redirect so links shared before the move still land.
+    return RedirectResponse("/shop", status_code=301)
 
 
 @app.get("/diy", response_class=HTMLResponse)

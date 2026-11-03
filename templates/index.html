@@ -609,17 +609,45 @@ function hmFullHomepage() {
   <span class="tt-follow-vert-handle">@GetHauntmap</span>
 </a>
 
-{# HauntMart banner (Dan, 2026-11-03, staged for preview): takes
-   the hero-split "social" grid seat the HauntSocial promo vacated
-   when it moved to the bottom of the page. Wide, slim, one job:
-   send shoppers to /picks. #}
+{# HauntMart banner (Dan, 2026-11-03): takes the hero-split
+   "social" grid seat the HauntSocial promo vacated when it moved
+   to the bottom of the page. Round 2 (Dan, later 2026-11-03):
+   block made bigger, with a featured-products row underneath the
+   banner copy inside the same block. One job: send shoppers to
+   /shop (the store moved from /picks to /shop the same day).
+   Tiles link to /shop, never straight to Amazon — the store page
+   carries the Associates disclosure. Prices mirror PICKS data in
+   app/main.py; gear tiles show no price, matching /shop. #}
 <section class="hm-shop-banner" aria-label="HauntMart — the HauntMap shop">
-  <img class="hm-shop-banner-badge" src="/static/img/nav2_shop.webp" alt="" aria-hidden="true">
-  <div class="hm-shop-banner-copy">
-    <h2 class="hm-shop-banner-title">HauntMart is OPEN</h2>
-    <p class="hm-shop-banner-sub">Horror comics, costumes, props &amp; gear for your haunt &mdash; hand-picked by HauntMap.</p>
+  <div class="hm-shop-banner-top">
+    <img class="hm-shop-banner-badge" src="/static/img/nav2_shop.webp" alt="" aria-hidden="true">
+    <div class="hm-shop-banner-copy">
+      <h2 class="hm-shop-banner-title">HauntMart is OPEN</h2>
+      <p class="hm-shop-banner-sub">Horror comics, costumes, props &amp; gear for your haunt &mdash; hand-picked by HauntMap.</p>
+    </div>
+    <a class="hm-shop-banner-btn" href="/shop">Shop HauntMart</a>
   </div>
-  <a class="hm-shop-banner-btn" href="/picks">Shop HauntMart</a>
+  <div class="hm-shop-featured">
+    <a class="hm-shop-tile" href="/shop">
+      <img src="/static/img/picks/siktc-vol1-1.jpg" alt="Something Is Killing the Children Vol. 1 cover art" loading="lazy">
+      <span class="hm-shop-tile-name">Something Is Killing the Children Vol. 1</span>
+      <span class="hm-shop-tile-price">~$11.18</span>
+    </a>
+    <a class="hm-shop-tile" href="/shop">
+      <img src="/static/img/picks/uzumaki-1.jpg" alt="Uzumaki — Deluxe Edition cover" loading="lazy">
+      <span class="hm-shop-tile-name">Uzumaki &mdash; Deluxe Edition</span>
+      <span class="hm-shop-tile-price">~$19.99</span>
+    </a>
+    <a class="hm-shop-tile" href="/shop">
+      <img src="/static/img/picks/fog-machine-1.jpg" alt="Fog machine pouring out low-lying fog" loading="lazy">
+      <span class="hm-shop-tile-name">Fog Machine + Fog Juice</span>
+    </a>
+    <a class="hm-shop-tile" href="/shop">
+      <img src="/static/img/picks/locke-key-keyhouse-cover.jpg" alt="Locke &amp; Key — Keyhouse Compendium cover" loading="lazy">
+      <span class="hm-shop-tile-name">Locke &amp; Key &mdash; Keyhouse Compendium</span>
+      <span class="hm-shop-tile-price">$80.85</span>
+    </a>
+  </div>
 </section>
 
 {% if sponsors and not is_plus %}
