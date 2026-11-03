@@ -9203,6 +9203,24 @@ POP_CULTURE_GRID: list[dict] = [
               "out of it. 135,000 likes. The hardest any costume "
               "committed to the bit in 2026."},
 
+    # Ballpark Boyz' Wonka factory house (Dan, 2026-11-02
+    # evening): sent as a tiktok.com/t short link; slotted
+    # right behind the top 3, ahead of the Heidi hand entry.
+    {"id": "7703237044302122270",
+     "platform": "tiktok",
+     "url": "https://www.tiktok.com/@ballpark.boyz/video/7703237044302122270",
+     "thumb": "/static/img/ballparkboyz_wonka.jpg",
+     "title": "The Wonka Factory House",
+     "channel": "Ballpark Boyz",
+     "kind": "TikTok", "short": True,
+     "blurb": "@ballpark.boyz found the house that went FULL "
+              "Wonka: a giant Wonka Bar sign over the door, a "
+              "balloon arch in every candy color there is, "
+              "shelves stacked with candy boxes, and a Wonka "
+              "in the purple coat greeting trick-or-treaters "
+              "at the factory gate. Their caption says it "
+              "best: too cool not to post."},
+
     # Heidi Klum's severed-hand party entrance (Variety) —
     # restored Nov 2 evening at Dan's order, slotted behind
     # the new top 3 (ESPN / Villain of Halloween / Ace Ventura).
