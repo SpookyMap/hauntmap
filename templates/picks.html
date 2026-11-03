@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block content %}
+<style>
+  .pick-cover { font-size: 64px; line-height: 1; text-align: center; padding: 26px 0 10px; }
+  .pick-price { font-weight: 700; }
+  .pick-btn { display: inline-block; margin-top: 8px; padding: 9px 16px; border-radius: 999px;
+              background: #f90; color: #111; font-weight: 700; text-decoration: none; }
+  .pick-btn:hover { filter: brightness(1.1); }
+  .pick-note { opacity: .75; font-size: .92em; }
+</style>
+<div class="hero-intro">
+  <h1>&#x1F383; HauntMap Picks</h1>
+  <p>Horror comics to read by porch light, and the gear that turns a yard into a destination — hand-picked by the HauntMap crew. This page is how the map pays its bills: buy through these links and you support the map at no extra cost.</p>
+</div>
+
+<h2 class="diy-section-title">&#x1F4DA; Horror Comics &amp; Graphic Novels</h2>
+<p class="diy-section-sub">Start here after the porch light goes off. Prices checked Nov 3, 2026 — Amazon moves them around, so the button shows today's.</p>
+
+<div class="diy-grid">
+  {% for b in books %}
+  <div class="diy-card">
+    <div class="pick-cover" aria-hidden="true">{{ b.glyph }}</div>
+    <h3>{{ b.title }}</h3>
+    <p class="diy-creator">by {{ b.by }}</p>
+    <p class="diy-blurb">{{ b.pitch }}</p>
+    <p class="pick-price">{{ b.price }} <span class="pick-note">(checked Nov 3)</span></p>
+    <!-- ASSOCIATES SLOT: replace gethauntmap-20 with Dan's real Associates ID before shipping -->
+    <p><a class="pick-btn" href="https://www.amazon.com/s?k={{ b.q }}&amp;tag=gethauntmap-20" target="_blank" rel="noopener sponsored">View on Amazon &#x2197;</a></p>
+  </div>
+  {% endfor %}
+</div>
+
+<h2 class="diy-section-title">&#x1F6D2; Haunt Gear — Build the Display</h2>
+<p class="diy-section-sub">The workhorses behind the displays everyone drives to see. Gear prices move fast in season — each button lands on the current listing.</p>
+
+<div class="diy-grid">
+  {% for g in gear %}
+  <div class="diy-card">
+    <div class="pick-cover" aria-hidden="true">{{ g.glyph }}</div>
+    <h3>{{ g.title }}</h3>
+    <p class="diy-blurb">{{ g.pitch }}</p>
+    <!-- ASSOCIATES SLOT: replace gethauntmap-20 with Dan's real Associates ID before shipping -->
+    <p><a class="pick-btn" href="https://www.amazon.com/s?k={{ g.q }}&amp;tag=gethauntmap-20" target="_blank" rel="noopener sponsored">View on Amazon &#x2197;</a></p>
+  </div>
+  {% endfor %}
+</div>
+
+<p class="pick-note">As an Amazon Associate, HauntMap earns from qualifying purchases made through links on this page — at no extra cost to you. Thank you for keeping the map free.</p>
+{% endblock %}
