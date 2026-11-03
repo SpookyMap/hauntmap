@@ -9169,7 +9169,7 @@ POP_CULTURE_FEATURED = {
              "a hazmat crew — a giant severed hand, wedding "
              "ring, red nails and all, with Heidi inside. "
              "Variety's camera caught the whole unload. The "
-             "queen of Halloween doesn't walk the carpet "
+             "Queen of Halloween doesn't walk the carpet "
              "anymore; she arrives as evidence.",
 }
 # The collection grid. Dan feeds entries one at a time; append dicts of
@@ -9323,7 +9323,7 @@ POP_CULTURE_GRID: list[dict] = [
      "title": "Heidi Klum Arrives at Her Own Party — Medusa",
      "channel": "The Hollywood Reporter",
      "kind": "Facebook Reel", "short": True,
-     "blurb": "The queen of Halloween arrives at her own "
+     "blurb": "The Queen of Halloween arrives at her own "
               "annual party in NYC, and The Hollywood "
               "Reporter's camera is on the carpet: the full "
               "Medusa look in motion, snakes and all, while a "
