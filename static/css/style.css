@@ -7418,3 +7418,11 @@ a.wn-fbtn:hover, summary.wn-fbtn:hover { border-color: #57a8ff; }
      right edge. Phones/tablets keep the tuned right-aligned six. */
   .mini-bar .mini-links { flex: 1; margin-left: 0; justify-content: space-evenly; gap: 0; }
 }
+/* Per-link icons in the scroll bar (Dan, 2026-11-03): every item gets
+   its own symbol like Search and Plus already had. The .mini-ic
+   spans render only on wide screens — the phone bar's tuned fit
+   (six links, this morning) is deliberately left untouched. */
+.mini-bar .mini-ic { display: none; }
+@media (min-width: 1024px) {
+  .mini-bar .mini-ic { display: inline; }
+}
