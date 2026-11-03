@@ -9182,6 +9182,46 @@ POP_CULTURE_FEATURED = {
 # still and the click handler swaps in that platform's official embed.
 POP_CULTURE_GRID: list[dict] = [
 
+    # Grid head (Dan, 2026-11-02): three adds in his order —
+    # ESPN's sibling-prank toddler, House of Highlights'
+    # vegetable house, and @spookywiener's Ace Ventura rhino.
+    {"id": "7701785479590595870",
+     "platform": "tiktok",
+     "url": "https://www.tiktok.com/@espn/video/7701785479590595870",
+     "thumb": "/static/img/espn_scare_worth_wait.jpg",
+     "title": "When the Scare Is Worth the Wait",
+     "channel": "ESPN",
+     "kind": "TikTok", "short": True,
+     "blurb": "\"When the scare is worth the wait.\" ESPN "
+              "shared @sumcowkids' sibling prank: a toddler in "
+              "pajamas wearing the most cursed old-man mask on "
+              "the internet, frozen mid-stare like a tiny "
+              "horror-movie final boss. 2.1 million plays."},
+    {"id": "7703225663683169550",
+     "platform": "tiktok",
+     "url": "https://www.tiktok.com/@houseofhighlights/video/7703225663683169550",
+     "thumb": "/static/img/hoh_villain_halloween.jpg",
+     "title": "The Villain of Halloween",
+     "channel": "House of Highlights",
+     "kind": "TikTok", "short": True,
+     "blurb": "THE VILLAIN OF HALLOWEEN. House of Highlights "
+              "found the doorstep of the house that hands out "
+              "vegetables instead of candy — and the "
+              "trick-or-treaters' reviews are in: 8.3 million "
+              "plays. They are never coming back to her house."},
+    {"id": "DfFe8BWHIZB",
+     "platform": "instagram", "ig_post": True,
+     "url": "https://www.instagram.com/p/DfFe8BWHIZB/",
+     "thumb": "/static/img/spookywiener_ace_ventura.jpg",
+     "title": "Ace Ventura, Rhino Included",
+     "channel": "spookywiener",
+     "kind": "Instagram Post", "short": True,
+     "blurb": "Emily Hebert (@spookywiener) was Ace Ventura "
+              "this year — the full When Nature Calls tribute: "
+              "a life-size rhino costume, and her being born "
+              "out of it. 135,000 likes. The hardest any costume "
+              "committed to the bit in 2026."},
+
     # Grid head (Dan, 2026-11-01): WASTED's meme clip from
     # Scouts Guide to the Zombie Apocalypse (2015) — the
     # Scout leader serenading a zombie with Britney Spears.

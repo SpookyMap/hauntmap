@@ -64,7 +64,7 @@
       <span class="yt-play" aria-hidden="true">&#9654;</span>
     </button>
     {% elif v.platform == 'instagram' %}
-    <button type="button" class="yt-facade yt-facade--tt" data-ig="{{ v.id }}" aria-label="Play {{ v.title }}">
+    <button type="button" class="yt-facade yt-facade--tt" data-ig="{{ v.id }}"{% if v.ig_post %} data-igseg="p"{% endif %} aria-label="Play {{ v.title }}">
       <img src="{{ v.thumb }}" alt="" loading="lazy">
       <span class="yt-play" aria-hidden="true">&#9654;</span>
     </button>
@@ -109,7 +109,7 @@ document.addEventListener('click', function (ev) {
   if (!fb && !tt && !ig && !b.hasAttribute('data-yt')) return; // live tap-out facade: follow the link
   if (ig) {
     f.className = 'tt-frame';
-    f.src = 'https://www.instagram.com/reel/' + ig + '/embed';
+    f.src = 'https://www.instagram.com/' + (b.getAttribute('data-igseg') ? 'p' : 'reel') + '/' + ig + '/embed';
     f.setAttribute('allow', 'autoplay; encrypted-media; fullscreen; picture-in-picture');
     f.setAttribute('allowfullscreen', '');
     f.setAttribute('scrolling', 'no');
