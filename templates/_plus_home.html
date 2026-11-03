@@ -1,0 +1,27 @@
+{# HauntMap Plus — homepage membership block (Dan, 2026-11-02):
+   Dan asked for the new Stripe membership on the homepage as well
+   as its dedicated /plus page. Sits at the bottom of the hero
+   panel, under the text-alerts form. The three tiers mirror
+   templates/plus.html; the CTA routes to /plus, where the buy
+   buttons live (env-gated Stripe links + webhook activation).
+   When the links are wired, these cards can take direct
+   checkout buttons without a layout change. #}
+<section class="plus-home" aria-label="HauntMap Plus membership">
+  <h2>&#x2B50; HauntMap Plus</h2>
+  <p class="plus-home-pitch">Optimized tour routes, printable town packs, priority text alerts, and an ad-free map — one membership for HauntMap <em>and</em> Jolly Map.</p>
+  <div class="plus-home-tiers">
+    <div class="plus-home-tier">
+      <div class="plus-home-amt">$3.99<span class="plus-home-per">/mo</span></div>
+      <div class="plus-home-note">Starts with a 7-day free trial</div>
+    </div>
+    <div class="plus-home-tier plus-home-tier--best">
+      <div class="plus-home-amt">$29.99<span class="plus-home-per">/yr</span></div>
+      <div class="plus-home-note">Two months free vs. monthly</div>
+    </div>
+    <div class="plus-home-tier">
+      <div class="plus-home-amt">$59.99</div>
+      <div class="plus-home-note">Lifetime — one payment, forever</div>
+    </div>
+  </div>
+  <p class="plus-home-cta"><a class="plus-home-btn" href="/plus">Become a Plus member &rarr;</a></p>
+</section>

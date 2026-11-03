@@ -494,6 +494,11 @@ function hmFullHomepage() {
   {% with sms_source = "homepage" %}{% include "_text_alerts.html" %}{% endwith %}
   {% endif %}
 </div>
+
+  {# HauntMap Plus membership block (Dan, 2026-11-02): bottom of
+     the hero panel, OUTSIDE .hero-stack (the stack is display:none
+     on phone) so every viewport sees it. #}
+  {% include "_plus_home.html" %}
 </div>
 
 {# strip-fit (Dan, Oct 23): PHONE twin of the VT/TV strip — Dan moved
