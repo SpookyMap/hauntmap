@@ -9147,31 +9147,23 @@ def movies_page(request: Request):
 # The cadenmcdonald flying-ghost reel that led the page until
 # now heads the grid below instead.
 POP_CULTURE_FEATURED = {
-    # Featured (Dan, 2026-11-01): Heidi Klum's 2026 party
-    # entrance — Variety's video of her arrival at her own
-    # NYC Halloween party as a giant severed human hand,
-    # delivered by biohazard truck and unloaded by a hazmat
-    # crew (16.9M plays in a day). Dan's same instruction
-    # removed every LIVE card from the homepage feature:
-    # live rooms live on the Live board only now. The still
-    # is the video's own frame (the hand, mid-unload),
-    # stored locally; tap swaps in TikTok's embed player.
-    "id": "7703024884800146702",
+    # Featured (Dan, 2026-11-02 evening): ESPN's sibling-prank
+    # toddler — Dan replaced the Heidi Klum severed-hand hand
+    # entry at the top of the feature block with this video,
+    # with House of Highlights' Villain of Halloween leading
+    # the grid directly under it.
+    "id": "7701785479590595870",
     "platform": "tiktok",
-    "url": "https://www.tiktok.com/@varietymagazine/video/7703024884800146702",
-    "thumb": "/static/img/heidi_klum_variety_hand.jpg",
-    "title": "Heidi Klum Arrives as a Severed Human Hand",
-    "channel": "Variety",
+    "url": "https://www.tiktok.com/@espn/video/7701785479590595870",
+    "thumb": "/static/img/espn_scare_worth_wait.jpg",
+    "title": "When the Scare Is Worth the Wait",
+    "channel": "ESPN",
     "kind": "TikTok", "short": True,
-    "blurb": "16.9 MILLION plays in a day. Heidi Klum's "
-             "2026 entrance at her own NYC Halloween party: "
-             "delivered in a biohazard truck and unloaded by "
-             "a hazmat crew — a giant severed hand, wedding "
-             "ring, red nails and all, with Heidi inside. "
-             "Variety's camera caught the whole unload. The "
-             "Queen of Halloween doesn't walk the carpet "
-             "anymore; she arrives as evidence.",
-}
+    "blurb": "\"When the scare is worth the wait.\" ESPN "
+             "shared @sumcowkids' sibling prank: a toddler in "
+             "pajamas wearing the most cursed old-man mask on "
+             "the internet, frozen mid-stare like a tiny "
+             "horror-movie final boss. 2.1 million plays."}
 # The collection grid. Dan feeds entries one at a time; append dicts of
 # {"id", "title", "channel", "kind", "blurb"} — the template renders
 # them as cards next to the featured pick. The Shorts below were all
@@ -9182,21 +9174,10 @@ POP_CULTURE_FEATURED = {
 # still and the click handler swaps in that platform's official embed.
 POP_CULTURE_GRID: list[dict] = [
 
-    # Grid head (Dan, 2026-11-02): three adds in his order —
-    # ESPN's sibling-prank toddler, House of Highlights'
-    # vegetable house, and @spookywiener's Ace Ventura rhino.
-    {"id": "7701785479590595870",
-     "platform": "tiktok",
-     "url": "https://www.tiktok.com/@espn/video/7701785479590595870",
-     "thumb": "/static/img/espn_scare_worth_wait.jpg",
-     "title": "When the Scare Is Worth the Wait",
-     "channel": "ESPN",
-     "kind": "TikTok", "short": True,
-     "blurb": "\"When the scare is worth the wait.\" ESPN "
-              "shared @sumcowkids' sibling prank: a toddler in "
-              "pajamas wearing the most cursed old-man mask on "
-              "the internet, frozen mid-stare like a tiny "
-              "horror-movie final boss. 2.1 million plays."},
+    # Grid head (Dan, 2026-11-02): House of Highlights'
+    # vegetable house and @spookywiener's Ace Ventura rhino.
+    # (ESPN's sibling-prank toddler moved up to
+    # POP_CULTURE_FEATURED the same night, at Dan's order.)
     {"id": "7703225663683169550",
      "platform": "tiktok",
      "url": "https://www.tiktok.com/@houseofhighlights/video/7703225663683169550",
