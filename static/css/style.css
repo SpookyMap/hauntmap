@@ -7395,12 +7395,12 @@ a.wn-fbtn:hover, summary.wn-fbtn:hover { border-color: #57a8ff; }
   .site-header.v2 .header-nav .header-events-col { grid-row: 1 / span 3; }
 }
 @media (max-width: 480px) {
-  /* v2 (2026-11-03): v1 still overflowed a 360px screen by ~21px and
-     left only 8px spare at 390px — tighten once more so all six
-     links (Search/Map/Watch/Tours/Plus/Add Yours) fit every phone. */
-  .mini-bar { gap: 0.22rem; padding: 0 0.3rem; }
-  .mini-bar .mini-links { gap: 0.2rem; }
-  .mini-bar a { font-size: 0.64rem; }
+  /* v3 (2026-11-03): Games + Chat join the phone bar (Dan) — nine
+     links + wordmark now. Tighten once more (font 0.64 -> 0.58rem,
+     gaps down) so all nine fit one line at 360px and 390px. */
+  .mini-bar { gap: 0.18rem; padding: 0 0.3rem; }
+  .mini-bar .mini-links { gap: 0.16rem; }
+  .mini-bar a { font-size: 0.58rem; }
   /* Text-only phone bar (Dan, 2026-11-03): lose the ghost image —
      the "HauntMap" wordmark text carries the brand on its own.
      Per-link icons are already >=1024px-only via .mini-ic. */
@@ -7408,11 +7408,27 @@ a.wn-fbtn:hover, summary.wn-fbtn:hover { border-color: #57a8ff; }
 }
 
 /* Full mini-bar on wide screens (Dan, 2026-11-03): the scroll bar
-   carried only 6 of the 12 header destinations. The extra six
-   (.mini-x: Events, DIY, DIY Costumes, Games, Top Haunts, About Us)
-   join on laptop widths; phones/tablets keep the tuned core six so
-   the fit verified this morning is untouched. */
+   carried only 6 of the 12 header destinations. The extras
+   (.mini-x: Events, DIY, DIY Costumes, Top Haunts, About Us)
+   join on laptop widths; Games + Chat ride as core links at every
+   width (Dan, 2026-11-03) — phones get the tuned nine below. */
 .mini-bar .mini-links a.mini-x { display: none; }
+/* Events takes Add Yours' end slot on phones (Dan, 2026-11-03):
+   Add Yours leaves the mini-bar entirely. The .mini-p Events anchor
+   sits after Chat (the bar's last phone slot); on laptop the bar's
+   original first-position Events (.mini-x) already shows, so the
+   .mini-p copy hides at >=1024px — Events never appears twice. */
+@media (min-width: 1024px) {
+  .mini-bar .mini-links a.mini-p { display: none; }
+}
+@media (min-width: 1024px) and (max-width: 1279px) {
+  /* Chat makes 14 laptop items (Dan, 2026-11-03): at 0.8rem the bar
+     overflowed 1024px by ~5px and clipped About Us. A small font
+     step in the 1024-1279 range restores the even spread; >=1280
+     keeps the original size. */
+  .mini-bar a { font-size: 0.76rem; }
+  .mini-bar { gap: 0.45rem; padding: 0 0.55rem; }
+}
 @media (min-width: 1024px) {
   .mini-bar .mini-links a.mini-x { display: inline; }
   /* Even spread (Dan, 2026-11-03): on wide screens the links stop
