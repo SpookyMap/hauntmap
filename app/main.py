@@ -4121,6 +4121,41 @@ DIY_VIDEOS_WYLD = [
 ]
 
 
+# HauntMap Picks (DRAFT, local only — Dan approved the Amazon
+# Associates direction 2026-10-31; the Associates application
+# is his step and the tag below is a PLACEHOLDER slot:
+# replace "gethauntmap-20" with his real Associates ID before this
+# page ships anywhere. Book prices were researched 2026-10-31
+# and re-checked 2026-11-03 (Amazon blocks automated reads, so
+# the re-check ran through third-party trackers/listings; any
+# price that could not be corroborated was left unchanged) and
+# are labeled as such on the page; gear cards carry no
+# prices until ship-time verification.)
+PICKS_BOOKS = [
+    {"title": "Locke & Key Vol. 1: Welcome to Lovecraft", "by": "Joe Hill & Gabriel Rodr\u00edguez", "price": "~$10.48", "q": "Locke+and+Key+Vol+1+Welcome+to+Lovecraft", "glyph": "\U0001F5DD\uFE0F", "pitch": "A haunted house full of keys that unlock powers — and doors that should stay shut. The graphic novel every haunter wishes their house was based on."},
+    {"title": "Uzumaki — Deluxe Edition", "by": "Junji Ito", "price": "~$19.99", "q": "Uzumaki+Deluxe+Edition+Junji+Ito", "glyph": "\U0001F300", "pitch": "The spiral curse that eats a whole town. Ito's masterpiece in a hardcover deluxe edition that looks as good on the shelf as it is horrifying inside."},
+    {"title": "Something Is Killing the Children Vol. 1", "by": "James Tynion IV & Werther Dell'Edera", "price": "~$11.18", "q": "Something+Is+Killing+the+Children+Vol+1", "glyph": "\U0001FA78", "pitch": "Monsters are eating children in a small town, and the only one who can see them is a drifter with secrets. Modern horror comics at their very best."},
+    {"title": "The Walking Dead — Compendium One", "by": "Robert Kirkman", "price": "~$29.34", "q": "The+Walking+Dead+Compendium+One", "glyph": "\U0001F9DF", "pitch": "The first 48 issues in one brick of a book — the zombie saga as it was before TV got to it: gorier, meaner and better in print."},
+    {"title": "Locke & Key — The Keyhouse Compendium", "by": "Joe Hill & Gabriel Rodr\u00edguez", "price": "$80.85", "q": "Locke+and+Key+Keyhouse+Compendium", "glyph": "\U0001F3DA\uFE0F", "pitch": "The whole saga — all six volumes, a thousand pages — for the reader who finished Volume 1 at 2 AM and needs the rest tonight."},
+]
+PICKS_GEAR = [
+    {"title": "12-Foot Giant Skeleton", "q": "12+foot+giant+skeleton+Halloween", "glyph": "\U0001F480", "pitch": "The yard anchor that started the giant-prop era. One of these on the lawn and your house IS the neighborhood destination."},
+    {"title": "Fog Machine + Fog Juice", "q": "fog+machine+Halloween+low+lying", "glyph": "\U0001F32B\uFE0F", "pitch": "Low-lying fog is the cheapest atmosphere money can buy — it makes a $20 display look like a $200 one."},
+    {"title": "Halloween Window Projector Kit", "q": "Halloween+window+projector+kit", "glyph": "\U0001F4FD\uFE0F", "pitch": "Ten minutes to turn any window into a haunted scene — ghosts, zombies and apparitions included. Renter-friendly, zero construction."},
+    {"title": "Purple & Orange String Lights", "q": "purple+orange+Halloween+string+lights", "glyph": "\U0001F49C", "pitch": "The two-color glow that reads Halloween from a block away. Outline the roofline and the porch and you're on the tour."},
+    {"title": "Outdoor Blacklight Floodlight", "q": "LED+blacklight+floodlight+outdoor+Halloween", "glyph": "\U0001F526", "pitch": "Makes whites, neons and glow paint light up like a haunt maze. Point it at the yard and watch the whole scene go ultraviolet."},
+    {"title": "Motion-Activated Animatronic", "q": "motion+activated+Halloween+animatronic", "glyph": "\U0001F383", "pitch": "One good jump-scare outperforms twenty static props. Start with a single lunging ghoul by the candy bowl and build from there."},
+]
+
+
+@app.get("/picks", response_class=HTMLResponse)
+def picks_page(request: Request):
+    return templates.TemplateResponse(
+        request, "picks.html",
+        {"books": PICKS_BOOKS, "gear": PICKS_GEAR},
+    )
+
+
 @app.get("/diy", response_class=HTMLResponse)
 def diy_page(request: Request):
     return templates.TemplateResponse(
