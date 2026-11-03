@@ -7395,7 +7395,11 @@ a.wn-fbtn:hover, summary.wn-fbtn:hover { border-color: #57a8ff; }
   .site-header.v2 .header-nav .header-events-col { grid-row: 1 / span 3; }
 }
 @media (max-width: 480px) {
-  .mini-bar { gap: 0.4rem; padding: 0 0.5rem; }
-  .mini-bar .mini-links { gap: 0.4rem; }
-  .mini-bar a { font-size: 0.7rem; }
+  /* v2 (2026-11-03): v1 still overflowed a 360px screen by ~21px and
+     left only 8px spare at 390px — tighten once more so all six
+     links (Search/Map/Watch/Tours/Plus/Add Yours) fit every phone. */
+  .mini-bar { gap: 0.3rem; padding: 0 0.4rem; }
+  .mini-bar .mini-links { gap: 0.3rem; }
+  .mini-bar a { font-size: 0.66rem; }
+  .mini-bar img { height: 24px; width: 24px; }
 }
