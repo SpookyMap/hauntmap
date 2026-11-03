@@ -7285,6 +7285,7 @@ a.wn-fbtn:hover, summary.wn-fbtn:hover { border-color: #57a8ff; }
 .games-nav-btn--ninjago { --gnb: #57c84c; --gnb-glow: rgba(87, 200, 76, 0.35); --gnb-glow-hi: rgba(87, 200, 76, 0.55); }
 .games-nav-btn--minecraft { --gnb: #3ddc3d; --gnb-glow: rgba(61, 220, 61, 0.35); --gnb-glow-hi: rgba(61, 220, 61, 0.55); }
 .games-nav-btn--roblox { --gnb: #e2231a; --gnb-glow: rgba(226, 35, 26, 0.35); --gnb-glow-hi: rgba(226, 35, 26, 0.55); }
+.games-nav-btn--marvel { --gnb: #e23636; --gnb-glow: rgba(226, 54, 54, 0.35); --gnb-glow-hi: rgba(226, 54, 54, 0.55); }
 .gnb-ic {
   flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center;
   width: 1.55rem; height: 1.55rem; border-radius: 50%;

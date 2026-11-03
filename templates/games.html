@@ -61,6 +61,7 @@ body.ios-iphone .games-featured-pill { display: inline-block; }
   <a class="games-nav-btn games-nav-btn--ninjago" href="#ninja-games"><span class="gnb-ic" aria-hidden="true">&#x1F977;</span><span class="gnb-label"><span class="gnb-l1">Ninja</span> <span class="gnb-l2">Games</span></span></a>
   <a class="games-nav-btn games-nav-btn--minecraft" href="#minecraft-games"><span class="gnb-ic" aria-hidden="true">&#x26CF;</span><span class="gnb-label"><span class="gnb-l1">Minecraft</span> <span class="gnb-l2">Games</span></span></a>
   <a class="games-nav-btn games-nav-btn--roblox" href="#roblox-games"><span class="gnb-ic" aria-hidden="true">&#x1F7E5;</span><span class="gnb-label"><span class="gnb-l1">Roblox</span> <span class="gnb-l2">Games</span></span></a>
+  <a class="games-nav-btn games-nav-btn--marvel" href="#marvel-games"><span class="gnb-ic" aria-hidden="true">&#x1F577;</span><span class="gnb-label"><span class="gnb-l1">Marvel &amp;</span> <span class="gnb-l2">Spider-Man</span></span></a>
   <a class="games-nav-btn" href="#iphone-games"><span class="gnb-ic" aria-hidden="true">&#x1F4F1;</span><span class="gnb-label"><span class="gnb-l1">iPhone</span> <span class="gnb-l2">Games</span></span></a>
 </div>
 
@@ -298,6 +299,36 @@ body.ios-iphone .games-featured-pill { display: inline-block; }
 <p class="portal-note">Maturity labels are Roblox's own content ratings, shown on each game's Roblox page. ROBLOX is a trademark of Roblox Corporation, which does not sponsor, authorize or endorse HauntMap.</p>
 </section>
 
+{# MARVEL & SPIDER-MAN SHELF (Dan, Nov 3) — GamePix EMBEDS, the same
+   open webmaster program as the Halloween Arcade (portal_games.js
+   builds their iframes on tap). Marvel's own web games were retired
+   with the Marvel HQ site (now an app splash page), so this shelf is
+   partner games with Marvel-hero themes — web-slinging fighters,
+   hero races and puzzle brawls — render-verified Nov 3, 2026; the
+   dead-payload and wrong-game rejects are documented over
+   MARVEL_GAMES in app/main.py. #}
+<section class="games-sec" id="marvel-games">
+<h2 class="games-sec-head">&#x1F577; Marvel &amp; Spider-Man Games</h2>
+<p class="games-sec-intro">Your friendly neighborhood heroes, playable right here: web-slinging arena fights, hero obstacle races and puzzle brawls starring Spider-Man and friends. Tap a card, hit play, and go.</p>
+
+<div class="portal-grid">
+  {% for g in marvel_games %}
+  <div class="portal-card" data-game-slug="{{ g.slug }}" data-game-title="{{ g.title }}" data-iphone="{{ 1 if g.iphone else 0 }}">
+    <div class="portal-frame" style="--pw: {{ g.w }}; --ph: {{ g.h }};">
+      <button class="portal-facade" type="button" aria-label="Play {{ g.title }}">
+        <img src="{{ g.img }}" alt="{{ g.title }} cover art" loading="lazy">
+        <span class="portal-playbtn" aria-hidden="true">&#x25B6;</span>
+      </button>
+    </div>
+    <h3>{{ g.title }}</h3>
+    <p>{{ g.blurb }}</p>
+    <span class="portal-tag">{{ g.tag }}</span>
+  </div>
+  {% endfor %}
+</div>
+<p class="portal-note">Partner games are hosted by GamePix and the ads inside them are theirs. MARVEL, Spider-Man and the Avengers are trademarks of Marvel Entertainment; these are fan-favorite partner games, not published or endorsed by Marvel.</p>
+</section>
+
 <script>
 // Minecraft trailer facade (same click-to-play pattern as
 // /pop-haunt-culture): the YouTube player only loads when a visitor
@@ -364,7 +395,7 @@ document.addEventListener('click', function (ev) {
   if (shelf && arcade && arcade.parentNode) {
     arcade.parentNode.insertBefore(shelf, arcade);
   }
-  ["halloween-arcade", "ninja-games"].forEach(function (id) {
+  ["halloween-arcade", "ninja-games", "marvel-games"].forEach(function (id) {
     var sec = document.getElementById(id);
     if (!sec) return;
     var grid = sec.querySelector(".portal-grid");

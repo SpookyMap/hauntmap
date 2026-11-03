@@ -5058,6 +5058,105 @@ IPHONE_GAMES = [
 ]
 
 
+# ------------------------------------------- marvel / spider-man shelf
+# MARVEL & SPIDER-MAN GAMES (Dan, Nov 3: "Add marvel games and spider
+# man games into games section"). Same two clean channels as every
+# franchise shelf on this page, checked in order:
+#
+# (1) OFFICIAL MARVEL — Marvel HQ's web games are GONE: marvelhq.com/
+# games and spiderman.marvelhq.com/games are now a splash page for the
+# StoryToys Marvel HQ *app* (checked Nov 3, 2026), and marvel.com's
+# games hub lists console/PC/mobile titles only — there is no
+# official browser-playable Marvel game left to link or embed.
+# (2) GAMEPIX EMBEDS — the shelf therefore runs on GamePix's open
+# webmaster embed program, the exact channel the Halloween Arcade and
+# Ninja shelves already ship on (games hosted + ad-monetized by
+# GamePix; HauntMap hosts nothing, rips nothing). These are partner
+# games with Marvel-hero themes — several star a web-slinging hero
+# outright — NOT Marvel-published titles, and the shelf note on the
+# page says so (same disclaimer pattern as the LEGO/Roblox shelves).
+#
+# RENDER-VERIFIED Nov 3, 2026 — every title below was loaded in an
+# iframe from another origin and taken past the GamePix splash into
+# its real menu or gameplay (verification harness + screenshots in
+# goals/hauntmap-halloween-web-app/hidden_files/marvel-verify/;
+# sandbox Chromium cannot traverse the egress proxy, so page bytes
+# were relayed through the proxy while the game code itself executed
+# in Chromium — menus/gameplay observed are the game's own).
+# REJECTED after render checks, do not add: spider-man-hazards-at-
+# horizon-high, green-goblin ("Spider-Man: Green Goblin Havoc"),
+# avengers-hydra-dash, super-heroes-ball and spider-swing-manhattan
+# (player loads, game payload answers "AccessDenied" — dead files on
+# GamePix, the same failure the Oct 26 swap caught in spooky-bubble-
+# shooter); pictures-by-numbers-superheroes-marvel (archived slug —
+# GamePix serves a Tetris-clone fallback instead, the TenTrix trap
+# from Oct 26); spider-hook (plays, but it is a LITERAL spider
+# catching flies with WASD/mouse — not a Spider-Man game);
+# superhero-memory-match (menu reached, but its cards are scraped
+# photos incl. real actors — likeness/quality reject); and
+# spiderlox-theme-park-battle, superhero-transform-change-race and
+# count-masters-superhero (correct payloads, loaders advanced
+# through every stage, but their menus were not reached inside the
+# verification relay's time budget — excluded under the seen-playing
+# gate; first candidates for a live-browser spot-check). CrazyGames
+# stays ruled out per the Oct 26 finding (sitelocked, no
+# third-party embed program).
+#
+# iPHONE GAMES RULE (Dan, Oct 27): every title below carries
+# iphone=True on this evidence: GamePix's v3 API flags each one
+# mobileFriendly with touch-first controls (tap/swipe runners, puzzle
+# and arena fighters with on-screen buttons), and each was ALSO
+# loaded in an iPhone-profile pass (iPhone UA + touch + 390px) where
+# the splash took taps and the same build booted on its game canvas.
+# Any future title that fails that pass ships iphone=False and sinks
+# below the "plays best" divider via the games.html demotion script
+# (marvel-games is registered there).
+MARVEL_GAMES = [
+    {"iphone": True, "slug": "superhero-fighting-game",
+     "img": "https://img.gamepix.com/games/superhero-fighting-game/cover/superhero-fighting-game.png?w=512",
+     "title": "Superhero Fighting Game",
+     "blurb": "Suit up as a web-slinging hero and brawl through the "
+              "arena \u2014 strikes, blocks and special moves, one "
+              "fighter standing at the end.",
+     "tag": "Fighting \u00b7 plays here via GamePix", "w": 800, "h": 600},
+    {"iphone": True, "slug": "superhero-race",
+     "img": "https://img.gamepix.com/games/superhero-race/cover/superhero-race.png?w=512",
+     "title": "Superhero Race",
+     "blurb": "Dash the obstacle course as Spider-Man, the Hulk and "
+              "more \u2014 swap heroes mid-run, leap the spinning "
+              "blades and grab coins to unlock the whole roster.",
+     "tag": "Runner \u00b7 plays here via GamePix", "w": 800, "h": 600},
+    {"iphone": True, "slug": "the-superhero-league",
+     "img": "https://img.gamepix.com/games/the-superhero-league/cover/the-superhero-league.png?w=512",
+     "title": "The Superhero League",
+     "blurb": "A superhero puzzle-brawler: bend each hero's powers "
+              "to crack the level, outsmart the villains and save "
+              "the city one clever move at a time.",
+     "tag": "Puzzle action \u00b7 plays here via GamePix", "w": 800, "h": 600},
+    {"iphone": True, "slug": "stickman-warriors-superhero-fight",
+     "img": "https://img.gamepix.com/games/stickman-warriors-superhero-fight/cover/stickman-warriors-superhero-fight.png?w=512",
+     "title": "Stickman Warriors Superhero Fight",
+     "blurb": "Stick-figure arena combat with a hero roster straight "
+              "off the comic rack \u2014 spider-heroes, iron suits "
+              "and a gauntlet-wearing villain. Upgrade and brawl.",
+     "tag": "Fighting \u00b7 plays here via GamePix", "w": 800, "h": 600},
+    {"iphone": True, "slug": "bullet-superhero",
+     "img": "https://img.gamepix.com/games/bullet-superhero/cover/bullet-superhero.png?w=512",
+     "title": "Bullet Superhero",
+     "blurb": "A superhero .io arena: pick your hero skin \u2014 "
+              "web-slinger, caped crusader, green giant \u2014 then "
+              "out-shoot and out-last the whole lobby.",
+     "tag": "Arena \u00b7 plays here via GamePix", "w": 800, "h": 600},
+    {"iphone": True, "slug": "superhero-adventure",
+     "img": "https://img.gamepix.com/games/superhero-adventure/cover/superhero-adventure.png?w=512",
+     "title": "Superhero Adventure",
+     "blurb": "A masked hero blasts through a jungle gauntlet \u2014 "
+              "run, gun and platform past every ambush the island "
+              "throws at you.",
+     "tag": "Action \u00b7 plays here via GamePix", "w": 800, "h": 600},
+]
+
+
 @app.get("/games", response_class=HTMLResponse)
 def games_page(request: Request):
     return templates.TemplateResponse(
@@ -5069,6 +5168,7 @@ def games_page(request: Request):
                                 "minecraft_stores": MINECRAFT_DUNGEONS_STORES,
                                 "minecraft_trailer": MINECRAFT_TRAILER,
                                 "roblox_games": ROBLOX_GAMES,
+                                "marvel_games": MARVEL_GAMES,
                                 "iphone_games": IPHONE_GAMES})
 
 
