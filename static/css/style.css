@@ -7401,7 +7401,10 @@ a.wn-fbtn:hover, summary.wn-fbtn:hover { border-color: #57a8ff; }
   .mini-bar { gap: 0.22rem; padding: 0 0.3rem; }
   .mini-bar .mini-links { gap: 0.2rem; }
   .mini-bar a { font-size: 0.64rem; }
-  .mini-bar img { height: 24px; width: 24px; }
+  /* Text-only phone bar (Dan, 2026-11-03): lose the ghost image —
+     the "HauntMap" wordmark text carries the brand on its own.
+     Per-link icons are already >=1024px-only via .mini-ic. */
+  .mini-bar img { display: none; }
 }
 
 /* Full mini-bar on wide screens (Dan, 2026-11-03): the scroll bar
