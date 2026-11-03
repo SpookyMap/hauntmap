@@ -7519,3 +7519,38 @@ a.wn-fbtn:hover, summary.wn-fbtn:hover { border-color: #57a8ff; }
     grid-auto-rows: 1fr;
   }
 }
+
+/* ============ Laptop header buttons: ONE row in the 761-1240 band (Dan, 2026-11-03 — STAGED for preview, NOT shipped) ============
+   Dan: "button spacing menu at top bar on laptop view is still messy,"
+   then, on the 6+6 two-row staging: "can we fit them all in one row
+   at the top?" Measured on production (z241): at >=1241px the v2
+   header nav is already a single even row (gaps 33.2px @1440), but
+   in the 761-1240px band the wrapping flex row dangles — 11+2 at
+   1024px, 12+1 at 1150px. The band's natural content is ~1203px wide
+   at a 1024px viewport (events column 166.7px + 12 label-driven
+   buttons 834.2px + gaps), ~211px more than the 992px nav, and the
+   overflow is almost all label width: the four two-word labels run
+   86-122px on one line at the band's 0.91rem.
+   Fix, scoped to the band only (and to normal-height windows, so the
+   compact-landscape slim row keeps its own rules): the nav stays
+   flex but stops wrapping; the 12 buttons take equal flex shares
+   (flex: 1 1 0, min-width: 0) behind the events column's natural
+   seat, with a uniform 0.3rem gap — equal widths + fixed gap is what
+   makes the spacing provably even. Labels drop one step (0.91rem ->
+   0.72rem), may wrap, and center, so "DIY Costumes" / "Top Haunts" /
+   "Add Yours" / "About Us" stack as two tidy lines under their icon
+   instead of forcing the row wide; the widest single word left,
+   COSTUMES, measures ~61px against a 64px button at 1024px. Icons
+   hold at 34px (band already renders 35px). >=1241px is outside the
+   query and pixel-untouched; <=760px (phone 4x3 grid, text-only
+   mini-bar) likewise; the scroll mini-bar measured even at laptop
+   widths and is deliberately not touched. */
+@media (min-width: 761px) and (max-width: 1240px) and (min-height: 501px) {
+  .site-header.v2 .header-nav { flex-wrap: nowrap; gap: 0.3rem; }
+  .site-header.v2 .header-nav a.navbtn { flex: 1 1 0; min-width: 0; }
+  .site-header.v2 .header-nav a.navbtn img { width: 34px; height: 34px; }
+  .site-header.v2 .header-nav a.navbtn span {
+    white-space: normal; text-align: center;
+    font-size: 0.72rem; line-height: 1.15;
+  }
+}
