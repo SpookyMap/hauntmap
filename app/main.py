@@ -9203,6 +9203,35 @@ POP_CULTURE_GRID: list[dict] = [
               "out of it. 135,000 likes. The hardest any costume "
               "committed to the bit in 2026."},
 
+    # Heidi Klum's severed-hand party entrance (Variety) —
+    # restored Nov 2 evening at Dan's order, slotted behind
+    # the new top 3 (ESPN / Villain of Halloween / Ace Ventura).
+    # Featured (Dan, 2026-11-01): Heidi Klum's 2026 party
+    # entrance — Variety's video of her arrival at her own
+    # NYC Halloween party as a giant severed human hand,
+    # delivered by biohazard truck and unloaded by a hazmat
+    # crew (16.9M plays in a day). Dan's same instruction
+    # removed every LIVE card from the homepage feature:
+    # live rooms live on the Live board only now. The still
+    # is the video's own frame (the hand, mid-unload),
+    # stored locally; tap swaps in TikTok's embed player.
+    {"id": "7703024884800146702",
+     "platform": "tiktok",
+     "url": "https://www.tiktok.com/@varietymagazine/video/7703024884800146702",
+     "thumb": "/static/img/heidi_klum_variety_hand.jpg",
+     "title": "Heidi Klum Arrives as a Severed Human Hand",
+     "channel": "Variety",
+     "kind": "TikTok", "short": True,
+     "blurb": "16.9 MILLION plays in a day. Heidi Klum's "
+              "2026 entrance at her own NYC Halloween party: "
+              "delivered in a biohazard truck and unloaded by "
+              "a hazmat crew — a giant severed hand, wedding "
+              "ring, red nails and all, with Heidi inside. "
+              "Variety's camera caught the whole unload. The "
+              "Queen of Halloween doesn't walk the carpet "
+              "anymore; she arrives as evidence.",
+    },
+
     # Grid head (Dan, 2026-11-01): WASTED's meme clip from
     # Scouts Guide to the Zombie Apocalypse (2015) — the
     # Scout leader serenading a zombie with Britney Spears.

@@ -6125,7 +6125,7 @@ main.wrap:has(> .vt-tv-strip-bottom) { padding-bottom: 0; }
    the shared .yt-facade/.yt-play styles untouched. */
 .pop-home {
   margin: 1rem 0 0.4rem; padding: 1rem; text-align: left;
-  background: linear-gradient(160deg, #1c1038, #0e1a20);
+  background: transparent;
   border: 1px solid #b18cff; border-radius: 14px;
   box-shadow: 0 0 18px rgba(177, 140, 255, 0.35);
 }
