@@ -68,7 +68,7 @@
     <p class="diy-blurb">{{ b.pitch }}</p>
     <p class="pick-price">{{ b.price }} <span class="pick-note">(checked Nov 3)</span></p>
     <!-- ASSOCIATES SLOT: replace gethauntmap-20 with Dan's real Associates ID before shipping -->
-    <p><a class="pick-btn" href="https://www.amazon.com/s?k={{ b.q }}&amp;tag=gethauntmap-20" target="_blank" rel="noopener sponsored">View on Amazon &#x2197;</a></p>
+    <p><a class="pick-btn" href="{% if b.asin %}https://www.amazon.com/dp/{{ b.asin }}?tag=gethauntmap-20{% else %}https://www.amazon.com/s?k={{ b.q }}&amp;tag=gethauntmap-20{% endif %}" target="_blank" rel="noopener sponsored">View on Amazon &#x2197;</a></p>
   </div>
   {% endfor %}
 </div>
@@ -90,7 +90,7 @@
     <h3>{{ g.title }}</h3>
     <p class="diy-blurb">{{ g.pitch }}</p>
     <!-- ASSOCIATES SLOT: replace gethauntmap-20 with Dan's real Associates ID before shipping -->
-    <p><a class="pick-btn" href="https://www.amazon.com/s?k={{ g.q }}&amp;tag=gethauntmap-20" target="_blank" rel="noopener sponsored">View on Amazon &#x2197;</a></p>
+    <p><a class="pick-btn" href="{% if g.asin %}https://www.amazon.com/dp/{{ g.asin }}?tag=gethauntmap-20{% else %}https://www.amazon.com/s?k={{ g.q }}&amp;tag=gethauntmap-20{% endif %}" target="_blank" rel="noopener sponsored">View on Amazon &#x2197;</a></p>
   </div>
   {% endfor %}
 </div>
@@ -115,8 +115,8 @@
 
 <script>
   const HM_GALLERIES = {
-    {% for b in books %}{% if b.imgs %}"book-{{ loop.index0 }}": {"title": {{ b.title|tojson }}, "imgs": {{ b.imgs|tojson }}, "buy": "https://www.amazon.com/s?k={{ b.q }}&tag=gethauntmap-20"},{% endif %}{% endfor %}
-    {% for g in gear %}{% if g.imgs %}"gear-{{ loop.index0 }}": {"title": {{ g.title|tojson }}, "imgs": {{ g.imgs|tojson }}, "buy": "https://www.amazon.com/s?k={{ g.q }}&tag=gethauntmap-20"},{% endif %}{% endfor %}
+    {% for b in books %}{% if b.imgs %}"book-{{ loop.index0 }}": {"title": {{ b.title|tojson }}, "imgs": {{ b.imgs|tojson }}, "buy": {% if b.asin %}"https://www.amazon.com/dp/{{ b.asin }}?tag=gethauntmap-20"{% else %}"https://www.amazon.com/s?k={{ b.q }}&tag=gethauntmap-20"{% endif %}},{% endif %}{% endfor %}
+    {% for g in gear %}{% if g.imgs %}"gear-{{ loop.index0 }}": {"title": {{ g.title|tojson }}, "imgs": {{ g.imgs|tojson }}, "buy": {% if g.asin %}"https://www.amazon.com/dp/{{ g.asin }}?tag=gethauntmap-20"{% else %}"https://www.amazon.com/s?k={{ g.q }}&tag=gethauntmap-20"{% endif %}},{% endif %}{% endfor %}
   };
   (function () {
     const lb = document.getElementById('hm-lightbox');
