@@ -30,7 +30,7 @@ import json
 import time
 import urllib.request
 import urllib.parse
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
 from fastapi import BackgroundTasks, FastAPI, Form, HTTPException, Query, Request, UploadFile, File, WebSocket, WebSocketDisconnect
@@ -2853,6 +2853,7 @@ def home(request: Request, sort: str = "new", town: str = "", town_search: str =
     with get_conn(DB_PATH) as conn:
         entries = [row_to_dict(r) for r in conn.execute(query, params).fetchall()]
         _attach_views(conn, entries)  # Item 7: feed cards show view counts
+        fall_events_home = _fall_events_home(conn)
         sponsors = [dict(r) for r in conn.execute(
             "SELECT * FROM sponsors WHERE is_active = 1 ORDER BY "
             "CASE tier WHEN 'title' THEN 0 WHEN 'premium' THEN 1 ELSE 2 END, created_at").fetchall()]
@@ -3170,6 +3171,10 @@ def home(request: Request, sort: str = "new", town: str = "", town_search: str =
          # POP_CULTURE_HOME_CARDS below). /pop-haunt-culture
          # has its own route/template and is unaffected.
          "pop_home_cards": POP_CULTURE_HOME_CARDS,
+         # Fall Events homepage section (Dan, 2026-11-04): the
+         # Fall Events Batch 1 set featured directly under the
+         # Pop Haunt Culture block (see FALL_EVENTS_HOME_IDS).
+         "fall_events_home": fall_events_home,
          "trending": trending, "near_towns": near_towns,
          "home_top10": home_top10,
          "top10_menu": top10_menu,
@@ -10048,6 +10053,52 @@ POP_CULTURE_HOME_CARDS: list[dict] = (
     [POP_CULTURE_TOP_PICKS[1]] + POP_CULTURE_GRID[:7]
     + POP_CULTURE_HOME_TRUNK_GROUP
 )
+
+
+# Fall Events homepage section (Dan, 2026-11-04): "lets feature
+# these events on the homepage under pop haunt culture feature" —
+# the Fall Events Batch 1 set (10 new posts, the 4 date-corrected
+# pins, and the 3 fall festivals already live) featured in its own
+# section directly under the Pop Haunt Culture block, as the
+# homepage's fall transition takes over from Halloween posts.
+# A curated ID list resolved against the entries table at render
+# (the HANDPICKED_ENTRY_IDS pattern): titles, photos and towns
+# always come from the live pins, so the section can never drift
+# from the listings themselves.
+FALL_EVENTS_HOME_IDS: tuple[int, ...] = (
+    9494, 9495, 9496, 9497, 9498, 9499, 9500, 9501, 9502, 9503,
+    9504, 9505, 5969, 143, 116, 117, 144,
+)
+
+
+def _fall_events_home(conn) -> list[dict]:
+    """Resolve FALL_EVENTS_HOME_IDS for the homepage Fall Events
+    section. Order follows Dan's events rule (by day, soonest
+    first) applied to closing dates — last chance first: the
+    Nov 6-7 closers lead, and the long runners (the Sleepy Hollow
+    tours through Nov 28, Catacombs through Nov 30) land last.
+    A pin whose parsed run has already ended drops off on its
+    own, so the section prunes itself as the season closes."""
+    if not FALL_EVENTS_HOME_IDS:
+        return []
+    marks = ",".join("?" * len(FALL_EVENTS_HOME_IDS))
+    rows = [row_to_dict(r) for r in conn.execute(
+        f"SELECT * FROM entries WHERE hidden = 0 AND id IN ({marks})",
+        FALL_EVENTS_HOME_IDS).fetchall()]
+    by_id = {e["id"]: e for e in rows}
+    today = _today_et()
+    live: list[tuple[tuple[date, date], dict]] = []
+    for pid in FALL_EVENTS_HOME_IDS:
+        e = by_id.get(pid)
+        if e is None:
+            continue
+        span = parse_event_dates(e["title"])
+        if span is not None and span[1] < today:
+            continue  # run is over — the section prunes itself
+        key = (span[1], span[0]) if span else (date.max, date.max)
+        live.append((key, e))
+    live.sort(key=lambda t: t[0])
+    return [e for _, e in live]
 
 
 @app.get("/pop-haunt-culture", response_class=HTMLResponse)

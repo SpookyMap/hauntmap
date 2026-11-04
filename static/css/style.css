@@ -6196,6 +6196,30 @@ main.wrap:has(> .vt-tv-strip-bottom) { padding-bottom: 0; }
 .pop-home-feature-blurb { display: block; color: #ece5fb; font-size: 0.86rem;
   line-height: 1.45; margin-top: 0.3rem; text-shadow: 0 1px 5px rgba(0, 0, 0, 0.85); }
 
+/* Fall Events — homepage section (Dan, 2026-11-04): the Fall
+   Events Batch 1 set featured directly under the Pop Haunt
+   Culture block. Same panel shell family as .pop-home (bordered,
+   rounded, glow) but in the logo palette's fall tones — pumpkin
+   border, cream heading, window-amber link — so the section reads
+   as the homepage's fall turn, distinct from Pop Haunt Culture's
+   violet above it and Plus's gold below. Cards are the shared
+   .card markup (pin_card macro); only the section shell and the
+   grid live here, all scoped under .fall-ev-home. */
+.fall-ev-home {
+  margin: 1rem 0 0.4rem; padding: 1rem; text-align: left;
+  background: transparent;
+  border: 1px solid #EB7A2C; border-radius: 14px;
+  box-shadow: 0 0 18px rgba(235, 122, 44, 0.35);
+}
+.fall-ev-home h2 { font-size: 1.25rem; margin: 0 0 0.5rem; color: #F9E5C2; }
+.fall-ev-sub { color: var(--muted); font-size: 0.92rem; margin: 0 0 0.8rem; line-height: 1.5; }
+.fall-ev-grid { display: grid; grid-template-columns: 1fr; gap: 0.9rem; }
+@media (min-width: 620px) { .fall-ev-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 1100px) { .fall-ev-grid { grid-template-columns: repeat(3, 1fr); } }
+.fall-ev-more { margin: 0.85rem 0 0; }
+.fall-ev-more a { font-weight: 700; color: #F19D45; }
+.fall-ev-more a:hover { color: #ffc98a; }
+
 /* Auto Tour's move under the search bar (Dan, Oct 27 — order
    update): the panel's single copy now lives inside .hero-intro
    directly under .hm-find, above .pop-home, with no hero-copy

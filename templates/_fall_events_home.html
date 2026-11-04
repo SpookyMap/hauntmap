@@ -1,0 +1,27 @@
+{# Fall Events — homepage feature (Dan, 2026-11-04): "lets
+   feature these events on the homepage under pop haunt culture
+   feature." The Fall Events Batch 1 set — the November haunts,
+   lantern tours and fall festivals still running as the homepage
+   transitions from Halloween posts to fall + haunted events —
+   in its own section directly under the Pop Haunt Culture block
+   (inside .hero-intro, one copy serving both viewports, exactly
+   like the block above it). Data is fall_events_home from
+   app/main.py: FALL_EVENTS_HOME_IDS resolved against the live
+   entries table at render and ordered last-chance-first (see
+   _fall_events_home), so cards always carry the pins' real
+   titles (dates included), photos and towns, and ended runs
+   drop off on their own. Cards reuse the shared pin_card macro
+   — the same event-card presentation (thumbnail, title, town)
+   the rails and Watch feed render. The section renders only
+   when at least one featured event is still running. #}
+{% from "_pin_card.html" import pin_card %}
+{% if fall_events_home %}
+<section class="fall-ev-home" aria-label="Fall Events">
+  <h2>&#x1F342; Fall Events</h2>
+  <p class="fall-ev-sub">Haunted nights, lantern tours and harvest festivals still running this fall &mdash; last chances first.</p>
+  <div class="fall-ev-grid">
+    {% for e in fall_events_home %}{{ pin_card(e) }}{% endfor %}
+  </div>
+  <p class="fall-ev-more"><a href="/events">See all events &rarr;</a></p>
+</section>
+{% endif %}
