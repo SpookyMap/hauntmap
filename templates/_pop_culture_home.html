@@ -11,39 +11,20 @@
    Data is POP_CULTURE_FEATURED from app/main.py, passed in as
    pop_featured — the same dict /pop-haunt-culture renders, so the
    homepage feature and the section page can never drift. #}
+{# Uniform-grid update (Dan, 2026-11-04): "put all the pop haunt
+   culture features on the homepage small without any large
+   feature, all the same size" — the lead no longer gets a
+   full-width feature treatment in this block; it renders as the
+   first card of the .pop-home-duo grid below, with the same
+   facade + caption markup as every companion card. Its blurb
+   stays under its caption (it carries the plays count, per the
+   house pattern); companions never showed blurbs in this block.
+   /pop-haunt-culture keeps its own featured treatment (separate
+   template, untouched). #}
 <section class="pop-home" aria-label="Pop Haunt Culture feature">
   <h2>&#x1F4FA; Pop Haunt Culture</h2>
-  {% if pop_featured.platform == 'live' %}
-  <a class="yt-facade yt-facade--live" href="{{ pop_featured.url }}" target="_blank" rel="noopener" aria-label="Watch live: {{ pop_featured.title }}">
-    <img src="{{ pop_featured.thumb }}" alt="" loading="lazy">
-    <span class="yt-play" aria-hidden="true">&#x1F534;</span>
-  </a>
-  {% elif pop_featured.platform == 'facebook' %}
-  <button type="button" class="yt-facade yt-facade--fb" data-fb="{{ pop_featured.url }}" aria-label="Play {{ pop_featured.title }}">
-    <img src="{{ pop_featured.thumb }}" alt="" loading="lazy">
-    <span class="yt-play" aria-hidden="true">&#9654;</span>
-  </button>
-  {% elif pop_featured.platform == 'tiktok' %}
-  <button type="button" class="yt-facade yt-facade--tt" data-ttv="{{ pop_featured.id }}" aria-label="Play {{ pop_featured.title }}">
-    <img src="{{ pop_featured.thumb }}" alt="" loading="lazy">
-    <span class="yt-play" aria-hidden="true">&#9654;</span>
-  </button>
-  {% elif pop_featured.platform == 'instagram' %}
-  <button type="button" class="yt-facade yt-facade--tt" data-ig="{{ pop_featured.id }}" aria-label="Play {{ pop_featured.title }}">
-    <img src="{{ pop_featured.thumb }}" alt="" loading="lazy">
-    <span class="yt-play" aria-hidden="true">&#9654;</span>
-  </button>
-  {% else %}
-  <button type="button" class="yt-facade" data-yt="{{ pop_featured.id }}" aria-label="Play {{ pop_featured.title }}">
-    <img src="https://i.ytimg.com/vi/{{ pop_featured.id }}/hqdefault.jpg" alt="" loading="lazy">
-    <span class="yt-play" aria-hidden="true">&#9654;</span>
-  </button>
-  {% endif %}
-  <p class="yt-cap">{{ pop_featured.title }} &middot; {{ pop_featured.channel }}</p>
-  <p class="pop-home-blurb">{{ pop_featured.blurb }}</p>
-  {% if pop_home_grid %}
   <div class="pop-home-duo">
-    {% for v in pop_home_grid %}
+    {% for v in [pop_featured] + pop_home_grid %}
     <div class="pop-home-duo-item">
       {% if v.platform == 'live' %}
       <a class="yt-facade yt-facade--live" href="{{ v.url }}" target="_blank" rel="noopener" aria-label="Watch live: {{ v.title }}">
@@ -72,10 +53,12 @@
       </button>
       {% endif %}
       <p class="yt-cap">{{ v.title }} &middot; {{ v.channel }}</p>
+      {% if loop.first and v.blurb %}
+      <p class="pop-home-blurb">{{ v.blurb }}</p>
+      {% endif %}
     </div>
     {% endfor %}
   </div>
-  {% endif %}
   <p class="pop-home-more"><a href="/pop-haunt-culture">See all of Pop Haunt Culture &rarr;</a></p>
   <script>
   // Click-to-play facade (same pattern as /pop-haunt-culture,
