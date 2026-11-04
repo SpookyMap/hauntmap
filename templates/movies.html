@@ -10,6 +10,7 @@
   <a href="#classics">&#x1F3C6; The Classics</a>
   <a href="#deep-cuts">&#x1F52A; Superfan Deep Cuts</a>
   <a href="#free">&#x1F3AC; Free Full Movies</a>
+  <a href="#tv">&#x1F4FA; Halloween TV</a>
 </nav>
 
 <h2 class="music-h2" id="new">&#x1F195; New for 2026</h2>
@@ -79,6 +80,23 @@
     {% if v.note %}<p class="movie-meta">{{ v.note }}</p>{% endif %}
     <p class="movie-blurb">{{ v.blurb }}</p>
     <p class="yt-cap">{{ v.kind }} &middot; {{ v.channel }}{% if v.pd %} &middot; Public domain classic{% endif %}</p>
+  </article>
+  {% endfor %}
+</div>
+
+<h2 class="music-h2" id="tv">&#x1F4FA; Halloween TV</h2>
+<p>The small screen built Halloween too — the specials and series superfans grew up on, streaming full episodes from the shows' own channels. Tap any cover to watch right here.</p>
+<div class="yt-grid">
+  {% for v in tv %}
+  <article class="yt-item movie-card">
+    <button type="button" class="yt-facade" data-yt="{{ v.id }}" aria-label="Play: {{ v.title }}">
+      <img src="https://i.ytimg.com/vi/{{ v.id }}/hqdefault.jpg" alt="" loading="lazy">
+      <span class="yt-play" aria-hidden="true">&#9654;</span>
+    </button>
+    <h3 class="movie-title">{{ v.title }} <span class="movie-year">({{ v.year }})</span></h3>
+    <p class="movie-meta">{{ v.meta }}</p>
+    <p class="movie-blurb">{{ v.blurb }}</p>
+    <p class="yt-cap">{{ v.kind }} &middot; {{ v.channel }}</p>
   </article>
   {% endfor %}
 </div>

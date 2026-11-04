@@ -9051,6 +9051,35 @@ MOVIE_NEW = [
               "the whole film right here, free.",
      "id": "mF7qqb3yMDM", "channel": "YouTube Movies",
      "kind": "Full Movie"},
+    # Full-movie adds (Dan, Nov 4 — "put this on the movie page at the
+    # top next to dogma"): Hocus Pocus in full, placed directly beside
+    # Dogma at Dan's direction, followed by two more full-movie adds
+    # from the same batch. All three IDs oEmbed-verified 2026-11-04
+    # (title + channel match, embeddable).
+    {"title": "Hocus Pocus", "year": 1993,
+     "meta": "Streaming free · Full movie",
+     "blurb": "The Sanderson sisters rise again — one black-flame "
+              "candle, one very unlucky teenager, and all of Salem "
+              "in trouble until sunrise. Midler, Parker and Najimy "
+              "in the most rewatched Halloween movie ever made — "
+              "the whole film, right here.",
+     "id": "wlWOefzv9po", "channel": "Wakas Critica",
+     "kind": "Full Movie"},
+    {"title": "Stephen King's Best-Seller Horror Movie", "year": 2026,
+     "meta": "Streaming free · Full movie",
+     "blurb": "A Stephen King nightmare brought to the screen — "
+              "small-town dread, a sci-fi twist, and something that "
+              "should not exist. The full movie, streaming free.",
+     "id": "XN8rhOgmIVA", "channel": "NeoMovies Cinema",
+     "kind": "Full Movie"},
+    {"title": "Yellow Brick Road", "year": 2010,
+     "meta": "Streaming free · Full movie",
+     "blurb": "In 1940 the entire town of Friar, New Hampshire "
+              "walked up a forest trail and vanished. A modern team "
+              "retraces the path — and the woods start answering "
+              "back. The full film, streaming free.",
+     "id": "pTmBkzI9WSY", "channel": "CREEPY POPCORN",
+     "kind": "Full Movie"},
     # Practical Magic pair (Dan, Oct 24): the full film is a Warner Bros.
     # title with NO legal free embed (HBO Max / transactional VOD only —
     # checked Oct 24), so the page carries the official trailers instead.
@@ -9298,6 +9327,24 @@ MOVIE_FREE_FULL = [
      "host": "yt", "id": "qGGTwchOUys",
      "channel": "Kings of Horror", "kind": "Full Movie", "pd": False},
 ]
+# Halloween TV (Dan, Nov 4 — "feature this on the movie page as well
+# under halloween tv"): the small screen's side of the season — the
+# specials and series superfans grew up on, streaming as YouTube
+# facades in the same format as the movie shelves, from the shows'
+# own channels wherever the catalog offers them. Lead entry is the
+# Goosebumps Season 2 marathon from Scholastic's official channel.
+# ID oEmbed-verified 2026-11-04 (title + channel match, embeddable).
+MOVIE_TV = [
+    {"title": "Goosebumps", "year": 1996,
+     "meta": "Season 2 marathon · Full episodes",
+     "blurb": "R.L. Stine's haunted library, binge-sized — the "
+              "official Scholastic channel's full Season 2 marathon: "
+              "the Haunted Mask returns, jack-o'-lanterns attack, "
+              "and a headless ghost checks in. Viewer beware — "
+              "you're in for a scare.",
+     "id": "ka6PNhQN9q4", "channel": "Goosebumps - Scholastic",
+     "kind": "Full Episodes"},
+]
 
 
 @app.get("/movies", response_class=HTMLResponse)
@@ -9306,7 +9353,7 @@ def movies_page(request: Request):
         request, "movies.html",
         {"site_name": SITE_NAME, "new": MOVIE_NEW,
          "classics": MOVIE_CLASSICS, "deep_cuts": MOVIE_DEEP_CUTS,
-         "free_full": MOVIE_FREE_FULL},
+         "free_full": MOVIE_FREE_FULL, "tv": MOVIE_TV},
     )
 
 
