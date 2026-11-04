@@ -9023,6 +9023,21 @@ def music_page(request: Request):
 # and the three R ratings are from the studios' own trailers and the
 # October 2026 release calendars (see the staged build report).
 MOVIE_NEW = [
+    # Dogma (Dan, Nov 3 — "add to movies at the top"): Kevin Smith's
+    # 1999 film spent 25 years locked out of streaming; the full movie
+    # now streams free with ads on YouTube's own Movies channel (the
+    # official distributor listing — JustWatch checked 2026-11-03).
+    # This entry is the FULL film, not a trailer. ID oEmbed-verified
+    # 2026-11-03 (title "Dogma", channel "YouTube Movies", embeddable).
+    {"title": "Dogma", "year": 1999,
+     "meta": "Streaming free with ads · Full movie",
+     "blurb": "Two fallen angels find a loophole that would unmake "
+              "existence itself, and a New Jersey clinic worker has to "
+              "stop them. Affleck, Damon, George Carlin — and Alanis "
+              "Morissette as God. Locked away for 25 years; now watch "
+              "the whole film right here, free.",
+     "id": "mF7qqb3yMDM", "channel": "YouTube Movies",
+     "kind": "Full Movie"},
     # Practical Magic pair (Dan, Oct 24): the full film is a Warner Bros.
     # title with NO legal free embed (HBO Max / transactional VOD only —
     # checked Oct 24), so the page carries the official trailers instead.
