@@ -4,9 +4,16 @@
 <style>
   .pick-cover { font-size: 64px; line-height: 1; text-align: center; padding: 26px 0 10px; }
   .pick-price { font-weight: 700; }
-  .pick-was { opacity: .55; font-weight: 400; margin-left: 6px; }
-  .pick-off { display: inline-block; margin-left: 8px; padding: 2px 10px; border-radius: 999px;
-              background: #e4572e; color: #fff; font-size: .82em; font-weight: 800; letter-spacing: .03em; }
+  .pick-price-sale { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; }
+  .pick-now { display: inline-block; padding: 3px 14px; border-radius: 999px;
+              background: linear-gradient(135deg, #f19d45, #e6b16d); color: #2a1a3e;
+              font-size: 1.5em; font-weight: 800; letter-spacing: .01em; line-height: 1.25;
+              box-shadow: 0 0 14px rgba(241,157,69,.5), 0 2px 6px rgba(0,0,0,.45); }
+  .pick-was { opacity: .65; font-weight: 400; font-size: 1.05em; color: #cfc4dd;
+              text-decoration: line-through; text-decoration-thickness: 2px;
+              text-decoration-color: #e4572e; }
+  .pick-off { display: inline-block; padding: 3px 10px; border-radius: 999px;
+              background: #e4572e; color: #fff; font-size: .85em; font-weight: 800; letter-spacing: .03em; }
   .pick-btn { display: inline-block; margin-top: 8px; padding: 9px 16px; border-radius: 999px;
               background: #f90; color: #111; font-weight: 700; text-decoration: none; }
   .pick-btn:hover { filter: brightness(1.1); }
@@ -68,7 +75,7 @@
     {% endif %}
     <h3>{{ s.title }}</h3>
     <p class="diy-blurb">{{ s.pitch }}</p>
-    <p class="pick-price">{{ s.price }}{% if s.was %} <s class="pick-was">{{ s.was }}</s>{% endif %}{% if s.off %} <span class="pick-off">{{ s.off }} OFF</span>{% endif %} <span class="pick-note">(checked Nov 3)</span></p>
+    <p class="pick-price pick-price-sale">{% if s.was %}<s class="pick-was">{{ s.was }}</s> {% endif %}<span class="pick-now">{{ s.price }}</span>{% if s.off %} <span class="pick-off">{{ s.off }} OFF</span>{% endif %} <span class="pick-note">(checked Nov 3)</span></p>
     <!-- ASSOCIATES SLOT: replace gethauntmap-20 with Dan's real Associates ID before shipping -->
     <p><a class="pick-btn" href="{% if s.asin %}https://www.amazon.com/dp/{{ s.asin }}?tag=gethauntmap-20{% else %}https://www.amazon.com/s?k={{ s.q }}&amp;tag=gethauntmap-20{% endif %}" target="_blank" rel="noopener sponsored">View on Amazon &#x2197;</a></p>
   </div>
