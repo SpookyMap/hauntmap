@@ -241,6 +241,13 @@ HANDPICKED_ENTRY_IDS = (
     # Culture feature batch. 9490 is the newest hand-picked
     # pin and leads the Live board; 9489 follows at #2.
     9489, 9490,
+    # Nov 4 additions: 9493 — The McDonald's Drive-Thru
+    # Trunk-or-Treat (@chelseawheeler119), and 9492 — A Fall
+    # Day at Carm's Farms (@carolyn.polanco), Dan's two Pop
+    # Haunt Culture top picks, also featured on the Live
+    # board per his order. 9493 is the newest hand-picked
+    # pin and leads the Live board; 9492 follows at #2.
+    9493, 9492,
 )
 
 SCHEMA = """
