@@ -9432,6 +9432,23 @@ POP_CULTURE_FEATURED = {
 # still and the click handler swaps in that platform's official embed.
 POP_CULTURE_GRID: list[dict] = [
 
+    # Grid head (Dan, 2026-11-04): the 53rd Village Halloween
+    # Parade in under a minute — Ahsan Goraya's best-and-craziest
+    # cut of Halloween night on Sixth Avenue. Dan asked for
+    # "Halloween parade highlights 2026" and picked this Short
+    # over the Thriller NYC and Marina NYC cuts. YouTube exposed
+    # no view count at add time, so the blurb carries none.
+    {"id": "tU69Temc_9I",
+     "title": "NYC Halloween Parade 2026 🎃👻 | Best & Craziest Moments!",
+     "channel": "Ahsan Goraya",
+     "kind": "YouTube Short", "short": True,
+     "blurb": "The 53rd Village Halloween Parade in under a "
+              "minute: Ahsan Goraya's best-and-craziest cut of "
+              "Halloween night on Sixth Avenue — spectacular "
+              "costumes, spooky characters, dance performances "
+              "and giant puppets, with the whole street turned "
+              "into one moving costume party. The world's "
+              "biggest Halloween parade, distilled."},
     # Grid head (Dan, 2026-11-04): Steve Ronin's night walk
     # through Japan's Aokigahara Forest — one flashlight, then
     # the daylight cut to rows of tiny black tents pitched on
