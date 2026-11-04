@@ -9365,6 +9365,32 @@ POP_CULTURE_FEATURED = {
 # still and the click handler swaps in that platform's official embed.
 POP_CULTURE_GRID: list[dict] = [
 
+    # Grid head (Dan, 2026-11-04): Steve Ronin's night walk
+    # through Japan's Aokigahara Forest — one flashlight, then
+    # the daylight cut to rows of tiny black tents pitched on
+    # the forest floor ("I found these weird tiny tents in
+    # Japans most haunted forest"). Dan sent the
+    # facebook.com/share link; the still is the reel's own
+    # poster frame (Steve mid-forest with the video's own
+    # opening caption). Tap swaps in Facebook's player. No
+    # play count in the blurb — Facebook exposes none publicly
+    # for this reel.
+    {"id": "1505814501365314",
+     "platform": "facebook",
+     "url": "https://www.facebook.com/reel/1505814501365314/",
+     "thumb": "/static/img/steveronin_aokigahara_tents.jpg",
+     "title": "The Tiny Tents of Aokigahara",
+     "channel": "Steve Ronin",
+     "kind": "Facebook Reel", "short": True,
+     "blurb": "Steve Ronin takes one flashlight into "
+              "Japan's Aokigahara Forest after dark: "
+              "\"Steve explores deep inside Japans "
+              "Aokigahara Forest And realized...\" Cut to "
+              "daylight — row after row of tiny black tents "
+              "pitched across the forest floor, exactly what "
+              "his caption promises: \"I found these weird "
+              "tiny tents in Japans most haunted forest.\" "
+              "No narration, no jump scares. Just the quiet."},
     # Third in the 2026-11-03 evening batch (Dan): the line
     # outside The Tyler Halloween House in Tyler, Texas —
     # slotted under the @graypizza live room, ahead of ESPN.
@@ -10011,12 +10037,15 @@ POP_CULTURE_HOME_TRUNK_GROUP: list[dict] = (
 
 # The homepage block's full card order (Dan, 2026-11-04):
 # Carm's Farms (POP_CULTURE_TOP_PICKS[1] — Dan's fall-activity
-# pick, NOT a trunk-or-treat) + the first six grid companions
-# on top, then the trunk-or-treat group closing the bottom.
+# pick, NOT a trunk-or-treat) + the first seven grid companions
+# on top (seven, not six, since 2026-11-04: Steve Ronin joined
+# the grid head and Dan ordered Heidi Klum kept on the
+# homepage too — 13 cards in the block), then the
+# trunk-or-treat group closing the bottom.
 # Homepage-only: /pop-haunt-culture never reads this list and
 # keeps POP_CULTURE_FEATURED as its own feature.
 POP_CULTURE_HOME_CARDS: list[dict] = (
-    [POP_CULTURE_TOP_PICKS[1]] + POP_CULTURE_GRID[:6]
+    [POP_CULTURE_TOP_PICKS[1]] + POP_CULTURE_GRID[:7]
     + POP_CULTURE_HOME_TRUNK_GROUP
 )
 
