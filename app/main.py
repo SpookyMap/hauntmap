@@ -4141,13 +4141,22 @@ PICKS_BOOKS = [
     {"title": "Hellboy Omnibus Boxed Set", "by": "Mike Mignola", "price": "$99.99", "q": "Hellboy+Omnibus+Boxed+Set", "glyph": "\U0001F608", "pitch": "All four Hellboy omnibuses \u2014 1,600 pages \u2014 in a slipcase with new art by Mignola himself. Ranked the #1 horror graphic novel going at 4.8 stars; the collector anchor of the whole shelf.", "imgs": ["hellboy-boxed-1.jpg"]},
     {"title": "Tomie \u2014 Complete Deluxe Edition", "by": "Junji Ito", "price": "$34.99", "q": "Tomie+Complete+Deluxe+Edition+Junji+Ito", "glyph": "\U0001F48B", "pitch": "She gets murdered, she comes back, and everyone who meets her is doomed. Ito's complete Tomie saga in one deluxe hardcover \u2014 4.8 stars across 12,000+ ratings, and the book Uzumaki readers reach for next.", "imgs": ["tomie-1.jpg"]},
 ]
+# On Sale Now strip (Dan, 2026-11-03): the Cosmo/GH sale finds, moved out of
+# PICKS_GEAR to a strip at the very top of /shop with visible prices. price/was/off
+# checked Nov 3, 2026 (articles + CamelCamelCamel — see hidden_files/cosmo_batch_2026-11-03.md).
+# NTBAY carries NO was/off on purpose: the article's "was $50" conflicts with CCC's
+# $29.99 list price for the orange variant, so only the verified $30 current price prints.
+PICKS_SALE = [
+    {"title": "Ghost Throw Pillow Covers — Set of 2 (MIULEE)", "q": "MIULEE+ghost+throw+pillow+covers", "asin": "B0F727NJ82", "glyph": "\U0001F47B", "pitch": "Two plush white-ghost pillow covers (18x18) — the cute-not-creepy couch upgrade that flew around every fall decor feed this year, spotted in Cosmopolitan's Halloween roundup at $10 (was $28).", "imgs": ["ghost-pillow-covers-1.jpg"], "price": "~$9.99", "was": "$28", "off": "64%"},
+    {"title": "3D Bat Decorations — 60 Pack (Coogam)", "q": "Coogam+60+3D+Halloween+bats", "asin": "B07TRCJJS3", "glyph": "\U0001F987", "pitch": "Sixty fold-and-stick 3D bats in four sizes — swarming a wall or window in ten minutes for eight bucks (was $15). The highest-impact cheapest decor in this whole list.", "imgs": ["bat-decorations-1.jpg"], "price": "$8", "was": "$15", "off": "47%"},
+    {"title": "Cotton Cable Knit Throw Blanket (NTBAY)", "q": "NTBAY+cotton+cable+knit+throw+blanket+orange", "asin": "B01MSKKDYP", "glyph": "\U0001F9F6", "pitch": "A chunky cable-knit throw in peak-fall orange — real cotton, couch-ready, and the cozy half of a Halloween movie night. Cosmopolitan spotted it at $30 in their fall roundup.", "imgs": ["cable-knit-throw-1.jpg"], "price": "$30"},
+]
+
 PICKS_GEAR = [
-    # Cosmo + Good Housekeeping batch (Nov 3, 2026): sale finds first, then full-price.
+    # Cosmo + Good Housekeeping batch (Nov 3, 2026): full-price finds (the three
+    # sale finds moved to PICKS_SALE above, which leads the page in its own strip).
     # "asin" renders a direct /dp/ buy link; prices from the articles/CCC at add time —
     # see hidden_files/cosmo_batch_2026-11-03.md. Images: manufacturer sources only.
-    {"title": "Ghost Throw Pillow Covers — Set of 2 (MIULEE)", "q": "MIULEE+ghost+throw+pillow+covers", "asin": "B0F727NJ82", "glyph": "\U0001F47B", "pitch": "Two plush white-ghost pillow covers (18x18) — the cute-not-creepy couch upgrade that flew around every fall decor feed this year, spotted in Cosmopolitan's Halloween roundup at $10 (was $28).", "imgs": ["ghost-pillow-covers-1.jpg"]},
-    {"title": "3D Bat Decorations — 60 Pack (Coogam)", "q": "Coogam+60+3D+Halloween+bats", "asin": "B07TRCJJS3", "glyph": "\U0001F987", "pitch": "Sixty fold-and-stick 3D bats in four sizes — swarming a wall or window in ten minutes for eight bucks (was $15). The highest-impact cheapest decor in this whole list.", "imgs": ["bat-decorations-1.jpg"]},
-    {"title": "Cotton Cable Knit Throw Blanket (NTBAY)", "q": "NTBAY+cotton+cable+knit+throw+blanket+orange", "asin": "B01MSKKDYP", "glyph": "\U0001F9F6", "pitch": "A chunky cable-knit throw in peak-fall orange — real cotton, couch-ready, and the cozy half of a Halloween movie night. Cosmopolitan flagged it at $30 (was $50).", "imgs": ["cable-knit-throw-1.jpg"]},
     {"title": "Autumn Wreath Large Jar Candle (Yankee Candle)", "q": "Yankee+Candle+Autumn+Wreath+large+jar", "asin": "B0F3DRZV41", "glyph": "\U0001F342", "pitch": "The iconic fall scent — spiced pumpkin, cinnamon leaf and clove — in the big 22 oz jar, good for 110+ hours. Light it and the whole house smells like October.", "imgs": ["autumn-wreath-candle-1.jpg"]},
     {"title": "Pumpkin Petite Cocotte (Le Creuset)", "q": "Le+Creuset+pumpkin+petite+cocotte", "asin": "B0CBQNPGF9", "glyph": "\U0001F383", "pitch": "Le Creuset's pumpkin-shaped stoneware mini cocotte with its stem lid — bakes individual soups and dips, then steals the table as pure decor.", "imgs": ["pumpkin-cocotte-1.jpg"]},
     {"title": "Cinnamon Brooms — 36in + 6in (Nautical Crush Trading)", "q": "cinnamon+brooms+scented+36+inch", "asin": "B0BLZS47QF", "glyph": "\U0001F9F9", "pitch": "A real cinnamon-scented broom pair (one 36-inch, one 6-inch) — hang the big one by the door and the entryway smells like fall for the whole season.", "imgs": ["cinnamon-brooms-1.jpg"]},
@@ -4173,7 +4182,7 @@ PICKS_GEAR = [
 def picks_page(request: Request):
     return templates.TemplateResponse(
         request, "picks.html",
-        {"books": PICKS_BOOKS, "gear": PICKS_GEAR},
+        {"books": PICKS_BOOKS, "gear": PICKS_GEAR, "sale": PICKS_SALE},
     )
 
 

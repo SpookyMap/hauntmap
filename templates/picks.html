@@ -4,6 +4,9 @@
 <style>
   .pick-cover { font-size: 64px; line-height: 1; text-align: center; padding: 26px 0 10px; }
   .pick-price { font-weight: 700; }
+  .pick-was { opacity: .55; font-weight: 400; margin-left: 6px; }
+  .pick-off { display: inline-block; margin-left: 8px; padding: 2px 10px; border-radius: 999px;
+              background: #e4572e; color: #fff; font-size: .82em; font-weight: 800; letter-spacing: .03em; }
   .pick-btn { display: inline-block; margin-top: 8px; padding: 9px 16px; border-radius: 999px;
               background: #f90; color: #111; font-weight: 700; text-decoration: none; }
   .pick-btn:hover { filter: brightness(1.1); }
@@ -47,6 +50,29 @@
 <div class="hero-intro">
   <h1>&#x1F383; HauntMart</h1>
   <p>Horror comics to read by porch light, and the gear that turns a yard into a destination — hand-picked by the HauntMap crew. This page is how the map pays its bills: buy through these links and you support the map at no extra cost.</p>
+</div>
+
+<h2 class="diy-section-title">&#x1F3F7;&#xFE0F; On Sale Now</h2>
+<p class="diy-section-sub">The deals, first thing. Prices checked Nov 3, 2026 — Amazon moves them around, so the button shows today's.</p>
+
+<div class="diy-grid">
+  {% for s in sale %}
+  <div class="diy-card">
+    {% if s.imgs %}
+    <button type="button" class="pick-thumb" data-gal="sale-{{ loop.index0 }}" aria-label="View photos of {{ s.title }}">
+      <img src="/static/img/picks/{{ s.imgs[0] }}" alt="{{ s.title }}" loading="lazy">
+      <span class="pick-photos">&#x1F4F7; {{ s.imgs|length }} photo{{ 's' if s.imgs|length > 1 }} — tap to view</span>
+    </button>
+    {% else %}
+    <div class="pick-cover" aria-hidden="true">{{ s.glyph }}</div>
+    {% endif %}
+    <h3>{{ s.title }}</h3>
+    <p class="diy-blurb">{{ s.pitch }}</p>
+    <p class="pick-price">{{ s.price }}{% if s.was %} <s class="pick-was">{{ s.was }}</s>{% endif %}{% if s.off %} <span class="pick-off">{{ s.off }} OFF</span>{% endif %} <span class="pick-note">(checked Nov 3)</span></p>
+    <!-- ASSOCIATES SLOT: replace gethauntmap-20 with Dan's real Associates ID before shipping -->
+    <p><a class="pick-btn" href="{% if s.asin %}https://www.amazon.com/dp/{{ s.asin }}?tag=gethauntmap-20{% else %}https://www.amazon.com/s?k={{ s.q }}&amp;tag=gethauntmap-20{% endif %}" target="_blank" rel="noopener sponsored">View on Amazon &#x2197;</a></p>
+  </div>
+  {% endfor %}
 </div>
 
 <h2 class="diy-section-title">&#x1F4DA; Horror Comics &amp; Graphic Novels</h2>
@@ -115,6 +141,7 @@
 
 <script>
   const HM_GALLERIES = {
+    {% for s in sale %}{% if s.imgs %}"sale-{{ loop.index0 }}": {"title": {{ s.title|tojson }}, "imgs": {{ s.imgs|tojson }}, "buy": {% if s.asin %}"https://www.amazon.com/dp/{{ s.asin }}?tag=gethauntmap-20"{% else %}"https://www.amazon.com/s?k={{ s.q }}&tag=gethauntmap-20"{% endif %}},{% endif %}{% endfor %}
     {% for b in books %}{% if b.imgs %}"book-{{ loop.index0 }}": {"title": {{ b.title|tojson }}, "imgs": {{ b.imgs|tojson }}, "buy": {% if b.asin %}"https://www.amazon.com/dp/{{ b.asin }}?tag=gethauntmap-20"{% else %}"https://www.amazon.com/s?k={{ b.q }}&tag=gethauntmap-20"{% endif %}},{% endif %}{% endfor %}
     {% for g in gear %}{% if g.imgs %}"gear-{{ loop.index0 }}": {"title": {{ g.title|tojson }}, "imgs": {{ g.imgs|tojson }}, "buy": {% if g.asin %}"https://www.amazon.com/dp/{{ g.asin }}?tag=gethauntmap-20"{% else %}"https://www.amazon.com/s?k={{ g.q }}&tag=gethauntmap-20"{% endif %}},{% endif %}{% endfor %}
   };
