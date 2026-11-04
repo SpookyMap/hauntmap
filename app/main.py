@@ -9334,23 +9334,28 @@ def movies_page(request: Request):
 # The cadenmcdonald flying-ghost reel that led the page until
 # now heads the grid below instead.
 POP_CULTURE_FEATURED = {
-    # Featured (Dan, 2026-11-02 evening): ESPN's sibling-prank
-    # toddler — Dan replaced the Heidi Klum severed-hand hand
-    # entry at the top of the feature block with this video,
-    # with House of Highlights' Villain of Halloween leading
-    # the grid directly under it.
-    "id": "7701785479590595870",
+    # Featured (Dan, 2026-11-03 evening): the "Haunted Live
+    # Scream" feature — @travelbyashleyz's first trunk-or-treat,
+    # sent as a tiktok.com/t short link and put at the very top
+    # of Pop Haunt Culture and the homepage feature at Dan's
+    # order. ESPN's sibling-prank toddler moves down into the
+    # grid, behind the @graypizza live room. The still is the
+    # video's own frame (the tentacle trunk, lit at night),
+    # stored locally; tap swaps in TikTok's official embed.
+    "id": "7702575946070527245",
     "platform": "tiktok",
-    "url": "https://www.tiktok.com/@espn/video/7701785479590595870",
-    "thumb": "/static/img/espn_scare_worth_wait.jpg",
-    "title": "When the Scare Is Worth the Wait",
-    "channel": "ESPN",
+    "url": "https://www.tiktok.com/@travelbyashleyz/video/7702575946070527245",
+    "thumb": "/static/img/travelbyashleyz_octopus_trunk.jpg",
+    "title": "Haunted Live Scream",
+    "channel": "travelbyashleyz",
     "kind": "TikTok", "short": True,
-    "blurb": "\"When the scare is worth the wait.\" ESPN "
-             "shared @sumcowkids' sibling prank: a toddler in "
-             "pajamas wearing the most cursed old-man mask on "
-             "the internet, frozen mid-stare like a tiny "
-             "horror-movie final boss. 2.1 million plays."}
+    "blurb": "Dan's Haunted Live Scream feature. "
+             "@travelbyashleyz's first trunk-or-treat went "
+             "full sea monster: 7.2-foot inflatable octopus "
+             "tentacles bursting out of the hatch, glowing "
+             "eels standing guard and a cauldron of candy in "
+             "the deep. Their caption calls the night a "
+             "success — 1,079 plays so far."}
 # The collection grid. Dan feeds entries one at a time; append dicts of
 # {"id", "title", "channel", "kind", "blurb"} — the template renders
 # them as cards next to the featured pick. The Shorts below were all
@@ -9360,6 +9365,58 @@ POP_CULTURE_FEATURED = {
 # cover-frame file in static/img/): the template renders the local
 # still and the click handler swaps in that platform's official embed.
 POP_CULTURE_GRID: list[dict] = [
+
+    # Grid head (Dan, 2026-11-03 evening): @graypizza's live
+    # room, slotted directly under the Haunted Live Scream
+    # feature. Gray Pizza (the Grays) run historical and
+    # haunted tours of West Virginia / Ohio and stream them
+    # live. "platform": "live" renders the tap-out facade to
+    # the TikTok live room; the still is their channel art.
+    {"id": "graypizza-live",
+     "platform": "live",
+     "url": "https://www.tiktok.com/@graypizza/live",
+     "thumb": "/static/img/graypizza_live.jpg",
+     "title": "Gray Pizza — LIVE Haunted Tours",
+     "channel": "graypizza",
+     "kind": "TikTok LIVE", "short": True,
+     "blurb": "🔴 LIVE: Gray Pizza — the Grays — stream "
+              "their historical and haunted tours of West "
+              "Virginia and Ohio to 117K followers: real "
+              "haunted places, walked and talked live. Tap "
+              "the cover to watch live on TikTok."},
+    # Third in the 2026-11-03 evening batch (Dan): the line
+    # outside The Tyler Halloween House in Tyler, Texas —
+    # slotted under the @graypizza live room, ahead of ESPN.
+    {"id": "7702975782645157151",
+     "platform": "tiktok",
+     "url": "https://www.tiktok.com/@sandyonsocial/video/7702975782645157151",
+     "thumb": "/static/img/sandyonsocial_tyler_coraline.jpg",
+     "title": "The Tyler Halloween House",
+     "channel": "sandyonsocial",
+     "kind": "TikTok", "short": True,
+     "blurb": "The line is LONG at The Tyler Halloween "
+              "House. @sandyonsocial queued up in Tyler's "
+              "Azalea District for the house that turns "
+              "itself into a full Coraline story — costumes, "
+              "characters and a walk through the Other "
+              "World. The verdict from the sidewalk: worth "
+              "the wait. 331,600 plays."},
+    # ESPN's sibling-prank toddler — the featured pick until
+    # 2026-11-03 evening, when the Haunted Live Scream feature
+    # took the top slot (Dan's order); it holds the grid spot
+    # directly under the @sandyonsocial Tyler entry.
+    {"id": "7701785479590595870",
+     "platform": "tiktok",
+     "url": "https://www.tiktok.com/@espn/video/7701785479590595870",
+     "thumb": "/static/img/espn_scare_worth_wait.jpg",
+     "title": "When the Scare Is Worth the Wait",
+     "channel": "ESPN",
+     "kind": "TikTok", "short": True,
+     "blurb": "\"When the scare is worth the wait.\" ESPN "
+              "shared @sumcowkids' sibling prank: a toddler in "
+              "pajamas wearing the most cursed old-man mask on "
+              "the internet, frozen mid-stare like a tiny "
+              "horror-movie final boss. 2.1 million plays."},
 
     # Grid head (Dan, 2026-11-02): House of Highlights'
     # vegetable house and @spookywiener's Ace Ventura rhino.
