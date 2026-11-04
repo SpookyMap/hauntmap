@@ -10162,6 +10162,10 @@ POP_CULTURE_HOME_CARDS: list[dict] = (
 FALL_EVENTS_HOME_IDS: tuple[int, ...] = (
     9494, 9495, 9496, 9497, 9498, 9499, 9500, 9501, 9502, 9503,
     9504, 9505, 5969, 143, 116, 117, 144,
+    # ChristmasWeen Party, Wildwoods Convention Center, Sat Nov 14
+    # (pin 9507) — Dan ordered the homepage feature 2026-11-04; the
+    # Halloween-meets-Christmas bridge into Jolly season.
+    9507,
 )
 
 
