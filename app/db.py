@@ -235,6 +235,12 @@ HANDPICKED_ENTRY_IDS = (
     # Nashville; Dan made him the homepage Haunt Culture
     # feature, so he leads the Live board too.
     9469,
+    # Nov 3 evening additions: 9489 — Gray Pizza LIVE haunted
+    # tours (WV / Ohio), and 9490 — Haunted Live Scream
+    # (@travelbyashleyz), both Dan-sent with the Pop Haunt
+    # Culture feature batch. 9490 is the newest hand-picked
+    # pin and leads the Live board; 9489 follows at #2.
+    9489, 9490,
 )
 
 SCHEMA = """
