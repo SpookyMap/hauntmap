@@ -1319,6 +1319,36 @@ def init_db(db_path: Path) -> None:
             "WHERE id = 1 AND title != ?",
             ("Zombie House — Hawthorne", "Zombie House — Hawthorne"),
         )
+        # Fall-events date corrections (Nov 4): Netherworld (5969)
+        # closes its 30th season with a Final Weekend Nov 6–7, 2026
+        # (plus afternoon Lights On Tours both days) — its live title
+        # still said "Nightly Through Sun Nov 1" — and Terhune
+        # Orchards (143) adds a half-price Encore Weekend Nov 6–8, so
+        # its festival span extends to November 8. Neither fix can
+        # ride the normal routes: /admin/edit cannot write
+        # description, and a fresh /upload re-geocodes and rejects
+        # both addresses (OSM has no coverage of 1313 Netherworld
+        # Way, a private road, and no house-number match for 330
+        # Cold Soil Road), while a recreate would lose the pins'
+        # hand-set coordinates. Dan approved the direct DB fix
+        # (Nov 4). Guarded on the exact pre-fix titles, so each
+        # fires once and can never override a later admin edit;
+        # title + description only — address, coordinates, photo
+        # and every other field stay exactly as seeded.
+        conn.execute(
+            "UPDATE entries SET title = ?, description = ? "
+            "WHERE id = 5969 AND title = ?",
+            ("Netherworld Haunted House — Stone Mountain · Final Weekend Nov 6–7, 2026",
+             "📅 Final weekend: Friday, November 6 & Saturday, November 7, 2026 — plus afternoon Lights On Tours both days. Netherworld — one of America's most famous haunted houses — closes its 30th season with two haunts: Curse of the Collector and Beyond Oblivion. Timed tickets; the final weekend sells out.",
+             "Netherworld Haunted House — Stone Mountain · Nightly Through Sun Nov 1"),
+        )
+        conn.execute(
+            "UPDATE entries SET title = ?, description = ? "
+            "WHERE id = 143 AND title = ?",
+            ("Terhune Orchards Fall Festival — September 12 – November 8, 2026",
+             "📅 Fall Family Fun weekends through November 1 — plus a half-price Encore Weekend, Friday–Sunday, November 6–8, 2026, 10:00 AM–5:00 PM ($10). Corn maze, hayrides, farm animals and cider at the Princeton farm.",
+             "Terhune Orchards Fall Festival — September 12 – November 1, 2026"),
+        )
         if "is_handpicked" not in cols:
             # Hand-picked feed boost (Dan, Oct 23): pins Dan personally
             # sent/curated lead every feed. Ranking data is never
