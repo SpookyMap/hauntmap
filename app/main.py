@@ -10942,6 +10942,7 @@ _PAGE_TIME_LABELS = {
     "/trivia": "Trivia", "/upload": "Add a Haunt",
     "/about": "About Us", "/advertise": "Advertise",
     "/media-kit": "Media Kit",
+    "/shop": "HauntMart", "/plus": "HauntMap Plus",
     "/signup": "Sign Up", "/login": "Log In",
     "/forgot-password": "Forgot Password", "/profile/edit": "Edit Profile",
     "/feedback": "Feedback", "/privacy": "Privacy Policy",
