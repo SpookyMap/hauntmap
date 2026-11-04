@@ -21,10 +21,19 @@
    house pattern); companions never showed blurbs in this block.
    /pop-haunt-culture keeps its own featured treatment (separate
    template, untouched). #}
+{# Sandwich update (Dan, 2026-11-04): Dan's two hand-sent picks
+   (pop_home_top, POP_CULTURE_TOP_PICKS) lead the block at
+   positions 1-2, ahead of the featured pick; the homepage grid
+   tail (appended in the route context) is the trunk-or-treat
+   row closing out the bottom. Both additions are homepage-only
+   — neither list feeds /pop-haunt-culture. Because a top pick
+   is now loop.first, the under-caption blurb slot rides on
+   Dan's pick #1 instead of the featured pick (whose blurb
+   still shows on /pop-haunt-culture). #}
 <section class="pop-home" aria-label="Pop Haunt Culture feature">
   <h2>&#x1F4FA; Pop Haunt Culture</h2>
   <div class="pop-home-duo">
-    {% for v in [pop_featured] + pop_home_grid %}
+    {% for v in pop_home_top + [pop_featured] + pop_home_grid %}
     <div class="pop-home-duo-item">
       {% if v.platform == 'live' %}
       <a class="yt-facade yt-facade--live" href="{{ v.url }}" target="_blank" rel="noopener" aria-label="Watch live: {{ v.title }}">

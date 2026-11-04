@@ -3170,7 +3170,14 @@ def home(request: Request, sort: str = "new", town: str = "", town_search: str =
          # feature sits NEXT TO the top collection picks on the
          # homepage — tonight that's the DinomiteTwins live room
          # and the Village Halloween Parade video.
-         "pop_home_grid": POP_CULTURE_GRID[:6],
+         # Dan's two hand-sent picks lead the homepage block
+         # (Dan, 2026-11-04); homepage-only, like the
+         # trunk-or-treat tail appended to the grid below.
+         "pop_home_top": POP_CULTURE_TOP_PICKS,
+         # Homepage grid (updated Dan, 2026-11-04): the first
+         # six collection picks, then the trunk-or-treat row
+         # closing out the bottom of the block.
+         "pop_home_grid": POP_CULTURE_GRID[:6] + POP_CULTURE_TRUNK_OR_TREAT,
          "trending": trending, "near_towns": near_towns,
          "home_top10": home_top10,
          "top10_menu": top10_menu,
@@ -9905,6 +9912,96 @@ POP_CULTURE_GRID: list[dict] = [
      "kind": "YouTube Short", "short": True,
      "blurb": "Trey Eversman calls the five costumes you'll see "
               "everywhere this Halloween."},
+]
+
+
+# Dan's two hand-sent picks (Dan, 2026-11-04, updated order):
+# "Feature in live and top of pop haunt culture feature on
+# homepage." These two lead the HOMEPAGE block only (positions
+# 1-2, ahead of POP_CULTURE_FEATURED); /pop-haunt-culture keeps
+# its own order and does not include them. Both are regular
+# TikTok videos, NOT livestreams — the Live-board side of Dan's
+# order is staged separately as hand-picked virtual live pins
+# (same pattern as pin 9490, itself a regular video filed as a
+# live pin at Dan's order).
+POP_CULTURE_TOP_PICKS: list[dict] = [
+    # Dan's pick #1, sent as tiktok.com/t/ZPL9hkMDf/: a trunk
+    # turned into a full McDonald's drive-thru for
+    # trunk-or-treat (verified: 121,600 plays, 2026-10-30).
+    {"id": "7702162880971541791",
+     "platform": "tiktok",
+     "url": "https://www.tiktok.com/@chelseawheeler119/video/7702162880971541791",
+     "thumb": "/static/img/chelseawheeler119_mcdonalds_trunk.jpg",
+     "title": "The McDonald's Drive-Thru Trunk",
+     "channel": "Chelsea Wheeler",
+     "kind": "TikTok", "short": True,
+     "blurb": "@chelseawheeler119 turned her trunk into a "
+              "full McDonald's drive-thru for trunk-or-treat: "
+              "golden arches, menu boards, Happy Meal boxes "
+              "and a headset on the window, handing every kid "
+              "a bag. 121,600 plays."},
+    # Dan's pick #2, sent as tiktok.com/t/ZPL9hsCHm/: NOT a
+    # trunk-or-treat video — @carolyn.polanco's fall day at
+    # Carm's Farms in Colts Neck, NJ (verified: 59,500 plays,
+    # 2026-10-21). Staged at Dan's order; the mismatch is
+    # flagged for him in the preview report.
+    {"id": "7698851891614207262",
+     "platform": "tiktok",
+     "url": "https://www.tiktok.com/@carolyn.polanco/video/7698851891614207262",
+     "thumb": "/static/img/carolynpolanco_carm_farms.jpg",
+     "title": "A Fall Day at Carm's Farms",
+     "channel": "carolyn.polanco",
+     "kind": "TikTok", "short": True,
+     "blurb": "@carolyn.polanco's fall day at Carm's Farms "
+              "in Colts Neck, New Jersey: $12 in, a pyramid "
+              "of pumpkins at the gate and more than 20 "
+              "animals to meet. 59,500 plays."},
+]
+
+# Trunk-or-treat row for the BOTTOM of the homepage block
+# (Dan, 2026-11-04): homepage-only additions — the homepage
+# context appends them after the six grid companions. They are
+# deliberately NOT in POP_CULTURE_GRID, so /pop-haunt-culture
+# does not pick them up. All verified on their TikTok pages
+# 2026-11-04 (canonical URL, creator, real play count).
+POP_CULTURE_TRUNK_OR_TREAT: list[dict] = [
+    {"id": "7699654369628704014",
+     "platform": "tiktok",
+     "url": "https://www.tiktok.com/@_suleysbeautyboutique/video/7699654369628704014",
+     "thumb": "/static/img/suleysbeautyboutique_trunk.jpg",
+     "title": "Truck or Treat 2026 at Suley's",
+     "channel": "Suley's Beauty Boutique",
+     "kind": "TikTok", "short": True,
+     "blurb": "@_suleysbeautyboutique's truck-or-treat "
+              "2026: the El Monte, California boutique's "
+              "decorated setup out front for the "
+              "neighborhood kids. 5,008 plays."},
+    {"id": "7698161785337154830",
+     "platform": "tiktok",
+     "url": "https://www.tiktok.com/@littlenuggetssoftplayky/video/7698161785337154830",
+     "thumb": "/static/img/littlenuggets_trunkortreat.jpg",
+     "title": "Little Nuggets Trunk-or-Treat, Louisville",
+     "channel": "Little Nuggets Softplay",
+     "kind": "TikTok", "short": True,
+     "blurb": "The Little Nuggets Trunk-or-Treat at "
+              "Louisville's Mellwood Art Center: local "
+              "businesses decorated the trunks and the "
+              "families packed the lot. A 15-second "
+              "community recap. 214 plays."},
+    {"id": "7702521330050059550",
+     "platform": "tiktok",
+     "url": "https://www.tiktok.com/@nataliemeansnice/video/7702521330050059550",
+     "thumb": "/static/img/nataliemeansnice_sunblock.jpg",
+     "title": "The Sunblock Lip Balm Incident",
+     "channel": "nataliemeansnice",
+     "kind": "TikTok", "short": True,
+     "blurb": "The trunk-or-treat story of the season: "
+              "Texas mom Natalie Drue (@nataliemeansnice) "
+              "loved the lip balm a medical group handed "
+              "out at a candy-less trunk-or-treat — until "
+              "the car mirror showed her the side she'd "
+              "been wearing was sunblock, after talking to "
+              "dozens of people. 4.7 million plays."},
 ]
 
 
