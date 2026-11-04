@@ -7554,3 +7554,39 @@ a.wn-fbtn:hover, summary.wn-fbtn:hover { border-color: #57a8ff; }
     font-size: 0.72rem; line-height: 1.15;
   }
 }
+
+/* ============ Laptop header buttons: EQUAL COLUMNS at every width >=761px (Dan, 2026-11-03) ============
+   Dan's photo of his MacBook Air after the band fix above shipped:
+   "Buttons at top still not cleanly spaced." He was right — the band
+   fix stopped at 1240px, and above it the nav fell back to natural
+   button widths with space-between: the GAPS between buttons were
+   even, but the buttons themselves run 42-118px wide (Map/DIY vs
+   DIY Costumes), so the icon CENTERS land on an uneven rhythm.
+   Measured on the live layout (z242 code): center-to-center deltas
+   @1280 run 65.7px (Shop->DIY) to 118.1px (Top Haunts->Add Yours),
+   @1440 79.0px to 131.4px — a 52.4px spread at both widths.
+   Fix: the band's equal-share rule now covers every laptop width —
+   the media query below drops the 1240px cap, so at >=1241px the 12
+   buttons also take flex: 1 1 0 behind the events column's natural
+   seat with the same uniform 0.3rem gap, and center-to-center
+   spacing becomes (column width + gap) everywhere by construction.
+   Wide widths keep z151's sizes (36px discs / 0.93rem labels): the
+   34px / 0.72rem step-down stays scoped to the 761-1240 band in the
+   block above. Labels may wrap and center at wide widths too, so
+   "DIY Costumes" / "Top Haunts" / "Add Yours" / "About Us" stack as
+   two tidy lines inside their ~84px columns at 1280 instead of
+   forcing the row wide. Buttons take align-self: flex-start so a
+   two-line label grows DOWNWARD from the shared top edge and every
+   icon stays on one horizontal line (with the nav's align-items:
+   center, the taller buttons would otherwise ride up and stagger
+   the icon row); the events column keeps its own centered seat.
+   Scoping unchanged otherwise: normal-height windows only (the
+   compact-landscape slim row keeps its own rules) and <=760px
+   (phone 4x3 grid, text-only mini-bar) is untouched. */
+@media (min-width: 761px) and (min-height: 501px) {
+  .site-header.v2 .header-nav { flex-wrap: nowrap; gap: 0.3rem; }
+  .site-header.v2 .header-nav a.navbtn { flex: 1 1 0; min-width: 0; align-self: flex-start; }
+  .site-header.v2 .header-nav a.navbtn span {
+    white-space: normal; text-align: center; line-height: 1.15;
+  }
+}
