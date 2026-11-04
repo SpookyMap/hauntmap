@@ -11093,6 +11093,20 @@ def _page_time_build() -> list:
             "'/sitemap.xml') AND path NOT LIKE '/api/%' "
             f"AND {frag} "
             "GROUP BY path ORDER BY views DESC LIMIT 40", frag_params).fetchall()
+        # Money pages are ALWAYS shown (Dan, Nov 4): HauntMart and Plus
+        # keep their timing rows even when they fall below the top-40
+        # view cut, so their stats never vanish from this table.
+        have = {r["path"] for r in cand}
+        missing = [p for p in ("/plus", "/shop") if p not in have]
+        if missing:
+            mm = ",".join("?" * len(missing))
+            extra = conn.execute(
+                "SELECT path, COUNT(*) AS views FROM page_views "
+                "WHERE viewed_at >= datetime('now', '-7 days') "
+                f"AND path IN ({mm}) AND {frag} "
+                "GROUP BY path", missing + list(frag_params)).fetchall()
+            cand = sorted(list(cand) + list(extra),
+                          key=lambda r: r["views"], reverse=True)
         if not cand:
             return rows_out
         paths = [r["path"] for r in cand]
