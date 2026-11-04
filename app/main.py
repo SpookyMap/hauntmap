@@ -4136,6 +4136,11 @@ DIY_VIDEOS_WYLD = [
 # are labeled as such on the page; gear cards carry no
 # prices until ship-time verification.)
 PICKS_BOOKS = [
+    # Nue's Exorcist Vol. 9 (Dan, 2026-11-04): released Nov 3, 2026 (Viz).
+    # Direct /dp/ link — the ASIN is the book's ISBN-10, confirmed by Viz's
+    # own product page (viz.com product 9168; cover file 1974765490.jpg on
+    # Viz's CDN). Cover: Viz's official art, stored locally like the others.
+    {"title": "Nue's Exorcist, Vol. 9", "by": "Kota Kawae", "price": "$11.99", "asin": "1974765490", "q": "Nues+Exorcist+Vol+9+Kota+Kawae", "glyph": "\U0001F479", "pitch": "Gakuro has always seen spirits — then he frees Nue, an ancient powerhouse who treats exorcism like a video game. In the brand-new Vol. 9 (out Nov 3), a summer-festival confession brews while Raisei pacts with Gashadokuro, the giant-skeleton Hyo prophesied to revive first. Shonen Jump's supernatural hit.", "imgs": ["nues-exorcist-vol9-1.jpg"]},
     {"title": "Locke & Key Vol. 1: Welcome to Lovecraft", "by": "Joe Hill & Gabriel Rodr\u00edguez", "price": "~$10.48", "q": "Locke+and+Key+Vol+1+Welcome+to+Lovecraft", "glyph": "\U0001F5DD\uFE0F", "pitch": "A haunted house full of keys that unlock powers — and doors that should stay shut. The graphic novel every haunter wishes their house was based on.", "imgs": ["locke-key-vol1-cover.jpg", "locke-key-vol1-1.jpg", "locke-key-vol1-2.jpg", "locke-key-vol1-3.jpg"]},
     {"title": "Uzumaki — Deluxe Edition", "by": "Junji Ito", "price": "~$19.99", "q": "Uzumaki+Deluxe+Edition+Junji+Ito", "glyph": "\U0001F300", "pitch": "The spiral curse that eats a whole town. Ito's masterpiece in a hardcover deluxe edition that looks as good on the shelf as it is horrifying inside.", "imgs": ["uzumaki-1.jpg"]},
     {"title": "Something Is Killing the Children Vol. 1", "by": "James Tynion IV & Werther Dell'Edera", "price": "~$11.18", "q": "Something+Is+Killing+the+Children+Vol+1", "glyph": "\U0001FA78", "pitch": "Monsters are eating children in a small town, and the only one who can see them is a drifter with secrets. Modern horror comics at their very best.", "imgs": ["siktc-vol1-1.jpg", "siktc-vol1-2.jpg", "siktc-vol1-3.jpg"]},
