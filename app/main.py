@@ -3170,7 +3170,7 @@ def home(request: Request, sort: str = "new", town: str = "", town_search: str =
          # feature sits NEXT TO the top collection picks on the
          # homepage — tonight that's the DinomiteTwins live room
          # and the Village Halloween Parade video.
-         "pop_home_grid": POP_CULTURE_GRID[:7],
+         "pop_home_grid": POP_CULTURE_GRID[:6],
          "trending": trending, "near_towns": near_towns,
          "home_top10": home_top10,
          "top10_menu": top10_menu,
@@ -9366,24 +9366,6 @@ POP_CULTURE_FEATURED = {
 # still and the click handler swaps in that platform's official embed.
 POP_CULTURE_GRID: list[dict] = [
 
-    # Grid head (Dan, 2026-11-03 evening): @graypizza's live
-    # room, slotted directly under the Haunted Live Scream
-    # feature. Gray Pizza (the Grays) run historical and
-    # haunted tours of West Virginia / Ohio and stream them
-    # live. "platform": "live" renders the tap-out facade to
-    # the TikTok live room; the still is their channel art.
-    {"id": "graypizza-live",
-     "platform": "live",
-     "url": "https://www.tiktok.com/@graypizza/live",
-     "thumb": "/static/img/graypizza_live.jpg",
-     "title": "Gray Pizza — LIVE Haunted Tours",
-     "channel": "graypizza",
-     "kind": "TikTok LIVE", "short": True,
-     "blurb": "🔴 LIVE: Gray Pizza — the Grays — stream "
-              "their historical and haunted tours of West "
-              "Virginia and Ohio to 117K followers: real "
-              "haunted places, walked and talked live. Tap "
-              "the cover to watch live on TikTok."},
     # Third in the 2026-11-03 evening batch (Dan): the line
     # outside The Tyler Halloween House in Tyler, Texas —
     # slotted under the @graypizza live room, ahead of ESPN.
