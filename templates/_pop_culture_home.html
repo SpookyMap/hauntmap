@@ -35,10 +35,58 @@
    renders on the homepage (same as every non-first card),
    while the featured pick's blurb still shows on
    /pop-haunt-culture. #}
+{# Farm spotlight (Dan, 2026-11-04, refined direction): the farm
+   comes OUT of the uniform grid and renders as a LARGE feature
+   above it — "large and above all of them with the paragraph
+   running across the bottom of video", "larger than the other
+   ones in its own spotlight at the top". This supersedes the
+   uniform treatment above for the first card only:
+   pop_home_cards[0] (Carm's Farms) gets the .pop-home-feature
+   treatment — a wider facade with the violet spotlight glow,
+   its caption + blurb (paragraph) as a band across the BOTTOM
+   of the video (scoped CSS in style.css, .pop-home-feature-*).
+   The remaining 11 cards stay uniform in the grid below in the
+   reordered sequence (trunk-or-treat group still at the
+   bottom); nothing is added or removed, and /pop-haunt-culture
+   is untouched. #}
 <section class="pop-home" aria-label="Pop Haunt Culture feature">
   <h2>&#x1F4FA; Pop Haunt Culture</h2>
+  {% set f = pop_home_cards[0] %}
+  <div class="pop-home-feature">
+    {% if f.platform == 'live' %}
+    <a class="yt-facade yt-facade--live" href="{{ f.url }}" target="_blank" rel="noopener" aria-label="Watch live: {{ f.title }}">
+      <img src="{{ f.thumb }}" alt="" loading="lazy">
+      <span class="yt-play" aria-hidden="true">&#x1F534;</span>
+      <span class="pop-home-feature-band"><span class="pop-home-feature-cap">{{ f.title }} &middot; {{ f.channel }}</span>{% if f.blurb %}<span class="pop-home-feature-blurb">{{ f.blurb }}</span>{% endif %}</span>
+    </a>
+    {% elif f.platform == 'facebook' %}
+    <button type="button" class="yt-facade yt-facade--fb" data-fb="{{ f.url }}" aria-label="Play {{ f.title }}">
+      <img src="{{ f.thumb }}" alt="" loading="lazy">
+      <span class="yt-play" aria-hidden="true">&#9654;</span>
+      <span class="pop-home-feature-band"><span class="pop-home-feature-cap">{{ f.title }} &middot; {{ f.channel }}</span>{% if f.blurb %}<span class="pop-home-feature-blurb">{{ f.blurb }}</span>{% endif %}</span>
+    </button>
+    {% elif f.platform == 'tiktok' %}
+    <button type="button" class="yt-facade yt-facade--tt" data-ttv="{{ f.id }}" aria-label="Play {{ f.title }}">
+      <img src="{{ f.thumb }}" alt="" loading="lazy">
+      <span class="yt-play" aria-hidden="true">&#9654;</span>
+      <span class="pop-home-feature-band"><span class="pop-home-feature-cap">{{ f.title }} &middot; {{ f.channel }}</span>{% if f.blurb %}<span class="pop-home-feature-blurb">{{ f.blurb }}</span>{% endif %}</span>
+    </button>
+    {% elif f.platform == 'instagram' %}
+    <button type="button" class="yt-facade yt-facade--tt" data-ig="{{ f.id }}"{% if f.ig_post %} data-igseg="p"{% endif %} aria-label="Play {{ f.title }}">
+      <img src="{{ f.thumb }}" alt="" loading="lazy">
+      <span class="yt-play" aria-hidden="true">&#9654;</span>
+      <span class="pop-home-feature-band"><span class="pop-home-feature-cap">{{ f.title }} &middot; {{ f.channel }}</span>{% if f.blurb %}<span class="pop-home-feature-blurb">{{ f.blurb }}</span>{% endif %}</span>
+    </button>
+    {% else %}
+    <button type="button" class="yt-facade" data-yt="{{ f.id }}" aria-label="Play {{ f.title }}">
+      <img src="https://i.ytimg.com/vi/{{ f.id }}/hqdefault.jpg" alt="" loading="lazy">
+      <span class="yt-play" aria-hidden="true">&#9654;</span>
+      <span class="pop-home-feature-band"><span class="pop-home-feature-cap">{{ f.title }} &middot; {{ f.channel }}</span>{% if f.blurb %}<span class="pop-home-feature-blurb">{{ f.blurb }}</span>{% endif %}</span>
+    </button>
+    {% endif %}
+  </div>
   <div class="pop-home-duo">
-    {% for v in pop_home_cards %}
+    {% for v in pop_home_cards[1:] %}
     <div class="pop-home-duo-item">
       {% if v.platform == 'live' %}
       <a class="yt-facade yt-facade--live" href="{{ v.url }}" target="_blank" rel="noopener" aria-label="Watch live: {{ v.title }}">
@@ -67,9 +115,6 @@
       </button>
       {% endif %}
       <p class="yt-cap">{{ v.title }} &middot; {{ v.channel }}</p>
-      {% if loop.first and v.blurb %}
-      <p class="pop-home-blurb">{{ v.blurb }}</p>
-      {% endif %}
     </div>
     {% endfor %}
   </div>

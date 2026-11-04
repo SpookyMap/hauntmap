@@ -6169,6 +6169,33 @@ main.wrap:has(> .vt-tv-strip-bottom) { padding-bottom: 0; }
 @media (min-width: 620px) { .pop-home-duo { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); } }
 .pop-home-duo .yt-cap { font-size: 0.82rem; }
 
+/* Farm spotlight (Dan, 2026-11-04): the homepage block's first
+   card (Carm's Farms) renders as a LARGE feature above the
+   uniform grid — "larger than the other ones in its own
+   spotlight at the top", with its paragraph running across the
+   bottom of the video. A wider facade (430px vs the grid's
+   300px), the Pop Haunt Culture violet as border + glow, a
+   bigger play button, and the caption + blurb as an overlay
+   band across the BOTTOM of the facade (dark gradient so the
+   text stays legible over the cover frame). Scoped to
+   .pop-home so /pop-haunt-culture never sees any of it; the
+   iframe the facade swaps in on tap keeps the spotlight width
+   via the .pop-home-feature frame rules. */
+.pop-home-feature { max-width: 430px; margin: 0.35rem auto 0; }
+.pop-home-feature .yt-facade { max-width: 100%; border-color: #b18cff;
+  box-shadow: 0 0 24px rgba(177, 140, 255, 0.55), 0 6px 22px rgba(0, 0, 0, 0.5); }
+.pop-home-feature .yt-play { width: 76px; height: 76px; line-height: 76px; font-size: 1.75rem; }
+.pop-home-feature .tt-frame, .pop-home-feature .fb-frame,
+.pop-home-feature .yt-frame { max-width: 100%; }
+.pop-home-feature-band { position: absolute; left: 0; right: 0; bottom: 0;
+  display: block; text-align: left; pointer-events: none;
+  font-family: inherit; padding: 2.4rem 0.85rem 0.7rem;
+  background: linear-gradient(to top, rgba(8, 3, 18, 0.94) 52%, rgba(8, 3, 18, 0)); }
+.pop-home-feature-cap { display: block; color: #fff; font-weight: 800;
+  font-size: 1.02rem; line-height: 1.3; text-shadow: 0 1px 6px rgba(0, 0, 0, 0.85); }
+.pop-home-feature-blurb { display: block; color: #ece5fb; font-size: 0.86rem;
+  line-height: 1.45; margin-top: 0.3rem; text-shadow: 0 1px 5px rgba(0, 0, 0, 0.85); }
+
 /* Auto Tour's move under the search bar (Dan, Oct 27 — order
    update): the panel's single copy now lives inside .hero-intro
    directly under .hm-find, above .pop-home, with no hero-copy
