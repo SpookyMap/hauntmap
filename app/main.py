@@ -9080,6 +9080,21 @@ MOVIE_NEW = [
               "back. The full film, streaming free.",
      "id": "pTmBkzI9WSY", "channel": "CREEPY POPCORN",
      "kind": "Full Movie"},
+    # Ranked-list add (Dan, Nov 4 — held as off-format in the morning
+    # batch, then Dan overrode: "Put it on /movies anyway"): Matt
+    # Draper's countdown of the 31 best Halloween-season movies. It is
+    # a video essay, not a film or trailer, and the card bills it
+    # honestly as a ranked list. ID oEmbed-verified 2026-11-04
+    # (title + channel match, embeddable).
+    {"title": "The 31 Best Halloween Season Movies", "year": 2024,
+     "meta": "Ranked list · Video essay",
+     "blurb": "Need a watchlist? Matt Draper ranks 31 movies by how "
+              "perfectly they bottle the Halloween season — from The "
+              "Wolf Man and Carnival of Souls to Beetlejuice, Hocus "
+              "Pocus and Trick 'r Treat. One for every night of "
+              "October.",
+     "id": "PIcD_dul_kM", "channel": "Matt Draper",
+     "kind": "Ranked List"},
     # Practical Magic pair (Dan, Oct 24): the full film is a Warner Bros.
     # title with NO legal free embed (HBO Max / transactional VOD only —
     # checked Oct 24), so the page carries the official trailers instead.
