@@ -8,32 +8,37 @@
    .hm-find itself): on laptop it heads the hero panel above the
    .hero-stack (Near You and everything after keep their order);
    on phone it follows the search under the front-door rail.
-   Data is POP_CULTURE_FEATURED from app/main.py, passed in as
-   pop_featured — the same dict /pop-haunt-culture renders, so the
-   homepage feature and the section page can never drift. #}
+   Data is POP_CULTURE_HOME_CARDS from app/main.py, passed in as
+   pop_home_cards — a homepage-only ordered list built from the
+   same entry dicts /pop-haunt-culture renders, so the two can
+   never drift. #}
 {# Uniform-grid update (Dan, 2026-11-04): "put all the pop haunt
    culture features on the homepage small without any large
-   feature, all the same size" — the lead no longer gets a
-   full-width feature treatment in this block; it renders as the
-   first card of the .pop-home-duo grid below, with the same
-   facade + caption markup as every companion card. Its blurb
-   stays under its caption (it carries the plays count, per the
-   house pattern); companions never showed blurbs in this block.
+   feature, all the same size" — no entry gets a full-width
+   feature treatment in this block; every card renders in the
+   .pop-home-duo grid below with the same facade + caption
+   markup. The loop.first card's blurb stays under its caption
+   (it carries the plays count, per the house pattern); other
+   cards never showed blurbs in this block.
    /pop-haunt-culture keeps its own featured treatment (separate
    template, untouched). #}
-{# Sandwich update (Dan, 2026-11-04): Dan's two hand-sent picks
-   (pop_home_top, POP_CULTURE_TOP_PICKS) lead the block at
-   positions 1-2, ahead of the featured pick; the homepage grid
-   tail (appended in the route context) is the trunk-or-treat
-   row closing out the bottom. Both additions are homepage-only
-   — neither list feeds /pop-haunt-culture. Because a top pick
-   is now loop.first, the under-caption blurb slot rides on
-   Dan's pick #1 instead of the featured pick (whose blurb
-   still shows on /pop-haunt-culture). #}
+{# Trunk-bottom reorder (Dan, 2026-11-04): ALL trunk-or-treat
+   cards group at the BOTTOM of the block — Dan's explicit call
+   ("All of them — McDonald's moves down too"). The one ordered
+   list renders: Carm's Farms + the six grid companions on top,
+   then the trunk-or-treat group (Dan's McDonald's trunk pick
+   leading it, the Haunted Live Scream feature next — itself a
+   trunk-or-treat video — then the trunk-or-treat row).
+   Homepage-only: /pop-haunt-culture keeps its own order.
+   Because Carm's Farms is now loop.first, the under-caption
+   blurb slot rides on it; the McDonald's blurb no longer
+   renders on the homepage (same as every non-first card),
+   while the featured pick's blurb still shows on
+   /pop-haunt-culture. #}
 <section class="pop-home" aria-label="Pop Haunt Culture feature">
   <h2>&#x1F4FA; Pop Haunt Culture</h2>
   <div class="pop-home-duo">
-    {% for v in pop_home_top + [pop_featured] + pop_home_grid %}
+    {% for v in pop_home_cards %}
     <div class="pop-home-duo-item">
       {% if v.platform == 'live' %}
       <a class="yt-facade yt-facade--live" href="{{ v.url }}" target="_blank" rel="noopener" aria-label="Watch live: {{ v.title }}">

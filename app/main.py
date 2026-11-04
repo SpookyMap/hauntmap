@@ -3163,21 +3163,13 @@ def home(request: Request, sort: str = "new", town: str = "", town_search: str =
          "tstrip": tstrip,
          "slim_events": slim_events,
          "bracket_teaser": _bracket_teaser(),
-         # Pop Haunt Culture homepage feature (Dan, Oct 27): the
-         # section page's lead dict, shared so they can't drift.
-         "pop_featured": POP_CULTURE_FEATURED,
-         # Homepage companions (Dan, Oct 31 ~19:57): the live
-         # feature sits NEXT TO the top collection picks on the
-         # homepage — tonight that's the DinomiteTwins live room
-         # and the Village Halloween Parade video.
-         # Dan's two hand-sent picks lead the homepage block
-         # (Dan, 2026-11-04); homepage-only, like the
-         # trunk-or-treat tail appended to the grid below.
-         "pop_home_top": POP_CULTURE_TOP_PICKS,
-         # Homepage grid (updated Dan, 2026-11-04): the first
-         # six collection picks, then the trunk-or-treat row
-         # closing out the bottom of the block.
-         "pop_home_grid": POP_CULTURE_GRID[:6] + POP_CULTURE_TRUNK_OR_TREAT,
+         # Pop Haunt Culture homepage block (Dan, 2026-11-04):
+         # one ordered homepage-only card list — Carm's Farms
+         # and the first six grid companions on top, ALL
+         # trunk-or-treat cards grouped at the bottom (see
+         # POP_CULTURE_HOME_CARDS below). /pop-haunt-culture
+         # has its own route/template and is unaffected.
+         "pop_home_cards": POP_CULTURE_HOME_CARDS,
          "trending": trending, "near_towns": near_towns,
          "home_top10": home_top10,
          "top10_menu": top10_menu,
@@ -10003,6 +9995,30 @@ POP_CULTURE_TRUNK_OR_TREAT: list[dict] = [
               "been wearing was sunblock, after talking to "
               "dozens of people. 4.7 million plays."},
 ]
+
+
+# Homepage bottom group (Dan, 2026-11-04): "feature ALL trunk
+# or treats at the bottom of the block" — Dan's McDonald's
+# trunk pick (POP_CULTURE_TOP_PICKS[0]) leads the group, the
+# Haunted Live Scream feature follows (it is itself a
+# trunk-or-treat video — the giant octopus trunk), then the
+# trunk-or-treat row above. References the same entry dicts;
+# nothing is copied, so titles/blurbs can never drift.
+POP_CULTURE_HOME_TRUNK_GROUP: list[dict] = (
+    [POP_CULTURE_TOP_PICKS[0], POP_CULTURE_FEATURED]
+    + POP_CULTURE_TRUNK_OR_TREAT
+)
+
+# The homepage block's full card order (Dan, 2026-11-04):
+# Carm's Farms (POP_CULTURE_TOP_PICKS[1] — Dan's fall-activity
+# pick, NOT a trunk-or-treat) + the first six grid companions
+# on top, then the trunk-or-treat group closing the bottom.
+# Homepage-only: /pop-haunt-culture never reads this list and
+# keeps POP_CULTURE_FEATURED as its own feature.
+POP_CULTURE_HOME_CARDS: list[dict] = (
+    [POP_CULTURE_TOP_PICKS[1]] + POP_CULTURE_GRID[:6]
+    + POP_CULTURE_HOME_TRUNK_GROUP
+)
 
 
 @app.get("/pop-haunt-culture", response_class=HTMLResponse)
