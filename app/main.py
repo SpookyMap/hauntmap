@@ -13160,6 +13160,16 @@ def pwa_manifest():
         headers={"Cache-Control": "public, max-age=3600"})
 
 
+@app.get("/ads.txt")
+def ads_txt():
+    # AdSense authorized-sellers file (Dan, Nov 5, 2026): must live at
+    # the site root; content is the single google.com DIRECT line.
+    return FileResponse(
+        BASE_DIR / "static" / "ads.txt",
+        media_type="text/plain",
+        headers={"Cache-Control": "public, max-age=3600"})
+
+
 @app.get("/sw.js")
 def pwa_service_worker():
     return FileResponse(
