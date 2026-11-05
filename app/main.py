@@ -54,6 +54,38 @@ THUMB_DIR = UPLOAD_DIR / "thumbs"
 DB_PATH = DATA_DIR / "hauntmap.db"
 
 SITE_NAME = os.environ.get("SITE_NAME", "HauntMap")
+
+# Stay22 "Stay near this haunt" hotel maps (staged Nov 5, 2026 — local
+# preview only until Dan approves the ship). The embed format is
+# Stay22's officially documented Maps iframe: the Overview
+# (dev.stay22.com/docs/maps) gives the /embed/gm iframe pattern, the
+# Widescale page (dev.stay22.com/docs/maps/widescale) documents building
+# the src programmatically from page data — no per-map Hub codes — and
+# the Parameters page (dev.stay22.com/docs/maps/parameters) defines the
+# params used here: aid (required), a per-surface campaign for booking
+# attribution, and the mapstyle/maincolor appearance params — dark map
+# + compass gold so the widget sits inside the site's theme.
+# CENTERING: the documented `address` param with a town-level place
+# name ("Salem, MA"). Verified live Nov 5, 2026: /embed/gm answers 200
+# for town/place names (Salem MA, Bernville PA, Sleepy Hollow NY,
+# Hackensack NJ, Gettysburg PA…) but 404s for raw lat/lng outside
+# major metros (Salem's own coordinates 404; Boston/NYC/Montreal
+# coords work) and for street addresses ("318 Essex St, Salem, MA"
+# 404s). Town-level centering is also the right product fit — hotels
+# serve the town the haunt is in.
+STAY22_AID = "hauntmap"
+
+
+def stay22_map_url(place, campaign=""):
+    """Stay22 hotels-map embed URL centred on a town-level place name,
+    or None when there is no place to point the map at."""
+    if not place:
+        return None
+    params = {"aid": STAY22_AID, "address": place,
+              "mapstyle": "dark", "maincolor": "E6B16D"}
+    if campaign:
+        params["campaign"] = campaign
+    return "https://www.stay22.com/embed/gm?" + urllib.parse.urlencode(params)
 ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "haunt-admin")
 
 PHOTO_EXTS = {".jpg", ".jpeg", ".png", ".webp"}
@@ -6978,8 +7010,18 @@ def detail(request: Request, entry_id: int):
     # Item 7: _views STAYS on town_haunts (it used to be popped here) —
     # the town rail renders through _pin_card.html, which shows the
     # count on video cards.
+    # Stay22 "Stay near this haunt" (staged Nov 5): the hotels map
+    # centres on the pin's town (see stay22_map_url for why town-level
+    # centering); virtual rooms have no place to stay near, so they
+    # get no widget.
+    stay22_url = None
+    if not entry.get("virtual"):
+        stay22_url = stay22_map_url(entry.get("town_label")
+                                     or entry.get("town"),
+                                     campaign="pin_page")
     return templates.TemplateResponse(request, "detail.html",
         {"request": request, "entry": entry, "voted": voted, "reported": reported,
+         "stay22_url": stay22_url,
          "extra_videos": extra_videos,
          "is_venue": entry["category"] in VENUE_CATS,
          "tips": tips, "scare_counts": scare_counts, "scare_total": scare_total,
@@ -8348,10 +8390,14 @@ def town_page(request: Request, slug: str):
     # — this town is the anchor; displays lit = its halloween pins (the
     # entries list itself), events on = parsed events in this town.
     tstrip = _tonight_strip(label, len(entries))
+    # Stay22 "Stay in <town>" (staged Nov 5): the hotels map centres on
+    # the town label itself (see stay22_map_url for why town-level
+    # centering).
+    stay22_url = stay22_map_url(label, campaign=f"town_{slug}")
     return templates.TemplateResponse(
         request, "town.html",
         {"label": label, "entries": entries, "site_name": SITE_NAME,
-         "tstrip": tstrip},
+         "tstrip": tstrip, "stay22_url": stay22_url},
     )
 
 

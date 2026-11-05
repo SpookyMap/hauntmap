@@ -64,6 +64,9 @@
 </div>
 {% endif %}
 {% with map_label = label %}{% include "_town_map_strip.html" %}{% endwith %}
+{% if stay22_url %}
+{% with stay22_heading = "Stay in " ~ label, stay22_place = label %}{% include "_stay22.html" %}{% endwith %}
+{% endif %}
 <p class="town-more"><a href="/towns">Browse all towns &rarr;</a> &middot; <a href="/?town={{ label|urlencode }}">See {{ label }} in the main feed &rarr;</a></p>
 <style>
 .town-sub { color: #c9bce8; }

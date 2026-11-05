@@ -236,6 +236,13 @@
   </div>
   {% endif %}
 
+  {% if stay22_url %}
+  {# Stay22 "Stay near this haunt" (staged Nov 5): sits directly under
+     the directions row — the visitor has just seen where this haunt is
+     and how to drive to it, which is the trip-planning moment. #}
+  {% with stay22_heading = "Stay near this haunt", stay22_place = entry.town_label %}{% include "_stay22.html" %}{% endwith %}
+  {% endif %}
+
   {% if town_haunts %}
   <section class="town-rail">
     {# Utility title (Rail Boost research addendum): when the town holds

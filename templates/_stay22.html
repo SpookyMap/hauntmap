@@ -1,0 +1,13 @@
+{# "Stay near this haunt" — Stay22 hotels map (staged Nov 5, 2026;
+   local preview only until Dan approves the ship). The iframe src is
+   built by stay22_map_url() in app/main.py from Stay22's documented
+   embed format (dev.stay22.com/docs/maps). Expects: stay22_url,
+   stay22_heading, stay22_place. Renders nothing without a URL. #}
+{% if stay22_url %}
+<section class="stay-near">
+  <h2>&#x1F3E8; {{ stay22_heading }}</h2>
+  <p class="stay-near-sub">Making a trip of it? Hotels and places to stay around {{ stay22_place }}, with live prices on the map.</p>
+  <iframe class="stay-near-frame" src="{{ stay22_url }}" title="Hotels and places to stay near {{ stay22_place }}" loading="lazy"></iframe>
+  <p class="stay-near-note">Hotel links are affiliate links — booking through them supports HauntMap at no extra cost to you.</p>
+</section>
+{% endif %}
