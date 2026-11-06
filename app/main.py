@@ -4013,13 +4013,24 @@ def nearby(request: Request, q: str = "", miles: float = 10, cat: str = "hallowe
     )
 
 
+# Display categories on the default map (Dan, Nov 6, 2026):
+# Halloween + Christmas house displays together. Venue and event
+# categories keep their own surfaces and stay off the default map;
+# an explicit ?cat= still narrows the map to that one category.
+MAP_DISPLAY_CATS = ("halloween", "christmas")
+
+
 @app.get("/map", response_class=HTMLResponse)
-def map_view(request: Request, cat: str = "halloween"):
-    """Full-screen map with all haunt pins, Google Maps-style browsing."""
-    cat = cat if cat in CATEGORIES else "halloween"
+def map_view(request: Request, cat: str = ""):
+    """Full-screen map with all display pins, Google Maps-style browsing."""
+    if cat in CATEGORIES:
+        cats = (cat,)
+    else:
+        cats = MAP_DISPLAY_CATS
+        cat = "halloween"
     # Rows from the shared _category_rows snapshot (fortification
     # pass 2) instead of a per-render scan + row_to_dict pass.
-    pins = [e for e in _category_rows(cat)
+    pins = [e for c in cats for e in _category_rows(c)
             if e["lat"] is not None and e["lng"] is not None]
     return templates.TemplateResponse(request, "map.html",
         {"request": request, "pins": pins, "cat": cat,
