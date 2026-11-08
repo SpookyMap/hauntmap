@@ -10196,17 +10196,43 @@ POP_CULTURE_HOME_TRUNK_GROUP: list[dict] = (
     + POP_CULTURE_TRUNK_OR_TREAT
 )
 
-# The homepage block's full card order (Dan, 2026-11-04):
-# Carm's Farms (POP_CULTURE_TOP_PICKS[1] — Dan's fall-activity
-# pick, NOT a trunk-or-treat) + the first seven grid companions
-# on top (seven, not six, since 2026-11-04: Steve Ronin joined
-# the grid head and Dan ordered Heidi Klum kept on the
-# homepage too — 13 cards in the block), then the
-# trunk-or-treat group closing the bottom.
+# Homepage lead (Dan, 2026-11-08): @bartlettadventures' Daniel
+# Island, SC Halloween walkthrough — sent as a tiktok.com/t
+# short link and ordered featured at the very top of the Pop
+# Haunt Culture homepage block. It takes the large spotlight
+# seat (pop_home_cards[0]); Carm's Farms moves down to lead
+# the uniform grid under it. The still is the video's own
+# cover frame (the purple-lit alien in the yard), stored
+# locally; tap swaps in TikTok's official embed.
+POP_CULTURE_HOME_LEAD = {
+    "id": "7700388935679380767",
+    "platform": "tiktok",
+    "url": "https://www.tiktok.com/@bartlettadventures/video/7700388935679380767",
+    "thumb": "/static/img/bartlettadventures_daniel_island.jpg",
+    "title": "Daniel Island's Over-the-Top Halloween",
+    "channel": "Bartlett Adventures",
+    "kind": "TikTok", "short": True,
+    "blurb": "@bartlettadventures says Daniel Island, South "
+             "Carolina might have the most over-the-top "
+             "Halloween decorations they've ever experienced "
+             "— and the walkthrough backs it up: yard after "
+             "yard of giant lit figures, including a towering "
+             "alien glowing purple in the trees. 81,600 plays."}
+
+# The homepage block's full card order (Dan, 2026-11-04;
+# lead updated 2026-11-08): the Bartlett Adventures Daniel
+# Island lead (POP_CULTURE_HOME_LEAD) in the large spotlight
+# on top, then Carm's Farms (POP_CULTURE_TOP_PICKS[1] —
+# Dan's fall-activity pick, NOT a trunk-or-treat) + the first
+# seven grid companions (seven, not six, since 2026-11-04:
+# Steve Ronin joined the grid head and Dan ordered Heidi
+# Klum kept on the homepage too), then the trunk-or-treat
+# group closing the bottom — 14 cards in the block.
 # Homepage-only: /pop-haunt-culture never reads this list and
 # keeps POP_CULTURE_FEATURED as its own feature.
 POP_CULTURE_HOME_CARDS: list[dict] = (
-    [POP_CULTURE_TOP_PICKS[1]] + POP_CULTURE_GRID[:7]
+    [POP_CULTURE_HOME_LEAD, POP_CULTURE_TOP_PICKS[1]]
+    + POP_CULTURE_GRID[:7]
     + POP_CULTURE_HOME_TRUNK_GROUP
 )
 
