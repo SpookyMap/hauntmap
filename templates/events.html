@@ -47,6 +47,43 @@
 <p class="music-crosslink">&#x1F3B5; Want the soundtrack too? <a href="/music">Halloween playlists, classic videos &amp; music icons &rarr;</a></p>
 <p class="music-crosslink">&#x1F6D2; After costumes, d&eacute;cor &amp; curiosities? <a href="/markets">Flea Markets &amp; Pop-Ups &rarr;</a></p>
 
+{# Events page lead (Dan, 2026-11-09): @t0rr.ashley's LUMINISCENCE
+   video at the very top of the page — a large tap-to-play feature
+   reusing the Pop Haunt Culture homepage facade. Unfiltered view
+   only: once a visitor filters by type/place/date, the feature
+   steps aside so their results lead. Data is EVENTS_PAGE_FEATURE
+   in app/main.py. #}
+{% if events_feature and not filtered %}
+<section class="ev-feature" aria-label="Featured event video">
+  <div class="pop-home-feature">
+    <button type="button" class="yt-facade yt-facade--tt" data-ttv="{{ events_feature.id }}" aria-label="Play {{ events_feature.title }}">
+      <img src="{{ events_feature.thumb }}" alt="" loading="lazy">
+      <span class="yt-play" aria-hidden="true">&#9654;</span>
+      <span class="pop-home-feature-band"><span class="pop-home-feature-cap">{{ events_feature.title }} &middot; {{ events_feature.channel }}</span>{% if events_feature.blurb %}<span class="pop-home-feature-blurb">{{ events_feature.blurb }}</span>{% endif %}</span>
+    </button>
+  </div>
+  <script>
+  // Tap-to-play (same pattern as the homepage Pop Haunt Culture
+  // feature): the cover frame shows first; TikTok's official
+  // embed/v2 player loads only on tap — no autoplay, no
+  // third-party requests before it.
+  document.addEventListener('click', function (ev) {
+    var b = ev.target.closest && ev.target.closest('.ev-feature .yt-facade');
+    if (!b || b.dataset.loaded) return;
+    b.dataset.loaded = '1';
+    var f = document.createElement('iframe');
+    f.className = 'tt-frame';
+    f.src = 'https://www.tiktok.com/embed/v2/' + b.getAttribute('data-ttv');
+    f.setAttribute('allow', 'autoplay; encrypted-media; fullscreen; picture-in-picture');
+    f.setAttribute('allowfullscreen', '');
+    f.setAttribute('scrolling', 'no');
+    f.setAttribute('title', b.getAttribute('aria-label') || 'TikTok video');
+    b.replaceWith(f);
+  });
+  </script>
+</section>
+{% endif %}
+
 {# "Events near me" (Dan, Oct 24 — STAGED): one tap to the events
    around the visitor, reusing the site's existing location flow —
    the saved town (localStorage hm_town), browser geolocation

@@ -3719,6 +3719,7 @@ def events_page(request: Request, type: str = "", genre: str = "",
         f"{k}={urllib.parse.quote_plus(v)}" for k, v in near_fields)
     return templates.TemplateResponse(request, "events.html",
         {"request": request, "entries": entries, "sort": sort,
+         "events_feature": EVENTS_PAGE_FEATURE,
          "day_groups": day_groups,
          "spotlight": spotlight, "near_events": near_events,
          "chip_types": chip_types, "ev_chrome": ev_chrome,
@@ -10218,6 +10219,33 @@ POP_CULTURE_HOME_LEAD = {
              "— and the walkthrough backs it up: yard after "
              "yard of giant lit figures, including a towering "
              "alien glowing purple in the trees. 81,600 plays."}
+
+# Events page lead (Dan, 2026-11-09): @t0rr.ashley's
+# LUMINISCENCE video — sent as a tiktok.com/t short link and
+# ordered at the top of the events page. LUMINISCENCE is the
+# immersive projection show inside Philadelphia's Cathedral
+# Basilica of Saints Peter & Paul (1723 Race St), running
+# through Jan 2, 2027 (Christmas edition Nov 19–Jan 2, tickets
+# from $19 via Fever — verified 2026-11-09). It renders as a
+# large tap-to-play feature at the top of /events on the
+# unfiltered view only, reusing the pop-home feature facade.
+# The still is the video's own cover frame (the cathedral
+# interior under kaleidoscope projections), stored locally.
+EVENTS_PAGE_FEATURE = {
+    "id": "7702531608632429854",
+    "platform": "tiktok",
+    "url": "https://www.tiktok.com/@t0rr.ashley/video/7702531608632429854",
+    "thumb": "/static/img/luminiscence_philly.jpg",
+    "title": "LUMINISCENCE: A Cathedral Becomes Light",
+    "channel": "@t0rr.ashley · Philadelphia",
+    "kind": "TikTok", "short": True,
+    "blurb": "LUMINISCENCE turns Philadelphia's Cathedral "
+             "Basilica of Saints Peter & Paul (1723 Race St) "
+             "into a 360° canvas of light and live music — now "
+             "playing through Jan 2, with a special Christmas "
+             "edition Nov 19–Jan 2. Tickets from $19. "
+             "@t0rr.ashley calls it one of the most beautiful "
+             "experiences in Philadelphia."}
 
 # The homepage block's full card order (Dan, 2026-11-04;
 # lead updated 2026-11-08): the Bartlett Adventures Daniel
