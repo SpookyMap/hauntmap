@@ -5248,6 +5248,88 @@ MARVEL_GAMES = [
      "tag": "Action \u00b7 plays here via GamePix", "w": 800, "h": 600},
 ]
 
+# ------------------------------------------- among us shelf
+# AMONG US GAMES (Dan, Nov 10: "i meant among us games" — a GamePix
+# embed shelf like Marvel/Minecraft). GamePix's open webmaster embed
+# program only: games hosted + ad-monetized by GamePix; HauntMap
+# hosts nothing, rips nothing. Partner games with Among Us themes —
+# NOT Innersloth-published titles (the flagship slug is GamePix's own
+# "Among Us Online" web build), and the shelf note on the page says
+# so (same disclaimer pattern as the LEGO/Marvel shelves).
+#
+# RENDER-VERIFIED Nov 10, 2026 — 13 candidate slugs were loaded
+# cross-origin through the Marvel shelf's relay harness and taken
+# past the GamePix splash into real menus/gameplay, desktop AND
+# iPhone-profile passes (evidence in goals/hauntmap-halloween-web-
+# app/hidden_files/imposter-verify/). Only 6 passed:
+# REJECTED after render checks, do not add: red-impostor-vs-crew,
+# imposter-sorter and freddy-among-us (archived slugs — GamePix
+# serves the TenTrix block puzzle under all three names, splash and
+# gameplay); among-u-red-imposter, imposter-3d-online-horror,
+# amogus-io and survival-456-but-its-impostor (payload answers
+# AccessDenied — GamePix resolves their build path to a literal
+# "undefined" URL; dead today, may revive if GamePix restores the
+# pointers). NOTE on the-imposter-between-us: the catalog copy sells
+# a meeting-and-vote deduction game; the served game is actually a
+# hyper-casual 3D swipe impostor — shelf copy describes the real
+# game, never the catalog's.
+#
+# iPHONE GAMES RULE (Dan, Oct 27): iphone=True only where the render
+# pass proved touch play. the-imposter-between-us and imposter-sort-
+# color booted to gameplay in the iPhone profile with tap/swipe
+# controls; space-impostors-shooting-adventure booted the same build
+# in the iPhone profile (YYG title, no rotate wall, vendor-documented
+# tap controls; menu entry itself wasn't captured inside the relay
+# window — flagged here honestly). among-us, ratomilton-imposter-us
+# and 456-impostor all stop at a "rotate your device" wall in the
+# portrait embed and are keyboard/mouse games: iphone=False, and
+# among-us-games is registered in the games.html demotion script.
+AMONG_US_GAMES = [
+    {"iphone": False, "slug": "among-us",
+     "img": "https://img.gamepix.com/games/among-us/cover/among-us.png?w=512",
+     "title": "Among Us",
+     "blurb": "The one that started it all: finish your tasks "
+              "aboard the ship while the impostor vents, sabotages "
+              "and picks off the crew \u2014 call the meeting, make "
+              "your case, vote out the sus.",
+     "tag": "Social deduction \u00b7 plays here via GamePix", "w": 800, "h": 450},
+    {"iphone": True, "slug": "the-imposter-between-us",
+     "img": "https://img.gamepix.com/games/the-imposter-between-us/cover/the-imposter-between-us.png?w=512",
+     "title": "The Imposter Between Us",
+     "blurb": "A fast 3D swipe through the spaceship as the "
+              "impostor \u2014 dart between rooms, strike when no "
+              "one's watching and never get caught in the act.",
+     "tag": "Swipe action \u00b7 plays here via GamePix", "w": 450, "h": 800},
+    {"iphone": False, "slug": "ratomilton-imposter-us",
+     "img": "https://img.gamepix.com/games/ratomilton-imposter-us/cover/ratomilton-imposter-us.png?w=512",
+     "title": "Ratomilton Imposter Us",
+     "blurb": "Play the sneaky rat impostor: slip through the "
+              "vents, sabotage the ship's systems and take out the "
+              "AI crew one by one without blowing your cover.",
+     "tag": "Stealth \u00b7 plays here via GamePix", "w": 800, "h": 450},
+    {"iphone": True, "slug": "space-impostors-shooting-adventure",
+     "img": "https://img.gamepix.com/games/space-impostors-shooting-adventure/cover/space-impostors-shooting-adventure.png?w=512",
+     "title": "Space Impostors Shooting Adventure",
+     "blurb": "The ship's been overrun: blast waves of alien "
+              "impostors in nonstop arena shooting across battle "
+              "royale, endless and challenge modes.",
+     "tag": "Shooter \u00b7 plays here via GamePix", "w": 800, "h": 450},
+    {"iphone": True, "slug": "imposter-sort-color-puzzle-game",
+     "img": "https://img.gamepix.com/games/imposter-sort-color-puzzle-game/cover/imposter-sort-color-puzzle-game.png?w=512",
+     "title": "Imposter Sort Color",
+     "blurb": "A brain-teasing sort puzzle: tap and pour the "
+              "little crewmates between tubes until every color is "
+              "grouped together \u2014 hundreds of levels.",
+     "tag": "Puzzle \u00b7 plays here via GamePix", "w": 450, "h": 800},
+    {"iphone": False, "slug": "456-impostor",
+     "img": "https://img.gamepix.com/games/456-impostor/cover/456-impostor.png?w=512",
+     "title": "456 Impostor",
+     "blurb": "A pixel platformer in a numbered tracksuit: bounce "
+              "the red-suited rivals, chain your jumps and keep "
+              "running as every tenth level speeds up.",
+     "tag": "Platformer \u00b7 plays here via GamePix", "w": 800, "h": 450},
+]
+
 
 @app.get("/games", response_class=HTMLResponse)
 def games_page(request: Request):
@@ -5261,6 +5343,7 @@ def games_page(request: Request):
                                 "minecraft_trailer": MINECRAFT_TRAILER,
                                 "roblox_games": ROBLOX_GAMES,
                                 "marvel_games": MARVEL_GAMES,
+                                "among_us_games": AMONG_US_GAMES,
                                 "iphone_games": IPHONE_GAMES})
 
 

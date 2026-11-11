@@ -47,7 +47,7 @@ body.ios-iphone .games-featured-pill { display: inline-block; }
 {% block content %}
 <h1 class="games-sr-only">HauntMap Games</h1>
 
-{# SECTION NAV (Dan, Oct 26; sleek restyle z217, Oct 28) — the seven
+{# SECTION NAV (Dan, Oct 26; sleek restyle z217, Oct 28) — the eight
    category buttons now wear the homepage VT/TV strip's sleek
    component (style.css z217): slim pill, circular icon medallion,
    name split over two label lines, each category keeping its accent
@@ -62,6 +62,7 @@ body.ios-iphone .games-featured-pill { display: inline-block; }
   <a class="games-nav-btn games-nav-btn--minecraft" href="#minecraft-games"><span class="gnb-ic" aria-hidden="true">&#x26CF;</span><span class="gnb-label"><span class="gnb-l1">Minecraft</span> <span class="gnb-l2">Games</span></span></a>
   <a class="games-nav-btn games-nav-btn--roblox" href="#roblox-games"><span class="gnb-ic" aria-hidden="true">&#x1F7E5;</span><span class="gnb-label"><span class="gnb-l1">Roblox</span> <span class="gnb-l2">Games</span></span></a>
   <a class="games-nav-btn games-nav-btn--marvel" href="#marvel-games"><span class="gnb-ic" aria-hidden="true">&#x1F577;</span><span class="gnb-label"><span class="gnb-l1">Marvel &amp;</span> <span class="gnb-l2">Spider-Man</span></span></a>
+  <a class="games-nav-btn games-nav-btn--amongus" href="#among-us-games"><span class="gnb-ic" aria-hidden="true">&#x1F680;</span><span class="gnb-label"><span class="gnb-l1">Among Us</span> <span class="gnb-l2">Games</span></span></a>
   <a class="games-nav-btn" href="#iphone-games"><span class="gnb-ic" aria-hidden="true">&#x1F4F1;</span><span class="gnb-label"><span class="gnb-l1">iPhone</span> <span class="gnb-l2">Games</span></span></a>
 </div>
 
@@ -329,6 +330,36 @@ body.ios-iphone .games-featured-pill { display: inline-block; }
 <p class="portal-note">Partner games are hosted by GamePix and the ads inside them are theirs. MARVEL, Spider-Man and the Avengers are trademarks of Marvel Entertainment; these are fan-favorite partner games, not published or endorsed by Marvel.</p>
 </section>
 
+{# AMONG US SHELF (Dan, Nov 10: "i meant among us games") — GamePix
+   partner embeds only, click-to-load via portal_games.js like every
+   franchise shelf. Every title render-verified Nov 10, 2026 (relay
+   harness, desktop + iPhone passes; 7 of 13 candidates rejected:
+   three serve the TenTrix fallback under their names, four are dead
+   AccessDenied builds — see AMONG_US_GAMES in app/main.py). Registered
+   in the iPhone demotion script below: keyboard games sink under
+   the "plays best" divider on iPhone. #}
+<section class="games-sec" id="among-us-games">
+<h2 class="games-sec-head">&#x1F680; Among Us Games</h2>
+<p class="games-sec-intro">Someone on this ship is sus. Crewmate-and-impostor games playable right here: the original deduction classic, stealth impostor runs, a spaceship shooter and a crewmate sort puzzle. Tap a card, hit play — trust no one.</p>
+
+<div class="portal-grid">
+  {% for g in among_us_games %}
+  <div class="portal-card" data-game-slug="{{ g.slug }}" data-game-title="{{ g.title }}" data-iphone="{{ 1 if g.iphone else 0 }}">
+    <div class="portal-frame" style="--pw: {{ g.w }}; --ph: {{ g.h }};">
+      <button class="portal-facade" type="button" aria-label="Play {{ g.title }}">
+        <img src="{{ g.img }}" alt="{{ g.title }} cover art" loading="lazy">
+        <span class="portal-playbtn" aria-hidden="true">&#x25B6;</span>
+      </button>
+    </div>
+    <h3>{{ g.title }}</h3>
+    <p>{{ g.blurb }}</p>
+    <span class="portal-tag">{{ g.tag }}</span>
+  </div>
+  {% endfor %}
+</div>
+<p class="portal-note">Partner games are hosted by GamePix and the ads inside them are theirs. Among Us is a trademark of Innersloth; these are fan-favorite partner games playable via GamePix, not published or endorsed by Innersloth.</p>
+</section>
+
 <script>
 // Minecraft trailer facade (same click-to-play pattern as
 // /pop-haunt-culture): the YouTube player only loads when a visitor
@@ -395,7 +426,7 @@ document.addEventListener('click', function (ev) {
   if (shelf && arcade && arcade.parentNode) {
     arcade.parentNode.insertBefore(shelf, arcade);
   }
-  ["halloween-arcade", "ninja-games", "marvel-games"].forEach(function (id) {
+  ["halloween-arcade", "ninja-games", "marvel-games", "among-us-games"].forEach(function (id) {
     var sec = document.getElementById(id);
     if (!sec) return;
     var grid = sec.querySelector(".portal-grid");
