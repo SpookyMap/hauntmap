@@ -25,6 +25,8 @@
   .pick-photos { display: inline-block; margin-top: 8px; font-size: .85em; font-weight: 700;
                  color: #8fd8ff; background: rgba(91,141,238,.16); border: 1px solid rgba(143,216,255,.4);
                  padding: 3px 10px; border-radius: 999px; }
+  .pick-thumb--video { position: relative; }
+  .pick-thumb--video .yt-play { width: 54px; height: 54px; line-height: 54px; font-size: 1.3rem; }
   #hm-lightbox { position: fixed; inset: 0; z-index: 9999; display: none;
                  background: rgba(3,6,10,.9); backdrop-filter: blur(4px);
                  align-items: center; justify-content: center; padding: 14px; }
@@ -111,7 +113,13 @@
 <div class="diy-grid">
   {% for g in gear %}
   <div class="diy-card">
-    {% if g.imgs %}
+    {% if g.ttv %}
+    <button type="button" class="pick-thumb pick-thumb--video" data-ttv="{{ g.ttv }}" aria-label="Watch {{ g.title }} in action">
+      <img src="/static/img/picks/{{ g.imgs[0] }}" alt="{{ g.title }}" loading="lazy">
+      <span class="yt-play" aria-hidden="true">&#9654;</span>
+      <span class="pick-photos">&#x25B6; Watch them in action — tap to play</span>
+    </button>
+    {% elif g.imgs %}
     <button type="button" class="pick-thumb" data-gal="gear-{{ loop.index0 }}" aria-label="View photos of {{ g.title }}">
       <img src="/static/img/picks/{{ g.imgs[0] }}" alt="{{ g.title }}" loading="lazy">
       <span class="pick-photos">&#x1F4F7; {{ g.imgs|length }} photo{{ 's' if g.imgs|length > 1 }} — tap to view</span>
@@ -192,8 +200,22 @@
       document.body.style.overflow = '';
       cur = null; main.src = '';
     }
-    document.querySelectorAll('.pick-thumb').forEach(function (b) {
+    document.querySelectorAll('.pick-thumb[data-gal]').forEach(function (b) {
       b.addEventListener('click', function () { open(b.getAttribute('data-gal')); });
+    });
+    document.querySelectorAll('.pick-thumb--video').forEach(function (b) {
+      b.addEventListener('click', function () {
+        if (b.dataset.loaded) return;
+        b.dataset.loaded = '1';
+        var f = document.createElement('iframe');
+        f.className = 'hm-shop-video-frame';
+        f.src = 'https://www.tiktok.com/embed/v2/' + b.getAttribute('data-ttv');
+        f.setAttribute('allow', 'autoplay; encrypted-media; fullscreen; picture-in-picture');
+        f.setAttribute('allowfullscreen', '');
+        f.setAttribute('scrolling', 'no');
+        f.setAttribute('title', b.getAttribute('aria-label') || 'TikTok video');
+        b.replaceWith(f);
+      });
     });
     document.getElementById('hm-lb-close').addEventListener('click', close);
     prevBtn.addEventListener('click', function () { show(idx - 1); });

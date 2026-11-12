@@ -4206,6 +4206,13 @@ PICKS_SALE = [
 ]
 
 PICKS_GEAR = [
+    # Swing jumping lights (Dan, 2026-11-12): the viral motorized yard
+    # lights from the @ancestralshowcase TikTok (718K plays) — Dan picked
+    # the Amazon listing himself and shared it (ASIN from his share link).
+    # No legal off-Amazon product photo exists, so the visual is the
+    # TikTok's own cover frame, stored locally like the other TikTok
+    # thumbs; the homepage mart tile plays the official TikTok embed.
+    {"title": "Swing Jumping Garden Lights — 4 Pack", "q": "Swing+Jumping+Garden+LED+Light+4+Pack", "asin": "B0HMH6SXHL", "glyph": "\U0001F4A1", "pitch": "The viral jumping lights: each tall stem sits on a motorized base that swings it back and forth, so the glowing tip hops and dances across the yard in waves of color. Stake the set of four along a path or flower bed and the whole display comes alive after dark — tap the video to watch them move.", "imgs": ["swing-jumping-lights-1.jpg"], "ttv": "7706664927158734111"},
     # Cosmo + Good Housekeeping batch (Nov 3, 2026): full-price finds (the three
     # sale finds moved to PICKS_SALE above, which leads the page in its own strip).
     # "asin" renders a direct /dp/ buy link; prices from the articles/CCC at add time —

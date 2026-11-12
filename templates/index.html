@@ -634,6 +634,14 @@ function hmFullHomepage() {
     <a class="hm-shop-banner-btn" href="/shop">Shop HauntMart</a>
   </div>
   <div class="hm-shop-featured">
+    <button type="button" class="hm-shop-tile hm-shop-tile--video" data-ttv="7706664927158734111" aria-label="Watch the Swing Jumping Garden Lights in action">
+      <span class="hm-shop-media">
+        <img src="/static/img/picks/swing-jumping-lights-1.jpg" alt="Swing Jumping Garden Lights swinging lit stems across a yard at night" loading="lazy">
+        <span class="yt-play" aria-hidden="true">&#9654;</span>
+      </span>
+      <span class="hm-shop-tile-name">Swing Jumping Garden Lights — 4 Pack</span>
+      <span class="hm-shop-tile-watch">&#9654; Watch them jump</span>
+    </button>
     <a class="hm-shop-tile" href="/shop">
       <img src="/static/img/picks/siktc-vol1-1.jpg" alt="Something Is Killing the Children Vol. 1 cover art" loading="lazy">
       <span class="hm-shop-tile-name">Something Is Killing the Children Vol. 1</span>
@@ -655,6 +663,26 @@ function hmFullHomepage() {
     </a>
   </div>
 </section>
+<script>
+// HauntMart video tile (Dan, 2026-11-12): tap-to-play facade — the
+// official TikTok embed only loads when a visitor taps the cover,
+// same pattern as the Pop Haunt Culture block. The tile leads the
+// mart row for the swing jumping lights; the /shop card carries the
+// same video.
+document.addEventListener('click', function (ev) {
+  var b = ev.target.closest && ev.target.closest('.hm-shop-tile--video');
+  if (!b || b.dataset.loaded) return;
+  b.dataset.loaded = '1';
+  var f = document.createElement('iframe');
+  f.className = 'hm-shop-video-frame';
+  f.src = 'https://www.tiktok.com/embed/v2/' + b.getAttribute('data-ttv');
+  f.setAttribute('allow', 'autoplay; encrypted-media; fullscreen; picture-in-picture');
+  f.setAttribute('allowfullscreen', '');
+  f.setAttribute('scrolling', 'no');
+  f.setAttribute('title', b.getAttribute('aria-label') || 'TikTok video');
+  b.replaceWith(f);
+});
+</script>
 
 {% if sponsors and not is_plus %}
 <div class="sponsor-section">
