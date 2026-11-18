@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+{% block content %}
+<link href="https://fonts.googleapis.com/css2?family=Anton&display=swap" rel="stylesheet">
+{# MerryQuest homepage — a NEW layout, not HauntMap's (Dan, Nov 18,
+   2026). The fused brief, in Dan's words: copy Railway's layout,
+   Airbnb's organization under it, "look like a gaming/tech savvy
+   website like the new GTA game launch campaign," plus "elements
+   from the Pokémon GO website." So: Railway's skeleton (slim nav in
+   base.html, centered hero, stats row), a GTA-campaign hero
+   (full-bleed photo, massive condensed type, sunset gradient,
+   launch-date framing), Pokémon GO's elements (check-in / catch /
+   collect trio, a Pokédex-style cast panel, app badges), and
+   Airbnb's uniform card grids underneath. Same data as the HauntMap
+   home (tonight, trending, entries) — a different page entirely. #}
+<div class="mqx-wrap">
+
+  <section class="mqx-hero">
+    {% if tonight %}<div class="mqx-hero-bg" style="background-image:url('{{ tonight.thumb_url }}'){% if trending %}, url('{{ trending[0].thumb_url }}'){% endif %}" aria-hidden="true"></div>{% endif %}
+    <div class="mqx-hero-in">
+      <p class="mqx-chip">🎄 The quest begins Dec 1 · <span id="mqx-countdown">--d --h --m --s</span></p>
+      <h1 class="mqx-h1">Find the Best Christmas Lights <span class="mqx-grad">Near You</span></h1>
+      <p class="mqx-sub">Real displays with verified addresses — and a game on top. Visit a display, check in, and catch the holiday character hiding there.</p>
+      <form class="mqx-search" method="get" action="/nearby" role="search">
+        <input type="text" name="q" placeholder="Town or ZIP" autocomplete="off">
+        <button type="submit">Search</button>
+      </form>
+      <div class="mqx-hero-ctas">
+        <a class="mqx-ghost-btn" href="/nearby?choose=town">Choose my town</a>
+        <a class="mqx-ghost-btn" href="#mqx-quest">How the quest works</a>
+        <span class="mqx-app-badges"><span>📱 App drops Dec 1</span><span>iOS · Android</span></span>
+      </div>
+      {% if tonight %}
+      <a class="mqx-quest-card" href="/d/{{ tonight.id }}">
+        <span class="mqx-quest-kicker">⭐ Tonight's quest</span>
+        <span class="mqx-quest-title">{{ tonight.title }}</span>
+        <span class="mqx-quest-meta">{{ tonight.town_label }} · Check in within 150 ft to catch a character</span>
+      </a>
+      {% endif %}
+    </div>
+  </section>
+
+  <div class="mqx-marquee" aria-hidden="true"><div class="mqx-marquee-track">{% for i in range(2) %}<span>Check in <b>&#x2605;</b> Catch <b>&#x2605;</b> Collect <b>&#x2605;</b> Golden nights <b>&#x2605;</b> 32 characters <b>&#x2605;</b> Every town <b>&#x2605;</b> Check in <b>&#x2605;</b> Catch <b>&#x2605;</b> Collect <b>&#x2605;</b> Golden nights <b>&#x2605;</b> 32 characters <b>&#x2605;</b> Every town <b>&#x2605;</b> </span>{% endfor %}</div></div>
+
+  <div class="mqx-stats">
+    <div><b>850+</b><span>Christmas displays</span></div>
+    <div><b>1,700+</b><span>Towns</span></div>
+    <div><b>32</b><span>Characters to catch</span></div>
+    <div><b>150 ft</b><span>Check-in radius</span></div>
+  </div>
+
+  <section class="mqx-trio">
+    <div class="mqx-trio-card">
+      <span class="mqx-trio-icon">📍</span>
+      <h3>Check in</h3>
+      <p>Arrive at a real display and check in — GPS puts you on the map.</p>
+    </div>
+    <div class="mqx-trio-card">
+      <span class="mqx-trio-icon">⭐</span>
+      <h3>Catch</h3>
+      <p>Every display hides a character. Checking in catches whoever's there.</p>
+    </div>
+    <div class="mqx-trio-card">
+      <span class="mqx-trio-icon">🎒</span>
+      <h3>Collect</h3>
+      <p>Build the full cast of 32 in Santa's Sack before the season ends.</p>
+    </div>
+  </section>
+
+  <section class="mqx-section">
+    <p class="mqx-eyebrow">Trending</p>
+    <h2 class="mqx-h2">Displays people love right now</h2>
+    <div class="mqx-grid">
+      {% for p in trending %}{% if loop.index <= 8 %}
+      <a class="mqx-card" href="/d/{{ p.id }}">
+        <span class="mqx-card-media">
+          {% if p.media_type == 'video' and not p.thumb_path %}<span class="mqx-card-empty">🎬</span>{% else %}<img src="{{ p.thumb_card_url or p.thumb_url }}" alt="{{ p.title }}" loading="lazy" onerror="this.onerror=null;this.src='{{ p.thumb_url }}'">{% endif %}
+          {% if p.media_type == 'video' %}<span class="mqx-card-badge">▶ Video</span>{% endif %}
+        </span>
+        <span class="mqx-card-body">
+          <span class="mqx-card-title">{{ p.title }}</span>
+          <span class="mqx-card-meta">{{ p.town_label }}</span>
+        </span>
+      </a>
+      {% endif %}{% endfor %}
+    </div>
+  </section>
+
+  <section class="mqx-split" id="mqx-quest">
+    <div class="mqx-split-copy">
+      <p class="mqx-eyebrow">The quest</p>
+      <h2 class="mqx-h2">Catch characters at real displays</h2>
+      <p class="mqx-p">Every display on the map can hide a character. Arrive, check in, and it lands in your Sack — build the whole cast of 32 before the season ends.</p>
+      <ol class="mqx-steps">
+        <li><b>1</b> Find a display near you</li>
+        <li><b>2</b> Check in when you arrive</li>
+        <li><b>3</b> Catch who's hiding there</li>
+      </ol>
+      {% if quest_enabled %}<a class="mqx-cta" href="/sack">Open Santa's Sack</a>{% else %}<a class="mqx-cta" href="/signup">Join free — the Quest opens Dec 1</a>{% endif %}
+    </div>
+    <div class="mqx-cast-panel">
+      <p class="mqx-cast-head">The cast of 32</p>
+      <div class="mqx-cast">
+        <span class="mqx-tier-legendary">Santa Claus</span><span class="mqx-tier-legendary">Krampus</span><span class="mqx-tier-legendary">Ded Moroz</span><span class="mqx-tier-epic">Mrs. Claus</span><span class="mqx-tier-epic">Jack Frost</span><span class="mqx-tier-epic">Ebenezer Scrooge</span><span class="mqx-tier-epic">Jacob Marley</span><span class="mqx-tier-epic">Nutcracker Prince</span><span class="mqx-tier-epic">Sugar Plum Fairy</span><span>Dasher</span><span>Dancer</span><span>Prancer</span><span>Vixen</span><span>Comet</span><span>Cupid</span><span>Donner</span><span>Blitzen</span><span>Tiny Tim</span><span>La Befana</span><span>Belsnickel</span><span class="mqx-cast-more">+ 12 more</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="mqx-tour">
+    <h2 class="mqx-h2">Build my tour for me</h2>
+    <p class="mqx-p">Skip the picking — we line up the most-viewed displays near you into a ready-to-drive route.</p>
+    <a class="mqx-cta" href="/tour">Build my tour</a>
+  </section>
+
+  <section class="mqx-section">
+    <p class="mqx-eyebrow">Fresh on the map</p>
+    <h2 class="mqx-h2">Newest displays</h2>
+    <div class="mqx-grid">
+      {% for e in entries %}{% if loop.index <= 8 %}
+      <a class="mqx-card" href="/d/{{ e.id }}">
+        <span class="mqx-card-media">
+          {% if e.media_type == 'video' and not e.thumb_path %}<span class="mqx-card-empty">🎬</span>{% elif e.media_path %}<img src="{{ e.thumb_card_url or e.thumb_url }}" alt="{{ e.title }}" loading="lazy" onerror="this.onerror=null;this.src='{{ e.thumb_url }}'">{% else %}<span class="mqx-card-empty">🎄</span>{% endif %}
+          {% if e.media_type == 'video' %}<span class="mqx-card-badge">▶ Video</span>{% endif %}
+          {% if e.is_new %}<span class="mqx-card-badge mqx-card-badge-new">✨ New</span>{% endif %}
+        </span>
+        <span class="mqx-card-body">
+          <span class="mqx-card-title">{{ e.title }}</span>
+          <span class="mqx-card-meta">{{ e.town_label }}</span>
+        </span>
+      </a>
+      {% endif %}{% endfor %}
+    </div>
+    <p class="mqx-more"><a class="mqx-ghost-btn" href="/map">Browse the full map →</a></p>
+  </section>
+
+</div>
+<script>
+(function () {
+  var el = document.getElementById('mqx-countdown');
+  if (!el) return;
+  var target = Date.UTC(2026, 11, 1, 5, 0, 0); /* Dec 1, 2026, midnight ET */
+  function pad(n) { return (n < 10 ? '0' : '') + n; }
+  function tick() {
+    var ms = target - Date.now();
+    if (ms <= 0) { el.textContent = 'LIVE NOW'; return; }
+    var s = Math.floor(ms / 1000);
+    var d = Math.floor(s / 86400); s -= d * 86400;
+    var h = Math.floor(s / 3600); s -= h * 3600;
+    var m = Math.floor(s / 60); s -= m * 60;
+    el.textContent = d + 'd ' + pad(h) + 'h ' + pad(m) + 'm ' + pad(s) + 's';
+    setTimeout(tick, 1000);
+  }
+  tick();
+})();
+</script>
+{% endblock %}

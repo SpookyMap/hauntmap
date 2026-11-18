@@ -50,8 +50,8 @@
    reordered sequence (trunk-or-treat group still at the
    bottom); nothing is added or removed, and /pop-haunt-culture
    is untouched. #}
-<section class="pop-home" aria-label="Pop Haunt Culture feature">
-  <h2>&#x1F4FA; Pop Haunt Culture</h2>
+<section class="pop-home" aria-label="{% if brand | default('haunt') == 'merryquest'%}Pop Christmas Culture feature{% else %}Pop Haunt Culture feature{% endif %}">
+  <h2>&#x1F4FA; {% if brand | default('haunt') == 'merryquest' %}Pop Christmas Culture{% else %}Pop Haunt Culture{% endif %}</h2>
   {% set f = pop_home_cards[0] %}
   <div class="pop-home-feature">
     {% if f.platform == 'live' %}
@@ -119,7 +119,7 @@
     </div>
     {% endfor %}
   </div>
-  <p class="pop-home-more"><a href="/pop-haunt-culture">See all of Pop Haunt Culture &rarr;</a></p>
+  <p class="pop-home-more"><a href="/pop-haunt-culture">See all of {% if brand | default('haunt') == 'merryquest' %}Pop Christmas Culture{% else %}Pop Haunt Culture{% endif %} &rarr;</a></p>
   <script>
   // Click-to-play facade (same pattern as /pop-haunt-culture,
   // /music and /movies): the real player only loads when a visitor

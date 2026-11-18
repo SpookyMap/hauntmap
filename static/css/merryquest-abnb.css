@@ -1,0 +1,320 @@
+/* MerryQuest "Organized" skin — Airbnb-feel variant (Dan, Nov 18,
+   2026: fourth reference pick, airbnb.com "for organization").
+   Loaded INSTEAD of merryquest.css when the preview asks for
+   ?vibe=abnb; scoped to body.brand-merryquest.
+
+   The Airbnb translation is ORGANIZATION, not decoration: a quiet
+   white grid where every card has the same anatomy — big rounded
+   photo, semibold title, gray meta line — a search pill with a
+   soft shadow, an icon-over-label category rail with an underline
+   for the active item, and almost no chrome competing with the
+   content. Brand mapping: pine #122B1E takes the #222 ink seat,
+   holiday red #D32F2F takes the Rausch accent seat, gold rests. */
+
+body.brand-merryquest {
+  --bg: #ffffff;
+  --bg2: #f7f7f5;
+  --card: #ffffff;
+  --ink: #122b1e;
+  --muted: #6a7a6d;
+  --accent: #d32f2f;
+  --accent2: #122b1e;
+  --danger: #d32f2f;
+  --mq-sans: "Inter", "Helvetica Neue", Helvetica, Arial, system-ui, sans-serif;
+  --mq-line: #e7ede7;
+  background: #ffffff;
+  color: var(--ink);
+  font-family: var(--mq-sans);
+}
+body.brand-merryquest::before { display: none; }
+body.brand-merryquest .spooky-side { display: none; }
+body.brand-merryquest .tt-follow-vert { display: none; }
+
+/* ---------- Header: white, hairline, wordmark only ---------- */
+body.brand-merryquest .site-header {
+  background: #ffffff;
+  border-bottom: 1px solid var(--mq-line);
+  box-shadow: none; backdrop-filter: none;
+}
+body.brand-merryquest .mini-bar {
+  background: #ffffff; border-bottom: 1px solid var(--mq-line);
+  box-shadow: none;
+}
+body.brand-merryquest .mini-bar a { color: var(--ink); }
+body.brand-merryquest .header-frank { display: none; }
+body.brand-merryquest .brand-pip { height: 38px; width: 38px; flex-shrink: 0; filter: none; }
+body.brand-merryquest .brand-wordmark {
+  font-family: "Fredoka", var(--mq-sans);
+  font-weight: 700; font-size: 27px;
+  color: #122b1e; margin-left: 8px; white-space: nowrap;
+}
+body.brand-merryquest .brand-wordmark .bw-alt { color: #d32f2f; }
+@media (max-width: 760px) {
+  body.brand-merryquest .brand-pip { height: 32px; width: 32px; }
+  body.brand-merryquest .brand-wordmark { font-size: 22px; }
+  body.brand-merryquest .header-hook { display: none; }
+}
+body.brand-merryquest .header-hook { font-family: var(--mq-sans); font-size: 13px; text-shadow: none; }
+body.brand-merryquest .hook-line { color: var(--muted); }
+body.brand-merryquest .hook-line .hook-dot { color: #d32f2f; }
+body.brand-merryquest .header-hook .tag-c { color: #122b1e; font-weight: 600; }
+body.brand-merryquest .header-hook .tag-d { color: #122b1e; font-weight: 600; }
+body.brand-merryquest .header-hook .hook-l2 { font-size: inherit; }
+
+body.brand-merryquest .header-nav .navbtn img { display: none; }
+body.brand-merryquest .header-nav .navbtn {
+  font-size: 12px; font-weight: 600;
+  letter-spacing: 0.06em; text-transform: uppercase; color: #3d4f42;
+}
+body.brand-merryquest .site-header.v2 .header-nav a.events-link img.events-gif,
+body.brand-merryquest .site-header.v2 .header-nav a.navbtn-events img.events-gif { display: none; }
+body.brand-merryquest .events-daily,
+body.brand-merryquest .events-closer { font-family: var(--mq-sans); text-shadow: none; }
+body.brand-merryquest .nh-red { color: #d32f2f; }
+body.brand-merryquest .nh-daily { color: #122b1e; }
+body.brand-merryquest .ec-a { color: #122b1e; }
+body.brand-merryquest .ec-b { color: #d32f2f; }
+
+/* Join: dark pill */
+body.brand-merryquest .nav-join {
+  background: #122b1e; border: none; border-radius: 999px; box-shadow: none;
+}
+body.brand-merryquest .nav-join-label,
+body.brand-merryquest .nav-join .hs-brand {
+  color: #ffffff; font-weight: 600; text-shadow: none; letter-spacing: 0.02em;
+}
+body.brand-merryquest .nav-join-tag { display: none; }
+
+/* Category rail: icon over label, underline marks the active one */
+body.brand-merryquest .vt-tv-strip { background: transparent; box-shadow: none; }
+body.brand-merryquest .vt-tv-strip .vt-btn,
+body.brand-merryquest .vt-tv-strip .tv-btn,
+body.brand-merryquest .vt-tv-strip .music-btn,
+body.brand-merryquest .vt-tv-strip .movies-btn,
+body.brand-merryquest .vt-tv-strip .art-btn,
+body.brand-merryquest .vt-tv-strip .pop-btn,
+body.brand-merryquest .vt-tv-strip .makeup-btn,
+body.brand-merryquest .vt-tv-strip .markets-btn,
+body.brand-merryquest .vt-tv-strip .top100-btn {
+  background: transparent; background-image: none;
+  border: none; border-radius: 0;
+  box-shadow: none; color: #3d4f42;
+}
+body.brand-merryquest .vt-tv-strip .vt-btn { box-shadow: inset 0 -2px 0 #122b1e; color: #122b1e; }
+body.brand-merryquest .vt-tv-strip .vt-l1,
+body.brand-merryquest .vt-tv-strip .vt-l2 {
+  color: inherit; text-shadow: none;
+  font-family: var(--mq-sans); font-weight: 600; font-size: 12px; letter-spacing: 0.02em;
+}
+
+/* Ticker: a light utility strip */
+body.brand-merryquest .daily-band {
+  background: #f7f7f5; border: 1px solid var(--mq-line);
+  border-radius: 12px; box-shadow: none;
+}
+body.brand-merryquest .daily-band-head,
+body.brand-merryquest .daily-band-title,
+body.brand-merryquest .daily-band-links,
+body.brand-merryquest .daily-mini {
+  background: transparent; color: #3d4f42; text-shadow: none;
+}
+body.brand-merryquest .daily-band a { color: #122b1e; font-weight: 600; }
+
+/* ---------- Hero: demoted — the grid is the hero ---------- */
+body.brand-merryquest .hero-intro {
+  background: transparent; border: none; box-shadow: none;
+  padding: 30px 8px 4px;
+}
+body.brand-merryquest .hero-intro h1.hero-title {
+  font-family: var(--mq-sans);
+  font-weight: 700;
+  font-size: clamp(27px, 3.4vw, 38px);
+  line-height: 1.15; letter-spacing: -0.01em;
+  color: #122b1e; text-shadow: none; max-width: 22em;
+}
+body.brand-merryquest .hero-title-alt { color: #122b1e; }
+body.brand-merryquest .hero-intro p { color: var(--muted); text-shadow: none; }
+body.brand-merryquest .fd-prop { font-size: 14.5px; color: var(--muted); margin-top: 10px; }
+
+/* Cards: photo, title, meta — nothing else */
+body.brand-merryquest .fd-rail-head {
+  font-size: 13px; font-weight: 700; letter-spacing: 0.04em;
+  text-transform: uppercase; color: #122b1e;
+}
+body.brand-merryquest .fd-card {
+  background: transparent; border: none; box-shadow: none; border-radius: 0;
+}
+body.brand-merryquest .fd-card-media img { border-radius: 14px; }
+body.brand-merryquest .fd-card-title { font-weight: 600; font-size: 15.5px; color: #122b1e; }
+body.brand-merryquest .fd-card-meta { font-size: 13.5px; color: var(--muted); }
+body.brand-merryquest .fd-badge {
+  background: #ffffff; color: #122b1e; border: none; border-radius: 999px;
+  font-size: 10.5px; font-weight: 700; letter-spacing: 0.06em;
+  text-transform: uppercase; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+  text-shadow: none;
+}
+
+/* Search: the floating pill */
+body.brand-merryquest .hm-find {
+  background: #ffffff; border: 1px solid var(--mq-line);
+  border-radius: 24px; box-shadow: 0 6px 24px rgba(18, 43, 30, 0.10);
+}
+body.brand-merryquest .hm-find-text { color: var(--muted); }
+body.brand-merryquest .hm-find-form input {
+  background: #ffffff; color: var(--ink);
+  border: 1px solid #d8e0d8; border-radius: 999px;
+  font-family: var(--mq-sans); font-size: 14.5px;
+}
+body.brand-merryquest .hm-find-form input::placeholder { color: #93a295; }
+body.brand-merryquest .btn {
+  background: #d32f2f; color: #ffffff; border: none; border-radius: 999px;
+  font-weight: 700; font-size: 14px; box-shadow: none; text-shadow: none;
+}
+body.brand-merryquest .hm-find-btn {
+  background: #ffffff; color: #122b1e;
+  border: 1px solid #d8e0d8; border-radius: 999px;
+  font-weight: 600; font-size: 13.5px; box-shadow: none; text-shadow: none;
+}
+
+/* ---------- Sections + cards ---------- */
+body.brand-merryquest h2 {
+  font-family: var(--mq-sans); font-weight: 700;
+  font-size: clamp(21px, 2.6vw, 27px);
+  color: #122b1e; text-shadow: none; text-transform: none;
+}
+body.brand-merryquest .card,
+body.brand-merryquest .tonight-card,
+body.brand-merryquest .bk-home-card,
+body.brand-merryquest .sponsor-card,
+body.brand-merryquest .hm-prompt,
+body.brand-merryquest .engage-next,
+body.brand-merryquest .hon-card {
+  background: #ffffff; border: 1px solid var(--mq-line);
+  border-radius: 14px; box-shadow: none;
+}
+body.brand-merryquest .card img,
+body.brand-merryquest .tonight-card img,
+body.brand-merryquest .bk-home-card img { border-radius: 10px; }
+body.brand-merryquest .card-body h3,
+body.brand-merryquest .bk-home-title { font-weight: 600; color: #122b1e; }
+body.brand-merryquest .filter-chip {
+  background: #ffffff; border: 1px solid #d8e0d8;
+  color: #3d4f42; border-radius: 999px; box-shadow: none; font-weight: 600;
+}
+body.brand-merryquest .filter-chip.active {
+  background: #122b1e; color: #ffffff; border-color: #122b1e;
+}
+body.brand-merryquest .cat-tabs a {
+  background: transparent; border: none; box-shadow: none;
+  color: var(--muted); border-radius: 999px; font-weight: 600;
+}
+body.brand-merryquest .cat-tabs a.active {
+  background: transparent; color: #122b1e;
+  box-shadow: inset 0 -2px 0 #122b1e; font-weight: 700;
+}
+
+/* What's-new rail: a tidy list card */
+body.brand-merryquest .wn-rail {
+  background: #ffffff; border: 1px solid var(--mq-line);
+  border-radius: 14px; box-shadow: none;
+}
+body.brand-merryquest .wn-rail-head {
+  background: #ffffff; border-bottom: 1px solid var(--mq-line);
+}
+body.brand-merryquest .wn-rail-badge { display: none; }
+body.brand-merryquest .wn-rail-title { font-family: var(--mq-sans); font-weight: 700; color: #122b1e; }
+body.brand-merryquest .wn-rail-accent { color: #d32f2f; text-shadow: none; }
+body.brand-merryquest .wn-rail-sub { color: var(--muted); }
+body.brand-merryquest .wn-rail-group {
+  background: #f7f7f5; color: #122b1e; font-weight: 700; letter-spacing: 0.03em;
+}
+body.brand-merryquest .wn-rail a { color: #122b1e; }
+body.brand-merryquest .wn-rail-scroll { scrollbar-color: #c9d2c9 #ffffff; }
+
+/* Shop: light gray panel, white tiles, dark button */
+body.brand-merryquest .hm-shop-banner {
+  background: #f7f7f5; border: 1px solid var(--mq-line);
+  box-shadow: none; border-radius: 14px;
+}
+body.brand-merryquest .hm-shop-banner-title { color: #122b1e; font-weight: 700; }
+body.brand-merryquest .hm-shop-banner-copy p,
+body.brand-merryquest .hm-shop-banner-sub { color: var(--muted); }
+body.brand-merryquest .hm-shop-banner-btn {
+  background: #122b1e; color: #ffffff; border: none; border-radius: 999px;
+  font-weight: 700; box-shadow: none;
+}
+body.brand-merryquest .hm-shop-tile {
+  background: #ffffff; border: 1px solid var(--mq-line);
+  border-radius: 12px; box-shadow: none;
+}
+body.brand-merryquest .hm-shop-tile-name { color: #122b1e; font-weight: 600; }
+body.brand-merryquest .hm-shop-tile-price { color: #122b1e; font-weight: 700; }
+body.brand-merryquest .hm-shop-tile-watch { color: var(--muted); }
+
+/* Tour panel: pine block, white button */
+body.brand-merryquest .auto-tour-home {
+  background: #122b1e; border: none; box-shadow: none; border-radius: 14px;
+}
+body.brand-merryquest .auto-tour-home h2 { color: #ffffff; }
+body.brand-merryquest .auto-tour-sub { color: #cfe0cf; }
+body.brand-merryquest .auto-tour-btn {
+  background: #ffffff; border: none; color: #122b1e; border-radius: 999px; font-weight: 700;
+}
+body.brand-merryquest .auto-tour-btn-sub { color: #5c6b5e; }
+body.brand-merryquest .hero-intro .auto-tour-home p { color: #cfe0cf; }
+body.brand-merryquest .hero-intro .auto-tour-home .auto-tour-btn-title { color: #122b1e; }
+
+/* Radio chip: pine pill */
+body.brand-merryquest .hmr-chip { background: #122b1e; border: none; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25); }
+body.brand-merryquest .hmr-name { color: #ffffff; font-weight: 600; }
+
+/* ---------- Santa's Sack: a tidy collection grid ---------- */
+body.brand-merryquest .sack-wrap { max-width: 960px; margin: 0 auto; padding: 36px 16px 56px; }
+body.brand-merryquest .sack-title {
+  font-family: var(--mq-sans); font-weight: 700;
+  color: #122b1e; font-size: clamp(28px, 4vw, 38px); margin: 0 0 4px;
+  letter-spacing: -0.01em;
+}
+body.brand-merryquest .sack-sub { color: var(--muted); margin: 0 0 26px; font-size: 14.5px; }
+body.brand-merryquest .sack-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; }
+body.brand-merryquest .sack-card {
+  background: #ffffff; border: 1px solid var(--mq-line);
+  border-radius: 14px; padding: 16px 10px 12px; text-align: center;
+  box-shadow: none;
+}
+body.brand-merryquest .sack-card-star { font-size: 1.5rem; line-height: 1; color: #ffc82c; text-shadow: none; }
+body.brand-merryquest .sack-card-name { font-weight: 600; font-size: 15.5px; color: #122b1e; margin-top: 7px; }
+body.brand-merryquest .sack-card-tier {
+  text-transform: uppercase; letter-spacing: 0.09em;
+  color: var(--muted); font-size: 0.68rem; font-weight: 600;
+}
+body.brand-merryquest .sack-card-count {
+  display: inline-block; margin-top: 6px; background: #122b1e;
+  color: #ffffff; border-radius: 999px; padding: 1px 10px;
+  font-weight: 700; font-size: 0.82rem;
+}
+body.brand-merryquest .sack-card.sack-tier-legendary { border-color: #ffc82c; box-shadow: 0 0 0 1px #ffc82c; }
+body.brand-merryquest .sack-card.sack-tier-epic { border-color: #d32f2f; }
+body.brand-merryquest .sack-card.sack-tier-rare { border-color: #e6c65c; }
+body.brand-merryquest .sack-empty {
+  background: #f7f7f5; border: 1px dashed #c9d2c9;
+  border-radius: 14px; padding: 30px 20px; text-align: center;
+}
+body.brand-merryquest .sack-empty-big { font-size: 1.3rem; font-weight: 700; color: #122b1e; margin: 0 0 8px; }
+body.brand-merryquest .sack-empty p { color: var(--muted); }
+body.brand-merryquest .sack-empty-btn {
+  display: inline-block; margin-top: 12px; background: #d32f2f;
+  color: #ffffff; border: none; font-weight: 700;
+  text-decoration: none; border-radius: 999px; padding: 10px 22px; font-size: 14.5px;
+}
+body.brand-merryquest .sack-cast-title { font-weight: 700; color: #122b1e; margin: 36px 0 4px; }
+body.brand-merryquest .sack-cast-note { color: var(--muted); margin: 0 0 14px; font-size: 14px; }
+body.brand-merryquest .sack-cast { display: flex; flex-wrap: wrap; gap: 8px; }
+body.brand-merryquest .sack-cast-chip {
+  border: 1px solid #d8e0d8; color: #93a295;
+  border-radius: 999px; padding: 4px 13px; font-weight: 600; font-size: 0.9rem;
+  background: #ffffff;
+}
+body.brand-merryquest .sack-cast-chip.got {
+  border-color: #122b1e; color: #122b1e; background: #f2f7f2;
+}

@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% block title %}Santa's Sack · {{ site_name }}{% endblock %}
+{% block content %}
+<section class="sack-wrap">
+  <h1 class="sack-title">&#x1F384; Santa's Sack</h1>
+  <p class="sack-sub">{{ collected_count }} of {{ total_collectible }} characters collected</p>
+
+  <section class="hunt-box">
+    <h2 class="hunt-title">&#x1F50D; Hunt a character</h2>
+    <p class="hunt-sub">Pick your town, then tap a character you haven&rsquo;t caught yet in the cast below. The more you catch in a town, the stronger your hints get &mdash; a <b>Whisper</b> for everyone, a <b>Riddle</b> after 5 town catches, and a <b>Lantern</b> after 12.</p>
+    <input class="hunt-town" id="huntTown" list="huntTowns" placeholder="Your town &mdash; e.g. Bay Shore, NY" autocomplete="off">
+    <datalist id="huntTowns">{% for t in hunt_towns %}<option value="{{ t }}">{% endfor %}</datalist>
+    <div class="hint-card" id="hintCard" hidden></div>
+  </section>
+
+  {% if collected %}
+  <div class="sack-grid">
+    {% for c in collected %}
+    <div class="sack-card sack-tier-{{ c.tier }}">
+      <div class="sack-card-star" aria-hidden="true">&#x2605;</div>
+      <div class="sack-card-name">{{ c.name }}</div>
+      <div class="sack-card-tier">{{ c.tier }}</div>
+      {% if c.count > 1 %}<div class="sack-card-count">&times; {{ c.count }}</div>{% endif %}
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="sack-empty">
+    <p class="sack-empty-big">Your Sack is empty &mdash; for now.</p>
+    <p>Visit a Christmas light display, step within 150 feet, and check in
+       to collect the character waiting there. Somewhere out there, Pip the
+       Star Pin has your name on him.</p>
+    <a class="sack-empty-btn" href="/map">Find a display &rarr;</a>
+  </div>
+  {% endif %}
+
+  <h2 class="sack-cast-title">The whole cast</h2>
+  <p class="sack-cast-note">Greyed-out friends are still out there waiting at a display.</p>
+  <div class="sack-cast">
+    {% for c in cast %}
+    {% if c.count %}<span class="sack-cast-chip sack-tier-{{ c.tier }} got">{{ c.name }}</span>{% else %}<button type="button" class="sack-cast-chip sack-tier-{{ c.tier }} hunt-chip" data-slug="{{ c.slug }}" title="Get a hint for {{ c.name }}">{{ c.name }}</button>{% endif %}
+    {% endfor %}
+  </div>
+</section>
+<script>
+(function () {
+  var townInput = document.getElementById('huntTown');
+  var card = document.getElementById('hintCard');
+  function showHint(title, lines, unlock) {
+    card.hidden = false;
+    card.innerHTML = '';
+    var h = document.createElement('p');
+    h.className = 'hint-card-title'; h.textContent = title;
+    card.appendChild(h);
+    lines.forEach(function (ln) {
+      var p = document.createElement('p');
+      p.className = 'hint-line';
+      var k = document.createElement('b'); k.textContent = ln.kind + ': ';
+      p.appendChild(k);
+      p.appendChild(document.createTextNode(ln.text));
+      card.appendChild(p);
+    });
+    if (unlock) {
+      var u = document.createElement('p');
+      u.className = 'hint-unlock'; u.textContent = unlock;
+      card.appendChild(u);
+    }
+    card.scrollIntoView({behavior: 'smooth', block: 'nearest'});
+  }
+  document.querySelectorAll('.hunt-chip').forEach(function (chip) {
+    chip.addEventListener('click', function () {
+      var town = (townInput.value || '').trim();
+      if (!town) {
+        showHint('First, pick your town above', [{kind: 'Hint', text: 'Type your town (like Bay Shore, NY), then tap a character name again.'}], null);
+        townInput.focus();
+        return;
+      }
+      var url = '/api/quest/hint?character=' + encodeURIComponent(chip.dataset.slug) +
+                '&town=' + encodeURIComponent(town);
+      var qs = window.location.search;
+      if (qs) url += '&' + qs.replace(/^\?/, '');
+      fetch(url).then(function (r) { return r.json(); }).then(function (d) {
+        if (!d.ok) { showHint('Hmm', [{kind: 'Hint', text: 'No hint came back \u2014 check the town name and try again.'}], null); return; }
+        if (!d.available_tonight) { showHint(d.character, [{kind: 'Word', text: d.note}], null); return; }
+        showHint(d.character + ' \u2014 tonight in ' + d.town,
+                 d.hints.map(function (x) { return {kind: x.kind[0].toUpperCase() + x.kind.slice(1), text: x.text}; }),
+                 d.next_unlock);
+      }).catch(function () {
+        showHint('Hmm', [{kind: 'Hint', text: 'No connection \u2014 try again in a moment.'}], null);
+      });
+    });
+  });
+})();
+</script>
+{% endblock %}

@@ -205,6 +205,59 @@ app = FastAPI(title=SITE_NAME, docs_url=None, redoc_url=None)
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 templates.env.globals["site_name"] = SITE_NAME
 
+
+# TWO DOMAINS, ONE ENGINE (Dan locked in 2026-11-01; brand renamed
+# MerryQuest Nov 6, 2026 — Jolly Map retired): MerryQuest is its own
+# branded site (gomerryquest.com) served by this same app, codebase
+# and database on the same service. The brand resolves per request
+# from the Host header (or the ?brand=merryquest preview override)
+# and is injected into every template context by the TemplateResponse
+# wrapper below. "haunt" is always the default, so gethauntmap.com
+# renders exactly as before. Listings, accounts, sponsors and the
+# newsletter list are shared — only the skin and the default landing
+# category differ.
+def _brand_of(request) -> str:
+    try:
+        host = (request.headers.get("host") or "").lower()
+        if "gomerryquest" in host or \
+                request.query_params.get("brand") == "merryquest":
+            return "merryquest"
+    except Exception:
+        pass
+    return "haunt"
+
+
+_orig_template_response = templates.TemplateResponse
+
+
+def _branded_template_response(request, name, context=None, **kwargs):
+    ctx = dict(context or {})
+    brand = _brand_of(request)
+    ctx.setdefault("brand", brand)
+    ctx.setdefault("quest_enabled", QUEST_ENABLED)
+    if brand == "merryquest":
+        ctx["site_name"] = "MerryQuest"
+    return _orig_template_response(request, name, ctx, **kwargs)
+
+
+templates.TemplateResponse = _branded_template_response
+
+
+# MerryQuest quest layer — server-side feature flags (spec Defense 3:
+# ship the shell early, unlock by server-side config on Dec 1 with no
+# second app review). Read once from the environment at boot; every
+# flag defaults OFF, so production behaviour is unchanged until the
+# launch unlock sets them. QUEST_SPONSOR_LAYER_ENABLED's first
+# consumer is the Quest Stop ranking boost (a featured stop ranks
+# with the house displays); fuller sponsor layers are a later phase.
+def _env_flag(name: str) -> bool:
+    return os.environ.get(name, "").strip().lower() in ("1", "true", "yes", "on")
+
+
+QUEST_ENABLED = _env_flag("QUEST_ENABLED")
+QUEST_SPAWNS_ENABLED = _env_flag("QUEST_SPAWNS_ENABLED")
+QUEST_SPONSOR_LAYER_ENABLED = _env_flag("QUEST_SPONSOR_LAYER_ENABLED")
+
 # In-memory admin sessions: token -> True. Resets on restart (fine for v1).
 admin_sessions: set[str] = set()
 ADMIN_COOKIE = "haunt_admin"
@@ -420,7 +473,10 @@ async def _page_cache(request: Request, call_next):
         response = await call_next(request)
         response.headers["X-Cache"] = "BYPASS"
         return response
-    key = request.url.path
+    # Brand is part of the key (MerryQuest skin): the two hosts share
+    # these paths but render different skins/default categories, so a
+    # page cached for one brand must never be served on the other.
+    key = _brand_of(request) + ":" + request.url.path
     entry = _PAGE_CACHE.get(key)
     if entry and entry[0] > time.monotonic():
         _, headers, body = entry
@@ -1967,8 +2023,33 @@ def _halloween_countdown(today) -> str:
     return "\U0001F383 Halloween night has passed — still lit tonight"
 
 
+def _christmas_countdown(today) -> str:
+    """The MerryQuest Tonight-strip countdown (Phase 1 rollout,
+    Nov 18, 2026): quest framing in November, golden-night calls
+    in season, Christmas countdown in December."""
+    md = (today.month, today.day)
+    if today.month == 11:
+        n = (date(today.year, 12, 1) - today).days
+        return (f"\U0001F384 The Quest opens in {n} day"
+                f"{'s' if n != 1 else ''} — Dec 1")
+    if md == (12, 1):
+        return "\U0001F384 The Quest is LIVE — golden night"
+    if _quest_is_golden_night(today):
+        return "\u2728 Golden night — Legendaries are out"
+    if today.month == 12 and today.day < 25:
+        n = (date(today.year, 12, 25) - today).days
+        return (f"\U0001F384 {n} day{'s' if n != 1 else ''} "
+                f"to Christmas")
+    if md == (12, 25):
+        return "\U0001F384 Christmas Day — golden night"
+    if (today.month == 12 and today.day > 25) or \
+            (today.month == 1 and today.day <= 6):
+        return "\u2728 The season's last golden night is Jan 6"
+    return "\U0001F384 The lights are dimming — see you next season"
+
+
 def _tonight_strip(town_label: str, displays: int, town_note: str = "",
-                   events_day=None) -> dict:
+                   events_day=None, brand: str = "haunt") -> dict:
     """Data for the _tonight_strip.html partial (Item 5): ET countdown,
     events near the anchor town, displays lit tonight. `displays` =
     halloween-category pins in the town (house displays run nightly
@@ -1986,7 +2067,11 @@ def _tonight_strip(town_label: str, displays: int, town_note: str = "",
     else:
         events_when = "on " + day.strftime("%a, %b ") + str(day.day)
     return {"town_label": town_label, "town_note": town_note,
-            "countdown": _halloween_countdown(today),
+            "countdown": (_christmas_countdown(today)
+                          if brand == "merryquest"
+                          else _halloween_countdown(today)),
+            "display_icon": ("\U0001F384" if brand == "merryquest"
+                             else "\U0001F383"),
             "today_iso": today.isoformat(),
             "events_on": events_on, "displays": displays,
             "events_iso": day.isoformat(), "events_when": events_when,
@@ -2007,6 +2092,7 @@ def _tonight_strip_map() -> dict:
             "WHERE hidden = 0 AND category = 'halloween'"
         ).fetchone()["n"]
     return {"town_label": "", "town_note": "",
+            "display_icon": "\U0001F383",
             "countdown": _halloween_countdown(today),
             "today_iso": today.isoformat(),
             "events_on": sum(counts.values()), "displays": displays,
@@ -2652,13 +2738,17 @@ def _tonight_pool(conn=None, category: str | None = None) -> list[dict]:
     return [dict(d) for d in base]
 
 
-def _tonight_quality_pool(conn) -> list[dict]:
+def _tonight_quality_pool(conn, category: str = "halloween") -> list[dict]:
     """The Tonight's Display quality pool, shared by the random
     homepage pick and Item 6's deterministic daily pick so the two can
     never drift: eligible pins (see _tonight_pool) that have video,
-    plus the 200 most-viewed eligible pins, ordered by id."""
-    rows = _tonight_pool(conn, "halloween")
-    if not rows:
+    plus the 200 most-viewed eligible pins, ordered by id. Category
+    threading (MerryQuest skin): the MQ brand passes "christmas" so
+    its rails show Christmas content; the all-category fallback
+    applies to halloween only — an empty christmas pool stays empty
+    rather than leaking Halloween pins onto the MerryQuest rails."""
+    rows = _tonight_pool(conn, category)
+    if not rows and category == "halloween":
         rows = _tonight_pool(conn, None)
     if not rows:
         return []
@@ -2668,7 +2758,8 @@ def _tonight_quality_pool(conn) -> list[dict]:
     return [quality[k] for k in sorted(quality)]
 
 
-def _pick_tonights_display(conn, exclude_id=None) -> dict | None:
+def _pick_tonights_display(conn, exclude_id=None,
+                           category: str = "halloween") -> dict | None:
     """Tonight's Display: a fresh random pick on every homepage load
     (Dan, Oct 22 — supersedes the earlier date-seeded daily pick). Pool
     rules unchanged: eligible halloween pins that have video, plus the
@@ -2676,7 +2767,7 @@ def _pick_tonights_display(conn, exclude_id=None) -> dict | None:
     only. exclude_id (the visitor's previous pick, from the tonight_last
     cookie) is skipped when the pool has more than one entry, so a
     reload doesn't serve the same pin twice in a row."""
-    pool = _tonight_quality_pool(conn)
+    pool = _tonight_quality_pool(conn, category)
     if not pool:
         return None
     pool_size = len(pool)
@@ -2691,7 +2782,7 @@ def _pick_tonights_display(conn, exclude_id=None) -> dict | None:
     return pick
 
 
-def _daily_display(conn, et_date) -> dict | None:
+def _daily_display(conn, et_date, category: str = "halloween") -> dict | None:
     """Item 6 (Daily Fright): the canonical display drop for one
     America/New_York date. SAME pool as Tonight's Display (the shared
     _tonight_quality_pool over _tonight_pool), but the pick is
@@ -2700,7 +2791,7 @@ def _daily_display(conn, et_date) -> dict | None:
     rolls. (Tonight's Display itself stays a per-load random pick, per
     Dan Oct 22; the daily drop is deliberately a different contract:
     one drop a TikTok post can deep-link to.)"""
-    pool = _tonight_quality_pool(conn)
+    pool = _tonight_quality_pool(conn, category)
     if not pool:
         return None
     pick = dict(random.Random(et_date.toordinal()).choice(pool))
@@ -2709,25 +2800,37 @@ def _daily_display(conn, et_date) -> dict | None:
     return pick
 
 
-def _trending() -> list[dict]:
+def _trending(category: str | None = None) -> list[dict]:
     """Homepage Trending strip: the 5 most-viewed media-carrying pins
     site-wide (detail-page views DESC, votes DESC, id — the ranking
     the old inline LEFT JOIN in home() produced), zero-view pins
     excluded. TTL-cached + background-refreshed (fortification
     pass 2): the old query re-ran the page_views GROUP BY plus a
-    media-entries scan on EVERY homepage render. Callers get copies."""
+    media-entries scan on EVERY homepage render. Callers get copies.
+    Category threading (MerryQuest skin): a category scopes the strip
+    to that category under its own cache key; None keeps the original
+    site-wide behaviour and the original "trending" cache key, so the
+    HauntMap host is unchanged."""
     def build():
         with get_conn(DB_PATH) as conn:
-            rows = [row_to_dict(r) for r in conn.execute(
-                "SELECT * FROM entries WHERE hidden = 0 "
-                "AND media_path IS NOT NULL AND TRIM(media_path) != ''"
-            ).fetchall()]
+            if category:
+                rows = [row_to_dict(r) for r in conn.execute(
+                    "SELECT * FROM entries WHERE hidden = 0 "
+                    "AND category = ? "
+                    "AND media_path IS NOT NULL AND TRIM(media_path) != ''",
+                    (category,)).fetchall()]
+            else:
+                rows = [row_to_dict(r) for r in conn.execute(
+                    "SELECT * FROM entries WHERE hidden = 0 "
+                    "AND media_path IS NOT NULL AND TRIM(media_path) != ''"
+                ).fetchall()]
         views = _views_by_id()
         for d in rows:
             d["_views"] = views.get(d["id"], 0)
         rows.sort(key=lambda d: (-d["_views"], -(d["votes"] or 0), d["id"]))
         return [d for d in rows[:5] if d["_views"] > 0]
-    return [dict(d) for d in _ttl_cached("trending", build)]
+    key = f"trending:{category}" if category else "trending"
+    return [dict(d) for d in _ttl_cached(key, build)]
 
 
 def _category_counts() -> dict:
@@ -2796,6 +2899,10 @@ def home(request: Request, sort: str = "new", town: str = "", town_search: str =
     # URL identical to the Auto Tour toggle's, and the distinct Python
     # name leaves the module-level states() helper callable below.
     cat = cat if cat in CATEGORIES else "halloween"
+    # MerryQuest host: Christmas is the default landing view (an
+    # explicit ?cat= in the URL always wins, on either brand).
+    if "cat" not in request.query_params and _brand_of(request) == "merryquest":
+        cat = "christmas"
     # Feed-order rule (Dan, Oct 23): the default view is newest-first,
     # with Dan's hand-picked pins boosted to the very top. "Top" stays
     # available as an explicit sort choice only.
@@ -2998,12 +3105,19 @@ def home(request: Request, sort: str = "new", town: str = "", town_search: str =
         today_et = datetime.now(timezone.utc).date()
     last_raw = request.cookies.get("tonight_last", "")
     last_id = int(last_raw) if last_raw.isdigit() else None
+    # Homepage rails follow the BRAND, not the feed's category: the
+    # MerryQuest skin's Tonight's Display / Daily / Trending rails are
+    # Christmas-scoped, while the HauntMap host keeps its exact
+    # current behaviour (halloween pools, site-wide trending).
+    rail_category = "christmas" if _brand_of(request) == "merryquest" \
+        else "halloween"
     with get_conn(DB_PATH) as conn:
-        tonight = _pick_tonights_display(conn, exclude_id=last_id)
+        tonight = _pick_tonights_display(conn, exclude_id=last_id,
+                                         category=rail_category)
         # Item 6: the Daily Fright band's display drop — deterministic
         # per ET date (same pool as Tonight's, different contract), so
         # the band names the same pin /daily leads with all day.
-        daily = _daily_display(conn, today_et)
+        daily = _daily_display(conn, today_et, category=rail_category)
     daily_quiz = _trivia_quiz_for(datetime.now(timezone.utc).date())
     tonight_label = today_et.strftime("%A, %B ") + str(today_et.day)
     # First-screen modules (second-click #3): computed on EVERY homepage
@@ -3017,8 +3131,11 @@ def home(request: Request, sort: str = "new", town: str = "", town_search: str =
     with get_conn(DB_PATH) as conn:
         # Trending comes from the TTL-cached _trending() snapshot
         # (fortification pass 2) — it used to re-run the page_views
-        # GROUP BY inline here on every homepage render.
-        trending = _trending()
+        # GROUP BY inline here on every homepage render. The
+        # MerryQuest brand scopes it to christmas; HauntMap keeps the
+        # site-wide snapshot (category None), unchanged.
+        trending = _trending(
+            "christmas" if rail_category == "christmas" else None)
         # Near-you towns now come from the Item 1 resolution (geo-aware
         # when Cloudflare headers are present, biggest-site-wide when
         # not) computed above; the counts are the same live halloween
@@ -3183,7 +3300,7 @@ def home(request: Request, sort: str = "new", town: str = "", town_search: str =
         slim_events = {"text": "\U0001F3AA Events near you \u2192",
                        "href": "/events"}
     _hm = current_member(request)
-    response = templates.TemplateResponse(request, "index.html",
+    response = templates.TemplateResponse(request, "index_merryquest.html" if _brand_of(request) == "merryquest" else "index.html",
         {"request": request, "entries": entries, "sort": sort,
          "is_plus": _plus_active(_hm["id"]) if _hm else False,
          "town": town, "towns": towns(cat, state), "states": states(cat),
@@ -7121,6 +7238,31 @@ def detail(request: Request, entry_id: int):
         stay22_url = stay22_map_url(entry.get("town_label")
                                      or entry.get("town"),
                                      campaign="pin_page")
+    # MerryQuest quest panel (Phase 1 rollout, Nov 18, 2026): on the
+    # MerryQuest brand with the quest layer on, a spawn location's
+    # page shows tonight's character teaser + check-in. Invisible
+    # everywhere else (quest_panel stays None).
+    quest_panel = None
+    if _brand_of(request) == "merryquest" and QUEST_ENABLED \
+            and QUEST_SPAWNS_ENABLED \
+            and entry.get("category") in QUEST_SPAWN_CATEGORIES:
+        _member = current_member(request)
+        with get_conn(DB_PATH) as conn:
+            _char = _quest_spawn_for_entry(conn, entry)
+            _caught = False
+            if _char and _member:
+                _caught = conn.execute(
+                    "SELECT 1 FROM quest_sack WHERE user_id = ? "
+                    "AND character_id = ?",
+                    (_member["id"], _char["id"])).fetchone() is not None
+        if _char:
+            quest_panel = {
+                "tier": _char["tier"], "name": _char["name"],
+                "caught": _caught,
+                "is_stop": entry["category"] != QUEST_HOUSE_CATEGORY,
+                "golden": _quest_is_golden_night(_quest_today()),
+                "logged_in": _member is not None,
+            }
     return templates.TemplateResponse(request, "detail.html",
         {"request": request, "entry": entry, "voted": voted, "reported": reported,
          "stay22_url": stay22_url,
@@ -7133,7 +7275,7 @@ def detail(request: Request, entry_id: int):
          "video_chain": chain.get("video_chain", []),
          "town_centers": chain.get("town_centers", []),
          "prev_pin": chain["prev_pin"], "more_near": chain["more_near"],
-         "more_like": chain["more_like"], "town_pin_ids": town_pin_ids,
+         "more_like": chain["more_like"], "town_pin_ids": town_pin_ids, "quest_panel": quest_panel,
          "more_haunts": more_haunts, "town_haunts": town_haunts,
          "bracket_info": ({"seed": brk.SEED_OF[entry_id],
                            "region": brk.REGIONS.get(entry_id, "")}
@@ -8459,7 +8601,9 @@ def _entry_has_video(e: dict) -> bool:
 @app.get("/towns/{slug}", response_class=HTMLResponse)
 def town_page(request: Request, slug: str):
     label = None
-    for t in _towns_with_counts():
+    _town_cat = "christmas" if _brand_of(request) == "merryquest" \
+        else "halloween"
+    for t in _towns_with_counts(_town_cat):
         if t["slug"] == slug:
             label = t["label"]
             break
@@ -8472,7 +8616,7 @@ def town_page(request: Request, slug: str):
     # no sort control, so this IS its default view) is the old SQL
     # ORDER BY applied as a Python sort over the snapshot rows before
     # the town filter, exactly as the SQL ordered-then-filtered.
-    rows = _category_rows("halloween")
+    rows = _category_rows(_town_cat)
     rows.sort(key=lambda e: (e["is_handpicked"] or 0,
                              e["created_at"] or "", e["id"]),
               reverse=True)
@@ -8491,7 +8635,8 @@ def town_page(request: Request, slug: str):
     # Retention Wave 3, Item 5: the "Tonight" strip under the town header
     # — this town is the anchor; displays lit = its halloween pins (the
     # entries list itself), events on = parsed events in this town.
-    tstrip = _tonight_strip(label, len(entries))
+    tstrip = _tonight_strip(label, len(entries),
+                            brand=("merryquest" if _town_cat == "christmas" else "haunt"))
     # Stay22 "Stay in <town>" (staged Nov 5): the hotels map centres on
     # the town label itself (see stay22_map_url for why town-level
     # centering).
@@ -13385,7 +13530,35 @@ def privacy_page(request: Request):
 # site. Push plumbing lives in app/push.py; keys come from env.
 
 @app.get("/manifest.webmanifest")
-def pwa_manifest():
+def pwa_manifest(request: Request):
+    # Brand-aware (MerryQuest skin): the MerryQuest host installs as
+    # "MerryQuest" with its own colors/description; the HauntMap file
+    # below is served byte-identical on the haunt brand.
+    if _brand_of(request) == "merryquest":
+        return JSONResponse({
+            "name": "MerryQuest: Christmas Lights",
+            "short_name": "MerryQuest",
+            "description": "Christmas Light Map & Tours — find the best "
+                           "Christmas light displays near you and build "
+                           "your light night.",
+            "id": "/",
+            "start_url": "/",
+            "scope": "/",
+            "display": "standalone",
+            "orientation": "portrait",
+            "background_color": "#FFFFFF",
+            "theme_color": "#122B1E",
+            "icons": [
+                {"src": "/static/img/icons/icon-192.png",
+                 "sizes": "192x192", "type": "image/png", "purpose": "any"},
+                {"src": "/static/img/icons/icon-512.png",
+                 "sizes": "512x512", "type": "image/png", "purpose": "any"},
+                {"src": "/static/img/icons/icon-maskable-512.png",
+                 "sizes": "512x512", "type": "image/png",
+                 "purpose": "maskable"},
+            ],
+        }, media_type="application/manifest+json",
+            headers={"Cache-Control": "public, max-age=3600"})
     return FileResponse(
         BASE_DIR / "static" / "manifest.webmanifest",
         media_type="application/manifest+json",
@@ -17179,3 +17352,453 @@ async def stripe_webhook(request: Request):
                             obj[key], timezone.utc).isoformat()
             _plus_upsert(uid, **fields)
     return JSONResponse({"received": True})
+
+
+# ------------------------------------------------------------ MerryQuest
+# Quest layer — v1 shell (Nov 17, 2026; spec:
+# merryquest-gamification-spec, cast lock Nov 6, 2026). Structural
+# plumbing only: the 150-ft check-in, the spawn engine (Dan's
+# every-city rule, Nov 18, 2026 — see _quest_spawn_for_entry), and
+# Santa's Sack. Everything sits behind the QUEST_* env
+# flags (all default OFF) AND the MerryQuest brand — with the flags
+# off these routes 404 and production is untouched. NOT in this shell
+# (later phases, kept out of sight): the weekly leaderboard, badges
+# and levels, teams, lures, Holiday Helper, Snapshot Mode, sponsor
+# layers, and Plus perks.
+#
+# GPS posture (v1, per spec): the client (the Capacitor app) obtains
+# the fix from the NATIVE geolocation plugin and submits lat/lng;
+# this endpoint verifies the submitted coordinates against the pin
+# server-side. Client-supplied coordinates are inherently spoofable —
+# v1 accepts that knowingly (the spec's anti-spoofing layer of rate
+# limits plus device/account signals is a later phase); December
+# awards titles and honors only, no cash, so the exposure is bounded.
+QUEST_CHECKIN_RADIUS_FT = 150.0
+
+
+def _haversine_ft(lat1: float, lng1: float,
+                  lat2: float, lng2: float) -> float:
+    """Great-circle distance in feet between two lat/lng points."""
+    r_m = 6371000.0
+    p1, p2 = math.radians(lat1), math.radians(lat2)
+    dphi = math.radians(lat2 - lat1)
+    dlmb = math.radians(lng2 - lng1)
+    a = math.sin(dphi / 2) ** 2 \
+        + math.cos(p1) * math.cos(p2) * math.sin(dlmb / 2) ** 2
+    return 2 * r_m * math.asin(math.sqrt(a)) * 3.28084
+
+
+def _quest_today():
+    """The season runs on US Eastern time (EST, UTC-5, all season —
+    DST ends before December), where the displays are."""
+    return datetime.now(timezone(timedelta(hours=-5))).date()
+
+
+# Golden nights (spec, locked Nov 6, 2026): opening night Dec 1,
+# every December Friday, the Christmas Eve/Day window, Epiphany.
+def _quest_is_golden_night(d) -> bool:
+    if d.month == 12:
+        return d.day == 1 or d.day in (24, 25) or d.weekday() == 4
+    return d.month == 1 and d.day == 6
+
+
+# Spawn locations (Dan, Nov 18, 2026): house displays are the core,
+# but a town's standing Christmas-friendly places — cafés, shops,
+# restaurants, hotels, ice-cream parlors; city halls and parks join
+# as they are seeded — also host characters as "Quest Stops". Stops
+# carry the remainder of the cast a town's houses can't hold at once,
+# so players complete the cast by visiting NEW places instead of
+# re-visiting the same displays every night. A stop that sponsors
+# (a featured pin) is the pitch: hosting a character puts players at
+# the business's door — with QUEST_SPONSOR_LAYER_ENABLED on, featured
+# stops rank up with the house displays instead of behind them.
+QUEST_HOUSE_CATEGORY = "christmas"
+QUEST_STOP_CATEGORIES = ("restaurants", "shops", "coffee", "hotels",
+                         "ice_cream")
+QUEST_SPAWN_CATEGORIES = (QUEST_HOUSE_CATEGORY,) + QUEST_STOP_CATEGORIES
+
+
+def _quest_town_locations(conn, town: str) -> list:
+    """The town's spawn locations, ranked: house displays first
+    (hand-picked, then detail-page views, then votes, then distance
+    to the town centroid — the best and most central first), then
+    Quest Stops by the same quality order. With the sponsor layer
+    on, a featured (sponsoring) stop ranks with the houses."""
+    marks = ",".join("?" * len(QUEST_SPAWN_CATEGORIES))
+    pins = conn.execute(
+        "SELECT id, title, category, address, lat, lng, votes, "
+        "is_handpicked, is_featured FROM entries "
+        f"WHERE category IN ({marks}) AND hidden = 0 AND town = ? "
+        "AND lat IS NOT NULL AND lng IS NOT NULL",
+        (*QUEST_SPAWN_CATEGORIES, town)).fetchall()
+    if not pins:
+        return []
+    views: dict[int, int] = {}
+    paths = [f"/d/{p['id']}" for p in pins]
+    marks2 = ",".join("?" * len(paths))
+    for r in conn.execute(
+            "SELECT CAST(substr(path, 4) AS INTEGER) AS eid, "
+            f"COUNT(*) AS v FROM page_views WHERE path IN ({marks2}) "
+            "GROUP BY eid", paths):
+        views[r["eid"]] = r["v"]
+    clat = sum(p["lat"] for p in pins) / len(pins)
+    clng = sum(p["lng"] for p in pins) / len(pins)
+
+    def rank_key(p):
+        is_house = p["category"] == QUEST_HOUSE_CATEGORY
+        boosted = QUEST_SPONSOR_LAYER_ENABLED and p["is_featured"]
+        group = 0 if is_house or boosted else 1
+        return (group,
+                0 if p["is_handpicked"] else 1,
+                -views.get(p["id"], 0),
+                -(p["votes"] or 0),
+                _haversine_ft(p["lat"], p["lng"], clat, clng),
+                p["id"])
+
+    return sorted(pins, key=rank_key)
+
+
+def _quest_assignments(conn, town: str, today) -> dict:
+    """entry_id -> character for every spawn location in town today.
+
+    Dan's every-city rule (Nov 18, 2026): EVERY character must be
+    available in EVERY city, spread across different locations,
+    favoring the better, more central ones, so the most people can
+    reach them and complete the cast locally. Ranks map onto tier
+    bands in cast proportion (Epic 7 / Rare 13 / Common 8), so the
+    best locations host the best characters every day; within a band
+    the assignment rotates daily, so locations cycle through their
+    band. Towns with fewer than 7 locations also drift bands daily,
+    so even a one-display town sees every tier across the week and
+    the full cast over the season. On golden nights the town's #1
+    location hosts a Legendary instead, rotating per town. Pip never
+    spawns wild (he is the tutorial capture) and Legendaries spawn
+    ONLY on golden nights. Computed, never stored — a pure function
+    of the town, its locations and the date, identical for every
+    player that day."""
+    rows = conn.execute(
+        "SELECT * FROM quest_characters WHERE collectible = 1 "
+        "AND spawnable = 1 ORDER BY sort").fetchall()
+    if not rows:
+        return {}
+    by_tier: dict[str, list] = {"epic": [], "rare": [], "common": []}
+    for r in rows:
+        if r["tier"] in by_tier:
+            by_tier[r["tier"]].append(dict(r))
+    ranked = _quest_town_locations(conn, town)
+    n = len(ranked)
+    if n == 0:
+        return {}
+    day_index = today.toordinal()
+    seq = (["epic"] * len(by_tier["epic"])
+           + ["rare"] * len(by_tier["rare"])
+           + ["common"] * len(by_tier["common"]))
+    bands = ["epic", "rare", "common"]
+
+    def band_of(r: int) -> str:
+        pos = int((r + 0.5) * len(seq) / n)
+        band = seq[min(pos, len(seq) - 1)]
+        if n < 7:
+            band = bands[(bands.index(band) + day_index) % 3]
+        return band
+
+    band_of_rank = [band_of(r) for r in range(n)]
+    out: dict[int, dict] = {}
+    for r, pin in enumerate(ranked):
+        if r == 0 and _quest_is_golden_night(today):
+            legends = conn.execute(
+                "SELECT * FROM quest_characters WHERE collectible = 1 "
+                "AND tier = 'legendary' ORDER BY sort").fetchall()
+            if legends:
+                town_key = int(hashlib.sha256(
+                    f"mq-town:{town}".encode()).hexdigest(), 16)
+                out[pin["id"]] = dict(
+                    legends[(town_key + day_index) % len(legends)])
+                continue
+        band = band_of_rank[r]
+        band_rank = band_of_rank[:r].count(band)
+        pool = by_tier[band]
+        out[pin["id"]] = pool[(band_rank + day_index) % len(pool)]
+    return out
+
+
+def _quest_spawn_for_entry(conn, entry, today=None) -> dict | None:
+    """The collectible spawned at one location tonight."""
+    if today is None:
+        today = _quest_today()
+    return _quest_assignments(
+        conn, entry["town"], today).get(entry["id"])
+
+
+# Progressive hints (Dan, Nov 18, 2026): as a hunter's collection in
+# a town grows, the help grows with it — a Whisper for everyone, a
+# Riddle after 5 town catches, a Lantern (nearly the address) after
+# 12 — so younger hunters can always find the next character and
+# finish the cast. The hunt stays a hunt; the help just grows.
+QUEST_HINT_RIDDLE_AT = 5
+QUEST_HINT_LANTERN_AT = 12
+
+_STOP_RIDDLES = {
+    "coffee": "Where cocoa steams and cookies cool on {street}, "
+              "{name} is warming up — follow the peppermint.",
+    "restaurants": "Where families feast on {street} and the windows "
+                   "fog with cheer, {name} has saved you a seat.",
+    "shops": "Among the ribbons and the wrapping on {street}, "
+             "{name} is hiding in plain sight.",
+    "hotels": "Where travelers rest on {street} beneath a lobby "
+              "tree, {name} is a guest tonight.",
+    "ice_cream": "Even in winter, on {street}, something sweet is "
+                 "scooping — and {name} is first in line.",
+}
+_HOUSE_RIDDLE = ("On {street}, where the windows glow and the lights "
+                 "dance, {name} waits at the brightest display.")
+
+
+def _quest_street(address, title) -> str:
+    raw = (address or "").split(",")[0].strip()
+    if not raw:
+        raw = (title or "").split("—")[0].strip()
+    parts = raw.split(None, 1)
+    if len(parts) == 2 and any(ch.isdigit() for ch in parts[0]):
+        return parts[1]
+    return raw
+
+
+def _quest_hint_texts(pin, character, clat, clng) -> list:
+    name = character["name"]
+    street = _quest_street(pin["address"], pin["title"]) \
+        or "the main street"
+    dlat = pin["lat"] - clat
+    dlng = pin["lng"] - clng
+    ns = "north" if dlat >= 0 else "south"
+    ew = "east" if dlng >= 0 else "west"
+    if abs(dlat) > 2 * abs(dlng):
+        direction = ns
+    elif abs(dlng) > 2 * abs(dlat):
+        direction = ew
+    else:
+        direction = ns + ew
+    whisper = (f"{name} is hiding in town tonight — somewhere "
+               f"{direction} of the town's heart. Keep your eyes "
+               f"on the glow.")
+    riddle = _STOP_RIDDLES.get(
+        pin["category"], _HOUSE_RIDDLE).format(street=street,
+                                               name=name)
+    place = (pin["title"] or "").split("—")[0].strip()
+    dist_mi = _haversine_ft(pin["lat"], pin["lng"], clat, clng) / 5280.0
+    lantern = (f"{name} is at {place} on {street} — about "
+               f"{dist_mi:.1f} mi from the town center. Go stand "
+               f"in the glow and check in!")
+    return [whisper, riddle, lantern]
+
+
+@app.post("/api/quest/checkin")
+async def quest_checkin(request: Request):
+    """GPS-verified arrival + capture. Body: {entry_id, lat, lng}.
+    Login required. MerryQuest brand + QUEST_ENABLED +
+    QUEST_SPAWNS_ENABLED required — anything else is a 404, so the
+    endpoint is invisible while the layer is off."""
+    if not (QUEST_ENABLED and QUEST_SPAWNS_ENABLED) \
+            or _brand_of(request) != "merryquest":
+        raise HTTPException(status_code=404)
+    member = current_member(request)
+    if member is None:
+        return JSONResponse({"ok": False, "error": "login_required"},
+                            status_code=401)
+    try:
+        payload = await request.json()
+    except Exception:
+        return JSONResponse({"ok": False, "error": "bad_json"},
+                            status_code=400)
+    try:
+        entry_id = int(payload.get("entry_id"))
+        lat = float(payload.get("lat"))
+        lng = float(payload.get("lng"))
+    except (TypeError, ValueError, AttributeError):
+        return JSONResponse({"ok": False, "error": "bad_coords"},
+                            status_code=400)
+    if not (-90 <= lat <= 90 and -180 <= lng <= 180):
+        return JSONResponse({"ok": False, "error": "bad_coords"},
+                            status_code=400)
+    now = datetime.now(timezone.utc).isoformat()
+    with get_conn(DB_PATH) as conn:
+        entry = conn.execute(
+            "SELECT id, title, town, category, lat, lng, hidden "
+            "FROM entries WHERE id = ?", (entry_id,)).fetchone()
+        if entry is None or entry["hidden"] \
+                or entry["category"] not in QUEST_SPAWN_CATEGORIES:
+            return JSONResponse({"ok": False, "error": "pin_not_found"},
+                                status_code=404)
+        if entry["lat"] is None or entry["lng"] is None:
+            return JSONResponse(
+                {"ok": False, "error": "pin_has_no_coords"},
+                status_code=422)
+        distance = _haversine_ft(lat, lng, entry["lat"], entry["lng"])
+        if distance > QUEST_CHECKIN_RADIUS_FT:
+            return JSONResponse({
+                "ok": False, "error": "too_far",
+                "distance_ft": round(distance),
+                "radius_ft": int(QUEST_CHECKIN_RADIUS_FT)})
+        character = _quest_spawn_for_entry(conn, entry)
+        conn.execute(
+            "INSERT INTO quest_checkins "
+            "(user_id, entry_id, character_id, lat, lng, distance_ft,"
+            " created_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
+            (member["id"], entry_id,
+             character["id"] if character else None,
+             lat, lng, distance, now))
+        duplicate = False
+        sack_count = 0
+        if character is not None:
+            existing = conn.execute(
+                "SELECT count FROM quest_sack WHERE user_id = ? "
+                "AND character_id = ?",
+                (member["id"], character["id"])).fetchone()
+            duplicate = existing is not None
+            conn.execute(
+                "INSERT INTO quest_sack "
+                "(user_id, character_id, count, first_at, last_at) "
+                "VALUES (?, ?, 1, ?, ?) "
+                "ON CONFLICT(user_id, character_id) DO UPDATE SET "
+                "count = count + 1, last_at = excluded.last_at",
+                (member["id"], character["id"], now, now))
+            sack_count = conn.execute(
+                "SELECT count FROM quest_sack WHERE user_id = ? "
+                "AND character_id = ?",
+                (member["id"], character["id"])).fetchone()["count"]
+        conn.commit()
+    return JSONResponse({
+        "ok": True,
+        "distance_ft": round(distance),
+        "pin": {"id": entry["id"], "title": entry["title"],
+                "town": entry["town"]},
+        "character": ({"slug": character["slug"],
+                       "name": character["name"],
+                       "tier": character["tier"]}
+                      if character else None),
+        "duplicate": duplicate,
+        "sack_count": sack_count})
+
+
+@app.get("/api/quest/hint")
+async def quest_hint(request: Request, character: str = "",
+                     town: str = ""):
+    """Progressive hints toward one character's location tonight.
+    Login required; MerryQuest brand + quest flags required (404
+    otherwise, like the check-in). The hint level grows with the
+    hunter's distinct catches in that town: Whisper for everyone,
+    Riddle at QUEST_HINT_RIDDLE_AT, Lantern at
+    QUEST_HINT_LANTERN_AT."""
+    if not (QUEST_ENABLED and QUEST_SPAWNS_ENABLED) \
+            or _brand_of(request) != "merryquest":
+        raise HTTPException(status_code=404)
+    member = current_member(request)
+    if member is None:
+        return JSONResponse({"ok": False, "error": "login_required"},
+                            status_code=401)
+    today = _quest_today()
+    with get_conn(DB_PATH) as conn:
+        char = conn.execute(
+            "SELECT * FROM quest_characters WHERE slug = ? "
+            "AND collectible = 1", (character,)).fetchone()
+        if char is None:
+            return JSONResponse(
+                {"ok": False, "error": "no_such_character"},
+                status_code=404)
+        if char["slug"] == "pip-the-star-pin":
+            return JSONResponse({
+                "ok": True, "character": char["name"],
+                "available_tonight": False,
+                "note": "Pip is your guide — he joins every hunter "
+                        "at the very start of the quest."})
+        assignments = _quest_assignments(conn, town, today)
+        target_id = next((eid for eid, c in assignments.items()
+                          if c["id"] == char["id"]), None)
+        if target_id is None:
+            if char["tier"] == "legendary":
+                nxt = today
+                for _ in range(45):
+                    nxt += timedelta(days=1)
+                    if _quest_is_golden_night(nxt):
+                        break
+                note = (f"{char['name']} only appears on golden "
+                        f"nights — the next one here is "
+                        f"{nxt.strftime('%A, %B ') + str(nxt.day)}.")
+            else:
+                note = ("Not in this town tonight — the cast rotates "
+                        "nightly, so check back tomorrow.")
+            return JSONResponse({
+                "ok": True, "character": char["name"],
+                "available_tonight": False, "note": note})
+        pin = conn.execute(
+            "SELECT id, title, category, address, lat, lng FROM "
+            "entries WHERE id = ?", (target_id,)).fetchone()
+        locations = _quest_town_locations(conn, town)
+        clat = sum(p["lat"] for p in locations) / len(locations)
+        clng = sum(p["lng"] for p in locations) / len(locations)
+        caught = conn.execute(
+            "SELECT COUNT(DISTINCT qc.character_id) AS c FROM "
+            "quest_checkins qc JOIN entries e ON e.id = qc.entry_id "
+            "WHERE qc.user_id = ? AND e.town = ?",
+            (member["id"], town)).fetchone()["c"]
+    level = 1 + (1 if caught >= QUEST_HINT_RIDDLE_AT else 0) \
+        + (1 if caught >= QUEST_HINT_LANTERN_AT else 0)
+    texts = _quest_hint_texts(pin, dict(char), clat, clng)
+    kinds = ["whisper", "riddle", "lantern"]
+    if level == 1:
+        nxt_unlock = (f"Catch {QUEST_HINT_RIDDLE_AT - caught} more "
+                      f"in {town} to unlock the riddle.")
+    elif level == 2:
+        nxt_unlock = (f"Catch {QUEST_HINT_LANTERN_AT - caught} more "
+                      f"in {town} to unlock the lantern hint.")
+    else:
+        nxt_unlock = None
+    return JSONResponse({
+        "ok": True, "character": char["name"], "tier": char["tier"],
+        "available_tonight": True, "town": town,
+        "town_catches": caught, "hint_level": level,
+        "hints": [{"kind": kinds[i], "text": texts[i]}
+                  for i in range(level)],
+        "next_unlock": nxt_unlock})
+
+
+@app.get("/sack", response_class=HTMLResponse)
+def sack_page(request: Request):
+    """Santa's Sack — the collection view. MerryQuest brand +
+    QUEST_ENABLED only; login required (guests are sent to sign in
+    first, with a next back here)."""
+    if not QUEST_ENABLED or _brand_of(request) != "merryquest":
+        raise HTTPException(status_code=404)
+    member = current_member(request)
+    if member is None:
+        return RedirectResponse("/login?next=/sack", status_code=303)
+    with get_conn(DB_PATH) as conn:
+        cast = [dict(r) for r in conn.execute(
+            "SELECT * FROM quest_characters WHERE collectible = 1 "
+            "ORDER BY sort").fetchall()]
+        held = {r["character_id"]: dict(r) for r in conn.execute(
+            "SELECT * FROM quest_sack WHERE user_id = ?",
+            (member["id"],)).fetchall()}
+        _marks = ",".join("?" * len(QUEST_SPAWN_CATEGORIES))
+        hunt_towns = [r["town"] for r in conn.execute(
+            f"SELECT town, COUNT(*) AS c FROM entries WHERE "
+            f"category IN ({_marks}) AND hidden = 0 "
+            f"AND lat IS NOT NULL GROUP BY town "
+            f"ORDER BY c DESC LIMIT 80",
+            QUEST_SPAWN_CATEGORIES).fetchall()]
+    cast_out = []
+    collected = []
+    for c in cast:
+        h = held.get(c["id"])
+        row = {**c, "count": h["count"] if h else 0}
+        cast_out.append(row)
+        if h:
+            collected.append({**row, "first_at": h["first_at"]})
+    return templates.TemplateResponse(request, "sack.html", {
+        "member": member,
+        "collected": collected,
+        "cast": cast_out,
+        "collected_count": len(collected),
+        "total_collectible": len(cast),
+        "hunt_towns": hunt_towns,
+    })

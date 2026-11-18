@@ -1,0 +1,748 @@
+/* MerryQuest "Midnight" skin — Railway-feel variant (Dan, Nov 18,
+   2026: fifth reference pick, railway.app — "really love the
+   design"). Loaded INSTEAD of merryquest.css when the preview asks
+   for ?vibe=rail; scoped to body.brand-merryquest.
+
+   The Railway translation: a near-black world with a green tint,
+   GLASS panels (white at 3-4% over the dark, 1px borders at 8%),
+   tight Inter typography with letterspaced micro-labels, one
+   gradient accent (compass gold #FFC82C running to ember) in the
+   primary seat — Railway's purple gradient, re-cast in brand
+   colors — and glow used sparingly, like a status light. Sleek
+   and premium where Quest Mode is chunky and playful. */
+
+body.brand-merryquest {
+  --bg: #090d0b;
+  --bg2: #070a08;
+  --card: rgba(255, 255, 255, 0.03);
+  --ink: #edecea;
+  --muted: #9ba79d;
+  --accent: #ffc82c;
+  --accent2: #ffc82c;
+  --danger: #ff6b5e;
+  --mq-sans: "Inter", "Helvetica Neue", Helvetica, Arial, system-ui, sans-serif;
+  --mq-line: rgba(255, 255, 255, 0.08);
+  --mq-grad: linear-gradient(92deg, #ffc82c 0%, #ff9a3d 55%, #ff6b5e 100%);
+  background:
+    radial-gradient(900px 480px at 85% -10%, rgba(255, 154, 61, 0.10) 0%, rgba(9, 13, 11, 0) 55%),
+    radial-gradient(1000px 560px at 8% -12%, rgba(255, 200, 44, 0.09) 0%, rgba(9, 13, 11, 0) 58%),
+    #090d0b;
+  color: var(--ink);
+  font-family: var(--mq-sans);
+}
+body.brand-merryquest::before { display: none; }
+body.brand-merryquest .spooky-side { display: none; }
+body.brand-merryquest .tt-follow-vert { display: none; }
+
+/* ---------- Header: glass bar ---------- */
+body.brand-merryquest .site-header {
+  background: rgba(9, 13, 11, 0.82);
+  border-bottom: 1px solid var(--mq-line);
+  box-shadow: none;
+  backdrop-filter: blur(14px);
+}
+body.brand-merryquest .mini-bar {
+  background: rgba(9, 13, 11, 0.9);
+  border-bottom: 1px solid var(--mq-line);
+  box-shadow: none;
+}
+body.brand-merryquest .mini-bar a { color: var(--ink); }
+body.brand-merryquest .header-frank { display: none; }
+body.brand-merryquest .brand-pip {
+  height: 38px; width: 38px; flex-shrink: 0;
+  filter: drop-shadow(0 0 10px rgba(255, 200, 44, 0.55));
+}
+body.brand-merryquest .brand-wordmark {
+  font-family: var(--mq-sans);
+  font-weight: 700; font-size: 24px; letter-spacing: -0.02em;
+  color: #ffffff; margin-left: 8px; white-space: nowrap;
+}
+body.brand-merryquest .brand-wordmark .bw-alt {
+  background: var(--mq-grad); -webkit-background-clip: text; background-clip: text;
+  color: transparent;
+}
+@media (max-width: 760px) {
+  body.brand-merryquest .brand-pip { height: 32px; width: 32px; }
+  body.brand-merryquest .brand-wordmark { font-size: 20px; }
+  body.brand-merryquest .header-hook { display: none; }
+}
+
+/* Hook line: colors live on .hook-line itself (AGENTS.md rule) */
+body.brand-merryquest .header-hook {
+  font-family: var(--mq-sans); font-size: 13px; text-shadow: none;
+}
+body.brand-merryquest .hook-line { color: var(--muted); }
+body.brand-merryquest .hook-line .hook-dot { color: #ffc82c; }
+body.brand-merryquest .header-hook .tag-c { color: #edecea; font-weight: 600; }
+body.brand-merryquest .header-hook .tag-d { color: #edecea; font-weight: 600; }
+body.brand-merryquest .header-hook .hook-l2 { font-size: inherit; }
+
+body.brand-merryquest .header-nav .navbtn img { display: none; }
+body.brand-merryquest .header-nav .navbtn {
+  font-size: 12px; font-weight: 500;
+  letter-spacing: 0.09em; text-transform: uppercase; color: #c8d2c9;
+}
+body.brand-merryquest .site-header.v2 .header-nav a.events-link img.events-gif,
+body.brand-merryquest .site-header.v2 .header-nav a.navbtn-events img.events-gif { display: none; }
+body.brand-merryquest .events-daily,
+body.brand-merryquest .events-closer { font-family: var(--mq-sans); text-shadow: none; }
+body.brand-merryquest .nh-red { color: #ffc82c; }
+body.brand-merryquest .nh-daily { color: #edecea; }
+body.brand-merryquest .ec-a { color: #edecea; }
+body.brand-merryquest .ec-b { color: #ffc82c; }
+
+/* Join: the one gradient button */
+body.brand-merryquest .nav-join {
+  background: var(--mq-grad); border: none; border-radius: 999px;
+  box-shadow: 0 4px 20px rgba(255, 154, 61, 0.35);
+}
+body.brand-merryquest .nav-join-label,
+body.brand-merryquest .nav-join .hs-brand {
+  color: #1a1206; font-weight: 700; text-shadow: none; letter-spacing: 0.02em;
+}
+body.brand-merryquest .nav-join-tag { display: none; }
+
+/* Module pills: glass chips */
+body.brand-merryquest .vt-tv-strip { background: transparent; box-shadow: none; }
+body.brand-merryquest .vt-tv-strip .vt-btn,
+body.brand-merryquest .vt-tv-strip .tv-btn,
+body.brand-merryquest .vt-tv-strip .music-btn,
+body.brand-merryquest .vt-tv-strip .movies-btn,
+body.brand-merryquest .vt-tv-strip .art-btn,
+body.brand-merryquest .vt-tv-strip .pop-btn,
+body.brand-merryquest .vt-tv-strip .makeup-btn,
+body.brand-merryquest .vt-tv-strip .markets-btn,
+body.brand-merryquest .vt-tv-strip .top100-btn {
+  background: rgba(255, 255, 255, 0.04); background-image: none;
+  border: 1px solid var(--mq-line); border-radius: 10px;
+  box-shadow: none; color: #edecea;
+}
+body.brand-merryquest .vt-tv-strip .vt-btn {
+  background: rgba(255, 200, 44, 0.13); border-color: rgba(255, 200, 44, 0.45);
+}
+body.brand-merryquest .vt-tv-strip .vt-l1,
+body.brand-merryquest .vt-tv-strip .vt-l2 {
+  color: inherit; text-shadow: none;
+  font-family: var(--mq-sans); font-weight: 600; font-size: 12px; letter-spacing: 0.05em;
+}
+
+/* Ticker: glass feed strip */
+body.brand-merryquest .daily-band {
+  background: rgba(255, 255, 255, 0.03); border: 1px solid var(--mq-line);
+  border-radius: 12px; box-shadow: none;
+}
+body.brand-merryquest .daily-band-head,
+body.brand-merryquest .daily-band-title,
+body.brand-merryquest .daily-band-links,
+body.brand-merryquest .daily-mini {
+  background: transparent; color: #c8d2c9; text-shadow: none;
+}
+body.brand-merryquest .daily-band a { color: #ffc82c; }
+
+/* ---------- Hero: tight, bright, gradient accent ---------- */
+body.brand-merryquest .hero-intro {
+  background: transparent; border: none; box-shadow: none;
+  padding: 52px 8px 8px;
+}
+body.brand-merryquest .hero-intro h1.hero-title {
+  font-family: var(--mq-sans);
+  font-weight: 650;
+  font-size: clamp(40px, 5.8vw, 68px);
+  line-height: 1.06; letter-spacing: -0.025em;
+  color: #ffffff; text-shadow: none; max-width: 12em;
+}
+body.brand-merryquest .hero-title-alt {
+  background: var(--mq-grad); -webkit-background-clip: text; background-clip: text;
+  color: transparent;
+}
+body.brand-merryquest .hero-intro p { color: var(--muted); text-shadow: none; }
+body.brand-merryquest .fd-prop { font-size: 15px; color: #c8d2c9; margin-top: 16px; }
+
+/* Front-door rail: glass cards */
+body.brand-merryquest .fd-rail-head {
+  font-size: 11.5px; font-weight: 700; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--muted);
+}
+body.brand-merryquest .fd-card {
+  background: rgba(255, 255, 255, 0.03); border: 1px solid var(--mq-line);
+  border-radius: 12px; box-shadow: none; overflow: hidden;
+}
+body.brand-merryquest .fd-card-title { font-weight: 600; font-size: 15.5px; color: #ffffff; }
+body.brand-merryquest .fd-card-meta { font-size: 12.5px; color: var(--muted); }
+body.brand-merryquest .fd-badge {
+  background: rgba(9, 13, 11, 0.85); color: #ffc82c;
+  border: 1px solid rgba(255, 200, 44, 0.5); border-radius: 999px;
+  font-size: 10px; font-weight: 700; letter-spacing: 0.1em;
+  text-transform: uppercase; box-shadow: none; text-shadow: none;
+}
+
+/* Find block: glass panel, gradient search */
+body.brand-merryquest .hm-find {
+  background: rgba(255, 255, 255, 0.03); border: 1px solid var(--mq-line);
+  border-radius: 14px; box-shadow: none;
+}
+body.brand-merryquest .hm-find-text { color: #c8d2c9; }
+body.brand-merryquest .hm-find-form input {
+  background: rgba(255, 255, 255, 0.05); color: #ffffff;
+  border: 1px solid var(--mq-line); border-radius: 10px;
+  font-family: var(--mq-sans); font-size: 14px;
+}
+body.brand-merryquest .hm-find-form input::placeholder { color: #77857a; }
+body.brand-merryquest .btn {
+  background: var(--mq-grad); color: #1a1206; border: none; border-radius: 10px;
+  font-weight: 700; font-size: 14px; box-shadow: 0 4px 18px rgba(255, 154, 61, 0.30);
+  text-shadow: none;
+}
+body.brand-merryquest .hm-find-btn {
+  background: rgba(255, 255, 255, 0.05); color: #edecea;
+  border: 1px solid var(--mq-line); border-radius: 10px;
+  font-weight: 600; font-size: 13.5px; box-shadow: none; text-shadow: none;
+}
+
+/* ---------- Sections + cards ---------- */
+body.brand-merryquest h2 {
+  font-family: var(--mq-sans); font-weight: 650;
+  font-size: clamp(24px, 3vw, 34px); letter-spacing: -0.02em;
+  color: #ffffff; text-shadow: none; text-transform: none;
+}
+body.brand-merryquest .card,
+body.brand-merryquest .tonight-card,
+body.brand-merryquest .bk-home-card,
+body.brand-merryquest .sponsor-card,
+body.brand-merryquest .hm-prompt,
+body.brand-merryquest .engage-next,
+body.brand-merryquest .hon-card {
+  background: rgba(255, 255, 255, 0.03); border: 1px solid var(--mq-line);
+  border-radius: 12px; box-shadow: none;
+}
+body.brand-merryquest .card-body h3,
+body.brand-merryquest .bk-home-title { font-weight: 600; color: #ffffff; }
+body.brand-merryquest .filter-chip {
+  background: rgba(255, 255, 255, 0.04); border: 1px solid var(--mq-line);
+  color: #c8d2c9; border-radius: 999px; box-shadow: none; font-weight: 600;
+}
+body.brand-merryquest .filter-chip.active {
+  background: rgba(255, 200, 44, 0.15); color: #ffc82c; border-color: rgba(255, 200, 44, 0.5);
+}
+body.brand-merryquest .cat-tabs a {
+  background: transparent; border: none; box-shadow: none;
+  color: var(--muted); border-radius: 999px; font-weight: 600;
+}
+body.brand-merryquest .cat-tabs a.active {
+  background: rgba(255, 200, 44, 0.15); color: #ffc82c;
+  box-shadow: none; font-weight: 700;
+}
+
+/* What's-new rail: glass list */
+body.brand-merryquest .wn-rail {
+  background: rgba(255, 255, 255, 0.03); border: 1px solid var(--mq-line);
+  border-radius: 12px; box-shadow: none;
+}
+body.brand-merryquest .wn-rail-head {
+  background: rgba(255, 255, 255, 0.02); border-bottom: 1px solid var(--mq-line);
+}
+body.brand-merryquest .wn-rail-badge { display: none; }
+body.brand-merryquest .wn-rail-title { font-family: var(--mq-sans); font-weight: 650; color: #ffffff; }
+body.brand-merryquest .wn-rail-accent {
+  background: var(--mq-grad); -webkit-background-clip: text; background-clip: text;
+  color: transparent; text-shadow: none;
+}
+body.brand-merryquest .wn-rail-sub { color: var(--muted); }
+body.brand-merryquest .wn-rail-group {
+  background: rgba(255, 255, 255, 0.03); color: #ffc82c;
+  font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;
+}
+body.brand-merryquest .wn-rail a { color: #edecea; }
+body.brand-merryquest .wn-rail-scroll { scrollbar-color: rgba(255, 200, 44, 0.5) transparent; }
+
+/* Shop + tour: glass panels, gradient title on the shop */
+body.brand-merryquest .hm-shop-banner {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 200, 44, 0.28);
+  box-shadow: none; border-radius: 14px;
+}
+body.brand-merryquest .hm-shop-banner-title {
+  font-weight: 700; letter-spacing: -0.01em;
+  background: var(--mq-grad); -webkit-background-clip: text; background-clip: text;
+  color: transparent;
+}
+body.brand-merryquest .hm-shop-banner-copy p,
+body.brand-merryquest .hm-shop-banner-sub { color: #c8d2c9; }
+body.brand-merryquest .hm-shop-banner-btn {
+  background: var(--mq-grad); color: #1a1206; border: none; border-radius: 10px;
+  font-weight: 700; box-shadow: 0 4px 18px rgba(255, 154, 61, 0.30);
+}
+body.brand-merryquest .hm-shop-tile {
+  background: rgba(255, 255, 255, 0.04); border: 1px solid var(--mq-line);
+  border-radius: 10px; box-shadow: none;
+}
+body.brand-merryquest .hm-shop-tile-name { color: #ffffff; font-weight: 600; }
+body.brand-merryquest .hm-shop-tile-price { color: #ffc82c; font-weight: 700; }
+body.brand-merryquest .hm-shop-tile-watch { color: #c8d2c9; }
+body.brand-merryquest .auto-tour-home {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 200, 44, 0.28);
+  box-shadow: none; border-radius: 14px;
+}
+body.brand-merryquest .auto-tour-home h2 { color: #ffffff; }
+body.brand-merryquest .auto-tour-sub { color: #c8d2c9; }
+body.brand-merryquest .auto-tour-btn {
+  background: rgba(255, 200, 44, 0.12);
+  border: 1px solid rgba(255, 200, 44, 0.5); color: #ffffff; border-radius: 10px;
+}
+body.brand-merryquest .auto-tour-btn-sub { color: #9ba79d; }
+body.brand-merryquest .hero-intro .auto-tour-home p { color: #c8d2c9; }
+body.brand-merryquest .hero-intro .auto-tour-home .auto-tour-btn-title { color: #ffffff; }
+
+/* Radio chip: glass with a gold status dot feel */
+body.brand-merryquest .hmr-chip {
+  background: rgba(16, 22, 18, 0.92); border: 1px solid rgba(255, 200, 44, 0.4);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
+}
+body.brand-merryquest .hmr-name { color: #ffffff; font-weight: 600; }
+
+/* ---------- Santa's Sack: a sleek collection dashboard ---------- */
+body.brand-merryquest .sack-wrap { max-width: 960px; margin: 0 auto; padding: 44px 16px 64px; }
+body.brand-merryquest .sack-title {
+  font-family: var(--mq-sans); font-weight: 700; letter-spacing: -0.02em;
+  color: #ffffff; font-size: clamp(32px, 4.6vw, 46px); margin: 0 0 6px;
+}
+body.brand-merryquest .sack-sub { color: var(--muted); margin: 0 0 28px; font-size: 14px; }
+body.brand-merryquest .sack-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; }
+body.brand-merryquest .sack-card {
+  background: rgba(255, 255, 255, 0.03); border: 1px solid var(--mq-line);
+  border-radius: 12px; padding: 18px 10px 14px; text-align: center;
+  box-shadow: none;
+}
+body.brand-merryquest .sack-card-star {
+  font-size: 1.5rem; line-height: 1; color: #ffc82c;
+  text-shadow: 0 0 12px rgba(255, 200, 44, 0.65);
+}
+body.brand-merryquest .sack-card-name { font-weight: 600; font-size: 15.5px; color: #ffffff; margin-top: 8px; }
+body.brand-merryquest .sack-card-tier {
+  text-transform: uppercase; letter-spacing: 0.12em;
+  color: var(--muted); font-size: 0.66rem; font-weight: 700;
+}
+body.brand-merryquest .sack-card-count {
+  display: inline-block; margin-top: 7px;
+  background: rgba(255, 200, 44, 0.15); color: #ffc82c;
+  border: 1px solid rgba(255, 200, 44, 0.45);
+  border-radius: 999px; padding: 1px 10px; font-weight: 700; font-size: 0.82rem;
+}
+body.brand-merryquest .sack-card.sack-tier-legendary {
+  border-color: rgba(255, 200, 44, 0.65);
+  box-shadow: 0 0 22px rgba(255, 170, 50, 0.25);
+}
+body.brand-merryquest .sack-card.sack-tier-epic { border-color: rgba(255, 107, 94, 0.55); }
+body.brand-merryquest .sack-card.sack-tier-rare { border-color: rgba(255, 200, 44, 0.35); }
+body.brand-merryquest .sack-empty {
+  background: rgba(255, 255, 255, 0.03); border: 1px dashed rgba(255, 200, 44, 0.4);
+  border-radius: 14px; padding: 34px 20px; text-align: center;
+}
+body.brand-merryquest .sack-empty-big { font-size: 1.4rem; font-weight: 650; color: #ffffff; margin: 0 0 8px; }
+body.brand-merryquest .sack-empty p { color: var(--muted); }
+body.brand-merryquest .sack-empty-btn {
+  display: inline-block; margin-top: 12px; background: var(--mq-grad);
+  color: #1a1206; border: none; font-weight: 700;
+  text-decoration: none; border-radius: 10px; padding: 11px 24px; font-size: 14.5px;
+}
+body.brand-merryquest .sack-cast-title { font-weight: 650; color: #ffffff; margin: 40px 0 4px; }
+body.brand-merryquest .sack-cast-note { color: var(--muted); margin: 0 0 14px; font-size: 14px; }
+body.brand-merryquest .sack-cast { display: flex; flex-wrap: wrap; gap: 8px; }
+body.brand-merryquest .sack-cast-chip {
+  border: 1px solid var(--mq-line); color: #77857a;
+  border-radius: 999px; padding: 4px 13px; font-weight: 600; font-size: 0.88rem;
+  background: rgba(255, 255, 255, 0.02);
+}
+body.brand-merryquest .sack-cast-chip.got {
+  border-color: rgba(255, 200, 44, 0.55); color: #ffffff;
+  background: rgba(255, 200, 44, 0.12);
+}
+
+/* =====================================================================
+   MQX — the new MerryQuest layout (Dan, Nov 18, 2026): Railway's
+   skeleton, a GTA-launch-campaign hero, Pokémon GO's elements,
+   Airbnb's card discipline, futuristic gaming execution. This layer
+   styles templates/index_merryquest.html + the slim MQ header in
+   base.html. It does not touch HauntMap's classes.
+   ===================================================================== */
+body.brand-merryquest .mini-bar,
+body.brand-merryquest .mini-links { display: none; }
+body.brand-merryquest {
+  --mqx-grad: linear-gradient(92deg, #ffc82c, #eb7a2c 55%, #d32f2f);
+  --mqx-glass: rgba(255, 255, 255, 0.04);
+  --mqx-line: rgba(255, 255, 255, 0.10);
+  --mqx-display: "Anton", "Inter", system-ui, sans-serif;
+}
+
+/* ---------- Slim header (Railway nav) ---------- */
+.mqx-header {
+  position: sticky; top: 0; z-index: 60;
+  background: rgba(6, 10, 8, 0.82);
+  backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--mqx-line);
+}
+.mqx-header-in {
+  max-width: 1180px; margin: 0 auto; padding: 12px 20px;
+  display: flex; align-items: center; gap: 28px;
+}
+.mqx-brand { display: flex; align-items: center; gap: 9px; text-decoration: none; }
+.mqx-brand .brand-pip { height: 34px; width: 34px; }
+.mqx-wordmark {
+  font-family: var(--mq-sans, "Inter", system-ui, sans-serif);
+  font-weight: 800; font-size: 21px; letter-spacing: -0.02em; color: #f2f5f1;
+}
+.mqx-wordmark b { color: #ffc82c; font-weight: 800; }
+.mqx-nav { display: flex; gap: 22px; margin-left: 8px; }
+.mqx-nav a {
+  color: #a9b8ac; text-decoration: none; font-size: 14px; font-weight: 600;
+}
+.mqx-nav a:hover { color: #ffffff; }
+.mqx-actions { margin-left: auto; display: flex; align-items: center; gap: 14px; }
+.mqx-login { color: #dfe7de; text-decoration: none; font-size: 14px; font-weight: 600; }
+.mqx-join {
+  background: var(--mqx-grad); color: #131313; text-decoration: none;
+  font-size: 14px; font-weight: 800; padding: 9px 18px; border-radius: 999px;
+  box-shadow: 0 4px 22px rgba(235, 122, 44, 0.35);
+}
+@media (max-width: 760px) {
+  .mqx-header-in { gap: 14px; padding: 10px 14px; flex-wrap: wrap; }
+  .mqx-nav { order: 3; width: 100%; gap: 16px; overflow-x: auto; padding-bottom: 2px; }
+  .mqx-nav a { white-space: nowrap; font-size: 13.5px; }
+  .mqx-wordmark { font-size: 19px; }
+}
+
+/* ---------- Page frame ---------- */
+.mqx-wrap { max-width: 1180px; margin: 0 auto; padding: 0 20px 72px; }
+@media (max-width: 760px) { .mqx-wrap { padding: 0 14px 56px; } }
+
+/* ---------- Hero: full-bleed campaign shot (GTA) ---------- */
+.mqx-hero {
+  position: relative; margin: 18px -20px 0; padding: 76px 24px 40px;
+  border-radius: 24px; overflow: hidden; text-align: center;
+  border: 1px solid var(--mqx-line);
+  background: radial-gradient(120% 130% at 50% 0%, #14301f 0%, #08130c 58%, #050807 100%);
+}
+@media (max-width: 760px) { .mqx-hero { margin: 12px -14px 0; padding: 52px 16px 30px; border-radius: 18px; } }
+.mqx-hero-bg {
+  position: absolute; inset: 0; background-size: cover; background-position: center;
+  opacity: 0.5;
+}
+.mqx-hero-bg::after {
+  content: ""; position: absolute; inset: 0;
+  background:
+    linear-gradient(180deg, rgba(5, 8, 7, 0.55) 0%, rgba(5, 8, 7, 0.25) 40%, rgba(5, 8, 7, 0.92) 100%),
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.025) 0 1px, transparent 1px 3px);
+}
+.mqx-hero-in { position: relative; z-index: 1; max-width: 820px; margin: 0 auto; }
+.mqx-chip {
+  display: inline-block; margin: 0 0 22px; padding: 7px 16px;
+  background: rgba(10, 18, 12, 0.66); border: 1px solid rgba(255, 200, 44, 0.45);
+  border-radius: 999px; color: #ffd968; font-size: 12.5px; font-weight: 700;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+}
+.mqx-chip span { color: #ffffff; font-variant-numeric: tabular-nums; }
+.mqx-h1 {
+  font-family: var(--mqx-display); font-weight: 400;
+  font-size: clamp(44px, 7.4vw, 88px); line-height: 0.98;
+  letter-spacing: 0.005em; text-transform: uppercase;
+  color: #ffffff; margin: 0 0 18px; text-shadow: 0 6px 34px rgba(0, 0, 0, 0.55);
+}
+.mqx-grad {
+  background: var(--mqx-grad); -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent; color: transparent;
+}
+.mqx-sub {
+  color: #cfdccf; font-size: 17px; line-height: 1.5;
+  max-width: 56ch; margin: 0 auto 26px;
+}
+.mqx-search {
+  display: flex; gap: 8px; max-width: 560px; margin: 0 auto;
+  background: rgba(8, 13, 10, 0.72); border: 1px solid var(--mqx-line);
+  border-radius: 999px; padding: 6px;
+  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+}
+.mqx-search input {
+  flex: 1; min-width: 0; background: transparent; border: none; outline: none;
+  color: #ffffff; font-size: 16px; padding: 10px 16px;
+  font-family: inherit;
+}
+.mqx-search input::placeholder { color: #8fa294; }
+.mqx-search button {
+  background: var(--mqx-grad); border: none; cursor: pointer;
+  color: #131313; font-weight: 800; font-size: 15px;
+  border-radius: 999px; padding: 11px 26px;
+  box-shadow: 0 4px 22px rgba(235, 122, 44, 0.4);
+}
+.mqx-hero-ctas {
+  display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;
+  align-items: center; margin-top: 18px;
+}
+.mqx-ghost-btn {
+  display: inline-block; color: #eef3ee; text-decoration: none;
+  border: 1px solid rgba(255, 255, 255, 0.28); border-radius: 999px;
+  padding: 10px 20px; font-size: 14px; font-weight: 600;
+  background: rgba(8, 13, 10, 0.4);
+}
+.mqx-ghost-btn:hover { border-color: rgba(255, 200, 44, 0.7); color: #ffffff; }
+.mqx-app-badges { display: inline-flex; gap: 8px; }
+.mqx-app-badges span {
+  border: 1px dashed rgba(255, 255, 255, 0.3); color: #b9c8ba;
+  border-radius: 999px; padding: 9px 14px; font-size: 12.5px; font-weight: 600;
+  letter-spacing: 0.04em;
+}
+.mqx-quest-card {
+  display: block; max-width: 560px; margin: 30px auto 0; text-align: left;
+  background: rgba(9, 15, 11, 0.78); border: 1px solid rgba(255, 200, 44, 0.4);
+  border-radius: 16px; padding: 15px 18px; text-decoration: none;
+  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.45);
+}
+.mqx-quest-kicker {
+  display: block; color: #ffc82c; font-size: 11.5px; font-weight: 800;
+  letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 4px;
+}
+.mqx-quest-title { display: block; color: #ffffff; font-size: 18px; font-weight: 700; }
+.mqx-quest-meta { display: block; color: #a9b8ac; font-size: 13.5px; margin-top: 3px; }
+
+/* ---------- Stats ---------- */
+.mqx-stats {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;
+  max-width: 900px; margin: 34px auto 0; text-align: center;
+}
+.mqx-stats div { border-left: 1px solid var(--mqx-line); padding: 4px 6px; }
+.mqx-stats div:first-child { border-left: none; }
+.mqx-stats b {
+  display: block; font-family: var(--mqx-display); font-weight: 400;
+  font-size: 30px; color: #ffffff; letter-spacing: 0.01em;
+}
+.mqx-stats span {
+  display: block; color: #8fa294; font-size: 11.5px; font-weight: 700;
+  letter-spacing: 0.12em; text-transform: uppercase; margin-top: 4px;
+}
+@media (max-width: 760px) { .mqx-stats { grid-template-columns: repeat(2, 1fr); } .mqx-stats div:nth-child(3) { border-left: none; } }
+
+/* ---------- GO-style trio ---------- */
+.mqx-trio {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 44px;
+}
+@media (max-width: 760px) { .mqx-trio { grid-template-columns: 1fr; } }
+.mqx-trio-card {
+  background: var(--mqx-glass); border: 1px solid var(--mqx-line);
+  border-radius: 18px; padding: 22px 20px;
+}
+.mqx-trio-icon {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 46px; height: 46px; border-radius: 50%; font-size: 21px;
+  background: rgba(255, 200, 44, 0.12);
+  border: 1px solid rgba(255, 200, 44, 0.4);
+  box-shadow: 0 0 22px rgba(255, 200, 44, 0.22);
+}
+.mqx-trio-card h3 { color: #ffffff; font-size: 18px; margin: 13px 0 6px; font-weight: 700; }
+.mqx-trio-card p { color: #a9b8ac; font-size: 14.5px; line-height: 1.5; margin: 0; }
+
+/* ---------- Sections + Airbnb grid ---------- */
+.mqx-section { margin-top: 56px; }
+.mqx-eyebrow {
+  color: #eb7a2c; font-size: 12px; font-weight: 800;
+  letter-spacing: 0.16em; text-transform: uppercase; margin: 0 0 8px;
+}
+.mqx-h2 {
+  font-family: var(--mq-sans, "Inter", system-ui, sans-serif);
+  font-size: clamp(25px, 3.4vw, 34px); font-weight: 700; letter-spacing: -0.02em;
+  color: #ffffff; margin: 0 0 20px; text-transform: none; text-shadow: none;
+}
+.mqx-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px;
+}
+@media (max-width: 1000px) { .mqx-grid { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 760px) { .mqx-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; } }
+.mqx-card {
+  display: block; text-decoration: none; background: var(--mqx-glass);
+  border: 1px solid var(--mqx-line); border-radius: 16px; overflow: hidden;
+  transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+}
+.mqx-card:hover {
+  transform: translateY(-3px); border-color: rgba(255, 200, 44, 0.45);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.45);
+}
+.mqx-card-media { display: block; position: relative; aspect-ratio: 4 / 3; background: #0d1710; }
+.mqx-card-media img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.mqx-card-empty {
+  display: flex; align-items: center; justify-content: center;
+  width: 100%; height: 100%; font-size: 34px;
+}
+.mqx-card-badge {
+  position: absolute; left: 10px; bottom: 10px;
+  background: rgba(7, 11, 8, 0.82); color: #ffd968;
+  border: 1px solid rgba(255, 200, 44, 0.4);
+  font-size: 11px; font-weight: 700; letter-spacing: 0.05em;
+  padding: 4px 10px; border-radius: 999px;
+}
+.mqx-card-badge-new { left: auto; right: 10px; color: #ffffff; border-color: rgba(255, 255, 255, 0.35); }
+.mqx-card-body { display: block; padding: 13px 15px 15px; }
+.mqx-card-title {
+  display: block; color: #f2f5f1; font-size: 15.5px; font-weight: 600;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.mqx-card-meta { display: block; color: #8fa294; font-size: 13px; margin-top: 3px; }
+.mqx-more { margin-top: 22px; text-align: center; }
+
+/* ---------- Quest split + cast (Pokédex panel) ---------- */
+.mqx-split {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 18px;
+  margin-top: 56px; align-items: stretch;
+}
+@media (max-width: 760px) { .mqx-split { grid-template-columns: 1fr; } }
+.mqx-split-copy {
+  background: var(--mqx-glass); border: 1px solid var(--mqx-line);
+  border-radius: 20px; padding: 30px 28px;
+}
+.mqx-p { color: #b9c8ba; font-size: 15.5px; line-height: 1.55; margin: 0 0 18px; }
+.mqx-steps { list-style: none; margin: 0 0 24px; padding: 0; display: grid; gap: 11px; }
+.mqx-steps li { color: #e6ede6; font-size: 15px; font-weight: 600; display: flex; align-items: center; gap: 12px; }
+.mqx-steps b {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 27px; height: 27px; border-radius: 50%; flex-shrink: 0;
+  background: var(--mqx-grad); color: #131313; font-size: 14px; font-weight: 800;
+}
+.mqx-cta {
+  display: inline-block; background: var(--mqx-grad); color: #131313;
+  text-decoration: none; font-weight: 800; font-size: 15px;
+  padding: 13px 26px; border-radius: 999px;
+  box-shadow: 0 6px 26px rgba(235, 122, 44, 0.38);
+}
+.mqx-cast-panel {
+  border-radius: 20px; padding: 30px 28px;
+  background: linear-gradient(160deg, rgba(255, 200, 44, 0.09), rgba(211, 47, 47, 0.07) 60%, rgba(255, 255, 255, 0.02));
+  border: 1px solid rgba(255, 200, 44, 0.28);
+}
+.mqx-cast-head {
+  color: #ffffff; font-weight: 800; font-size: 15px;
+  letter-spacing: 0.1em; text-transform: uppercase; margin: 0 0 16px;
+}
+.mqx-cast { display: flex; flex-wrap: wrap; gap: 8px; }
+.mqx-cast span {
+  border: 1px solid var(--mqx-line); background: rgba(7, 11, 8, 0.5);
+  color: #c4d2c4; border-radius: 999px; padding: 6px 13px;
+  font-size: 13.5px; font-weight: 600;
+}
+.mqx-cast span.mqx-tier-legendary { border-color: rgba(255, 200, 44, 0.65); color: #ffd968; box-shadow: 0 0 14px rgba(255, 200, 44, 0.18); }
+.mqx-cast span.mqx-tier-epic { border-color: rgba(235, 122, 44, 0.55); color: #ffb37a; }
+.mqx-cast span.mqx-cast-more { border-style: dashed; color: #8fa294; }
+
+/* ---------- Tour band ---------- */
+.mqx-tour {
+  margin-top: 56px; text-align: center; padding: 42px 24px;
+  border-radius: 22px; border: 1px solid rgba(255, 200, 44, 0.3);
+  background:
+    radial-gradient(90% 160% at 50% 0%, rgba(255, 200, 44, 0.13), transparent 60%),
+    linear-gradient(180deg, #0c1a10, #060d08);
+}
+.mqx-tour .mqx-h2 { margin-bottom: 10px; }
+.mqx-tour .mqx-p { max-width: 52ch; margin: 0 auto 22px; }
+
+/* Search input: beat the base form-input styling outright */
+body.brand-merryquest .mqx-search input[type="text"] {
+  border: none; box-shadow: none; background: transparent; border-radius: 999px;
+}
+
+/* ==== MQX Phase 1 rollout (Nov 18, 2026): quest panel, hunt, town, footer */
+.quest-panel { position:relative; margin:22px 0; padding:22px 22px 18px; border-radius:18px;
+  background:linear-gradient(180deg, rgba(255,255,255,.055), rgba(255,255,255,.02));
+  border:1px solid var(--line); overflow:hidden; }
+.quest-panel::before { content:""; position:absolute; inset:0; pointer-events:none;
+  background:radial-gradient(70% 90% at 15% 0%, var(--qglow), transparent 65%); opacity:.28; }
+.quest-tier-legendary { --qglow:#FFC82C; --qtc:#FFC82C; }
+.quest-tier-epic { --qglow:#EB7A2C; --qtc:#EB7A2C; }
+.quest-tier-rare { --qglow:#77DFB8; --qtc:#77DFB8; }
+.quest-tier-common { --qglow:#9FB4A4; --qtc:#C4D2C4; }
+.quest-tier-original { --qglow:#FFC82C; --qtc:#FFC82C; }
+.quest-panel-eyebrow { position:relative; font-size:12px; font-weight:800; letter-spacing:.26em;
+  text-transform:uppercase; color:var(--qtc); margin:0 0 10px; }
+.quest-panel-name { position:relative; font-family:'Anton',sans-serif; font-size:30px; line-height:1.08;
+  text-transform:uppercase; margin:0 0 8px; }
+.quest-panel-name b { color:var(--qtc); }
+.quest-mystery { display:inline-grid; place-items:center; width:44px; height:44px; border-radius:12px;
+  border:2px solid var(--qtc); color:var(--qtc); font-size:28px; vertical-align:-8px; margin-right:8px;
+  box-shadow:0 0 22px var(--qglow); }
+.quest-panel-sub { position:relative; color:var(--mut); margin:0 0 14px; }
+.quest-checkin-btn { position:relative; display:inline-block; border:0; cursor:pointer;
+  font:inherit; font-weight:800; font-size:16px; color:#122B1E; text-decoration:none;
+  background:linear-gradient(92deg,#FFC82C,#EB7A2C); padding:13px 26px; border-radius:999px;
+  box-shadow:0 10px 28px rgba(235,122,44,.35); }
+.quest-checkin-btn[disabled] { opacity:.65; }
+.quest-panel-msg { position:relative; color:#FFD9A8; margin:10px 0 0; min-height:1.2em; }
+.quest-panel-sack { position:relative; display:inline-block; margin-top:12px; color:var(--gold);
+  font-weight:700; text-decoration:none; }
+.hunt-box { margin:20px 0 26px; padding:20px 22px; border-radius:18px;
+  background:linear-gradient(180deg, rgba(255,255,255,.055), rgba(255,255,255,.02));
+  border:1px solid var(--line); }
+.hunt-title { font-family:'Anton',sans-serif; text-transform:uppercase; letter-spacing:.02em;
+  font-size:24px; margin:0 0 8px; }
+.hunt-sub { color:var(--mut); margin:0 0 14px; }
+.hunt-sub b { color:var(--ink); }
+.hunt-town { width:100%; max-width:430px; padding:12px 16px; border-radius:12px; font:inherit;
+  background:rgba(255,255,255,.06); border:1px solid var(--line); color:var(--ink); }
+.hint-card { margin-top:16px; padding:16px 18px; border-radius:14px;
+  background:rgba(255,200,44,.07); border:1px solid rgba(255,200,44,.35); }
+.hint-card-title { font-family:'Anton',sans-serif; text-transform:uppercase; font-size:19px; margin:0 0 8px; }
+.hint-line { margin:0 0 6px; color:var(--ink); }
+.hint-line b { color:var(--gold); }
+.hint-unlock { margin:8px 0 0; color:var(--mut); font-size:14px; }
+button.sack-cast-chip { font:inherit; cursor:pointer; background:none; }
+button.sack-cast-chip:hover { border-color:var(--gold); color:var(--gold); }
+.mq-footer-brand { text-align:center; color:var(--mut); letter-spacing:.14em; font-weight:700; }
+main > h1 { font-family:'Anton',sans-serif; text-transform:uppercase; letter-spacing:.01em;
+  font-size:clamp(30px, 5.4vw, 46px); line-height:1.02; }
+
+/* ==== MQX Motion (Nov 18, 2026) — the immersive layer, after
+   immersive-g.com: scroll reveals, parallax drift, living glow.
+   Transform/opacity only, and everything stops for
+   prefers-reduced-motion. */
+[data-reveal] { opacity: 0; transform: translateY(26px) scale(.985);
+  transition: opacity .8s cubic-bezier(.22,.8,.3,1), transform .8s cubic-bezier(.22,.8,.3,1);
+  transition-delay: var(--rd, 0ms); will-change: opacity, transform; }
+[data-reveal].in { opacity: 1; transform: none; }
+.mqx-hero-bg { animation: mqxKenburns 26s ease-in-out infinite alternate; }
+@keyframes mqxKenburns { from { transform: scale(1) translateY(0); } to { transform: scale(1.09) translateY(-1.5%); } }
+.mqx-hero::before, .mqx-hero::after { content: ""; position: absolute; border-radius: 50%;
+  filter: blur(70px); pointer-events: none; z-index: 0; }
+.mqx-hero::before { width: 420px; height: 420px; right: -110px; top: -130px;
+  background: radial-gradient(circle, rgba(255,200,44,.34), transparent 70%);
+  animation: mqxDrift 15s ease-in-out infinite alternate; }
+.mqx-hero::after { width: 380px; height: 380px; left: -120px; bottom: -150px;
+  background: radial-gradient(circle, rgba(211,47,47,.30), transparent 70%);
+  animation: mqxDrift 19s ease-in-out infinite alternate-reverse; }
+@keyframes mqxDrift { from { transform: translate(0,0) scale(1); } to { transform: translate(-36px, 30px) scale(1.13); } }
+.mqx-hero-in { position: relative; z-index: 1; }
+.mqx-grad { background-size: 200% 100%; animation: mqxShimmer 7s linear infinite; }
+@keyframes mqxShimmer { to { background-position: 200% 0; } }
+.mqx-count { animation: mqxPulse 2.6s ease-in-out infinite; }
+@keyframes mqxPulse { 0%,100% { box-shadow: 0 0 0 rgba(255,200,44,0); } 50% { box-shadow: 0 0 22px rgba(255,200,44,.45); } }
+.mqx-marquee { overflow: hidden; border-block: 1px solid var(--line);
+  background: rgba(255,255,255,.02); padding: 13px 0; }
+.mqx-marquee-track { display: flex; width: max-content; white-space: nowrap;
+  animation: mqxMarquee 32s linear infinite; }
+.mqx-marquee-track span { font-family: 'Anton', sans-serif; text-transform: uppercase;
+  letter-spacing: .14em; font-size: 15px; color: var(--mut); padding-right: .6em; }
+.mqx-marquee-track b { color: var(--gold); font-weight: 400; }
+@keyframes mqxMarquee { to { transform: translateX(-50%); } }
+.quest-mystery { animation: mqxBreathe 2.8s ease-in-out infinite; }
+@keyframes mqxBreathe { 0%,100% { box-shadow: 0 0 12px var(--qglow); } 50% { box-shadow: 0 0 36px var(--qglow); } }
+.mqx-card { position: relative; }
+.mqx-card::after { content: ""; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(105deg, transparent 40%, rgba(255,255,255,.14) 50%, transparent 60%);
+  transform: translateX(-130%); transition: transform .9s ease; }
+.mqx-card:hover::after { transform: translateX(130%); }
+.sack-card { animation: mqxPop .55s cubic-bezier(.22,.8,.3,1) both; }
+.sack-card:nth-child(2) { animation-delay: .06s; } .sack-card:nth-child(3) { animation-delay: .12s; }
+.sack-card:nth-child(4) { animation-delay: .18s; } .sack-card:nth-child(5) { animation-delay: .24s; }
+.sack-card:nth-child(6) { animation-delay: .30s; } .sack-card:nth-child(7) { animation-delay: .36s; }
+.sack-card:nth-child(8) { animation-delay: .42s; }
+@keyframes mqxPop { from { opacity: 0; transform: translateY(14px) scale(.96); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+  [data-reveal] { opacity: 1; transform: none; }
+}

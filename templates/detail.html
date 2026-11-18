@@ -236,6 +236,65 @@
   </div>
   {% endif %}
 
+  {% if quest_panel %}
+  <section class="quest-panel quest-tier-{{ quest_panel.tier }}" id="questPanel">
+    <p class="quest-panel-eyebrow">{% if quest_panel.golden %}&#x2728; Golden night &middot; {% endif %}Tonight at this {% if quest_panel.is_stop %}Quest Stop{% else %}display{% endif %}</p>
+    {% if quest_panel.caught %}
+    <p class="quest-panel-name">You caught <b>{{ quest_panel.name }}</b> here tonight &#x2713;</p>
+    <p class="quest-panel-sub">The cast rotates at midnight &mdash; a new friend may be waiting here tomorrow.</p>
+    {% else %}
+    <p class="quest-panel-name"><span class="quest-mystery">?</span> {{ 'An' if quest_panel.tier == 'epic' else 'A' }} <b>{{ quest_panel.tier }}</b> character is hiding here</p>
+    <p class="quest-panel-sub">Stand within 150 feet of this {% if quest_panel.is_stop %}stop{% else %}display{% endif %} and check in to catch them.</p>
+    {% if quest_panel.logged_in %}
+    <button class="quest-checkin-btn" id="questCheckinBtn" type="button">Check in &amp; catch</button>
+    {% else %}
+    <a class="quest-checkin-btn" href="/login?next=/d/{{ entry.id }}">Log in to catch</a>
+    {% endif %}
+    <p class="quest-panel-msg" id="questPanelMsg" role="status"></p>
+    {% endif %}
+    <a class="quest-panel-sack" href="/sack">Santa&rsquo;s Sack &rarr;</a>
+  </section>
+  <script>
+  (function () {
+    var btn = document.getElementById('questCheckinBtn');
+    if (!btn) return;
+    var msg = document.getElementById('questPanelMsg');
+    var panel = document.getElementById('questPanel');
+    btn.addEventListener('click', function () {
+      if (!navigator.geolocation) { msg.textContent = 'Location is not available on this device.'; return; }
+      btn.disabled = true; btn.textContent = 'Finding you\u2026';
+      navigator.geolocation.getCurrentPosition(function (pos) {
+        fetch('/api/quest/checkin' + window.location.search, {
+          method: 'POST', headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({entry_id: {{ entry.id }}, lat: pos.coords.latitude, lng: pos.coords.longitude})
+        }).then(function (r) { return r.json(); }).then(function (d) {
+          if (d.ok && d.character) {
+            panel.innerHTML = '<p class="quest-panel-eyebrow">Caught!</p>' +
+              '<p class="quest-panel-name">\u2605 ' + d.character.name + '</p>' +
+              '<p class="quest-panel-sub">' + (d.duplicate ? 'Another one for the Sack \u2014 now \u00D7 ' + d.sack_count + '.' : 'New in your Sack!') + '</p>' +
+              '<a class="quest-panel-sack" href="/sack">See Santa\u2019s Sack \u2192</a>';
+          } else if (d.error === 'too_far') {
+            btn.disabled = false; btn.textContent = 'Check in & catch';
+            msg.textContent = 'You are ' + d.distance_ft + ' ft away \u2014 step within 150 ft of the display and try again.';
+          } else if (d.error === 'login_required') {
+            msg.innerHTML = 'Your session ended \u2014 <a href="/login?next=/d/{{ entry.id }}">log in</a> and try again.';
+          } else {
+            btn.disabled = false; btn.textContent = 'Check in & catch';
+            msg.textContent = 'Something went sideways \u2014 try again in a moment.';
+          }
+        }).catch(function () {
+          btn.disabled = false; btn.textContent = 'Check in & catch';
+          msg.textContent = 'No connection \u2014 try again in a moment.';
+        });
+      }, function () {
+        btn.disabled = false; btn.textContent = 'Check in & catch';
+        msg.textContent = 'Location is off \u2014 turn it on to check in.';
+      }, {enableHighAccuracy: true, timeout: 12000});
+    });
+  })();
+  </script>
+  {% endif %}
+
   {% if stay22_url %}
   {# Stay22 "Stay near this haunt" (staged Nov 5): sits directly under
      the directions row — the visitor has just seen where this haunt is

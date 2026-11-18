@@ -37,12 +37,12 @@ function hmFullHomepage() {
    per viewport (style.css, strip-fit block). #}
 <div class="vt-tv-strip vt-tv-strip-top">
   <a class="vt-btn" href="/virtual-tour"><span class="vt-ic">&#x25B6;&#xFE0F;</span><span class="vt-label"><span class="vt-l1">Virtual</span> <span class="vt-l2">Tour</span></span></a>
-  <a class="tv-btn" href="/virtual-tour?mode=tv"><span class="vt-ic">&#x1F4FA;</span><span class="vt-label"><span class="vt-l1">HauntMap</span> <span class="vt-l2">TV</span></span></a>
-  <a class="pop-btn" href="/pop-haunt-culture"><span class="vt-ic">&#x1F37F;</span><span class="vt-label"><span class="vt-l1">Pop Haunt</span> <span class="vt-l2">Culture</span></span></a>
-  <a class="makeup-btn" href="/makeup"><span class="vt-ic">&#x1F484;</span><span class="vt-label"><span class="vt-l1">Haunted</span> <span class="vt-l2">Makeup</span></span></a>
-  <a class="music-btn" href="/music"><span class="vt-ic">&#x1F3B5;</span><span class="vt-label"><span class="vt-l1">HauntMap</span> <span class="vt-l2">Music</span></span></a>
-  <a class="movies-btn" href="/movies"><span class="vt-ic">&#x1F3AC;</span><span class="vt-label"><span class="vt-l1">HauntMap</span> <span class="vt-l2">Movies</span></span></a>
-  <a class="art-btn" href="/fan-art"><span class="vt-ic">&#x1F3A8;</span><span class="vt-label"><span class="vt-l1">HauntMap</span> <span class="vt-l2">Art</span></span></a>
+  <a class="tv-btn" href="/virtual-tour?mode=tv"><span class="vt-ic">&#x1F4FA;</span><span class="vt-label"><span class="vt-l1">{% if brand | default('haunt') == 'merryquest' %}MerryQuest{% else %}HauntMap{% endif %}</span> <span class="vt-l2">TV</span></span></a>
+  <a class="pop-btn" href="/pop-haunt-culture"><span class="vt-ic">&#x1F37F;</span><span class="vt-label"><span class="vt-l1">{% if brand | default('haunt') == 'merryquest' %}Pop Christmas{% else %}Pop Haunt{% endif %}</span> <span class="vt-l2">Culture</span></span></a>
+  <a class="makeup-btn" href="/makeup"><span class="vt-ic">&#x1F484;</span><span class="vt-label"><span class="vt-l1">{% if brand | default('haunt') == 'merryquest' %}Holiday{% else %}Haunted{% endif %}</span> <span class="vt-l2">Makeup</span></span></a>
+  <a class="music-btn" href="/music"><span class="vt-ic">&#x1F3B5;</span><span class="vt-label"><span class="vt-l1">{% if brand | default('haunt') == 'merryquest' %}MerryQuest{% else %}HauntMap{% endif %}</span> <span class="vt-l2">Music</span></span></a>
+  <a class="movies-btn" href="/movies"><span class="vt-ic">&#x1F3AC;</span><span class="vt-label"><span class="vt-l1">{% if brand | default('haunt') == 'merryquest' %}MerryQuest{% else %}HauntMap{% endif %}</span> <span class="vt-l2">Movies</span></span></a>
+  <a class="art-btn" href="/fan-art"><span class="vt-ic">&#x1F3A8;</span><span class="vt-label"><span class="vt-l1">{% if brand | default('haunt') == 'merryquest' %}MerryQuest{% else %}HauntMap{% endif %}</span> <span class="vt-l2">Art</span></span></a>
   <a class="markets-btn" href="/markets"><span class="vt-ic">&#x1F6D2;</span><span class="vt-label"><span class="vt-l1">Flea</span> <span class="vt-l2">Markets</span> <span class="vt-l3">&amp; Pop-Ups</span></span></a>
   <a class="top100-btn" href="/leaderboard/top-100"><span class="vt-ic">&#x1F3C6;</span><span class="vt-label"><span class="vt-l1">Top 100</span> <span class="vt-l2">Nationwide</span></span></a>
 </div>
@@ -139,7 +139,7 @@ function hmFullHomepage() {
 </div>
 <div class="hero-split">
 <div class="hero-intro">
-  <h1 class="hero-title">Find the Best Halloween Displays <span class="hero-title-alt">Near You</span></h1>
+  <h1 class="hero-title">{% if brand | default('haunt') == 'merryquest' %}Find the Best Christmas Lights <span class="hero-title-alt">Near You</span>{% else %}Find the Best Halloween Displays <span class="hero-title-alt">Near You</span>{% endif %}</h1>
 
 {# FRONT-DOOR PREVIEW (staged Oct 26, NOT shipped — awaiting Dan's go):
    the homepage's quick-exit problem is a cold TikTok tap-in meeting a
@@ -155,7 +155,7 @@ function hmFullHomepage() {
    exactly like the hero/below-band module pairs). Value first,
    form second; search stays put right under the rail. No new
    permission asks, nothing autoplays. #}
-<p class="fd-prop">&#x1F383; 5,000+ displays, real addresses &mdash; let the haunt begin!</p>
+<p class="fd-prop">{% if brand | default('haunt') == 'merryquest' %}&#x1F384; 5,000+ displays, real addresses &mdash; let the quest begin!{% else %}&#x1F383; 5,000+ displays, real addresses &mdash; let the haunt begin!{% endif %}</p>
 {% if tonight or trending %}
 <div class="fd-rail" aria-label="Start here: tonight's pick and trending haunts">
   <p class="fd-rail-head">&#x1F525; Trending now</p>
@@ -516,12 +516,12 @@ function hmFullHomepage() {
    stacked .hero-split layouts (style.css, strip-fit block). #}
 <div class="vt-tv-strip vt-tv-strip-phone">
   <a class="vt-btn" href="/virtual-tour"><span class="vt-ic">&#x25B6;&#xFE0F;</span><span class="vt-label"><span class="vt-l1">Virtual</span> <span class="vt-l2">Tour</span></span></a>
-  <a class="tv-btn" href="/virtual-tour?mode=tv"><span class="vt-ic">&#x1F4FA;</span><span class="vt-label"><span class="vt-l1">HauntMap</span> <span class="vt-l2">TV</span></span></a>
-  <a class="pop-btn" href="/pop-haunt-culture"><span class="vt-ic">&#x1F37F;</span><span class="vt-label"><span class="vt-l1">Pop Haunt</span> <span class="vt-l2">Culture</span></span></a>
-  <a class="makeup-btn" href="/makeup"><span class="vt-ic">&#x1F484;</span><span class="vt-label"><span class="vt-l1">Haunted</span> <span class="vt-l2">Makeup</span></span></a>
-  <a class="music-btn" href="/music"><span class="vt-ic">&#x1F3B5;</span><span class="vt-label"><span class="vt-l1">HauntMap</span> <span class="vt-l2">Music</span></span></a>
-  <a class="movies-btn" href="/movies"><span class="vt-ic">&#x1F3AC;</span><span class="vt-label"><span class="vt-l1">HauntMap</span> <span class="vt-l2">Movies</span></span></a>
-  <a class="art-btn" href="/fan-art"><span class="vt-ic">&#x1F3A8;</span><span class="vt-label"><span class="vt-l1">HauntMap</span> <span class="vt-l2">Art</span></span></a>
+  <a class="tv-btn" href="/virtual-tour?mode=tv"><span class="vt-ic">&#x1F4FA;</span><span class="vt-label"><span class="vt-l1">{% if brand | default('haunt') == 'merryquest' %}MerryQuest{% else %}HauntMap{% endif %}</span> <span class="vt-l2">TV</span></span></a>
+  <a class="pop-btn" href="/pop-haunt-culture"><span class="vt-ic">&#x1F37F;</span><span class="vt-label"><span class="vt-l1">{% if brand | default('haunt') == 'merryquest' %}Pop Christmas{% else %}Pop Haunt{% endif %}</span> <span class="vt-l2">Culture</span></span></a>
+  <a class="makeup-btn" href="/makeup"><span class="vt-ic">&#x1F484;</span><span class="vt-label"><span class="vt-l1">{% if brand | default('haunt') == 'merryquest' %}Holiday{% else %}Haunted{% endif %}</span> <span class="vt-l2">Makeup</span></span></a>
+  <a class="music-btn" href="/music"><span class="vt-ic">&#x1F3B5;</span><span class="vt-label"><span class="vt-l1">{% if brand | default('haunt') == 'merryquest' %}MerryQuest{% else %}HauntMap{% endif %}</span> <span class="vt-l2">Music</span></span></a>
+  <a class="movies-btn" href="/movies"><span class="vt-ic">&#x1F3AC;</span><span class="vt-label"><span class="vt-l1">{% if brand | default('haunt') == 'merryquest' %}MerryQuest{% else %}HauntMap{% endif %}</span> <span class="vt-l2">Movies</span></span></a>
+  <a class="art-btn" href="/fan-art"><span class="vt-ic">&#x1F3A8;</span><span class="vt-label"><span class="vt-l1">{% if brand | default('haunt') == 'merryquest' %}MerryQuest{% else %}HauntMap{% endif %}</span> <span class="vt-l2">Art</span></span></a>
   <a class="markets-btn" href="/markets"><span class="vt-ic">&#x1F6D2;</span><span class="vt-label"><span class="vt-l1">Flea</span> <span class="vt-l2">Markets</span> <span class="vt-l3">&amp; Pop-Ups</span></span></a>
   <a class="top100-btn" href="/leaderboard/top-100"><span class="vt-ic">&#x1F3C6;</span><span class="vt-label"><span class="vt-l1">Top 100</span> <span class="vt-l2">Nationwide</span></span></a>
 </div>
@@ -624,14 +624,14 @@ function hmFullHomepage() {
    Tiles link to /shop, never straight to Amazon — the store page
    carries the Associates disclosure. Prices mirror PICKS data in
    app/main.py; gear tiles show no price, matching /shop. #}
-<section class="hm-shop-banner" aria-label="HauntMart — the HauntMap shop">
+<section class="hm-shop-banner" aria-label="{% if brand | default('haunt') == 'merryquest'%}MerryMart — the MerryQuest shop{% else %}HauntMart — the HauntMap shop{% endif %}">
   <div class="hm-shop-banner-top">
     <img class="hm-shop-banner-badge" src="/static/img/nav2_shop.webp" alt="" aria-hidden="true">
     <div class="hm-shop-banner-copy">
-      <h2 class="hm-shop-banner-title">HauntMart is OPEN</h2>
-      <p class="hm-shop-banner-sub">Horror comics, costumes, props &amp; gear for your haunt &mdash; hand-picked by HauntMap.</p>
+      <h2 class="hm-shop-banner-title">{% if brand | default('haunt') == 'merryquest' %}MerryMart{% else %}HauntMart{% endif %} is OPEN</h2>
+      <p class="hm-shop-banner-sub">Horror comics, costumes, props &amp; gear for your haunt &mdash; hand-picked by {% if brand | default('haunt') == 'merryquest' %}MerryQuest{% else %}HauntMap{% endif %}.</p>
     </div>
-    <a class="hm-shop-banner-btn" href="/shop">Shop HauntMart</a>
+    <a class="hm-shop-banner-btn" href="/shop">Shop {% if brand | default('haunt') == 'merryquest' %}MerryMart{% else %}HauntMart{% endif %}</a>
   </div>
   <div class="hm-shop-featured">
     <button type="button" class="hm-shop-tile hm-shop-tile--video" data-ttv="7706664927158734111" aria-label="Watch the Swing Jumping Garden Lights in action">
@@ -985,7 +985,7 @@ document.addEventListener('click', function (ev) {
 
 <div class="cat-tabs-main">
   <a href="/?cat=halloween{% if sort != 'new' %}&sort={{ sort }}{% endif %}{% if town %}&town={{ town }}{% endif %}{% if video %}&video=1{% endif %}" class="cat-btn-main {% if cat == 'halloween' %}active{% endif %}">&#x1F383; Haunt Map</a>
-  <a href="/?cat=christmas{% if sort != 'new' %}&sort={{ sort }}{% endif %}{% if town %}&town={{ town }}{% endif %}{% if video %}&video=1{% endif %}" class="cat-btn-main {% if cat == 'christmas' %}active{% endif %}">&#x1F384; Jolly Map</a>
+  <a href="/?cat=christmas{% if sort != 'new' %}&sort={{ sort }}{% endif %}{% if town %}&town={{ town }}{% endif %}{% if video %}&video=1{% endif %}" class="cat-btn-main {% if cat == 'christmas' %}active{% endif %}">&#x1F384; MerryQuest</a>
   <a href="/?cat=haunted_houses{% if sort != 'new' %}&sort={{ sort }}{% endif %}{% if town %}&town={{ town }}{% endif %}{% if video %}&video=1{% endif %}" class="cat-btn-main {% if cat == 'haunted_houses' %}active{% endif %}">&#x1F3DA;&#xFE0F; Haunted Houses</a>
   <a href="/?cat=escape_rooms{% if sort != 'new' %}&sort={{ sort }}{% endif %}{% if town %}&town={{ town }}{% endif %}{% if video %}&video=1{% endif %}" class="cat-btn-main {% if cat == 'escape_rooms' %}active{% endif %}">&#x1F510; Escape Rooms</a>
   <a href="/?cat=events{% if sort != 'new' %}&sort={{ sort }}{% endif %}{% if town %}&town={{ town }}{% endif %}{% if video %}&video=1{% endif %}" class="cat-btn-main {% if cat == 'events' %}active{% endif %}">&#x1F3AA; Events</a>
@@ -1153,26 +1153,26 @@ document.addEventListener('click', function (ev) {
     <img class="social-promo-ghost" src="/static/img/hauntmap_ghost.webp" alt="" aria-hidden="true">
     <div class="social-promo-head">
       <p class="social-promo-kicker">The First Halloween Social Network</p>
-      <h2 class="social-promo-title social-promo-wordmark">HauntSocial</h2>
+      <h2 class="social-promo-title social-promo-wordmark">{% if brand | default('haunt') == 'merryquest' %}MerrySocial{% else %}HauntSocial{% endif %}</h2>
     </div>
   </div>
   <p class="social-promo-sub">The social network for Halloween lovers — your own page, your anthem, your Top 8. Free to join.</p>
   <p class="social-promo-line">Build your haunter profile, show off your haunt, and follow the haunters behind the displays you love.</p>
   <p class="social-promo-line">Post your favorite haunts, share your favorite memories, and chat with your friends about your favorite Halloween events, parties, music, and costumes.</p>
-  <p class="social-promo-line">&#x1F195; Keep up with every new haunt, event and feature on the public <a href="/updates">Fresh From the Crypt</a> blog — no account needed. Join <span class="hs-brand">HauntSocial</span> and you can jump into the <a href="/chat">&#x1F4AC; Haunt Chat</a> and talk it all over live.</p>
+  <p class="social-promo-line">&#x1F195; Keep up with every new haunt, event and feature on the public <a href="/updates">Fresh From the Crypt</a> blog — no account needed. Join <span class="hs-brand">{% if brand | default('haunt') == 'merryquest' %}MerrySocial{% else %}HauntSocial{% endif %}</span> and you can jump into the <a href="/chat">&#x1F4AC; Haunt Chat</a> and talk it all over live.</p>
   {% if request.state.member %}
   <div class="social-promo-cta">
     <a class="social-promo-btn" href="/@{{ request.state.member.handle }}">Go to your page</a>
     <span class="social-promo-alt">Signed in as @{{ request.state.member.handle }}</span>
     <a class="social-promo-what" href="/chat">💬 Haunt Chat</a>
-    <a class="social-promo-what" href="/hauntsocial">What is <span class="hs-brand">HauntSocial</span>?</a>
+    <a class="social-promo-what" href="/hauntsocial">What is <span class="hs-brand">{% if brand | default('haunt') == 'merryquest' %}MerrySocial{% else %}HauntSocial{% endif %}</span>?</a>
   </div>
   {% else %}
   <div class="social-promo-cta">
-    <a class="social-promo-btn" href="/signup"><span class="hs-brand promo-join-first">Join</span> <span class="hs-brand">HauntSocial</span></a>
+    <a class="social-promo-btn" href="/signup"><span class="hs-brand promo-join-first">Join</span> <span class="hs-brand">{% if brand | default('haunt') == 'merryquest' %}MerrySocial{% else %}HauntSocial{% endif %}</span></a>
     <a class="social-promo-alt" href="/login">Already a member? Sign in</a>
     <a class="social-promo-what" href="/chat">💬 Haunt Chat</a>
-    <a class="social-promo-what" href="/hauntsocial">What is <span class="hs-brand">HauntSocial</span>?</a>
+    <a class="social-promo-what" href="/hauntsocial">What is <span class="hs-brand">{% if brand | default('haunt') == 'merryquest' %}MerrySocial{% else %}HauntSocial{% endif %}</span>?</a>
   </div>
   {% endif %}
   </div>

@@ -659,7 +659,147 @@ CREATE TABLE IF NOT EXISTS push_settings (
     replies INTEGER NOT NULL DEFAULT 1,
     updated_at TEXT NOT NULL
 );
+-- ------------------------------------------------ MerryQuest game (v1 shell)
+-- Quest layer (spec: merryquest-gamification-spec, cast lock Nov 6,
+-- 2026). Additive only. The whole layer is gated server-side by env
+-- flags in app/main.py (QUEST_ENABLED / QUEST_SPAWNS_ENABLED /
+-- QUEST_SPONSOR_LAYER_ENABLED, all default OFF), so these tables sit
+-- unused until the Dec 1 unlock flips the flags.
+CREATE TABLE IF NOT EXISTS quest_characters (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    slug TEXT NOT NULL UNIQUE,          -- stable key, e.g. 'santa-claus'
+    name TEXT NOT NULL,                 -- display name
+    tier TEXT NOT NULL,                 -- legendary | epic | rare | common | original
+    set_name TEXT,                      -- 'santas_team' | 'dickens' | NULL
+    source TEXT,                        -- public-domain / folklore provenance
+    collectible INTEGER NOT NULL DEFAULT 1, -- 0 = NPC guide (Noelle)
+    spawnable INTEGER NOT NULL DEFAULT 1,   -- 0 = not in the normal spawn pool:
+                                            -- Legendaries are golden-night only;
+                                            -- Krampus + Ded Moroz join mid-season;
+                                            -- Pip is the tutorial capture
+    sort INTEGER NOT NULL DEFAULT 0
+);
+CREATE TABLE IF NOT EXISTS quest_checkins (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    entry_id INTEGER NOT NULL REFERENCES entries(id) ON DELETE CASCADE,
+    character_id INTEGER REFERENCES quest_characters(id),
+    lat REAL NOT NULL,                  -- client-submitted coordinates
+    lng REAL NOT NULL,
+    distance_ft REAL NOT NULL,          -- server-computed distance to the pin
+    created_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_quest_checkins_user
+    ON quest_checkins(user_id, created_at);
+CREATE INDEX IF NOT EXISTS idx_quest_checkins_entry
+    ON quest_checkins(entry_id);
+CREATE TABLE IF NOT EXISTS quest_sack (
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    character_id INTEGER NOT NULL REFERENCES quest_characters(id),
+    count INTEGER NOT NULL DEFAULT 1,   -- duplicates kept: they feed the
+                                        -- ornament upgrade chains later
+    first_at TEXT NOT NULL,
+    last_at TEXT NOT NULL,
+    PRIMARY KEY (user_id, character_id)
+);
 """
+
+# The locked launch cast (spec cast lock, Nov 6, 2026): 31 collectible
+# characters — 3 Legendary + 7 Epic + 13 Rare + 8 Common — plus the 2
+# MerryQuest originals (Pip, Noelle) = 33 named figures. Public-domain
+# and folklore figures plus originals ONLY (IP guardrails: no Grinch,
+# no Rudolph, no Frosty, no Disney/Warner/Rankin-Bass/Peanuts).
+# Tuple: (slug, name, tier, set_name, source, collectible, spawnable).
+QUEST_CAST = [
+    # Legendary — golden-spawn nights only, never in the normal pool.
+    ("santa-claus", "Santa Claus", "legendary", None,
+     "Folklore", 1, 0),
+    ("krampus", "Krampus", "legendary", None,
+     "Alpine folklore", 1, 0),
+    ("ded-moroz", "Ded Moroz", "legendary", None,
+     "Slavic folklore", 1, 0),
+    # Epic — the Dickens bench (A Christmas Carol, 1843).
+    ("ebenezer-scrooge", "Ebenezer Scrooge", "epic", "dickens",
+     "Dickens, A Christmas Carol (1843)", 1, 1),
+    ("jacob-marley", "Jacob Marley", "epic", "dickens",
+     "Dickens, A Christmas Carol (1843)", 1, 1),
+    ("ghost-of-christmas-past", "Ghost of Christmas Past", "epic",
+     "dickens", "Dickens, A Christmas Carol (1843)", 1, 1),
+    ("ghost-of-christmas-present", "Ghost of Christmas Present", "epic",
+     "dickens", "Dickens, A Christmas Carol (1843)", 1, 1),
+    ("ghost-of-christmas-yet-to-come", "Ghost of Christmas Yet to Come",
+     "epic", "dickens", "Dickens, A Christmas Carol (1843)", 1, 1),
+    # Epic — the Nutcracker bench (Hoffmann, 1816).
+    ("sugar-plum-fairy", "Sugar Plum Fairy", "epic", None,
+     "Hoffmann, The Nutcracker and the Mouse King (1816)", 1, 1),
+    ("mouse-king", "Mouse King", "epic", None,
+     "Hoffmann, The Nutcracker and the Mouse King (1816)", 1, 1),
+    # Rare — Santa's Team: the eight reindeer of Moore's 1823 poem.
+    ("dasher", "Dasher", "rare", "santas_team",
+     "Moore, A Visit from St. Nicholas (1823)", 1, 1),
+    ("dancer", "Dancer", "rare", "santas_team",
+     "Moore, A Visit from St. Nicholas (1823)", 1, 1),
+    ("prancer", "Prancer", "rare", "santas_team",
+     "Moore, A Visit from St. Nicholas (1823)", 1, 1),
+    ("vixen", "Vixen", "rare", "santas_team",
+     "Moore, A Visit from St. Nicholas (1823)", 1, 1),
+    ("comet", "Comet", "rare", "santas_team",
+     "Moore, A Visit from St. Nicholas (1823)", 1, 1),
+    ("cupid", "Cupid", "rare", "santas_team",
+     "Moore, A Visit from St. Nicholas (1823)", 1, 1),
+    ("donner", "Donner", "rare", "santas_team",
+     "Moore, A Visit from St. Nicholas (1823)", 1, 1),
+    ("blitzen", "Blitzen", "rare", "santas_team",
+     "Moore, A Visit from St. Nicholas (1823)", 1, 1),
+    # Rare — affinity rares.
+    ("mrs-claus", "Mrs. Claus", "rare", None,
+     "American folklore (Bates, Goody Santa Claus, 1889)", 1, 1),
+    ("la-befana", "La Befana", "rare", None,
+     "Italian folklore", 1, 1),
+    ("jack-frost", "Jack Frost", "rare", None,
+     "English folklore", 1, 1),
+    ("nutcracker-prince", "Nutcracker Prince", "rare", None,
+     "Hoffmann, The Nutcracker and the Mouse King (1816)", 1, 1),
+    ("belsnickel", "Belsnickel", "rare", None,
+     "German & Pennsylvania Dutch folklore", 1, 1),
+    # Common — the Sack-fillers.
+    ("tiny-tim", "Tiny Tim", "common", None,
+     "Dickens, A Christmas Carol (1843)", 1, 1),
+    ("toy-soldier", "Toy Soldier", "common", None,
+     "Folk / Nutcracker tradition", 1, 1),
+    ("christmas-caroler", "Christmas Caroler", "common", None,
+     "Folk tradition", 1, 1),
+    ("elf-helper", "Elf Helper", "common", None,
+     "Folklore", 1, 1),
+    ("gingerbread-scout", "Gingerbread Scout", "common", None,
+     "MerryQuest Original", 1, 1),
+    ("snow-sprite", "Snow Sprite", "common", None,
+     "MerryQuest Original", 1, 1),
+    ("candy-cane-sprite", "Candy Cane Sprite", "common", None,
+     "MerryQuest Original", 1, 1),
+    ("pinecone-imp", "Pinecone Imp", "common", None,
+     "MerryQuest Original", 1, 1),
+    # Originals — mascot + guide (not standard collectibles).
+    ("pip", "Pip the Star Pin", "original", None,
+     "MerryQuest Original — mascot; every player's tutorial first capture",
+     1, 0),
+    ("noelle", "Noelle the Navigator", "original", None,
+     "MerryQuest Original — quest guide (NPC)", 0, 0),
+]
+
+
+def seed_quest_cast(conn: sqlite3.Connection) -> None:
+    """Idempotent cast seed: INSERT OR IGNORE by slug, so re-boots and
+    future cast edits in code never duplicate or clobber rows."""
+    for i, (slug, name, tier, set_name, source, collectible,
+            spawnable) in enumerate(QUEST_CAST):
+        conn.execute(
+            "INSERT OR IGNORE INTO quest_characters "
+            "(slug, name, tier, set_name, source, collectible, spawnable,"
+            " sort) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+            (slug, name, tier, set_name, source, collectible, spawnable,
+             i),
+        )
 
 
 def get_conn(db_path: Path) -> sqlite3.Connection:
@@ -810,6 +950,8 @@ def init_db(db_path: Path) -> None:
     db_path.parent.mkdir(parents=True, exist_ok=True)
     with get_conn(db_path) as conn:
         conn.executescript(SCHEMA)
+        # MerryQuest quest layer: seed the locked cast (idempotent).
+        seed_quest_cast(conn)
         # Haunt Chat games opt-out (Oct 27): profiles predating the
         # chat-games build gain the "don't receive game challenges" flag.
         pcols = {r["name"] for r in conn.execute("PRAGMA table_info(profiles)").fetchall()}

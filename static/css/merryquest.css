@@ -1,0 +1,417 @@
+/* MerryQuest brand skin — TWO DOMAINS, ONE ENGINE (Dan, 2026-11-01;
+   brand locked Nov 6, 2026). Loaded only when the request brand is
+   "merryquest" (gomerryquest.com, or the ?brand=merryquest preview).
+   Everything is scoped to body.brand-merryquest so HauntMap's
+   rendering is untouched.
+
+   DESIGN RESET (Dan, Nov 17-18, 2026): whole new design from scratch,
+   modeled on Dan's reference pick — immersive-g.com (Immersive
+   Garden, Paris). The language: a flat light ground, near-black ink,
+   an elegant Times-class SERIF for display type at fluid sizes,
+   Helvetica for quiet UI text, hairline rules instead of boxes,
+   no shadows, no glow, no gradients — photography carries the color.
+   Dan's locked brand palette maps onto it: deep pine #122B1E plays
+   the ink role, pure white #FFFFFF the ground, compass gold #FFC82C
+   the single accent mark (Pip, small markers), holiday red #D32F2F
+   retired to rare functional use only. */
+
+body.brand-merryquest {
+  --bg: #ffffff;
+  --bg2: #f2f2f0;
+  --card: #ffffff;
+  --ink: #122b1e;
+  --muted: #5c6b5e;
+  --accent: #122b1e;
+  --accent2: #122b1e;
+  --danger: #d32f2f;
+  --mq-serif: "PSTimes", "Playfair Display", Georgia, "Times New Roman", Times, serif;
+  --mq-sans: "Helvetica Neue", Helvetica, Arial, system-ui, sans-serif;
+  --mq-hair: rgba(18, 43, 30, 0.16);
+  background: #ffffff;
+  color: var(--ink);
+  font-family: var(--mq-sans);
+}
+
+/* ---------- Header: flat white, one hairline, quiet type ---------- */
+body.brand-merryquest .site-header {
+  background: #ffffff;
+  border-bottom: 1px solid var(--mq-hair);
+  box-shadow: none;
+  backdrop-filter: none;
+}
+body.brand-merryquest .mini-bar {
+  background: #ffffff;
+  border-bottom: 1px solid var(--mq-hair);
+  box-shadow: none;
+}
+body.brand-merryquest .mini-bar a { color: var(--ink); }
+
+/* Frank is HauntMap's mark — MerryQuest's mark is Pip */
+body.brand-merryquest .header-frank { display: none; }
+/* Halloween side-rail art has no place in the editorial look */
+body.brand-merryquest .spooky-side { display: none; }
+
+/* Brand lockup: small Pip, serif wordmark, no glow */
+body.brand-merryquest .brand-pip {
+  height: 40px; width: 40px; flex-shrink: 0;
+  filter: none;
+}
+body.brand-merryquest .brand-wordmark {
+  font-family: var(--mq-serif);
+  font-weight: 400; font-size: 28px; letter-spacing: 0;
+  color: #122b1e; margin-left: 8px; white-space: nowrap;
+}
+body.brand-merryquest .brand-wordmark .bw-alt { color: #122b1e; font-style: italic; }
+@media (max-width: 760px) {
+  body.brand-merryquest .brand-pip { height: 32px; width: 32px; }
+  body.brand-merryquest .brand-wordmark { font-size: 22px; }
+}
+
+/* Hook line: one quiet letterspaced line */
+body.brand-merryquest .header-hook {
+  font-family: var(--mq-sans);
+  font-size: 13px; letter-spacing: 0.04em;
+  text-shadow: none;
+}
+body.brand-merryquest .hook-line { color: var(--muted); }
+body.brand-merryquest .hook-line .hook-dot { color: #ffc82c; }
+body.brand-merryquest .header-hook .tag-c { color: #122b1e; }
+body.brand-merryquest .header-hook .tag-d { color: #122b1e; font-style: italic; font-family: var(--mq-serif); font-size: 15px; }
+body.brand-merryquest .header-hook .hook-l2 { font-size: inherit; }
+
+/* Nav: text only — the Halloween icon tiles retire on this brand */
+body.brand-merryquest .header-nav .navbtn img { display: none; }
+body.brand-merryquest .header-nav .navbtn {
+  font-family: var(--mq-sans);
+  font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--ink);
+}
+body.brand-merryquest .nav-join { color: var(--ink); }
+
+/* ---------- Hero: a serif statement on open white ---------- */
+body.brand-merryquest .hero-intro {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  padding: 56px 8px 8px;
+}
+body.brand-merryquest .hero-intro h1.hero-title {
+  font-family: var(--mq-serif);
+  font-weight: 400;
+  font-size: clamp(44px, 6.8vw, 88px);
+  line-height: 1.02;
+  letter-spacing: -0.015em;
+  color: #122b1e;
+  text-shadow: none;
+  max-width: 12em;
+}
+body.brand-merryquest .hero-title-alt { color: #122b1e; font-style: italic; }
+body.brand-merryquest .hero-intro p {
+  color: var(--muted);
+  text-shadow: none;
+}
+body.brand-merryquest .fd-prop {
+  font-size: 14px; letter-spacing: 0.02em; color: var(--muted);
+  margin-top: 18px;
+}
+
+/* Front-door rail: photo-first, caption below, no boxes */
+body.brand-merryquest .fd-rail-head {
+  font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--muted); font-weight: 400;
+}
+body.brand-merryquest .fd-card {
+  background: transparent; border: none; box-shadow: none; border-radius: 0;
+}
+body.brand-merryquest .fd-card-media img { border-radius: 2px; }
+body.brand-merryquest .fd-card-title {
+  font-family: var(--mq-serif); font-weight: 400; font-size: 17px;
+  color: #122b1e;
+}
+body.brand-merryquest .fd-card-meta { font-size: 12px; color: var(--muted); }
+body.brand-merryquest .fd-badge {
+  background: #ffffff; color: #122b1e;
+  border: 1px solid var(--mq-hair); border-radius: 999px;
+  font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase;
+  box-shadow: none; text-shadow: none;
+}
+
+/* Find block: hairline field, outline pill button */
+body.brand-merryquest .hm-find-form input {
+  background: #ffffff; color: var(--ink);
+  border: 1px solid var(--mq-hair); border-radius: 999px;
+  font-family: var(--mq-sans); font-size: 14px;
+}
+body.brand-merryquest .btn,
+body.brand-merryquest .hm-find-btn {
+  background: transparent; color: #122b1e;
+  border: 1px solid #122b1e; border-radius: 999px;
+  font-family: var(--mq-sans); font-size: 13px; letter-spacing: 0.04em;
+  box-shadow: none; text-shadow: none;
+}
+
+/* ---------- Sections + cards: serif heads, hairlines, no shadows ---------- */
+body.brand-merryquest h2 {
+  font-family: var(--mq-serif);
+  font-weight: 400;
+  font-size: clamp(30px, 3.6vw, 44px);
+  letter-spacing: -0.01em;
+  color: #122b1e;
+  text-shadow: none;
+}
+body.brand-merryquest .card,
+body.brand-merryquest .tonight-card,
+body.brand-merryquest .bk-home-card,
+body.brand-merryquest .sponsor-card,
+body.brand-merryquest .hm-prompt,
+body.brand-merryquest .engage-next,
+body.brand-merryquest .hon-card {
+  background: #ffffff;
+  border: 1px solid var(--mq-hair);
+  border-radius: 2px;
+  box-shadow: none;
+}
+body.brand-merryquest .card-body h3,
+body.brand-merryquest .bk-home-title {
+  font-family: var(--mq-serif); font-weight: 400; color: #122b1e;
+}
+
+/* Filters/chips: quiet pills; the active state is a gold underline */
+body.brand-merryquest .filter-chip {
+  background: #ffffff; border: 1px solid var(--mq-hair);
+  color: var(--ink); border-radius: 999px; box-shadow: none;
+}
+body.brand-merryquest .filter-chip.active {
+  background: #ffffff; color: #122b1e;
+  border-color: #122b1e; font-weight: 700;
+}
+body.brand-merryquest .cat-tabs a {
+  background: transparent; border: none; box-shadow: none;
+  color: var(--muted); border-radius: 0;
+}
+body.brand-merryquest .cat-tabs a.active {
+  background: transparent; color: #122b1e;
+  border-color: transparent;
+  box-shadow: inset 0 -2px 0 #ffc82c;
+}
+
+/* ---------- Deliberately-dark panels: flat pine, serif gold title ---------- */
+body.brand-merryquest .hm-shop-banner {
+  background: #122b1e;
+  border: none;
+  box-shadow: none; border-radius: 2px;
+}
+body.brand-merryquest .hm-shop-banner-title {
+  color: #ffc82c; font-family: var(--mq-serif); font-weight: 400;
+}
+body.brand-merryquest .hm-shop-banner-copy p { color: #dce5dc; }
+body.brand-merryquest .auto-tour-home {
+  background: #122b1e;
+  border: none;
+  box-shadow: none; border-radius: 2px;
+}
+body.brand-merryquest .auto-tour-home h2 { color: #ffc82c; }
+body.brand-merryquest .auto-tour-sub { color: #cfe0cf; }
+body.brand-merryquest .auto-tour-btn {
+  background: transparent;
+  border: 1px solid #ffc82c;
+  color: #ffffff; border-radius: 999px;
+}
+body.brand-merryquest .auto-tour-btn-sub { color: #cfe0cf; }
+body.brand-merryquest .hero-intro .auto-tour-home p { color: #cfe0cf; }
+body.brand-merryquest .hero-intro .auto-tour-home .auto-tour-btn-title { color: #ffffff; }
+
+/* ---------- Santa's Sack: a calm collection ledger ---------- */
+body.brand-merryquest .sack-wrap { max-width: 960px; margin: 0 auto; padding: 48px 16px 64px; }
+body.brand-merryquest .sack-title {
+  font-family: var(--mq-serif); font-weight: 400;
+  color: #122b1e; font-size: clamp(36px, 5vw, 52px); margin: 0 0 6px;
+  letter-spacing: -0.01em;
+}
+body.brand-merryquest .sack-sub { color: var(--muted); margin: 0 0 30px; font-size: 14px; }
+body.brand-merryquest .sack-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 1px; background: var(--mq-hair); border: 1px solid var(--mq-hair); }
+body.brand-merryquest .sack-card { background: #ffffff; border: none; border-radius: 0; padding: 18px 10px 14px; text-align: center; box-shadow: none; }
+body.brand-merryquest .sack-card-star { font-size: 1.5rem; line-height: 1; color: #ffc82c; text-shadow: none; }
+body.brand-merryquest .sack-card-name { font-family: var(--mq-serif); font-weight: 400; font-size: 17px; color: #122b1e; margin-top: 8px; }
+body.brand-merryquest .sack-card-tier { text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); font-size: 0.68rem; }
+body.brand-merryquest .sack-card-count { display: inline-block; margin-top: 6px; background: transparent; color: #122b1e; border: none; padding: 0; font-family: var(--mq-serif); font-size: 0.95rem; }
+body.brand-merryquest .sack-card.sack-tier-legendary { box-shadow: inset 0 0 0 1px #ffc82c; }
+body.brand-merryquest .sack-card.sack-tier-epic { box-shadow: inset 0 0 0 1px rgba(18, 43, 30, 0.45); }
+body.brand-merryquest .sack-card.sack-tier-rare { box-shadow: inset 0 0 0 1px rgba(255, 200, 44, 0.6); }
+body.brand-merryquest .sack-empty { background: #f2f2f0; border: 1px dashed var(--mq-hair); border-radius: 2px; padding: 34px 20px; text-align: center; }
+body.brand-merryquest .sack-empty-big { font-family: var(--mq-serif); font-size: 1.5rem; font-weight: 400; color: #122b1e; margin: 0 0 8px; }
+body.brand-merryquest .sack-empty p { color: var(--muted); }
+body.brand-merryquest .sack-empty-btn { display: inline-block; margin-top: 12px; background: transparent; color: #122b1e; border: 1px solid #122b1e; font-weight: 400; text-decoration: none; border-radius: 999px; padding: 10px 22px; font-size: 14px; }
+body.brand-merryquest .sack-cast-title { font-family: var(--mq-serif); font-weight: 400; color: #122b1e; margin: 40px 0 4px; }
+body.brand-merryquest .sack-cast-note { color: var(--muted); margin: 0 0 14px; font-size: 14px; }
+body.brand-merryquest .sack-cast { display: flex; flex-wrap: wrap; gap: 8px 18px; }
+body.brand-merryquest .sack-cast-chip { border: none; border-bottom: 1px solid var(--mq-hair); color: #93a295; border-radius: 0; padding: 2px 1px; font-size: 0.92rem; }
+body.brand-merryquest .sack-cast-chip.got { border-color: #ffc82c; color: #122b1e; background: transparent; }
+
+/* ===== Pass 2: inherited HauntMap chrome, translated ===== */
+
+/* The ghost watermark is HauntMap's backdrop — MerryQuest is a clean sheet */
+body.brand-merryquest::before { display: none; }
+
+/* Section heads stay sentence-case serif (no carnival caps) */
+body.brand-merryquest h2 { text-transform: none; }
+
+/* Events column: retire the graffiti gif and carnival colors */
+body.brand-merryquest .events-gif { display: none; }
+body.brand-merryquest .events-daily,
+body.brand-merryquest .events-closer {
+  font-family: var(--mq-sans); letter-spacing: 0.05em; text-shadow: none;
+}
+body.brand-merryquest .nh-red,
+body.brand-merryquest .nh-daily,
+body.brand-merryquest .ec-a { color: #122b1e; }
+body.brand-merryquest .ec-b {
+  color: #122b1e; font-family: var(--mq-serif); font-style: italic;
+}
+
+/* Join pill: quiet outline, and the Halloween tagline stays off this brand */
+body.brand-merryquest .nav-join {
+  background: transparent; border: 1px solid #122b1e;
+  border-radius: 999px; box-shadow: none;
+}
+body.brand-merryquest .nav-join-label,
+body.brand-merryquest .nav-join .hs-brand { color: #122b1e; text-shadow: none; }
+body.brand-merryquest .nav-join-tag { display: none; }
+
+/* Module pills (Virtual Tour / TV / Music / Movies / Art): light pills */
+body.brand-merryquest .vt-tv-strip { background: transparent; box-shadow: none; }
+body.brand-merryquest .vt-btn {
+  background: #ffffff; border: 1px solid var(--mq-hair);
+  border-radius: 999px; box-shadow: none;
+}
+body.brand-merryquest .vt-btn img { display: none; }
+body.brand-merryquest .vt-btn .vt-l1 {
+  color: #122b1e; text-shadow: none;
+  font-family: var(--mq-sans); letter-spacing: 0.05em;
+}
+
+/* Ticker band: a ruled line of text, not a dark bar */
+body.brand-merryquest .daily-band {
+  background: #ffffff; color: #122b1e;
+  border-top: 1px solid var(--mq-hair);
+  border-bottom: 1px solid var(--mq-hair);
+  box-shadow: none;
+}
+body.brand-merryquest .daily-band a { color: #122b1e; }
+
+/* Find panel: light field */
+body.brand-merryquest .hm-find {
+  background: #ffffff; border: 1px solid var(--mq-hair);
+  border-radius: 2px; box-shadow: none;
+}
+body.brand-merryquest .hm-find-text { color: var(--muted); }
+body.brand-merryquest .hm-find-form input {
+  background: #ffffff; color: var(--ink);
+  border: 1px solid var(--mq-hair); border-radius: 999px;
+}
+body.brand-merryquest .hm-find-form input::placeholder { color: #93a295; }
+
+/* What's-new rail: light panel */
+body.brand-merryquest .wn-rail {
+  background: #ffffff; border: 1px solid var(--mq-hair);
+  border-radius: 2px; box-shadow: none;
+}
+body.brand-merryquest .wn-rail * { text-shadow: none; }
+body.brand-merryquest .wn-rail a { color: #122b1e; }
+body.brand-merryquest .wn-rail-sub { color: var(--muted); }
+
+/* The vertical TikTok tab points at HauntMap's handle — off until
+   the MerryQuest TikTok exists */
+body.brand-merryquest .tt-follow-vert { display: none; }
+
+/* MerryMart banner innards on the flat pine panel */
+body.brand-merryquest .hm-shop-banner-btn {
+  background: transparent; border: 1px solid #ffc82c; color: #ffc82c;
+  border-radius: 999px; box-shadow: none;
+}
+body.brand-merryquest .hm-shop-tile {
+  background: transparent; border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 2px; box-shadow: none;
+}
+body.brand-merryquest .hm-shop-tile-name {
+  color: #ffffff; font-family: var(--mq-serif); font-weight: 400;
+}
+body.brand-merryquest .hm-shop-tile-price { color: #ffc82c; }
+body.brand-merryquest .hm-shop-tile-watch { color: #cfe0cf; }
+body.brand-merryquest .hm-shop-banner-sub { color: #cfe0cf; }
+
+/* Radio chip: flat pine pill */
+body.brand-merryquest .hmr-chip {
+  background: #122b1e; border: none; box-shadow: none;
+}
+body.brand-merryquest .hmr-name { color: #ffffff; }
+
+/* Phone: wordmark only — the hook line retires (it collided with the
+   lockup at small widths, and the reference goes quiet on mobile) */
+@media (max-width: 760px) {
+  body.brand-merryquest .header-hook { display: none; }
+}
+
+/* ===== Pass 3: long-chain wins over style.css's header selectors ===== */
+
+/* Events column: kill the graffiti gif on both header variants */
+body.brand-merryquest .site-header.v2 .header-nav a.events-link img.events-gif,
+body.brand-merryquest .site-header.v2 .header-nav a.navbtn-events img.events-gif { display: none; }
+body.brand-merryquest .site-header.v2 .header-nav a.events-link .events-daily .nh-red,
+body.brand-merryquest .site-header.v2 .header-nav a.events-link .events-daily .nh-daily,
+body.brand-merryquest .site-header.v2 .header-nav a.events-link .events-closer .ec-a {
+  color: #122b1e; text-shadow: none;
+}
+body.brand-merryquest .site-header.v2 .header-nav a.events-link .events-closer .ec-b {
+  color: #122b1e; font-family: var(--mq-serif); font-style: italic; text-shadow: none;
+}
+
+/* Module pill family: one light pill for every module */
+body.brand-merryquest .vt-tv-strip .vt-btn,
+body.brand-merryquest .vt-tv-strip .tv-btn,
+body.brand-merryquest .vt-tv-strip .music-btn,
+body.brand-merryquest .vt-tv-strip .movies-btn,
+body.brand-merryquest .vt-tv-strip .art-btn,
+body.brand-merryquest .vt-tv-strip .pop-btn,
+body.brand-merryquest .vt-tv-strip .makeup-btn,
+body.brand-merryquest .vt-tv-strip .markets-btn,
+body.brand-merryquest .vt-tv-strip .top100-btn {
+  background: #ffffff; background-image: none;
+  border: 1px solid var(--mq-hair); border-radius: 999px;
+  box-shadow: none; color: #122b1e;
+}
+body.brand-merryquest .vt-tv-strip .vt-l1,
+body.brand-merryquest .vt-tv-strip .vt-l2 {
+  color: #122b1e; text-shadow: none;
+  font-family: var(--mq-sans); letter-spacing: 0.05em;
+}
+
+/* What's-new rail: light head, serif title, ruled group bars */
+body.brand-merryquest .wn-rail-head {
+  background: #ffffff; border-bottom: 1px solid var(--mq-hair);
+}
+body.brand-merryquest .wn-rail-badge { display: none; }
+body.brand-merryquest .wn-rail-title {
+  font-family: var(--mq-serif); color: #122b1e;
+}
+body.brand-merryquest .wn-rail-accent {
+  color: #122b1e; font-style: italic; text-shadow: none;
+}
+body.brand-merryquest .wn-rail-group {
+  background: #ffffff; color: #122b1e;
+  border-bottom: 1px solid var(--mq-hair);
+}
+body.brand-merryquest .wn-rail-scroll { scrollbar-color: #c9d2c9 #ffffff; }
+
+/* Ticker band children: light head + track */
+body.brand-merryquest .daily-band-head,
+body.brand-merryquest .daily-band-title,
+body.brand-merryquest .daily-band-links,
+body.brand-merryquest .daily-mini {
+  background: transparent; color: #122b1e; text-shadow: none;
+}
+
+/* Join pill label in the UI sans, not a display face */
+body.brand-merryquest .nav-join-label {
+  font-family: var(--mq-sans); letter-spacing: 0.04em;
+}
