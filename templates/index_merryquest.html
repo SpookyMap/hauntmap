@@ -14,7 +14,7 @@
    home (tonight, trending, entries) — a different page entirely. #}
 <div class="mqx-wrap">
 
-  <div class="mqx-intro" id="mqx-intro" aria-hidden="true"><img class="mqx-intro-logo" src="/static/img/merryquest-logo.png" alt="" width="620" height="124"></div>
+  <div class="mqx-intro" id="mqx-intro" aria-hidden="true"><span class="mqx-loadbtn">▶ Loading</span><img class="mqx-intro-logo" src="/static/img/merryquest-logo.png" alt="" width="620" height="124"></div>
   <section class="mqx-hero mqx-bleed">
     <div class="mqx-hero-bg mqx-hero-clouds" aria-hidden="true"><video class="mqx-hero-video" muted loop playsinline preload="auto" poster="/static/img/mq-sleigh-classic.jpg"><source src="/static/video/mq-hero-classic.mp4" type="video/mp4"></video></div>
     <div class="mqx-hero-in">
@@ -236,7 +236,7 @@
     startBg();
   }
   intro.addEventListener('click', finish);
-  setTimeout(finish, 2600);
+  setTimeout(finish, 2850);
 })();
 </script>
 {% endblock %}
