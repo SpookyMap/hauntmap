@@ -393,12 +393,12 @@ body.brand-merryquest {
   font-weight: 800; font-size: 21px; letter-spacing: -0.02em; color: #f2f5f1;
 }
 .mqx-wordmark b { color: #ffc82c; font-weight: 800; }
-.mqx-nav { display: flex; gap: 22px; margin-left: 8px; }
+.mqx-nav { display: flex; flex: 1; justify-content: space-between; align-items: center; gap: 14px; margin-left: 6px; }
 .mqx-nav a {
   color: #a9b8ac; text-decoration: none; font-size: 14px; font-weight: 600;
 }
 .mqx-nav a:hover { color: #ffffff; }
-.mqx-actions { margin-left: auto; display: flex; align-items: center; gap: 14px; }
+.mqx-actions { display: flex; align-items: center; gap: 14px; }
 .mqx-login { color: #dfe7de; text-decoration: none; font-size: 14px; font-weight: 600; }
 .mqx-join {
   background: var(--mqx-grad); color: #131313; text-decoration: none;
@@ -407,7 +407,7 @@ body.brand-merryquest {
 }
 @media (max-width: 760px) {
   .mqx-header-in { gap: 14px; padding: 10px 14px; flex-wrap: wrap; }
-  .mqx-nav { order: 3; width: 100%; gap: 16px; overflow-x: auto; padding-bottom: 2px; }
+  .mqx-nav { order: 3; width: 100%; flex: none; gap: 16px; overflow-x: auto; padding-bottom: 2px; margin-left: 0; }
   .mqx-nav a { white-space: nowrap; font-size: 13.5px; }
   .mqx-wordmark { font-size: 19px; }
 }
