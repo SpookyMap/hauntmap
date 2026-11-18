@@ -14,8 +14,9 @@
    home (tonight, trending, entries) — a different page entirely. #}
 <div class="mqx-wrap">
 
-  <section class="mqx-hero">
-    <div class="mqx-hero-bg mqx-hero-clouds" aria-hidden="true"><video class="mqx-hero-video" autoplay muted loop playsinline preload="metadata" poster="/static/img/mq-sleigh-future.jpg"><source src="/static/video/mq-hero-sleigh.mp4" type="video/mp4"></video></div>
+  <div class="mqx-intro" id="mqx-intro" aria-hidden="true"><img class="mqx-intro-logo" src="/static/img/merryquest-logo.png" alt="" width="620" height="124"></div>
+  <section class="mqx-hero mqx-bleed">
+    <div class="mqx-hero-bg mqx-hero-clouds" aria-hidden="true"><video class="mqx-hero-video" muted loop playsinline preload="auto" poster="/static/img/mq-sleigh-future.jpg"><source src="/static/video/mq-hero-sleigh.mp4" type="video/mp4"></video></div>
     <div class="mqx-hero-in">
       <p class="mqx-hero-word"><img src="/static/img/merryquest-logo.png" alt="MerryQuest" width="620" height="124"></p>
       <h1 class="mqx-h1">Find the Best Christmas Displays <span class="mqx-grad">Near You</span></h1>
@@ -113,12 +114,12 @@
     </div>
   </section>
 
-  <section class="mqx-drive">
+  <section class="mqx-drive mqx-bleed">
     <video class="mqx-drive-video" autoplay muted loop playsinline preload="metadata" poster="/static/img/merryquest-hero-bg.jpg"><source src="/static/video/mq-drive.mp4" type="video/mp4"></video>
     <p class="mqx-drive-cap">Drive display to display. <span>Capture them all.</span></p>
   </section>
 
-  <section class="mqx-universe">
+  <section class="mqx-universe mqx-bleed">
     <p class="mqx-eyebrow">The reveal begins Nov 24</p>
     <h2 class="mqx-h2">The MerryQuest Universe</h2>
     <div class="mqx-lineup">
@@ -212,6 +213,30 @@
     b.textContent = v.muted ? '🔇' : '🔊';
     b.setAttribute('aria-label', v.muted ? 'Turn the sound on' : 'Turn the sound off');
   });
+})();
+</script>
+<script>
+(function () {
+  var intro = document.getElementById('mqx-intro');
+  var vid = document.querySelector('.mqx-hero-video');
+  function startBg() { if (vid) { vid.play().catch(function () {}); } }
+  if (!intro) { startBg(); return; }
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    intro.remove(); startBg(); return;
+  }
+  try {
+    if (sessionStorage.getItem('mqx-intro-seen')) { intro.remove(); startBg(); return; }
+  } catch (e) {}
+  var done = false;
+  function finish() {
+    if (done) return;
+    done = true;
+    try { sessionStorage.setItem('mqx-intro-seen', '1'); } catch (e) {}
+    intro.remove();
+    startBg();
+  }
+  intro.addEventListener('click', finish);
+  setTimeout(finish, 2600);
 })();
 </script>
 {% endblock %}
