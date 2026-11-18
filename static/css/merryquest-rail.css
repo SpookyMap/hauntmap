@@ -376,6 +376,13 @@ body.brand-merryquest {
 }
 
 /* ---------- Slim header (Railway nav) ---------- */
+/* Luckiest Guy is self-hosted (Nov 18, 2026): the poster display
+   font must not depend on a Google Fonts round-trip. */
+@font-face {
+  font-family: "Luckiest Guy";
+  src: url("/static/fonts/luckiest-guy-latin.woff2") format("woff2");
+  font-weight: 400; font-style: normal; font-display: swap;
+}
 .mqx-header {
   position: sticky; top: 0; z-index: 60;
   background: rgba(6, 10, 8, 0.82);
@@ -444,10 +451,21 @@ body.brand-merryquest {
 }
 .mqx-chip span { color: #ffffff; font-variant-numeric: tabular-nums; }
 .mqx-h1 {
-  font-family: var(--mqx-display); font-weight: 400;
-  font-size: clamp(44px, 7.4vw, 88px); line-height: 0.98;
-  letter-spacing: 0.005em; text-transform: uppercase;
-  color: #ffffff; margin: 0 0 18px; text-shadow: 0 6px 34px rgba(0, 0, 0, 0.55);
+  font-family: "Luckiest Guy", var(--mqx-display); font-weight: 400;
+  font-size: clamp(40px, 6.8vw, 80px); line-height: 1.04;
+  letter-spacing: 0.012em; text-transform: uppercase;
+  color: #ffffff; margin: 0 0 18px;
+  transform: skewX(-4deg);
+  filter: drop-shadow(0 5px 0 rgba(18, 43, 30, 0.55)) drop-shadow(0 16px 30px rgba(0, 0, 0, 0.5));
+}
+.mqx-h1 .mqx-w { display: inline-block; white-space: nowrap; }
+.mqx-h1.mqx-letters .mqx-l {
+  display: inline-block;
+  animation: mqx-letter-pop 0.7s cubic-bezier(0.2, 1.6, 0.4, 1) both;
+}
+@keyframes mqx-letter-pop {
+  from { opacity: 0; transform: translateY(30px) scale(0.45) rotate(-9deg); }
+  to { opacity: 1; transform: translateY(0) scale(1) rotate(0deg); }
 }
 .mqx-grad {
   background: var(--mqx-grad); -webkit-background-clip: text; background-clip: text;
@@ -549,9 +567,10 @@ body.brand-merryquest {
   letter-spacing: 0.16em; text-transform: uppercase; margin: 0 0 8px;
 }
 .mqx-h2 {
-  font-family: var(--mq-sans, "Inter", system-ui, sans-serif);
-  font-size: clamp(25px, 3.4vw, 34px); font-weight: 700; letter-spacing: -0.02em;
-  color: #ffffff; margin: 0 0 20px; text-transform: none; text-shadow: none;
+  font-family: "Luckiest Guy", var(--mqx-display);
+  font-size: clamp(23px, 3.1vw, 33px); font-weight: 400; letter-spacing: 0.015em;
+  color: #ffffff; margin: 0 0 20px; text-transform: uppercase; text-shadow: none;
+  transform: skewX(-3deg);
 }
 .mqx-grid {
   display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px;
@@ -771,3 +790,64 @@ main > h1 { font-family:'Anton',sans-serif; text-transform:uppercase; letter-spa
   border-radius:18px;border:1px solid rgba(230,177,109,.45);
   box-shadow:0 24px 60px rgba(0,0,0,.5),0 0 44px rgba(255,200,44,.10)}
 .mqx-hero-bg-art{opacity:.62}
+/* Clouds hero (Nov 18, 2026): Santa's sleigh loop above a cloud
+   sea, the brand word written across the sky, Cartier-style. */
+.mqx-hero-clouds { opacity: 0.94; animation: none; }
+.mqx-hero-video { width: 100%; height: 100%; object-fit: cover; display: block; }
+.mqx-hero-word { margin: 0 0 10px; text-align: center; line-height: 0; }
+.mqx-hero-word img {
+  width: min(560px, 88%); height: auto;
+  filter: drop-shadow(0 6px 22px rgba(6, 10, 30, 0.4)) drop-shadow(0 0 24px rgba(120, 220, 255, 0.2));
+}
+/* Big countdown (Nov 18, 2026): poster numerals under the hero
+   CTAs, mirrored on the merryquest.app splash. */
+.mqx-bigcd { display: flex; justify-content: center; gap: clamp(16px, 4vw, 40px); margin-top: 32px; }
+.mqx-bigcd-cell { text-align: center; min-width: 74px; }
+.mqx-bigcd-cell span {
+  display: block; font-family: "Luckiest Guy", var(--mqx-display); font-weight: 400;
+  font-size: clamp(46px, 8.5vw, 88px); line-height: 1; color: #ffc82c;
+  transform: skewX(-3deg);
+  filter: drop-shadow(0 4px 0 rgba(18, 43, 30, 0.55)) drop-shadow(0 12px 24px rgba(0, 0, 0, 0.5));
+}
+.mqx-bigcd-cell label {
+  display: block; margin-top: 8px; font-size: 11px; font-weight: 700;
+  letter-spacing: 0.32em; text-indent: 0.32em; text-transform: uppercase; color: #e6efe6;
+}
+/* Driving loop banner (Nov 18, 2026). */
+.mqx-drive { margin-top: 56px; position: relative; border-radius: 26px; overflow: hidden; border: 1px solid var(--mqx-line); }
+.mqx-drive-video { width: 100%; display: block; aspect-ratio: 1200 / 640; object-fit: cover; }
+.mqx-drive-cap {
+  position: absolute; left: 22px; bottom: 16px; margin: 0;
+  font-family: "Luckiest Guy", var(--mqx-display); font-size: clamp(18px, 2.6vw, 28px);
+  color: #ffffff; text-transform: uppercase; transform: skewX(-3deg);
+  text-shadow: 0 3px 18px rgba(0, 0, 0, 0.75);
+}
+.mqx-drive-cap span { color: #ffc82c; }
+/* Universe reveal lineup (Nov 18, 2026): the neon cast on a dark
+   stage, UNKJD-style, ahead of the Nov 24 reveal drip. */
+.mqx-universe {
+  margin-top: 56px; text-align: center; padding: 52px 18px 44px;
+  border-radius: 26px; overflow: hidden;
+  background: radial-gradient(1100px 480px at 50% -8%, rgba(88, 40, 140, 0.38), transparent 62%), linear-gradient(180deg, #0d0716, #060310);
+  border: 1px solid rgba(150, 110, 220, 0.22);
+}
+.mqx-universe .mqx-eyebrow { color: #c9a7ff; }
+.mqx-lineup {
+  display: flex; align-items: flex-end; justify-content: center; gap: 8px; margin-top: 10px;
+  background: radial-gradient(60% 90px at 50% 100%, rgba(255, 170, 60, 0.14), transparent 70%);
+}
+.mqx-fig { margin: 0; flex: 1 1 0; min-width: 0; }
+.mqx-fig img { height: 272px; width: 100%; object-fit: cover; object-position: top center; border-radius: 16px; display: block; }
+.mqx-fig-center { flex-grow: 1.18; }
+.mqx-fig-center img { height: 318px; }
+.mqx-fig figcaption {
+  margin-top: 10px; font-family: "Luckiest Guy", var(--mqx-display); font-size: 13px;
+  letter-spacing: 0.06em; text-transform: uppercase; color: #efeaff;
+}
+.mqx-universe-note { color: #bdb2d9; margin: 20px 0 0; font-size: 15px; }
+@media (max-width: 760px) {
+  .mqx-lineup { overflow-x: auto; justify-content: flex-start; padding-bottom: 6px; }
+  .mqx-fig { flex: 0 0 auto; }
+  .mqx-fig img { height: 208px; width: 138px; }
+  .mqx-fig-center img { height: 240px; width: 160px; }
+}

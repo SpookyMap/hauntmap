@@ -216,6 +216,18 @@ templates.env.globals["site_name"] = SITE_NAME
 # renders exactly as before. Listings, accounts, sponsors and the
 # newsletter list are shared — only the skin and the default landing
 # category differ.
+def _is_appdoor(request) -> bool:
+    # merryquest.app is the app's store door (Dan, Nov 17-18, 2026):
+    # until the store listings exist it serves a countdown splash.
+    # The ?brand=appdoor override exists for local previews.
+    try:
+        host = (request.headers.get("host") or "").lower()
+        return "merryquest.app" in host or \
+            request.query_params.get("brand") == "appdoor"
+    except Exception:
+        return False
+
+
 def _brand_of(request) -> str:
     try:
         host = (request.headers.get("host") or "").lower()
@@ -476,7 +488,11 @@ async def _page_cache(request: Request, call_next):
     # Brand is part of the key (MerryQuest skin): the two hosts share
     # these paths but render different skins/default categories, so a
     # page cached for one brand must never be served on the other.
-    key = _brand_of(request) + ":" + request.url.path
+    # The merryquest.app store door gets its own key too: its splash
+    # must never leak onto gethauntmap.com (whose brand key it would
+    # otherwise share).
+    key = ("appdoor" if _is_appdoor(request) else _brand_of(request)) \
+        + ":" + request.url.path
     entry = _PAGE_CACHE.get(key)
     if entry and entry[0] > time.monotonic():
         _, headers, body = entry
@@ -2895,6 +2911,9 @@ LONG_ISLAND_TERMS = ["wantagh", "bellmore", "merrick", "levittown", "east meadow
 def home(request: Request, sort: str = "new", town: str = "", town_search: str = "",
          state: str = "", region: str = "", cat: str = "halloween", scare: str = "", tag: str = "",
          video: str = "", states_q: str = Query("", alias="states")):
+    if _is_appdoor(request):
+        return templates.TemplateResponse(
+            request, "countdown_merryquest.html", {})
     # states_q is the ?states=1 near-me opt-in; the alias keeps the
     # URL identical to the Auto Tour toggle's, and the distinct Python
     # name leaves the module-level states() helper callable below.
