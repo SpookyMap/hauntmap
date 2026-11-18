@@ -16,7 +16,7 @@
 
   <div class="mqx-intro" id="mqx-intro" aria-hidden="true"><span class="mqx-loadbtn">▶ Loading</span><img class="mqx-intro-logo" src="/static/img/merryquest-logo.png" alt="" width="620" height="124"></div>
   <section class="mqx-hero mqx-bleed">
-    <div class="mqx-hero-bg mqx-hero-clouds" aria-hidden="true"><video class="mqx-hero-video" autoplay muted loop playsinline preload="auto" poster="/static/img/mq-sleigh-classic.jpg"><source src="/static/video/mq-hero-classic-v2.mp4" type="video/mp4"></video></div>
+    <div class="mqx-hero-bg mqx-hero-clouds" aria-hidden="true"><video class="mqx-hero-video" autoplay muted loop playsinline preload="auto" poster="/static/img/mq-sleigh-classic.jpg"><source src="/static/video/mq-hero-classic-v3.mp4" type="video/mp4"></video></div>
     <div class="mqx-hero-in">
       <p class="mqx-hero-word"><img src="/static/img/merryquest-logo.png" alt="MerryQuest" width="620" height="124"></p>
       <h1 class="mqx-h1">Find the Best Christmas Displays <span class="mqx-grad">Near You</span></h1>
@@ -37,7 +37,6 @@
         <a class="mqx-ghost-btn" href="#mqx-quest">How the quest works</a>
         <span class="mqx-app-badges"><span>📱 App drops Dec 1</span><span>iOS · Android</span></span>
       </div>
-      <button class="mqx-sound" id="mqx-sound-btn" type="button" aria-label="Turn the sound on">🔇</button>
       {% if tonight %}
       <a class="mqx-quest-card" href="/d/{{ tonight.id }}">
         <span class="mqx-quest-kicker">⭐ Tonight's quest</span>
@@ -200,19 +199,6 @@
     setTimeout(tick, 1000);
   }
   tick();
-})();
-</script>
-<script>
-(function () {
-  var b = document.getElementById('mqx-sound-btn');
-  var v = document.querySelector('.mqx-hero-video');
-  if (!b || !v) return;
-  b.addEventListener('click', function () {
-    v.muted = !v.muted;
-    if (!v.muted) { v.play(); }
-    b.textContent = v.muted ? '🔇' : '🔊';
-    b.setAttribute('aria-label', v.muted ? 'Turn the sound on' : 'Turn the sound off');
-  });
 })();
 </script>
 <script>
