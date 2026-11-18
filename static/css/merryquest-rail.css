@@ -400,7 +400,7 @@ body.brand-merryquest {
   font-weight: 800; font-size: 21px; letter-spacing: -0.02em; color: #f2f5f1;
 }
 .mqx-wordmark b { color: #ffc82c; font-weight: 800; }
-.mqx-nav { display: flex; flex: 1; justify-content: space-between; align-items: center; gap: 14px; margin-left: 6px; }
+.mqx-nav { display: flex; flex: 1; justify-content: center; align-items: center; gap: clamp(20px, 3vw, 42px); margin-left: 6px; }
 .mqx-nav a {
   color: #a9b8ac; text-decoration: none; font-size: 14px; font-weight: 600;
 }
