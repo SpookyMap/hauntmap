@@ -100,10 +100,32 @@
     <div class="mqx-cast-panel">
       <p class="mqx-cast-head">The cast of 32</p>
       <div class="mqx-cast">
-        <span class="mqx-tier-legendary">Santa Claus</span><span class="mqx-tier-legendary">Krampus</span><span class="mqx-tier-legendary">Ded Moroz</span><span class="mqx-tier-epic">Mrs. Claus</span><span class="mqx-tier-epic">Jack Frost</span><span class="mqx-tier-epic">Ebenezer Scrooge</span><span class="mqx-tier-epic">Jacob Marley</span><span class="mqx-tier-epic">Nutcracker Prince</span><span class="mqx-tier-epic">Sugar Plum Fairy</span><span>Dasher</span><span>Dancer</span><span>Prancer</span><span>Vixen</span><span>Comet</span><span>Cupid</span><span>Donner</span><span>Blitzen</span><span>Tiny Tim</span><span>La Befana</span><span>Belsnickel</span><span class="mqx-cast-more">+ 12 more</span>
+        <span class="mqx-tier-legendary">Santa Claus</span><span class="mqx-tier-legendary">Krampus</span><span class="mqx-tier-legendary">Ded Moroz</span><span>Mrs. Claus</span><span>Jack Frost</span><span class="mqx-tier-epic">Ebenezer Scrooge</span><span class="mqx-tier-epic">Jacob Marley</span><span>Nutcracker Prince</span><span class="mqx-tier-epic">Sugar Plum Fairy</span><span>Dasher</span><span>Dancer</span><span>Prancer</span><span>Vixen</span><span>Comet</span><span>Cupid</span><span>Donner</span><span>Blitzen</span><span>Tiny Tim</span><span>La Befana</span><span>Belsnickel</span><span class="mqx-cast-more">+ 12 more</span>
       </div>
     </div>
   </section>
+
+  {% if cotd %}
+  <section class="mqx-cotd">
+    <div class="mqx-cotd-art"><img src="{{ cotd.img }}" alt="{{ cotd.name }} — MerryQuest character of the day" loading="lazy"></div>
+    <div class="mqx-cotd-body">
+      <p class="mqx-eyebrow">★ Character of the day</p>
+      <h2 class="mqx-cotd-name">{{ cotd.name }}</h2>
+      <p><span class="mqx-tier-pill mqx-tier-{{ cotd.tier }}">{{ cotd.tier_label }}</span></p>
+      <p class="mqx-p">{{ cotd.flavor }}</p>
+      {% if cotd.mode == "teaser" %}
+      <p class="mqx-p">A new star takes the spotlight every day from Nov 24 — and from Dec 1, the whole cast is hiding out there in the lights.</p>
+      <a class="mqx-cta" href="/signup">Join free for launch day</a>
+      {% elif cotd.mode == "drip" %}
+      <p class="mqx-p">One of four new reveals today — the full cast steps into the light by Dec 1, when the Quest opens.</p>
+      <a class="mqx-cta" href="/signup">Join free for launch day</a>
+      {% else %}
+      <p class="mqx-p">Hiding somewhere out there tonight. Check in at a display to find out who's waiting.</p>
+      <a class="mqx-cta" href="/map">Find displays near you</a>
+      {% endif %}
+    </div>
+  </section>
+  {% endif %}
 
   <section class="mqx-tour">
     <h2 class="mqx-h2">Build my tour for me</h2>

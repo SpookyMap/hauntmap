@@ -3306,6 +3306,7 @@ def home(request: Request, sort: str = "new", town: str = "", town_search: str =
          "town": town, "towns": towns(cat, state), "states": states(cat),
          "state": state, "region": region, "voted": voted,
          "cat": cat, "cat_labels": CAT_LABELS, "cat_emoji": CAT_EMOJI,
+         "cotd": _quest_cotd() if _brand_of(request) == "merryquest" else None,
          "scare": scare, "tag": tag, "video": "1" if video.strip() == "1" else "",
          "tonight": tonight, "tonight_label": tonight_label,
          "daily": daily, "daily_label": tonight_label,
@@ -13538,7 +13539,7 @@ def pwa_manifest(request: Request):
         return JSONResponse({
             "name": "MerryQuest: Christmas Lights",
             "short_name": "MerryQuest",
-            "description": "Christmas Light Map & Tours — find the best "
+            "description": "Capture the Magic — find the best "
                            "Christmas light displays near you and build "
                            "your light night.",
             "id": "/",
@@ -17400,6 +17401,72 @@ def _quest_is_golden_night(d) -> bool:
     if d.month == 12:
         return d.day == 1 or d.day in (24, 25) or d.weekday() == 4
     return d.month == 1 and d.day == 6
+
+
+# Character of the Day (Dan approved Nov 18, 2026 — roadmap #1): one
+# spotlight character per US-Eastern day, the same for every visitor.
+# The reveal-drip week (Nov 24-30) leads with each day's headline
+# reveal, Dec 1 belongs to Santa, and after launch the full cast
+# cycles daily. Before Nov 24 the card runs in teaser mode with Pip.
+# (slug, name, tier, flavor) — mirrors the reveal-kit cast exactly.
+_QUEST_CAST = [
+    ("christmas-caroler", "Christmas Caroler", "common", "Her song drifts from the brightest porch on the block."),
+    ("elf-helper", "Elf Helper", "common", "Small hands, enormous deadlines."),
+    ("toy-soldier", "Toy Soldier", "common", "Stands guard at the nutcracker gate. Never blinks."),
+    ("gingerbread-scout", "Gingerbread Scout", "common", "First to the display, first to report back. Smells amazing."),
+    ("tiny-tim", "Tiny Tim", "common", "The heart of the whole quest. God bless us, every one."),
+    ("snow-sprite", "Snow Sprite", "common", "Appears wherever the first flakes of the night are falling."),
+    ("candy-cane-sprite", "Candy Cane Sprite", "common", "Leaves a peppermint shimmer on every railing she touches."),
+    ("pinecone-imp", "Pinecone Imp", "common", "Mischief, pocket-sized. Check the wreaths twice."),
+    ("dasher", "Dasher", "rare", "Fastest hooves in the northern sky. First out of the gate."),
+    ("dancer", "Dancer", "rare", "Grace at 30,000 feet."),
+    ("prancer", "Prancer", "rare", "All pride, all polish, all season."),
+    ("vixen", "Vixen", "rare", "Clever enough to find the displays before the map does."),
+    ("comet", "Comet", "rare", "A streak of light over the rooftops — look up."),
+    ("cupid", "Cupid", "rare", "Small wings, perfect aim, endless cheer."),
+    ("donner", "Donner", "rare", "Thunder in a harness."),
+    ("blitzen", "Blitzen", "rare", "Lightning, twice as bright. Last to land."),
+    ("mrs-claus", "Mrs. Claus", "rare", "Runs the North Pole. And, quietly, the whole quest."),
+    ("la-befana", "La Befana", "rare", "Italy's gift-bearing witch, sweeping in on her broom."),
+    ("jack-frost", "Jack Frost", "rare", "He paints the windows. He chills the route. He never RSVPs."),
+    ("belsnickel", "Belsnickel", "rare", "Rusty chains, a switch of sticks, and gifts for the good."),
+    ("nutcracker-prince", "Nutcracker Prince", "rare", "Cursed, courageous, and first into the fray."),
+    ("sugar-plum-fairy", "Sugar Plum Fairy", "epic", "The Mouse King's sworn enemy, dancing on air."),
+    ("mouse-king", "Mouse King", "epic", "Seven crowns, one grudge, zero fear of nutcrackers."),
+    ("jacob-marley", "Jacob Marley", "epic", "Bound in chains he forged in life. He rattles first."),
+    ("ebenezer-scrooge", "Ebenezer Scrooge", "epic", "The hardest catch in the cast — his heart thaws slowly."),
+    ("ghost-of-christmas-past", "Ghost of Christmas Past", "epic", "She carries the light of a thousand remembered winters."),
+    ("ghost-of-christmas-present", "Ghost of Christmas Present", "epic", "A giant of joy, here for one glorious night only."),
+    ("ghost-of-christmas-yet-to-come", "Ghost of Christmas Yet to Come", "epic", "Silent. Hooded. Already waiting at the last display."),
+    ("ded-moroz", "Ded Moroz", "legendary", "Grandfather Frost, striding out of the Siberian snow."),
+    ("krampus", "Krampus", "legendary", "He keeps the naughty list. Pray your name isn't on it."),
+    ("santa-claus", "Santa Claus", "legendary", "The legend himself. Golden nights only."),
+    ("pip-the-star-pin", "Pip the Star Pin", "original", "Your guide, your mascot — the star on top of the quest."),
+]
+_QUEST_COTD_DRIP = ["christmas-caroler", "tiny-tim", "dasher", "comet",
+                    "mrs-claus", "nutcracker-prince", "ebenezer-scrooge"]
+_QUEST_TIER_LABEL = {"legendary": "LEGENDARY", "epic": "EPIC", "rare": "RARE",
+                     "common": "COMMON", "original": "THE GUIDE"}
+
+
+def _quest_cotd(today=None) -> dict:
+    today = today or _quest_today()
+    cast = {c[0]: c for c in _QUEST_CAST}
+
+    def mk(slug, mode):
+        s, name, tier, flavor = cast[slug]
+        return {"slug": s, "name": name, "tier": tier,
+                "tier_label": _QUEST_TIER_LABEL[tier], "flavor": flavor,
+                "img": f"/static/img/cotd/{s}.jpg", "mode": mode}
+
+    drip_start = date(2026, 11, 24)
+    if today < drip_start:
+        return mk("pip-the-star-pin", "teaser")
+    if today < date(2026, 12, 1):
+        return mk(_QUEST_COTD_DRIP[(today - drip_start).days], "drip")
+    if today == date(2026, 12, 1):
+        return mk("santa-claus", "live")
+    return mk(_QUEST_CAST[(today - date(2026, 12, 2)).days % len(_QUEST_CAST)][0], "live")
 
 
 # Spawn locations (Dan, Nov 18, 2026): house displays are the core,
