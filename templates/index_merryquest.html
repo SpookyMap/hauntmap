@@ -15,11 +15,11 @@
 <div class="mqx-wrap">
 
   <section class="mqx-hero">
-    {% if tonight %}<div class="mqx-hero-bg" style="background-image:url('{{ tonight.thumb_url }}'){% if trending %}, url('{{ trending[0].thumb_url }}'){% endif %}" aria-hidden="true"></div>{% endif %}
     <div class="mqx-hero-in">
+      <img class="mqx-hero-logo" src="/static/img/merryquest-logo.jpg" alt="MerryQuest — Capture the Magic" width="485" height="514">
       <p class="mqx-chip">🎄 The quest begins Dec 1 · <span id="mqx-countdown">--d --h --m --s</span></p>
-      <h1 class="mqx-h1">Find the Best Christmas Lights <span class="mqx-grad">Near You</span></h1>
-      <p class="mqx-sub">Real displays with verified addresses — and a game on top. Visit a display, check in, and catch the holiday character hiding there.</p>
+      <h1 class="mqx-h1">Find the Best Christmas Displays <span class="mqx-grad">Near You</span></h1>
+      <p class="mqx-sub">Real displays. Verified addresses. Capture every character hiding in the lights before Santa comes to town.</p>
       <form class="mqx-search" method="get" action="/nearby" role="search">
         <input type="text" name="q" placeholder="Town or ZIP" autocomplete="off">
         <button type="submit">Search</button>
@@ -39,7 +39,7 @@
     </div>
   </section>
 
-  <div class="mqx-marquee" aria-hidden="true"><div class="mqx-marquee-track">{% for i in range(2) %}<span>Check in <b>&#x2605;</b> Catch <b>&#x2605;</b> Collect <b>&#x2605;</b> Golden nights <b>&#x2605;</b> 32 characters <b>&#x2605;</b> Every town <b>&#x2605;</b> Check in <b>&#x2605;</b> Catch <b>&#x2605;</b> Collect <b>&#x2605;</b> Golden nights <b>&#x2605;</b> 32 characters <b>&#x2605;</b> Every town <b>&#x2605;</b> </span>{% endfor %}</div></div>
+  <div class="mqx-marquee" aria-hidden="true"><div class="mqx-marquee-track">{% for i in range(2) %}<span>Check in <b>&#x2605;</b> Capture <b>&#x2605;</b> Collect <b>&#x2605;</b> Golden nights <b>&#x2605;</b> 32 characters <b>&#x2605;</b> Every town <b>&#x2605;</b> Check in <b>&#x2605;</b> Capture <b>&#x2605;</b> Collect <b>&#x2605;</b> Golden nights <b>&#x2605;</b> 32 characters <b>&#x2605;</b> Every town <b>&#x2605;</b> </span>{% endfor %}</div></div>
 
   <div class="mqx-stats">
     <div><b>850+</b><span>Christmas displays</span></div>
@@ -56,7 +56,7 @@
     </div>
     <div class="mqx-trio-card">
       <span class="mqx-trio-icon">⭐</span>
-      <h3>Catch</h3>
+      <h3>Capture</h3>
       <p>Every display hides a character. Checking in catches whoever's there.</p>
     </div>
     <div class="mqx-trio-card">
@@ -88,14 +88,14 @@
   <section class="mqx-split" id="mqx-quest">
     <div class="mqx-split-copy">
       <p class="mqx-eyebrow">The quest</p>
-      <h2 class="mqx-h2">Catch characters at real displays</h2>
+      <h2 class="mqx-h2">Capture characters at real displays</h2>
       <p class="mqx-p">Every display on the map can hide a character. Arrive, check in, and it lands in your Sack — build the whole cast of 32 before the season ends.</p>
       <ol class="mqx-steps">
         <li><b>1</b> Find a display near you</li>
         <li><b>2</b> Check in when you arrive</li>
-        <li><b>3</b> Catch who's hiding there</li>
+        <li><b>3</b> Capture who's hiding there</li>
       </ol>
-      {% if quest_enabled %}<a class="mqx-cta" href="/sack">Open Santa's Sack</a>{% else %}<a class="mqx-cta" href="/signup">Join free — the Quest opens Dec 1</a>{% endif %}
+      {% if quest_enabled %}<a class="mqx-cta" href="/sack">Open Santa's Sack</a>{% else %}<a class="mqx-cta" href="/signup">Join Today — MerryQuest begins December 1st</a>{% endif %}
     </div>
     <div class="mqx-cast-panel">
       <p class="mqx-cast-head">The cast of 32</p>

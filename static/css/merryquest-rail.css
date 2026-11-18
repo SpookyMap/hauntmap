@@ -765,3 +765,8 @@ main > h1 { font-family:'Anton',sans-serif; text-transform:uppercase; letter-spa
   .mqx-cotd-art{max-width:230px;margin:0 auto}
   .mqx-cotd-name{font-size:32px}
 }
+
+/* Hero logo plaque (Dan's emblem, Nov 18) */
+.mqx-hero-logo{display:block;width:min(470px,88vw);height:auto;margin:0 auto 16px;
+  border-radius:18px;border:1px solid rgba(230,177,109,.45);
+  box-shadow:0 24px 60px rgba(0,0,0,.5),0 0 44px rgba(255,200,44,.10)}
