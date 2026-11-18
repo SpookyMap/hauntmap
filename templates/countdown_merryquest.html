@@ -74,7 +74,7 @@
 </head>
 <body>
   <div class="bg" aria-hidden="true">
-    <video autoplay muted loop playsinline preload="metadata" poster="/static/img/merryquest-clouds.jpg">
+    <video autoplay muted loop playsinline preload="metadata" poster="/static/img/mq-sleigh-future.jpg">
       <source src="/static/video/mq-hero-sleigh.mp4" type="video/mp4">
     </video>
   </div>
@@ -94,6 +94,7 @@
     <a class="cta" href="https://gomerryquest.com">Enter gomerryquest.com</a>
     <p class="note">The app arrives December 1 · iOS &amp; Android</p>
   </main>
+  <button id="sound-btn" type="button" aria-label="Turn the sound on" style="position:fixed;right:16px;bottom:16px;z-index:5;width:46px;height:46px;border-radius:50%;border:1px solid rgba(255,255,255,0.35);background:rgba(8,12,20,0.55);font-size:20px;line-height:1;cursor:pointer;color:#fff;">🔇</button>
 <script>
 (function () {
   var cd = { d: document.getElementById('cd-d'), h: document.getElementById('cd-h'),
@@ -111,6 +112,16 @@
     setTimeout(tick, 1000);
   }
   tick();
+  var sb = document.getElementById('sound-btn');
+  var vid = document.querySelector('.bg video');
+  if (sb && vid) {
+    sb.addEventListener('click', function () {
+      vid.muted = !vid.muted;
+      if (!vid.muted) { vid.play(); }
+      sb.textContent = vid.muted ? '🔇' : '🔊';
+      sb.setAttribute('aria-label', vid.muted ? 'Turn the sound on' : 'Turn the sound off');
+    });
+  }
 })();
 </script>
 </body>
