@@ -886,6 +886,11 @@ main > h1 { font-family:'Anton',sans-serif; text-transform:uppercase; letter-spa
 /* Driving loop banner (Nov 18, 2026). */
 .mqx-drive { margin-top: 0; position: relative; overflow: hidden; border: 1px solid var(--mqx-line); }
 .mqx-drive-video { width: 100%; display: block; height: clamp(360px, 74vh, 740px); object-fit: cover; }
+@media (max-width: 760px) {
+  /* Phones: show the full frame at its natural ratio instead of
+     cover-cropping the sides away. */
+  .mqx-drive-video { height: auto; aspect-ratio: 1100 / 586; }
+}
 .mqx-drive-cap {
   position: absolute; left: 22px; bottom: 16px; margin: 0;
   font-family: "Luckiest Guy", var(--mqx-display); font-size: clamp(18px, 2.6vw, 28px);
