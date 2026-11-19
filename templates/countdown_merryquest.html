@@ -120,17 +120,25 @@
   .begins {
     /* Bebas Neue (Dan's pick, Nov 19, 2026): the movie-poster line. */
     font-family: "Bebas Neue", "Inter", sans-serif;
-    margin: 12px 0 6px; font-size: 15px; font-weight: 400; letter-spacing: 0.34em; text-indent: 0.34em;
+    /* Auto top margin (Dan, Nov 19, 2026): the line sinks to the middle
+       of the free space between the title and the counter. */
+    margin: auto 0 6px; padding-top: 12px; font-size: 15px; font-weight: 400; letter-spacing: 0.34em; text-indent: 0.34em;
     text-transform: uppercase; color: #ffd98a;
   }
   /* Website view (Dan, Nov 19, 2026): "The Quest Begins In" larger. */
   @media (min-width: 761px) {
-    .begins { font-size: 44px; letter-spacing: 0.26em; text-indent: 0.26em; margin: 30px 0 12px; }
+    .begins { font-size: 44px; letter-spacing: 0.26em; text-indent: 0.26em; margin: auto 0 12px; padding-top: 30px; }
   }
   /* Counter slid down (Dan, Nov 19, 2026): the auto top margin eats the
      free height so the counter + note fill the page bottom — no dead
      space under them. */
   .cd { display: flex; justify-content: center; gap: clamp(10px, 3.5vw, 44px); margin: auto 0 36px; padding-top: 22px; width: 100%; }
+  /* Phone (Dan, Nov 19, 2026): "The Quest Begins In" drops to just above
+     the counter — the pair groups at the bottom; desktop keeps the
+     line floating mid-page. */
+  @media (max-width: 760px) {
+    .cd { margin-top: 10px; }
+  }
   .cell { text-align: center; min-width: 0; }
   .cell span {
     display: block; font-family: "Luckiest Guy", cursive; font-weight: 400;
