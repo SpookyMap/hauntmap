@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Creepster&family=Fredoka:wght@500;600;700&family=Inter:wght@500;600;700;800;900&family=Luckiest+Guy&family=Nosifer&family=Rubik+Wet+Paint&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/static/css/style.css?v=20261112z249">
-{% if brand | default('haunt') == 'merryquest' %}{% if request.query_params.get('vibe') == 'game' %}<link rel="stylesheet" href="/static/css/merryquest-game.css?v=20261118g2">{% elif request.query_params.get('vibe') == 'duo' %}<link rel="stylesheet" href="/static/css/merryquest-duo.css?v=20261118d1">{% elif request.query_params.get('vibe') == 'abnb' %}<link rel="stylesheet" href="/static/css/merryquest-abnb.css?v=20261118a1">{% elif request.query_params.get('vibe') == 'rail' %}<link rel="stylesheet" href="/static/css/merryquest-rail.css?v=20261118r23">{% elif request.query_params.get('vibe') == 'wise' %}<link rel="stylesheet" href="/static/css/merryquest-wise.css?v=20261118w4">{% else %}<link rel="stylesheet" href="/static/css/merryquest-rail.css?v=20261118r23">{% endif %}{% endif %}
+{% if brand | default('haunt') == 'merryquest' %}{% if request.query_params.get('vibe') == 'game' %}<link rel="stylesheet" href="/static/css/merryquest-game.css?v=20261118g2">{% elif request.query_params.get('vibe') == 'duo' %}<link rel="stylesheet" href="/static/css/merryquest-duo.css?v=20261118d1">{% elif request.query_params.get('vibe') == 'abnb' %}<link rel="stylesheet" href="/static/css/merryquest-abnb.css?v=20261118a1">{% elif request.query_params.get('vibe') == 'rail' %}<link rel="stylesheet" href="/static/css/merryquest-rail.css?v=20261119r24">{% elif request.query_params.get('vibe') == 'wise' %}<link rel="stylesheet" href="/static/css/merryquest-wise.css?v=20261118w4">{% else %}<link rel="stylesheet" href="/static/css/merryquest-rail.css?v=20261119r24">{% endif %}{% endif %}
 {# PWA (Wave 1, Oct 27): installable HauntMap + the web-push service
    worker. iOS needs the apple-* metas + touch icon for Add to Home
    Screen; push on iOS works only from the installed PWA. #}
@@ -70,7 +70,7 @@ two.parentNode.insertBefore(twenty, two);
 {% if brand | default('haunt') == 'merryquest' %}
 <header class="mqx-header">
   <div class="mqx-header-in">
-    <a class="mqx-brand" href="/"><svg class="brand-pip" viewBox="0 0 48 48" aria-hidden="true" focusable="false"><path d="M24 2C14.6 2 7 9.6 7 19c0 12.4 15.4 25.6 15.7 25.9a2 2 0 0 0 2.6 0C25.6 44.6 41 31.4 41 19 41 9.6 33.4 2 24 2z" fill="#FFC82C" stroke="#122B1E" stroke-width="2"/><path d="M24 10l3.1 6.3 6.9 1-5 4.9 1.2 6.9L24 25.9l-6.2 3.2L19 22.2l-5-4.9 6.9-1z" fill="#122B1E"/></svg><span class="mqx-wordmark">Merry<b>Quest</b></span></a>
+    <a class="mqx-brand" href="/"><img class="mqx-brand-logo" src="/static/img/merryquest-logo.png" alt="MerryQuest" width="620" height="124"></a>
     <nav class="mqx-nav">
       <a href="/map">Map</a>
       <a href="/nearby">Displays</a>
@@ -78,11 +78,10 @@ two.parentNode.insertBefore(twenty, two);
       <a href="/tour">Tours</a>
       <a href="/games">Games</a>
       {% if quest_enabled %}<a href="/sack">Santa's Sack</a>{% endif %}
-      {% if request.state.member %}<a class="mqx-login" href="/@{{ request.state.member.handle }}">@{{ request.state.member.handle }}</a>{% else %}<a class="mqx-login" href="/login">Log in</a>{% endif %}
     </nav>
-    {% if not request.state.member %}<div class="mqx-actions">
-      <a class="mqx-join" href="/signup">Join free</a>
-    </div>{% endif %}
+    <div class="mqx-actions">
+      {% if request.state.member %}<a class="mqx-login" href="/@{{ request.state.member.handle }}">@{{ request.state.member.handle }}</a>{% else %}<a class="mqx-login" href="/login">Log in</a><a class="mqx-join" href="/signup">Join free</a>{% endif %}
+    </div>
   </div>
 </header>
 {% else %}<header class="site-header v2">

@@ -390,9 +390,10 @@ body.brand-merryquest {
   border-bottom: 1px solid var(--mqx-line);
 }
 .mqx-header-in {
-  max-width: 1180px; margin: 0 auto; padding: 12px 20px;
+  max-width: none; margin: 0; padding: 12px 28px;
   display: flex; align-items: center; gap: 28px;
 }
+.mqx-brand-logo { height: 34px; width: auto; display: block; }
 .mqx-brand { display: flex; align-items: center; gap: 9px; text-decoration: none; }
 .mqx-brand .brand-pip { height: 34px; width: 34px; }
 .mqx-wordmark {
@@ -400,13 +401,20 @@ body.brand-merryquest {
   font-weight: 800; font-size: 21px; letter-spacing: -0.02em; color: #f2f5f1;
 }
 .mqx-wordmark b { color: #ffc82c; font-weight: 800; }
-.mqx-nav { display: flex; flex: 1; justify-content: center; align-items: center; gap: clamp(20px, 3vw, 42px); margin-left: 6px; }
+.mqx-nav { display: flex; flex: 1; justify-content: center; align-items: center; gap: clamp(38px, 5vw, 76px); margin-left: 6px; }
+@media (min-width: 1080px) {
+  .mqx-header-in { position: relative; }
+  .mqx-nav { position: absolute; left: 50%; transform: translateX(-50%); flex: none; margin-left: 0; }
+}
 .mqx-nav a {
   color: #a9b8ac; text-decoration: none; font-size: 14px; font-weight: 600;
 }
 .mqx-nav a:hover { color: #ffffff; }
-.mqx-actions { display: flex; align-items: center; gap: 14px; }
-.mqx-login { color: #dfe7de; text-decoration: none; font-size: 14px; font-weight: 600; }
+.mqx-actions { display: flex; align-items: center; gap: 12px; margin-left: auto; }
+.mqx-login {
+  color: #ffffff; text-decoration: none; font-size: 14px; font-weight: 700;
+  padding: 9px 18px; border-radius: 999px; border: 1px solid rgba(223, 231, 222, 0.38);
+}
 .mqx-join {
   background: var(--mqx-grad); color: #131313; text-decoration: none;
   font-size: 14px; font-weight: 800; padding: 9px 18px; border-radius: 999px;
@@ -414,9 +422,14 @@ body.brand-merryquest {
 }
 @media (max-width: 760px) {
   .mqx-header-in { gap: 14px; padding: 10px 14px; flex-wrap: wrap; }
-  .mqx-nav { order: 3; width: 100%; flex: none; gap: 16px; overflow-x: auto; padding-bottom: 2px; margin-left: 0; }
+  /* Phone: Join free first, Log in to its right, same size. */
+  .mqx-actions { gap: 8px; }
+  .mqx-join { order: 1; }
+  .mqx-login { order: 2; }
+  .mqx-nav { order: 3; width: 100%; flex: none; gap: 8px; justify-content: space-between; overflow-x: visible; padding: 2px 2px; margin-left: 0; }
   .mqx-nav a { white-space: nowrap; font-size: 13.5px; }
   .mqx-wordmark { font-size: 19px; }
+  .mqx-brand-logo { height: 27px; }
 }
 
 /* ---------- Page frame ---------- */
