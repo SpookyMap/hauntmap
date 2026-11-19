@@ -1105,8 +1105,10 @@ main > h1 { font-family:'Anton',sans-serif; text-transform:uppercase; letter-spa
 .mqx-marquee-track { display: flex; width: max-content; white-space: nowrap;
   animation: mqxMarquee 32s linear infinite; }
 .mqx-marquee-track span { font-family: 'Anton', sans-serif; text-transform: uppercase;
-  letter-spacing: .14em; font-size: 15px; color: var(--mut); padding-right: .6em; }
-.mqx-marquee-track b { color: var(--gold); font-weight: 400; }
+  letter-spacing: .14em; font-size: 15px; color: #f4feff; padding-right: .6em;
+  animation: mqx-charge 9s linear infinite; }
+.mqx-marquee-track b { color: var(--gold); font-weight: 400;
+  text-shadow: 0 0 10px rgba(255, 200, 44, 0.85), 0 0 26px rgba(255, 170, 0, 0.45); }
 @keyframes mqxMarquee { to { transform: translateX(-50%); } }
 .quest-mystery { animation: mqxBreathe 2.8s ease-in-out infinite; }
 @keyframes mqxBreathe { 0%,100% { box-shadow: 0 0 12px var(--qglow); } 50% { box-shadow: 0 0 36px var(--qglow); } }

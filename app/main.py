@@ -3330,7 +3330,7 @@ def home(request: Request, sort: str = "new", town: str = "", town_search: str =
     response = templates.TemplateResponse(request, "index_merryquest.html" if _brand_of(request) == "merryquest" else "index.html",
         {"request": request, "entries": entries, "sort": sort,
          "is_plus": _plus_active(_hm["id"]) if _hm else False,
-         "town": town, "towns": towns(cat, state), "states": states(cat),
+         "town": town, "towns": towns(cat, state), "ticker_towns": towns("christmas"), "states": states(cat),
          "state": state, "region": region, "voted": voted,
          "cat": cat, "cat_labels": CAT_LABELS, "cat_emoji": CAT_EMOJI,
          "cotd": _quest_cotd() if _brand_of(request) == "merryquest" else None,
