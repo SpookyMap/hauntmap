@@ -484,6 +484,25 @@ body.brand-merryquest { overflow-x: clip; }
 @media (prefers-reduced-motion: reduce) {
   .mqx-intro { display: none; }
 }
+/* Page-exit zoom (Nov 18, 2026): clicking a nav link from the
+   homepage zooms the logo at the viewer before the next page. */
+.mqx-zoomout {
+  position: fixed; inset: 0; z-index: 90; display: flex;
+  align-items: center; justify-content: center; overflow: hidden;
+  pointer-events: none; opacity: 0;
+  background: radial-gradient(120% 120% at 50% 40%, rgba(27, 15, 51, 0.93) 0%, rgba(7, 4, 15, 0.97) 72%);
+}
+.mqx-zoomout.on { opacity: 1; transition: opacity 0.18s ease; pointer-events: all; }
+.mqx-zoomout img {
+  width: min(560px, 84vw); height: auto; transform-origin: 63% 50%;
+  filter: drop-shadow(0 10px 34px rgba(0, 0, 0, 0.55)) drop-shadow(0 0 30px rgba(120, 220, 255, 0.25));
+}
+.mqx-zoomout.on img { animation: mqx-zoomout-fly 0.68s cubic-bezier(0.55, 0, 0.9, 0.4) both; }
+@keyframes mqx-zoomout-fly {
+  0% { transform: scale(0.9); opacity: 1; }
+  60% { opacity: 1; }
+  100% { transform: scale(13); opacity: 0; filter: blur(6px); }
+}
 
 /* ---------- Hero: full-bleed campaign shot (GTA) ---------- */
 .mqx-hero {
