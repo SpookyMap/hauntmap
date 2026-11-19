@@ -3334,6 +3334,7 @@ def home(request: Request, sort: str = "new", town: str = "", town_search: str =
          "state": state, "region": region, "voted": voted,
          "cat": cat, "cat_labels": CAT_LABELS, "cat_emoji": CAT_EMOJI,
          "cotd": _quest_cotd() if _brand_of(request) == "merryquest" else None,
+         "cast_chips": _quest_cast_chips() if _brand_of(request) == "merryquest" else None,
          "scare": scare, "tag": tag, "video": "1" if video.strip() == "1" else "",
          "tonight": tonight, "tonight_label": tonight_label,
          "daily": daily, "daily_label": tonight_label,
@@ -17476,15 +17477,59 @@ _QUEST_TIER_LABEL = {"legendary": "LEGENDARY", "epic": "EPIC", "rare": "RARE",
                      "common": "COMMON", "original": "THE GUIDE"}
 
 
+_QUEST_PUBLIC_SLUGS = {
+    # Revealed means REVEALED (Dan, Nov 19, 2026): only the five on
+    # the cast wall are named in public. The seven background
+    # characters show as faces but stay unnamed until their reveal
+    # day. Pip is the public mascot/guide, named everywhere already.
+    "santa-claus", "krampus", "ded-moroz", "ebenezer-scrooge",
+    "la-befana", "pip-the-star-pin",
+}
+_QUEST_GHOST_SLUGS = {"ghost-of-christmas-past",
+                      "ghost-of-christmas-present",
+                      "ghost-of-christmas-yet-to-come"}
+
+
+def _quest_cast_chips(today=None) -> list:
+    """Cast panel chips (Dan, Nov 19, 2026): names only for characters
+    already public; everyone else is a "?" bubble that flips to its
+    name on its reveal day — the COTD drip, the Ghosts on Nov 30,
+    and the whole cast at the Dec 1 launch."""
+    today = today or _quest_today()
+    drip_start = date(2026, 11, 24)
+    revealed = set(_QUEST_PUBLIC_SLUGS)
+    for i, slug in enumerate(_QUEST_COTD_DRIP):
+        if today >= drip_start + timedelta(days=i):
+            revealed.add(slug)
+    if today >= date(2026, 11, 30):
+        revealed |= _QUEST_GHOST_SLUGS
+    if today >= date(2026, 12, 1):
+        revealed |= {c[0] for c in _QUEST_CAST}
+    tier_rank = {"legendary": 0, "epic": 1, "rare": 2, "common": 3,
+                 "original": 4}
+    named, mystery = [], []
+    for slug, name, tier, _flavor in _QUEST_CAST:
+        if slug in revealed:
+            cls = {"legendary": "mqx-tier-legendary",
+                   "epic": "mqx-tier-epic"}.get(tier, "")
+            named.append((tier_rank.get(tier, 5), name,
+                          {"label": name, "cls": cls}))
+        else:
+            mystery.append({"label": "?", "cls": "mqx-cast-mystery"})
+    named.sort(key=lambda t: (t[0], t[1]))
+    return [c for _r, _n, c in named] + mystery
+
+
 def _quest_cotd(today=None) -> dict:
     today = today or _quest_today()
     cast = {c[0]: c for c in _QUEST_CAST}
 
     def mk(slug, mode):
         s, name, tier, flavor = cast[slug]
+        img_slug = "la-befana-v2" if s == "la-befana" else s
         return {"slug": s, "name": name, "tier": tier,
                 "tier_label": _QUEST_TIER_LABEL[tier], "flavor": flavor,
-                "img": f"/static/img/cotd/{s}.jpg", "mode": mode}
+                "img": f"/static/img/cotd/{img_slug}.jpg", "mode": mode}
 
     drip_start = date(2026, 11, 24)
     if today < drip_start:

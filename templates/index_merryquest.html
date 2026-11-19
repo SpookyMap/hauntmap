@@ -125,7 +125,7 @@
     <div class="mqx-cast-panel">
       <p class="mqx-cast-head">The cast of 32</p>
       <div class="mqx-cast">
-        <span class="mqx-tier-legendary">Santa Claus</span><span class="mqx-tier-legendary">Krampus</span><span class="mqx-tier-legendary">Ded Moroz</span><span>Mrs. Claus</span><span>Jack Frost</span><span class="mqx-tier-epic">Ebenezer Scrooge</span><span class="mqx-tier-epic">Jacob Marley</span><span>Nutcracker Prince</span><span class="mqx-tier-epic">Sugar Plum Fairy</span><span>Dasher</span><span>Dancer</span><span>Prancer</span><span>Vixen</span><span>Comet</span><span>Cupid</span><span>Donner</span><span>Blitzen</span><span>Tiny Tim</span><span>La Befana</span><span>Belsnickel</span><span class="mqx-cast-more">+ 12 more</span>
+        {% for chip in cast_chips %}<span{% if chip.cls %} class="{{ chip.cls }}"{% endif %}>{{ chip.label }}</span>{% endfor %}
       </div>
     </div>
   </section>
@@ -140,7 +140,7 @@
       <figure class="mqx-fig"><img src="/static/img/neon/scrooge.jpg" alt="Ebenezer Scrooge — MerryQuest Epic" loading="lazy"><figcaption>Ebenezer Scrooge</figcaption></figure>
       <figure class="mqx-fig mqx-fig-center"><img src="/static/img/neon/santa.jpg" alt="Santa Claus — MerryQuest Legendary" loading="lazy"><figcaption>Santa Claus</figcaption></figure>
       <figure class="mqx-fig"><img src="/static/img/neon/ded-moroz.jpg" alt="Ded Moroz — MerryQuest Legendary" loading="lazy"><figcaption>Ded Moroz</figcaption></figure>
-      <figure class="mqx-fig"><img src="/static/img/neon/la-befana.jpg" alt="La Befana — MerryQuest Rare" loading="lazy"><figcaption>La Befana</figcaption></figure>
+      <figure class="mqx-fig"><img src="/static/img/neon/la-befana-v2.jpg" alt="La Befana — MerryQuest Rare" loading="lazy"><figcaption>La Befana</figcaption></figure>
     </div>
     <p class="mqx-universe-note">Five revealed. Twenty-seven still in the dark.</p>
   </section>
