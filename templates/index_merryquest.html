@@ -120,7 +120,6 @@
         <li><b>2</b> Check in when you arrive</li>
         <li><b>3</b> Capture who's hiding there</li>
       </ol>
-      {% if quest_enabled %}<a class="mqx-cta" href="/sack">Open Santa's Sack</a>{% else %}<a class="mqx-cta" href="/signup">Join Today — MerryQuest begins December 1st</a>{% endif %}
     </div>
     <div class="mqx-cast-panel">
       <p class="mqx-cast-head">The cast of 32</p>
@@ -128,6 +127,7 @@
         {% for chip in cast_chips %}<span{% if chip.cls %} class="{{ chip.cls }}"{% endif %}>{{ chip.label }}</span>{% endfor %}
       </div>
     </div>
+    {% if quest_enabled %}<a class="mqx-cta mqx-cta-join-small" href="/sack">Open Santa's Sack</a>{% else %}<a class="mqx-cta mqx-cta-join-small" href="/signup">Join Today — MerryQuest begins December 1st</a>{% endif %}
   </section>
 
 

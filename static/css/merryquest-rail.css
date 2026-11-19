@@ -964,10 +964,6 @@ body.brand-merryquest .mqx-h2 {
     radial-gradient(120% 150% at 85% 0%, rgba(255, 200, 44, 0.10), transparent 55%),
     linear-gradient(165deg, rgba(16, 24, 18, 0.97), rgba(9, 14, 10, 0.97));
 }
-@media (max-width: 760px) {
-  .mqx-split { grid-template-columns: 1fr; padding: 26px 22px; }
-  .mqx-cast-panel { border-left: none; border-top: 1px solid rgba(255, 255, 255, 0.09); padding-left: 0; padding-top: 24px; }
-}
 .mqx-split-copy {
   background: none; border: none;
   border-radius: 0; padding: 0;
@@ -986,6 +982,9 @@ body.brand-merryquest .mqx-h2 {
   padding: 13px 26px; border-radius: 999px;
   box-shadow: 0 6px 26px rgba(235, 122, 44, 0.38);
 }
+.mqx-split .mqx-cta-join-small { grid-column: 1 / -1; justify-self: center;
+  font-size: 12.5px; font-weight: 700; padding: 8px 18px; margin-top: 6px;
+  box-shadow: 0 3px 14px rgba(235, 122, 44, 0.25); }
 .mqx-cast-panel {
   border-radius: 0; padding: 0 0 0 30px;
   background: none;
@@ -1007,6 +1006,19 @@ body.brand-merryquest .mqx-h2 {
 .mqx-cast span.mqx-tier-epic { border-color: rgba(235, 122, 44, 0.55); color: #ffb37a; }
 .mqx-cast span.mqx-cast-more { border-style: dashed; color: #8fa294; }
 .mqx-cast span.mqx-cast-mystery { border-style: dashed; color: #8fa294; min-width: 36px; text-align: center; }
+
+@media (max-width: 760px) {
+  /* Phone cleanup (Dan, Nov 19, 2026): the merged block floated narrow
+     with black margins (zoom + breakout math), and the cast panel kept
+     its desktop left border and 30px indent because the old phone block
+     sat before the base rules and lost on order. Full-bleed block, no
+     zoom, panel stacked under a top divider. */
+  .mqx-split { grid-template-columns: 1fr; zoom: 1; width: calc(100vw - 12px);
+    padding: 28px 20px 30px; margin-top: 40px; gap: 0; }
+  .mqx-cast-panel { border-left: none; border-top: 1px solid rgba(255, 255, 255, 0.09);
+    padding: 24px 0 0; margin-top: 26px; align-self: stretch; }
+  .mqx-p { font-size: 15px; }
+}
 
 /* ---------- Tour band ---------- */
 .mqx-tour {
@@ -1205,13 +1217,13 @@ main > h1 { font-family:'Anton',sans-serif; text-transform:uppercase; letter-spa
   position: absolute; left: calc(7.5% + 22px); bottom: 16px; margin: 0;
   font-family: "Luckiest Guy", var(--mqx-display); font-size: clamp(18px, 2.6vw, 28px);
   color: #ffffff; text-transform: uppercase; transform: skewX(-3deg);
-  text-shadow: 0 3px 18px rgba(0, 0, 0, 0.75);
+  text-shadow: 0 3px 18px rgba(0, 0, 0, 0.75); white-space: nowrap;
 }
 .mqx-drive-cap span { color: #ffc82c; }
 @media (max-width: 760px) {
   /* Phone: the caption was running edge to edge and wrapping over the
      car — smaller, inset to the video's frame, capped width. */
-  .mqx-drive-cap { font-size: 15px; left: calc(7.5% + 12px); bottom: 10px; max-width: 78%; }
+  .mqx-drive-cap { font-size: clamp(10px, 2.9vw, 14px); left: calc(7.5% + 12px); bottom: 10px; max-width: none; }
 }
 /* Universe reveal lineup (Nov 18, 2026): the neon cast on a dark
    stage, UNKJD-style, ahead of the Nov 24 reveal drip. */
