@@ -632,7 +632,7 @@ body.brand-merryquest { overflow-x: clip; }
    cards; the photo IS the tile, title and town ride on it. */
 .mqx-mosaic-head { max-width: 1180px; margin: 0 auto; padding: 0 20px 18px; }
 .mqx-mosaic-more { max-width: 1180px; margin: 18px auto 0; padding: 0 20px; }
-.mqx-mosaic { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; zoom: 0.8; }
+.mqx-mosaic { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; zoom: 0.72; }
 .mqx-tile {
   position: relative; display: block; aspect-ratio: 4 / 3; overflow: hidden;
   background: #0d1f14; text-decoration: none;
