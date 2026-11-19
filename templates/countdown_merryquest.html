@@ -31,7 +31,7 @@
   .wrap {
     position: relative; z-index: 1; min-height: 100vh;
     display: flex; flex-direction: column; align-items: center; justify-content: center;
-    text-align: center; padding: 12px 20px 40px;
+    text-align: center; padding: 4px 20px 40px;
   }
   .logo { margin: 0; line-height: 0; }
   .logo img {
@@ -69,8 +69,8 @@
     box-shadow: 0 0 18px rgba(64, 200, 255, 0.95), 0 0 60px rgba(64, 200, 255, 0.6);
   }
   .rule {
-    display: flex; align-items: center; justify-content: center; gap: 18px;
-    margin: 0 auto 5px; width: min(830px, 92vw);
+    display: flex; align-items: center; justify-content: center; gap: 0;
+    margin: -8px auto 2px; width: min(830px, 92vw);
     color: #ffc82c; font-size: 46px;
     text-shadow: 0 0 16px rgba(255, 200, 44, 0.95), 0 0 40px rgba(255, 160, 32, 0.6);
   }
@@ -88,16 +88,20 @@
   .magic {
     /* Video-game subtitle lockup (Dan, Nov 19, 2026): tracked-out Anton
        riding tight under the logo + rule, like a game title card. */
-    margin: 0 0 26px; font-family: "Orbitron", "Inter", sans-serif; font-weight: 700; text-transform: uppercase;
-    font-size: clamp(18px, 4vw, 33px); letter-spacing: 0.34em; text-indent: 0.34em;
+    margin: -2px 0 18px; font-family: "Orbitron", "Inter", sans-serif; font-weight: 700; text-transform: uppercase;
+    font-size: clamp(18px, 4.6vw, 38px); letter-spacing: 0.34em; text-indent: 0.34em;
     color: #ffffff; text-shadow: 0 0 12px rgba(120, 230, 255, 0.8), 0 0 38px rgba(0, 180, 255, 0.5), 0 4px 0 rgba(10, 6, 34, 0.5);
+  }
+  /* Website view (Dan, Nov 19, 2026): "The Quest Begins In" larger. */
+  @media (min-width: 761px) {
+    .begins { font-size: 18px; margin: 0 0 8px; }
   }
   /* Phone lockup (Dan, Nov 19, 2026): star + line smaller, CAPTURE THE
      MAGIC pulled up tight to the logo. */
   @media (max-width: 760px) {
     .rule { font-size: 22px; gap: 12px; margin: 0 auto 4px; width: min(560px, 88vw); }
     .rule::before, .rule::after { height: 3px; }
-    .magic { margin: 0 0 30px; }
+    .magic { margin: 0 0 10px; }
   }
   @media (prefers-reduced-motion: reduce) {
     .grid { animation: none; }
@@ -140,7 +144,7 @@
   <div class="grid" aria-hidden="true"></div>
   <main class="wrap">
     <h1 class="logo"><img src="/static/img/merryquest-logo.png" alt="MerryQuest" width="620" height="124"><span class="sr-only">MerryQuest</span></h1>
-    <div class="rule" aria-hidden="true">✦</div>
+    <div class="rule" aria-hidden="true"></div>
     <p class="magic">Capture the Magic</p>
     <p class="begins">The quest begins in</p>
     <div class="cd" role="timer" aria-label="Countdown to the December 1 launch">
