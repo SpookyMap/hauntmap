@@ -704,6 +704,34 @@ body.brand-merryquest { overflow-x: clip; }
      on iOS Safari when the hero video starts compositing (Dan, Nov 18). */
   color: #ffc82c; -webkit-text-fill-color: #ffc82c;
 }
+/* Electric headline (Dan, Nov 19, 2026): the H1 carries a live charge —
+   a steady cyan halo, a loose-bulb double flicker, and a periodic surge;
+   the gold line chases Christmas-light colors (text-shadow only, so the
+   iOS solid-fill rule above is untouched). */
+.mqx-h1 {
+  text-shadow: 0 0 16px rgba(120, 220, 255, 0.35), 0 0 44px rgba(64, 200, 255, 0.18);
+  animation: mqx-charge 6s linear infinite;
+}
+@keyframes mqx-charge {
+  0%, 100% { text-shadow: 0 0 16px rgba(120, 220, 255, 0.35), 0 0 44px rgba(64, 200, 255, 0.18); }
+  6% { text-shadow: 0 0 22px rgba(190, 240, 255, 0.75), 0 0 60px rgba(64, 200, 255, 0.4); opacity: 0.86; }
+  8% { text-shadow: 0 0 16px rgba(120, 220, 255, 0.35), 0 0 44px rgba(64, 200, 255, 0.18); opacity: 1; }
+  10% { text-shadow: 0 0 24px rgba(190, 240, 255, 0.8), 0 0 64px rgba(64, 200, 255, 0.45); opacity: 0.9; }
+  12%, 48% { text-shadow: 0 0 16px rgba(120, 220, 255, 0.35), 0 0 44px rgba(64, 200, 255, 0.18); opacity: 1; }
+  52% { text-shadow: 0 0 10px rgba(255, 255, 255, 0.95), 0 0 34px rgba(160, 235, 255, 0.9), 0 0 90px rgba(64, 200, 255, 0.65), 0 0 130px rgba(255, 200, 44, 0.4); }
+  55% { text-shadow: 0 0 18px rgba(190, 240, 255, 0.6), 0 0 52px rgba(64, 200, 255, 0.35); }
+  58% { text-shadow: 0 0 16px rgba(120, 220, 255, 0.35), 0 0 44px rgba(64, 200, 255, 0.18); }
+}
+.mqx-h1 .mqx-grad { animation: mqx-chase 6s linear infinite; }
+@keyframes mqx-chase {
+  0%, 100% { text-shadow: 0 0 18px rgba(255, 200, 44, 0.55), 0 0 46px rgba(255, 200, 44, 0.25); }
+  25% { text-shadow: 0 0 18px rgba(255, 90, 90, 0.6), 0 0 46px rgba(211, 47, 47, 0.3); }
+  50% { text-shadow: 0 0 18px rgba(119, 223, 184, 0.6), 0 0 46px rgba(119, 223, 184, 0.3); }
+  75% { text-shadow: 0 0 18px rgba(84, 185, 255, 0.6), 0 0 46px rgba(84, 185, 255, 0.3); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mqx-h1, .mqx-h1 .mqx-grad { animation: none; }
+}
 .mqx-begins {
   display: flex; align-items: center; justify-content: center; gap: 10px;
   margin: 4px 0 0; color: #ffd968; font-weight: 700;
