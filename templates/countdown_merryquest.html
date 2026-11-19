@@ -7,7 +7,7 @@
 <meta name="description" content="MerryQuest: Christmas Lights. Capture the Magic. The quest begins December 1, 2026.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Anton&family=Creepster&family=Fredoka:wght@500;600;700&family=Inter:wght@500;600;700;800;900&family=Luckiest+Guy&family=Nosifer&family=Orbitron:wght@700&family=Rubik+Wet+Paint&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Creepster&family=Fredoka:wght@500;600;700&family=Inter:wght@500;600;700;800;900&family=Luckiest+Guy&family=Nosifer&family=Russo+One&family=Orbitron:wght@700&family=Rubik+Wet+Paint&display=swap" rel="stylesheet">
 <style>
   @font-face {
     font-family: "Luckiest Guy";
@@ -88,13 +88,9 @@
   .magic {
     /* Video-game subtitle lockup (Dan, Nov 19, 2026): tracked-out Anton
        riding tight under the logo + rule, like a game title card. */
-    margin: -2px 0 18px; font-family: "Orbitron", "Inter", sans-serif; font-weight: 700; text-transform: uppercase;
-    font-size: clamp(18px, 4.6vw, 38px); letter-spacing: 0.34em; text-indent: 0.34em;
+    margin: -2px 0 18px; font-family: "Russo One", "Inter", sans-serif; font-weight: 400; text-transform: uppercase;
+    font-size: clamp(19px, 4.8vw, 40px); letter-spacing: 0.3em; text-indent: 0.3em;
     color: #ffffff; text-shadow: 0 0 12px rgba(120, 230, 255, 0.8), 0 0 38px rgba(0, 180, 255, 0.5), 0 4px 0 rgba(10, 6, 34, 0.5);
-  }
-  /* Website view (Dan, Nov 19, 2026): "The Quest Begins In" larger. */
-  @media (min-width: 761px) {
-    .begins { font-size: 18px; margin: 0 0 8px; }
   }
   /* Phone lockup (Dan, Nov 19, 2026): star + line smaller, CAPTURE THE
      MAGIC pulled up tight to the logo. */
@@ -110,16 +106,20 @@
     margin: 0 0 6px; font-size: 12px; font-weight: 700; letter-spacing: 0.34em; text-indent: 0.34em;
     text-transform: uppercase; color: #ffd98a;
   }
-  .cd { display: flex; justify-content: center; gap: clamp(10px, 4.5vw, 54px); margin: 10px 0 36px; width: 100%; }
+  /* Website view (Dan, Nov 19, 2026): "The Quest Begins In" larger. */
+  @media (min-width: 761px) {
+    .begins { font-size: 40px; letter-spacing: 0.26em; text-indent: 0.26em; margin: 0 0 12px; }
+  }
+  .cd { display: flex; justify-content: center; gap: clamp(10px, 3.5vw, 44px); margin: 10px 0 36px; width: 100%; }
   .cell { text-align: center; min-width: 0; }
   .cell span {
     display: block; font-family: "Luckiest Guy", cursive; font-weight: 400;
-    font-size: clamp(50px, 14vw, 168px); line-height: 0.95; color: #c8f6ff;
+    font-size: clamp(38px, 9.5vw, 112px); line-height: 0.95; color: #c8f6ff;
     transform: skewX(-3deg);
     text-shadow: 0 0 16px rgba(110, 230, 255, 0.75), 0 0 52px rgba(110, 230, 255, 0.40), 0 6px 0 rgba(20, 10, 50, 0.55);
   }
   .colon {
-    font-family: "Luckiest Guy", cursive; font-size: clamp(40px, 11vw, 130px); line-height: 0.95;
+    font-family: "Luckiest Guy", cursive; font-size: clamp(30px, 7.5vw, 88px); line-height: 0.95;
     color: #8fe9ff; align-self: flex-start; padding-top: 0.06em;
     text-shadow: 0 0 14px rgba(110, 230, 255, 0.7);
   }
