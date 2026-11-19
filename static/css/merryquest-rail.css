@@ -19,6 +19,11 @@
   src: url("/static/fonts/russo-one-latin.woff2") format("woff2");
   font-weight: 400; font-style: normal; font-display: swap;
 }
+@font-face {
+  font-family: "Bebas Neue";
+  src: url("/static/fonts/bebas-neue-latin.woff2") format("woff2");
+  font-weight: 400; font-style: normal; font-display: swap;
+}
 
 body.brand-merryquest {
   --bg: #090d0b;
@@ -693,7 +698,7 @@ body.brand-merryquest { overflow-x: clip; }
 .mqx-chip span { color: #ffffff; font-variant-numeric: tabular-nums; }
 .mqx-h1 {
   font-family: "Luckiest Guy", var(--mqx-display); font-weight: 400;
-  font-size: clamp(40px, 6.8vw, 80px); line-height: 1.04;
+  font-size: clamp(34px, 5.6vw, 66px); line-height: 1.04;
   letter-spacing: 0.012em; text-transform: uppercase;
   color: #ffffff; margin: 0 0 18px;
   transform: skewX(-4deg);
@@ -763,14 +768,17 @@ body.brand-merryquest { overflow-x: clip; }
   .mqx-h1, .mqx-h1 .mqx-grad { animation: none; }
 }
 .mqx-begins {
-  display: flex; align-items: center; justify-content: center; gap: 10px;
-  margin: 4px 0 0; color: #ffd968; font-weight: 700;
-  font-size: clamp(11px, 2.8vw, 16px); letter-spacing: clamp(0.05em, 0.6vw, 0.3em);
+  /* Bebas Neue like the splash's begins line (Dan, Nov 19, 2026):
+     no snowflakes, a step larger, flanking lines reaching outward. */
+  font-family: "Bebas Neue", sans-serif;
+  display: flex; align-items: center; justify-content: center; gap: 14px;
+  margin: 6px 0 0; color: #ffd968; font-weight: 400;
+  font-size: clamp(16px, 3.4vw, 24px); letter-spacing: clamp(0.08em, 0.6vw, 0.22em);
   text-transform: uppercase; white-space: nowrap;
   text-shadow: 0 2px 14px rgba(0, 0, 0, 0.45);
 }
 .mqx-begins::before, .mqx-begins::after {
-  content: ""; height: 1px; flex: 1 1 10px; max-width: 84px;
+  content: ""; height: 1px; flex: 1 1 10px; max-width: 230px;
   background: linear-gradient(90deg, transparent, rgba(255, 200, 44, 0.75));
 }
 .mqx-begins::after { background: linear-gradient(90deg, rgba(255, 200, 44, 0.75), transparent); }
@@ -1143,15 +1151,13 @@ main > h1 { font-family:'Anton',sans-serif; text-transform:uppercase; letter-spa
    rule + CAPTURE THE MAGIC in Russo One, seated under the hero wordmark
    and above the headline — same treatment as the app door. */
 .mqx-hero-rule {
-  display: flex; align-items: center; justify-content: center; gap: 14px;
+  /* One continuous line (Dan, Nov 19, 2026): the center break is gone —
+     a single Tron rule under the wordmark, fading at both ends. */
+  height: 3px;
   margin: 2px auto 10px; width: min(560px, 88%);
-}
-.mqx-hero-rule::before, .mqx-hero-rule::after {
-  content: ""; height: 3px; flex: 1;
-  background: linear-gradient(90deg, transparent, rgba(120, 230, 255, 0.85));
+  background: linear-gradient(90deg, transparent, rgba(120, 230, 255, 0.85) 18%, rgba(120, 230, 255, 0.85) 82%, transparent);
   box-shadow: 0 0 10px rgba(64, 200, 255, 0.6);
 }
-.mqx-hero-rule::after { background: linear-gradient(90deg, rgba(120, 230, 255, 0.85), transparent); }
 .mqx-hero-magic {
   font-family: "Russo One", sans-serif; font-weight: 400;
   font-size: clamp(19px, 3.2vw, 34px); letter-spacing: 0.14em; text-indent: 0.14em;
