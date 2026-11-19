@@ -17526,7 +17526,9 @@ def _quest_cotd(today=None) -> dict:
 
     def mk(slug, mode):
         s, name, tier, flavor = cast[slug]
-        img_slug = "la-befana-v2" if s == "la-befana" else s
+        img_slug = {"la-befana": "la-befana-v2",
+                    "snow-sprite": "snow-sprite-v2",
+                    "sugar-plum-fairy": "sugar-plum-fairy-v2"}.get(s, s)
         return {"slug": s, "name": name, "tier": tier,
                 "tier_label": _QUEST_TIER_LABEL[tier], "flavor": flavor,
                 "img": f"/static/img/cotd/{img_slug}.jpg", "mode": mode}
