@@ -536,13 +536,81 @@ body.brand-merryquest { overflow-x: clip; }
 }
 @media (prefers-reduced-motion: reduce) {
   .mqx-spirit { transition: none; animation: none; }
+body.brand-merryquest { overflow-x: clip; }
   .mqx-spirit.alive { opacity: 0.32; transform: none; filter: none; }
+}
+
+/* Comic strip trio (Nov 19, 2026): Check in / Capture / Collect
+   told as three comic panels — caption boxes, speech bubbles, a
+   starburst, halftone dots and hard offset shadows. */
+.mqx-panel {
+  position: relative; transform: rotate(var(--rot, 0deg));
+  background: #101c13; border: 3px solid #f2f5f1; border-radius: 6px;
+  box-shadow: 7px 7px 0 rgba(0, 0, 0, 0.55);
+  padding: 14px 14px 16px; overflow: hidden;
+}
+.mqx-panel::after {
+  content: ""; position: absolute; top: 0; right: 0; width: 92px; height: 92px;
+  background-image: radial-gradient(rgba(255, 200, 44, 0.35) 1.6px, transparent 1.7px);
+  background-size: 11px 11px; pointer-events: none;
+  -webkit-mask-image: linear-gradient(225deg, #000 30%, transparent 78%);
+  mask-image: linear-gradient(225deg, #000 30%, transparent 78%);
+}
+.mqx-panel-cap {
+  display: inline-block; background: #ffc82c; color: #131313;
+  font-weight: 900; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase;
+  padding: 5px 10px; border: 2px solid #131313; border-radius: 4px;
+  box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.6); margin: 0 0 12px;
+}
+.mqx-panel-art {
+  position: relative; border: 2px solid rgba(242, 245, 241, 0.85); border-radius: 4px;
+  overflow: hidden; aspect-ratio: 4 / 3; background: #0a140d; margin-bottom: 13px;
+}
+.mqx-panel-art > img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.mqx-bubble {
+  position: absolute; left: 10px; bottom: 10px; z-index: 2;
+  background: #ffffff; color: #131313; font-weight: 800; font-size: 13.5px;
+  padding: 7px 11px; border-radius: 999px; border: 2px solid #131313;
+  box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.45);
+}
+.mqx-burst {
+  position: absolute; right: 8px; top: 8px; z-index: 2; width: 96px; height: 96px;
+  display: flex; align-items: center; justify-content: center; text-align: center;
+  background: #d32f2f; color: #ffffff; font-weight: 900; font-size: 16.5px;
+  clip-path: polygon(50% 0%, 61% 12%, 76% 6%, 82% 20%, 97% 22%, 93% 37%, 100% 50%, 90% 61%, 95% 76%, 81% 79%, 78% 94%, 64% 88%, 50% 100%, 36% 88%, 22% 94%, 19% 79%, 5% 76%, 10% 61%, 0% 50%, 7% 37%, 3% 22%, 18% 20%, 24% 6%, 39% 12%);
+  transform: rotate(10deg); text-shadow: 0 1px 0 rgba(0, 0, 0, 0.35);
+}
+.mqx-panel h3 {
+  color: #ffffff; font-size: 20px; font-weight: 900; margin: 0 0 6px;
+  text-transform: uppercase; letter-spacing: 0.03em;
+}
+.mqx-panel-txt { color: #a9b8ac; font-size: 14.5px; line-height: 1.5; margin: 0; }
+.mqx-sack-faces { display: grid; grid-template-columns: repeat(3, 1fr); height: 100%; }
+.mqx-sack-faces img { width: 100%; height: 100%; object-fit: cover; display: block; }
+@media (max-width: 760px) {
+  .mqx-panel { transform: none; }
+  .mqx-burst { width: 84px; height: 84px; font-size: 15px; }
+}
+
+/* Golden Nights band (Nov 19, 2026): the marquee has name-dropped
+   Golden Nights since launch with no explanation anywhere — this
+   band is the explanation. */
+.mqx-golden {
+  margin-top: 56px; text-align: center;
+  border: 1px solid rgba(255, 200, 44, 0.45); border-radius: 22px;
+  padding: 30px 26px 26px;
+  background: radial-gradient(120% 160% at 50% 0%, rgba(255, 200, 44, 0.14), rgba(255, 200, 44, 0.03) 55%, transparent);
+}
+.mqx-golden .mqx-p { max-width: 640px; margin-left: auto; margin-right: auto; }
+.mqx-golden-chips { display: flex; flex-wrap: wrap; gap: 9px; justify-content: center; margin-top: 16px; }
+.mqx-golden-chips span {
+  border: 1px solid rgba(255, 200, 44, 0.55); color: #ffd968; border-radius: 999px;
+  padding: 7px 13px; font-size: 13px; font-weight: 700; background: rgba(7, 11, 8, 0.55);
 }
 
 /* ---------- Hero: full-bleed campaign shot (GTA) ---------- */
 .mqx-hero {
   position: relative; padding: 76px 24px 48px;
-  overflow: hidden; text-align: center;
   border: 1px solid var(--mqx-line);
   background: radial-gradient(120% 130% at 50% 0%, #14301f 0%, #08130c 58%, #050807 100%);
   min-height: 94vh; display: flex; flex-direction: column; justify-content: center;
