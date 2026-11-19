@@ -698,7 +698,7 @@ body.brand-merryquest { overflow-x: clip; }
 .mqx-chip span { color: #ffffff; font-variant-numeric: tabular-nums; }
 .mqx-h1 {
   font-family: "Luckiest Guy", var(--mqx-display); font-weight: 400;
-  font-size: clamp(34px, 5.6vw, 66px); line-height: 1.04;
+  font-size: clamp(26px, 4.2vw, 50px); line-height: 1.04;
   letter-spacing: 0.012em; text-transform: uppercase;
   color: #ffffff; margin: 0 0 18px;
   transform: skewX(-4deg);
