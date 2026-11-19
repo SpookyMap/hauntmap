@@ -24,6 +24,11 @@
     src: url("/static/fonts/luckiest-guy-latin.woff2") format("woff2");
     font-weight: 400; font-style: normal; font-display: swap;
   }
+  @font-face {
+    font-family: "Bebas Neue";
+    src: url("/static/fonts/bebas-neue-latin.woff2") format("woff2");
+    font-weight: 400; font-style: normal; font-display: swap;
+  }
   * { box-sizing: border-box; }
   html, body { margin: 0; padding: 0; }
   body {
@@ -41,7 +46,7 @@
   .wrap {
     position: relative; z-index: 1; min-height: 100vh;
     display: flex; flex-direction: column; align-items: center; justify-content: center;
-    text-align: center; padding: 4px 20px 40px;
+    text-align: center; padding: 5vh 20px 40px;
   }
   .logo { margin: 0; line-height: 0; }
   .logo img {
@@ -113,23 +118,28 @@
     .grid { animation: none; }
   }
   .begins {
-    margin: 0 0 6px; font-size: 12px; font-weight: 700; letter-spacing: 0.34em; text-indent: 0.34em;
+    /* Bebas Neue (Dan's pick, Nov 19, 2026): the movie-poster line. */
+    font-family: "Bebas Neue", "Inter", sans-serif;
+    margin: 12px 0 6px; font-size: 15px; font-weight: 400; letter-spacing: 0.34em; text-indent: 0.34em;
     text-transform: uppercase; color: #ffd98a;
   }
   /* Website view (Dan, Nov 19, 2026): "The Quest Begins In" larger. */
   @media (min-width: 761px) {
-    .begins { font-size: 40px; letter-spacing: 0.26em; text-indent: 0.26em; margin: 0 0 12px; }
+    .begins { font-size: 44px; letter-spacing: 0.26em; text-indent: 0.26em; margin: 30px 0 12px; }
   }
-  .cd { display: flex; justify-content: center; gap: clamp(10px, 3.5vw, 44px); margin: 10px 0 36px; width: 100%; }
+  /* Counter slid down (Dan, Nov 19, 2026): the auto top margin eats the
+     free height so the counter + note fill the page bottom — no dead
+     space under them. */
+  .cd { display: flex; justify-content: center; gap: clamp(10px, 3.5vw, 44px); margin: auto 0 36px; padding-top: 22px; width: 100%; }
   .cell { text-align: center; min-width: 0; }
   .cell span {
     display: block; font-family: "Luckiest Guy", cursive; font-weight: 400;
-    font-size: clamp(38px, 9.5vw, 112px); line-height: 0.95; color: #c8f6ff;
+    font-size: clamp(34px, 8.6vw, 96px); line-height: 0.95; color: #c8f6ff;
     transform: skewX(-3deg);
     text-shadow: 0 0 16px rgba(110, 230, 255, 0.75), 0 0 52px rgba(110, 230, 255, 0.40), 0 6px 0 rgba(20, 10, 50, 0.55);
   }
   .colon {
-    font-family: "Luckiest Guy", cursive; font-size: clamp(30px, 7.5vw, 88px); line-height: 0.95;
+    font-family: "Luckiest Guy", cursive; font-size: clamp(27px, 6.8vw, 76px); line-height: 0.95;
     color: #8fe9ff; align-self: flex-start; padding-top: 0.06em;
     text-shadow: 0 0 14px rgba(110, 230, 255, 0.7);
   }
