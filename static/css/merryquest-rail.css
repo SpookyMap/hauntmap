@@ -543,52 +543,58 @@ body.brand-merryquest { overflow-x: clip; }
    told as three comic panels — caption boxes, speech bubbles, a
    starburst, halftone dots and hard offset shadows. */
 .mqx-panel {
-  position: relative; transform: rotate(var(--rot, 0deg));
-  background: #101c13; border: 3px solid #f2f5f1; border-radius: 6px;
-  box-shadow: 7px 7px 0 rgba(0, 0, 0, 0.55);
+  position: relative; transform: translateY(var(--lift, 0px)) rotate(var(--rot, 0deg));
+  background: linear-gradient(165deg, #171238 0%, #0a0d22 58%, #0c1a14 100%);
+  border: 2px solid #e6b16d; border-radius: 14px;
+  box-shadow: 0 0 0 4px #07081a, 0 0 24px rgba(64, 200, 255, 0.28), 8px 8px 0 rgba(0, 0, 0, 0.5);
   padding: 14px 14px 16px; overflow: hidden;
 }
 .mqx-panel::after {
   content: ""; position: absolute; top: 0; right: 0; width: 92px; height: 92px;
-  background-image: radial-gradient(rgba(255, 200, 44, 0.35) 1.6px, transparent 1.7px);
+  background-image: radial-gradient(rgba(120, 220, 255, 0.4) 1.6px, transparent 1.7px);
   background-size: 11px 11px; pointer-events: none;
   -webkit-mask-image: linear-gradient(225deg, #000 30%, transparent 78%);
   mask-image: linear-gradient(225deg, #000 30%, transparent 78%);
 }
 .mqx-panel-cap {
-  display: inline-block; background: #ffc82c; color: #131313;
-  font-weight: 900; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase;
-  padding: 5px 10px; border: 2px solid #131313; border-radius: 4px;
-  box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.6); margin: 0 0 12px;
+  display: inline-block; background: #1b1440; color: #ffc82c;
+  font-family: 'Cinzel', Georgia, serif;
+  font-weight: 900; font-size: 12px; letter-spacing: 0.18em; text-transform: uppercase;
+  padding: 5px 10px; border: 1.5px solid #e6b16d; border-radius: 4px;
+  box-shadow: 0 0 12px rgba(255, 200, 44, 0.25); margin: 0 0 12px;
 }
 .mqx-panel-art {
-  position: relative; border: 2px solid rgba(242, 245, 241, 0.85); border-radius: 4px;
-  overflow: hidden; aspect-ratio: 4 / 3; background: #0a140d; margin-bottom: 13px;
+  position: relative; border: 2px solid rgba(120, 220, 255, 0.55); border-radius: 4px;
+  box-shadow: inset 0 0 18px rgba(64, 200, 255, 0.25), 0 0 10px rgba(64, 200, 255, 0.18);
+  overflow: hidden; aspect-ratio: 1 / 1; background: #0a140d; margin-bottom: 13px;
 }
 .mqx-panel-art > img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .mqx-bubble {
-  position: absolute; left: 10px; bottom: 10px; z-index: 2;
-  background: #ffffff; color: #131313; font-weight: 800; font-size: 13.5px;
-  padding: 7px 11px; border-radius: 999px; border: 2px solid #131313;
-  box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.45);
+  position: absolute; left: 8px; bottom: 8px; z-index: 2;
+  background: rgba(8, 12, 28, 0.88); color: #aee6ff; font-weight: 800; font-size: 10px;
+  padding: 4px 7px; border-radius: 999px; border: 1.5px solid rgba(120, 220, 255, 0.8);
+  box-shadow: 0 0 10px rgba(64, 200, 255, 0.35);
 }
 .mqx-burst {
-  position: absolute; right: 8px; top: 8px; z-index: 2; width: 96px; height: 96px;
+  position: absolute; right: 8px; top: 8px; z-index: 2; width: 52px; height: 52px;
   display: flex; align-items: center; justify-content: center; text-align: center;
-  background: #d32f2f; color: #ffffff; font-weight: 900; font-size: 16.5px;
+  background: radial-gradient(circle at 50% 42%, #e0483e, #8e1f1f 78%); color: #ffe9b0; font-family: 'Cinzel', Georgia, serif; font-weight: 900; font-size: 10.5px;
+  filter: drop-shadow(0 0 6px rgba(255, 200, 44, 0.65));
   clip-path: polygon(50% 0%, 61% 12%, 76% 6%, 82% 20%, 97% 22%, 93% 37%, 100% 50%, 90% 61%, 95% 76%, 81% 79%, 78% 94%, 64% 88%, 50% 100%, 36% 88%, 22% 94%, 19% 79%, 5% 76%, 10% 61%, 0% 50%, 7% 37%, 3% 22%, 18% 20%, 24% 6%, 39% 12%);
   transform: rotate(10deg); text-shadow: 0 1px 0 rgba(0, 0, 0, 0.35);
 }
 .mqx-panel h3 {
-  color: #ffffff; font-size: 20px; font-weight: 900; margin: 0 0 6px;
-  text-transform: uppercase; letter-spacing: 0.03em;
+  color: #ffc82c; font-family: 'Cinzel', Georgia, serif;
+  font-size: 21px; font-weight: 900; margin: 0 0 6px;
+  text-transform: uppercase; letter-spacing: 0.06em;
+  text-shadow: 0 0 14px rgba(255, 200, 44, 0.35);
 }
-.mqx-panel-txt { color: #a9b8ac; font-size: 14.5px; line-height: 1.5; margin: 0; }
+.mqx-panel-txt { color: #c3cede; font-family: Georgia, 'Times New Roman', serif; font-style: italic; font-size: 15px; line-height: 1.55; margin: 0; }
 .mqx-sack-faces { display: grid; grid-template-columns: repeat(3, 1fr); height: 100%; }
 .mqx-sack-faces img { width: 100%; height: 100%; object-fit: cover; display: block; }
 @media (max-width: 760px) {
   .mqx-panel { transform: none; }
-  .mqx-burst { width: 84px; height: 84px; font-size: 15px; }
+  .mqx-burst { width: 48px; height: 48px; font-size: 10px; }
 }
 
 /* Golden Nights band (Nov 19, 2026): the marquee has name-dropped
@@ -789,11 +795,26 @@ body.brand-merryquest { overflow-x: clip; }
 
 /* ---------- GO-style trio ---------- */
 .mqx-trio {
-  display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 44px;
+  display: flex; justify-content: center; align-items: flex-start; margin-top: 52px;
+  padding: 10px 6px 16px;
+}
+/* The chapters as a fanned hand of cards (Nov 19, 2026). */
+.mqx-trio .mqx-panel {
+  flex: 0 1 400px; margin-left: -8px; transform-origin: 50% 100%;
+  transition: transform 0.35s ease, box-shadow 0.35s ease;
+}
+.mqx-trio .mqx-panel:first-child { margin-left: 0; z-index: 1; }
+.mqx-trio .mqx-panel:nth-child(2) { z-index: 3; }
+.mqx-trio .mqx-panel:nth-child(3) { z-index: 2; }
+.mqx-trio .mqx-panel:hover {
+  transform: translateY(calc(var(--lift, 0px) - 14px)) rotate(var(--rot, 0deg)) scale(1.02);
+  z-index: 6;
 }
 @media (max-width: 760px) {
-  /* Phones: compact horizontal rows instead of three tall billboards. */
-  .mqx-trio { grid-template-columns: 1fr; gap: 10px; margin-top: 28px; }
+  /* Phones: the hand stacks into a deck — full-width cards, slight overlap. */
+  .mqx-trio { flex-direction: column; align-items: stretch; margin-top: 32px; padding: 4px 0 8px; }
+  .mqx-trio .mqx-panel { flex: none; margin-left: 0; margin-top: -12px; }
+  .mqx-trio .mqx-panel:first-child { margin-top: 0; }
   .mqx-trio-card {
     display: grid; grid-template-columns: 38px 1fr; column-gap: 13px;
     grid-template-areas: "icon title" "icon text";
