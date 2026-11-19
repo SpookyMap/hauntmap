@@ -1222,6 +1222,7 @@ main > h1 { font-family:'Anton',sans-serif; text-transform:uppercase; letter-spa
 .mqx-universe .mqx-eyebrow { color: #c9a7ff; }
 .mqx-lineup {
   display: flex; align-items: flex-end; justify-content: center; gap: 8px; margin-top: 10px;
+  padding: 22px 12px 6px; position: relative; z-index: 3;
   background: radial-gradient(60% 90px at 50% 100%, rgba(255, 170, 60, 0.14), transparent 70%);
 }
 .mqx-fig { margin: 0; flex: 1 1 0; min-width: 0; position: relative;
@@ -1236,7 +1237,8 @@ main > h1 { font-family:'Anton',sans-serif; text-transform:uppercase; letter-spa
 .mqx-fig-center::before { height: 408px; }
 .mqx-fig:hover { transform: translateY(-14px) scale(1.08); z-index: 5; }
 .mqx-fig:hover::before { opacity: 1; }
-.mqx-fig:hover img { filter: saturate(1.12) brightness(1.08);
+.mqx-fig:hover img { filter: saturate(1.12) brightness(1.08); object-fit: contain;
+  background: radial-gradient(90% 90% at 50% 40%, rgba(30, 20, 54, 0.9), rgba(8, 5, 16, 0.95));
   box-shadow: 0 26px 54px rgba(0, 0, 0, 0.55), 0 0 0 1.5px rgba(120, 220, 255, 0.8), 0 0 38px rgba(64, 200, 255, 0.5); }
 .mqx-fig figcaption { transition: color 0.3s ease, letter-spacing 0.3s ease, text-shadow 0.3s ease; }
 .mqx-fig:hover figcaption { color: #aee6ff; letter-spacing: 0.14em; text-shadow: 0 0 14px rgba(64, 200, 255, 0.65); }
@@ -1249,8 +1251,19 @@ main > h1 { font-family:'Anton',sans-serif; text-transform:uppercase; letter-spa
 }
 .mqx-universe-note { color: #bdb2d9; margin: 20px 0 0; font-size: 15px; }
 @media (max-width: 760px) {
-  .mqx-lineup { overflow-x: auto; justify-content: flex-start; padding-bottom: 6px; }
-  .mqx-fig { flex: 0 0 auto; }
-  .mqx-fig img { height: 208px; width: 138px; }
-  .mqx-fig-center img { height: 240px; width: 160px; }
+  /* Phone Universe (Dan, Nov 19, 2026): the scroll strip clipped the
+     outer figures mid-portrait. The block goes nearly full-bleed at
+     full size, and the lineup becomes a poster grid — Santa large on
+     top, the other four in pairs — so every character is big and
+     nothing is cut off. */
+  .mqx-universe { zoom: 1; position: relative; left: 50%; transform: translateX(-50%);
+    width: calc(100vw - 12px); padding: 44px 14px 40px; min-height: 0; }
+  .mqx-lineup { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 10px;
+    align-items: start; overflow: visible; padding-bottom: 0; }
+  .mqx-fig { width: auto; }
+  .mqx-fig-center { grid-column: 1 / -1; order: -1; }
+  .mqx-fig img { height: auto; width: 100%; aspect-ratio: 1; }
+  .mqx-fig-center img { height: auto; width: 100%; aspect-ratio: 1; }
+  .mqx-fig::before { height: auto; aspect-ratio: 1; }
+  .mqx-fig-center::before { height: auto; aspect-ratio: 1; }
 }
