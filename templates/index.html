@@ -137,6 +137,11 @@ function hmFullHomepage() {
   })();
   </script>
 </div>
+{# MerryQuest cross-promo ABOVE the HauntMart banner (Dan, Nov 19, 2026):
+   the banner holds the hero-split grid's top row on desktop, so the
+   promo sits directly under the hero panel, before the split. #}
+{% include "_mq_app_promo.html" %}
+
 <div class="hero-split">
 <div class="hero-intro">
   <h1 class="hero-title">{% if brand | default('haunt') == 'merryquest' %}Find the Best Christmas Lights <span class="hero-title-alt">Near You</span>{% else %}Find the Best Halloween Displays <span class="hero-title-alt">Near You</span>{% endif %}</h1>
@@ -730,8 +735,6 @@ document.addEventListener('click', function (ev) {
 </div>
 
 
-{# MerryQuest cross-promo moved to the TOP of the homepage, full width (Dan, Nov 19, 2026). #}
-{% include "_mq_app_promo.html" %}
 
 
 {# TRENDING RAIL, DESKTOP TWIN (Dan, Oct 26 — shipped as z173):
