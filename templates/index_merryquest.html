@@ -19,7 +19,6 @@
     <div class="mqx-hero-bg mqx-hero-clouds" aria-hidden="true"><video class="mqx-hero-video" autoplay muted loop playsinline preload="auto" poster="/static/img/mq-sleigh-classic.jpg"><source src="/static/video/mq-hero-classic-v3.mp4" type="video/mp4"></video></div>
     <div class="mqx-hero-in">
       <p class="mqx-hero-word"><img src="/static/img/merryquest-logo.png" alt="MerryQuest" width="620" height="124"></p>
-      <h1 class="mqx-h1">Find the Best Christmas Displays <span class="mqx-grad">Near You</span></h1>
       <p class="mqx-begins">🎄 The quest begins December 1st</p>
       <div class="mqx-bigcd" role="timer" aria-label="Countdown to the December 1 launch">
         <div class="mqx-bigcd-cell"><span id="mqx-cd-d">--</span><label>Days</label></div>
@@ -27,7 +26,8 @@
         <div class="mqx-bigcd-cell"><span id="mqx-cd-m">--</span><label>Minutes</label></div>
         <div class="mqx-bigcd-cell"><span id="mqx-cd-s">--</span><label>Seconds</label></div>
       </div>
-      <p class="mqx-sub">Real displays. Verified addresses. Capture every character hiding in the lights before Santa comes to town.</p>
+      <h1 class="mqx-h1">The Best Christmas Displays, <span class="mqx-grad">Your Town, USA.</span></h1>
+      <p class="mqx-sub">Thirty-two legends slipped out of the storybooks and hid in the lights — Santa, Krampus, Ded Moroz, and twenty-nine more, scattered across the best Christmas displays near you. They're only out while the season lasts. Catch them before the lights come down.</p>
       <form class="mqx-search" method="get" action="/nearby" role="search">
         <input type="text" name="q" placeholder="Town or ZIP" autocomplete="off">
         <button type="submit">Search</button>
@@ -91,21 +91,18 @@
     <p class="mqx-drive-cap">Drive display to display. <span>Capture them all.</span></p>
   </section>
 
-  <section class="mqx-section mqx-haunted">
+  <section class="mqx-section mqx-haunted mqx-bleed">
     <div class="mqx-spirit-field" aria-hidden="true"><img class="mqx-spirit s-left" style="--tilt:-3deg; top:6%" src="/static/img/spirits/toy-soldier.jpg" alt="" loading="lazy" decoding="async"></div>
-    <p class="mqx-eyebrow">Trending</p>
-    <h2 class="mqx-h2">Displays people love right now</h2>
-    <div class="mqx-grid">
+    <div class="mqx-mosaic-head">
+      <p class="mqx-eyebrow">Trending</p>
+      <h2 class="mqx-h2">Displays people love right now</h2>
+    </div>
+    <div class="mqx-mosaic">
       {% for p in trending %}{% if loop.index <= 8 %}
-      <a class="mqx-card" href="/d/{{ p.id }}">
-        <span class="mqx-card-media">
-          {% if p.media_type == 'video' and not p.thumb_path %}<span class="mqx-card-empty">🎬</span>{% else %}<img src="{{ p.thumb_card_url or p.thumb_url }}" alt="{{ p.title }}" loading="lazy" onerror="this.onerror=null;this.src='{{ p.thumb_url }}'">{% endif %}
-          {% if p.media_type == 'video' %}<span class="mqx-card-badge">▶ Video</span>{% endif %}
-        </span>
-        <span class="mqx-card-body">
-          <span class="mqx-card-title">{{ p.title }}</span>
-          <span class="mqx-card-meta">{{ p.town_label }}</span>
-        </span>
+      <a class="mqx-tile" href="/d/{{ p.id }}">
+        {% if p.media_type == 'video' and not p.thumb_path %}<span class="mqx-tile-empty">🎬</span>{% else %}<img src="{{ p.thumb_card_url or p.thumb_url }}" alt="{{ p.title }}" loading="lazy" onerror="this.onerror=null;this.src='{{ p.thumb_url }}'">{% endif %}
+        {% if p.media_type == 'video' %}<span class="mqx-card-badge">▶ Video</span>{% endif %}
+        <span class="mqx-tile-cap"><span class="mqx-tile-title">{{ p.title }}</span><span class="mqx-tile-meta">{{ p.town_label }}</span></span>
       </a>
       {% endif %}{% endfor %}
     </div>
@@ -184,26 +181,23 @@
     <a class="mqx-cta" href="/tour">Build my tour</a>
   </section>
 
-  <section class="mqx-section mqx-haunted">
+  <section class="mqx-section mqx-haunted mqx-bleed">
     <div class="mqx-spirit-field" aria-hidden="true"><img class="mqx-spirit s-right" style="--tilt:2deg; top:6%" src="/static/img/spirits/mrs-claus.jpg" alt="" loading="lazy" decoding="async"></div>
-    <p class="mqx-eyebrow">Fresh on the map</p>
-    <h2 class="mqx-h2">Newest displays</h2>
-    <div class="mqx-grid">
+    <div class="mqx-mosaic-head">
+      <p class="mqx-eyebrow">Fresh on the map</p>
+      <h2 class="mqx-h2">Newest displays</h2>
+    </div>
+    <div class="mqx-mosaic">
       {% for e in entries %}{% if loop.index <= 8 %}
-      <a class="mqx-card" href="/d/{{ e.id }}">
-        <span class="mqx-card-media">
-          {% if e.media_type == 'video' and not e.thumb_path %}<span class="mqx-card-empty">🎬</span>{% elif e.media_path %}<img src="{{ e.thumb_card_url or e.thumb_url }}" alt="{{ e.title }}" loading="lazy" onerror="this.onerror=null;this.src='{{ e.thumb_url }}'">{% else %}<span class="mqx-card-empty">🎄</span>{% endif %}
-          {% if e.media_type == 'video' %}<span class="mqx-card-badge">▶ Video</span>{% endif %}
-          {% if e.is_new %}<span class="mqx-card-badge mqx-card-badge-new">✨ New</span>{% endif %}
-        </span>
-        <span class="mqx-card-body">
-          <span class="mqx-card-title">{{ e.title }}</span>
-          <span class="mqx-card-meta">{{ e.town_label }}</span>
-        </span>
+      <a class="mqx-tile" href="/d/{{ e.id }}">
+        {% if e.media_type == 'video' and not e.thumb_path %}<span class="mqx-tile-empty">🎬</span>{% elif e.media_path %}<img src="{{ e.thumb_card_url or e.thumb_url }}" alt="{{ e.title }}" loading="lazy" onerror="this.onerror=null;this.src='{{ e.thumb_url }}'">{% else %}<span class="mqx-tile-empty">🎄</span>{% endif %}
+        {% if e.media_type == 'video' %}<span class="mqx-card-badge">▶ Video</span>{% endif %}
+        {% if e.is_new %}<span class="mqx-card-badge mqx-card-badge-new">✨ New</span>{% endif %}
+        <span class="mqx-tile-cap"><span class="mqx-tile-title">{{ e.title }}</span><span class="mqx-tile-meta">{{ e.town_label }}</span></span>
       </a>
       {% endif %}{% endfor %}
     </div>
-    <p class="mqx-more"><a class="mqx-ghost-btn" href="/map">Browse the full map →</a></p>
+    <div class="mqx-mosaic-more"><p class="mqx-more"><a class="mqx-ghost-btn" href="/map">Browse the full map →</a></p></div>
   </section>
 
 </div>

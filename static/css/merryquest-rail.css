@@ -536,7 +536,6 @@ body.brand-merryquest { overflow-x: clip; }
 }
 @media (prefers-reduced-motion: reduce) {
   .mqx-spirit { transition: none; animation: none; }
-body.brand-merryquest { overflow-x: clip; }
   .mqx-spirit.alive { opacity: 0.32; transform: none; filter: none; }
 }
 
@@ -608,9 +607,51 @@ body.brand-merryquest { overflow-x: clip; }
   padding: 7px 13px; font-size: 13px; font-weight: 700; background: rgba(7, 11, 8, 0.55);
 }
 
+/* Bold photo mosaics (Nov 19, 2026): Trending, Newest and the
+   Displays page run as large photos edge to edge — no gaps, no
+   cards; the photo IS the tile, title and town ride on it. */
+.mqx-mosaic-head { max-width: 1180px; margin: 0 auto; padding: 0 20px 18px; }
+.mqx-mosaic-more { max-width: 1180px; margin: 18px auto 0; padding: 0 20px; }
+.mqx-mosaic { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; }
+.mqx-tile {
+  position: relative; display: block; aspect-ratio: 4 / 3; overflow: hidden;
+  background: #0d1f14; text-decoration: none;
+}
+.mqx-tile > img {
+  position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block;
+  transition: transform 0.7s cubic-bezier(0.22, 0.61, 0.21, 1), filter 0.7s ease;
+}
+.mqx-tile:hover > img { transform: scale(1.06); filter: brightness(1.09); }
+.mqx-tile-cap {
+  position: absolute; left: 0; right: 0; bottom: 0; z-index: 2;
+  padding: 36px 16px 13px; display: flex; flex-direction: column; gap: 2px;
+  background: linear-gradient(180deg, transparent, rgba(4, 10, 6, 0.85));
+}
+.mqx-tile-title {
+  color: #ffffff; font-weight: 800; font-size: 17px; line-height: 1.25;
+  letter-spacing: -0.01em; text-shadow: 0 1px 10px rgba(0, 0, 0, 0.5);
+}
+.mqx-tile-meta {
+  color: #ffc82c; font-weight: 700; font-size: 12.5px;
+  text-transform: uppercase; letter-spacing: 0.06em;
+}
+.mqx-tile .mqx-card-badge { left: 10px; top: 10px; bottom: auto; z-index: 3; }
+.mqx-tile .mqx-card-badge-new { left: auto; right: 10px; }
+.mqx-tile-empty {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  font-size: 46px; background: #122b1e;
+}
+.mqx-tile .tour-add-btn { position: absolute; top: 10px; right: 10px; z-index: 3; }
+@media (max-width: 900px) {
+  .mqx-mosaic { grid-template-columns: repeat(2, 1fr); }
+  .mqx-tile { aspect-ratio: 1 / 1; }
+  .mqx-tile-title { font-size: 15px; }
+}
+
 /* ---------- Hero: full-bleed campaign shot (GTA) ---------- */
 .mqx-hero {
   position: relative; padding: 76px 24px 48px;
+  overflow: hidden; text-align: center;
   border: 1px solid var(--mqx-line);
   background: radial-gradient(120% 130% at 50% 0%, #14301f 0%, #08130c 58%, #050807 100%);
   min-height: 94vh; display: flex; flex-direction: column; justify-content: center;
@@ -660,7 +701,7 @@ body.brand-merryquest { overflow-x: clip; }
 .mqx-begins {
   display: flex; align-items: center; justify-content: center; gap: 10px;
   margin: 4px 0 0; color: #ffd968; font-weight: 700;
-  font-size: clamp(9.5px, 2.4vw, 13.5px); letter-spacing: clamp(0.05em, 0.6vw, 0.3em);
+  font-size: clamp(11px, 2.8vw, 16px); letter-spacing: clamp(0.05em, 0.6vw, 0.3em);
   text-transform: uppercase; white-space: nowrap;
   text-shadow: 0 2px 14px rgba(0, 0, 0, 0.45);
 }

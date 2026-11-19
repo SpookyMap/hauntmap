@@ -131,6 +131,25 @@ document.getElementById('btn-near-me').onclick = function() {
 {% elif q %}
   <p class="nearby-count">{{ entries|length }} haunt{{ 's' if entries|length != 1 }} within {{ miles }} mi of "{{ q }}"{% if center_state and not multi %} &middot; in {{ center_state_name }} only{% if wide_count > entries|length %} ({{ wide_count - entries|length }} more across state lines — turn on <strong>Include nearby states</strong> above to see them){% endif %}{% endif %}</p>
   {% if entries %}
+  {% if brand | default('haunt') == 'merryquest' %}
+  <div class="mqx-mosaic mqx-bleed">
+    {% for e in entries %}
+    <a class="mqx-tile" href="/d/{{ e.id }}">
+      {% if e.media_path %}
+      {% if e.media_type == 'video' %}
+      {% if e.thumb_path %}<img src="{{ e.thumb_card_url or e.thumb_url }}" alt="{{ e.title }}" loading="lazy" onerror="this.onerror=null;this.src='{{ e.thumb_url }}'"><span class="mqx-card-badge">&#x25B6; Video</span>{% else %}<span class="mqx-tile-empty">&#x1F3AC;</span>{% endif %}
+      {% else %}
+      <img src="{{ e.thumb_card_url or e.thumb_url }}" alt="{{ e.title }}" loading="lazy" onerror="this.onerror=null;this.src='{{ e.thumb_url }}'">
+      {% endif %}
+      {% else %}
+      <span class="mqx-tile-empty">{% if e.category == 'events' %}&#x1F4C5;{% else %}&#x1F384;{% endif %}</span>
+      {% endif %}
+      <span class="tour-add-btn" role="button" tabindex="0" data-tour-btn data-id="{{ e.id }}" data-title="{{ e.title }}" data-town="{{ e.town }}" data-lat="{{ e.lat if e.lat is not none else '' }}" data-lng="{{ e.lng if e.lng is not none else '' }}" data-thumb="{{ e.thumb_url }}">+ Tour</span>
+      <span class="mqx-tile-cap"><span class="mqx-tile-title">{{ e.title }}</span><span class="mqx-tile-meta">{{ e.town }} &middot; {{ "%.1f"|format(e.distance) }} mi away</span></span>
+    </a>
+    {% endfor %}
+  </div>
+  {% else %}
   <div class="grid">
     {% for e in entries %}
     <a class="card" href="/d/{{ e.id }}">
@@ -155,6 +174,7 @@ document.getElementById('btn-near-me').onclick = function() {
     </a>
     {% endfor %}
   </div>
+  {% endif %}
   {% else %}
   <div class="empty">
     <p class="empty-emoji">&#x1F47B;</p>
