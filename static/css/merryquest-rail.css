@@ -1180,20 +1180,25 @@ main > h1 { font-family:'Anton',sans-serif; text-transform:uppercase; letter-spa
   letter-spacing: 0.32em; text-indent: 0.32em; text-transform: uppercase; color: #e6efe6;
 }
 /* Driving loop banner (Nov 18, 2026). */
-.mqx-drive { margin-top: 0; position: relative; overflow: hidden; border: 1px solid var(--mqx-line); }
-.mqx-drive-video { width: 100%; display: block; height: clamp(360px, 74vh, 740px); object-fit: cover; }
-@media (max-width: 760px) {
-  /* Phones: show the full frame at its natural ratio instead of
-     cover-cropping the sides away. */
-  .mqx-drive-video { height: auto; aspect-ratio: 1100 / 586; }
+.mqx-drive { margin-top: 0; position: relative; overflow: hidden; border: 1px solid var(--mqx-line); background: #04070d; }
+.mqx-drive-video {
+  /* 15% smaller and uncropped (Dan, Nov 19, 2026): 85% width at the
+     video's natural ratio, so the hologram pop-ups at the frame edges
+     are no longer cut off by cover-cropping. */
+  width: 85%; margin: 0 auto; display: block; height: auto; aspect-ratio: 1100 / 586; object-fit: cover;
 }
 .mqx-drive-cap {
-  position: absolute; left: 22px; bottom: 16px; margin: 0;
+  position: absolute; left: calc(7.5% + 22px); bottom: 16px; margin: 0;
   font-family: "Luckiest Guy", var(--mqx-display); font-size: clamp(18px, 2.6vw, 28px);
   color: #ffffff; text-transform: uppercase; transform: skewX(-3deg);
   text-shadow: 0 3px 18px rgba(0, 0, 0, 0.75);
 }
 .mqx-drive-cap span { color: #ffc82c; }
+@media (max-width: 760px) {
+  /* Phone: the caption was running edge to edge and wrapping over the
+     car — smaller, inset to the video's frame, capped width. */
+  .mqx-drive-cap { font-size: 15px; left: calc(7.5% + 12px); bottom: 10px; max-width: 78%; }
+}
 /* Universe reveal lineup (Nov 18, 2026): the neon cast on a dark
    stage, UNKJD-style, ahead of the Nov 24 reveal drip. */
 .mqx-universe {
