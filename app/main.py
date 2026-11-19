@@ -597,6 +597,7 @@ def _analytics_write_batch(conn, batch: list) -> None:
         for r in pv:
             path_, ts_, ref_, dev_, sid_, country_, region_, city_, ua_ = r[:9]
             ip_addr = r[9] if len(r) > 9 else None
+            host_ = r[10] if len(r) > 10 else None
             geo_src = "cf" if region_ else None
             if ip_addr and (not region_ or not country_):
                 ip_country, ip_state = _geoip_lookup(ip_addr)
@@ -607,11 +608,11 @@ def _analytics_write_batch(conn, batch: list) -> None:
                         region_ = ip_state
                         geo_src = "ip"
             rows.append((path_, ts_, ref_, dev_, sid_, country_, region_,
-                         city_, ua_, ip_addr, geo_src))
+                         city_, ua_, ip_addr, geo_src, host_))
         conn.executemany(
             "INSERT INTO page_views (path, viewed_at, referrer, device, sid, "
-            "country, region, city, user_agent, ip_addr, geo_src) "
-            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", rows)
+            "country, region, city, user_agent, ip_addr, geo_src, host) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", rows)
     engaged = [r[1:] for r in batch if r[0] == "engaged"]
     if engaged:
         conn.executemany(
@@ -881,11 +882,18 @@ async def _track_page_view(request: Request, call_next):
                     if new_sid:
                         sid = secrets.token_hex(16)
                     country, region, city = _pv_geo(request)
+                    # Serving domain (Nov 19, 2026): one app serves
+                    # gethauntmap.com, gomerryquest.com and merryquest.app —
+                    # record which one, www-normalized, so traffic splits
+                    # by brand instead of lumping by path.
+                    host = (request.url.hostname or "").lower()
+                    if host.startswith("www."):
+                        host = host[4:]
                     _analytics_q.put((
                         "pv", path, datetime.now(timezone.utc).isoformat(),
                         referrer, _device_bucket(ua), sid,
                         country, region, city, ua_stored,
-                        _pv_ip(request)))
+                        _pv_ip(request), host))
                     if new_sid:
                         response.set_cookie("hm_sid", sid, max_age=30 * 24 * 3600,
                                             httponly=True, samesite="lax")

@@ -319,7 +319,8 @@ CREATE TABLE IF NOT EXISTS page_views (
     city TEXT,                            -- cf-ipcity (needs CF's visitor-location transform); NULL when absent
     user_agent TEXT,                      -- raw User-Agent header, <=512 chars (Oct 27 UA logging); NULL on older rows
     ip_addr TEXT,                         -- visitor IP as delivered by Cloudflare (cf-connecting-ip); tracker-table only, never displayed (Oct 27); NULL on older rows
-    geo_src TEXT                          -- where region came from: 'cf' (Cloudflare header) | 'ip' (bundled GeoLite2 lookup); NULL when no region
+    geo_src TEXT,                         -- where region came from: 'cf' (Cloudflare header) | 'ip' (bundled GeoLite2 lookup); NULL when no region
+    host TEXT                             -- serving domain, www-normalized (Nov 19, 2026): gethauntmap.com | gomerryquest.com | merryquest.app; NULL on older rows
 );
 CREATE INDEX IF NOT EXISTS idx_page_views_date ON page_views(viewed_at);
 CREATE TABLE IF NOT EXISTS sponsors (
@@ -954,6 +955,13 @@ def init_db(db_path: Path) -> None:
         seed_quest_cast(conn)
         # Haunt Chat games opt-out (Oct 27): profiles predating the
         # chat-games build gain the "don't receive game challenges" flag.
+        # Per-domain traffic split (Nov 19, 2026): page_views gains the
+        # serving host so HauntMap / MerryQuest traffic can be told apart.
+        vcols = {r["name"] for r in conn.execute("PRAGMA table_info(page_views)").fetchall()}
+        if vcols and "host" not in vcols:
+            conn.execute("ALTER TABLE page_views ADD COLUMN host TEXT")
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_page_views_host ON page_views(host, viewed_at)")
         pcols = {r["name"] for r in conn.execute("PRAGMA table_info(profiles)").fetchall()}
         if "no_challenges" not in pcols:
             conn.execute(
@@ -1577,6 +1585,13 @@ def init_db(db_path: Path) -> None:
         if ucols and "is_official" not in ucols:
             conn.execute(
                 "ALTER TABLE users ADD COLUMN is_official INTEGER NOT NULL DEFAULT 0")
+        # Per-domain traffic split (Nov 19, 2026): page_views gains the
+        # serving host so HauntMap / MerryQuest traffic can be told apart.
+        vcols = {r["name"] for r in conn.execute("PRAGMA table_info(page_views)").fetchall()}
+        if vcols and "host" not in vcols:
+            conn.execute("ALTER TABLE page_views ADD COLUMN host TEXT")
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_page_views_host ON page_views(host, viewed_at)")
         pcols = {r["name"] for r in conn.execute("PRAGMA table_info(profiles)").fetchall()}
         if pcols and "theme" not in pcols:
             conn.execute("ALTER TABLE profiles ADD COLUMN theme TEXT")
