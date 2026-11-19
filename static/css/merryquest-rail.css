@@ -1139,6 +1139,26 @@ main > h1 { font-family:'Anton',sans-serif; text-transform:uppercase; letter-spa
   width: min(560px, 88%); height: auto;
   filter: drop-shadow(0 6px 22px rgba(6, 10, 30, 0.4)) drop-shadow(0 0 24px rgba(120, 220, 255, 0.2));
 }
+/* Splash lockup (Dan, Nov 19, 2026): the merryquest.app splash's Tron
+   rule + CAPTURE THE MAGIC in Russo One, seated under the hero wordmark
+   and above the headline — same treatment as the app door. */
+.mqx-hero-rule {
+  display: flex; align-items: center; justify-content: center; gap: 14px;
+  margin: 2px auto 10px; width: min(560px, 88%);
+}
+.mqx-hero-rule::before, .mqx-hero-rule::after {
+  content: ""; height: 3px; flex: 1;
+  background: linear-gradient(90deg, transparent, rgba(120, 230, 255, 0.85));
+  box-shadow: 0 0 10px rgba(64, 200, 255, 0.6);
+}
+.mqx-hero-rule::after { background: linear-gradient(90deg, rgba(120, 230, 255, 0.85), transparent); }
+.mqx-hero-magic {
+  font-family: "Russo One", sans-serif; font-weight: 400;
+  font-size: clamp(19px, 3.2vw, 34px); letter-spacing: 0.14em; text-indent: 0.14em;
+  text-transform: uppercase; color: #ffffff; text-align: center;
+  margin: 0 0 16px;
+  text-shadow: 0 0 6px rgba(255, 255, 255, 0.65), 0 0 18px rgba(120, 230, 255, 0.85), 0 0 42px rgba(0, 180, 255, 0.55), 0 0 84px rgba(0, 120, 255, 0.35);
+}
 /* Big countdown (Nov 18, 2026): poster numerals under the hero
    CTAs, mirrored on the merryquest.app splash. */
 .mqx-bigcd { display: flex; justify-content: center; gap: clamp(16px, 4vw, 40px); margin: 20px 0 4px; }
