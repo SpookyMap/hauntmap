@@ -7,7 +7,7 @@
 
   <section class="hunt-box">
     <h2 class="hunt-title">&#x1F50D; Hunt a character</h2>
-    <p class="hunt-sub">Pick your town, then tap a character you haven&rsquo;t caught yet in the cast below. The more you catch in a town, the stronger your hints get &mdash; a <b>Whisper</b> for everyone, a <b>Riddle</b> after 5 town catches, and a <b>Lantern</b> after 12.</p>
+    <p class="hunt-sub">Pick your town, then tap a character you haven&rsquo;t captured yet in the cast below. The more you capture in a town, the stronger your hints get &mdash; a <b>Whisper</b> for everyone, a <b>Riddle</b> after 5 town captures, and a <b>Lantern</b> after 12.</p>
     <input class="hunt-town" id="huntTown" list="huntTowns" placeholder="Your town &mdash; e.g. Bay Shore, NY" autocomplete="off">
     <datalist id="huntTowns">{% for t in hunt_towns %}<option value="{{ t }}">{% endfor %}</datalist>
     <div class="hint-card" id="hintCard" hidden></div>

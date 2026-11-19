@@ -17832,10 +17832,10 @@ async def quest_hint(request: Request, character: str = "",
     texts = _quest_hint_texts(pin, dict(char), clat, clng)
     kinds = ["whisper", "riddle", "lantern"]
     if level == 1:
-        nxt_unlock = (f"Catch {QUEST_HINT_RIDDLE_AT - caught} more "
+        nxt_unlock = (f"Capture {QUEST_HINT_RIDDLE_AT - caught} more "
                       f"in {town} to unlock the riddle.")
     elif level == 2:
-        nxt_unlock = (f"Catch {QUEST_HINT_LANTERN_AT - caught} more "
+        nxt_unlock = (f"Capture {QUEST_HINT_LANTERN_AT - caught} more "
                       f"in {town} to unlock the lantern hint.")
     else:
         nxt_unlock = None

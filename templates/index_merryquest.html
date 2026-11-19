@@ -8,7 +8,7 @@
    from the Pokémon GO website." So: Railway's skeleton (slim nav in
    base.html, centered hero, stats row), a GTA-campaign hero
    (full-bleed photo, massive condensed type, sunset gradient,
-   launch-date framing), Pokémon GO's elements (check-in / catch /
+   launch-date framing), Pokémon GO's elements (check-in / capture /
    collect trio, a Pokédex-style cast panel, app badges), and
    Airbnb's uniform card grids underneath. Same data as the HauntMap
    home (tonight, trending, entries) — a different page entirely. #}
@@ -27,7 +27,7 @@
         <div class="mqx-bigcd-cell"><span id="mqx-cd-m">--</span><label>Minutes</label></div>
         <div class="mqx-bigcd-cell"><span id="mqx-cd-s">--</span><label>Seconds</label></div>
       </div>
-      <p class="mqx-sub">Thirty-two legends slipped out of the storybooks and hid in the lights — Santa, Krampus, Ded Moroz, and twenty-nine more, scattered across the best Christmas displays near you. They're only out while the season lasts. Catch them before the lights come down.</p>
+      <p class="mqx-sub">Thirty-two legends slipped out of storybooks hidden in the lights — Santa, Krampus, Ded Moroz, and twenty-nine more, scattered across the best Christmas displays near you. They're only out while the season lasts. Capture them before the lights come down.</p>
       <form class="mqx-search" method="get" action="/nearby" role="search">
         <input type="text" name="q" placeholder="Town or ZIP" autocomplete="off">
         <button type="submit">Search</button>
@@ -41,7 +41,7 @@
       <a class="mqx-quest-card" href="/d/{{ tonight.id }}">
         <span class="mqx-quest-kicker">⭐ Tonight's quest</span>
         <span class="mqx-quest-title">{{ tonight.title }}</span>
-        <span class="mqx-quest-meta">{{ tonight.town_label }} · Check in within 150 ft to catch a character</span>
+        <span class="mqx-quest-meta">{{ tonight.town_label }} · Check in within 150 ft to capture a character</span>
       </a>
       {% endif %}
     </div>
@@ -52,7 +52,7 @@
   <div class="mqx-stats">
     <div><b>850+</b><span>Christmas displays</span></div>
     <div><b>1,700+</b><span>Towns</span></div>
-    <div><b>32</b><span>Characters to catch</span></div>
+    <div><b>32</b><span>Characters to capture</span></div>
     <div><b>150 ft</b><span>Check-in radius</span></div>
   </div>
 
@@ -74,7 +74,7 @@
         <span class="mqx-burst">Gotcha!</span>
       </div>
       <h3>Capture</h3>
-      <p class="mqx-panel-txt">A legend hides at every display. Check in to face the encounter — and claim your catch.</p>
+      <p class="mqx-panel-txt">A legend hides at every display. Check in to face the encounter — and claim your capture.</p>
     </article>
     <article class="mqx-panel" style="--rot:5deg">
       <p class="mqx-panel-cap">Chapter III · Collect</p>
@@ -147,7 +147,7 @@
   <section class="mqx-golden">
     <p class="mqx-eyebrow">✦ Golden Nights</p>
     <h2 class="mqx-h2">Some nights shine brighter</h2>
-    <p class="mqx-p">On Golden Nights, a <b>Legendary</b> character hides at the best display in every town — the rarest catches of the season, out for one night only.</p>
+    <p class="mqx-p">On Golden Nights, a <b>Legendary</b> character hides at the best display in every town — the rarest captures of the season, out for one night only.</p>
     <div class="mqx-golden-chips"><span>Dec 1 · Launch night</span><span>Every Friday in December</span><span>Dec 24 · Christmas Eve</span><span>Dec 25 · Christmas Day</span><span>Jan 6 · Epiphany</span></div>
   </section>
 

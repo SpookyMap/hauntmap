@@ -7671,7 +7671,11 @@ a.wn-fbtn:hover, summary.wn-fbtn:hover { border-color: #57a8ff; }
 
 /* ——— MerryQuest app cross-promo band (HauntMap homepage, Nov 19, 2026) ——— */
 .xmq-band {
-  margin: 34px auto; max-width: 1180px; padding: 0 16px;
+  /* Breakout of the 720px .wrap (house pattern): full-width band,
+     centered on the viewport, capped at 1320px (Dan, Nov 19, 2026). */
+  position: relative; left: 50%; transform: translateX(-50%);
+  width: min(1320px, calc(100vw - 2rem)); max-width: none;
+  margin: 26px 0 34px; padding: 0;
 }
 .xmq-in {
   display: flex; align-items: center; gap: 34px;
@@ -7706,7 +7710,7 @@ a.wn-fbtn:hover, summary.wn-fbtn:hover { border-color: #57a8ff; }
   border: 1px solid rgba(110, 230, 255, 0.5); box-shadow: 0 0 26px rgba(110, 230, 255, 0.25);
 }
 @media (max-width: 1100px) {
-  .xmq-band { margin: 24px auto; padding: 0 12px; }
+  .xmq-band { margin: 24px 0; padding: 0; }
   .xmq-in { flex-direction: column; align-items: stretch; gap: 20px; padding: 24px 20px; }
   .xmq-art { flex: none; }
   .xmq-body { font-size: 15.5px; }

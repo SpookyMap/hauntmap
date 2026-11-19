@@ -11,6 +11,15 @@
    colors — and glow used sparingly, like a status light. Sleek
    and premium where Quest Mode is chunky and playful. */
 
+/* Russo One, self-hosted (Dan, Nov 19, 2026): the Google Fonts route
+   proved unreliable for this family; the woff2 is the latin subset,
+   same pattern as the splash's self-hosted Luckiest Guy. */
+@font-face {
+  font-family: "Russo One";
+  src: url("/static/fonts/russo-one-latin.woff2") format("woff2");
+  font-weight: 400; font-style: normal; font-display: swap;
+}
+
 body.brand-merryquest {
   --bg: #090d0b;
   --bg2: #070a08;
@@ -893,8 +902,8 @@ body.brand-merryquest { overflow-x: clip; }
   color: #eb7a2c; font-size: 12px; font-weight: 800;
   letter-spacing: 0.16em; text-transform: uppercase; margin: 0 0 8px;
 }
-.mqx-h2 {
-  font-family: "Luckiest Guy", var(--mqx-display);
+body.brand-merryquest .mqx-h2 {
+  font-family: "Russo One", "Luckiest Guy", var(--mqx-display);
   font-size: clamp(23px, 3.1vw, 33px); font-weight: 400; letter-spacing: 0.015em;
   color: #ffffff; margin: 0 0 20px; text-transform: uppercase; text-shadow: none;
   transform: skewX(-3deg);
@@ -965,7 +974,8 @@ body.brand-merryquest { overflow-x: clip; }
   border: 1px solid rgba(255, 200, 44, 0.28);
 }
 .mqx-cast-head {
-  color: #ffffff; font-weight: 800; font-size: 15px;
+  font-family: "Russo One", "Inter", sans-serif;
+  color: #ffffff; font-weight: 400; font-size: 16px;
   letter-spacing: 0.1em; text-transform: uppercase; margin: 0 0 16px;
 }
 .mqx-cast { display: flex; flex-wrap: wrap; gap: 8px; }

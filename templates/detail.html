@@ -244,11 +244,11 @@
     <p class="quest-panel-sub">The cast rotates at midnight &mdash; a new friend may be waiting here tomorrow.</p>
     {% else %}
     <p class="quest-panel-name"><span class="quest-mystery">?</span> {{ 'An' if quest_panel.tier == 'epic' else 'A' }} <b>{{ quest_panel.tier }}</b> character is hiding here</p>
-    <p class="quest-panel-sub">Stand within 150 feet of this {% if quest_panel.is_stop %}stop{% else %}display{% endif %} and check in to catch them.</p>
+    <p class="quest-panel-sub">Stand within 150 feet of this {% if quest_panel.is_stop %}stop{% else %}display{% endif %} and check in to capture them.</p>
     {% if quest_panel.logged_in %}
-    <button class="quest-checkin-btn" id="questCheckinBtn" type="button">Check in &amp; catch</button>
+    <button class="quest-checkin-btn" id="questCheckinBtn" type="button">Check in &amp; capture</button>
     {% else %}
-    <a class="quest-checkin-btn" href="/login?next=/d/{{ entry.id }}">Log in to catch</a>
+    <a class="quest-checkin-btn" href="/login?next=/d/{{ entry.id }}">Log in to capture</a>
     {% endif %}
     <p class="quest-panel-msg" id="questPanelMsg" role="status"></p>
     {% endif %}

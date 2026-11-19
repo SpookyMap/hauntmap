@@ -730,6 +730,10 @@ document.addEventListener('click', function (ev) {
 </div>
 
 
+{# MerryQuest cross-promo moved to the TOP of the homepage, full width (Dan, Nov 19, 2026). #}
+{% include "_mq_app_promo.html" %}
+
+
 {# TRENDING RAIL, DESKTOP TWIN (Dan, Oct 26 — shipped as z173):
    the phone front-door rail (.fd-rail, z167) gets a
    desktop copy seated DIRECTLY UNDER the hero — same heading, same
@@ -786,8 +790,6 @@ document.addEventListener('click', function (ev) {
 {% endif %}
 
 {% if tonight %}
-{% include "_mq_app_promo.html" %}
-
 <section class="tonight-band" aria-label="Tonight's Display">
   <a class="tonight-card" href="/d/{{ tonight.id }}">
     <img src="{{ tonight.thumb_url }}" alt="{{ tonight.title }}" loading="lazy">
