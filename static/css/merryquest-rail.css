@@ -991,6 +991,7 @@ body.brand-merryquest .mqx-search input[type="text"] {
 button.sack-cast-chip { font:inherit; cursor:pointer; background:none; }
 button.sack-cast-chip:hover { border-color:var(--gold); color:var(--gold); }
 .mq-footer-brand { text-align:center; color:var(--mut); letter-spacing:.14em; font-weight:700; }
+.mq-map .leaflet-tile-pane { filter: saturate(0.85) contrast(1.05) brightness(1.06); }
 .mq-footer-brand a { color:#ffc82c; text-decoration:none; }
 .mq-footer-brand a:hover { text-decoration:underline; }
 main > h1 { font-family:'Anton',sans-serif; text-transform:uppercase; letter-spacing:.01em;

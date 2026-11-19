@@ -20,9 +20,33 @@
 .thumb-marker { border: 2px solid #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 6px rgba(0,0,0,0.4); background: #0d0916; }
 .thumb-marker img { width: 64px; height: 48px; object-fit: cover; display: block; }
 </style>
+{% if brand | default('haunt') == 'merryquest' %}
+<style>
+/* MerryQuest futuristic map skin (Nov 19, 2026): dark Tron basemap,
+   neon-gold photo pins, glass popups and controls. MQ brand only. */
+.mq-map #full-map { background: #04060f; }
+.mq-map .thumb-marker { border: 2px solid #ffc82c; border-radius: 10px; box-shadow: 0 0 12px rgba(64,200,255,0.55), 0 4px 14px rgba(0,0,0,0.6); }
+.mq-map .marker-cluster-small { background-color: rgba(27,20,64,0.55); }
+.mq-map .marker-cluster-small div { background-color: rgba(64,200,255,0.35); color: #eaf7ff; font-weight: 800; border: 1px solid rgba(120,220,255,0.8); }
+.mq-map .marker-cluster-medium { background-color: rgba(27,20,64,0.55); }
+.mq-map .marker-cluster-medium div { background-color: rgba(255,200,44,0.4); color: #fff7dd; font-weight: 800; border: 1px solid rgba(255,200,44,0.85); }
+.mq-map .marker-cluster-large { background-color: rgba(27,20,64,0.55); }
+.mq-map .marker-cluster-large div { background-color: rgba(235,122,44,0.45); color: #ffefe2; font-weight: 800; border: 1px solid rgba(235,122,44,0.9); }
+.mq-map .leaflet-popup-content-wrapper { background: #0b0f22; color: #e8eefc; border: 1.5px solid rgba(255,200,44,0.65); box-shadow: 0 0 18px rgba(64,200,255,0.35); border-radius: 12px; }
+.mq-map .leaflet-popup-tip { background: #0b0f22; }
+.mq-map .leaflet-popup-close-button { color: #ffc82c !important; }
+.mq-map .pin-popup a { color: #ffc82c; }
+.mq-map .map-search input { background: rgba(8,12,28,0.92); border: 1.5px solid rgba(120,220,255,0.6); color: #eaf7ff; box-shadow: 0 0 14px rgba(64,200,255,0.25); }
+.mq-map .map-search button { background: linear-gradient(135deg, #ffc82c, #eb7a2c); color: #1a0f00; }
+.mq-map .btn-locate-map { background: rgba(8,12,28,0.92); border: 1.5px solid rgba(120,220,255,0.6); box-shadow: 0 0 14px rgba(64,200,255,0.25); }
+.mq-map .leaflet-control-zoom a { background: rgba(8,12,28,0.92); color: #aee6ff; border-color: rgba(120,220,255,0.5); }
+.mq-map .leaflet-control-attribution { background: rgba(4,6,15,0.75) !important; color: #5f7195 !important; font-size: 9px; }
+.mq-map .leaflet-control-attribution a { color: #7d90b8 !important; }
+</style>
+{% endif %}
 {% endblock %}
 {% block content %}
-<div class="map-wrap">
+<div class="map-wrap{% if brand | default('haunt') == 'merryquest' %} mq-map{% endif %}">
   <div id="full-map"></div>
   <div class="map-search">
     <input type="text" id="map-q" placeholder="Search town or address...">
@@ -34,7 +58,12 @@
 const pins = {{ pins | tojson }};
 const map = L.map('full-map', { zoomControl: false }).setView([40.75, -74.0], 10);
 L.control.zoom({ position: 'topright' }).addTo(map);
+{% if brand | default('haunt') == 'merryquest' %}
+L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}', {maxZoom: 16, attribution: 'Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ'}).addTo(map);
+L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}', {maxZoom: 16}).addTo(map);
+{% else %}
 L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom: 19}).addTo(map);
+{% endif %}
 const cluster = L.markerClusterGroup();
 // thumbnail markers when zoomed in, plain pins when zoomed out
 function thumbIcon(p) {
@@ -55,7 +84,7 @@ pins.forEach(p => {
     ? `<video src="${p.media_url}" poster="${thumb}" muted playsinline style="pointer-events:none"></video>`
     : `<img src="${thumb}" alt="" loading="lazy">`) : '';
   const m = L.marker([p.lat, p.lng], {icon: thumbIcon(p)});
-  m.bindPopup(`<div class="pin-popup">${media}<strong>${p.title}</strong>${p.votes ? `<div>&#x1F383; ${p.votes} vote${p.votes != 1 ? 's' : ''}</div>` : ''}<a href="/d/${p.id}">View haunt</a></div>`);
+  m.bindPopup(`<div class="pin-popup">${media}<strong>${p.title}</strong>${p.votes ? `<div>&#x1F383; ${p.votes} vote${p.votes != 1 ? 's' : ''}</div>` : ''}<a href="/d/${p.id}">{% if brand | default('haunt') == 'merryquest' %}View display{% else %}View haunt{% endif %}</a></div>`);
   cluster.addLayer(m);
 });
 map.addLayer(cluster);
