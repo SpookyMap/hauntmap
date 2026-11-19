@@ -56,7 +56,8 @@
     <div><b>150 ft</b><span>Check-in radius</span></div>
   </div>
 
-  <section class="mqx-trio">
+  <section class="mqx-trio mqx-haunted">
+    <div class="mqx-spirit-field" aria-hidden="true"><img class="mqx-spirit s-right" style="--tilt:3deg; top:0" src="/static/img/spirits/gingerbread-scout.jpg" alt="" loading="lazy" decoding="async"></div>
     <div class="mqx-trio-card">
       <span class="mqx-trio-icon">📍</span>
       <h3>Check in</h3>
@@ -78,7 +79,8 @@
     <p class="mqx-drive-cap">Drive display to display. <span>Capture them all.</span></p>
   </section>
 
-  <section class="mqx-section">
+  <section class="mqx-section mqx-haunted">
+    <div class="mqx-spirit-field" aria-hidden="true"><img class="mqx-spirit s-left" style="--tilt:-3deg; top:6%" src="/static/img/spirits/toy-soldier.jpg" alt="" loading="lazy" decoding="async"></div>
     <p class="mqx-eyebrow">Trending</p>
     <h2 class="mqx-h2">Displays people love right now</h2>
     <div class="mqx-grid">
@@ -97,7 +99,8 @@
     </div>
   </section>
 
-  <section class="mqx-split" id="mqx-quest">
+  <section class="mqx-split mqx-haunted" id="mqx-quest">
+    <div class="mqx-spirit-field" aria-hidden="true"><img class="mqx-spirit s-right" style="--tilt:2deg; top:8%" src="/static/img/spirits/tiny-tim.jpg" alt="" loading="lazy" decoding="async"></div>
     <div class="mqx-split-copy">
       <p class="mqx-eyebrow">The quest</p>
       <h2 class="mqx-h2">Capture characters at real displays</h2>
@@ -118,7 +121,8 @@
   </section>
 
 
-  <section class="mqx-universe mqx-bleed">
+  <section class="mqx-universe mqx-bleed mqx-haunted">
+    <div class="mqx-spirit-field" aria-hidden="true"><img class="mqx-spirit s-left" style="--tilt:-2deg; top:10%" src="/static/img/spirits/belsnickel.jpg" alt="" loading="lazy" decoding="async"></div>
     <p class="mqx-eyebrow">The reveal begins Nov 24</p>
     <h2 class="mqx-h2">The MerryQuest Universe</h2>
     <div class="mqx-lineup">
@@ -132,7 +136,8 @@
   </section>
 
   {% if cotd %}
-  <section class="mqx-cotd">
+  <section class="mqx-cotd mqx-haunted">
+    <div class="mqx-spirit-field" aria-hidden="true"><img class="mqx-spirit s-right" style="--tilt:3deg; top:4%" src="/static/img/spirits/sugar-plum-fairy.jpg" alt="" loading="lazy" decoding="async"></div>
     <div class="mqx-cotd-art"><img src="{{ cotd.img }}" alt="{{ cotd.name }} — MerryQuest character of the day" loading="lazy"></div>
     <div class="mqx-cotd-body">
       <p class="mqx-eyebrow">★ Character of the day</p>
@@ -153,13 +158,15 @@
   </section>
   {% endif %}
 
-  <section class="mqx-tour">
+  <section class="mqx-tour mqx-haunted">
+    <div class="mqx-spirit-field" aria-hidden="true"><img class="mqx-spirit s-left" style="--tilt:-3deg; top:0; object-position:50% 18%" src="/static/img/spirits/nutcracker-prince.jpg" alt="" loading="lazy" decoding="async"></div>
     <h2 class="mqx-h2">Build my tour for me</h2>
     <p class="mqx-p">Skip the picking — we line up the most-viewed displays near you into a ready-to-drive route.</p>
     <a class="mqx-cta" href="/tour">Build my tour</a>
   </section>
 
-  <section class="mqx-section">
+  <section class="mqx-section mqx-haunted">
+    <div class="mqx-spirit-field" aria-hidden="true"><img class="mqx-spirit s-right" style="--tilt:2deg; top:6%" src="/static/img/spirits/mrs-claus.jpg" alt="" loading="lazy" decoding="async"></div>
     <p class="mqx-eyebrow">Fresh on the map</p>
     <h2 class="mqx-h2">Newest displays</h2>
     <div class="mqx-grid">
@@ -251,6 +258,20 @@
     ov.classList.add('on');
     setTimeout(function () { window.location.href = url.href; }, 640);
   });
+})();
+</script>
+<script>
+(function () {
+  var spirits = document.querySelectorAll('.mqx-spirit');
+  if (!spirits.length) return;
+  if (!('IntersectionObserver' in window)) {
+    spirits.forEach(function (s) { s.classList.add('alive'); });
+    return;
+  }
+  var io = new IntersectionObserver(function (entries) {
+    entries.forEach(function (en) { en.target.classList.toggle('alive', en.isIntersecting); });
+  }, { threshold: 0.28, rootMargin: '0px 0px -6% 0px' });
+  spirits.forEach(function (s) { io.observe(s); });
 })();
 </script>
 {% endblock %}

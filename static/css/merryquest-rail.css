@@ -504,6 +504,41 @@ body.brand-merryquest { overflow-x: clip; }
   100% { transform: scale(13); opacity: 0; filter: blur(6px); }
 }
 
+/* Scroll spirits (Nov 19, 2026): the seven revealed cast portraits
+   haunt the homepage background — each one blooms to life as it
+   scrolls into view and fades away as it leaves, after the
+   immersive-g.com flower fields Dan referenced. */
+.mqx-haunted { position: relative; }
+.mqx-haunted > :not(.mqx-spirit-field) { position: relative; z-index: 1; }
+.mqx-spirit-field { position: absolute; inset: 0; overflow: hidden; z-index: 0; pointer-events: none; }
+.mqx-spirit {
+  position: absolute; width: min(44vmin, 400px); aspect-ratio: 1 / 1;
+  object-fit: cover; pointer-events: none;
+  -webkit-mask-image: radial-gradient(ellipse 66% 66% at 50% 50%, #000 52%, transparent 76%);
+  mask-image: radial-gradient(ellipse 66% 66% at 50% 50%, #000 52%, transparent 76%);
+  opacity: 0; filter: saturate(0.8) brightness(0.9) blur(3px);
+  transform: translateY(52px) scale(0.84) rotate(var(--tilt, 0deg));
+  transition: opacity 1.15s ease, transform 1.5s cubic-bezier(0.22, 0.61, 0.21, 1), filter 1.5s ease;
+}
+.mqx-spirit.s-left { left: -3.5%; }
+.mqx-spirit.s-right { right: -3.5%; }
+.mqx-spirit.alive {
+  opacity: 0.5; filter: saturate(1.06) brightness(1.03) blur(0);
+  transform: translateY(0) scale(1) rotate(var(--tilt, 0deg));
+  animation: mqx-spirit-drift 7.5s ease-in-out 1.5s infinite alternate;
+}
+@keyframes mqx-spirit-drift { from { translate: 0 0; } to { translate: 0 -14px; } }
+@media (max-width: 760px) {
+  .mqx-spirit { width: 66vmin; }
+  .mqx-spirit.s-left { left: -16%; }
+  .mqx-spirit.s-right { right: -16%; }
+  .mqx-spirit.alive { opacity: 0.34; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mqx-spirit { transition: none; animation: none; }
+  .mqx-spirit.alive { opacity: 0.32; transform: none; filter: none; }
+}
+
 /* ---------- Hero: full-bleed campaign shot (GTA) ---------- */
 .mqx-hero {
   position: relative; padding: 76px 24px 48px;
