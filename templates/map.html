@@ -25,6 +25,12 @@
 /* MerryQuest futuristic map skin (Nov 19, 2026): dark Tron basemap,
    neon-gold photo pins, glass popups and controls. MQ brand only. */
 .mq-map #full-map { background: #04060f; }
+/* Tron-blue cast over the dark gray basemap (Dan, Nov 19, 2026):
+   sepia gives the gray tiles a hue, hue-rotate swings it to blue,
+   moderate saturation keeps it futuristic without going tech-heavy.
+   Labels and roads stay crisp; pins and clusters sit above the pane
+   and keep their own colors. */
+.mq-map .leaflet-tile-pane { filter: sepia(0.32) hue-rotate(188deg) saturate(1.38) brightness(0.94) contrast(1.05); }
 .mq-map .thumb-marker { border: 2px solid #ffc82c; border-radius: 10px; box-shadow: 0 0 12px rgba(64,200,255,0.55), 0 4px 14px rgba(0,0,0,0.6); }
 .mq-map .marker-cluster-small { background-color: rgba(27,20,64,0.55); }
 .mq-map .marker-cluster-small div { background-color: rgba(64,200,255,0.35); color: #eaf7ff; font-weight: 800; border: 1px solid rgba(120,220,255,0.8); }

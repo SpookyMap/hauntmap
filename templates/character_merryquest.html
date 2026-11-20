@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}{{ char_name }} - MerryQuest{% endblock %}
+{% block content %}
+{# Character story page (Nov 19, 2026): portrait, tier, flavor, the
+   reveal-kit story, and the character's animated clip. Reached by
+   tapping a figure in the Universe lineup (or Pip's medallion). #}
+<div class="mqx-wrap">
+  <section class="mqx-char">
+    <a class="mqx-char-back" href="/#mqx-universe">&larr; The MerryQuest Universe</a>
+    <div class="mqx-char-hero">
+      <img class="mqx-char-portrait" src="{{ char_portrait }}" alt="{{ char_name }} — MerryQuest {{ char_tier }}">
+      <div class="mqx-char-head">
+        <span class="mqx-char-tier mqx-tier-{{ char_tier_class }}">{{ char_tier }}</span>
+        <h1 class="mqx-char-name">{{ char_name }}</h1>
+        <p class="mqx-char-flavor">{{ char_flavor }}</p>
+      </div>
+    </div>
+    {% if char_video %}
+    <video class="mqx-char-media" autoplay muted loop playsinline src="{{ char_video }}"></video>
+    {% elif char_image %}
+    <img class="mqx-char-media" src="{{ char_image }}" alt="{{ char_name }} in action">
+    {% endif %}
+    <h2 class="mqx-h2 mqx-char-story-h">The story</h2>
+    <p class="mqx-char-story">{{ char_story }}</p>
+    <div class="mqx-char-ctas">
+      <a class="mqx-cta" href="/map">Find displays near you</a>
+    </div>
+    <div class="mqx-char-others">
+      <p class="mqx-eyebrow">More of the cast</p>
+      <div class="mqx-char-chips">
+        {% for o in others %}<a href="/characters/{{ o.slug }}">{{ o.name }}</a>{% endfor %}
+      </div>
+    </div>
+  </section>
+</div>
+{% endblock %}

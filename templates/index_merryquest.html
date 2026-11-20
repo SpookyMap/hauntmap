@@ -65,7 +65,7 @@
 
   <section class="mqx-trio mqx-haunted">
     <div class="mqx-spirit-field" aria-hidden="true"><img class="mqx-spirit s-right" style="--tilt:3deg; top:0" src="/static/img/neon/ded-moroz.jpg" alt="" loading="lazy" decoding="async"></div>
-    <article class="mqx-panel" style="--rot:-5deg">
+    <article class="mqx-panel" style="--rot:-8deg; z-index:2">
       <p class="mqx-panel-cap">Chapter I · Check in</p>
       <div class="mqx-panel-art">
         <img src="/static/img/card-checkin.jpg" alt="Pip the Star Pin checking in at a glowing Christmas display" loading="lazy">
@@ -74,7 +74,15 @@
       <h3>Check in</h3>
       <p class="mqx-panel-txt">Every quest begins with a journey. Travel to a real glowing display, and the map shall mark your arrival.</p>
     </article>
-    <article class="mqx-panel" style="--rot:0deg; --lift:-16px">
+    <div class="mqx-panel mqx-panel-back" style="--rot:-4deg; z-index:3" aria-hidden="true">
+      <div class="mqx-back-frame">
+        <span class="mqx-back-star">&#9733;</span>
+        <img src="/static/img/merryquest-logo-hd2.webp" alt="">
+        <span class="mqx-back-tag">Capture the Magic</span>
+        <span class="mqx-back-star">&#9733;</span>
+      </div>
+    </div>
+    <article class="mqx-panel" style="--rot:0deg; --lift:-16px; z-index:5">
       <p class="mqx-panel-cap">Chapter II · Capture</p>
       <div class="mqx-panel-art">
         <img src="/static/img/card-capture.jpg" alt="Krampus caught in the capture rings" loading="lazy">
@@ -83,7 +91,15 @@
       <h3>Capture</h3>
       <p class="mqx-panel-txt">A legend hides at every display. Check in to face the encounter — and claim your capture.</p>
     </article>
-    <article class="mqx-panel" style="--rot:5deg">
+    <div class="mqx-panel mqx-panel-back" style="--rot:4deg; z-index:4" aria-hidden="true">
+      <div class="mqx-back-frame">
+        <span class="mqx-back-star">&#9733;</span>
+        <img src="/static/img/merryquest-logo-hd2.webp" alt="">
+        <span class="mqx-back-tag">Capture the Magic</span>
+        <span class="mqx-back-star">&#9733;</span>
+      </div>
+    </div>
+    <article class="mqx-panel" style="--rot:8deg; z-index:3">
       <p class="mqx-panel-cap">Chapter III · Collect</p>
       <div class="mqx-panel-art">
         <img src="/static/img/card-collect.jpg" alt="The revealed legends gathered around Santa's Sack" loading="lazy">
@@ -92,6 +108,47 @@
       <h3>Collect</h3>
       <p class="mqx-panel-txt">Gather the whole company — all 32 legends — into Santa's Sack before the season's last night falls.</p>
     </article>
+  </section>
+  <section class="mqx-guide mqx-haunted">
+    <a class="mqx-guide-medal" href="/characters/pip-the-star-pin"><img src="/static/img/pip-portrait.jpg" alt="Pip the Star Pin — your MerryQuest guide" loading="lazy"></a>
+    <div class="mqx-guide-copy">
+      <p class="mqx-eyebrow">Your guide</p>
+      <h2 class="mqx-h2">Meet Pip, the Star Pin</h2>
+      <p class="mqx-p">Pip slipped out of the storybooks first — and she knows where every legend is hiding. Roll up to a glowing display and Pip marks your arrival. When a character is near, she springs the encounter. And every capture you make, she tucks safely into Santa's Sack. You don't catch Pip. Pip catches you.</p>
+      <div class="mqx-guide-steps"><span>📍 She marks your arrival</span><span>✨ She springs the encounter</span><span>🎒 She fills your Sack</span></div>
+    </div>
+  </section>
+  <section class="mqx-universe mqx-bleed mqx-haunted" id="mqx-universe">
+    <div class="mqx-spirit-field" aria-hidden="true"><img class="mqx-spirit s-left" style="--tilt:-2deg; top:10%" src="/static/img/neon/krampus.jpg" alt="" loading="lazy" decoding="async"></div>
+    <p class="mqx-eyebrow">The reveal begins Nov 24</p>
+    <h2 class="mqx-h2">The MerryQuest Universe</h2>
+    <div class="mqx-lineup">
+      <a class="mqx-fig" href="/characters/krampus"><img src="/static/img/neon/krampus.jpg" alt="Krampus — MerryQuest Legendary" loading="lazy"><span class="mqx-fig-name">Krampus</span></a>
+      <a class="mqx-fig" href="/characters/ebenezer-scrooge"><img src="/static/img/neon/scrooge.jpg" alt="Ebenezer Scrooge — MerryQuest Epic" loading="lazy"><span class="mqx-fig-name">Ebenezer Scrooge</span></a>
+      <a class="mqx-fig mqx-fig-center" href="/characters/santa-claus"><img src="/static/img/neon/santa.jpg" alt="Santa Claus — MerryQuest Legendary" loading="lazy"><span class="mqx-fig-name">Santa Claus</span></a>
+      <a class="mqx-fig" href="/characters/ded-moroz"><img src="/static/img/neon/ded-moroz.jpg" alt="Ded Moroz — MerryQuest Legendary" loading="lazy"><span class="mqx-fig-name">Ded Moroz</span></a>
+      <a class="mqx-fig" href="/characters/la-befana"><img src="/static/img/neon/la-befana-v2.jpg" alt="La Befana — MerryQuest Rare" loading="lazy"><span class="mqx-fig-name">La Befana</span></a>
+    </div>
+    <p class="mqx-universe-note">Five revealed. Twenty-seven still in the dark.</p>
+  </section>
+  <section class="mqx-split mqx-haunted" id="mqx-quest">
+    <div class="mqx-split-copy">
+      <p class="mqx-eyebrow">The quest</p>
+      <h2 class="mqx-h2">Capture characters at real displays in your city</h2>
+      <p class="mqx-p">Every display on the map can hide a character. Arrive, check in, and it lands in your Sack — build the whole cast of 32 before the season ends.</p>
+      <ol class="mqx-steps">
+        <li><b>1</b> Find a display near you</li>
+        <li><b>2</b> Check in when you arrive</li>
+        <li><b>3</b> Capture who's hiding there</li>
+      </ol>
+    </div>
+    <div class="mqx-cast-panel">
+      <p class="mqx-cast-head">The cast of 32</p>
+      <div class="mqx-cast">
+        {% for chip in cast_chips %}<span{% if chip.cls %} class="{{ chip.cls }}"{% endif %}>{{ chip.label }}</span>{% endfor %}
+      </div>
+    </div>
+    {% if quest_enabled %}<a class="mqx-cta mqx-cta-join-small" href="/sack">Open Santa's Sack</a>{% else %}<a class="mqx-cta mqx-cta-join-small" href="/signup">Join Today — MerryQuest begins December 1st</a>{% endif %}
   </section>
   <section class="mqx-section mqx-haunted mqx-bleed">
     <div class="mqx-spirit-field" aria-hidden="true"><img class="mqx-spirit s-left" style="--tilt:-3deg; top:6%" src="/static/img/neon/la-befana-v2.jpg" alt="" loading="lazy" decoding="async"></div>
@@ -110,40 +167,8 @@
     </div>
   </section>
 
-  <section class="mqx-split mqx-haunted" id="mqx-quest">
-    <div class="mqx-split-copy">
-      <p class="mqx-eyebrow">The quest</p>
-      <h2 class="mqx-h2">Capture characters at real displays</h2>
-      <p class="mqx-p">Every display on the map can hide a character. Arrive, check in, and it lands in your Sack — build the whole cast of 32 before the season ends.</p>
-      <ol class="mqx-steps">
-        <li><b>1</b> Find a display near you</li>
-        <li><b>2</b> Check in when you arrive</li>
-        <li><b>3</b> Capture who's hiding there</li>
-      </ol>
-    </div>
-    <div class="mqx-cast-panel">
-      <p class="mqx-cast-head">The cast of 32</p>
-      <div class="mqx-cast">
-        {% for chip in cast_chips %}<span{% if chip.cls %} class="{{ chip.cls }}"{% endif %}>{{ chip.label }}</span>{% endfor %}
-      </div>
-    </div>
-    {% if quest_enabled %}<a class="mqx-cta mqx-cta-join-small" href="/sack">Open Santa's Sack</a>{% else %}<a class="mqx-cta mqx-cta-join-small" href="/signup">Join Today — MerryQuest begins December 1st</a>{% endif %}
-  </section>
 
 
-  <section class="mqx-universe mqx-bleed mqx-haunted">
-    <div class="mqx-spirit-field" aria-hidden="true"><img class="mqx-spirit s-left" style="--tilt:-2deg; top:10%" src="/static/img/neon/krampus.jpg" alt="" loading="lazy" decoding="async"></div>
-    <p class="mqx-eyebrow">The reveal begins Nov 24</p>
-    <h2 class="mqx-h2">The MerryQuest Universe</h2>
-    <div class="mqx-lineup">
-      <figure class="mqx-fig"><img src="/static/img/neon/krampus.jpg" alt="Krampus — MerryQuest Legendary" loading="lazy"><figcaption>Krampus</figcaption></figure>
-      <figure class="mqx-fig"><img src="/static/img/neon/scrooge.jpg" alt="Ebenezer Scrooge — MerryQuest Epic" loading="lazy"><figcaption>Ebenezer Scrooge</figcaption></figure>
-      <figure class="mqx-fig mqx-fig-center"><img src="/static/img/neon/santa.jpg" alt="Santa Claus — MerryQuest Legendary" loading="lazy"><figcaption>Santa Claus</figcaption></figure>
-      <figure class="mqx-fig"><img src="/static/img/neon/ded-moroz.jpg" alt="Ded Moroz — MerryQuest Legendary" loading="lazy"><figcaption>Ded Moroz</figcaption></figure>
-      <figure class="mqx-fig"><img src="/static/img/neon/la-befana-v2.jpg" alt="La Befana — MerryQuest Rare" loading="lazy"><figcaption>La Befana</figcaption></figure>
-    </div>
-    <p class="mqx-universe-note">Five revealed. Twenty-seven still in the dark.</p>
-  </section>
 
   <section class="mqx-golden">
     <p class="mqx-eyebrow">✦ Golden Nights</p>

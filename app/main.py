@@ -17527,6 +17527,50 @@ _QUEST_GHOST_SLUGS = {"ghost-of-christmas-past",
                       "ghost-of-christmas-yet-to-come"}
 
 
+# Character story pages (Dan, Nov 19, 2026): every revealed character
+# gets a public page at /characters/<slug> — portrait, their reveal-kit
+# story, and the animated clip of them in action. Gated to
+# _QUEST_PUBLIC_SLUGS, so an unrevealed character's page 404s until
+# their reveal day makes them public. Story text is the reveal kit's,
+# verbatim (files/reveal-kit/stories.md).
+_QUEST_STORIES = {
+    "krampus": "He keeps the naughty list, and he checks it himself. While Santa rewards the good, Krampus handles the other column — bells, chains, and consequences, Alpine-style. Pray your name isn't on it. Then check in anyway. Fortune favors the bold.",
+    "santa-claus": "The legend himself. Golden nights only. All season the others hid in the lights — Santa IS the light the rest of them orbit. When a Golden Night falls and the best display in town starts to glow a little too warmly, drive. He's there. Catch the magic.",
+    "ded-moroz": "Grandfather Frost strides out of the Siberian snow with a staff that freezes the ground it touches, delivering gifts in the deepest cold of the year. He respects one thing: endurance. If you're out hunting on the coldest night, so is he.",
+    "ebenezer-scrooge": "The hardest catch in the cast, because his heart thaws slowly and he trusts no one — not even Christmas. He starts the season hiding from all of it. Catch him anyway. Everybody in this story gets a second chance; that's the entire point of him.",
+    "la-befana": "Italy's gift-bearing witch sweeps in on her broom every January 6th, leaving sweets for the good and coal for the rest — centuries before anyone thought to check a map. She hides at the displays with old-world soul. Leave the kitchen window open. Old habits.",
+    "pip-the-star-pin": "Your guide, your mascot — the star on top of the quest. Pip was the first light placed this season and will be the last one taken down, and in between, Pip rides along on every hunt, pointing the way. You don't catch Pip. Pip catches you. Welcome to MerryQuest.",
+}
+_QUEST_PORTRAITS = {
+    "la-befana": "/static/img/neon/la-befana-v2.jpg",
+    "pip-the-star-pin": "/static/img/pip-portrait.jpg",
+}
+
+
+@app.get("/characters/{slug}")
+async def merryquest_character(request: Request, slug: str):
+    if _brand_of(request) != "merryquest" or slug not in _QUEST_PUBLIC_SLUGS:
+        raise HTTPException(status_code=404)
+    cast = {s_: (n_, t_, f_) for (s_, n_, t_, f_) in _QUEST_CAST}
+    name, tier, flavor = cast[slug]
+    others = [{"slug": s_, "name": n_} for (s_, n_, t_, f_) in _QUEST_CAST
+              if s_ in _QUEST_PUBLIC_SLUGS and s_ != slug]
+    return templates.TemplateResponse(request, "character_merryquest.html", {
+        "char_name": name,
+        "char_tier": _QUEST_TIER_LABEL.get(tier, tier.upper()),
+        "char_tier_class": tier,
+        "char_flavor": flavor,
+        "char_story": _QUEST_STORIES[slug],
+        "char_portrait": _QUEST_PORTRAITS.get(slug, f"/static/img/neon/{slug}.jpg"),
+        "char_video": (f"/static/img/story/{slug}.mp4"
+                       if slug != "pip-the-star-pin" else None),
+        "char_image": ("/static/img/card-checkin.jpg"
+                       if slug == "pip-the-star-pin" else None),
+        "char_slug": slug,
+        "others": others,
+    })
+
+
 def _quest_cast_chips(today=None) -> list:
     """Cast panel chips (Dan, Nov 19, 2026): names only for characters
     already public; everyone else is a "?" bubble that flips to its
