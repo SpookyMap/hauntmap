@@ -1030,6 +1030,16 @@ body.brand-merryquest .mqx-h2 {
     radial-gradient(120% 150% at 85% 0%, rgba(255, 200, 44, 0.10), transparent 55%),
     linear-gradient(165deg, rgba(16, 24, 18, 0.97), rgba(9, 14, 10, 0.97));
 }
+.mqx-h2-magic {
+  background: linear-gradient(100deg, #fff6d8 0%, #ffd968 30%, #ff9d5c 50%, #ffd968 70%, #fff6d8 100%);
+  background-size: 200% 100%;
+  -webkit-background-clip: text; background-clip: text;
+  color: transparent; -webkit-text-fill-color: transparent;
+  animation: mqx-shine 5s linear infinite;
+  filter: drop-shadow(0 2px 16px rgba(255, 200, 44, 0.28));
+}
+@keyframes mqx-shine { to { background-position: -200% 0; } }
+@media (prefers-reduced-motion: reduce) { .mqx-h2-magic { animation: none; } }
 .mqx-split-copy {
   background: none; border: none;
   border-radius: 0; padding: 0;
