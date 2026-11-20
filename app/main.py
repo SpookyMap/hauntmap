@@ -577,10 +577,24 @@ async def _cache_headers(request: Request, call_next):
 # shutdown hook drains the queue, so a graceful deploy loses nothing.
 _ANALYTICS_FLUSH_SECONDS = 1.0
 _ANALYTICS_BATCH_MAX = 500
+_ANALYTICS_MAX_FAIL_STREAK = 5
 _analytics_q: "queue.SimpleQueue[tuple]" = queue.SimpleQueue()
 _analytics_stop = threading.Event()
 _analytics_thread: threading.Thread | None = None
 
+
+
+_pv_host_cache: list = []
+
+def _pv_has_host(conn) -> bool:
+    if not _pv_host_cache:
+        try:
+            cols = {r["name"] for r in conn.execute(
+                "PRAGMA table_info(page_views)").fetchall()}
+            _pv_host_cache.append("host" in cols)
+        except Exception:
+            _pv_host_cache.append(False)
+    return _pv_host_cache[0]
 
 def _analytics_write_batch(conn, batch: list) -> None:
     pv = [r[1:] for r in batch if r[0] == "pv"]
@@ -609,10 +623,20 @@ def _analytics_write_batch(conn, batch: list) -> None:
                         geo_src = "ip"
             rows.append((path_, ts_, ref_, dev_, sid_, country_, region_,
                          city_, ua_, ip_addr, geo_src, host_))
-        conn.executemany(
-            "INSERT INTO page_views (path, viewed_at, referrer, device, sid, "
-            "country, region, city, user_agent, ip_addr, geo_src, host) "
-            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", rows)
+        # The host column arrived Nov 19, 2026; if a database ever lacks
+        # it (migration not applied), write without it rather than
+        # failing every batch forever.
+        if _pv_has_host(conn):
+            conn.executemany(
+                "INSERT INTO page_views (path, viewed_at, referrer, device, sid, "
+                "country, region, city, user_agent, ip_addr, geo_src, host) "
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", rows)
+        else:
+            conn.executemany(
+                "INSERT INTO page_views (path, viewed_at, referrer, device, sid, "
+                "country, region, city, user_agent, ip_addr, geo_src) "
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                [r[:11] for r in rows])
     engaged = [r[1:] for r in batch if r[0] == "engaged"]
     if engaged:
         conn.executemany(
@@ -640,6 +664,7 @@ def _analytics_write_batch(conn, batch: list) -> None:
 
 def _analytics_writer() -> None:
     conn = None
+    fail_streak = 0
     while True:
         try:
             first = _analytics_q.get(timeout=_ANALYTICS_FLUSH_SECONDS)
@@ -657,19 +682,31 @@ def _analytics_writer() -> None:
             if conn is None:
                 conn = get_conn(DB_PATH)
             _analytics_write_batch(conn, batch)
+            fail_streak = 0
         except Exception:
             # Transient failure (e.g. lock contention beyond the busy
             # timeout): keep the rows — requeue and retry next flush
-            # rather than dropping sponsor-facing counts.
-            logger.exception("analytics flush failed; requeueing %d rows", len(batch))
+            # rather than dropping sponsor-facing counts. BUT a batch
+            # that fails _ANALYTICS_MAX_FAIL_STREAK times in a row is
+            # poison (schema drift, disk, corruption): shed it, or the
+            # unbounded queue grows behind it until the process dies
+            # (flapping-502 incident, Nov 19, 2026).
+            fail_streak += 1
             try:
                 if conn is not None:
                     conn.close()
             except Exception:
                 pass
             conn = None
-            for item in batch:
-                _analytics_q.put(item)
+            if fail_streak >= _ANALYTICS_MAX_FAIL_STREAK:
+                logger.exception(
+                    "analytics flush failed %d times running; DROPPING %d rows",
+                    fail_streak, len(batch))
+                fail_streak = 0
+            else:
+                logger.exception("analytics flush failed; requeueing %d rows", len(batch))
+                for item in batch:
+                    _analytics_q.put(item)
             time.sleep(1.0)
     if conn is not None:
         try:
