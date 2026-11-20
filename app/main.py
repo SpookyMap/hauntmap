@@ -512,6 +512,27 @@ async def _page_cache(request: Request, call_next):
 
 
 @app.middleware("http")
+async def _appdoor_guard(request: Request, call_next):
+    """merryquest.app is a SEALED store door until launch (Dan, Nov 20):
+    the countdown splash guarded only the root, so every other path on
+    the .app host (/map, /towns/..., any shared or typed link) served
+    the full website while it is still being built — spoiling the
+    surprise. On the .app host every page is now the splash; only
+    static assets and the splash's own subscribe POST pass through.
+    Retire this guard when the door opens at launch."""
+    if _is_appdoor(request):
+        path = request.url.path
+        if path.startswith("/static/") or path == "/favicon.ico":
+            return await call_next(request)
+        if request.method == "POST" and path == "/subscribe":
+            return await call_next(request)
+        if request.method in ("GET", "HEAD"):
+            return templates.TemplateResponse(
+                request, "countdown_merryquest.html", {})
+    return await call_next(request)
+
+
+@app.middleware("http")
 async def _member_context(request: Request, call_next):
     """Expose the logged-in member to base.html so the header nav can
     turn its JOIN button into the member's @handle link (z125). Only
