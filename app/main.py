@@ -511,6 +511,25 @@ async def _page_cache(request: Request, call_next):
     return out
 
 
+# Self-destruct service worker for the sealed door (Dan, Nov 20):
+# browsers that visited merryquest.app before the seal registered the
+# full site's SW and keep serving that ghost copy. Served only on the
+# .app host, this worker wipes every cache, unregisters itself, and
+# reloads open windows — which then land on the splash.
+_APPDOOR_KILL_SW = (
+    "self.addEventListener('install', function () { self.skipWaiting(); });\n"
+    "self.addEventListener('activate', function (e) {\n"
+    "  e.waitUntil((async function () {\n"
+    "    var keys = await caches.keys();\n"
+    "    await Promise.all(keys.map(function (k) { return caches.delete(k); }));\n"
+    "    await self.registration.unregister();\n"
+    "    var wins = await self.clients.matchAll({ type: 'window' });\n"
+    "    wins.forEach(function (w) { w.navigate(w.url); });\n"
+    "  })());\n"
+    "});\n"
+)
+
+
 @app.middleware("http")
 async def _appdoor_guard(request: Request, call_next):
     """merryquest.app is a SEALED store door until launch (Dan, Nov 20):
@@ -522,6 +541,11 @@ async def _appdoor_guard(request: Request, call_next):
     Retire this guard when the door opens at launch."""
     if _is_appdoor(request):
         path = request.url.path
+        if request.method == "GET" and path == "/sw.js":
+            return Response(_APPDOOR_KILL_SW,
+                            media_type="application/javascript",
+                            headers={"Service-Worker-Allowed": "/",
+                                     "Cache-Control": "no-store"})
         if path.startswith("/static/") or path == "/favicon.ico":
             return await call_next(request)
         if request.method == "POST" and path == "/subscribe":
