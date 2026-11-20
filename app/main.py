@@ -7312,6 +7312,16 @@ def detail(request: Request, entry_id: int):
         _all_videos = get_entry_videos(conn, entry_id)
     _primary_vid = tiktok_video_id(entry.get("tiktok_url"))
     extra_videos = [v for v in _all_videos if v["video_id"] != _primary_vid]
+    # Creator credit for the PRIMARY video (Dan, Nov 20, 2026 —
+    # embed hygiene: the creator's handle stays visible with a
+    # profile link on every video, hero included). Prefer the
+    # stored entry_videos creator; fall back to the handle in
+    # the video URL itself.
+    _primary_row = next(
+        (v for v in _all_videos if v["video_id"] == _primary_vid), None)
+    primary_creator = ((_primary_row or {}).get("creator") or "").lstrip("@")
+    if not primary_creator and entry.get("tiktok_url") and "/@" in entry["tiktok_url"]:
+        primary_creator = entry["tiktok_url"].split("/@", 1)[1].split("/")[0]
     voted = f"voted_{entry_id}" in request.cookies
     reported = f"reported_{entry_id}" in request.cookies
     with get_conn(DB_PATH) as conn:
@@ -7436,6 +7446,7 @@ def detail(request: Request, entry_id: int):
          "dark_tapped": f"dark_{entry_id}" in request.cookies,
          "stay22_url": stay22_url,
          "extra_videos": extra_videos,
+         "primary_creator": primary_creator,
          "is_venue": entry["category"] in VENUE_CATS,
          "tips": tips, "scare_counts": scare_counts, "scare_total": scare_total,
          "scare_pick": scare_pick, "next_pin": effective_next_pin,
@@ -7599,13 +7610,30 @@ def unvote(entry_id: int, request: Request):
 
 @app.post("/d/{entry_id}/report")
 def report(entry_id: int, request: Request):
+    """Visitor report of a listing (app-store UGC posture, Dan,
+    Nov 20, 2026): the first report flags the pin for admin
+    review; a second DISTINCT report (cookie-gated — one counted
+    report per device) auto-hides it pending that review. Admin
+    unhide restores the pin and resets the count."""
     entry = get_entry(entry_id)
     if not entry or entry["hidden"]:
         raise HTTPException(404, "Entry not found.")
-    with get_conn(DB_PATH) as conn:
-        conn.execute("UPDATE entries SET flagged = 1 WHERE id = ?", (entry_id,))
-        conn.commit()
-    resp = RedirectResponse(f"/d/{entry_id}", status_code=303)
+    hid = False
+    if f"reported_{entry_id}" not in request.cookies:
+        with get_conn(DB_PATH) as conn:
+            conn.execute(
+                "UPDATE entries SET flagged = 1, "
+                "report_count = COALESCE(report_count, 0) + 1 WHERE id = ?",
+                (entry_id,))
+            row = conn.execute(
+                "SELECT report_count FROM entries WHERE id = ?",
+                (entry_id,)).fetchone()
+            if row and row[0] >= 2:
+                conn.execute(
+                    "UPDATE entries SET hidden = 1 WHERE id = ?", (entry_id,))
+                hid = True
+            conn.commit()
+    resp = RedirectResponse("/" if hid else f"/d/{entry_id}", status_code=303)
     resp.set_cookie(f"reported_{entry_id}", "1", max_age=365 * 24 * 3600,
                     httponly=True, samesite="lax")
     return resp
@@ -12805,7 +12833,7 @@ def admin_hide(entry_id: int, request: Request):
 def admin_unhide(entry_id: int, request: Request):
     _require_admin(request)
     with get_conn(DB_PATH) as conn:
-        conn.execute("UPDATE entries SET hidden = 0, flagged = 0 WHERE id = ?", (entry_id,))
+        conn.execute("UPDATE entries SET hidden = 0, flagged = 0, report_count = 0 WHERE id = ?", (entry_id,))
         conn.commit()
     return RedirectResponse("/admin", status_code=303)
 
@@ -12886,6 +12914,18 @@ async def admin_edit(entry_id: int, request: Request):
                     {"error": f"{field} must be one of: {', '.join(valid)}"},
                     status_code=400)
             updates[field] = value or None
+    # Location tier (Dan, Nov 20, 2026): 'verified' = publicly
+    # listed or owner-confirmed address (exact pin, capturable);
+    # 'inferred' = video-only sourcing (public pin fuzzed to
+    # neighborhood level, exact address hidden, not capturable
+    # until the owner claims the listing).
+    if "loc_source" in form:
+        value = str(form.get("loc_source", "")).strip()
+        if value not in ("verified", "inferred"):
+            return JSONResponse(
+                {"error": "loc_source must be 'verified' or 'inferred'"},
+                status_code=400)
+        updates["loc_source"] = value
     if not updates:
         return JSONResponse({"error": "No fields to update"}, status_code=400)
     if not get_entry(entry_id):

@@ -48,6 +48,15 @@
       });
     })();
     </script>
+    {% if primary_creator %}
+    {# Creator credit on the hero video too (Dan, Nov 20, 2026):
+       handle visible + profile link, same as the more-videos
+       captions — the benefit to the creator stays obvious. #}
+    <p class="primary-video-caption">by <a href="https://www.tiktok.com/@{{ primary_creator }}" target="_blank" rel="noopener">@{{ primary_creator }}</a> on TikTok &middot; <a href="{{ entry.tiktok_url }}" target="_blank" rel="noopener">Watch on TikTok &#x2197;</a></p>
+    <style>
+    .primary-video-caption { margin: 0.55rem auto 0; max-width: 605px; font-size: 0.92rem; line-height: 1.35; text-align: center; }
+    </style>
+    {% endif %}
     {% if entry.is_sample %}<span class="sample-badge">Sample</span>{% endif %}
   </div>
   {% elif entry.media_path %}
