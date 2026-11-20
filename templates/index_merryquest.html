@@ -49,6 +49,13 @@
     </div>
   </section>
 
+  <section class="mqx-tour mqx-haunted">
+    <div class="mqx-spirit-field" aria-hidden="true"><img class="mqx-spirit s-left" style="--tilt:-3deg; top:0; object-position:50% 18%" src="/static/img/neon/santa.jpg" alt="" loading="lazy" decoding="async"></div>
+    <h2 class="mqx-h2">Build my tour for me</h2>
+    <p class="mqx-p">Skip the picking — we line up the most-viewed displays near you into a ready-to-drive route.</p>
+    <a class="mqx-cta" href="/tour">Build my tour</a>
+  </section>
+
   <div class="mqx-marquee" aria-hidden="true"><div class="mqx-marquee-track" style="animation-duration: {{ [32, (ticker_towns|length * 2.4)|round|int]|max }}s">{% for i in range(2) %}<span>{% if ticker_towns %}{% for t in ticker_towns %}{{ t }} <b>&#x2605;</b> {% endfor %}{% else %}Check in <b>&#x2605;</b> Capture <b>&#x2605;</b> Collect <b>&#x2605;</b> Golden nights <b>&#x2605;</b> 32 characters <b>&#x2605;</b> Every town <b>&#x2605;</b> {% endif %}</span>{% endfor %}</div></div>
 
   <div class="mqx-stats">
@@ -59,7 +66,7 @@
   </div>
 
   <section class="mqx-drive mqx-bleed">
-    <video class="mqx-drive-video" autoplay muted loop playsinline preload="auto"><source src="/static/video/mq-drive-v13.mp4" type="video/mp4"></video>
+    <video class="mqx-drive-video" autoplay muted loop playsinline preload="auto"><source src="/static/video/mq-drive-v14.mp4" type="video/mp4"></video>
     <p class="mqx-drive-cap">Drive to your favorite displays. <span>Capture them all.</span></p>
   </section>
 
@@ -177,7 +184,7 @@
     <div class="mqx-golden-chips"><span>Dec 1 · Launch night</span><span>Every Friday in December</span><span>Dec 24 · Christmas Eve</span><span>Dec 25 · Christmas Day</span><span>Jan 6 · Epiphany</span></div>
   </section>
 
-  {% if cotd %}
+  {% if cotd and cotd.mode != "teaser" %}
   <section class="mqx-cotd mqx-haunted">
     <div class="mqx-spirit-field" aria-hidden="true"><img class="mqx-spirit s-right" style="--tilt:3deg; top:4%" src="/static/img/neon/scrooge-v2.jpg" alt="" loading="lazy" decoding="async"></div>
     <div class="mqx-cotd-art"><img src="{{ cotd.img }}" alt="{{ cotd.name }} — MerryQuest character of the day" loading="lazy"></div>
@@ -200,12 +207,7 @@
   </section>
   {% endif %}
 
-  <section class="mqx-tour mqx-haunted">
-    <div class="mqx-spirit-field" aria-hidden="true"><img class="mqx-spirit s-left" style="--tilt:-3deg; top:0; object-position:50% 18%" src="/static/img/neon/santa.jpg" alt="" loading="lazy" decoding="async"></div>
-    <h2 class="mqx-h2">Build my tour for me</h2>
-    <p class="mqx-p">Skip the picking — we line up the most-viewed displays near you into a ready-to-drive route.</p>
-    <a class="mqx-cta" href="/tour">Build my tour</a>
-  </section>
+
 
   <section class="mqx-section mqx-haunted mqx-bleed">
     <div class="mqx-spirit-field" aria-hidden="true"><img class="mqx-spirit s-right" style="--tilt:2deg; top:6%" src="/static/img/neon/ded-moroz-v2.jpg" alt="" loading="lazy" decoding="async"></div>
