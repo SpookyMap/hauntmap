@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}Hunter leaderboards · {{ site_name }}{% endblock %}
+{% block content %}
+<div class="cat-tabs">
+  <a href="/leaderboard?cat=christmas">&#x1F384; Top displays</a>
+  <a href="/leaderboard/hunters" class="active">&#x1F3C6; Hunters</a>
+</div>
+<h1>&#x1F3C6; Hunter leaderboards</h1>
+<p class="muted">Follow the lights, capture the magic — then check the boards.
+Towns compete town against town, and every town crowns a Champion.</p>
+
+<h2>Top hunters</h2>
+{% if top_hunters %}
+<ol class="leader-list">
+  {% for h in top_hunters %}
+  <li><span class="leader-info"><strong>#{{ loop.index }} @{{ h.handle }}</strong>
+    <span class="meta">{{ h.chars }} of 32 characters · {{ h.captures }} captures</span></span></li>
+  {% endfor %}
+</ol>
+{% else %}
+<p class="muted">No captures yet — the boards light up when the quest opens December 1. First hunter on the board takes the crown.</p>
+{% endif %}
+
+<h2>Cities competing</h2>
+<form method="get" action="/leaderboard/hunters">
+  <input type="search" name="q" value="{{ q }}" placeholder="Search your city or town…" aria-label="Search your city or town">
+  <button type="submit" class="btn">Search</button>
+</form>
+{% if cities %}
+<div class="admin-list">
+  {% for c in cities %}
+  <div class="admin-row">
+    <strong><a href="/leaderboard/hunters?town={{ c.town | urlencode }}">{{ c.town }}</a></strong>
+    <span class="meta">{{ c.hunters }} hunter{{ 's' if c.hunters != 1 }} · {{ c.chars_found }} characters found · {{ c.captures }} captures{% if c.clearers %} · {{ c.clearers }} cleared tonight's set{% endif %}{% if c.all32 %} · {{ c.all32 }} holding all 32{% endif %}</span>
+  </div>
+  {% endfor %}
+</div>
+{% elif q %}
+<p class="muted">No hunters from “{{ q }}” yet — be the first and put your town on the board.</p>
+{% else %}
+<p class="muted">No town on the board yet. December 1, that changes.</p>
+{% endif %}
+
+{% if sel_town %}
+<h2>{{ sel_town }}{% if sel_available %} — {{ sel_available }} characters hiding tonight{% endif %}</h2>
+{% if champion %}
+<p>&#x1F451; <b>Town Champion: @{{ champion.handle }}</b> — {{ champion.chars }} characters caught in {{ sel_town }}.</p>
+{% endif %}
+{% if sel_clearers %}
+<p>&#x2B50; Cleared tonight's whole set: {% for h in sel_clearers %}@{{ h }}{% if not loop.last %}, {% endif %}{% endfor %}</p>
+{% endif %}
+{% if town_board %}
+<ol class="leader-list">
+  {% for h in town_board %}
+  <li><span class="leader-info"><strong>#{{ loop.index }} @{{ h.handle }}</strong>
+    <span class="meta">{{ h.chars }} characters · {{ h.captures }} captures in {{ sel_town }}</span></span></li>
+  {% endfor %}
+</ol>
+{% else %}
+<p class="muted">No captures in {{ sel_town }} yet — the crown is unclaimed.</p>
+{% endif %}
+{% endif %}
+{% endblock %}

@@ -295,7 +295,8 @@ CREATE TABLE IF NOT EXISTS entries (
     lit_status TEXT NOT NULL DEFAULT 'unconfirmed', -- 'lit' | 'unconfirmed' (Dan, Nov 20, 2026): only lit christmas displays are capturable or appear in tours
     lit_source TEXT,                      -- who confirmed it: 'curation' | 'visitor' | 'owner'
     lit_at TEXT,                          -- when it was confirmed lit (UTC ISO)
-    lit_dark INTEGER NOT NULL DEFAULT 0   -- 'not lit' reports against a lit pin; 2 demote it back to unconfirmed for review
+    lit_dark INTEGER NOT NULL DEFAULT 0,   -- 'not lit' reports against a lit pin; 2 demote it back to unconfirmed for review
+    loc_source TEXT NOT NULL DEFAULT 'verified' -- 'verified' = address confirmed by us/owner; 'inferred' = location guessed from a post's captions/tags: public map shows an approximate point and the listing hides the exact address until the owner claims it (Dan, Nov 20, 2026)
 );
 CREATE INDEX IF NOT EXISTS idx_entries_town ON entries(town);
 CREATE INDEX IF NOT EXISTS idx_entries_votes ON entries(votes DESC);
@@ -1046,6 +1047,17 @@ def init_db(db_path: Path) -> None:
                 "UPDATE entries SET lit_status = 'lit', lit_source = 'curation', "
                 "lit_at = created_at WHERE category = 'christmas' "
                 "AND created_at >= '2026-10-01'"
+            )
+        if "loc_source" not in cols:
+            # Location confidence (Dan, Nov 20, 2026): pins whose
+            # location was inferred from a post (captions/tags) are
+            # 'inferred' — the public map jitters their point to
+            # neighborhood level and the listing hides the exact
+            # address until the owner claims the pin. Everything
+            # already in the catalog passed the verified-address
+            # gate, so the default 'verified' is honest for them.
+            conn.execute(
+                "ALTER TABLE entries ADD COLUMN loc_source TEXT NOT NULL DEFAULT 'verified'"
             )
         # Enforce the code-owned editor's-pick set (FEATURED_ENTRY_IDS):
         # exactly those pins flagged, every other pin unflagged. Runs on

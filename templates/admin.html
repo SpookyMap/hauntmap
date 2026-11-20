@@ -129,6 +129,22 @@
 <p class="muted">No town requests yet.</p>
 {% endif %}
 
+<h2>Owner claims ({{ claims_count }})</h2>
+<p class="muted">Owners claiming their display. Verify by email reply, then set the entry's owner (badge goes live) and flip inferred pins to verified.</p>
+{% if claims_rows %}
+<div class="admin-list">
+  {% for c in claims_rows %}
+  <div class="admin-row">
+    <strong><a href="/d/{{ c.entry_id }}">{{ c.entry_title or ('#' ~ c.entry_id) }}</a></strong>{% if c.entry_town %} <span class="meta">{{ c.entry_town }}</span>{% endif %}
+    <span class="meta">{{ c.name }} &middot; {{ c.email }} &middot; {{ c.created_at[:10] }}</span>
+    {% if c.note %}<div>{{ c.note }}</div>{% endif %}
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<p class="muted">No claims yet.</p>
+{% endif %}
+
 <h2>Visitor feedback ({{ feedback_count }})</h2>
 <p class="muted">From the <a href="/feedback">/feedback</a> page — how visitors say we can improve the site, and how to make their Halloween spookier.</p>
 {% if feedback_rows %}

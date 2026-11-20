@@ -153,7 +153,9 @@
   <a class="bk-ribbon" href="/bracket">&#x1F3C6; Haunt Bracket contender &mdash; Seed #{{ bracket_info.seed }} ({{ bracket_info.region }}) &middot; America&rsquo;s Scariest House &middot; Round of 16 voting Oct 24&ndash;25 &mdash; vote &rarr;</a>
   {% endif %}
   <p class="meta">{{ entry.town_label }}{% if entry.display_name %} &middot; {{ entry.display_name }}{% endif %}</p>
-  {% if entry.address %}
+  {% if entry.loc_source == 'inferred' %}
+  <p class="entry-address">&#x1F4CD; Approximate location — the exact address appears when the owner claims this listing.</p>
+  {% elif entry.address %}
   <p class="entry-address">&#x1F4CD; {{ entry.address }}</p>
   {% endif %}
   {% if brand == 'merryquest' and entry.category == 'christmas' and not entry.virtual %}
@@ -169,6 +171,9 @@
     {% else %}<form method="post" action="/d/{{ entry.id }}/lit"><button type="submit" class="btn">💡 It's lit tonight — I saw it</button></form>{% endif %}
   </div>
   {% endif %}
+  {% endif %}
+  {% if entry.owner_user_id %}
+  <p class="owner-badge" style="font-size:14.5px;margin:8px 0;">&#x2705; <b>Verified by owner</b> <span class="muted">— the person who runs this display claimed this listing.</span></p>
   {% endif %}
   {% if entry.scare_level %}
   <p class="scare-badge">
@@ -601,7 +606,7 @@
   {% if brand == 'merryquest' and not entry.virtual %}
   <div class="mq-trust" style="margin:18px 0;padding:14px 16px;border:1px solid rgba(160,140,255,.25);border-radius:14px;font-size:14.5px;line-height:1.55;">
     <p style="margin:0 0 6px;">🏠 <b>This display is someone's home.</b> Enjoy it from the street — keep voices down, never walk the yard or driveway, and leave it exactly as you found it.</p>
-    <p style="margin:0;">Your house? <a href="/feedback">Claim this listing, or ask us to remove it</a> — one business day, no questions asked.</p>
+    <p style="margin:0;">Your house? <a href="/d/{{ entry.id }}/claim">Claim this listing</a>, or <a href="/feedback">ask us to remove it</a> — one business day, no questions asked.</p>
   </div>
   {% endif %}
 

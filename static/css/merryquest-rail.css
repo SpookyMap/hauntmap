@@ -1273,12 +1273,25 @@ main > h1 { font-family:'Anton',sans-serif; text-transform:uppercase; letter-spa
 .mqx-count { animation: mqxPulse 2.6s ease-in-out infinite; }
 @keyframes mqxPulse { 0%,100% { box-shadow: 0 0 0 rgba(255,200,44,0); } 50% { box-shadow: 0 0 22px rgba(255,200,44,.45); } }
 .mqx-marquee { overflow: hidden; border-block: 1px solid var(--line);
-  background: rgba(255,255,255,.02); padding: 13px 0; }
+  background: linear-gradient(180deg, rgba(43,2,10,.88), rgba(18,1,5,.92)); padding: 13px 0; }
 .mqx-marquee-track { display: flex; width: max-content; white-space: nowrap;
   animation: mqxMarquee 32s linear infinite; }
 .mqx-marquee-track span { font-family: 'Anton', sans-serif; text-transform: uppercase;
-  letter-spacing: .14em; font-size: 15px; color: #f4feff; padding-right: .6em;
-  animation: mqx-charge 9s linear infinite; }
+  letter-spacing: .14em; font-size: 15px; color: #ff2d2d; padding-right: .6em;
+  text-shadow: 0 0 6px rgba(255, 150, 150, 0.9), 0 0 18px rgba(255, 45, 45, 0.9), 0 0 42px rgba(255, 0, 60, 0.6), 0 0 84px rgba(255, 0, 60, 0.35);
+  animation: mqx-vegas 9s linear infinite; }
+@keyframes mqx-vegas {
+  /* Las Vegas neon (Dan, Nov 20, 2026): steady red tube glow with
+     the classic sign flicker dips and one hot surge per cycle. */
+  0%, 100% { text-shadow: 0 0 6px rgba(255, 150, 150, 0.9), 0 0 18px rgba(255, 45, 45, 0.9), 0 0 42px rgba(255, 0, 60, 0.6), 0 0 84px rgba(255, 0, 60, 0.35); opacity: 1; }
+  3% { text-shadow: 0 0 3px rgba(255, 150, 150, 0.5), 0 0 8px rgba(255, 45, 45, 0.45), 0 0 18px rgba(255, 0, 60, 0.3); opacity: 0.8; }
+  5% { text-shadow: 0 0 6px rgba(255, 150, 150, 0.9), 0 0 18px rgba(255, 45, 45, 0.9), 0 0 42px rgba(255, 0, 60, 0.6), 0 0 84px rgba(255, 0, 60, 0.35); opacity: 1; }
+  6.5% { text-shadow: 0 0 4px rgba(255, 150, 150, 0.55), 0 0 10px rgba(255, 45, 45, 0.5), 0 0 22px rgba(255, 0, 60, 0.32); opacity: 0.88; }
+  8%, 52% { text-shadow: 0 0 6px rgba(255, 150, 150, 0.9), 0 0 18px rgba(255, 45, 45, 0.9), 0 0 42px rgba(255, 0, 60, 0.6), 0 0 84px rgba(255, 0, 60, 0.35); opacity: 1; }
+  55% { text-shadow: 0 0 8px rgba(255, 190, 190, 0.95), 0 0 26px rgba(255, 70, 70, 0.95), 0 0 60px rgba(255, 0, 60, 0.8), 0 0 120px rgba(255, 0, 60, 0.5); opacity: 1; }
+  58% { text-shadow: 0 0 6px rgba(255, 150, 150, 0.9), 0 0 18px rgba(255, 45, 45, 0.9), 0 0 42px rgba(255, 0, 60, 0.6), 0 0 84px rgba(255, 0, 60, 0.35); opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) { .mqx-marquee-track span { animation: none; } }
 .mqx-marquee-track b { color: var(--gold); font-weight: 400;
   text-shadow: 0 0 10px rgba(255, 200, 44, 0.85), 0 0 26px rgba(255, 170, 0, 0.45); }
 @keyframes mqxMarquee { to { transform: translateX(-50%); } }
@@ -1344,6 +1357,24 @@ main > h1 { font-family:'Anton',sans-serif; text-transform:uppercase; letter-spa
   background: linear-gradient(90deg, transparent, rgba(120, 230, 255, 0.85) 18%, rgba(120, 230, 255, 0.85) 82%, transparent);
   box-shadow: 0 0 10px rgba(64, 200, 255, 0.6);
 }
+.mqx-hero-follow {
+  /* Campaign line, first half (Dan, Nov 20, 2026): "Follow the
+     lights" in front of Capture the Magic on BOTH sites — Russo One
+     to match the lockup, gold with the same light-sweep + glow the
+     splash carries. */
+  font-family: "Russo One", sans-serif; font-weight: 400;
+  font-size: clamp(16px, 2.7vw, 29px); letter-spacing: 0.14em; text-indent: 0.14em;
+  text-transform: uppercase; text-align: center;
+  margin: 0 0 4px;
+  background: linear-gradient(100deg, #d9920d 0%, #ffc82c 38%, #fff3b0 50%, #ffc82c 62%, #d9920d 100%);
+  background-size: 220% 100%;
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent; color: transparent;
+  filter: drop-shadow(0 0 10px rgba(255, 200, 44, 0.55)) drop-shadow(0 0 30px rgba(235, 122, 44, 0.30));
+  animation: mqxFollowSweep 4.5s linear infinite;
+}
+@keyframes mqxFollowSweep { from { background-position: 110% 0; } to { background-position: -110% 0; } }
+@media (prefers-reduced-motion: reduce) { .mqx-hero-follow { animation: none; } }
 .mqx-hero-magic {
   font-family: "Russo One", sans-serif; font-weight: 400;
   font-size: clamp(19px, 3.2vw, 34px); letter-spacing: 0.14em; text-indent: 0.14em;
@@ -1374,7 +1405,7 @@ main > h1 { font-family:'Anton',sans-serif; text-transform:uppercase; letter-spa
   width: 85%; margin: 0 auto; display: block; height: auto; aspect-ratio: 1100 / 586; object-fit: cover;
 }
 .mqx-drive-cap {
-  position: absolute; left: calc(7.5% + 22px); bottom: 16px; margin: 0;
+  position: absolute; left: 0; right: 0; text-align: center; bottom: 16px; margin: 0;
   font-family: "Luckiest Guy", var(--mqx-display); font-size: clamp(18px, 2.6vw, 28px);
   color: #ffffff; text-transform: uppercase; transform: skewX(-3deg);
   text-shadow: 0 3px 18px rgba(0, 0, 0, 0.75); white-space: nowrap;
@@ -1383,7 +1414,7 @@ main > h1 { font-family:'Anton',sans-serif; text-transform:uppercase; letter-spa
 @media (max-width: 760px) {
   /* Phone: the caption was running edge to edge and wrapping over the
      car — smaller, inset to the video's frame, capped width. */
-  .mqx-drive-cap { font-size: clamp(10px, 2.9vw, 14px); left: calc(7.5% + 12px); bottom: 10px; max-width: none; }
+  .mqx-drive-cap { font-size: clamp(10px, 2.9vw, 14px); left: 0; right: 0; bottom: 10px; max-width: none; }
 }
 /* Universe reveal lineup (Nov 18, 2026): the neon cast on a dark
    stage, UNKJD-style, ahead of the Nov 24 reveal drip. */

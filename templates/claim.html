@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Claim this display · {{ site_name }}{% endblock %}
+{% block content %}
+<section class="soc-auth">
+  <h1>🏠 Claim this display</h1>
+  <p><strong>{{ entry.title }}</strong>{% if entry.town %} · {{ entry.town }}{% endif %}</p>
+  {% if sent %}
+  <p><b>Claim received.</b> We verify every claim by email — watch your inbox
+     for a note from us within one business day. Once you're verified, this
+     listing gets the ✅ <b>Verified by owner</b> badge, and you can add your
+     hours, your radio station, and your best photo.</p>
+  <p><a href="/d/{{ entry.id }}">← Back to the listing</a></p>
+  {% else %}
+  <p>Run this display? Claim the listing and it's yours to polish: your
+     hours, your FM station, your best photo — plus a ✅ <b>Verified by
+     owner</b> badge so hunters know it's really you. Free, always.</p>
+  <form method="post" action="/d/{{ entry.id }}/claim">
+    <p><label>Your name<br>
+      <input type="text" name="name" maxlength="80" autocomplete="name" style="width:100%;max-width:420px;"></label></p>
+    <p><label>Email (required — we verify claims by replying to it)<br>
+      <input type="email" name="email" required maxlength="120" autocomplete="email" style="width:100%;max-width:420px;"></label></p>
+    <p><label>Anything we should know? (hours, station, best night to visit…)<br>
+      <textarea name="note" rows="3" maxlength="600" style="width:100%;max-width:420px;"></textarea></label></p>
+    <p style="display:none;" aria-hidden="true"><label>Website <input type="text" name="website" tabindex="-1" autocomplete="off"></label></p>
+    <p><button type="submit" class="btn">Claim this display</button></p>
+  </form>
+  <p class="muted">Not your display, or want it gone instead? Removal is one
+     tap on the listing page — no account, no questions, within one business
+     day.</p>
+  <p class="muted">Posting your display yourself? Tag <b>@gomerryquest</b>
+     with your town and we'll add it — claim it here afterwards to make it
+     verified.</p>
+  {% endif %}
+</section>
+{% endblock %}

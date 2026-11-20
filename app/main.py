@@ -246,7 +246,7 @@ def _branded_template_response(request, name, context=None, **kwargs):
     ctx = dict(context or {})
     brand = _brand_of(request)
     ctx.setdefault("brand", brand)
-    ctx.setdefault("quest_enabled", QUEST_ENABLED)
+    ctx.setdefault("quest_enabled", _quest_on(request))
     if brand == "merryquest":
         ctx["site_name"] = "MerryQuest"
     return _orig_template_response(request, name, ctx, **kwargs)
@@ -269,6 +269,42 @@ def _env_flag(name: str) -> bool:
 QUEST_ENABLED = _env_flag("QUEST_ENABLED")
 QUEST_SPAWNS_ENABLED = _env_flag("QUEST_SPAWNS_ENABLED")
 QUEST_SPONSOR_LAYER_ENABLED = _env_flag("QUEST_SPONSOR_LAYER_ENABLED")
+
+# Quest preview allowlist (built Nov 20, 2026 — the promised pre-launch
+# field test): while the global flags stay OFF, these member accounts
+# see the full quest layer (panels, Sack, check-in, hints) so Dan can
+# test the loop end-to-end before Dec 1. Everyone else sees nothing.
+# Extend or replace via env: QUEST_PREVIEW_EMAILS / QUEST_PREVIEW_HANDLES
+# (comma-separated). At the Dec 1 flip the global flags take over and
+# this list stops mattering.
+QUEST_PREVIEW_EMAILS = {
+    e.strip().lower() for e in os.environ.get(
+        "QUEST_PREVIEW_EMAILS",
+        "gethauntmap@gmail.com,questtest@example.com").split(",") if e.strip()}
+QUEST_PREVIEW_HANDLES = {
+    h.strip().lower() for h in os.environ.get(
+        "QUEST_PREVIEW_HANDLES", "dan,questtest").split(",") if h.strip()}
+
+
+def _quest_preview_member(request) -> bool:
+    if not request.cookies.get(MEMBER_COOKIE):
+        return False
+    m = current_member(request)
+    if m is None:
+        return False
+    return ((m.get("email") or "").lower() in QUEST_PREVIEW_EMAILS
+            or (m.get("handle") or "").lower() in QUEST_PREVIEW_HANDLES)
+
+
+def _quest_on(request) -> bool:
+    """Quest layer visible: globally on, or this member is previewing."""
+    return QUEST_ENABLED or _quest_preview_member(request)
+
+
+def _quest_live(request) -> bool:
+    """Spawns active: global enable + spawns, or a preview member."""
+    return (QUEST_ENABLED and QUEST_SPAWNS_ENABLED) \
+        or _quest_preview_member(request)
 
 # In-memory admin sessions: token -> True. Resets on restart (fine for v1).
 admin_sessions: set[str] = set()
@@ -4269,6 +4305,19 @@ def map_view(request: Request, cat: str = ""):
     # pass 2) instead of a per-render scan + row_to_dict pass.
     pins = [e for c in cats for e in _category_rows(c)
             if e["lat"] is not None and e["lng"] is not None]
+    # Inferred-location pins (Dan, Nov 20, 2026): the public map
+    # never carries their true point — a deterministic per-pin
+    # jitter (~±350 m, stable across loads) shows the neighborhood
+    # until the owner claims the listing and confirms the address.
+    def _jitter(e):
+        if e.get("loc_source") != "inferred":
+            return e
+        h = hashlib.md5(f"loc-{e['id']}".encode()).digest()
+        e = dict(e)
+        e["lat"] = e["lat"] + ((h[0] / 255.0) - 0.5) * 0.007
+        e["lng"] = e["lng"] + ((h[1] / 255.0) - 0.5) * 0.007
+        return e
+    pins = [_jitter(e) for e in pins]
     return templates.TemplateResponse(request, "map.html",
         {"request": request, "pins": pins, "cat": cat,
          "cat_labels": CAT_LABELS, "cat_emoji": CAT_EMOJI},
@@ -7362,8 +7411,7 @@ def detail(request: Request, entry_id: int):
     # page shows tonight's character teaser + check-in. Invisible
     # everywhere else (quest_panel stays None).
     quest_panel = None
-    if _brand_of(request) == "merryquest" and QUEST_ENABLED \
-            and QUEST_SPAWNS_ENABLED \
+    if _brand_of(request) == "merryquest" and _quest_live(request) \
             and entry.get("category") in QUEST_SPAWN_CATEGORIES:
         _member = current_member(request)
         with get_conn(DB_PATH) as conn:
@@ -7718,6 +7766,59 @@ async def town_request(request: Request):
                 conn.commit()
         return RedirectResponse(f"{ref}{sep}town_requested=1", status_code=303)
     return RedirectResponse(f"{ref}{sep}town_req_error=1", status_code=303)
+
+
+# ------------------------------------------------------------- claims
+# Owner claims (Dan, Nov 20, 2026): the creator-claim program's
+# intake. Capture-only, same shape as town requests — submissions
+# land in the claims table (nightly backup) and surface in /admin.
+# Approval is manual for v1: verify by email reply, then set the
+# entry's owner_user_id (badge appears) and, for inferred pins,
+# loc_source='verified' (real pin + address go public).
+CLAIMS_TABLE_SQL = (
+    "CREATE TABLE IF NOT EXISTS claims "
+    "(id INTEGER PRIMARY KEY, entry_id INTEGER, name TEXT, "
+    "email TEXT, note TEXT, created_at TEXT)"
+)
+
+
+@app.get("/d/{entry_id}/claim", response_class=HTMLResponse)
+def claim_page(request: Request, entry_id: int, sent: int = 0):
+    entry = get_entry(entry_id)
+    if not entry or entry.get("hidden"):
+        raise HTTPException(status_code=404, detail="Display not found")
+    return templates.TemplateResponse(request, "claim.html",
+        {"request": request, "entry": entry, "sent": sent})
+
+
+@app.post("/d/{entry_id}/claim")
+async def claim_submit(request: Request, entry_id: int):
+    entry = get_entry(entry_id)
+    if not entry or entry.get("hidden"):
+        raise HTTPException(status_code=404, detail="Display not found")
+    form = await request.form()
+    if (form.get("website") or "").strip():
+        return RedirectResponse(f"/d/{entry_id}/claim?sent=1", status_code=303)
+    name = (form.get("name") or "").strip()[:80]
+    email = (form.get("email") or "").strip().lower()[:120]
+    note = (form.get("note") or "").strip()[:600]
+    valid = email and "@" in email and "." in email.split("@")[-1]
+    if valid:
+        with get_conn(DB_PATH) as conn:
+            conn.execute(CLAIMS_TABLE_SQL)
+            dupe = conn.execute(
+                "SELECT 1 FROM claims WHERE email = ? AND entry_id = ? "
+                "AND created_at >= datetime('now', '-1 day')",
+                (email, entry_id)).fetchone()
+            if not dupe:
+                conn.execute(
+                    "INSERT INTO claims (entry_id, name, email, note, created_at) "
+                    "VALUES (?, ?, ?, ?, ?)",
+                    (entry_id, name, email, note,
+                     datetime.now(timezone.utc).isoformat()))
+                conn.commit()
+        return RedirectResponse(f"/d/{entry_id}/claim?sent=1", status_code=303)
+    return RedirectResponse(f"/d/{entry_id}/claim?error=1", status_code=303)
 
 
 # ------------------------------------------------------------- feedback
@@ -8106,6 +8207,118 @@ METRO_GROUPS = (
     {"code": "DMV", "name": "DMV — DC · Maryland · Virginia",
      "states": ("DC", "MD", "VA")},
 )
+
+
+@app.get("/leaderboard/hunters", response_class=HTMLResponse)
+def leaderboard_hunters(request: Request, town: str = "", q: str = ""):
+    """Hunter boards (Dan, Nov 20, 2026): the competitive layer over
+    the ONE quest source of truth — quest_sack (who holds what) and
+    quest_checkins (who caught what, where). Everything per-town is
+    derived here by aggregation; there is no per-town state to keep
+    in sync. Three lenses: top hunters nationwide, cities competing
+    (hunters / characters found / tonight's clearers / all-32
+    holders), and a per-town board whose #1 is the Town Champion.
+    Renders on the MerryQuest brand whether or not the quest layer
+    is live yet — pre-launch it is an empty-state marketing page."""
+    if _brand_of(request) != "merryquest":
+        raise HTTPException(status_code=404)
+    today = _quest_today().isoformat()
+    with get_conn(DB_PATH) as conn:
+        top_hunters = [dict(r) for r in conn.execute(
+            "SELECT u.handle AS handle, COUNT(*) AS chars, "
+            "SUM(s.count) AS captures FROM quest_sack s "
+            "JOIN users u ON u.id = s.user_id "
+            "GROUP BY s.user_id ORDER BY chars DESC, captures DESC "
+            "LIMIT 50").fetchall()]
+        city_rows = [dict(r) for r in conn.execute(
+            "SELECT e.town AS town, "
+            "COUNT(DISTINCT c.user_id) AS hunters, COUNT(*) AS captures, "
+            "COUNT(DISTINCT c.character_id) AS chars_found "
+            "FROM quest_checkins c JOIN entries e ON e.id = c.entry_id "
+            "WHERE c.character_id IS NOT NULL "
+            "GROUP BY e.town ORDER BY hunters DESC, captures DESC "
+            "LIMIT 200").fetchall()]
+        # All-32 holders per town they hunt in (cumulative lens).
+        all32 = {r[0] for r in conn.execute(
+            "SELECT user_id FROM quest_sack GROUP BY user_id "
+            "HAVING COUNT(*) >= 32").fetchall()}
+        town_all32: dict[str, int] = {}
+        if all32:
+            marks = ",".join("?" * len(all32))
+            for r in conn.execute(
+                    "SELECT e.town, COUNT(DISTINCT c.user_id) "
+                    "FROM quest_checkins c JOIN entries e "
+                    "ON e.id = c.entry_id WHERE c.character_id IS NOT NULL "
+                    f"AND c.user_id IN ({marks}) GROUP BY e.town",
+                    tuple(all32)).fetchall():
+                town_all32[r[0]] = r[1]
+        # Tonight's clearers per town: distinct characters caught in
+        # town tonight (season runs on EST, UTC-5) vs the town's
+        # available set from the spawn engine itself.
+        tonight_pairs = conn.execute(
+            "SELECT e.town, c.user_id, COUNT(DISTINCT c.character_id) "
+            "FROM quest_checkins c JOIN entries e ON e.id = c.entry_id "
+            "WHERE c.character_id IS NOT NULL "
+            "AND date(c.created_at, '-5 hours') = ? "
+            "GROUP BY e.town, c.user_id", (today,)).fetchall()
+        available_cache: dict[str, int] = {}
+
+        def _available(town_name):
+            if town_name not in available_cache:
+                try:
+                    assigns = _quest_assignments(conn, town_name,
+                                                 _quest_today())
+                    available_cache[town_name] = len(
+                        {ch["id"] for ch in assigns.values() if ch})
+                except Exception:
+                    available_cache[town_name] = 0
+            return available_cache[town_name]
+
+        town_clearers: dict[str, int] = {}
+        for tname, _uid, distinct_ct in tonight_pairs:
+            avail = _available(tname)
+            if avail and distinct_ct >= avail:
+                town_clearers[tname] = town_clearers.get(tname, 0) + 1
+        cities = []
+        for row in city_rows:
+            row["all32"] = town_all32.get(row["town"], 0)
+            row["clearers"] = town_clearers.get(row["town"], 0)
+            if q and q.lower() not in row["town"].lower():
+                continue
+            cities.append(row)
+        # Selected town board: requested town, else the busiest town.
+        sel = town or (city_rows[0]["town"] if city_rows else "")
+        town_board = []
+        sel_available = 0
+        sel_clearers = []
+        if sel:
+            town_board = [dict(r) for r in conn.execute(
+                "SELECT u.handle AS handle, "
+                "COUNT(DISTINCT c.character_id) AS chars, "
+                "COUNT(*) AS captures, MAX(c.created_at) AS last_at "
+                "FROM quest_checkins c JOIN entries e ON e.id = c.entry_id "
+                "JOIN users u ON u.id = c.user_id "
+                "WHERE e.town = ? AND c.character_id IS NOT NULL "
+                "GROUP BY c.user_id ORDER BY chars DESC, last_at ASC "
+                "LIMIT 50", (sel,)).fetchall()]
+            sel_available = _available(sel)
+            if sel_available:
+                sel_clearers = [r["handle"] for r in conn.execute(
+                    "SELECT u.handle AS handle, "
+                    "COUNT(DISTINCT c.character_id) AS d "
+                    "FROM quest_checkins c JOIN entries e "
+                    "ON e.id = c.entry_id JOIN users u "
+                    "ON u.id = c.user_id WHERE e.town = ? "
+                    "AND c.character_id IS NOT NULL "
+                    "AND date(c.created_at, '-5 hours') = ? "
+                    "GROUP BY c.user_id HAVING d >= ?",
+                    (sel, today, sel_available)).fetchall()]
+    return templates.TemplateResponse(request, "hunters_leaderboard.html",
+        {"request": request, "top_hunters": top_hunters,
+         "cities": cities, "q": q, "sel_town": sel,
+         "town_board": town_board, "sel_available": sel_available,
+         "sel_clearers": sel_clearers,
+         "champion": town_board[0] if town_board else None})
 
 
 @app.get("/leaderboard/states", response_class=HTMLResponse)
@@ -12159,6 +12372,13 @@ def admin(request: Request):
             "ORDER BY created_at DESC LIMIT 100").fetchall()
         town_req_count = conn.execute(
             "SELECT COUNT(*) FROM town_requests").fetchone()[0]
+        conn.execute(CLAIMS_TABLE_SQL)
+        claims_rows = [dict(r) for r in conn.execute(
+            "SELECT c.*, e.title AS entry_title, e.town AS entry_town "
+            "FROM claims c LEFT JOIN entries e ON e.id = c.entry_id "
+            "ORDER BY c.created_at DESC LIMIT 100").fetchall()]
+        claims_count = conn.execute(
+            "SELECT COUNT(*) FROM claims").fetchone()[0]
         conn.execute(FEEDBACK_TABLE_SQL)
         feedback_rows = [dict(r) for r in conn.execute(
             "SELECT * FROM feedback ORDER BY created_at DESC LIMIT 100").fetchall()]
@@ -12179,6 +12399,7 @@ def admin(request: Request):
         {"request": request, "logged_in": True, "flagged": flagged,
          "all_entries": all_entries, "subs": subs, "sub_count": sub_count, "error": None,
          "town_reqs": town_reqs, "town_req_count": town_req_count,
+         "claims_rows": claims_rows, "claims_count": claims_count,
          "feedback_rows": feedback_rows, "feedback_count": feedback_count,
          "fanart_pending": fanart_pending, "fanart_live": fanart_live},
     )
@@ -17937,7 +18158,7 @@ async def quest_checkin(request: Request):
     Login required. MerryQuest brand + QUEST_ENABLED +
     QUEST_SPAWNS_ENABLED required — anything else is a 404, so the
     endpoint is invisible while the layer is off."""
-    if not (QUEST_ENABLED and QUEST_SPAWNS_ENABLED) \
+    if not _quest_live(request) \
             or _brand_of(request) != "merryquest":
         raise HTTPException(status_code=404)
     member = current_member(request)
@@ -18028,7 +18249,7 @@ async def quest_hint(request: Request, character: str = "",
     hunter's distinct catches in that town: Whisper for everyone,
     Riddle at QUEST_HINT_RIDDLE_AT, Lantern at
     QUEST_HINT_LANTERN_AT."""
-    if not (QUEST_ENABLED and QUEST_SPAWNS_ENABLED) \
+    if not _quest_live(request) \
             or _brand_of(request) != "merryquest":
         raise HTTPException(status_code=404)
     member = current_member(request)
@@ -18106,7 +18327,7 @@ def sack_page(request: Request):
     """Santa's Sack — the collection view. MerryQuest brand +
     QUEST_ENABLED only; login required (guests are sent to sign in
     first, with a next back here)."""
-    if not QUEST_ENABLED or _brand_of(request) != "merryquest":
+    if not _quest_on(request) or _brand_of(request) != "merryquest":
         raise HTTPException(status_code=404)
     member = current_member(request)
     if member is None:
