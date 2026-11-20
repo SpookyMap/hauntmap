@@ -7384,6 +7384,8 @@ def detail(request: Request, entry_id: int):
             }
     return templates.TemplateResponse(request, "detail.html",
         {"request": request, "entry": entry, "voted": voted, "reported": reported,
+         "lit_tapped": f"lit_{entry_id}" in request.cookies,
+         "dark_tapped": f"dark_{entry_id}" in request.cookies,
          "stay22_url": stay22_url,
          "extra_videos": extra_videos,
          "is_venue": entry["category"] in VENUE_CATS,
@@ -7557,6 +7559,57 @@ def report(entry_id: int, request: Request):
         conn.commit()
     resp = RedirectResponse(f"/d/{entry_id}", status_code=303)
     resp.set_cookie(f"reported_{entry_id}", "1", max_age=365 * 24 * 3600,
+                    httponly=True, samesite="lax")
+    return resp
+
+
+@app.post("/d/{entry_id}/lit")
+def lit_confirm(entry_id: int, request: Request):
+    """Visitor "it's lit tonight" tap (Dan, Nov 20, 2026): one tap
+    promotes an unconfirmed christmas display to Lit — only Lit
+    displays are capturable or appear in tours. Cookie-gated to one
+    counted tap per device per listing."""
+    entry = get_entry(entry_id)
+    if not entry or entry["hidden"]:
+        raise HTTPException(404, "Entry not found.")
+    if f"lit_{entry_id}" not in request.cookies and entry.get("lit_status") != "lit":
+        with get_conn(DB_PATH) as conn:
+            conn.execute(
+                "UPDATE entries SET lit_status = 'lit', lit_source = 'visitor', "
+                "lit_at = ?, lit_dark = 0 WHERE id = ?",
+                (datetime.now(timezone.utc).isoformat(), entry_id))
+            conn.commit()
+    resp = RedirectResponse(f"/d/{entry_id}", status_code=303)
+    resp.set_cookie(f"lit_{entry_id}", "1", max_age=365 * 24 * 3600,
+                    httponly=True, samesite="lax")
+    return resp
+
+
+@app.post("/d/{entry_id}/dark")
+def lit_dark(entry_id: int, request: Request):
+    """Visitor "it was dark when I went" report (Dan, Nov 20, 2026):
+    two independent reports demote a Lit display back to
+    unconfirmed for review — never an auto-hide (removal is the
+    owner's flow). Cookie-gated to one counted report per device."""
+    entry = get_entry(entry_id)
+    if not entry or entry["hidden"]:
+        raise HTTPException(404, "Entry not found.")
+    if f"dark_{entry_id}" not in request.cookies:
+        with get_conn(DB_PATH) as conn:
+            conn.execute(
+                "UPDATE entries SET lit_dark = COALESCE(lit_dark, 0) + 1 WHERE id = ?",
+                (entry_id,))
+            if entry.get("lit_status") == "lit":
+                row = conn.execute(
+                    "SELECT lit_dark FROM entries WHERE id = ?",
+                    (entry_id,)).fetchone()
+                if row and row[0] >= 2:
+                    conn.execute(
+                        "UPDATE entries SET lit_status = 'unconfirmed', "
+                        "lit_dark = 0 WHERE id = ?", (entry_id,))
+            conn.commit()
+    resp = RedirectResponse(f"/d/{entry_id}", status_code=303)
+    resp.set_cookie(f"dark_{entry_id}", "1", max_age=365 * 24 * 3600,
                     httponly=True, samesite="lax")
     return resp
 
@@ -8266,6 +8319,8 @@ def _auto_tour_pool(conn, cat: str, clat: float, clng: float,
             continue
         if not (e.get("address") or "").strip():
             continue  # no verified street address — never auto-toured
+        if cat == "christmas" and e.get("lit_status") != "lit":
+            continue  # unconfirmed display — never auto-toured (Dan, Nov 20)
         d = haversine_miles(clat, clng, e["lat"], e["lng"])
         if d <= radius:
             e = dict(e)

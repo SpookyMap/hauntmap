@@ -156,6 +156,20 @@
   {% if entry.address %}
   <p class="entry-address">&#x1F4CD; {{ entry.address }}</p>
   {% endif %}
+  {% if brand == 'merryquest' and entry.category == 'christmas' and not entry.virtual %}
+  {% if entry.lit_status == 'lit' %}
+  <p class="lit-badge" style="font-size:14.5px;margin:8px 0;">💡 <b>Confirmed lit for 2026</b>
+    {% if dark_tapped %}<span class="muted">· Thanks — your dark report is noted.</span>
+    {% else %}· <form method="post" action="/d/{{ entry.id }}/dark" class="inline-form"><button type="submit" class="linklike">It was dark when I went</button></form>{% endif %}
+  </p>
+  {% else %}
+  <div class="lit-soon" style="margin:12px 0;padding:14px 16px;border:1px solid rgba(160,140,255,.25);border-radius:14px;">
+    <p style="margin:0 0 8px;">🌙 <b>Coming soon</b> — this display isn't confirmed lit for 2026 yet, so it's not on tours or in the quest for now.</p>
+    {% if lit_tapped %}<p class="muted" style="margin:0;">Thanks — you just confirmed this one. 💡</p>
+    {% else %}<form method="post" action="/d/{{ entry.id }}/lit"><button type="submit" class="btn">💡 It's lit tonight — I saw it</button></form>{% endif %}
+  </div>
+  {% endif %}
+  {% endif %}
   {% if entry.scare_level %}
   <p class="scare-badge">
     {% if entry.scare_level == 'family' %}&#x1F60A; Family-friendly
@@ -601,6 +615,7 @@
       <button type="submit" class="linklike danger">&#x1F6A9; Report</button>
     </form>
     {% endif %}
+    <a class="linklike" href="/feedback" title="Tell us where this pin should be — the feedback form picks up this listing automatically">&#x1F4CD; Pin is wrong</a>
   </div>
 </article>
 

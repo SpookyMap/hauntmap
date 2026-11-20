@@ -291,7 +291,11 @@ CREATE TABLE IF NOT EXISTS entries (
     ev_type TEXT,                         -- events facet: event type (see EVENT_TYPES in main.py)
     ev_genre TEXT,                        -- events facet: music genre (see EVENT_GENRES in main.py)
     ev_venue TEXT,                        -- events facet: venue style (see EVENT_VENUES in main.py)
-    virtual INTEGER NOT NULL DEFAULT 0    -- 1 = online/virtual LIVE room (Dan, Oct 27): no street address, no coords, town stored as "Online / Virtual"; live category only
+    virtual INTEGER NOT NULL DEFAULT 0,   -- 1 = online/virtual LIVE room (Dan, Oct 27): no street address, no coords, town stored as "Online / Virtual"; live category only
+    lit_status TEXT NOT NULL DEFAULT 'unconfirmed', -- 'lit' | 'unconfirmed' (Dan, Nov 20, 2026): only lit christmas displays are capturable or appear in tours
+    lit_source TEXT,                      -- who confirmed it: 'curation' | 'visitor' | 'owner'
+    lit_at TEXT,                          -- when it was confirmed lit (UTC ISO)
+    lit_dark INTEGER NOT NULL DEFAULT 0   -- 'not lit' reports against a lit pin; 2 demote it back to unconfirmed for review
 );
 CREATE INDEX IF NOT EXISTS idx_entries_town ON entries(town);
 CREATE INDEX IF NOT EXISTS idx_entries_votes ON entries(votes DESC);
@@ -1019,6 +1023,29 @@ def init_db(db_path: Path) -> None:
             # altered — the flag only affects list placement.
             conn.execute(
                 "ALTER TABLE entries ADD COLUMN is_featured INTEGER NOT NULL DEFAULT 0"
+            )
+        if "lit_status" not in cols:
+            # Lit status (Dan, Nov 20, 2026): a christmas display is
+            # 'lit' only once this season's lights are confirmed —
+            # by our curation, a visitor's "lit tonight" tap, or the
+            # owner. Only lit displays are capturable or enter tours;
+            # unconfirmed pins sit on the map as "coming soon."
+            conn.execute(
+                "ALTER TABLE entries ADD COLUMN lit_status TEXT NOT NULL DEFAULT 'unconfirmed'"
+            )
+            conn.execute("ALTER TABLE entries ADD COLUMN lit_source TEXT")
+            conn.execute("ALTER TABLE entries ADD COLUMN lit_at TEXT")
+            conn.execute(
+                "ALTER TABLE entries ADD COLUMN lit_dark INTEGER NOT NULL DEFAULT 0"
+            )
+            # One-time backfill (this block runs only when the column
+            # is first added): this season's christmas pins carry
+            # current-season media from the 2026 hunt, which is
+            # curation-grade evidence the display is up = lit.
+            conn.execute(
+                "UPDATE entries SET lit_status = 'lit', lit_source = 'curation', "
+                "lit_at = created_at WHERE category = 'christmas' "
+                "AND created_at >= '2026-10-01'"
             )
         # Enforce the code-owned editor's-pick set (FEATURED_ENTRY_IDS):
         # exactly those pins flagged, every other pin unflagged. Runs on

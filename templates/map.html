@@ -19,6 +19,7 @@
 .pin-popup a { color: var(--accent); font-weight: 700; text-decoration: none; }
 .thumb-marker { border: 2px solid #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 6px rgba(0,0,0,0.4); background: #0d0916; }
 .thumb-marker img { width: 64px; height: 48px; object-fit: cover; display: block; }
+.thumb-marker.pin-soon img { filter: grayscale(0.85); opacity: 0.5; }
 </style>
 {% if brand | default('haunt') == 'merryquest' %}
 <style>
@@ -78,7 +79,7 @@ function thumbIcon(p) {
     : '<span style="font-size:28px">&#x1F4CD;</span>';
   return L.divIcon({
     className: '',
-    html: `<div class="thumb-marker">${inner}</div>`,
+    html: `<div class="thumb-marker${p.category === 'christmas' && p.lit_status && p.lit_status !== 'lit' ? ' pin-soon' : ''}">${inner}</div>`,
     iconSize: [68, 52],
     iconAnchor: [34, 52],
     popupAnchor: [0, -52],
@@ -90,7 +91,7 @@ pins.forEach(p => {
     ? `<video src="${p.media_url}" poster="${thumb}" muted playsinline style="pointer-events:none"></video>`
     : `<img src="${thumb}" alt="" loading="lazy">`) : '';
   const m = L.marker([p.lat, p.lng], {icon: thumbIcon(p)});
-  m.bindPopup(`<div class="pin-popup">${media}<strong>${p.title}</strong>${p.votes ? `<div>&#x1F383; ${p.votes} vote${p.votes != 1 ? 's' : ''}</div>` : ''}<a href="/d/${p.id}">{% if brand | default('haunt') == 'merryquest' %}View display{% else %}View haunt{% endif %}</a></div>`);
+  m.bindPopup(`<div class="pin-popup">${media}<strong>${p.title}</strong>${p.category === 'christmas' && p.lit_status && p.lit_status !== 'lit' ? '<div>🌙 Coming soon — not yet confirmed lit</div>' : ''}${p.votes ? `<div>&#x1F383; ${p.votes} vote${p.votes != 1 ? 's' : ''}</div>` : ''}<a href="/d/${p.id}">{% if brand | default('haunt') == 'merryquest' %}View display{% else %}View haunt{% endif %}</a></div>`);
   cluster.addLayer(m);
 });
 map.addLayer(cluster);
