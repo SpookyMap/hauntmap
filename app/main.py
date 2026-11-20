@@ -4097,6 +4097,14 @@ def upload_form(request: Request):
     return templates.TemplateResponse(request, "upload.html", {"request": request, "error": None, "values": {}})
 
 
+@app.get("/add-lights", response_class=HTMLResponse)
+def add_lights_form(request: Request):
+    # Owner-simple submission (Dan, Nov 20): four fields, posts to the
+    # existing /upload endpoint (same street-address gate, same
+    # redirect to the new pin). Linked from MerryQuest town pages.
+    return templates.TemplateResponse(request, "add_lights.html", {"request": request})
+
+
 @app.get("/nearby", response_class=HTMLResponse)
 def nearby(request: Request, q: str = "", miles: float = 10, cat: str = "halloween",
            sort: str = "new", lat: str = "", lng: str = "", states: str = ""):

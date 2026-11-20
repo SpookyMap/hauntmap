@@ -1,9 +1,32 @@
 {% extends "base.html" %}
-{% block title %}{% if brand == 'merryquest' %}Christmas displays{% else %}Halloween displays{% endif %} in {{ label }} · {{ site_name }}{% endblock %}
-{% block head %}<meta name="description" content="The best Halloween displays, haunted houses and events in {{ label }} — photos, directions and custom tours on HauntMap.">{% endblock %}
+{% block title %}{% if brand == 'merryquest' %}Christmas lights in {{ label }} · {{ site_name }}{% else %}Halloween displays in {{ label }} · {{ site_name }}{% endif %}{% endblock %}
+{% block head %}<meta name="description" content="{% if brand == 'merryquest' %}The best Christmas lights and displays in {{ label }} — photos, directions, ready-made routes, and 32 legends hiding among them on MerryQuest.{% else %}The best Halloween displays, haunted houses and events in {{ label }} — photos, directions and custom tours on HauntMap.{% endif %}">{% endblock %}
 {% block content %}
-<h1>{% if brand == 'merryquest' %}&#x1F384; Christmas displays{% else %}&#x1F383; Halloween displays{% endif %} in {{ label }}</h1>
+<h1>{% if brand == 'merryquest' %}&#x1F384; Christmas lights{% else %}&#x1F383; Halloween displays{% endif %} in {{ label }}</h1>
 <p class="town-sub">{{ entries|length }} {% if brand == 'merryquest' %}festive{% else %}spooky{% endif %} stop{{ 's' if entries|length != 1 }} in {{ label }} — tap any card for directions, or add a few to a custom tour.</p>
+{% if brand == 'merryquest' %}<p class="town-legends">&#x2728; All 32 legends are in play in {{ label }} — hiding among these {{ entries|length }} displays. Who's waiting where is the surprise.</p>{% endif %}
+{% if brand == 'merryquest' and entries|length >= 3 %}
+<div class="town-route">
+  <h3>&#x1F697; A sample route in {{ label }}</h3>
+  <ol>
+    {% for e in entries[:5] %}<li>{{ e.title }}</li>{% endfor %}
+  </ol>
+  <a class="btn" href="/auto-tour?q={{ label|urlencode }}&size=10{% if brand == 'merryquest' %}&cat=christmas{% endif %}">Build this tour for me</a>
+  <button type="button" class="btn town-share-btn" data-share-url="/auto-tour?q={{ label|urlencode }}&size=10&cat=christmas" data-share-text="&#x1F384; Tonight's Christmas lights route in {{ label }} — come drive it with us:">Send this route to the group chat</button>
+</div>
+<script>
+(function () {
+  var b = document.querySelector('.town-share-btn');
+  if (!b) return;
+  b.addEventListener('click', function () {
+    var url = location.origin + b.getAttribute('data-share-url');
+    var text = b.getAttribute('data-share-text');
+    if (navigator.share) { navigator.share({ title: 'MerryQuest route', text: text, url: url }).catch(function () {}); }
+    else if (navigator.clipboard) { navigator.clipboard.writeText(text + ' ' + url).then(function () { b.textContent = 'Link copied — paste it in the chat'; }); }
+  });
+})();
+</script>
+{% endif %}
 {% if tstrip %}{% include "_tonight_strip.html" %}{% endif %}
 <div class="seen-strip" id="seen-strip" hidden>
   <p class="seen-text"></p>
@@ -67,9 +90,17 @@
 {% if stay22_url %}
 {% with stay22_heading = "Stay in " ~ label, stay22_place = label %}{% include "_stay22.html" %}{% endwith %}
 {% endif %}
+{% if brand == 'merryquest' %}<p class="town-owner">Own a display in {{ label }}? <a href="/add-lights">Add our lights</a> — one short form, no email needed.</p>{% endif %}
 <p class="town-more"><a href="/towns">Browse all towns &rarr;</a> &middot; <a href="/?town={{ label|urlencode }}">See {{ label }} in the main feed &rarr;</a></p>
 <style>
 .town-sub { color: #c9bce8; }
+.town-legends { color: #ffd98a; margin: .2rem 0 .8rem; }
+.town-route { border: 1px solid #3a2f5e; border-radius: 14px; padding: 14px 18px; margin: 0 0 1.1rem; background: rgba(255,255,255,.03); }
+.town-route h3 { margin: 0 0 .5rem; }
+.town-route ol { margin: 0 0 .8rem; padding-left: 1.3rem; }
+.town-route li { margin: .25rem 0; }
+.town-share-btn { margin-left: .5rem; }
+.town-owner { text-align: center; margin-top: 1.2rem; color: #ffd98a; }
 .town-more { margin-top: 1.2rem; text-align: center; }
 </style>
 {% endblock %}

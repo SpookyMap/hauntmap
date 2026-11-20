@@ -121,6 +121,21 @@ document.getElementById('at-locate').onclick = () => {
     {% if pool_size > total_stops %}&middot; picked from {{ pool_size }} eligible haunts nearby{% endif %}
     {% if home_state and not multi %}&middot; all in <strong>{{ home_state_name }}</strong>{% elif multi and route_states %}&middot; stops in <strong>{{ route_states | join(' + ') }}</strong>{% endif %}
   </p>
+  {% if brand | default('haunt') == 'merryquest' %}
+  <p class="at-share-row"><button type="button" class="at-share-btn" id="atShareBtn">&#x1F4E4; Send this route to the group chat</button></p>
+  <style>.at-share-btn { cursor: pointer; font-weight: 700; padding: 10px 18px; border-radius: 999px; }</style>
+  <script>
+  (function () {
+    var b = document.getElementById('atShareBtn');
+    if (!b) return;
+    b.addEventListener('click', function () {
+      var text = "\uD83C\uDF84 Tonight's Christmas lights route near {{ center_label }}: {{ total_stops }} stops, ~{{ total_miles|round|int }} mi of driving. Come ride:";
+      if (navigator.share) { navigator.share({ title: 'MerryQuest route', text: text, url: location.href }).catch(function () {}); }
+      else if (navigator.clipboard) { navigator.clipboard.writeText(text + ' ' + location.href).then(function () { b.textContent = 'Link copied \u2014 paste it in the chat'; }); }
+    });
+  })();
+  </script>
+  {% endif %}
   <form class="at-scope-row" method="get" action="/auto-tour">
     <input type="hidden" name="size" value="{{ size }}">
     <input type="hidden" name="cat" value="{{ cat }}">

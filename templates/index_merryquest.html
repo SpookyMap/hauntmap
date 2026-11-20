@@ -29,13 +29,13 @@
         <div class="mqx-bigcd-cell"><span id="mqx-cd-m">--</span><label>Minutes</label></div>
         <div class="mqx-bigcd-cell"><span id="mqx-cd-s">--</span><label>Seconds</label></div>
       </div>
-      <p class="mqx-sub">Thirty-two legends slipped out of the storybooks and into your city lights — Santa, Krampus, Ded Moroz, and twenty-nine more, scattered across the best Christmas displays near you. They're only out while the season lasts. Capture them before Santa leaves town.</p>
+      <p class="mqx-sub">The story doesn't finish on the couch. Watch a two-minute chapter, and it points you to a real display in your town — the Sack reward is what gets you out of the car. Thirty-two legends are hiding in the lights. No catch, no prize — just the hunt.</p>
       <form class="mqx-search" method="get" action="/nearby" role="search">
         <input type="text" name="q" placeholder="Town or ZIP" autocomplete="off">
         <button type="submit">Search</button>
       </form>
       <div class="mqx-hero-ctas">
-        <a class="mqx-ghost-btn" href="/nearby?choose=town">Choose my town</a>
+        <a class="mqx-cta" href="/nearby?choose=town">Choose my town</a>
         <a class="mqx-ghost-btn" href="#mqx-quest">How the quest works</a>
         <span class="mqx-app-badges"><span>📱 App drops Dec 1</span><span>iOS · Android</span></span>
       </div>
@@ -48,6 +48,64 @@
       {% endif %}
     </div>
   </section>
+
+  <section class="mqx-try mqx-haunted" id="mqx-try">
+    <p class="mqx-eyebrow">✦ Try it ✦</p>
+    <h2 class="mqx-h2">The loop, in three beats</h2>
+    <p class="mqx-p mqx-try-intro">A taste of December 1 — nothing here is saved.</p>
+
+    <h3 class="mqx-try-h">1 · Open a chapter</h3>
+    <div class="mqx-chapters">
+      <button type="button" class="mqx-chapter is-on" data-ch="santa" data-name="Santa" data-look="a rooftop sleigh scene"><img src="/static/img/neon/santa.jpg" alt="Santa Claus" loading="lazy"><span class="mqx-chapter-t">Chapter 1 · Santa</span><span class="mqx-chapter-sub">“The Night the Grid Went Dark”</span></button>
+      <button type="button" class="mqx-chapter" data-ch="krampus" data-name="Krampus" data-look="the darkest display in town — chains, horns, red light"><img src="/static/img/neon/krampus-v2.jpg" alt="Krampus" loading="lazy"><span class="mqx-chapter-t">Chapter 2 · Krampus</span><span class="mqx-chapter-sub">“The List Is Wrong”</span></button>
+      <button type="button" class="mqx-chapter" data-ch="dedmoroz" data-name="Ded Moroz" data-look="a display drowned in blue and ice"><img src="/static/img/neon/ded-moroz-v2.jpg" alt="Ded Moroz" loading="lazy"><span class="mqx-chapter-t">Chapter 3 · Ded Moroz</span><span class="mqx-chapter-sub">“One Flake”</span></button>
+      <div class="mqx-chapter mqx-chapter-locked" aria-label="Chapter 4 is locked until November 24"><span class="mqx-chapter-lock">🔒</span><span class="mqx-chapter-t">Chapter 4</span><span class="mqx-chapter-sub">Unlocks Tue, Nov 24</span></div>
+    </div>
+    <p class="mqx-try-line" id="tryLook">The chapter points you at <b>a rooftop sleigh scene</b> — that's the kind of display to look for.</p>
+
+    <h3 class="mqx-try-h">2 · Pick a town</h3>
+    <div class="mqx-try-towns" role="group" aria-label="Sample towns">
+      {% for t in ticker_towns[:6] %}<button type="button" class="mqx-try-town{% if loop.first %} is-on{% endif %}">{{ t }}</button>{% endfor %}
+      {% if not ticker_towns %}<button type="button" class="mqx-try-town is-on">Hackensack, NJ</button>{% endif %}
+    </div>
+    <ol class="mqx-try-route" id="tryRoute">
+      <li>The warm-up house — first lights on the route</li>
+      <li>The big synchronized show everyone talks about</li>
+      <li>The quiet stunner down the side street</li>
+      <li class="mqx-try-final">⭐ Final stop: <span id="tryFinal">a rooftop sleigh scene — that's where <b>Santa</b> is hiding tonight. Check in within 150 ft to claim the episode's reward.</span></li>
+    </ol>
+
+    <h3 class="mqx-try-h">3 · Join free</h3>
+    <form class="mqx-try-join" id="tryJoin">
+      <input type="email" required placeholder="you@email.com" aria-label="Email address">
+      <button type="submit">Join free</button>
+    </form>
+    <p class="mqx-try-line" id="tryJoinMsg">It only confirms an email. That's the whole signup.</p>
+  </section>
+  <script>
+  (function () {
+    var look = document.getElementById('tryLook'), fin = document.getElementById('tryFinal');
+    document.querySelectorAll('.mqx-chapter[data-ch]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        document.querySelectorAll('.mqx-chapter').forEach(function (x) { x.classList.remove('is-on'); });
+        b.classList.add('is-on');
+        look.innerHTML = 'The chapter points you at <b>' + b.getAttribute('data-look') + '</b> — that\u2019s the kind of display to look for.';
+        fin.innerHTML = b.getAttribute('data-look') + ' — that\u2019s where <b>' + b.getAttribute('data-name') + '</b> is hiding tonight. Check in within 150 ft to claim the episode\u2019s reward.';
+      });
+    });
+    document.querySelectorAll('.mqx-try-town').forEach(function (b) {
+      b.addEventListener('click', function () {
+        document.querySelectorAll('.mqx-try-town').forEach(function (x) { x.classList.remove('is-on'); });
+        b.classList.add('is-on');
+      });
+    });
+    var f = document.getElementById('tryJoin');
+    f.addEventListener('submit', function (e) {
+      e.preventDefault();
+      document.getElementById('tryJoinMsg').innerHTML = '✓ You\u2019re in — we\u2019d send one email to confirm, and that\u2019s it. <b>(Demo: nothing was saved.)</b>';
+    });
+  })();
+  </script>
 
   <section class="mqx-tour mqx-haunted">
     <div class="mqx-spirit-field" aria-hidden="true"><img class="mqx-spirit s-left" style="--tilt:-3deg; top:0; object-position:50% 18%" src="/static/img/neon/santa.jpg" alt="" loading="lazy" decoding="async"></div>
@@ -136,6 +194,7 @@
       <a class="mqx-fig" href="/characters/la-befana"><img src="/static/img/neon/la-befana-v2.jpg" alt="La Befana — MerryQuest Rare" loading="lazy"><span class="mqx-fig-name">La Befana</span></a>
     </div>
     <p class="mqx-universe-note">Five revealed. Twenty-seven still in the dark.</p>
+    <p class="mqx-universe-next">Next legend steps out of the dark <b>Tuesday, Nov 24</b> — then a new reveal every day through Dec 1.</p>
   </section>
   <section class="mqx-split mqx-haunted" id="mqx-quest">
     <div class="mqx-split-copy">
@@ -143,9 +202,9 @@
       <h2 class="mqx-h2 mqx-h2-magic">Capture the Magic</h2>
       <p class="mqx-p">Capture characters at real displays in your city. Arrive, check in, and whoever’s hiding there lands in your Sack — build the whole cast of 32 before the season ends.</p>
       <ol class="mqx-steps">
-        <li><b>1</b> Find a display near you</li>
-        <li><b>2</b> Check in when you arrive</li>
-        <li><b>3</b> Capture who's hiding there</li>
+        <li><b>1</b> Watch a two-minute chapter</li>
+        <li><b>2</b> Drive to the display it points at</li>
+        <li><b>3</b> Check in within 150 ft — claim the episode's reward</li>
       </ol>
     </div>
     <div class="mqx-cast-panel">
@@ -162,6 +221,17 @@
     <h2 class="mqx-h2">Some nights shine brighter</h2>
     <p class="mqx-p">On Golden Nights, a <b>Legendary</b> character hides at the best display in every town — the rarest captures of the season, out for one night only.</p>
     <div class="mqx-golden-chips"><span>Dec 1 · Launch night</span><span>Every Friday in December</span><span>Dec 24 · Christmas Eve</span><span>Dec 25 · Christmas Day</span><span>Jan 6 · Epiphany</span></div>
+  </section>
+
+  <section class="mqx-faq mqx-haunted">
+    <p class="mqx-eyebrow">✦ Good questions ✦</p>
+    <h2 class="mqx-h2">Before you hunt</h2>
+    <details class="mqx-faq-item"><summary>What if I miss a display tonight?</summary><p>Nothing's gone. Legends rotate from display to display all season — there's always another night, and another house.</p></details>
+    <details class="mqx-faq-item"><summary>Are Golden Nights the only way to get rares?</summary><p>No — rares hide out on regular nights too. Golden Nights raise the odds, and they're when a Legendary waits at the best display in town.</p></details>
+    <details class="mqx-faq-item"><summary>Does my progress survive the season?</summary><p>Yes. Your Sack, captures and badges live on your account year-round. Next season adds to your collection — it never erases it.</p></details>
+    <details class="mqx-faq-item"><summary>Can kids play without an account?</summary><p>Anyone can browse the map for free. Capturing takes a free account so your Sack can save — and Young Hunter mode, coming mid-December, is the kid lane: no chat, no purchases, just the hunt.</p></details>
+    <details class="mqx-faq-item"><summary>What about my privacy?</summary><p>Your location is used only at the moment you check in — never tracked while you drive, never sold. The full note is on our <a href="/privacy">Privacy page</a>.</p></details>
+    <details class="mqx-faq-item"><summary>Do I have to drive tonight?</summary><p>No. Plan from the couch, build your tour, go when you feel like it. The displays are up all season.</p></details>
   </section>
   <section class="mqx-section mqx-haunted mqx-bleed">
     <div class="mqx-spirit-field" aria-hidden="true"><img class="mqx-spirit s-left" style="--tilt:-3deg; top:6%" src="/static/img/neon/la-befana-v2.jpg" alt="" loading="lazy" decoding="async"></div>
@@ -227,6 +297,20 @@
       {% endif %}{% endfor %}
     </div>
     <div class="mqx-mosaic-more"><p class="mqx-more"><a class="mqx-ghost-btn" href="/map">Browse the full map →</a></p></div>
+  </section>
+
+  <section class="mqx-finale mqx-haunted">
+    <div class="mqx-finale-card">
+      <h2 class="mqx-finale-h">Be there when chapter one drops.</h2>
+      <p class="mqx-finale-p">Free. iOS and Android on December 1. We'll send the first film and your town's opening route — nothing else.</p>
+      <form method="post" action="/subscribe" class="mqx-finale-form">
+        <input type="email" name="email" placeholder="you@email.com" required aria-label="Email address">
+        <input type="hidden" name="location" value="MerryQuest Chapter One">
+        <input type="hidden" name="interest" value="Christmas">
+        <button type="submit">Join free</button>
+      </form>
+      <p class="mqx-finale-note">Location is used to confirm a check-in at a display, not to track the drive between stops.</p>
+    </div>
   </section>
 
 </div>

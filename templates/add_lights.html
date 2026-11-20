@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Add your lights · {{ site_name }}{% endblock %}
+{% block content %}
+<section class="soc-auth">
+  <h1>&#x1F384; Add your lights</h1>
+  <p class="soc-note">Your house, on the map, in about a minute. Four boxes, no account, no emailing anyone — when you submit, your display goes live and you land on its page.</p>
+  <form method="post" action="/upload" enctype="multipart/form-data">
+    <input type="hidden" name="category" value="{% if brand | default('haunt') == 'merryquest' %}christmas{% else %}halloween{% endif %}">
+    <p><label>What do you call your display?<br>
+      <input type="text" name="title" required maxlength="120" placeholder="e.g. The Johnson Family Light Show" style="width:100%"></label></p>
+    <p><label>Street address<br>
+      <input type="text" name="address" required maxlength="200" placeholder="123 Main St" style="width:100%"></label><br>
+      <small>So drivers can actually find you. Only the street address shows on your pin.</small></p>
+    <p><label>Town<br>
+      <input type="text" name="town" required maxlength="80" placeholder="Town, ST" style="width:100%"></label></p>
+    <p><label>A photo of your display<br>
+      <input type="file" name="media" accept="image/*,video/*"></label><br>
+      <small>One good photo of the lights — that's what your pin shows.</small></p>
+    <p><label>Your email <small>(optional — only if we need to reach you about your listing)</small><br>
+      <input type="email" name="uploader_email" maxlength="120" style="width:100%"></label></p>
+    <p><button type="submit" class="btn">Put my display on the map</button></p>
+  </form>
+</section>
+{% endblock %}

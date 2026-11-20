@@ -627,6 +627,90 @@ body.brand-merryquest { overflow-x: clip; }
   padding: 7px 13px; font-size: 13px; font-weight: 700; background: rgba(7, 11, 8, 0.55);
 }
 
+/* Homepage FAQ (Nov 20, 2026): the objection-killers, right after
+   the loop pitch — native details, no JS, tap to open. */
+.mqx-faq { max-width: 760px; margin: 0 auto; padding: 54px 20px 8px; text-align: center; }
+.mqx-faq-item {
+  text-align: left; border: 1px solid rgba(160, 140, 255, 0.28); border-radius: 14px;
+  background: rgba(255, 255, 255, 0.03); margin: 10px 0; padding: 4px 18px;
+}
+.mqx-faq-item summary {
+  cursor: pointer; font-weight: 700; font-size: 16.5px; color: var(--mq-ink, #f2ecff);
+  padding: 12px 0; list-style: none;
+}
+.mqx-faq-item summary::-webkit-details-marker { display: none; }
+.mqx-faq-item summary::after { content: "+"; float: right; color: #c9a7ff; font-weight: 800; }
+.mqx-faq-item[open ] summary::after { content: "–"; }
+.mqx-faq-item p { margin: 0 0 14px; color: #cfc6ea; line-height: 1.55; font-size: 15.5px; }
+.mqx-faq-item a { color: #ffd968; }
+
+/* Try-it demo (Nov 20, 2026): the three-beat loop as a playable
+   taste of Dec 1 — chapter picker, sample-town route, email-only
+   join. Pure front-end; nothing is posted or saved. */
+.mqx-try { max-width: 900px; margin: 0 auto; padding: 54px 20px 10px; text-align: center; }
+.mqx-try-intro { margin-top: 2px; }
+.mqx-try-h { margin: 30px 0 12px; font-size: 19px; color: #ffe9b0; text-align: left; }
+.mqx-chapters { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+.mqx-chapter {
+  border: 1px solid rgba(160, 140, 255, 0.30); border-radius: 14px; overflow: hidden;
+  background: rgba(255, 255, 255, 0.03); color: var(--mq-ink, #f2ecff); cursor: pointer;
+  padding: 0 0 10px; display: flex; flex-direction: column; gap: 3px; font: inherit;
+}
+.mqx-chapter img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; object-position: 50% 18%; display: block; }
+.mqx-chapter.is-on { border-color: #ffc82c; box-shadow: 0 0 0 1px #ffc82c, 0 10px 26px rgba(0, 0, 0, 0.45); }
+.mqx-chapter-t { font-weight: 800; font-size: 14.5px; padding: 8px 8px 0; }
+.mqx-chapter-sub { font-size: 12.5px; color: #bdb2d9; padding: 0 8px; }
+.mqx-chapter-locked { align-items: center; justify-content: center; cursor: default; min-height: 150px; }
+.mqx-chapter-lock { font-size: 30px; padding-top: 16px; }
+.mqx-try-line { color: #cfc6ea; font-size: 15.5px; margin: 14px 0 0; }
+.mqx-try-line b { color: #ffe9b0; }
+.mqx-try-towns { display: flex; flex-wrap: wrap; gap: 8px; }
+.mqx-try-town {
+  border: 1px solid rgba(160, 140, 255, 0.35); background: rgba(255, 255, 255, 0.03);
+  color: var(--mq-ink, #f2ecff); border-radius: 999px; padding: 8px 14px; cursor: pointer; font: inherit; font-size: 14.5px;
+}
+.mqx-try-town.is-on { border-color: #ffc82c; color: #ffe9b0; }
+.mqx-try-route { text-align: left; margin: 14px 0 0; padding-left: 1.4rem; color: #cfc6ea; line-height: 1.6; font-size: 15.5px; }
+.mqx-try-final { color: #ffe9b0; }
+.mqx-try-join { display: flex; gap: 8px; max-width: 460px; }
+.mqx-try-join input {
+  flex: 1; min-width: 0; border-radius: 999px; border: 1px solid rgba(160, 140, 255, 0.4);
+  background: rgba(7, 11, 8, 0.55); color: var(--mq-ink, #f2ecff); padding: 11px 16px; font: inherit;
+}
+.mqx-try-join button {
+  border: 0; border-radius: 999px; padding: 11px 20px; font: inherit; font-weight: 800;
+  background: linear-gradient(90deg, #ffc82c, #ff7847); color: #231303; cursor: pointer;
+}
+@media (max-width: 700px) {
+  .mqx-chapters { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* Finale (Nov 20, 2026): the closing card — "Be there when chapter
+   one drops." Real /subscribe form (interest=Christmas); the story's
+   last page is an invitation, not a footer. */
+.mqx-finale { max-width: 760px; margin: 0 auto; padding: 64px 20px 30px; }
+.mqx-finale-card {
+  border: 1px solid rgba(255, 200, 44, 0.45); border-radius: 22px;
+  background: linear-gradient(180deg, rgba(255, 200, 44, 0.07), rgba(255, 255, 255, 0.02));
+  padding: 38px 30px 28px; text-align: center;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
+}
+.mqx-finale-h { margin: 0 0 12px; font-size: clamp(30px, 5vw, 44px); line-height: 1.08; color: #fff7e0; }
+.mqx-finale-p { margin: 0 auto 22px; max-width: 520px; color: #cfc6ea; font-size: 16.5px; line-height: 1.55; }
+.mqx-finale-form { display: flex; gap: 8px; max-width: 480px; margin: 0 auto; }
+.mqx-finale-form input {
+  flex: 1; min-width: 0; border-radius: 999px; border: 1px solid rgba(160, 140, 255, 0.4);
+  background: rgba(7, 11, 8, 0.55); color: var(--mq-ink, #f2ecff); padding: 13px 18px; font: inherit;
+}
+.mqx-finale-form button {
+  border: 0; border-radius: 999px; padding: 13px 24px; font: inherit; font-weight: 800;
+  background: linear-gradient(90deg, #ffc82c, #ff7847); color: #231303; cursor: pointer; white-space: nowrap;
+}
+.mqx-finale-note { margin: 16px auto 0; max-width: 520px; color: #9d92c4; font-size: 13.5px; line-height: 1.5; }
+@media (max-width: 560px) {
+  .mqx-finale-form { flex-direction: column; }
+}
+
 /* Bold photo mosaics (Nov 19, 2026): Trending, Newest and the
    Displays page run as large photos edge to edge — no gaps, no
    cards; the photo IS the tile, title and town ride on it. */
@@ -1339,6 +1423,8 @@ main > h1 { font-family:'Anton',sans-serif; text-transform:uppercase; letter-spa
   letter-spacing: 0.06em; text-transform: uppercase; color: #efeaff;
 }
 .mqx-universe-note { color: #bdb2d9; margin: 20px 0 0; font-size: 15px; }
+.mqx-universe-next { color: #ffd98a; margin: 8px 0 0; font-size: 15.5px; }
+.mqx-universe-next b { color: #ffe9b0; }
 @media (max-width: 760px) {
   /* Phone Universe (Dan, Nov 19, 2026): the scroll strip clipped the
      outer figures mid-portrait. The block goes nearly full-bleed at
