@@ -17542,6 +17542,7 @@ _QUEST_STORIES = {
     "pip-the-star-pin": "Your guide, your mascot — the star on top of the quest. Pip was the first light placed this season and will be the last one taken down, and in between, Pip rides along on every hunt, pointing the way. You don't catch Pip. Pip catches you. Welcome to MerryQuest.",
 }
 _QUEST_PORTRAITS = {
+    "santa-claus": "/static/img/neon/santa.jpg",
     "krampus": "/static/img/neon/krampus-v2.jpg",
     "ded-moroz": "/static/img/neon/ded-moroz-v2.jpg",
     "ebenezer-scrooge": "/static/img/neon/scrooge-v2.jpg",

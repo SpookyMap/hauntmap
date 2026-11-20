@@ -954,7 +954,7 @@ body.brand-merryquest { overflow-x: clip; }
   .mqx-guide { flex-direction: column; text-align: center; gap: 20px; padding: 26px 20px 28px; zoom: 1; width: calc(100vw - 12px); }
   .mqx-guide-copy { text-align: center; }
   .mqx-guide-steps { justify-content: center; }
-  .mqx-guide-medal img { width: 132px; height: 132px; }
+  .mqx-guide-medal img { width: 106px; height: 106px; }
 }
 .mqx-trio-card {
   background: var(--mqx-glass); border: 1px solid var(--mqx-line);
@@ -1079,7 +1079,7 @@ body.brand-merryquest .mqx-h2 {
      its desktop left border and 30px indent because the old phone block
      sat before the base rules and lost on order. Full-bleed block, no
      zoom, panel stacked under a top divider. */
-  .mqx-split { grid-template-columns: 1fr; zoom: 1; width: calc(100vw - 12px);
+  .mqx-split { grid-template-columns: 1fr; zoom: 0.75; width: calc(100vw - 12px);
     padding: 28px 20px 30px; margin-top: 40px; gap: 0; }
   .mqx-cast-panel { border-left: none; border-top: 1px solid rgba(255, 255, 255, 0.09);
     padding: 24px 0 0; margin-top: 26px; align-self: stretch; }

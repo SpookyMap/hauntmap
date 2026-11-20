@@ -18,7 +18,7 @@
    pre-fix page there, while the revisioned URL misses that cache
    and always fetches the current file from origin. Bump BOTH the
    cache name and the rev whenever offline.html changes. */
-var STATIC_CACHE = "hauntmap-static-v4";
+var STATIC_CACHE = "hauntmap-static-v5";
 var OFFLINE_URL = "/static/offline.html?rev=4";
 
 self.addEventListener("install", function (event) {
@@ -57,6 +57,10 @@ self.addEventListener("fetch", function (event) {
   }
 
   if (url.pathname.indexOf("/static/") === 0) {
+    // Media files bypass the worker entirely: iOS Safari will not
+    // play video served from a service-worker cache response (it
+    // needs real HTTP Range streaming from the origin).
+    if (/\.(mp4|webm|mp3|m4a)$/i.test(url.pathname)) return;
     // Static assets: cache-first with a network fill (they are
     // versioned by query string in the templates).
     event.respondWith(
