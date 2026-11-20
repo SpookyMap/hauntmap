@@ -2171,9 +2171,13 @@ def _christmas_countdown(today) -> str:
     in season, Christmas countdown in December."""
     md = (today.month, today.day)
     if today.month == 11:
-        n = (date(today.year, 12, 1) - today).days
-        return (f"\U0001F384 The Quest opens in {n} day"
-                f"{'s' if n != 1 else ''} — Dec 1")
+        if today.day == 25:
+            return "\U0001F384 The Quest is LIVE — golden night"
+        if today.day < 25:
+            n = (date(today.year, 11, 25) - today).days
+            return (f"\U0001F384 The Quest opens in {n} day"
+                    f"{'s' if n != 1 else ''} — Nov 25")
+        return "\U0001F384 The Quest is LIVE"
     if md == (12, 1):
         return "\U0001F384 The Quest is LIVE — golden night"
     if _quest_is_golden_night(today):
@@ -17833,6 +17837,8 @@ def _quest_today():
 # Golden nights (spec, locked Nov 6, 2026): opening night Dec 1,
 # every December Friday, the Christmas Eve/Day window, Epiphany.
 def _quest_is_golden_night(d) -> bool:
+    if (d.year, d.month, d.day) == (2026, 11, 25):
+        return True  # opening night — launch moved to Nov 25 (Dan, Nov 20)
     if d.month == 12:
         return d.day == 1 or d.day in (24, 25) or d.weekday() == 4
     return d.month == 1 and d.day == 6
