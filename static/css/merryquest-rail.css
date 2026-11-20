@@ -861,14 +861,22 @@ body.brand-merryquest { overflow-x: clip; }
 
 /* ---------- GO-style trio ---------- */
 .mqx-trio {
-  display: flex; justify-content: center; align-items: flex-start; margin-top: 52px; zoom: 0.75;
-  padding: 10px 6px 16px;
+  /* Breakout like the guide/split blocks: the wrap is only ~690px,
+     far too narrow to deal five real cards across. */
+  position: relative; left: 50%; transform: translateX(-50%);
+  width: min(1300px, calc(100vw - 2rem));
+  display: flex; justify-content: center; align-items: flex-start; margin-top: 52px; zoom: 1;
+  padding: 14px 6px 22px;
 }
 /* The chapters as a fanned hand of cards (Nov 19, 2026). */
+/* Actual playing cards (Dan, Nov 19, 2026): true 5:7 card
+   proportion, dealt wider with a deeper fan overlap. */
 .mqx-trio .mqx-panel {
-  flex: 0 1 400px; min-width: 0; margin-left: -8px; transform-origin: 50% 100%;
+  flex: 0 1 400px; min-width: 0; margin-left: -30px; transform-origin: 50% 100%;
+  aspect-ratio: 5 / 7; display: flex; flex-direction: column; border-radius: 17px;
   transition: transform 0.35s ease, box-shadow 0.35s ease;
 }
+.mqx-trio .mqx-panel-art { flex: 1 1 auto; aspect-ratio: auto; min-height: 90px; }
 .mqx-trio .mqx-panel:first-child { margin-left: 0; z-index: 1; }
 .mqx-trio .mqx-panel:nth-child(2) { z-index: 3; }
 .mqx-trio .mqx-panel:nth-child(3) { z-index: 2; }
@@ -879,7 +887,8 @@ body.brand-merryquest { overflow-x: clip; }
 @media (max-width: 760px) {
   /* Phones: the hand stacks into a deck — full-width cards, slight overlap. */
   .mqx-trio { flex-direction: column; align-items: stretch; margin-top: 32px; padding: 4px 0 8px; }
-  .mqx-trio .mqx-panel { flex: none; margin-left: 0; margin-top: -12px; }
+  .mqx-trio { zoom: 0.82; }
+  .mqx-trio .mqx-panel { flex: none; margin-left: 0; margin-top: -12px; aspect-ratio: auto; }
   .mqx-trio .mqx-panel:first-child { margin-top: 0; }
   .mqx-trio-card {
     display: grid; grid-template-columns: 38px 1fr; column-gap: 13px;
@@ -893,7 +902,7 @@ body.brand-merryquest { overflow-x: clip; }
 /* Face-down card backs in the fan (Nov 19, 2026): two backs dealt
    between the chapter cards — a playing-card back carrying the
    game's chrome title over a lattice of cyan and gold. */
-.mqx-panel-back { display: flex; align-self: stretch; }
+.mqx-panel-back { display: flex; }
 .mqx-back-frame {
   flex: 1; border: 1.5px solid rgba(230, 177, 109, 0.85); border-radius: 9px;
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px;

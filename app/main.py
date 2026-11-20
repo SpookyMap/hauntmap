@@ -17542,8 +17542,11 @@ _QUEST_STORIES = {
     "pip-the-star-pin": "Your guide, your mascot — the star on top of the quest. Pip was the first light placed this season and will be the last one taken down, and in between, Pip rides along on every hunt, pointing the way. You don't catch Pip. Pip catches you. Welcome to MerryQuest.",
 }
 _QUEST_PORTRAITS = {
+    "krampus": "/static/img/neon/krampus-v2.jpg",
+    "ded-moroz": "/static/img/neon/ded-moroz-v2.jpg",
+    "ebenezer-scrooge": "/static/img/neon/scrooge-v2.jpg",
     "la-befana": "/static/img/neon/la-befana-v2.jpg",
-    "pip-the-star-pin": "/static/img/pip-portrait.jpg",
+    "pip-the-star-pin": "/static/img/pip-tech.jpg",
 }
 
 
@@ -17609,7 +17612,11 @@ def _quest_cotd(today=None) -> dict:
         s, name, tier, flavor = cast[slug]
         img_slug = {"la-befana": "la-befana-v2",
                     "snow-sprite": "snow-sprite-v2",
-                    "sugar-plum-fairy": "sugar-plum-fairy-v2"}.get(s, s)
+                    "sugar-plum-fairy": "sugar-plum-fairy-v2",
+                    "krampus": "krampus-v2",
+                    "ded-moroz": "ded-moroz-v2",
+                    "ebenezer-scrooge": "scrooge-v2",
+                    "jacob-marley": "jacob-marley-v2"}.get(s, s)
         return {"slug": s, "name": name, "tier": tier,
                 "tier_label": _QUEST_TIER_LABEL[tier], "flavor": flavor,
                 "img": f"/static/img/cotd/{img_slug}.jpg", "mode": mode}
