@@ -584,6 +584,13 @@
   </script>
   {% endif %}
 
+  {% if brand == 'merryquest' and not entry.virtual %}
+  <div class="mq-trust" style="margin:18px 0;padding:14px 16px;border:1px solid rgba(160,140,255,.25);border-radius:14px;font-size:14.5px;line-height:1.55;">
+    <p style="margin:0 0 6px;">🏠 <b>This display is someone's home.</b> Enjoy it from the street — keep voices down, never walk the yard or driveway, and leave it exactly as you found it.</p>
+    <p style="margin:0;">Your house? <a href="/feedback">Claim this listing, or ask us to remove it</a> — one business day, no questions asked.</p>
+  </div>
+  {% endif %}
+
   <div class="detail-foot">
     <button class="linklike" onclick="navigator.clipboard.writeText(window.location.href); this.textContent='Link copied!';">&#x1F517; Copy share link</button>
     {% if reported %}

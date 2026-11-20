@@ -116,7 +116,7 @@ two.parentNode.insertBefore(twenty, two);
   </nav>
 </header>{% endif %}
 <div class="mini-bar" id="hmMiniBar" aria-hidden="true">
-  <a href="/"><img src="/static/img/hauntmap_ghost.webp" alt="{{ site_name }}"></a>
+  <a href="/"><img src="{% if brand | default('haunt') == 'merryquest' %}/static/img/merryquest-logo-hd2.webp{% else %}/static/img/hauntmap_ghost.webp{% endif %}" alt="{{ site_name }}"></a>
   <a href="/">{{ site_name }}</a>
   <nav class="mini-links">
     <a class="mini-x" href="/events"><span class="mini-ic" aria-hidden="true">&#x1F39F;&#xFE0F;</span> Events</a>
@@ -131,8 +131,8 @@ two.parentNode.insertBefore(twenty, two);
     <a href="/games"><span class="mini-ic" aria-hidden="true">&#x1F47E;</span> Games</a>
     <a class="mini-x" href="/leaderboard"><span class="mini-ic" aria-hidden="true">&#x1F3C6;</span> {% if brand | default('haunt') == 'merryquest' %}Top Displays{% else %}Top Haunts{% endif %}</a>
     <a href="/chat"><span class="mini-ic" aria-hidden="true">&#x1F4AC;</span> Chat</a>
-    <a class="mini-p" href="/events"><span class="mini-ic" aria-hidden="true">&#x1F39F;&#xFE0F;</span> Events</a>
-    <a class="mini-x" href="/about"><span class="mini-ic" aria-hidden="true">&#x1F47B;</span> About Us</a>
+    {% if brand | default('haunt') != 'merryquest' %}<a class="mini-p" href="/events"><span class="mini-ic" aria-hidden="true">&#x1F39F;&#xFE0F;</span> Events</a>{% endif %}
+    <a class="mini-x" href="/about"><span class="mini-ic" aria-hidden="true">{% if brand | default('haunt') == 'merryquest' %}&#x1F384;{% else %}&#x1F47B;{% endif %}</span> About Us</a>
   </nav>
 </div>
 <script>
@@ -446,7 +446,7 @@ function hmFrightTouch() {
   <div class="vt-tv-strip vt-tv-strip-bottom">
     <a class="vt-btn" href="/virtual-tour"><span class="vt-ic">&#x25B6;&#xFE0F;</span><span class="vt-label"><span class="vt-l1">Virtual</span> <span class="vt-l2">Tour</span></span></a>
     <a class="tv-btn" href="/virtual-tour?mode=tv"><span class="vt-ic">&#x1F4FA;</span><span class="vt-label"><span class="vt-l1">{% if brand | default('haunt') == 'merryquest' %}MerryQuest{% else %}HauntMap{% endif %}</span> <span class="vt-l2">TV</span></span></a>
-    <a class="pop-btn" href="/pop-haunt-culture"><span class="vt-ic">&#x1F37F;</span><span class="vt-label"><span class="vt-l1">{% if brand | default('haunt') == 'merryquest' %}Pop Christmas{% else %}Pop Haunt{% endif %}</span> <span class="vt-l2">Culture</span></span></a>
+    <a class="pop-btn" href="{% if brand | default('haunt') == 'merryquest' %}/pop-christmas-culture{% else %}/pop-haunt-culture{% endif %}"><span class="vt-ic">&#x1F37F;</span><span class="vt-label"><span class="vt-l1">{% if brand | default('haunt') == 'merryquest' %}Pop Christmas{% else %}Pop Haunt{% endif %}</span> <span class="vt-l2">Culture</span></span></a>
     <a class="makeup-btn" href="/makeup"><span class="vt-ic">&#x1F484;</span><span class="vt-label"><span class="vt-l1">{% if brand | default('haunt') == 'merryquest' %}Holiday{% else %}Haunted{% endif %}</span> <span class="vt-l2">Makeup</span></span></a>
     <a class="music-btn" href="/music"><span class="vt-ic">&#x1F3B5;</span><span class="vt-label"><span class="vt-l1">{% if brand | default('haunt') == 'merryquest' %}MerryQuest{% else %}HauntMap{% endif %}</span> <span class="vt-l2">Music</span></span></a>
     <a class="movies-btn" href="/movies"><span class="vt-ic">&#x1F3AC;</span><span class="vt-label"><span class="vt-l1">{% if brand | default('haunt') == 'merryquest' %}MerryQuest{% else %}HauntMap{% endif %}</span> <span class="vt-l2">Movies</span></span></a>

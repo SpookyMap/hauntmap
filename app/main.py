@@ -10701,6 +10701,7 @@ def _fall_events_home(conn) -> list[dict]:
 
 
 @app.get("/pop-haunt-culture", response_class=HTMLResponse)
+@app.get("/pop-christmas-culture", response_class=HTMLResponse)
 def pop_culture_page(request: Request):
     return templates.TemplateResponse(
         request, "pop_culture.html",
