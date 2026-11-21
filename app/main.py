@@ -826,13 +826,18 @@ def _device_bucket(ua: str) -> str:
 # breakdowns, sponsor-accuracy checks), never in the request path.
 # Ordered most-specific first — search crawlers and preview fetchers
 # also contain "bot", so they must win over the generic bot bucket.
+# Nov 21, 2026: explicit needles for GPTBot (was only caught by the
+# generic "bot" bucket) and meta-externalagent (Meta's preview fetcher,
+# previously unmatched — its UA carries no "bot"/"crawler" substring
+# outside the signature itself in some variants).
 _UA_FAMILY_RULES = (
     ("uptime_health", ("uptimerobot", "pingdom", "statuscake", "healthcheck",
                        "health-check", "render/", "kube-probe", "site24x7")),
     ("search_crawler", ("googlebot", "google-inspectiontool", "bingbot",
                         "duckduckbot", "baiduspider", "yandexbot", "applebot",
-                        "petalbot", "seznambot", "naverbot")),
-    ("social_preview", ("facebookexternalhit", "facebot", "twitterbot",
+                        "gptbot", "petalbot", "seznambot", "naverbot")),
+    ("social_preview", ("facebookexternalhit", "meta-externalagent",
+                        "facebot", "twitterbot",
                         "whatsapp", "telegrambot", "discordbot", "slackbot",
                         "linkedinbot", "pinterestbot", "tiktok", "snapchat",
                         "skypeuripreview", "redditbot", "embedly", "iframely")),
@@ -11133,6 +11138,57 @@ def _mk_total_views() -> int:
     return int(_ttl_cached("mktotalviews", build))
 
 
+# Last-30-days human screen (Nov 21, 2026): stricter than _MK_HUMAN.
+# The path-only screen above let crawlers whose UA opens with a
+# browser-like "Mozilla/5.0…" prefix (GPTBot, Meta's external agent,
+# ElevenLabs' crawler) count as human audience, inflating the kit's
+# old traffic claims. This screen drops the machine paths AND any UA
+# carrying a known crawler / tool signature, plus rows with no UA
+# stored (they cannot be screened either way, and the 30-day window
+# postdates UA logging, so nothing legitimate is lost).
+_MK30_UA_BAD = ("bot", "crawl", "spider", "slurp", "externalagent",
+                "externalhit", "headless", "python", "curl", "wget",
+                "render/", "monitor", "preview")
+_MK30_HUMAN = (
+    "path NOT IN ('/healthz', '/sw.js', '/manifest.webmanifest', "
+    "'/favicon.ico') AND user_agent IS NOT NULL AND user_agent <> '' "
+    "AND NOT (" + " OR ".join(
+        "lower(user_agent) LIKE '%" + n + "%'" for n in _MK30_UA_BAD)
+    + ")")
+
+
+def _mk_last30() -> dict:
+    """Media-kit last-30-days block: human page views, distinct
+    visitors and new listings over the last 30 ET calendar days
+    (today included), screened with _MK30_HUMAN. TTL-cached like the
+    other kit aggregates (fortification pass 2 pattern)."""
+    def build():
+        from zoneinfo import ZoneInfo
+        et = ZoneInfo("America/New_York")
+        today_et = datetime.now(et).date()
+        start_et = today_et - timedelta(days=29)
+        cutoff = datetime.combine(
+            start_et, datetime.min.time(), tzinfo=et,
+        ).astimezone(timezone.utc).isoformat()
+        with get_conn(DB_PATH) as conn:
+            views = conn.execute(
+                "SELECT COUNT(*) FROM page_views WHERE viewed_at >= ? AND "
+                + _MK30_HUMAN, (cutoff,)).fetchone()[0]
+            visitors = conn.execute(
+                "SELECT COUNT(DISTINCT sid) FROM page_views "
+                "WHERE viewed_at >= ? AND " + _MK30_HUMAN,
+                (cutoff,)).fetchone()[0]
+            new_listings = conn.execute(
+                "SELECT COUNT(*) FROM entries WHERE hidden = 0 "
+                "AND created_at >= ?", (cutoff,)).fetchone()[0]
+        fmt_day = "%B %-d, %Y"
+        return {"views": views, "visitors": visitors,
+                "new_listings": new_listings,
+                "range": f"{start_et.strftime(fmt_day)} – "
+                         f"{today_et.strftime(fmt_day)}"}
+    return dict(_ttl_cached("mklast30", build))
+
+
 def _mk_geo() -> dict:
     """Media-kit geographic spread: distinct town labels + states
     across ALL categories. TTL-cached (fortification pass 2) — it was
@@ -11174,6 +11230,10 @@ def media_kit(request: Request):
         "visitors_today": 0,
         "visitors_week": 0,
         "total_views": 0,
+        "views_30d": 0,
+        "visitors_30d": 0,
+        "new_listings_30d": 0,
+        "range_30d": "",
         "total_pins": 0,
         "categories": [],
         "town_count": 0,
@@ -11192,6 +11252,14 @@ def media_kit(request: Request):
         pass
     try:
         kit["total_views"] = _mk_total_views()
+    except Exception:
+        pass
+    try:
+        last30 = _mk_last30()
+        kit["views_30d"] = last30["views"]
+        kit["visitors_30d"] = last30["visitors"]
+        kit["new_listings_30d"] = last30["new_listings"]
+        kit["range_30d"] = last30["range"]
     except Exception:
         pass
     counts = _category_counts()

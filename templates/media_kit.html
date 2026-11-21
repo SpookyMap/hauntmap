@@ -15,6 +15,17 @@
 <p class="mk-note"><strong>How we count:</strong> figures are human page views only — automated traffic (health checks, search crawlers, link previews) is excluded.</p>
 <p class="mk-note">Visitors are unique browsing sessions counted by HauntMap's own on-site tracker. Families use HauntMap to plan their nights out: which displays to visit, which towns to tour, and where to stop for coffee, dinner and treats on the way — that's the moment sponsors show up in.</p>
 
+<div class="mk-last30">
+  <h2 class="mk-h2 mk-last30-h">&#x1F4C5; Last 30 days</h2>
+  <p class="mk-last30-sub">The most recent 30 days only{% if kit.range_30d %} ({{ kit.range_30d }}){% endif %} — a rolling window, <strong>not</strong> all-time totals like the figures above.</p>
+  <div class="mk-stats">
+    <div class="mk-stat"><strong>{{ '{:,}'.format(kit.views_30d) }}</strong><span>human page views, last 30 days</span></div>
+    <div class="mk-stat"><strong>{{ '{:,}'.format(kit.visitors_30d) }}</strong><span>visitors, last 30 days</span></div>
+    <div class="mk-stat"><strong>{{ '{:,}'.format(kit.new_listings_30d) }}</strong><span>new listings added, last 30 days</span></div>
+  </div>
+  <p class="mk-note">Counted with our strict human screen: automated crawlers, bots, link previews and health checks are excluded — if it wasn't a person reading a page, it isn't in these numbers.</p>
+</div>
+
 <h2 class="mk-h2">What's on the map</h2>
 <div class="mk-stats">
   <div class="mk-stat"><strong>{{ '{:,}'.format(kit.total_pins) }}</strong><span>total listings</span></div>
@@ -58,6 +69,9 @@
 .mk-note { color: #c9bce8; line-height: 1.55; max-width: 680px; }
 .mk-cats { color: #e8e6e3; line-height: 1.6; padding-left: 1.1rem; }
 .mk-list { color: #e8e6e3; line-height: 1.6; padding-left: 1.1rem; max-width: 680px; }
+.mk-last30 { border: 2px solid #ff9d5c; background: #1d1433; border-radius: 14px; padding: 0.2rem 1rem 0.9rem; margin: 1.5rem 0 0.4rem; max-width: 720px; }
+.mk-last30-h { margin-top: 0.7rem; color: #ffd98a; }
+.mk-last30-sub { color: #c9bce8; line-height: 1.55; margin: 0.2rem 0 0; }
 .mk-partner-logo { text-align: center; margin: 1.1rem 0 0.2rem; }
 .mk-partner-logo img { width: 250px; max-width: 70vw; height: auto; border-radius: 14px; }
 </style>
