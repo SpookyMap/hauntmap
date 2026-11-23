@@ -38,16 +38,29 @@
       <div class="mqx-hero-ctas">
         <a class="mqx-cta" href="/nearby?choose=town">Choose my town</a>
         <a class="mqx-ghost-btn" href="#mqx-quest">How the quest works</a>
-        <span class="mqx-app-badges"><span>📱 App drops Dec 1</span><span>iOS · Android</span></span>
+        <span class="mqx-app-badges"><span>📱 App Coming soon</span><span>iOS · Android</span></span>
       </div>
-      {% if tonight %}
-      <a class="mqx-quest-card" href="/d/{{ tonight.id }}">
-        <span class="mqx-quest-kicker">⭐ Tonight's quest</span>
-        <span class="mqx-quest-title">{{ tonight.title }}</span>
-        <span class="mqx-quest-meta">{{ tonight.town_label }} · Check in within 150 ft to capture a character</span>
-      </a>
-      {% endif %}
     </div>
+
+  <section class="mqx-tour mqx-haunted">
+    <div class="mqx-spirit-field" aria-hidden="true"><img class="mqx-spirit s-left" style="--tilt:-3deg; top:0; object-position:50% 18%" src="/static/img/neon/santa.jpg" alt="" loading="lazy" decoding="async"></div>
+    <h2 class="mqx-h2">Build my tour for me</h2>
+    <p class="mqx-p">Skip the picking — we line up the most-viewed displays near you into a ready-to-drive route.</p>
+    <a class="mqx-cta" href="/tour">Build my tour</a>
+  </section>
+
+  <section class="mqx-drive mqx-bleed">
+    <video class="mqx-drive-video" autoplay muted loop playsinline preload="auto"><source src="/static/video/mq-drive-v16.mp4" type="video/mp4"></video>
+    <p class="mqx-drive-cap">Drive to your favorite displays <span>capture them all</span> before they disappear</p>
+  </section>
+
+  {% if tonight %}
+  <a class="mqx-quest-card" href="/d/{{ tonight.id }}">
+    <span class="mqx-quest-kicker">⭐ Tonight's quest</span>
+    <span class="mqx-quest-title">{{ tonight.title }}</span>
+    <span class="mqx-quest-meta">{{ tonight.town_label }} · Check in within 150 ft to capture a character</span>
+  </a>
+  {% endif %}
   </section>
 
   <section class="mqx-try mqx-haunted" id="mqx-try">
@@ -109,13 +122,6 @@
   })();
   </script>
 
-  <section class="mqx-tour mqx-haunted">
-    <div class="mqx-spirit-field" aria-hidden="true"><img class="mqx-spirit s-left" style="--tilt:-3deg; top:0; object-position:50% 18%" src="/static/img/neon/santa.jpg" alt="" loading="lazy" decoding="async"></div>
-    <h2 class="mqx-h2">Build my tour for me</h2>
-    <p class="mqx-p">Skip the picking — we line up the most-viewed displays near you into a ready-to-drive route.</p>
-    <a class="mqx-cta" href="/tour">Build my tour</a>
-  </section>
-
   <div class="mqx-marquee" aria-hidden="true"><div class="mqx-marquee-track" style="animation-duration: {{ [32, (ticker_towns|length * 2.4)|round|int]|max }}s">{% for i in range(2) %}<span>{% if ticker_towns %}{% for t in ticker_towns %}{{ t }} <b>&#x2605;</b> {% endfor %}{% else %}Check in <b>&#x2605;</b> Capture <b>&#x2605;</b> Collect <b>&#x2605;</b> Golden nights <b>&#x2605;</b> 32 characters <b>&#x2605;</b> Every town <b>&#x2605;</b> {% endif %}</span>{% endfor %}</div></div>
 
   <div class="mqx-stats">
@@ -124,11 +130,6 @@
     <div><b>32</b><span>Characters to capture</span></div>
     <div><b>150 ft</b><span>Check-in radius</span></div>
   </div>
-
-  <section class="mqx-drive mqx-bleed">
-    <video class="mqx-drive-video" autoplay muted loop playsinline preload="auto"><source src="/static/video/mq-drive-v16.mp4" type="video/mp4"></video>
-    <p class="mqx-drive-cap">Drive to your favorite displays <span>capture them all</span> before they disappear</p>
-  </section>
 
   <section class="mqx-trio mqx-haunted">
     <div class="mqx-spirit-field" aria-hidden="true"><img class="mqx-spirit s-right" style="--tilt:3deg; top:0" src="/static/img/neon/ded-moroz-v2.jpg" alt="" loading="lazy" decoding="async"></div>
