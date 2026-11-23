@@ -1190,11 +1190,13 @@ body.brand-merryquest .mqx-h2 {
 /* ---------- Tour band ---------- */
 .mqx-tour {
   margin-top: 56px; text-align: center; padding: 42px 24px; zoom: 0.75;
+  width: calc(113.37vw - 2.67px); margin-left: calc(50% - 42.5vw - 203px); margin-right: 0;
   border-radius: 22px; border: 1px solid rgba(255, 200, 44, 0.3);
   background:
     radial-gradient(90% 160% at 50% 0%, rgba(255, 200, 44, 0.13), transparent 60%),
     linear-gradient(180deg, #0c1a10, #060d08);
 }
+@media (max-width: 760px) { .mqx-tour { margin-left: calc(50% - 42.5vw - 54px); } }
 .mqx-tour .mqx-h2 { margin-bottom: 10px; }
 .mqx-tour .mqx-p { max-width: 52ch; margin: 0 auto 22px; }
 
