@@ -67,9 +67,9 @@
   <h2>&#x26A1; Build my tour for me</h2>
   <p class="at-sub">
     {% if size == 100 %}
-    The <strong>Top 100</strong> most-viewed haunts near you — ranked, routed, and split into nights of 10 stops so no night is a marathon.
+    The <strong>Top 100</strong> most-viewed {% if brand | default('haunt') == 'merryquest' %}displays{% else %}haunts{% endif %} near you — ranked, routed, and split into nights of 10 stops so no night is a marathon.
     {% else %}
-    The <strong>Top 10</strong> most-viewed haunts near you — ranked and routed into one ready-to-drive night.
+    The <strong>Top 10</strong> most-viewed {% if brand | default('haunt') == 'merryquest' %}displays{% else %}haunts{% endif %} near you — ranked and routed into one ready-to-drive night.
     {% endif %}
     First, tell us where you're starting from:
   </p>
@@ -109,16 +109,16 @@ document.getElementById('at-locate').onclick = () => {
   <h2>&#x26A1; {% if total_stops %}Top {{ total_stops }} near {{ center_label }}{% else %}No tour stops near {{ center_label }} yet{% endif %}</h2>
   <p class="at-sub">
     {% if size == 100 %}
-    Your area's most-viewed haunts, in drive order — split into {{ nights|length }} night{{ 's' if nights|length != 1 }} of up to {{ 10 }} stops. Open a night and it's a real tour: reorder it, drop stops, or send it straight to Google Maps.
+    Your area's most-viewed {% if brand | default('haunt') == 'merryquest' %}displays{% else %}haunts{% endif %}, in drive order — split into {{ nights|length }} night{{ 's' if nights|length != 1 }} of up to {{ 10 }} stops. Open a night and it's a real tour: reorder it, drop stops, or send it straight to Google Maps.
     {% else %}
-    Your area's most-viewed haunts, lined up in drive order — one ready night. Open it and it's a real tour: reorder it, drop stops, or send it straight to Google Maps.
+    Your area's most-viewed {% if brand | default('haunt') == 'merryquest' %}displays{% else %}haunts{% endif %}, lined up in drive order — one ready night. Open it and it's a real tour: reorder it, drop stops, or send it straight to Google Maps.
     {% endif %}
   </p>
   <p class="at-stats">
     <strong>{{ total_stops }}</strong> stop{{ 's' if total_stops != 1 }}
     &middot; within <strong>{{ radius|int }} mi</strong> of {{ center_label }}{% if approx %} (approximate center){% endif %}
     &middot; ~<strong>{{ total_miles|round|int }} mi</strong> of driving
-    {% if pool_size > total_stops %}&middot; picked from {{ pool_size }} eligible haunts nearby{% endif %}
+    {% if pool_size > total_stops %}&middot; picked from {{ pool_size }} eligible {% if brand | default('haunt') == 'merryquest' %}displays{% else %}haunts{% endif %} nearby{% endif %}
     {% if home_state and not multi %}&middot; all in <strong>{{ home_state_name }}</strong>{% elif multi and route_states %}&middot; stops in <strong>{{ route_states | join(' + ') }}</strong>{% endif %}
   </p>
   {% if brand | default('haunt') == 'merryquest' %}
@@ -157,16 +157,16 @@ document.getElementById('at-locate').onclick = () => {
   {% if total_stops == 0 %}
   <p class="at-note">
     {% if home_state and not multi %}
-    No eligible tour stops in {{ home_state_name }} within {{ radius|int }} miles of {{ center_label }} — a tour stop needs a verified street address. Turn on <strong>Include nearby states</strong> above{% if wide_pool_size %} ({{ wide_pool_size }} eligible haunt{{ 's' if wide_pool_size != 1 }} in range across state lines){% endif %}, or <a href="/auto-tour?size={{ size }}">start over with a different starting point &rarr;</a>
+    No eligible tour stops in {{ home_state_name }} within {{ radius|int }} miles of {{ center_label }} — a tour stop needs a verified street address. Turn on <strong>Include nearby states</strong> above{% if wide_pool_size %} ({{ wide_pool_size }} eligible {% if brand | default('haunt') == 'merryquest' %}display{% else %}haunt{% endif %}{{ 's' if wide_pool_size != 1 }} in range across state lines){% endif %}, or <a href="/auto-tour?size={{ size }}">start over with a different starting point &rarr;</a>
     {% else %}
     No eligible tour stops within {{ radius|int }} miles of {{ center_label }} — a tour stop needs a verified street address. <a href="/auto-tour?size={{ size }}">Start over with a different starting point &rarr;</a>
     {% endif %}
   </p>
   {% elif total_stops < size %}
     {% if home_state and not multi %}
-    <p class="at-note">That's every eligible haunt in {{ home_state_name }} within {{ radius|int }} miles — a tour stop needs a verified street address, so a few map pins don't qualify. {% if wide_pool_size > pool_size %}There are {{ wide_pool_size }} eligible haunts in range when nearby states are included — turn on <strong>Include nearby states</strong> above to add them. {% endif %}<a href="/nearby">See everything near you &rarr;</a></p>
+    <p class="at-note">That's every eligible {% if brand | default('haunt') == 'merryquest' %}display{% else %}haunt{% endif %} in {{ home_state_name }} within {{ radius|int }} miles — a tour stop needs a verified street address, so a few map pins don't qualify. {% if wide_pool_size > pool_size %}There are {{ wide_pool_size }} eligible {% if brand | default('haunt') == 'merryquest' %}displays{% else %}haunts{% endif %} in range when nearby states are included — turn on <strong>Include nearby states</strong> above to add them. {% endif %}<a href="/nearby">See everything near you &rarr;</a></p>
     {% else %}
-    <p class="at-note">That's every eligible haunt within {{ radius|int }} miles — a tour stop needs a verified street address, so a few map pins don't qualify. <a href="/nearby">See everything near you &rarr;</a></p>
+    <p class="at-note">That's every eligible {% if brand | default('haunt') == 'merryquest' %}display{% else %}haunt{% endif %} within {{ radius|int }} miles — a tour stop needs a verified street address, so a few map pins don't qualify. <a href="/nearby">See everything near you &rarr;</a></p>
     {% endif %}
   {% endif %}
   {% if size == 10 %}
@@ -202,7 +202,7 @@ document.getElementById('at-locate').onclick = () => {
 </section>
 {% endfor %}
 
-<p class="at-note">Stops are ranked by what haunters actually view (the same ranking as <a href="/leaderboard/top-100">Top 100 Nationwide</a>) and ordered to keep the driving short. Every stop has a verified street address. Wrong starting point? <a href="/auto-tour?size={{ size }}">Start over with a ZIP or town &rarr;</a></p>
+<p class="at-note">Stops are ranked by what {% if brand | default('haunt') == 'merryquest' %}questers{% else %}haunters{% endif %} actually view (the same ranking as <a href="/leaderboard/top-100">Top 100 Nationwide</a>) and ordered to keep the driving short. Every stop has a verified street address. Wrong starting point? <a href="/auto-tour?size={{ size }}">Start over with a ZIP or town &rarr;</a></p>
 
 <script>
 document.querySelectorAll('.at-open-btn').forEach(btn => {

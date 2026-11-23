@@ -1,10 +1,12 @@
 {% extends "base.html" %}
-{% block title %}My Haunt Tour - {{ site_name }}{% endblock %}
+{% block title %}{% if brand | default('haunt') == 'merryquest' %}My Quest Tour{% else %}My Haunt Tour{% endif %} - {{ site_name }}{% endblock %}
 {% block head %}
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
 #tour-map { height: 320px; border-radius: 12px; margin-bottom: 1rem; }
+{% if brand | default('haunt') == 'merryquest' %}#tour-map { background: #10141c; }
+.mq-dark-tiles { filter: invert(0.92) hue-rotate(180deg) saturate(0.65) brightness(1.14) contrast(1.03); }{% endif %}
 .tour-controls { display: flex; gap: 0.5rem; margin-bottom: 1rem; flex-wrap: wrap; align-items: center; }
 .mode-toggle { display: flex; background: var(--bg2); border-radius: 999px; padding: 3px; }
 .mode-toggle button { padding: 0.4rem 1rem; border-radius: 999px; border: none; background: none; color: var(--muted); font-size: 0.9rem; cursor: pointer; }
@@ -28,22 +30,22 @@
 </style>
 {% endblock %}
 {% block content %}
-<h2>&#x1F383; My Haunt Tour</h2>
-<p style="color: var(--muted); margin-top: -0.5rem; margin-bottom: 1rem;">Customize your haunt tour just the way you like it — pick your stops, set the order, and hit the road.</p>
+<h2>{% if brand | default('haunt') == 'merryquest' %}&#x1F384; My Quest Tour{% else %}&#x1F383; My Haunt Tour{% endif %}</h2>
+<p style="color: var(--muted); margin-top: -0.5rem; margin-bottom: 1rem;">Customize your {% if brand | default('haunt') == 'merryquest' %}quest{% else %}haunt{% endif %} tour just the way you like it — pick your stops, set the order, and hit the road.</p>
 {# Auto Tour banner: the no-work path, for visitors who don't want
    to hand-pick stops. Seats under the intro, above the how-to —
    Dan's tour-page order (how-to -> map -> catcher) is unchanged. #}
 <div class="auto-tour-banner">
   <strong>&#x26A1; Short on time? Let us build it for you</strong>
-  <p>One tap lines up the most-viewed haunts near you in drive order:
+  <p>One tap lines up the most-viewed {% if brand | default('haunt') == 'merryquest' %}displays{% else %}haunts{% endif %} near you in drive order:
   <a href="/auto-tour?size=10">Top 10 near me — one night</a> &middot;
   <a href="/auto-tour?size=100">Top 100 near me — planned by nights</a></p>
 </div>
 <details style="margin-bottom: 1rem; background: var(--card); border: 1px solid #33254f; border-radius: 10px; padding: 0.6rem 0.8rem;">
   <summary style="cursor: pointer; font-weight: 600;">How Do I Build A Tour &#x2753;</summary>
   <p style="margin: 0.5rem 0 0; font-size: 0.9rem; color: var(--muted);">
-    1. Browse haunts on the <a href="/">Haunt Map</a><br>
-    2. Tap <strong>"+ Add to my tour"</strong> on any haunt<br>
+    1. Browse {% if brand | default('haunt') == 'merryquest' %}displays on the <a href="/">Map</a>{% else %}haunts on the <a href="/">Haunt Map</a>{% endif %}<br>
+    2. Tap <strong>"+ Add to my tour"</strong> on any {% if brand | default('haunt') == 'merryquest' %}display{% else %}haunt{% endif %}<br>
     3. Reorder stops with ▲▼<br>
     4. Pick <strong>Walk</strong> or <strong>Drive</strong><br>
     5. Hit <strong>Open in Google Maps</strong> and go!
@@ -52,10 +54,10 @@
 <div id="tour-map"></div>
 <div class="signup-strip signup-strip-slim tour-catcher-center" style="margin-bottom: 1rem;">
   {% if request.query_params.get('subscribed') %}
-  <p class="newsletter-success">&#x1F389; You're in! First word on new haunts near your stops — and first in line for the Jolly Map &#x1F384;</p>
+  <p class="newsletter-success">&#x1F389; You're in! {% if brand | default('haunt') == 'merryquest' %}First word on new displays near your stops, all season long &#x1F384;{% else %}First word on new haunts near your stops — and first in line for the Jolly Map &#x1F384;{% endif %}</p>
   {% else %}
   <h3>&#x1F514; Don't miss a stop</h3>
-  <p>New haunts are added every day — be first to know when one lands near your tour, plus first access to the &#x1F384; Jolly Map this Christmas.</p>
+  <p>{% if brand | default('haunt') == 'merryquest' %}New displays are added every day — be first to know when one lights up near your tour.{% else %}New haunts are added every day — be first to know when one lands near your tour, plus first access to the &#x1F384; Jolly Map this Christmas.{% endif %}</p>
   <form method="post" action="/subscribe" class="newsletter-form">
     <input type="email" name="email" placeholder="you@email.com" required>
     <input type="text" name="location" placeholder="Your town (optional)">
@@ -96,8 +98,8 @@
   <p class="empty-emoji">&#x1F5FA;&#xFE0F;</p>
   <p><strong>How to build your tour:</strong></p>
   <p style="text-align:left; max-width: 320px; margin: 0 auto;">
-    1. Browse haunts on the <a href="/">Haunt Map</a><br>
-    2. Tap <strong>"+ Add to my tour"</strong> on any haunt you like<br>
+    1. Browse {% if brand | default('haunt') == 'merryquest' %}displays on the <a href="/">Map</a>{% else %}haunts on the <a href="/">Haunt Map</a>{% endif %}<br>
+    2. Tap <strong>"+ Add to my tour"</strong> on any {% if brand | default('haunt') == 'merryquest' %}display{% else %}haunt{% endif %} you like<br>
     3. Come back here to reorder stops with ▲▼<br>
     4. Pick <strong>Walk</strong> or <strong>Drive</strong><br>
     5. Hit <strong>Open in Google Maps</strong> and go!
@@ -124,7 +126,9 @@ function saveTour() {
 }
 function initMap() {
   map = L.map('tour-map').setView([40.75, -74.0], 10);
-  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom: 19}).addTo(map);
+{% if brand | default('haunt') == 'merryquest' %}  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom: 19, className: 'mq-dark-tiles'}).addTo(map);
+{% else %}  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom: 19}).addTo(map);
+{% endif %}
   routeLayer = L.layerGroup().addTo(map);
   markerLayer = L.layerGroup().addTo(map);
 }
@@ -137,7 +141,7 @@ async function drawRoute() {
     const r = await fetch(`https://router.project-osrm.org/route/v1/${profile}/${coords}?overview=full&geometries=geojson`);
     const j = await r.json();
     if (j.routes && j.routes[0]) {
-      L.geoJSON(j.routes[0].geometry, {style: {color: '#ff7a1a', weight: 4}}).addTo(routeLayer);
+      L.geoJSON(j.routes[0].geometry, {style: {color: '{% if brand | default('haunt') == 'merryquest' %}#ffc82c{% else %}#ff7a1a{% endif %}', weight: 4}}).addTo(routeLayer);
       updateStats(j.routes[0].distance / 1609.34);
     }
   } catch(e) { updateStats(0); }
@@ -166,7 +170,7 @@ function openAMaps() {
 document.getElementById('btn-gmaps').onclick = openGMaps;
 document.getElementById('btn-amaps').onclick = openAMaps;
 document.getElementById('btn-copy-addr').onclick = async () => {
-  const text = `My HauntMap Tour 🎃\n\n` + tour.map((e, i) => `${i+1}. ${e.title}\n   📍 ${e.town}`).join('\n\n');
+  const text = `{% if brand | default('haunt') == 'merryquest' %}My MerryQuest Tour 🎄{% else %}My HauntMap Tour 🎃{% endif %}\n\n` + tour.map((e, i) => `${i+1}. ${e.title}\n   📍 ${e.town}`).join('\n\n');
   try { await navigator.clipboard.writeText(text); alert('Addresses copied!'); }
   catch(e) { prompt('Copy these addresses:', text); }
 };
@@ -250,7 +254,7 @@ document.getElementById('btn-share').onclick = async () => {
   document.getElementById('social-row').style.display = 'flex';
 };
 function shareUrl() { return document.getElementById('share-link').value; }
-function shareText() { return `Check out my Halloween haunt tour on HauntMap! 🎃 ${tour.length} stops`; }
+function shareText() { return `{% if brand | default('haunt') == 'merryquest' %}Check out my Christmas lights tour on MerryQuest! 🎄{% else %}Check out my Halloween haunt tour on HauntMap! 🎃{% endif %} ${tour.length} stops`; }
 document.getElementById('btn-fb').onclick = () => window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl())}`, '_blank');
 document.getElementById('btn-x').onclick = () => window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText())}&url=${encodeURIComponent(shareUrl())}`, '_blank');
 document.getElementById('btn-wa').onclick = () => window.open(`https://wa.me/?text=${encodeURIComponent(shareText() + ' ' + shareUrl())}`, '_blank');
