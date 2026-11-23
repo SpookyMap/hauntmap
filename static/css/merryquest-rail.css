@@ -1111,10 +1111,10 @@ body.brand-merryquest .mqx-h2 {
 
 /* ---------- Quest split + cast (Pokédex panel) ---------- */
 .mqx-split {
-  display: grid; grid-template-columns: 1fr 1fr; gap: 22px; zoom: 0.75;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 22px; zoom: 0.8;
   margin-top: 56px; align-items: stretch;
   position: relative; left: 50%; transform: translateX(-50%);
-  width: min(1300px, calc(100vw - 2rem));
+  width: min(1100px, calc(100vw - 2rem));
   border: 1px solid var(--mqx-line); border-radius: 22px;
   padding: 34px 38px;
   background:
@@ -1180,7 +1180,7 @@ body.brand-merryquest .mqx-h2 {
      its desktop left border and 30px indent because the old phone block
      sat before the base rules and lost on order. Full-bleed block, no
      zoom, panel stacked under a top divider. */
-  .mqx-split { grid-template-columns: 1fr; zoom: 0.75; width: calc(100vw - 12px);
+  .mqx-split { grid-template-columns: 1fr; zoom: 1; width: calc(100vw - 12px);
     padding: 28px 20px 30px; margin-top: 40px; gap: 0; }
   .mqx-cast-panel { border-left: none; border-top: 1px solid rgba(255, 255, 255, 0.09);
     padding: 24px 0 0; margin-top: 26px; align-self: stretch; }
