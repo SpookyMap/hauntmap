@@ -1,7 +1,17 @@
 {% extends "base.html" %}
-{% block title %}Join HauntSocial · {{ site_name }}{% endblock %}
+{% block title %}{% if brand == 'merryquest' %}Join MerryQuest{% else %}Join HauntSocial{% endif %} · {{ site_name }}{% endblock %}
 {% block content %}
 <section class="soc-auth">
+  {% if brand == 'merryquest' %}
+  <p class="soc-kicker">MerryQuest</p>
+  <h1>&#x1F384; Join MerryQuest</h1>
+  <p class="soc-lede">MerryQuest is the Christmas lights quest — get your own
+     page at <strong>gomerryquest.com/@yourname</strong>: your Sack, your
+     captures, your wall. Free, and the map stays open to everyone either way.</p>
+  <p class="soc-sub">The hunt for the season's best lights — your own page,
+     your Sack of Guardians, your town on the board. Free to join.
+     <a href="/#mqx-try">What is MerryQuest?</a></p>
+  {% else %}
   <p class="soc-kicker"><span class="hs-brand">HauntSocial</span></p>
   <h1>&#x1F383; Join <span class="hs-brand">HauntSocial</span></h1>
   <p class="soc-lede">HauntSocial is HauntMap's social network — get your own
@@ -10,6 +20,7 @@
   <p class="soc-sub">The social network for Halloween lovers — your own page,
      your anthem, your Top 8. Free to join.
      <a href="/hauntsocial">What is <span class="hs-brand">HauntSocial</span>?</a></p>
+  {% endif %}
   {% if error %}<p class="soc-error">{{ error }}</p>{% endif %}
   <form class="form soc-form" method="post" action="/signup">
     <label>Email <span class="req">*</span>
@@ -18,7 +29,7 @@
     </label>
     <label>Your @handle <span class="req">*</span>
       <input type="text" name="handle" required autocomplete="username"
-             value="{{ values.handle or '' }}" placeholder="e.g. spooky_sam">
+             value="{{ values.handle or '' }}" placeholder="e.g. {% if brand == 'merryquest' %}jolly_sam{% else %}spooky_sam{% endif %}">
       <small>3–20 characters: letters, numbers, underscores. This is your page
         address, so it ends up lowercase — capitals are converted automatically.
         Pick the name you want to be known by.</small>
@@ -37,7 +48,7 @@
       I agree to the <a href="/terms">Terms</a> and <a href="/privacy">Privacy Policy</a>,
       and I know my profile is public.
     </label>
-    <button class="btn btn-big" type="submit">Create my page &#x1F47B;</button>
+    <button class="btn btn-big" type="submit">{% if brand == 'merryquest' %}Join the quest &#x1F384;{% else %}Create my page &#x1F47B;{% endif %}</button>
   </form>
   <p class="soc-alt">Already a member? <a href="/login">Sign in</a></p>
 </section>
