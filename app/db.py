@@ -1547,6 +1547,24 @@ def init_db(db_path: Path) -> None:
              "📅 Fall Family Fun weekends through November 1 — plus a half-price Encore Weekend, Friday–Sunday, November 6–8, 2026, 10:00 AM–5:00 PM ($10). Corn maze, hayrides, farm animals and cider at the Princeton farm.",
              "Terhune Orchards Fall Festival — September 12 – November 1, 2026"),
         )
+        # Asbury Park Holiday Bazaar 2026 refresh (Nov 23): pin 6014 is
+        # the year-round seasonal-series listing for the Grand Arcade of
+        # Convention Hall; Dan approved refreshing it in place for the
+        # 2026 Holiday Bazaar (Nov 27–Dec 20) rather than posting a
+        # duplicate. Same constraint as the Nov 4 fixes above:
+        # /admin/edit cannot write description, so title + description
+        # ride this guarded boot-time patch. Guarded on the exact
+        # pre-refresh title (stored truncated at "Conven"), so it fires
+        # once and can never override a later admin edit; title +
+        # description only — address, coordinates, photo, category and
+        # facets stay exactly as they are.
+        conn.execute(
+            "UPDATE entries SET title = ?, description = ? "
+            "WHERE id = 6014 AND title = ?",
+            ("Asbury Park Holiday Bazaar — Asbury Park, NJ · Nov 27–Dec 20, 2026",
+             "The Asbury Park Holiday Bazaar takes over the Grand Arcade of Convention Hall for the 2026 season — named New Jersey's Best Holiday Market by Food & Wine Magazine. Free admission, indoors, all ages, leashed pets welcome. Local and regional makers, food and libations, kids' activities and workshops, and Photos with Santa benefiting the Asbury Park Toy Drive. Opens Friday, Nov 27, 2026, 12–8 PM; Sat Nov 28 & Sun Nov 29, 12–5 PM; then every Friday–Sunday through Sunday, Dec 20, 2026 — Fridays 3–7 PM, Saturdays & Sundays 12–5 PM. 1300 Ocean Avenue, Asbury Park, NJ.",
+             "Asbury Park Bazaar — Asbury Park, NJ · Seasonal pop-up series in the Grand Arcade of Conven"),
+        )
         if "is_handpicked" not in cols:
             # Hand-picked feed boost (Dan, Oct 23): pins Dan personally
             # sent/curated lead every feed. Ranking data is never
