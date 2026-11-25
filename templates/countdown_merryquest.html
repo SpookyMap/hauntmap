@@ -47,27 +47,20 @@
     position: relative; z-index: 1; min-height: 100vh;
     display: flex; flex-direction: column; align-items: center; justify-content: center;
     text-align: center; padding: 5vh 20px 40px;
-    /* Clips the logo halo's bleed at the viewport edge (the halo
-       extends past the logo box by design; it must never widen
-       the page on narrow screens). */
+    /* Safety clip at the viewport edge: nothing inside the door
+       may ever widen the page on narrow screens. */
     overflow-x: clip;
   }
   .logo { margin: 0; line-height: 0; position: relative; }
   /* Epic Glow lockup art (Dan, Nov 25, 2026): the finished logo
      replaces the chrome wordmark + rule + Follow/Capture text
-     lines (the art carries all of them). Its baked dark navy
-     ground melts into the door's video with a navy halo behind
-     the frame plus a soft mask feather — the same treatment as
-     the homepage hero, so the panel reads as a vignette. */
-  .logo::before {
-    content: ""; position: absolute; inset: -18% -14%; z-index: 0; pointer-events: none;
-    background: radial-gradient(ellipse 50% 50% at 50% 50%, rgba(4, 11, 19, 0.9) 55%, rgba(4, 11, 19, 0.5) 78%, rgba(4, 11, 19, 0) 100%);
-  }
+     lines (the art carries all of them). Transparent version
+     (Dan, Nov 25: "get rid of the dark background"): the -clear
+     WebP is luma-keyed from the original art, so the lockup
+     floats on the door's video with no halo or mask feather. */
   .logo img {
     position: relative; z-index: 1;
     width: min(700px, 94vw); height: auto; display: block;
-    -webkit-mask-image: radial-gradient(ellipse 84% 82% at 50% 47%, #000 55%, rgba(0, 0, 0, 0.55) 80%, transparent 98%);
-    mask-image: radial-gradient(ellipse 84% 82% at 50% 47%, #000 55%, rgba(0, 0, 0, 0.55) 80%, transparent 98%);
   }
   .sr-only {
     position: absolute; width: 1px; height: 1px; overflow: hidden;
@@ -214,7 +207,7 @@
   </div>
   <div class="grid" aria-hidden="true"></div>
   <main class="wrap">
-    <h1 class="logo"><img src="/static/img/merryquest-logo-epicglow.webp" alt="MerryQuest — Follow the Lights, Capture the Magic" width="1170" height="653"><span class="sr-only">MerryQuest</span></h1>
+    <h1 class="logo"><img src="/static/img/merryquest-logo-epicglow-clear.webp" alt="MerryQuest — Follow the Lights, Capture the Magic" width="1170" height="653"><span class="sr-only">MerryQuest</span></h1>
     <p class="begins">The quest begins in</p>
     <div class="cd" role="timer" aria-label="Countdown to the November 25 launch">
       <div class="cell"><span id="cd-d">--</span><label>Days</label></div>
