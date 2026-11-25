@@ -568,13 +568,15 @@ _APPDOOR_KILL_SW = (
 
 @app.middleware("http")
 async def _appdoor_guard(request: Request, call_next):
-    """merryquest.app is a SEALED store door until launch (Dan, Nov 20):
-    the countdown splash guarded only the root, so every other path on
-    the .app host (/map, /towns/..., any shared or typed link) served
-    the full website while it is still being built — spoiling the
-    surprise. On the .app host every page is now the splash; only
-    static assets and the splash's own subscribe POST pass through.
-    Retire this guard when the door opens at launch."""
+    """merryquest.app was a SEALED store door until launch (Dan, Nov 20):
+    every page on the .app host served the countdown splash so the
+    half-built site stayed hidden. DOOR OPENED at launch (Dan, Nov 25,
+    2026): the .app host now redirects every page to the live site on
+    gomerryquest.com, same path and query. The kill service worker
+    stays (pre-seal browsers still need their ghost caches wiped —
+    after the wipe they reload and land on the redirect), and static
+    assets still pass through. The ?brand=appdoor override keeps
+    serving the splash for local previews only."""
     if _is_appdoor(request):
         path = request.url.path
         if request.method == "GET" and path == "/sw.js":
@@ -587,6 +589,12 @@ async def _appdoor_guard(request: Request, call_next):
         if request.method == "POST" and path == "/subscribe":
             return await call_next(request)
         if request.method in ("GET", "HEAD"):
+            host = (request.headers.get("host") or "").lower()
+            if "merryquest.app" in host:
+                target = "https://gomerryquest.com" + path
+                if request.url.query:
+                    target += "?" + request.url.query
+                return RedirectResponse(target, status_code=302)
             return templates.TemplateResponse(
                 request, "countdown_merryquest.html", {})
     return await call_next(request)
