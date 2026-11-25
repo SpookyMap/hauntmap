@@ -68,7 +68,7 @@
     <div class="vt-stage" id="vt-stage">{% if is_tv %}<video id="vt-video" controls playsinline preload="metadata" hidden></video><iframe id="vt-tt" hidden allowfullscreen allow="autoplay; encrypted-media; picture-in-picture; fullscreen" title="TikTok video player"></iframe><img id="vt-photo" hidden alt="">{% endif %}</div>
     <div class="vt-tv-next" id="vt-tv-next" hidden>
       <p class="vt-tv-next-note">&#x1F4FA; <strong>HauntMap TV:</strong> TikTok stops can't auto-play the next house — watch this one, then ride on:</p>
-      <button type="button" class="btn vt-tv-next-btn" id="vt-tv-next-btn">&#x25B6; Next haunt</button>
+      <button type="button" class="btn vt-tv-next-btn" id="vt-tv-next-btn">&#x25B6; {% if brand | default('haunt') == 'merryquest' %}Next quest{% else %}Next haunt{% endif %}</button>
     </div>
     {% if is_tv %}
     <div class="vt-remote" id="vt-remote">
@@ -1030,7 +1030,7 @@ var VT_SCARE = {
     if (tvNext) {
       tvNext.hidden = !(VT_TV && isTikTok);
       var nb = document.getElementById('vt-tv-next-btn');
-      if (nb) nb.textContent = idx === stops.length - 1 ? '▶ Finish channel ✓' : '▶ Next haunt';
+      if (nb) nb.textContent = idx === stops.length - 1 ? '▶ Finish channel ✓' : '▶ {% if brand | default('haunt') == 'merryquest' %}Next quest{% else %}Next haunt{% endif %}';
     }
     var link = document.getElementById('vt-stop-link');
     link.textContent = s.title;

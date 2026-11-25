@@ -12,6 +12,24 @@
    their eager <head> includes (different pages, different jobs). #}
 {% endblock %}
 {% block content %}
+{% if brand | default('haunt') == 'merryquest' %}
+<style>
+/* Sleek buttons pass (Dan, Nov 25): phone-only slimming of the detail
+   page's primary buttons — chunky .btn-big family and same-scale CTAs
+   drop ~25-30% of height/font where the ~36px tappable floor allows;
+   colors, labels, order and the sticky next-bar are untouched. The
+   plain .btn row (Add to my tour / Notify me / Share) already renders
+   at 36.6px, i.e. at the floor, so it is deliberately not in this block. */
+@media (max-width: 760px) {
+  body.brand-merryquest .detail .btn-big { padding: 0.5rem 0.7rem; font-size: 0.94rem; }
+  body.brand-merryquest .detail .next-haunt { line-height: 1.3; }
+  body.brand-merryquest .detail .next-haunt-sub { font-size: 0.75rem; margin-top: 0.1rem; }
+  body.brand-merryquest .detail .text-alerts-form .btn { min-height: 0; padding: 0.55rem 1rem; font-size: 0.88rem; }
+  body.brand-merryquest .detail .chain-nav .btn { padding-top: 0.5rem; padding-bottom: 0.5rem; }
+  body.brand-merryquest .detail .quest-checkin-btn { padding: 9px 20px; font-size: 14.5px; }
+}
+</style>
+{% endif %}
 <article class="detail">
   {% if entry.tiktok_url and '/video/' in entry.tiktok_url %}
   {# A TikTok video URL is the primary media — render the playable embed even
@@ -397,7 +415,7 @@
   {% endif %}
 
   {% if next_pin %}
-  <a class="btn btn-big next-haunt" href="/d/{{ next_pin.id }}">{% if next_is_video %}&#x1F3AC; Play next haunt &rarr;{% else %}Next haunt near here &rarr;{% endif %}<span class="next-haunt-sub">{{ next_pin.title }} &middot; {{ "%.1f"|format(next_pin.distance) }} mi &middot; {{ next_pin.town_label }}</span></a>
+  <a class="btn btn-big next-haunt" href="/d/{{ next_pin.id }}">{% if brand | default('haunt') == 'merryquest' %}{% if next_is_video %}&#x1F3AC; Play next quest &rarr;{% else %}Next quest near here &rarr;{% endif %}{% elif next_is_video %}&#x1F3AC; Play next haunt &rarr;{% else %}Next haunt near here &rarr;{% endif %}<span class="next-haunt-sub">{{ next_pin.title }} &middot; {{ "%.1f"|format(next_pin.distance) }} mi &middot; {{ next_pin.town_label }}</span></a>
   {% endif %}
 
   {% if not is_venue %}
@@ -552,7 +570,7 @@
      bar above chain video-to-video. #}
   <nav class="chain-nav">
     {% if prev_pin %}<a class="btn" href="/d/{{ prev_pin.id }}">&larr; Previous haunt</a>{% else %}<span></span>{% endif %}
-    {% if next_geo_pin %}<a class="btn" href="/d/{{ next_geo_pin.id }}">Next haunt &rarr;</a>{% endif %}
+    {% if next_geo_pin %}<a class="btn" href="/d/{{ next_geo_pin.id }}">Next {% if brand | default('haunt') == 'merryquest' %}quest{% else %}haunt{% endif %} &rarr;</a>{% endif %}
   </nav>
   {% endif %}
 
@@ -634,12 +652,12 @@
 </article>
 
 {% if next_pin %}
-<a class="next-haunt-bar" href="/d/{{ next_pin.id }}" aria-label="Next haunt: {{ next_pin.title }}">
+<a class="next-haunt-bar" href="/d/{{ next_pin.id }}" aria-label="Next {% if brand | default('haunt') == 'merryquest' %}quest{% else %}haunt{% endif %}: {{ next_pin.title }}">
   {# Rail Boost, Item 3: the bar now ALWAYS carries the target's
      thumbnail (was video-next only) and its distance from this pin —
      "Next: {title} · 0.4 mi" at a glance, before the tap. #}
   {% if next_pin.thumb_url %}<img class="nhb-thumb" src="{{ next_pin.thumb_url }}" alt="" loading="lazy">{% endif %}
-  <span class="nhb-label">{% if next_is_video %}&#x25B6; Play next haunt &rarr;{% else %}Next haunt &rarr;{% endif %}</span>
+  <span class="nhb-label">{% if brand | default('haunt') == 'merryquest' %}{% if next_is_video %}&#x25B6; Play next quest &rarr;{% else %}Next quest &rarr;{% endif %}{% elif next_is_video %}&#x25B6; Play next haunt &rarr;{% else %}Next haunt &rarr;{% endif %}</span>
   <span class="nhb-title">{{ next_pin.title }}{% if next_pin.distance is defined and next_pin.distance is not none %} &middot; {{ "%.1f"|format(next_pin.distance) }} mi{% endif %} &middot; {{ next_pin.town_label }}</span>
 </a>
 {% endif %}
@@ -708,7 +726,7 @@
     var bar = document.querySelector('a.next-haunt-bar');
     if (bar) {
       bar.href = href;
-      bar.setAttribute('aria-label', 'Next haunt: ' + pin.title);
+      bar.setAttribute('aria-label', 'Next {% if brand | default('haunt') == 'merryquest' %}quest{% else %}haunt{% endif %}: ' + pin.title);
       var ttl = bar.querySelector('.nhb-title');
       if (ttl) ttl.textContent = pin.title +
         (pin.dist !== null && pin.dist !== undefined ? ' \u00B7 ' + pin.dist.toFixed(1) + ' mi' : '') +

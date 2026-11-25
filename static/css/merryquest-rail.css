@@ -411,7 +411,13 @@ body.brand-merryquest {
    poster art replaces the wide chrome wordmark, so the slot runs
    taller than the old 34px strip to keep the lockup legible. */
 .mqx-brand-logo { height: 52px; width: auto; display: block; }
-.mqx-brand { display: flex; align-items: center; gap: 9px; text-decoration: none; }
+/* Header wordmark alone (Dan, Nov 25, 2026): the neon MERRYQUEST
+   wordmark keyed from Dan's render replaces the full lockup in the
+   top-left — the lockup turned to mush at bar height; the wordmark
+   reads. Bar height held by the .mqx-brand min-height (52/40px,
+   the old lockup's heights) with the wordmark centered inside. */
+.mqx-brand-wordmark { height: 34px; width: auto; display: block; }
+.mqx-brand { display: flex; align-items: center; gap: 9px; text-decoration: none; min-height: 52px; }
 .mqx-brand .brand-pip { height: 34px; width: 34px; }
 .mqx-wordmark {
   font-family: var(--mq-sans, "Inter", system-ui, sans-serif);
@@ -447,6 +453,8 @@ body.brand-merryquest {
   .mqx-nav a { white-space: nowrap; font-size: 13.5px; }
   .mqx-wordmark { font-size: 19px; }
   .mqx-brand-logo { height: 40px; }
+  .mqx-brand-wordmark { height: 28px; }
+  .mqx-brand { min-height: 40px; }
 }
 
 /* ---------- Page frame ---------- */
@@ -460,8 +468,10 @@ body.brand-merryquest { overflow-x: clip; }
   border-radius: 0; border-left: 0; border-right: 0;
 }
 /* Zoom-through intro (Nov 18, 2026): the logo rushes at the viewer,
-   flies through the Q and disappears; the hero logo then sits static
-   and the background video starts. Once per session, tap to skip. */
+   dives through the compass star and disappears; the hero logo then
+   sits static and the background video starts. Once per session, tap
+   to skip. Artwork swapped to the Epic Glow lockup Nov 25, 2026 —
+   transform-origin 53% 56% is the lockup's compass-star center. */
 .mqx-intro {
   position: fixed; inset: 0; z-index: 80; overflow: hidden;
   background: radial-gradient(120% 120% at 50% 40%, #24104d 0%, #0a0518 72%);
@@ -485,7 +495,7 @@ body.brand-merryquest { overflow-x: clip; }
 .mqx-intro-logo {
   position: absolute; left: 50%; top: 50%;
   width: min(620px, 86vw); height: auto;
-  transform-origin: 63% 50%;
+  transform-origin: 53% 56%;
   animation: mqx-intro-zoom 1.6s cubic-bezier(0.55, 0, 0.9, 0.4) 0.95s both;
   filter: drop-shadow(0 10px 34px rgba(0, 0, 0, 0.55)) drop-shadow(0 0 30px rgba(120, 220, 255, 0.25));
 }
@@ -511,7 +521,7 @@ body.brand-merryquest { overflow-x: clip; }
 }
 .mqx-zoomout.on { opacity: 1; transition: opacity 0.18s ease; pointer-events: all; }
 .mqx-zoomout img {
-  width: min(560px, 84vw); height: auto; transform-origin: 63% 50%;
+  width: min(560px, 84vw); height: auto; transform-origin: 53% 56%;
   filter: drop-shadow(0 10px 34px rgba(0, 0, 0, 0.55)) drop-shadow(0 0 30px rgba(120, 220, 255, 0.25));
 }
 .mqx-zoomout.on img { animation: mqx-zoomout-fly 0.68s cubic-bezier(0.55, 0, 0.9, 0.4) both; }
@@ -1065,10 +1075,17 @@ body.brand-merryquest { overflow-x: clip; }
   border-radius: 999px; padding: 6px 13px; font-size: 13.5px; font-weight: 700;
 }
 @media (max-width: 760px) {
-  .mqx-guide { flex-direction: column; text-align: center; gap: 20px; padding: 26px 20px 28px; zoom: 1; width: calc(100vw - 12px); }
+  .mqx-guide { flex-direction: column; text-align: center; gap: 13px; padding: 18px 16px 20px; zoom: 1; width: calc(100vw - 12px); margin-top: 30px; }
   .mqx-guide-copy { text-align: center; }
-  .mqx-guide-steps { justify-content: center; }
-  .mqx-guide-medal img { width: 106px; height: 106px; }
+  .mqx-guide-steps { justify-content: center; margin-top: 11px; gap: 7px; }
+  .mqx-guide-medal img { width: 84px; height: 84px; }
+  /* Compact pass (Dan, Nov 25, 2026): phone density mirrored from the
+     Build My Tour band, which renders at zoom .75 — heading at that
+     scale, tighter copy and chips. Scoped to this block only. */
+  body.brand-merryquest .mqx-guide .mqx-h2 { font-size: 18px; margin-bottom: 9px; }
+  .mqx-guide .mqx-eyebrow { margin-bottom: 5px; }
+  .mqx-guide .mqx-p { font-size: 14px; line-height: 1.5; margin-bottom: 0; }
+  .mqx-guide-steps span { padding: 5px 11px; font-size: 12.5px; }
 }
 .mqx-trio-card {
   background: var(--mqx-glass); border: 1px solid var(--mqx-line);
@@ -1204,10 +1221,23 @@ body.brand-merryquest .mqx-h2 {
      sat before the base rules and lost on order. Full-bleed block, no
      zoom, panel stacked under a top divider. */
   .mqx-split { grid-template-columns: 1fr; zoom: 1; width: calc(100vw - 12px);
-    padding: 28px 20px 30px; margin-top: 40px; gap: 0; }
+    padding: 20px 16px 22px; margin-top: 30px; gap: 0; }
   .mqx-cast-panel { border-left: none; border-top: 1px solid rgba(255, 255, 255, 0.09);
-    padding: 24px 0 0; margin-top: 26px; align-self: stretch; }
+    padding: 16px 0 0; margin-top: 18px; align-self: stretch; }
   .mqx-p { font-size: 15px; }
+  /* Compact pass (Dan, Nov 25, 2026): phone density mirrored from the
+     Build My Tour band (zoom .75 scale) — smaller heading, tighter
+     step rows and cast chips. Scoped so other sections keep theirs. */
+  body.brand-merryquest .mqx-split .mqx-h2 { font-size: 18px; margin-bottom: 9px; }
+  .mqx-split .mqx-eyebrow { margin-bottom: 5px; }
+  .mqx-split .mqx-p { font-size: 14px; line-height: 1.5; margin-bottom: 12px; }
+  .mqx-steps { gap: 8px; margin-bottom: 16px; }
+  .mqx-steps li { font-size: 14px; gap: 10px; }
+  .mqx-steps b { width: 23px; height: 23px; font-size: 12.5px; }
+  .mqx-cast-head { font-size: 14px; margin-bottom: 10px; }
+  .mqx-cast { gap: 6px; }
+  .mqx-cast span { padding: 5px 11px; font-size: 12.5px; }
+  .mqx-cast span.mqx-cast-mystery { min-width: 32px; }
 }
 
 /* ---------- Tour band ---------- */
