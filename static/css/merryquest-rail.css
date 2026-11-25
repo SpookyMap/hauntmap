@@ -757,13 +757,19 @@ body.brand-merryquest { overflow-x: clip; }
 
 /* ---------- Hero: full-bleed campaign shot (GTA) ---------- */
 .mqx-hero {
-  position: relative; padding: 76px 24px 48px;
+  /* Top-anchored stack (Dan, Nov 25, 2026 — "move logo higher,
+     clean spaced layout"): no more vertical centering — the stack
+     starts near the top of the hero under the slim nav, and the
+     hero stack below follows one spacing rhythm (see .mqx-epic-art,
+     .mqx-h1, .mqx-begins, .mqx-bigcd, .mqx-santacd, .mqx-sub,
+     .mqx-hero-ctas margins). */
+  position: relative; padding: 11px 24px 48px;
   overflow: hidden; text-align: center;
   border: 1px solid var(--mqx-line);
   background: radial-gradient(120% 130% at 50% 0%, #14301f 0%, #08130c 58%, #050807 100%);
-  min-height: 94vh; display: flex; flex-direction: column; justify-content: center;
+  min-height: 94vh; display: flex; flex-direction: column; justify-content: flex-start;
 }
-@media (max-width: 760px) { .mqx-hero { padding: 52px 16px 36px; min-height: 92vh; } }
+@media (max-width: 760px) { .mqx-hero { padding: 11px 16px 36px; min-height: 92vh; } }
 .mqx-hero-bg {
   position: absolute; inset: 0; background-size: cover; background-position: center;
   opacity: 0.5;
@@ -787,7 +793,7 @@ body.brand-merryquest { overflow-x: clip; }
   font-family: "Luckiest Guy", var(--mqx-display); font-weight: 400;
   font-size: clamp(26px, 4.2vw, 50px); line-height: 1.04;
   letter-spacing: 0.012em; text-transform: uppercase;
-  color: #ffffff; margin: 0 0 18px;
+  color: #aef4ff; margin: 0 0 16px;
   transform: skewX(-4deg);
   filter: drop-shadow(0 5px 0 rgba(18, 43, 30, 0.55)) drop-shadow(0 16px 30px rgba(0, 0, 0, 0.5));
 }
@@ -810,10 +816,19 @@ body.brand-merryquest { overflow-x: clip; }
    the gold line chases Christmas-light colors (text-shadow only, so the
    iOS solid-fill rule above is untouched). */
 .mqx-h1 {
-  /* Tron neon (Dan, Nov 19, 2026): the white line burns cyan full-time —
-     white-hot core, electric-blue tube glow, deep blue halo. */
-  text-shadow: 0 0 6px rgba(255, 255, 255, 0.65), 0 0 18px rgba(120, 230, 255, 0.85), 0 0 42px rgba(0, 180, 255, 0.55), 0 0 84px rgba(0, 120, 255, 0.35);
-  animation: mqx-charge 9s linear infinite;
+  /* Tron neon (Dan, Nov 19, 2026): the line burns cyan full-time —
+     electric-blue tube glow, deep blue halo. Counter blue (Dan,
+     Nov 25, 2026): the fill and core now burn the Santa counter's
+     #aef4ff, so headline and counter read as one color story.
+     Glow REMOVED (Dan, Nov 25, 2026): "take away glow for best
+     Christmas displays" — the text-shadow stack and the
+     charge animation that drove it are off, so the headline
+     renders flat and clean in its counter-blue fill (#aef4ff,
+     first .mqx-h1 rule) with only that rule's poster drop-shadow
+     filter. The mqx-charge keyframes below stay in the file,
+     unused by the headline. */
+  text-shadow: none;
+  animation: none;
 }
 /* Christmas-light flashes (Dan, Nov 19, 2026): inside the white lightning,
    the surge beats now flash Christmas colors at uneven intervals — red,
@@ -842,7 +857,12 @@ body.brand-merryquest { overflow-x: clip; }
   91% { text-shadow: 0 0 7px rgba(255, 255, 255, 0.8), 0 0 22px rgba(255, 200, 245, 0.9), 0 0 50px rgba(255, 110, 220, 0.6), 0 0 100px rgba(200, 60, 180, 0.4); }
   94% { text-shadow: 0 0 6px rgba(255, 255, 255, 0.65), 0 0 18px rgba(120, 230, 255, 0.85), 0 0 42px rgba(0, 180, 255, 0.55), 0 0 84px rgba(0, 120, 255, 0.35); }
 }
-.mqx-h1 .mqx-grad { animation: mqx-chase 6s linear infinite; }
+.mqx-h1 .mqx-grad {
+  /* Chase glow off (Dan, Nov 25, 2026): mqx-chase animated a
+     text-shadow glow on the gold span — removed with the rest of
+     the headline's glow so the whole H1 renders flat. */
+  animation: none;
+}
 
 
 @keyframes mqx-chase {
@@ -859,7 +879,7 @@ body.brand-merryquest { overflow-x: clip; }
      no snowflakes, a step larger, flanking lines reaching outward. */
   font-family: "Bebas Neue", sans-serif;
   display: flex; align-items: center; justify-content: center; gap: 14px;
-  margin: 6px 0 0; color: #ffd968; font-weight: 400;
+  margin: 0; color: #ffd968; font-weight: 400;
   font-size: clamp(16px, 3.4vw, 24px); letter-spacing: clamp(0.08em, 0.6vw, 0.22em);
   text-transform: uppercase; white-space: nowrap;
   text-shadow: 0 2px 14px rgba(0, 0, 0, 0.45);
@@ -878,7 +898,7 @@ body.brand-merryquest { overflow-x: clip; }
 }
 .mqx-sub {
   color: #cfdccf; font-size: 17px; line-height: 1.5;
-  max-width: 56ch; margin: 0 auto 26px;
+  max-width: 56ch; margin: 22px auto 24px;
 }
 .mqx-search {
   display: flex; gap: 8px; max-width: 560px; margin: 0 auto;
@@ -1395,8 +1415,23 @@ main > h1 { font-family:'Anton',sans-serif; text-transform:uppercase; letter-spa
   text-shadow: 0 0 6px rgba(255, 255, 255, 0.65), 0 0 18px rgba(120, 230, 255, 0.85), 0 0 42px rgba(0, 180, 255, 0.55), 0 0 84px rgba(0, 120, 255, 0.35);
 }
 /* Epic Glow logo artwork (Dan, Nov 25, 2026 — "Put it everywhere"):
-   Dan's finished lockup art is now the hero title. */
-.mqx-epic-art { position: relative; max-width: 800px; margin: 0 auto 8px; line-height: 0; }
+   Dan's finished lockup art is now the hero title, replacing the
+   live-text .mqx-epic block above (those rules stay in the file,
+   unreferenced). The art's baked near-black navy ground (#030d16)
+   melts into the hero video via an elliptical mask feather on all
+   four edges — opaque through the type, dissolving at the rim. */
+/* Hero logo +15% and higher (Dan, Nov 25, 2026, from his live
+   screenshot): the lockup renders 15% larger — width 115% of the
+   hero column, capped at 920px (= the old 800px max-width × 1.15),
+   centered on the column via left/transform since it now outgrows
+   its container. On phones the lockup already spans nearly the
+   full hero width, so 115% would breach the screen edges: the
+   ≤760px rule below caps it at 104.5% of the column, which keeps
+   ~8px+ of breathing room per side (≈+4.5% rendered at 390px).
+   The hero's top padding also dropped to 11px above, putting the
+   logo ~12px below the hero top at both viewports. */
+.mqx-epic-art { position: relative; width: 115%; max-width: 920px; left: 50%; transform: translateX(-50%); margin: 0 auto 22px; line-height: 0; }
+@media (max-width: 760px) { .mqx-epic-art { width: 104.5%; } }
 /* Transparent Epic Glow lockup (Dan, Nov 25, 2026): the -clear
    WebP is luma-keyed from the original art — no baked ground, so
    no navy halo and no mask feather; the lockup floats directly
@@ -1435,6 +1470,42 @@ main > h1 { font-family:'Anton',sans-serif; text-transform:uppercase; letter-spa
   transform: skewX(-3deg);
   filter: drop-shadow(0 4px 0 rgba(18, 43, 30, 0.55)) drop-shadow(0 12px 24px rgba(0, 0, 0, 0.5));
   margin: 20px 0 4px;
+}
+/* Chapter 1 premiere countdown (Dan, Nov 25, 2026; the label
+   read "Santa's chapter premieres in" until later that day, when
+   Dan changed the wording to "Chapter 1 premieres in"): a
+   secondary countdown under the "THE QUEST HAS BEGUN!" headline.
+   Same .mqx-bigcd structure and labels at roughly half scale, with
+   cyan glowing numerals (the splash countdown's treatment) so it
+   reads as a sub-beat under the gold headline instead of competing
+   with it. At zero the JS hides the numerals + label and unhides
+   the "is here" line. */
+.mqx-santacd { text-align: center; margin: 16px 0 2px; }
+.mqx-santacd-label {
+  /* Cinzel serif (Dan, Nov 25, 2026): the same font separation
+     as the splash — the label must not sit in the begun
+     headline's display face (Luckiest Guy here; Russo One on
+     the splash), and Cinzel ties it to the logo family's serif. */
+  font-family: "Cinzel", "Times New Roman", serif; font-weight: 700;
+  font-size: clamp(13px, 2vw, 18px); letter-spacing: 0.14em; text-indent: 0.14em;
+  text-transform: uppercase; color: #ffffff; margin: 0;
+  text-shadow: 0 0 6px rgba(255, 255, 255, 0.65), 0 0 18px rgba(120, 230, 255, 0.85), 0 0 42px rgba(0, 180, 255, 0.55);
+}
+.mqx-bigcd-mini { gap: clamp(10px, 2.6vw, 26px); margin: 8px 0 2px; }
+.mqx-bigcd-mini .mqx-bigcd-cell { min-width: 52px; }
+.mqx-bigcd-mini .mqx-bigcd-cell span {
+  font-size: clamp(26px, 4.6vw, 44px); color: #aef4ff;
+  text-shadow: 0 0 8px rgba(160, 240, 255, 0.8), 0 0 22px rgba(0, 180, 255, 0.6), 0 0 48px rgba(0, 120, 255, 0.4);
+}
+.mqx-bigcd-mini .mqx-bigcd-cell label { margin-top: 6px; font-size: 10px; }
+.mqx-santacd-done {
+  font-family: "Luckiest Guy", var(--mqx-display); font-weight: 400;
+  font-size: clamp(20px, 3.6vw, 34px); line-height: 1.05; color: #aef4ff;
+  text-transform: uppercase; text-align: center;
+  transform: skewX(-3deg);
+  text-shadow: 0 0 8px rgba(160, 240, 255, 0.8), 0 0 22px rgba(0, 180, 255, 0.6), 0 0 48px rgba(0, 120, 255, 0.4);
+  filter: drop-shadow(0 3px 0 rgba(18, 43, 30, 0.55)) drop-shadow(0 8px 18px rgba(0, 0, 0, 0.5));
+  margin: 8px 0 2px;
 }
 /* Driving loop banner (Nov 18, 2026). */
 .mqx-drive { margin-top: 0; position: relative; overflow: hidden; border: 1px solid var(--mqx-line); background: #04070d; }

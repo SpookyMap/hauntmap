@@ -20,16 +20,16 @@
     <div class="mqx-hero-in">
       {# Epic Glow logo artwork (Dan, Nov 25, 2026 — "Put it
          everywhere"): Dan's finished Epic Glow lockup art replaces
-         the hero logo image + rule + Follow/Capture lockup lines as
-         the hero title. The art carries the whole composition
-         (MerryQuest / Follow the Lights / Capture the Magic / An
-         Epic Mobile Adventure / Explore, Capture, Discover).
-         Transparent version (Dan, Nov 25: "get rid of the dark
-         background"): the -clear WebP is luma-keyed from the
-         original art, so the lockup floats on the hero video
-         with no panel, halo, or mask. #}
+         the staged live-text .mqx-epic block as the hero title.
+         The art carries the whole composition (MerryQuest /
+         Follow the Lights / Capture the Magic / An Epic Mobile
+         Adventure / Explore, Capture, Discover). Transparent
+         version (Dan, Nov 25: "get rid of the dark background"):
+         the -clear WebP is luma-keyed from the original art, so
+         the lockup floats on the hero video with no panel, halo,
+         or mask — see merryquest-rail.css .mqx-epic-art. #}
       <div class="mqx-epic-art">
-        <img src="/static/img/merryquest-logo-epicglow-clear.webp" alt="MerryQuest — Follow the Lights, Capture the Magic" width="1170" height="653">
+        <img src="/static/img/merryquest-logo-epicglow-clear.webp" alt="MerryQuest — Follow the Lights, Capture the Magic" width="640" height="360">
       </div>
       <h1 class="mqx-h1">The Best Christmas Displays, <span class="mqx-grad">Your Town, USA</span></h1>
       <p class="mqx-begins">The quest begins November 25th</p>
@@ -40,6 +40,16 @@
         <div class="mqx-bigcd-cell"><span id="mqx-cd-s">--</span><label>Seconds</label></div>
       </div>
       <p class="mqx-bigcd-done" id="mqx-cd-done" hidden>The quest has begun!</p>
+      <div class="mqx-santacd">
+        <p class="mqx-santacd-label" id="mqx-santa-label">Chapter 1 premieres in</p>
+        <div class="mqx-bigcd mqx-bigcd-mini" role="timer" aria-label="Countdown to Chapter 1 premiere on December 1">
+          <div class="mqx-bigcd-cell"><span id="mqx-sc-d">--</span><label>Days</label></div>
+          <div class="mqx-bigcd-cell"><span id="mqx-sc-h">--</span><label>Hours</label></div>
+          <div class="mqx-bigcd-cell"><span id="mqx-sc-m">--</span><label>Minutes</label></div>
+          <div class="mqx-bigcd-cell"><span id="mqx-sc-s">--</span><label>Seconds</label></div>
+        </div>
+        <p class="mqx-santacd-done" id="mqx-santa-done" hidden>Chapter 1 is here!</p>
+      </div>
       <p class="mqx-sub">The story doesn't finish on the couch. Watch a two-minute chapter, and it points you to a real display in your town — the Sack reward is what gets you out of the car. Thirty-two legends are hiding in the lights. Capture one and it's yours — legend, story and seal, safe in your Sack. Nothing to buy, nothing to win — just the hunt.</p>
       <form class="mqx-search" method="get" action="/nearby" role="search">
         <input type="text" name="q" placeholder="Town or ZIP" autocomplete="off">
@@ -343,6 +353,40 @@
       var box = cd.d.closest('.mqx-bigcd');
       var done = document.getElementById('mqx-cd-done');
       if (box) { box.hidden = true; }
+      if (done) { done.hidden = false; }
+      return;
+    }
+    var s = Math.floor(ms / 1000);
+    var d = Math.floor(s / 86400); s -= d * 86400;
+    var h = Math.floor(s / 3600); s -= h * 3600;
+    var m = Math.floor(s / 60); s -= m * 60;
+    cd.d.textContent = d; cd.h.textContent = pad(h); cd.m.textContent = pad(m); cd.s.textContent = pad(s);
+    setTimeout(tick, 1000);
+  }
+  tick();
+})();
+</script>
+<script>
+(function () {
+  /* Santa's chapter premiere countdown (Dan, Nov 25, 2026): a
+     secondary countdown under the "THE QUEST HAS BEGUN!" headline,
+     ticking to Santa's chapter premiere on December 1. At zero it
+     swaps the numerals for "SANTA'S CHAPTER IS HERE!" in the same
+     cyan glow style — the label hides so the two lines don't stack
+     redundant copy. */
+  var cd = { d: document.getElementById('mqx-sc-d'), h: document.getElementById('mqx-sc-h'),
+             m: document.getElementById('mqx-sc-m'), s: document.getElementById('mqx-sc-s') };
+  if (!cd.d) return;
+  var target = Date.UTC(2026, 11, 1, 5, 0, 0); /* Dec 1, 2026, midnight ET */
+  function pad(n) { return (n < 10 ? '0' : '') + n; }
+  function tick() {
+    var ms = target - Date.now();
+    if (ms <= 0) {
+      var box = cd.d.closest('.mqx-bigcd');
+      var label = document.getElementById('mqx-santa-label');
+      var done = document.getElementById('mqx-santa-done');
+      if (box) { box.hidden = true; }
+      if (label) { label.hidden = true; }
       if (done) { done.hidden = false; }
       return;
     }

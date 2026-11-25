@@ -17,7 +17,7 @@
 <meta name="twitter:image" content="https://merryquest.app/static/img/merryquest-logo-epicglow.jpg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Anton&family=Creepster&family=Fredoka:wght@500;600;700&family=Inter:wght@500;600;700;800;900&family=Luckiest+Guy&family=Nosifer&family=Russo+One&family=Orbitron:wght@700&family=Rubik+Wet+Paint&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Cinzel:wght@700&family=Creepster&family=Fredoka:wght@500;600;700&family=Inter:wght@500;600;700;800;900&family=Luckiest+Guy&family=Nosifer&family=Russo+One&family=Orbitron:wght@700&family=Rubik+Wet+Paint&display=swap" rel="stylesheet">
 <style>
   @font-face {
     font-family: "Luckiest Guy";
@@ -46,21 +46,54 @@
   .wrap {
     position: relative; z-index: 1; min-height: 100vh;
     display: flex; flex-direction: column; align-items: center; justify-content: center;
-    text-align: center; padding: 5vh 20px 40px;
+    text-align: center; padding: 5vh 20px 28px;
     /* Safety clip at the viewport edge: nothing inside the door
        may ever widen the page on narrow screens. */
     overflow-x: clip;
   }
-  .logo { margin: 0; line-height: 0; position: relative; }
+  /* Bigger, slid down (Dan, Nov 25, 2026): the auto top margin
+     collects the door's free height ABOVE the logo, so the lockup
+     drops out of the top band and sits centered in the middle
+     dead space over the sleigh; the countdown stack below keeps
+     fixed spacing and stays anchored under it.
+     Further up (Dan, Nov 25, 2026): "Further up center it" — the
+     free height now SPLITS: .logo keeps its auto top margin and
+     .note takes an auto bottom margin (see .note), so half the
+     free height collects below the stack and the lockup rises
+     from dead center (~49.5% of frame height on phone) to the
+     upper middle (~33%), still clear of the top edge. */
+  .logo { margin: auto 0 0; line-height: 0; position: relative; }
   /* Epic Glow lockup art (Dan, Nov 25, 2026): the finished logo
      replaces the chrome wordmark + rule + Follow/Capture text
      lines (the art carries all of them). Transparent version
      (Dan, Nov 25: "get rid of the dark background"): the -clear
      WebP is luma-keyed from the original art, so the lockup
-     floats on the door's video with no halo or mask feather. */
+     floats on the door's video with no halo or mask feather.
+     Width (Nov 25, bigger pass): 98vw on phone (was 94vw) and an
+     84vh cap so the enlarged art never pushes the countdown off
+     short laptop viewports. */
   .logo img {
     position: relative; z-index: 1;
-    width: min(700px, 94vw); height: auto; display: block;
+    width: min(860px, 98vw, 84vh); height: auto; display: block;
+  }
+  /* Animated lockup (Dan, Nov 25, 2026): Dan's GIF of the final
+     v2 art — sparkle sweep along the swirl — keyed off its
+     checkerboard ground and re-encoded as an animated WebP.
+     It layers exactly over the still: the still is first paint
+     and the permanent fallback, the animation fades in on top
+     once loaded (script at the bottom), and reduced-motion
+     visitors never get it at all. The hero keeps the still —
+     the animation is a door-only treat. The 640x360 art stretches
+     <1% to the still's box; imperceptible on glow art. */
+  .logo img.logo-anim {
+    position: absolute; inset: 0; z-index: 2;
+    width: 100%; height: 100%;
+    opacity: 0; transition: opacity 0.25s ease;
+    pointer-events: none;
+  }
+  .logo img.logo-anim.on { opacity: 1; }
+  @media (prefers-reduced-motion: reduce) {
+    .logo img.logo-anim { display: none !important; }
   }
   .sr-only {
     position: absolute; width: 1px; height: 1px; overflow: hidden;
@@ -139,28 +172,48 @@
     .grid { animation: none; }
   }
   .begins {
-    /* Bebas Neue (Dan's pick, Nov 19, 2026): the movie-poster line. */
-    font-family: "Bebas Neue", "Inter", sans-serif;
-    /* Auto top margin (Dan, Nov 19, 2026): the line sinks to the middle
-       of the free space between the title and the counter. */
-    margin: auto 0 6px; padding-top: 12px; font-size: 15px; font-weight: 400; letter-spacing: 0.34em; text-indent: 0.34em;
+    /* Cinzel serif (Dan, Nov 25, 2026): the premiere label must
+       NOT share a font with "THE QUEST HAS BEGUN!" below (.live,
+       Russo One) — a classical serif against that chunky display
+       sans reads as different type at a glance, and Cinzel ties
+       the label to the logo family's serif. (Was Bebas Neue,
+       Dan's Nov 19 pick; superseded by the font-separation call.)
+       Fixed top margin (Nov 25, 2026): the free height collects
+       around the LOGO (its auto margins), sliding the lockup over
+       the sleigh — this line just keeps a steady gap under it. */
+    font-family: "Cinzel", "Times New Roman", serif;
+    margin: 16px 0 6px; padding-top: 12px; font-size: 15px; font-weight: 700; letter-spacing: 0.34em; text-indent: 0.34em;
     text-transform: uppercase; color: #ffd98a;
   }
   /* Website view (Dan, Nov 19, 2026): "The Quest Begins In" larger. */
   @media (min-width: 761px) {
-    .begins { font-size: 44px; letter-spacing: 0.26em; text-indent: 0.26em; margin: auto 0 12px; padding-top: 30px; }
+    .begins { font-size: 44px; letter-spacing: 0.26em; text-indent: 0.26em; margin: 20px 0 12px; padding-top: 14px; }
   }
-  /* Counter slid down (Dan, Nov 19, 2026): the auto top margin eats the
-     free height so the counter + note fill the page bottom — no dead
-     space under them. */
-  .cd { display: flex; justify-content: center; gap: clamp(10px, 3.5vw, 44px); margin: auto 0 36px; padding-top: 22px; width: 100%; }
+  /* Counter placement (Nov 19, 2026; revised Nov 25, 2026): the counter
+     + note fill the page bottom — the free height now collects above
+     the logo instead (see .logo), so no dead space under them either. */
+  .cd { display: flex; justify-content: center; gap: clamp(10px, 3.5vw, 44px); margin: 0 0 24px; padding-top: 12px; width: 100%; }
   /* Phone (Dan, Nov 19, 2026): "The Quest Begins In" drops to just above
      the counter — the pair groups at the bottom; desktop keeps the
      line floating mid-page. */
   @media (max-width: 760px) {
     .cd { margin-top: 10px; }
-    /* Phone (Dan, Nov 19, 2026): the begins line bigger. */
-    .begins { font-size: 21px; letter-spacing: 0.22em; text-indent: 0.22em; }
+    /* Phone: the begins line bigger (Dan, Nov 19, 2026). Trimmed
+       21px → 19px with tighter tracking on Nov 25, 2026: Cinzel
+       runs wider than the Bebas it replaced, and "CHAPTER 1
+       PREMIERES IN" must hold one line at 390px. */
+    .begins { font-size: 19px; letter-spacing: 0.16em; text-indent: 0.16em; }
+  }
+  /* Countdown zero state (Dan, Nov 25, 2026): when the Dec 1
+     target passes, the script hides the label + numerals and
+     unhides this line in their place — "CHAPTER 1 IS HERE!" in
+     the countdown's own voice (Luckiest Guy, counter cyan),
+     replacing the GO/LI/VE/! cell flip the script used to write. */
+  .cd-done {
+    margin: 28px 0 24px; font-family: "Luckiest Guy", cursive; font-weight: 400; text-transform: uppercase;
+    font-size: clamp(30px, 7.4vw, 58px); line-height: 1; color: #aef4ff;
+    transform: skewX(-3deg);
+    text-shadow: 0 0 16px rgba(110, 230, 255, 0.75), 0 0 52px rgba(110, 230, 255, 0.40), 0 6px 0 rgba(20, 10, 50, 0.55);
   }
   .cell { text-align: center; min-width: 0; }
   .cell span {
@@ -183,7 +236,18 @@
     background: linear-gradient(92deg, #ffc82c, #eb7a2c); padding: 14px 30px; border-radius: 999px;
     box-shadow: 0 8px 30px rgba(235, 122, 44, 0.4);
   }
-  .note { margin: 20px 0 0; font-size: 17px; color: #cfdccf; }
+  /* Quest-live line (Nov 25, 2026): the quest launched Nov 25, so the
+     door now points into the live site above the app note; the counter
+     above it counts to Santa's chapter premiere on Dec 1. */
+  .live {
+    margin: 0 0 14px; font-family: "Russo One", "Inter", sans-serif; font-weight: 400; text-transform: uppercase;
+    font-size: clamp(17px, 3.6vw, 28px); letter-spacing: 0.24em; text-indent: 0.24em; color: #ffc82c;
+    text-shadow: 0 0 14px rgba(255, 200, 44, 0.55), 0 0 40px rgba(235, 122, 44, 0.35);
+  }
+  .live-cta { margin: 0; }
+  /* Auto bottom margin (Dan, Nov 25, 2026): the other half of
+     the free-height split that lifts the logo — see .logo. */
+  .note { margin: 20px 0 auto; font-size: 17px; color: #cfdccf; }
 </style>
 {# Tracking parity (Dan, Nov 19, 2026): the splash is a standalone
    template — it now carries the same GA4 + Mediavine Grow tags as the
@@ -207,9 +271,9 @@
   </div>
   <div class="grid" aria-hidden="true"></div>
   <main class="wrap">
-    <h1 class="logo"><img src="/static/img/merryquest-logo-epicglow-clear.webp" alt="MerryQuest — Follow the Lights, Capture the Magic" width="1170" height="653"><span class="sr-only">MerryQuest</span></h1>
-    <p class="begins">The quest begins in</p>
-    <div class="cd" role="timer" aria-label="Countdown to the November 25 launch">
+    <h1 class="logo"><img class="logo-still" src="/static/img/merryquest-logo-epicglow-clear.webp" alt="MerryQuest — Follow the Lights, Capture the Magic" width="1170" height="653"><img class="logo-anim" data-src="/static/img/merryquest-logo-animated.webp" alt="" aria-hidden="true" width="640" height="360"><span class="sr-only">MerryQuest</span></h1>
+    <p class="begins">Chapter 1 premieres in</p>
+    <div class="cd" role="timer" aria-label="Countdown to Chapter 1 premiere on December 1">
       <div class="cell"><span id="cd-d">--</span><label>Days</label></div>
       <span class="colon" aria-hidden="true">:</span>
       <div class="cell"><span id="cd-h">--</span><label>Hours</label></div>
@@ -218,17 +282,28 @@
       <span class="colon" aria-hidden="true">:</span>
       <div class="cell"><span id="cd-s">--</span><label>Seconds</label></div>
     </div>
-    <p class="note">November 25 · App on iOS &amp; Android Coming Soon</p>
+    <p class="cd-done" id="cd-done" hidden>Chapter 1 is here!</p>
+    <p class="live">The Quest has begun!</p>
+    <p class="live-cta"><a class="cta" href="https://gomerryquest.com/">Start the Quest</a></p>
+    <p class="note">App on iOS &amp; Android · Coming Soon</p>
   </main>
 <script>
 (function () {
   var cd = { d: document.getElementById('cd-d'), h: document.getElementById('cd-h'),
              m: document.getElementById('cd-m'), s: document.getElementById('cd-s') };
-  var target = Date.UTC(2026, 10, 25, 5, 0, 0); /* Nov 25, 2026, midnight ET */
+  var target = Date.UTC(2026, 11, 1, 5, 0, 0); /* Dec 1, 2026, midnight ET — Chapter 1 premiere */
   function pad(n) { return (n < 10 ? '0' : '') + n; }
   function tick() {
     var ms = target - Date.now();
-    if (ms <= 0) { cd.d.textContent = 'GO'; cd.h.textContent = 'LI'; cd.m.textContent = 'VE'; cd.s.textContent = '!'; return; }
+    if (ms <= 0) {
+      /* Zero state (Dan, Nov 25, 2026): the label + numerals give
+         way to a single "CHAPTER 1 IS HERE!" line — the old
+         GO/LI/VE/! cell flip is gone. */
+      document.querySelector('.begins').style.display = 'none';
+      document.querySelector('.cd').style.display = 'none';
+      document.getElementById('cd-done').hidden = false;
+      return;
+    }
     var s = Math.floor(ms / 1000);
     var d = Math.floor(s / 86400); s -= d * 86400;
     var h = Math.floor(s / 3600); s -= h * 3600;
@@ -237,6 +312,24 @@
     setTimeout(tick, 1000);
   }
   tick();
+})();
+</script>
+<script>
+(function () {
+  /* Animated splash logo (Nov 25, 2026): fetch the animated WebP
+     only when the visitor hasn't asked for reduced motion, and
+     fade it in over the still once it has actually loaded. If it
+     errors or never arrives, the still simply stays — first
+     paint is never blank and never blocked on the animation. */
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  var anim = document.querySelector('.logo-anim');
+  if (!anim) return;
+  var probe = new Image();
+  probe.onload = function () {
+    anim.src = probe.src;
+    anim.classList.add('on');
+  };
+  probe.src = anim.getAttribute('data-src');
 })();
 </script>
 </body>
