@@ -468,10 +468,12 @@ body.brand-merryquest { overflow-x: clip; }
   border-radius: 0; border-left: 0; border-right: 0;
 }
 /* Zoom-through intro (Nov 18, 2026): the logo rushes at the viewer,
-   dives through the compass star and disappears; the hero logo then
+   dives through its focal point and disappears; the hero logo then
    sits static and the background video starts. Once per session, tap
-   to skip. Artwork swapped to the Epic Glow lockup Nov 25, 2026 —
-   transform-origin 53% 56% is the lockup's compass-star center. */
+   to skip. Artwork swapped Nov 25, 2026 to Dan's purple/gold
+   MERRYQUEST wordmark banner (baked starfield, wordmark only) —
+   transform-origin 58% 48% is the measured center of the Q in QUEST
+   (bowl spans x 53.5–63.5%, y-center 47.5% of the 1170×653 art). */
 .mqx-intro {
   position: fixed; inset: 0; z-index: 80; overflow: hidden;
   background: radial-gradient(120% 120% at 50% 40%, #24104d 0%, #0a0518 72%);
@@ -494,8 +496,8 @@ body.brand-merryquest { overflow-x: clip; }
 @keyframes mqx-loadbtn-out { to { opacity: 0; visibility: hidden; } }
 .mqx-intro-logo {
   position: absolute; left: 50%; top: 50%;
-  width: min(620px, 86vw); height: auto;
-  transform-origin: 53% 56%;
+  width: min(880px, 94vw); height: auto;
+  transform-origin: 58% 48%;
   animation: mqx-intro-zoom 1.6s cubic-bezier(0.55, 0, 0.9, 0.4) 0.95s both;
   filter: drop-shadow(0 10px 34px rgba(0, 0, 0, 0.55)) drop-shadow(0 0 30px rgba(120, 220, 255, 0.25));
 }
@@ -512,7 +514,9 @@ body.brand-merryquest { overflow-x: clip; }
   .mqx-intro { display: none; }
 }
 /* Page-exit zoom (Nov 18, 2026): clicking a nav link from the
-   homepage zooms the logo at the viewer before the next page. */
+   homepage zooms the logo at the viewer before the next page.
+   Artwork: same purple/gold wordmark banner as the intro zoom
+   (Nov 25, 2026), diving through the Q at 58% 48%. */
 .mqx-zoomout {
   position: fixed; inset: 0; z-index: 90; display: flex;
   align-items: center; justify-content: center; overflow: hidden;
@@ -521,7 +525,7 @@ body.brand-merryquest { overflow-x: clip; }
 }
 .mqx-zoomout.on { opacity: 1; transition: opacity 0.18s ease; pointer-events: all; }
 .mqx-zoomout img {
-  width: min(560px, 84vw); height: auto; transform-origin: 53% 56%;
+  width: min(820px, 92vw); height: auto; transform-origin: 58% 48%;
   filter: drop-shadow(0 10px 34px rgba(0, 0, 0, 0.55)) drop-shadow(0 0 30px rgba(120, 220, 255, 0.25));
 }
 .mqx-zoomout.on img { animation: mqx-zoomout-fly 0.68s cubic-bezier(0.55, 0, 0.9, 0.4) both; }
