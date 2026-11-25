@@ -10,11 +10,11 @@
 <meta property="og:title" content="MerryQuest - Capture The Magic November 25th">
 <meta property="og:description" content="MerryQuest: Christmas Lights. Capture the Magic. The quest begins November 25, 2026.">
 <meta property="og:url" content="https://merryquest.app/">
-<meta property="og:image" content="https://merryquest.app/static/img/mq-appdoor-poster.jpg">
+<meta property="og:image" content="https://merryquest.app/static/img/merryquest-logo-epicglow.jpg">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="MerryQuest - Capture The Magic November 25th">
 <meta name="twitter:description" content="MerryQuest: Christmas Lights. Capture the Magic. The quest begins November 25, 2026.">
-<meta name="twitter:image" content="https://merryquest.app/static/img/mq-appdoor-poster.jpg">
+<meta name="twitter:image" content="https://merryquest.app/static/img/merryquest-logo-epicglow.jpg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Anton&family=Creepster&family=Fredoka:wght@500;600;700&family=Inter:wght@500;600;700;800;900&family=Luckiest+Guy&family=Nosifer&family=Russo+One&family=Orbitron:wght@700&family=Rubik+Wet+Paint&display=swap" rel="stylesheet">
@@ -47,11 +47,27 @@
     position: relative; z-index: 1; min-height: 100vh;
     display: flex; flex-direction: column; align-items: center; justify-content: center;
     text-align: center; padding: 5vh 20px 40px;
+    /* Clips the logo halo's bleed at the viewport edge (the halo
+       extends past the logo box by design; it must never widen
+       the page on narrow screens). */
+    overflow-x: clip;
   }
-  .logo { margin: 0; line-height: 0; }
+  .logo { margin: 0; line-height: 0; position: relative; }
+  /* Epic Glow lockup art (Dan, Nov 25, 2026): the finished logo
+     replaces the chrome wordmark + rule + Follow/Capture text
+     lines (the art carries all of them). Its baked dark navy
+     ground melts into the door's video with a navy halo behind
+     the frame plus a soft mask feather — the same treatment as
+     the homepage hero, so the panel reads as a vignette. */
+  .logo::before {
+    content: ""; position: absolute; inset: -18% -14%; z-index: 0; pointer-events: none;
+    background: radial-gradient(ellipse 50% 50% at 50% 50%, rgba(4, 11, 19, 0.9) 55%, rgba(4, 11, 19, 0.5) 78%, rgba(4, 11, 19, 0) 100%);
+  }
   .logo img {
-    width: min(660px, 70.5vw); height: auto;
-    filter: drop-shadow(0 6px 22px rgba(6, 10, 30, 0.45)) drop-shadow(0 0 34px rgba(120, 220, 255, 0.35));
+    position: relative; z-index: 1;
+    width: min(700px, 94vw); height: auto; display: block;
+    -webkit-mask-image: radial-gradient(ellipse 84% 82% at 50% 47%, #000 55%, rgba(0, 0, 0, 0.55) 80%, transparent 98%);
+    mask-image: radial-gradient(ellipse 84% 82% at 50% 47%, #000 55%, rgba(0, 0, 0, 0.55) 80%, transparent 98%);
   }
   .sr-only {
     position: absolute; width: 1px; height: 1px; overflow: hidden;
@@ -198,10 +214,7 @@
   </div>
   <div class="grid" aria-hidden="true"></div>
   <main class="wrap">
-    <h1 class="logo"><img src="/static/img/merryquest-logo-hd2.webp" alt="MerryQuest" width="620" height="124"><span class="sr-only">MerryQuest</span></h1>
-    <div class="rule" aria-hidden="true"></div>
-    <p class="follow">Follow the lights</p>
-    <p class="magic">Capture the Magic</p>
+    <h1 class="logo"><img src="/static/img/merryquest-logo-epicglow.webp" alt="MerryQuest — Follow the Lights, Capture the Magic" width="1170" height="653"><span class="sr-only">MerryQuest</span></h1>
     <p class="begins">The quest begins in</p>
     <div class="cd" role="timer" aria-label="Countdown to the November 25 launch">
       <div class="cell"><span id="cd-d">--</span><label>Days</label></div>

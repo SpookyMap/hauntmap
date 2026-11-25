@@ -407,7 +407,10 @@ body.brand-merryquest {
   max-width: none; margin: 0; padding: 12px 28px;
   display: flex; align-items: center; gap: 28px;
 }
-.mqx-brand-logo { height: 34px; width: auto; display: block; }
+/* Epic Glow lockup in the header (Dan, Nov 25, 2026): the full
+   poster art replaces the wide chrome wordmark, so the slot runs
+   taller than the old 34px strip to keep the lockup legible. */
+.mqx-brand-logo { height: 52px; width: auto; display: block; }
 .mqx-brand { display: flex; align-items: center; gap: 9px; text-decoration: none; }
 .mqx-brand .brand-pip { height: 34px; width: 34px; }
 .mqx-wordmark {
@@ -443,7 +446,7 @@ body.brand-merryquest {
   .mqx-nav { order: 3; width: 100%; flex: none; gap: 8px; justify-content: space-between; overflow-x: visible; padding: 2px 2px; margin-left: 0; }
   .mqx-nav a { white-space: nowrap; font-size: 13.5px; }
   .mqx-wordmark { font-size: 19px; }
-  .mqx-brand-logo { height: 27px; }
+  .mqx-brand-logo { height: 40px; }
 }
 
 /* ---------- Page frame ---------- */
@@ -1391,6 +1394,27 @@ main > h1 { font-family:'Anton',sans-serif; text-transform:uppercase; letter-spa
   margin: 0 0 16px;
   text-shadow: 0 0 6px rgba(255, 255, 255, 0.65), 0 0 18px rgba(120, 230, 255, 0.85), 0 0 42px rgba(0, 180, 255, 0.55), 0 0 84px rgba(0, 120, 255, 0.35);
 }
+/* Epic Glow logo artwork (Dan, Nov 25, 2026 — "Put it everywhere"):
+   Dan's finished lockup art is now the hero title. The art's baked
+   near-black navy ground (#030d16) melts into the hero video via
+   an elliptical mask feather on all four edges — opaque through
+   the type, dissolving at the rim. */
+.mqx-epic-art { position: relative; max-width: 800px; margin: 0 auto 8px; line-height: 0; }
+.mqx-epic-art::before {
+  /* Navy halo in the art's own ground color, feathered well past
+     the frame: the panel reads as a vignette over the video, not
+     a pasted rectangle (the mask alone left a straight edge
+     against bright video frames). */
+  content: ""; position: absolute; inset: -18% -14%; z-index: 0; pointer-events: none;
+  background: radial-gradient(ellipse 50% 50% at 50% 50%, rgba(4, 11, 19, 0.9) 55%, rgba(4, 11, 19, 0.5) 78%, rgba(4, 11, 19, 0) 100%);
+}
+.mqx-epic-art img {
+  position: relative; z-index: 1;
+  width: 100%; height: auto; display: block;
+  -webkit-mask-image: radial-gradient(ellipse 84% 82% at 50% 47%, #000 55%, rgba(0, 0, 0, 0.55) 80%, transparent 98%);
+  mask-image: radial-gradient(ellipse 84% 82% at 50% 47%, #000 55%, rgba(0, 0, 0, 0.55) 80%, transparent 98%);
+}
+
 /* Big countdown (Nov 18, 2026): poster numerals under the hero
    CTAs, mirrored on the merryquest.app splash. */
 .mqx-bigcd { display: flex; justify-content: center; gap: clamp(16px, 4vw, 40px); margin: 20px 0 4px; }
