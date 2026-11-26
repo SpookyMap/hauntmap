@@ -7688,7 +7688,7 @@ a.wn-fbtn:hover, summary.wn-fbtn:hover { border-color: #57a8ff; }
   display: inline-block; font-size: 12px; font-weight: 800; letter-spacing: 0.32em;
   text-transform: uppercase; color: #ffd98a; margin-bottom: 14px;
 }
-.xmq-logo { display: block; width: min(340px, 82%); height: auto; margin-bottom: 16px; }
+.xmq-logo { display: block; width: 100%; max-width: 680px; height: auto; margin-bottom: 20px; }
 .xmq-head {
   margin: 0 0 10px; font-size: clamp(26px, 3.4vw, 40px); font-weight: 900;
   color: #ffffff; letter-spacing: 0.01em; line-height: 1.08;
