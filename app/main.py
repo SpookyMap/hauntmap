@@ -365,6 +365,17 @@ def _startup() -> None:
     _warm_hot_caches()
     _start_hot_refresher()
     try:
+        # Prebuild the /admin/stats aggregates in the background
+        # (Nov 26, 2026 — see _warm_admin_stats_caches): their builds
+        # are far too heavy to leave to the first admin load, and
+        # once built they are pinned, so the refresher keeps them
+        # warm. A failure here must never break boot.
+        threading.Thread(target=_warm_admin_stats_caches,
+                         name="admin-stats-warmer",
+                         daemon=True).start()
+    except Exception:
+        logger.exception("admin stats warm start failed")
+    try:
         # Fill is_machine/day on pre-stamp page_views rows in the
         # background (batched + resumable — see its block comment);
         # a failure here must never break boot.
@@ -1303,6 +1314,12 @@ _TTL_CACHE: dict = {}
 # the same thread must not self-deadlock in the cold-build path.
 _TTL_CACHE_LOCK = threading.RLock()
 _HOT_BUILDERS: dict = {}
+# Keys the refresher must never idle-evict (see _hot_refresh_pass):
+# the /admin/stats aggregates pin themselves via _admin_ttl_cached.
+# Their only reader is sporadic — Dan checks the dashboard now and
+# then — and an evicted aggregate's next read pays a multi-minute
+# synchronous rebuild (Nov 26, 2026).
+_HOT_PINNED: set = set()
 _hot_stop = threading.Event()
 _hot_thread: threading.Thread | None = None
 
@@ -1342,14 +1359,18 @@ def _hot_refresh_pass() -> None:
     """One refresher sweep: rebuild every live aggregate that is
     within one refresh interval of expiring; drop aggregates nobody
     has read in over two TTL windows (their next reader rebuilds
-    synchronously, and the refresher stops paying for cold data)."""
+    synchronously, and the refresher stops paying for cold data).
+    Pinned keys (_HOT_PINNED — the /admin/stats aggregates) are
+    exempt from the drop: they stay warm however long they go
+    unread."""
     now = time.monotonic()
     for key, build in list(_HOT_BUILDERS.items()):
         hit = _TTL_CACHE.get(key)
         if hit is None:
             continue
         ttl = hit[3] if len(hit) > 3 else _HOT_TTL
-        if now - hit[2] > 2 * ttl + _HOT_REFRESH_SECONDS:
+        if key not in _HOT_PINNED and \
+                now - hit[2] > 2 * ttl + _HOT_REFRESH_SECONDS:
             with _TTL_CACHE_LOCK:
                 _TTL_CACHE.pop(key, None)
             _HOT_BUILDERS.pop(key, None)
@@ -12669,10 +12690,20 @@ def _fmt_dur_admin(sec: float) -> str:
 _ADMIN_STATS_TTL = 300.0
 
 
+def _admin_ttl_cached(key: str, build):
+    """_ttl_cached at the stats TTL with the key pinned (see
+    _HOT_PINNED): the refresher keeps pinned aggregates warm
+    indefinitely instead of idle-evicting them after two TTL
+    windows without a read. The dashboard's reader is sporadic, so
+    before pinning (Nov 26, 2026) nearly every real load landed on
+    an evicted cache and paid the full synchronous build."""
+    _HOT_PINNED.add(key)
+    return _ttl_cached(key, build, ttl=_ADMIN_STATS_TTL)
+
+
 def _page_time_stats(brand: str = "haunt") -> list:
-    return _ttl_cached(f"admin:page_time:{brand}",
-                       lambda: _page_time_build(brand),
-                       ttl=_ADMIN_STATS_TTL)
+    return _admin_ttl_cached(f"admin:page_time:{brand}",
+                             lambda: _page_time_build(brand))
 
 
 # ------------------------------------------ brand-aware admin stats
@@ -12786,9 +12817,8 @@ def _page_breakdown_build(brand: str = "haunt") -> list:
 
 
 def _page_breakdown(brand: str = "haunt") -> list:
-    return _ttl_cached(f"admin:page_breakdown:{brand}",
-                       lambda: _page_breakdown_build(brand),
-                       ttl=_ADMIN_STATS_TTL)
+    return _admin_ttl_cached(f"admin:page_breakdown:{brand}",
+                             lambda: _page_breakdown_build(brand))
 
 
 # ------------------------------------------ traffic tracker (Oct 28)
@@ -12990,9 +13020,8 @@ def _traffic_tracker_build(brand: str = "haunt") -> dict:
 
 
 def _traffic_tracker(brand: str = "haunt") -> dict:
-    return _ttl_cached(f"admin:traffic_tracker:{brand}",
-                       lambda: _traffic_tracker_build(brand),
-                       ttl=_ADMIN_STATS_TTL)
+    return _admin_ttl_cached(f"admin:traffic_tracker:{brand}",
+                             lambda: _traffic_tracker_build(brand))
 
 
 # ------------------------------------------------- US states (Oct 27)
@@ -13094,9 +13123,8 @@ def _us_states_build(brand: str = "haunt") -> dict:
 
 
 def _us_states_stats(brand: str = "haunt") -> dict:
-    return _ttl_cached(f"admin:us_states:{brand}",
-                       lambda: _us_states_build(brand),
-                       ttl=_ADMIN_STATS_TTL)
+    return _admin_ttl_cached(f"admin:us_states:{brand}",
+                             lambda: _us_states_build(brand))
 
 
 @app.get("/admin", response_class=HTMLResponse)
@@ -13290,40 +13318,27 @@ def _admin_stats_inline_build(brand: str = "haunt") -> dict:
 
 
 def _admin_stats_inline(brand: str = "haunt") -> dict:
-    return _ttl_cached(f"admin:inline:{brand}",
-                       lambda: _admin_stats_inline_build(brand),
-                       ttl=_ADMIN_STATS_TTL)
+    return _admin_ttl_cached(f"admin:inline:{brand}",
+                             lambda: _admin_stats_inline_build(brand))
 
 
-@app.get("/admin/stats", response_class=HTMLResponse)
-def admin_stats(request: Request):
-    """Traffic dashboard: page views by day and top pages.
-
-    Brand-aware (Nov 25, 2026): every figure below is filtered to
-    ONE brand — the serving host's, or ?brand=hauntmap|merryquest —
-    via _stats_host_sql / _stats_eng_sql (see their block comment).
-    The MerryQuest view additionally carries the Quest Stats section
-    built at the end of this function."""
-    if not is_admin(request):
-        return RedirectResponse("/admin", status_code=303)
-    stats_brand = _stats_brand(request)
-    _hsql = _stats_host_sql(stats_brand)
-    _esql = _stats_eng_sql(stats_brand)
-    # Headline counts, by-day, referrers, devices, geography, pin
-    # views and visit duration all come from the TTL-cached inline
-    # build now (Nov 25, 2026 — see _admin_stats_inline_build); this
-    # route no longer scans page_views synchronously. US states live
-    # in _us_states_stats() (Oct 27): the full human-only state table
-    # with 7-day + all-time windows, share and a coverage block.
-    inl = _admin_stats_inline(stats_brand)
-    total = inl["total"]
-    today = inl["today"]
-    week = inl["week"]
-    by_day = inl["by_day"]
-    top_referrers = inl["top_referrers"]
-    by_device = inl["by_device"]
-    geo = inl["geo"]
-    duration = inl["duration"]
+def _admin_engagement_build(brand: str) -> dict:
+    """The stats page's engagement section (last-7-days
+    engagement_events counts, rail CTR, top pins) as a buildable
+    aggregate (Nov 26, 2026). It used to run inline in the route on
+    EVERY load, and its brand proxy — sid IN (SELECT sid FROM
+    page_views WHERE <host predicate>) — re-materializes ~1.9M
+    distinct sids per query on the HauntMap view: ~41s of every
+    load, cached aggregates or not (~4s on MerryQuest). The queries
+    are the route's own, unchanged; they now run at most once per
+    stats TTL behind _admin_engagement, like every other block on
+    the page. pin_views_week comes from the inline aggregate's
+    snapshot instead of the same request's, so the ratio can mix
+    two snapshots a few minutes apart — both are slow-changing
+    7-day counts, the same staleness class as the rest of the page.
+    Top pins are plain dicts here (the cached value is shared
+    read-only; the template's row[...] access is identical)."""
+    _esql = _stats_eng_sql(brand)
     with get_conn(DB_PATH) as conn:
         # --- engagement events (Wave 2, Item 2): last 7 days ---
         # (engagement_events is created by init_db at startup — no DDL here.)
@@ -13337,15 +13352,18 @@ def admin_stats(request: Request):
             "SELECT COUNT(*) FROM engagement_events WHERE entry_id IS NOT NULL "
             "AND created_at >= datetime('now', '-7 days') "
             f"AND {_esql}").fetchone()[0]
-        pin_views_week = inl["pin_views_week"]
-        eng_top_pins = conn.execute(
-            "SELECT g.entry_id AS entry_id, COUNT(*) AS n, "
-            "e.title AS title, e.town AS town FROM engagement_events g "
-            "LEFT JOIN entries e ON e.id = g.entry_id "
-            "WHERE g.entry_id IS NOT NULL "
-            "AND g.created_at >= datetime('now', '-7 days') "
-            f"AND {_stats_eng_sql(stats_brand, 'g')} "
-            "GROUP BY g.entry_id ORDER BY n DESC, g.entry_id ASC LIMIT 5").fetchall()
+        pin_views_week = _admin_stats_inline(brand)["pin_views_week"]
+        eng_top_pins = [
+            {"entry_id": r["entry_id"], "n": r["n"],
+             "title": r["title"], "town": r["town"]}
+            for r in conn.execute(
+                "SELECT g.entry_id AS entry_id, COUNT(*) AS n, "
+                "e.title AS title, e.town AS town FROM engagement_events g "
+                "LEFT JOIN entries e ON e.id = g.entry_id "
+                "WHERE g.entry_id IS NOT NULL "
+                "AND g.created_at >= datetime('now', '-7 days') "
+                f"AND {_stats_eng_sql(brand, 'g')} "
+                "GROUP BY g.entry_id ORDER BY n DESC, g.entry_id ASC LIMIT 5")]
         # --- Rail Boost (Oct 25): per-rail clicks vs impressions —
         # CTR per rail SEEN (impression = rail >=50% visible once per
         # page view), not per page view. rail_click rows from before
@@ -13363,15 +13381,75 @@ def admin_stats(request: Request):
             {"src": r["src"], "clicks": r["clicks"], "imps": r["imps"],
              "ctr": (r["clicks"] / r["imps"]) if r["imps"] else None}
             for r in rail_rows]
-        engagement = {
-            "counts": [(ev, eng_counts[ev]) for ev in ENGAGEMENT_EVENTS_ALL],
-            "rail_sources": eng_rail_sources,
-            "total": sum(eng_counts.values()),
-            "with_pin": eng_with_pin,
-            "pin_views": pin_views_week,
-            "ratio": (eng_with_pin / pin_views_week) if pin_views_week else 0,
-            "top_pins": eng_top_pins,
-        }
+    return {
+        "counts": [(ev, eng_counts[ev]) for ev in ENGAGEMENT_EVENTS_ALL],
+        "rail_sources": eng_rail_sources,
+        "total": sum(eng_counts.values()),
+        "with_pin": eng_with_pin,
+        "pin_views": pin_views_week,
+        "ratio": (eng_with_pin / pin_views_week) if pin_views_week else 0,
+        "top_pins": eng_top_pins,
+    }
+
+
+def _admin_engagement(brand: str = "haunt") -> dict:
+    return _admin_ttl_cached(f"admin:engagement:{brand}",
+                             lambda: _admin_engagement_build(brand))
+
+
+def _warm_admin_stats_caches() -> None:
+    """Build every /admin/stats aggregate for both brands (run on a
+    daemon thread from _startup, Nov 26, 2026). Calling the helpers
+    registers their builders and pins their keys, so the hot
+    refresher owns their rebuilds from then on: the first admin load
+    after a restart — and every load after a quiet spell — reads
+    snapshots instead of paying a multi-minute synchronous build.
+    A failure here must never break boot — the cold-start fallback
+    in _ttl_cached covers anything left unbuilt."""
+    try:
+        for brand in ("haunt", "merryquest"):
+            _admin_stats_inline(brand)
+            _page_breakdown(brand)
+            _traffic_tracker(brand)
+            _us_states_stats(brand)
+            _page_time_stats(brand)
+            _admin_engagement(brand)
+    except Exception:
+        logger.exception("admin stats warm failed; cold-start "
+                         "fallback will build on first request")
+
+
+@app.get("/admin/stats", response_class=HTMLResponse)
+def admin_stats(request: Request):
+    """Traffic dashboard: page views by day and top pages.
+
+    Brand-aware (Nov 25, 2026): every figure below is filtered to
+    ONE brand — the serving host's, or ?brand=hauntmap|merryquest —
+    via _stats_host_sql / _stats_eng_sql (see their block comment).
+    The MerryQuest view additionally carries the Quest Stats section
+    built at the end of this function."""
+    if not is_admin(request):
+        return RedirectResponse("/admin", status_code=303)
+    stats_brand = _stats_brand(request)
+    # Headline counts, by-day, referrers, devices, geography, pin
+    # views and visit duration all come from the TTL-cached inline
+    # build now (Nov 25, 2026 — see _admin_stats_inline_build); this
+    # route no longer scans page_views synchronously. US states live
+    # in _us_states_stats() (Oct 27): the full human-only state table
+    # with 7-day + all-time windows, share and a coverage block.
+    # The engagement section is a cached aggregate too (Nov 26,
+    # 2026 — see _admin_engagement_build).
+    inl = _admin_stats_inline(stats_brand)
+    total = inl["total"]
+    today = inl["today"]
+    week = inl["week"]
+    by_day = inl["by_day"]
+    top_referrers = inl["top_referrers"]
+    by_device = inl["by_device"]
+    geo = inl["geo"]
+    duration = inl["duration"]
+    engagement = _admin_engagement(stats_brand)
+    with get_conn(DB_PATH) as conn:
         # --- Quest Stats (MerryQuest view only, Nov 25, 2026): the
         # numbers Dan actually watches this season — check-ins,
         # captures by character, Quest Points, counties cleared.
