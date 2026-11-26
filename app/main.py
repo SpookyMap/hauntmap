@@ -3384,6 +3384,16 @@ def home(request: Request, sort: str = "new", town: str = "", town_search: str =
             "SELECT id, title, town, category, ev_type, lat, lng FROM entries "
             f"WHERE hidden = 0 AND category IN ({_tick_ph}) "
             "ORDER BY id DESC LIMIT 60", TICKER_CATS).fetchall()
+        # MerryQuest "Just Added" ticker (Dan, Nov 26): the same
+        # stock-board crawl for the Christmas map — the newest
+        # christmas displays, fetched in the same pass and bucketed +
+        # capped alongside ticker_items below. MQ brand only, so
+        # HauntMap renders pay nothing for it.
+        mq_ticker_rows = conn.execute(
+            "SELECT id, title, town, category, ev_type, lat, lng FROM entries "
+            "WHERE hidden = 0 AND category = 'christmas' "
+            "ORDER BY id DESC LIMIT 60").fetchall() \
+            if _brand_of(request) == "merryquest" else []
     # Just-added ticker / update bar (Dan, Oct 23; announcement Dan,
     # Oct 25): the site's newest haunts + events, newest first, each
     # with a type emoji (markets = cart, events = ghost, the rest =
@@ -3447,6 +3457,20 @@ def home(request: Request, sort: str = "new", town: str = "", town_search: str =
                                 "emoji": "\U0001F3AA",
                                 "title": "NEW EVENTS posted in every city!",
                                 "town": ""})
+    # MerryQuest ticker items (Dan, Nov 26): the SAME location-first
+    # bucketing as the HauntMap crawl (near the visitor, then their
+    # state, then the newest overall; _ticker_bucket is defined by
+    # the geo block above), newest-first inside each bucket, capped
+    # at 12. Displays only — 🎄 + title + the derived 'City, ST'
+    # label, each linking to its pin page; no pinned announcement.
+    mq_ticker_items = []
+    if mq_ticker_rows:
+        if geo:
+            mq_ticker_rows = sorted(mq_ticker_rows, key=_ticker_bucket)
+        for r in mq_ticker_rows[:12]:
+            mq_ticker_items.append({"id": r["id"], "emoji": "\U0001F384",
+                                    "title": (r["title"] or "").strip(),
+                                    "town": extract_city_state(r["town"] or "")})
     # Item 1: resolve the visitor's area once — it drives both the
     # Near-you module (below) and the feed lead. With geo=None this is
     # exactly today's biggest-towns-site-wide behaviour.
@@ -3750,6 +3774,7 @@ def home(request: Request, sort: str = "new", town: str = "", town_search: str =
                           and t["clng"] is not None],
          "sponsors": sponsors,
          "ticker_items": ticker_items,
+         "mq_ticker_items": mq_ticker_items,
          # What's New slide-down bar (Dan, Oct 27): the latest slice
          # of the public /updates stream — announcements + newest
          # pins mixed newest-first; the bar starts closed.

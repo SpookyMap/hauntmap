@@ -15,6 +15,47 @@
 <div class="mqx-wrap">
 
   <div class="mqx-intro" id="mqx-intro" aria-hidden="true"><span class="mqx-loadbtn">▶ Loading</span><img class="mqx-intro-logo" src="/static/img/merryquest-wordmark-zoom-clear.webp" alt="" width="1001" height="559"></div>
+  {# Just Added ticker (Dan, Nov 26): the HauntMap homepage crawl
+     (.news-ticker in style.css, shared) wearing the MQ brand vars —
+     gold chip on the purple bar. Fed by mq_ticker_items: the newest
+     Christmas displays, location-bucketed like the HauntMap crawl,
+     each rendered 🎄 Title · City, ST and linking to its pin page.
+     Seated at the very top of the page above the hero, mirroring
+     the HauntMap ticker's seat above its hero headline. The inline
+     script is the HauntMap sizing script verbatim (constant
+     60px/sec crawl), scoped to .mq-ticker. #}
+  {% if mq_ticker_items %}
+  <div class="news-ticker mq-ticker" aria-label="Just added to MerryQuest">
+    <span class="nt-chip">&#x1F195; Just Added</span>
+    <div class="nt-viewport">
+      <div class="nt-track">
+        {% for _copy in range(2) %}
+        <div class="nt-group"{% if _copy %} aria-hidden="true"{% endif %}>{% for t in mq_ticker_items %}<a class="nt-item" href="/d/{{ t.id }}"{% if _copy %} tabindex="-1"{% endif %}><span class="nt-emoji">{{ t.emoji }}</span> {{ t.title }}{% if t.town %} <span class="nt-town">&middot; {{ t.town }}</span>{% endif %}</a><span class="nt-sep">&#x2726;</span>{% endfor %}</div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+  <script>
+  (function () {
+    var ticker = document.querySelector(".mq-ticker");
+    if (!ticker) return;
+    var track = ticker.querySelector(".nt-track");
+    var SPEED = 60; // px per second — constant crawl, stock-board style
+    function sizeTicker() {
+      var half = track.scrollWidth / 2;
+      if (half > 0) track.style.animationDuration = (half / SPEED) + "s";
+    }
+    sizeTicker();
+    window.addEventListener("resize", sizeTicker);
+    // Tap on the bar (not a link) toggles the pause on touch devices;
+    // hover / keyboard focus pause it via CSS.
+    ticker.addEventListener("click", function (e) {
+      if (e.target.closest("a")) return;
+      ticker.classList.toggle("nt-paused");
+    });
+  })();
+  </script>
+  {% endif %}
   <section class="mqx-hero mqx-bleed">
     <div class="mqx-hero-bg mqx-hero-clouds" aria-hidden="true"><video class="mqx-hero-video" autoplay muted loop playsinline preload="auto" poster="/static/img/mq-sleigh-future-v4.jpg"><source src="/static/video/mq-hero-future-v4.mp4" type="video/mp4"></video></div>
     <div class="mqx-hero-in">
