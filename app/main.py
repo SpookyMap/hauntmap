@@ -365,6 +365,13 @@ def _startup() -> None:
     _warm_hot_caches()
     _start_hot_refresher()
     try:
+        # Fill is_machine/day on pre-stamp page_views rows in the
+        # background (batched + resumable — see its block comment);
+        # a failure here must never break boot.
+        _start_pv_stamp_backfill()
+    except Exception:
+        logger.exception("page_views stamp backfill start failed")
+    try:
         _hauntsocial_boot()
     except Exception:
         # The mascot host is a courtesy layer — never break boot over it.
@@ -726,6 +733,23 @@ def _pv_has_host(conn) -> bool:
             _pv_host_cache.append(False)
     return _pv_host_cache[0]
 
+
+_pv_stamp_cache: list = []
+
+def _pv_has_stamps(conn) -> bool:
+    """True when page_views carries the Nov 25, 2026 write-time stamp
+    columns (is_machine, day) — same probe-and-degrade pattern as
+    _pv_has_host: a database whose migration hasn't run writes
+    without the stamps rather than failing every batch."""
+    if not _pv_stamp_cache:
+        try:
+            cols = {r["name"] for r in conn.execute(
+                "PRAGMA table_info(page_views)").fetchall()}
+            _pv_stamp_cache.append({"is_machine", "day"} <= cols)
+        except Exception:
+            _pv_stamp_cache.append(False)
+    return _pv_stamp_cache[0]
+
 def _analytics_write_batch(conn, batch: list) -> None:
     pv = [r[1:] for r in batch if r[0] == "pv"]
     if pv:
@@ -751,22 +775,36 @@ def _analytics_write_batch(conn, batch: list) -> None:
                     if not region_ and ip_country == "US" and ip_state:
                         region_ = ip_state
                         geo_src = "ip"
+            # Write-time stamps (Nov 25, 2026): is_machine classifies
+            # the UA once, here on the writer thread, and day is the
+            # row's UTC date — so the stats builders read two plain
+            # columns instead of re-running the 51-pattern LIKE screen
+            # and date() over millions of rows per build. day is the
+            # ISO date prefix of the stored timestamp, which is
+            # exactly what date(viewed_at) returns for it.
             rows.append((path_, ts_, ref_, dev_, sid_, country_, region_,
-                         city_, ua_, ip_addr, geo_src, host_))
-        # The host column arrived Nov 19, 2026; if a database ever lacks
-        # it (migration not applied), write without it rather than
-        # failing every batch forever.
+                         city_, ua_, ip_addr, geo_src, host_,
+                         _ua_is_machine(ua_), (ts_ or "")[:10] or None))
+        # The host column arrived Nov 19, 2026 and the stamp columns
+        # Nov 25; if a database ever lacks either (migration not
+        # applied), write without them rather than failing every batch
+        # forever. Column set is assembled once per batch from the
+        # probes above; row tuples always carry all 14 fields in the
+        # fixed order (… ip_addr, geo_src, host, is_machine, day).
+        _pv_cols = ["path", "viewed_at", "referrer", "device", "sid",
+                    "country", "region", "city", "user_agent", "ip_addr",
+                    "geo_src"]
+        _pv_idx = list(range(11))
         if _pv_has_host(conn):
-            conn.executemany(
-                "INSERT INTO page_views (path, viewed_at, referrer, device, sid, "
-                "country, region, city, user_agent, ip_addr, geo_src, host) "
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", rows)
-        else:
-            conn.executemany(
-                "INSERT INTO page_views (path, viewed_at, referrer, device, sid, "
-                "country, region, city, user_agent, ip_addr, geo_src) "
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                [r[:11] for r in rows])
+            _pv_cols.append("host")
+            _pv_idx.append(11)
+        if _pv_has_stamps(conn):
+            _pv_cols += ["is_machine", "day"]
+            _pv_idx += [12, 13]
+        conn.executemany(
+            f"INSERT INTO page_views ({', '.join(_pv_cols)}) "
+            f"VALUES ({', '.join('?' * len(_pv_cols))})",
+            [tuple(r[i] for i in _pv_idx) for r in rows])
     engaged = [r[1:] for r in batch if r[0] == "engaged"]
     if engaged:
         conn.executemany(
@@ -854,6 +892,69 @@ def _start_analytics_writer() -> None:
         _analytics_thread.start()
 
 
+# --------------------------------- page_views stamp backfill (Nov 25, 2026)
+# Rows written before the write-time stamps existed carry
+# is_machine/day = NULL. This worker fills them in id order, in small
+# committed batches with a sleep between them, so a deploy never
+# wedges on a multi-million-row UPDATE: the pass yields the database
+# to live traffic, survives restarts (progress is a social_meta
+# watermark; the UPDATE only touches rows still missing a stamp, so
+# resuming is a no-op for finished windows), and marks itself done in
+# social_meta when the last window passes. Until a row is stamped,
+# the stats builders' _human_ua_sql falls back to the legacy LIKE
+# screen for that row alone — figures are correct in every era, they
+# just get faster as the watermark advances. Progress is tracked by
+# id window rather than by "rows still NULL" so a row whose
+# date(viewed_at) is unparseable (day legitimately stays NULL) can
+# never loop the pass forever.
+_PV_STAMP_META_KEY = "pv_stamp_backfill_v1"
+_PV_STAMP_BATCH = 5000
+_PV_STAMP_YIELD_SECONDS = 0.25
+_pv_stamp_thread: threading.Thread | None = None
+
+
+def _pv_stamp_backfill_worker() -> None:
+    try:
+        if _social_meta_get(_PV_STAMP_META_KEY) == "done":
+            return
+        frag, frag_params = _machine_ua_sql()
+        with get_conn(DB_PATH) as conn:
+            max_id = conn.execute(
+                "SELECT MAX(id) FROM page_views").fetchone()[0] or 0
+        raw = _social_meta_get(_PV_STAMP_META_KEY) or ""
+        lo = int(raw.split(":", 1)[1]) if raw.startswith("id:") else 0
+        while lo < max_id:
+            hi = lo + _PV_STAMP_BATCH
+            with get_conn(DB_PATH) as conn:
+                conn.execute(
+                    "UPDATE page_views SET "
+                    f"is_machine = CASE WHEN {frag} THEN 0 ELSE 1 END, "
+                    "day = date(viewed_at) "
+                    "WHERE id > ? AND id <= ? "
+                    "AND (is_machine IS NULL OR day IS NULL)",
+                    (*frag_params, lo, hi))
+                conn.commit()
+            lo = hi
+            _social_meta_set(_PV_STAMP_META_KEY, f"id:{lo}")
+            time.sleep(_PV_STAMP_YIELD_SECONDS)
+        _social_meta_set(_PV_STAMP_META_KEY, "done")
+        logger.info("page_views stamp backfill complete")
+    except Exception:
+        # Never fatal: unstamped rows still report correctly through
+        # the builders' fallback screen; the pass resumes next boot.
+        logger.exception("page_views stamp backfill failed; "
+                         "will resume on next boot")
+
+
+def _start_pv_stamp_backfill() -> None:
+    global _pv_stamp_thread
+    if _pv_stamp_thread is None or not _pv_stamp_thread.is_alive():
+        _pv_stamp_thread = threading.Thread(
+            target=_pv_stamp_backfill_worker, name="pv-stamp-backfill",
+            daemon=True)
+        _pv_stamp_thread.start()
+
+
 def _device_bucket(ua: str) -> str:
     """Simple device detection from user agent (unchanged buckets)."""
     ua_lower = ua.lower()
@@ -913,6 +1014,12 @@ def _ua_family(ua: str | None) -> str:
     return "other"
 
 
+# Every machine needle across the families, sorted — the single
+# source the SQL screen, the Python classifier and the write-time
+# stamp all share, so the three can never drift apart.
+_MACHINE_UA_NEEDLES = sorted({n for _, ns in _UA_FAMILY_RULES for n in ns})
+
+
 def _machine_ua_sql(column: str = "user_agent") -> tuple:
     """(sql_fragment, params): TRUE for rows whose stored User-Agent
     does NOT classify as a machine family under _UA_FAMILY_RULES — the
@@ -922,10 +1029,35 @@ def _machine_ua_sql(column: str = "user_agent") -> tuple:
     Rows with no UA stored (everything before Oct 27's UA logging)
     pass: they cannot be UA-screened either way, and the admin page
     labels that instead of silently dropping the pre-UA era."""
-    needles = sorted({n for _, ns in _UA_FAMILY_RULES for n in ns})
-    likes = " OR ".join(f"lower({column}) LIKE ?" for _ in needles)
+    likes = " OR ".join(f"lower({column}) LIKE ?" for _ in _MACHINE_UA_NEEDLES)
     return (f"({column} IS NULL OR NOT ({likes}))",
-            tuple(f"%{n}%" for n in needles))
+            tuple(f"%{n}%" for n in _MACHINE_UA_NEEDLES))
+
+
+def _ua_is_machine(ua: str | None) -> int:
+    """1 when a raw User-Agent matches the machine screen, else 0 —
+    the Python twin of _machine_ua_sql's negation (same needles, same
+    substring-of-lowered-UA semantics; an absent UA is NOT machine,
+    exactly as the SQL screen passes NULL-UA rows as human). Stamped
+    onto page_views.is_machine by the analytics writer and by the
+    startup backfill, so report builders stop re-running the
+    51-pattern LIKE screen over every row (Nov 25, 2026)."""
+    if not ua:
+        return 0
+    low = ua.lower()
+    return 1 if any(n in low for n in _MACHINE_UA_NEEDLES) else 0
+
+
+def _human_ua_sql(column: str = "user_agent", stamp: str = "is_machine") -> tuple:
+    """(sql_fragment, params): the human screen for stats builders,
+    reading the write-time is_machine stamp. A stamped row is decided
+    by the stamp alone (the CASE arm is lazy — the LIKE screen is
+    never evaluated for it); a row the backfill hasn't reached yet
+    (stamp NULL) falls back to the exact legacy LIKE screen, so every
+    reported number is identical in every era."""
+    frag, params = _machine_ua_sql(column)
+    return (f"(CASE WHEN {stamp} IS NOT NULL THEN {stamp} = 0 "
+            f"ELSE {frag} END)", params)
 
 
 # Date the page_views geo columns started collecting (ship date of the
@@ -1175,11 +1307,18 @@ _hot_stop = threading.Event()
 _hot_thread: threading.Thread | None = None
 
 
-def _ttl_cached(key: str, build):
-    """Return the shared snapshot for key, at most _HOT_TTL seconds
-    old in steady state. See the block comment above for the exact
-    contract (background refresh, serve-snapshot, cold-start and
-    dead-refresher synchronous fallbacks)."""
+def _ttl_cached(key: str, build, ttl: float | None = None):
+    """Return the shared snapshot for key, at most ttl seconds
+    old in steady state (ttl defaults to the shared _HOT_TTL; the
+    /admin/stats aggregates pass a longer per-key TTL — Nov 25, 2026 —
+    because their builds scan the multi-million-row page_views table
+    and a 120s refresh cadence kept the single worker saturated).
+    See the block comment above for the exact contract (background
+    refresh, serve-snapshot, cold-start and dead-refresher
+    synchronous fallbacks). Cache entries are
+    [expiry, value, last_access, ttl]."""
+    if ttl is None:
+        ttl = _HOT_TTL
     _HOT_BUILDERS[key] = build
     now = time.monotonic()
     hit = _TTL_CACHE.get(key)
@@ -1187,7 +1326,7 @@ def _ttl_cached(key: str, build):
         hit[2] = now
         if hit[0] > now:
             return hit[1]
-        if now - (hit[0] - _HOT_TTL) < _HOT_TTL * 10:
+        if now - (hit[0] - hit[3]) < hit[3] * 10:
             return hit[1]
     with _TTL_CACHE_LOCK:
         hit = _TTL_CACHE.get(key)
@@ -1195,7 +1334,7 @@ def _ttl_cached(key: str, build):
             return hit[1]
         value = build()
         now = time.monotonic()
-        _TTL_CACHE[key] = [now + _HOT_TTL, value, now]
+        _TTL_CACHE[key] = [now + ttl, value, now, ttl]
         return value
 
 
@@ -1209,7 +1348,8 @@ def _hot_refresh_pass() -> None:
         hit = _TTL_CACHE.get(key)
         if hit is None:
             continue
-        if now - hit[2] > 2 * _HOT_TTL + _HOT_REFRESH_SECONDS:
+        ttl = hit[3] if len(hit) > 3 else _HOT_TTL
+        if now - hit[2] > 2 * ttl + _HOT_REFRESH_SECONDS:
             with _TTL_CACHE_LOCK:
                 _TTL_CACHE.pop(key, None)
             _HOT_BUILDERS.pop(key, None)
@@ -1224,8 +1364,8 @@ def _hot_refresh_pass() -> None:
         with _TTL_CACHE_LOCK:
             cur = _TTL_CACHE.get(key)
             last_access = cur[2] if cur is not None else now
-            _TTL_CACHE[key] = [time.monotonic() + _HOT_TTL, value,
-                               last_access]
+            _TTL_CACHE[key] = [time.monotonic() + ttl, value,
+                               last_access, ttl]
 
 
 def _hot_refresher() -> None:
@@ -12435,7 +12575,7 @@ def _page_time_build(brand: str = "haunt") -> list:
     # page no longer inflates the denominator its (zero) attention is
     # averaged over. The beacon side needs no screen — its rows only
     # exist when a real browser ran the page's timer.
-    frag, frag_params = _machine_ua_sql()
+    frag, frag_params = _human_ua_sql()
     with get_conn(DB_PATH) as conn:
         cand = conn.execute(
             "SELECT path, COUNT(*) AS views FROM page_views "
@@ -12520,9 +12660,19 @@ def _fmt_dur_admin(sec: float) -> str:
     return f"{sec}s" if sec < 60 else f"{sec // 60}m {sec % 60:02d}s"
 
 
+# /admin/stats aggregates refresh on a 5-minute TTL (Nov 25, 2026),
+# not the shared 120s hot-cache TTL: their builds scan page_views
+# (2M+ rows), and the 120s cadence kept a background refresher
+# re-scanning almost constantly — the CPU saturation behind the
+# Nov 25 load-shedding incident. Stats five minutes stale are fine;
+# a wedged site was not.
+_ADMIN_STATS_TTL = 300.0
+
+
 def _page_time_stats(brand: str = "haunt") -> list:
     return _ttl_cached(f"admin:page_time:{brand}",
-                       lambda: _page_time_build(brand))
+                       lambda: _page_time_build(brand),
+                       ttl=_ADMIN_STATS_TTL)
 
 
 # ------------------------------------------ brand-aware admin stats
@@ -12602,7 +12752,7 @@ def _stats_page_bucket(path: str):
 
 
 def _page_breakdown_build(brand: str = "haunt") -> list:
-    frag, frag_params = _machine_ua_sql()
+    frag, frag_params = _human_ua_sql()
     human = (f"{_MK_HUMAN} AND {frag} AND ({_stats_host_sql(brand)}) "
              "AND path NOT IN ('/favicon.ico', '/robots.txt')")
     win7 = "viewed_at >= datetime('now', '-7 days')"
@@ -12637,7 +12787,8 @@ def _page_breakdown_build(brand: str = "haunt") -> list:
 
 def _page_breakdown(brand: str = "haunt") -> list:
     return _ttl_cached(f"admin:page_breakdown:{brand}",
-                       lambda: _page_breakdown_build(brand))
+                       lambda: _page_breakdown_build(brand),
+                       ttl=_ADMIN_STATS_TTL)
 
 
 # ------------------------------------------ traffic tracker (Oct 28)
@@ -12714,7 +12865,7 @@ def _hour_range_label(h: int) -> str:
 def _traffic_tracker_build(brand: str = "haunt") -> dict:
     from zoneinfo import ZoneInfo
     et = ZoneInfo("America/New_York")
-    frag, frag_params = _machine_ua_sql()
+    frag, frag_params = _human_ua_sql()
     human = f"{_MK_HUMAN} AND {frag} AND ({_stats_host_sql(brand)})"
     today_et = datetime.now(et).date()
     week_start_et = today_et - timedelta(days=6)
@@ -12840,7 +12991,8 @@ def _traffic_tracker_build(brand: str = "haunt") -> dict:
 
 def _traffic_tracker(brand: str = "haunt") -> dict:
     return _ttl_cached(f"admin:traffic_tracker:{brand}",
-                       lambda: _traffic_tracker_build(brand))
+                       lambda: _traffic_tracker_build(brand),
+                       ttl=_ADMIN_STATS_TTL)
 
 
 # ------------------------------------------------- US states (Oct 27)
@@ -12858,7 +13010,7 @@ def _traffic_tracker(brand: str = "haunt") -> dict:
 # TTL-cached like the other admin aggregates.
 
 def _us_states_build(brand: str = "haunt") -> dict:
-    frag, frag_params = _machine_ua_sql()
+    frag, frag_params = _human_ua_sql()
     human = f"{_MK_HUMAN} AND {frag} AND ({_stats_host_sql(brand)})"
     win7 = "viewed_at >= datetime('now', '-7 days')"
     out = {"rows": [], "unknown": None, "coverage": {}}
@@ -12943,7 +13095,8 @@ def _us_states_build(brand: str = "haunt") -> dict:
 
 def _us_states_stats(brand: str = "haunt") -> dict:
     return _ttl_cached(f"admin:us_states:{brand}",
-                       lambda: _us_states_build(brand))
+                       lambda: _us_states_build(brand),
+                       ttl=_ADMIN_STATS_TTL)
 
 
 @app.get("/admin", response_class=HTMLResponse)
@@ -12998,43 +13151,49 @@ def admin(request: Request):
     )
 
 
-@app.get("/admin/stats", response_class=HTMLResponse)
-def admin_stats(request: Request):
-    """Traffic dashboard: page views by day and top pages.
+# --------------------------------- admin stats: the inline section
+# (Nov 25, 2026): everything in admin_stats that used to run UNCACHED
+# against page_views on every dashboard load — the headline counts,
+# views by day, referrers, devices, the geography panels, the pin-view
+# count and the visit-duration sessionization (~57s of full-table work
+# per load at 2M rows, and the load that wedged the site on Nov 25) —
+# now builds here, behind _ttl_cached at the 5-minute admin TTL, like
+# every other stats block. Queries read the write-time stamps
+# (page_views.day) wherever the old code called date(viewed_at); the
+# COALESCE fallback keeps rows the stamp backfill hasn't reached yet
+# counted exactly as before. The engagement/quest sections stay
+# inline in the route: they read small tables and were never the
+# problem.
 
-    Brand-aware (Nov 25, 2026): every figure below is filtered to
-    ONE brand — the serving host's, or ?brand=hauntmap|merryquest —
-    via _stats_host_sql / _stats_eng_sql (see their block comment).
-    The MerryQuest view additionally carries the Quest Stats section
-    built at the end of this function."""
-    if not is_admin(request):
-        return RedirectResponse("/admin", status_code=303)
-    stats_brand = _stats_brand(request)
-    _hsql = _stats_host_sql(stats_brand)
-    _esql = _stats_eng_sql(stats_brand)
+def _admin_stats_inline_build(brand: str = "haunt") -> dict:
+    _hsql = _stats_host_sql(brand)
+    dayx = "COALESCE(day, date(viewed_at))"
     with get_conn(DB_PATH) as conn:
         total = conn.execute(
             f"SELECT COUNT(*) FROM page_views WHERE {_hsql}").fetchone()[0]
         today = conn.execute(
-            "SELECT COUNT(*) FROM page_views WHERE date(viewed_at) = date('now')"
+            f"SELECT COUNT(*) FROM page_views WHERE {dayx} = date('now')"
             f" AND {_hsql}").fetchone()[0]
         week = conn.execute(
             "SELECT COUNT(*) FROM page_views WHERE viewed_at >= datetime('now', '-7 days')"
             f" AND {_hsql}").fetchone()[0]
-        by_day = conn.execute(
-            "SELECT date(viewed_at) AS day, COUNT(*) AS views "
-            f"FROM page_views WHERE {_hsql} GROUP BY day "
-            "ORDER BY day DESC LIMIT 14").fetchall()
-        top_referrers = conn.execute(
+        # Windowed to the 14 days the table displays (was: GROUP BY
+        # over all history, then LIMIT 14).
+        by_day = [{"day": r["day"], "views": r["views"]} for r in conn.execute(
+            f"SELECT {dayx} AS day, COUNT(*) AS views "
+            f"FROM page_views WHERE {_hsql} "
+            f"AND {dayx} >= date('now', '-13 days') "
+            "GROUP BY day ORDER BY day DESC LIMIT 14")]
+        top_referrers = [{"ref": r["ref"], "views": r["views"]} for r in conn.execute(
             "SELECT CASE WHEN referrer = '' OR referrer IS NULL THEN '(direct)' "
             "ELSE referrer END AS ref, COUNT(*) AS views FROM page_views "
             f"WHERE {_hsql} "
-            "GROUP BY ref ORDER BY views DESC LIMIT 15").fetchall()
-        by_device = conn.execute(
+            "GROUP BY ref ORDER BY views DESC LIMIT 15")]
+        by_device = [{"dev": r["dev"], "views": r["views"]} for r in conn.execute(
             "SELECT CASE WHEN device = '' OR device IS NULL THEN 'Unknown' "
             "ELSE device END AS dev, COUNT(*) AS views FROM page_views "
             f"WHERE {_hsql} "
-            "GROUP BY dev ORDER BY views DESC").fetchall()
+            "GROUP BY dev ORDER BY views DESC")]
         # --- visitors by geography (Dan, Oct 26): where the audience
         # actually is. Counted BOTH ways and labelled on the page:
         # visitors = COUNT(DISTINCT sid) (one person counts once per
@@ -13045,7 +13204,8 @@ def admin_stats(request: Request):
         # City rows exist only once Cloudflare's visitor-location
         # transform is on; state rows (the _us_states_stats table
         # below this panel) additionally come from the writer's IP
-        # lookup since Oct 27, transform or not.
+        # lookup since Oct 27, transform or not. The
+        # (country, region, city, sid) index covers both panels.
         geo = {"countries": [], "cities": []}
         for r in conn.execute(
                 "SELECT country, COUNT(DISTINCT sid) AS visitors, "
@@ -13058,9 +13218,6 @@ def admin_stats(request: Request):
                 "code": r["country"],
                 "label": _COUNTRY_NAMES.get(r["country"], r["country"]),
                 "visitors": r["visitors"], "views": r["views"]})
-        # US states moved to _us_states_stats() (Oct 27): the full
-        # human-only state table with 7-day + all-time windows, share
-        # and an explicit coverage block — see its section comment.
         for r in conn.execute(
                 "SELECT city, region, country, COUNT(DISTINCT sid) AS visitors, "
                 "COUNT(*) AS views FROM page_views "
@@ -13076,6 +13233,98 @@ def admin_stats(request: Request):
             geo["cities"].append({
                 "label": label,
                 "visitors": r["visitors"], "views": r["views"]})
+        pin_views_week = conn.execute(
+            "SELECT COUNT(*) FROM page_views WHERE path LIKE '/d/%' "
+            "AND viewed_at >= datetime('now', '-7 days') "
+            f"AND {_hsql}").fetchone()[0]
+        # --- visit duration: sessionize page views per visitor
+        # (30-min window). The (sid, viewed_at) index serves the
+        # ORDER BY with no full sort.
+        srows = conn.execute(
+            "SELECT sid, viewed_at FROM page_views WHERE sid IS NOT NULL "
+            "AND viewed_at >= datetime('now', '-30 days') "
+            f"AND {_hsql} ORDER BY sid, viewed_at").fetchall()
+    visits_list = []
+    cur_sid, cur_times = None, []
+
+    def _flush_visit():
+        if cur_times:
+            visits_list.append(((cur_times[-1] - cur_times[0]).total_seconds(), len(cur_times)))
+
+    for r in srows:
+        t = datetime.fromisoformat(r["viewed_at"])
+        if r["sid"] != cur_sid or (cur_times and (t - cur_times[-1]).total_seconds() > 1800):
+            _flush_visit()
+            cur_sid, cur_times = r["sid"], []
+        cur_times.append(t)
+    _flush_visit()
+
+    def _fmt_dur(sec):
+        sec = int(round(sec))
+        return f"{sec}s" if sec < 60 else f"{sec // 60}m {sec % 60:02d}s"
+
+    n_visits = len(visits_list)
+    if n_visits:
+        durs = sorted(d for d, _ in visits_list)
+        multi = [d for d, p in visits_list if p > 1]
+        mid = n_visits // 2
+        median_dur = durs[mid] if n_visits % 2 else (durs[mid - 1] + durs[mid]) / 2
+        bucket_defs = [("<10 sec", 0, 10), ("10–60 sec", 10, 60), ("1–3 min", 60, 180),
+                       ("3–5 min", 180, 300), ("5–10 min", 300, 600), ("10+ min", 600, float("inf"))]
+        duration = {
+            "visits": n_visits,
+            "avg": _fmt_dur(sum(durs) / n_visits),
+            "median": _fmt_dur(median_dur),
+            "engaged_avg": _fmt_dur(sum(multi) / len(multi)) if multi else "0s",
+            "bounce": round(sum(1 for _, p in visits_list if p == 1) / n_visits * 100, 1),
+            "avg_pages": round(sum(p for _, p in visits_list) / n_visits, 1),
+            "buckets": [(label, sum(1 for d in durs if lo <= d < hi)) for label, lo, hi in bucket_defs],
+        }
+    else:
+        duration = {"visits": 0, "avg": "—", "median": "—", "engaged_avg": "—",
+                    "bounce": 0, "avg_pages": 0, "buckets": []}
+    return {"total": total, "today": today, "week": week,
+            "by_day": by_day, "top_referrers": top_referrers,
+            "by_device": by_device, "geo": geo, "duration": duration,
+            "pin_views_week": pin_views_week}
+
+
+def _admin_stats_inline(brand: str = "haunt") -> dict:
+    return _ttl_cached(f"admin:inline:{brand}",
+                       lambda: _admin_stats_inline_build(brand),
+                       ttl=_ADMIN_STATS_TTL)
+
+
+@app.get("/admin/stats", response_class=HTMLResponse)
+def admin_stats(request: Request):
+    """Traffic dashboard: page views by day and top pages.
+
+    Brand-aware (Nov 25, 2026): every figure below is filtered to
+    ONE brand — the serving host's, or ?brand=hauntmap|merryquest —
+    via _stats_host_sql / _stats_eng_sql (see their block comment).
+    The MerryQuest view additionally carries the Quest Stats section
+    built at the end of this function."""
+    if not is_admin(request):
+        return RedirectResponse("/admin", status_code=303)
+    stats_brand = _stats_brand(request)
+    _hsql = _stats_host_sql(stats_brand)
+    _esql = _stats_eng_sql(stats_brand)
+    # Headline counts, by-day, referrers, devices, geography, pin
+    # views and visit duration all come from the TTL-cached inline
+    # build now (Nov 25, 2026 — see _admin_stats_inline_build); this
+    # route no longer scans page_views synchronously. US states live
+    # in _us_states_stats() (Oct 27): the full human-only state table
+    # with 7-day + all-time windows, share and a coverage block.
+    inl = _admin_stats_inline(stats_brand)
+    total = inl["total"]
+    today = inl["today"]
+    week = inl["week"]
+    by_day = inl["by_day"]
+    top_referrers = inl["top_referrers"]
+    by_device = inl["by_device"]
+    geo = inl["geo"]
+    duration = inl["duration"]
+    with get_conn(DB_PATH) as conn:
         # --- engagement events (Wave 2, Item 2): last 7 days ---
         # (engagement_events is created by init_db at startup — no DDL here.)
         eng_counts = {ev: 0 for ev in ENGAGEMENT_EVENTS_ALL}
@@ -13088,10 +13337,7 @@ def admin_stats(request: Request):
             "SELECT COUNT(*) FROM engagement_events WHERE entry_id IS NOT NULL "
             "AND created_at >= datetime('now', '-7 days') "
             f"AND {_esql}").fetchone()[0]
-        pin_views_week = conn.execute(
-            "SELECT COUNT(*) FROM page_views WHERE path LIKE '/d/%' "
-            "AND viewed_at >= datetime('now', '-7 days') "
-            f"AND {_hsql}").fetchone()[0]
+        pin_views_week = inl["pin_views_week"]
         eng_top_pins = conn.execute(
             "SELECT g.entry_id AS entry_id, COUNT(*) AS n, "
             "e.title AS title, e.town AS town FROM engagement_events g "
@@ -13177,50 +13423,6 @@ def admin_stats(request: Request):
                 }
             except Exception:
                 quest_stats = None
-        # --- visit duration: sessionize page views per visitor (30-min window) ---
-        srows = conn.execute(
-            "SELECT sid, viewed_at FROM page_views WHERE sid IS NOT NULL "
-            "AND viewed_at >= datetime('now', '-30 days') "
-            f"AND {_hsql} ORDER BY sid, viewed_at").fetchall()
-    visits_list = []
-    cur_sid, cur_times = None, []
-
-    def _flush_visit():
-        if cur_times:
-            visits_list.append(((cur_times[-1] - cur_times[0]).total_seconds(), len(cur_times)))
-
-    for r in srows:
-        t = datetime.fromisoformat(r["viewed_at"])
-        if r["sid"] != cur_sid or (cur_times and (t - cur_times[-1]).total_seconds() > 1800):
-            _flush_visit()
-            cur_sid, cur_times = r["sid"], []
-        cur_times.append(t)
-    _flush_visit()
-
-    def _fmt_dur(sec):
-        sec = int(round(sec))
-        return f"{sec}s" if sec < 60 else f"{sec // 60}m {sec % 60:02d}s"
-
-    n_visits = len(visits_list)
-    if n_visits:
-        durs = sorted(d for d, _ in visits_list)
-        multi = [d for d, p in visits_list if p > 1]
-        mid = n_visits // 2
-        median_dur = durs[mid] if n_visits % 2 else (durs[mid - 1] + durs[mid]) / 2
-        bucket_defs = [("<10 sec", 0, 10), ("10–60 sec", 10, 60), ("1–3 min", 60, 180),
-                       ("3–5 min", 180, 300), ("5–10 min", 300, 600), ("10+ min", 600, float("inf"))]
-        duration = {
-            "visits": n_visits,
-            "avg": _fmt_dur(sum(durs) / n_visits),
-            "median": _fmt_dur(median_dur),
-            "engaged_avg": _fmt_dur(sum(multi) / len(multi)) if multi else "0s",
-            "bounce": round(sum(1 for _, p in visits_list if p == 1) / n_visits * 100, 1),
-            "avg_pages": round(sum(p for _, p in visits_list) / n_visits, 1),
-            "buckets": [(label, sum(1 for d in durs if lo <= d < hi)) for label, lo, hi in bucket_defs],
-        }
-    else:
-        duration = {"visits": 0, "avg": "—", "median": "—", "engaged_avg": "—",
-                    "bounce": 0, "avg_pages": 0, "buckets": []}
     return templates.TemplateResponse(request, "stats.html",
         {"request": request, "total": total, "today": today, "week": week,
          "by_day": by_day, "pages": _page_breakdown(stats_brand),

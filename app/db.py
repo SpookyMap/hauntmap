@@ -328,7 +328,9 @@ CREATE TABLE IF NOT EXISTS page_views (
     user_agent TEXT,                      -- raw User-Agent header, <=512 chars (Oct 27 UA logging); NULL on older rows
     ip_addr TEXT,                         -- visitor IP as delivered by Cloudflare (cf-connecting-ip); tracker-table only, never displayed (Oct 27); NULL on older rows
     geo_src TEXT,                         -- where region came from: 'cf' (Cloudflare header) | 'ip' (bundled GeoLite2 lookup); NULL when no region
-    host TEXT                             -- serving domain, www-normalized (Nov 19, 2026): gethauntmap.com | gomerryquest.com | merryquest.app; NULL on older rows
+    host TEXT,                            -- serving domain, www-normalized (Nov 19, 2026): gethauntmap.com | gomerryquest.com | merryquest.app; NULL on older rows
+    is_machine INTEGER,                   -- write-time machine-UA stamp (Nov 25, 2026): 1 when the UA matches the machine screen (_UA_FAMILY_RULES), else 0; NULL until the startup backfill reaches the row
+    day TEXT                              -- write-time date stamp (Nov 25, 2026): date(viewed_at), 'YYYY-MM-DD'; NULL until the startup backfill reaches the row
 );
 CREATE INDEX IF NOT EXISTS idx_page_views_date ON page_views(viewed_at);
 CREATE TABLE IF NOT EXISTS sponsors (
@@ -979,6 +981,26 @@ def init_db(db_path: Path) -> None:
             conn.execute("ALTER TABLE page_views ADD COLUMN host TEXT")
         conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_page_views_host ON page_views(host, viewed_at)")
+        # Write-time traffic stamps (Nov 25, 2026): the /admin/stats
+        # builders used to re-run the 51-pattern machine-UA LIKE screen
+        # and date() over every page_views row on every build (~40s a
+        # scan at 2M rows; the churn wedged the single worker). Rows
+        # now carry is_machine + day, stamped by the analytics writer;
+        # existing rows are filled by the batched, resumable startup
+        # backfill in main.py (_pv_stamp_backfill_worker) — the ALTERs
+        # here only add the empty columns, never a table rewrite.
+        # Indexes are created HERE, after the columns exist (same
+        # rule as idx_page_views_country), never in SCHEMA.
+        if vcols and "is_machine" not in vcols:
+            conn.execute("ALTER TABLE page_views ADD COLUMN is_machine INTEGER")
+        if vcols and "day" not in vcols:
+            conn.execute("ALTER TABLE page_views ADD COLUMN day TEXT")
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_page_views_sid_time "
+            "ON page_views(sid, viewed_at)")
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_page_views_geo "
+            "ON page_views(country, region, city, sid)")
         pcols = {r["name"] for r in conn.execute("PRAGMA table_info(profiles)").fetchall()}
         if "no_challenges" not in pcols:
             conn.execute(
