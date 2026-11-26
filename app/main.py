@@ -264,6 +264,7 @@ _CHRISTMAS_EVENT_PHRASE_RE = re.compile(
     r"zoo ?lights|winter ?lights|wonderlights|walk of lights|"
     r"festival of lights|gardenfest|fantasy in lights|"
     r"fantasy of lights|magic of lights|wild lights|night lights|"
+    r"nights? of lights|"
     r"gardens aglow|animals aglow|lightfest|parade of lights|"
     r"trail of lights",
     re.IGNORECASE)
