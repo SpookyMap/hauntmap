@@ -80,8 +80,14 @@
   <a class="mqx-quest-card" href="/d/{{ tonight.id }}">
     <span class="mqx-quest-kicker">⭐ Tonight's quest</span>
     <span class="mqx-quest-title">{{ tonight.title }}</span>
+    {% if tonight.quest_scope_label %}
+    <span class="mqx-quest-meta">{{ tonight.quest_scope_label }} · {{ tonight.quest_character }} is waiting here{% if tonight.quest_golden %} · ✨ Golden night{% endif %}</span>
+    <span class="mqx-quest-meta">Check in within 150 ft to capture · <span style="text-decoration:underline">See tonight's quest →</span></span>
+    {% else %}
     <span class="mqx-quest-meta">{{ tonight.town_label }} · Check in within 150 ft to capture a character</span>
+    {% endif %}
   </a>
+  {% if tonight.quest_scope_label %}<a class="mqx-quest-card" href="/quest" style="margin-top:8px"><span class="mqx-quest-meta">🗺️ Open the full {{ tonight.quest_scope_label }} quest — every stop tonight →</span></a>{% endif %}
   {% endif %}
 
   <section class="mqx-guide mqx-haunted">

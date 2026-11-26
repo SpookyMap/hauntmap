@@ -9,6 +9,20 @@
 <p class="muted">Follow the lights, capture the magic — then check the boards.
 Towns compete town against town, and every town crowns a Champion.</p>
 
+{% if honor_roll is not none %}
+<h2>&#x1F31F; Finishers&rsquo; honor roll</h2>
+{% if honor_roll %}
+<ol class="leader-list">
+  {% for h in honor_roll %}
+  <li><span class="leader-info"><strong>@{{ h.handle }}</strong>
+    <span class="meta">{% if h.collector and h.storykeeper %}&#x1F3C5; {{ h.title or 'Completed the cast and the stories' }} — full cast + full stories{% elif h.collector %}Full cast collected{% else %}Full stories completed{% endif %}</span></span></li>
+  {% endfor %}
+</ol>
+{% else %}
+<p class="muted">No finishers yet. Catch all 32 characters to complete the Collector track — then finish every story to join the Storykeepers and unlock the Aurora Endgame.</p>
+{% endif %}
+{% endif %}
+
 <h2>Top hunters</h2>
 {% if top_hunters %}
 <ol class="leader-list">

@@ -26,6 +26,86 @@
   })();
   </script>
 
+  {% if quest_points %}
+  <div class="sack-points-card">
+    <p class="sack-points-line">&#x2B50; <b>{{ quest_points.tonight }} Quest Points tonight</b> &middot; {{ quest_points.total }} this season</p>
+    <p class="sack-points-sub">Points are capped at {{ quest_points.cap }} a night &mdash; captures past the cap still land in your Sack, they just don&rsquo;t add points until tomorrow.</p>
+  </div>
+  <style>
+  .sack-points-card { border: 1px solid rgba(120, 200, 255, .4); border-radius: 14px; padding: 12px 16px; margin: 0 auto 14px; max-width: 520px; text-align: center; background: rgba(255,255,255,.03); }
+  .sack-points-line { margin: 0 0 6px; }
+  .sack-points-sub { margin: 0; opacity: .8; font-size: .92em; }
+  </style>
+  {% endif %}
+
+  {% if completion %}
+  <section class="tracks-box">
+    <h2 class="hunt-title">&#x1F3C6; Your quest tracks</h2>
+    <div class="track-grid">
+      <div class="track-card">
+        <p class="track-name">&#x1F381; Collector</p>
+        <p class="track-count">{{ completion.collector_count }} of {{ completion.total }} captured</p>
+        {% if completion.collector_title %}<p class="track-title">Title: <b>{{ completion.collector_title }}</b></p>{% endif %}
+        <p class="track-rungs">{% for r in completion.collector_rungs %}<span class="rung{% if r.earned %} rung-on{% endif %}">{{ r.n }} &middot; {{ r.title }}</span>{% endfor %}</p>
+      </div>
+      <div class="track-card">
+        <p class="track-name">&#x1F4D6; Storykeeper</p>
+        <p class="track-count">{{ completion.story_count }} of {{ completion.total }} stories complete</p>
+        {% if completion.story_title %}<p class="track-title">Title: <b>{{ completion.story_title }}</b></p>{% endif %}
+        <p class="track-rungs">{% for r in completion.story_rungs %}<span class="rung{% if r.earned %} rung-on{% endif %}">{{ r.n }} &middot; {{ r.title }}</span>{% endfor %}</p>
+      </div>
+    </div>
+    <p class="track-cats">{% for cat in completion.categories %}<span class="rung{% if cat.complete %} rung-on{% endif %}">{{ cat.label }} {{ cat.held }}/{{ cat.total }}{% if cat.complete %} &#x2713; Complete{% endif %}</span>{% endfor %}</p>
+    <p class="track-note">A story completes in two halves: the first half drops on the character&rsquo;s reveal day for everyone who has captured them, and the second half unlocks when you&rsquo;ve captured every character in their group.</p>
+    {% if completion.aurora_eligible %}
+    <p class="track-endgame">&#x1F30C; <b>Endgame unlocked.</b> Full cast, full stories — the Aurora path is yours when it opens with the mid-December drop.{% if completion.capstone_title %} Title earned: <b>{{ completion.capstone_title }}</b>.{% endif %}</p>
+    {% else %}
+    <p class="track-endgame">&#x1F30C; Complete both tracks to unlock the Aurora Endgame — Aurora editions of all 32, with Aurora Santa as the capstone.</p>
+    {% endif %}
+  </section>
+  <style>
+  .tracks-box { max-width: 640px; margin: 0 auto 14px; text-align: center; }
+  .track-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 10px; margin: 10px 0; }
+  .track-card { border: 1px solid rgba(255,215,94,.35); border-radius: 14px; padding: 12px 14px; background: rgba(255,255,255,.03); }
+  .track-name { font-weight: 800; margin: 0 0 4px; }
+  .track-count { margin: 0 0 4px; }
+  .track-title { margin: 0 0 6px; color: #ffd75e; }
+  .track-rungs, .track-cats { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin: 6px 0; }
+  .rung { border: 1px solid rgba(255,255,255,.25); border-radius: 999px; padding: 2px 10px; font-size: .85em; opacity: .65; }
+  .rung-on { opacity: 1; border-color: #ffd75e; color: #ffd75e; font-weight: 700; }
+  .track-note { opacity: .8; font-size: .92em; }
+  .track-endgame { border: 1px dashed rgba(140, 220, 255, .5); border-radius: 12px; padding: 10px 12px; }
+  .sack-story { margin: 4px 0 0; font-size: .9em; }
+  .sack-story-done { color: #ffd75e; font-weight: 700; }
+  .sack-story details { text-align: left; margin-top: 6px; }
+  .sack-story summary { cursor: pointer; }
+  </style>
+  {% endif %}
+
+  {% if county_progress %}
+  <section class="county-box">
+    <h2 class="hunt-title">&#x1F5FA;&#xFE0F; Your counties</h2>
+    <p class="hunt-sub">Every county has its own quest. Characters you catch there count toward that county &mdash; catch them all in a county in a night to clear it.</p>
+    <div class="county-list">
+      {% for c in county_progress %}
+      <div class="county-row">
+        <span class="county-name">{{ c.name }}{% if c.state %}, {{ c.state }}{% endif %}</span>
+        <span class="county-stat">{{ c.chars }} character{{ 's' if c.chars != 1 }} &middot; {{ c.captures }} capture{{ 's' if c.captures != 1 }}</span>
+        {% if c.cleared %}<span class="county-badge">&#x1F3C5; County Cleared</span>{% endif %}
+      </div>
+      {% endfor %}
+    </div>
+    <p class="county-cta"><a href="/quest">Tonight&rsquo;s quest &rarr;</a></p>
+  </section>
+  <style>
+  .county-box { max-width: 520px; margin: 0 auto 14px; text-align: center; }
+  .county-list { display: grid; gap: 8px; margin: 10px 0; }
+  .county-row { border: 1px solid rgba(255,255,255,.14); border-radius: 12px; padding: 10px 14px; display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: center; justify-content: center; background: rgba(255,255,255,.03); }
+  .county-name { font-weight: 700; }
+  .county-badge { color: #ffd75e; font-weight: 700; }
+  </style>
+  {% endif %}
+
   <section class="hunt-box">
     <h2 class="hunt-title">&#x1F50D; Hunt a character</h2>
     <p class="hunt-sub">Pick your town, then tap a character you haven&rsquo;t captured yet in the cast below. The more you capture in a town, the stronger your hints get &mdash; a <b>Whisper</b> for everyone, a <b>Riddle</b> after 5 town captures, and a <b>Lantern</b> after 12.</p>
@@ -42,6 +122,21 @@
       <div class="sack-card-name">{{ c.name }}</div>
       <div class="sack-card-tier">{{ c.tier }}</div>
       {% if c.count > 1 %}<div class="sack-card-count">&times; {{ c.count }}</div>{% endif %}
+      {% if c.story_state == 'complete' %}
+      <div class="sack-story sack-story-done">&#x2605; Story Complete</div>
+      {% if c.story_first or c.story_second %}<div class="sack-story"><details><summary>Read the story</summary>
+        {% if c.story_first %}{% if c.story_first.kind == 'video' %}<p><a href="{{ c.story_first.url }}">&#x1F3AC; Watch the chapter film &rarr;</a></p>{% else %}<p>{{ c.story_first.text }}</p>{% endif %}{% endif %}
+        {% if c.story_second %}{% if c.story_second.kind == 'text' %}<p>{{ c.story_second.text }}</p>{% else %}<p><i>The second half of this tale is still being written.</i></p>{% endif %}{% endif %}
+      </details></div>{% endif %}
+      {% elif c.story_state == 'first' %}
+      <div class="sack-story">&#x1F4D6; First half unlocked</div>
+      {% if c.story_first %}<div class="sack-story"><details><summary>Read the first half</summary>
+        {% if c.story_first.kind == 'video' %}<p><a href="{{ c.story_first.url }}">&#x1F3AC; Watch the chapter film &rarr;</a></p>{% else %}<p>{{ c.story_first.text }}</p>{% endif %}
+        <p><i>Capture every character in this group to unlock the second half.</i></p>
+      </details></div>{% endif %}
+      {% elif c.story_state == 'pending' %}
+      <div class="sack-story">&#x1F4D6; First half drops {{ c.story_reveal_label }}</div>
+      {% endif %}
     </div>
     {% endfor %}
   </div>

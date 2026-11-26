@@ -298,6 +298,9 @@
     {% endif %}
     <p class="quest-panel-msg" id="questPanelMsg" role="status"></p>
     {% endif %}
+    {% if quest_panel.county_name %}
+    <p class="quest-panel-sub">Part of the <b>{{ quest_panel.county_name }} Quest</b>{% if quest_panel.logged_in %} &mdash; {{ quest_panel.county_caught }} of {{ quest_panel.county_total }} caught in the county{% endif %} &middot; <a href="/quest">Tonight&rsquo;s quest &rarr;</a></p>
+    {% endif %}
     <a class="quest-panel-sack" href="/sack">Santa&rsquo;s Sack &rarr;</a>
   </section>
   <script>
@@ -315,9 +318,22 @@
           body: JSON.stringify({entry_id: {{ entry.id }}, lat: pos.coords.latitude, lng: pos.coords.longitude})
         }).then(function (r) { return r.json(); }).then(function (d) {
           if (d.ok && d.character) {
+            var ptsLine = '';
+            if (d.points) {
+              ptsLine = d.points.earned > 0
+                ? '<p class="quest-panel-sub">+' + d.points.earned + ' Quest Points</p>'
+                : '<p class="quest-panel-sub">Nightly Quest Point cap reached \u2014 the catch still counts in your Sack.</p>';
+            }
+            var badgeLine = d.badge_new ? '<p class="quest-panel-sub">\uD83C\uDFC5 County Cleared \u2014 ' + (d.county ? d.county.name : 'county') + ' badge earned!</p>' : '';
+            if (d.story && d.story.category && d.story.category.complete) {
+              badgeLine += '<p class="quest-panel-sub">\uD83C\uDF89 ' + d.story.category.label + ' group complete \u2014 second halves unlocked in your Sack!</p>';
+            } else if (d.story && d.story.story_state === 'complete') {
+              badgeLine += '<p class="quest-panel-sub">\u2605 Story complete for this character \u2014 read it in your Sack.</p>';
+            }
             panel.innerHTML = '<p class="quest-panel-eyebrow">Caught!</p>' +
               '<p class="quest-panel-name">\u2605 ' + d.character.name + '</p>' +
               '<p class="quest-panel-sub">' + (d.duplicate ? 'Another one for the Sack \u2014 now \u00D7 ' + d.sack_count + '.' : 'New in your Sack!') + '</p>' +
+              ptsLine + badgeLine +
               '<a class="quest-panel-sack" href="/sack">See Santa\u2019s Sack \u2192</a>';
           } else if (d.error === 'too_far') {
             btn.disabled = false; btn.textContent = 'Check in & catch';

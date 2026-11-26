@@ -7,6 +7,7 @@ voting, not determined abuse. See the vote route below.
 """
 import asyncio
 import calendar
+import functools
 import hashlib
 import hmac
 import ipaddress
@@ -269,6 +270,40 @@ def _env_flag(name: str) -> bool:
 QUEST_ENABLED = _env_flag("QUEST_ENABLED")
 QUEST_SPAWNS_ENABLED = _env_flag("QUEST_SPAWNS_ENABLED")
 QUEST_SPONSOR_LAYER_ENABLED = _env_flag("QUEST_SPONSOR_LAYER_ENABLED")
+# County quest engine (Dan, Nov 24, 2026 — spec:
+# per-county-quests-spec-2026-11-24): quest sets keyed town-first,
+# expanding to the user's county when the town can't fill a set.
+# Default OFF: with it off the legacy town engine runs exactly as
+# before (the only shared change is the Lit-only spawn-pool filter
+# Dan approved for Phase 1, which applies in both engines).
+QUEST_COUNTY_ENABLED = _env_flag("QUEST_COUNTY_ENABLED")
+# Aurora Editions / Endgame (canon: earned only, never sold): the
+# completion tracks below are its eligibility condition. The flag
+# stays OFF until the mid-December drop — this build wires
+# eligibility only and enables nothing.
+QUEST_AURORA_ENABLED = _env_flag("QUEST_AURORA_ENABLED")
+
+# Quest Points (Dan, Nov 24, 2026): GPS-verified captures earn points
+# by tier — the gamification spec's points, given values here for the
+# first time (no numeric table existed before this build). Points
+# post ONLY under the county engine in this build: the legacy town
+# engine awards none today, so there is nothing to cap on that path
+# and flag-off behaviour stays identical. SOFT CAP: captures are
+# unlimited and always register (Sack, story, seal, badges); only
+# the points stop at QUEST_POINTS_NIGHTLY_CAP per season night
+# (US Eastern date) and resume the next night. Cap math: a full
+# local set — 8 Common x10 + 13 Rare x25 + 7 Epic x50 = 755 — plus
+# the golden-night anchor Legendary (100) = 855, so a perfect
+# legitimate night scores in full with ~145 of headroom for route
+# duplicates; a second full set the same night (755+) is what the
+# cap trims. Dan-tunable via env.
+QUEST_POINTS_BY_TIER = {"common": 10, "rare": 25, "epic": 50,
+                        "legendary": 100, "original": 0}
+try:
+    QUEST_POINTS_NIGHTLY_CAP = int(
+        os.environ.get("QUEST_POINTS_NIGHTLY_CAP", "1000"))
+except ValueError:
+    QUEST_POINTS_NIGHTLY_CAP = 1000
 
 # Quest preview allowlist (built Nov 20, 2026 — the promised pre-launch
 # field test): while the global flags stay OFF, these member accounts
@@ -339,6 +374,12 @@ def _startup() -> None:
     except Exception:
         # One-time data correction — never break boot over it.
         logger.exception("Pin coord fixes failed")
+    try:
+        _backfill_entry_counties()
+    except Exception:
+        # County tagging (Phase 1 of the county quest spec) is a
+        # silent data fill — never break boot over it.
+        logger.exception("County backfill failed")
 
 
 @app.on_event("shutdown")
@@ -3274,8 +3315,21 @@ def home(request: Request, sort: str = "new", town: str = "", town_search: str =
     rail_category = "christmas" if _brand_of(request) == "merryquest" \
         else "halloween"
     with get_conn(DB_PATH) as conn:
-        tonight = _pick_tonights_display(conn, exclude_id=last_id,
-                                         category=rail_category)
+        # County engine (flag on, MerryQuest only): Tonight's Quest
+        # becomes the visitor's own scope's featured quest. Any
+        # failure — or the flag being off — keeps the legacy random
+        # pick below, untouched.
+        tonight = None
+        if _brand_of(request) == "merryquest" \
+                and QUEST_COUNTY_ENABLED and _quest_on(request):
+            try:
+                tonight = _quest_county_tonight(request, conn)
+            except Exception:
+                logger.exception("County Tonight's Quest failed")
+                tonight = None
+        if tonight is None:
+            tonight = _pick_tonights_display(
+                conn, exclude_id=last_id, category=rail_category)
         # Item 6: the Daily Fright band's display drop — deterministic
         # per ET date (same pool as Tonight's, different contract), so
         # the band names the same pin /daily leads with all day.
@@ -7441,6 +7495,7 @@ def detail(request: Request, entry_id: int):
     if _brand_of(request) == "merryquest" and _quest_live(request) \
             and entry.get("category") in QUEST_SPAWN_CATEGORIES:
         _member = current_member(request)
+        _county_ctx = None
         with get_conn(DB_PATH) as conn:
             _char = _quest_spawn_for_entry(conn, entry)
             _caught = False
@@ -7449,6 +7504,38 @@ def detail(request: Request, entry_id: int):
                     "SELECT 1 FROM quest_sack WHERE user_id = ? "
                     "AND character_id = ?",
                     (_member["id"], _char["id"])).fetchone() is not None
+            if _char and QUEST_COUNTY_ENABLED:
+                # County context (flag on only): which county quest
+                # this display belongs to, and the hunter's progress
+                # in it tonight.
+                _cfips = entry.get("county_fips")
+                if not _cfips:
+                    _tagged = _tag_entry_county(
+                        conn, entry["id"], entry.get("lat"),
+                        entry.get("lng"))
+                    _cfips = _tagged["fips"] if _tagged else None
+                if _cfips:
+                    _cinfo = _county_by_fips(_cfips) or {
+                        "fips": _cfips,
+                        "name": entry.get("county_name") or "",
+                        "state": ""}
+                    _cscope = _quest_scope(
+                        conn, county_fips=_cfips)
+                    _hosted = 0
+                    if _cscope is not None:
+                        _hosted = len({
+                            c["id"] for c in
+                            _quest_assignments_v2(
+                                conn, _cscope,
+                                _quest_today()).values() if c})
+                    _county_ctx = {
+                        "county_name": _cinfo["name"],
+                        "county_caught": (
+                            _quest_county_catches(
+                                conn, _member["id"], _cfips)
+                            if _member else 0),
+                        "county_total": _hosted,
+                    }
         if _char:
             quest_panel = {
                 "tier": _char["tier"], "name": _char["name"],
@@ -7457,6 +7544,8 @@ def detail(request: Request, entry_id: int):
                 "golden": _quest_is_golden_night(_quest_today()),
                 "logged_in": _member is not None,
             }
+            if _county_ctx:
+                quest_panel.update(_county_ctx)
     return templates.TemplateResponse(request, "detail.html",
         {"request": request, "entry": entry, "voted": voted, "reported": reported,
          "lit_tapped": f"lit_{entry_id}" in request.cookies,
@@ -8358,12 +8447,18 @@ def leaderboard_hunters(request: Request, town: str = "", q: str = ""):
                     "AND date(c.created_at, '-5 hours') = ? "
                     "GROUP BY c.user_id HAVING d >= ?",
                     (sel, today, sel_available)).fetchall()]
+        # Finishers' honor roll (county completion layer, flag on
+        # only): hunters who completed the cast and/or the stories.
+        honor_roll = None
+        if QUEST_COUNTY_ENABLED:
+            honor_roll = _quest_honor_roll(conn)
     return templates.TemplateResponse(request, "hunters_leaderboard.html",
         {"request": request, "top_hunters": top_hunters,
          "cities": cities, "q": q, "sel_town": sel,
          "town_board": town_board, "sel_available": sel_available,
          "sel_clearers": sel_clearers,
-         "champion": town_board[0] if town_board else None})
+         "champion": town_board[0] if town_board else None,
+         "honor_roll": honor_roll})
 
 
 @app.get("/leaderboard/states", response_class=HTMLResponse)
@@ -18100,19 +18195,27 @@ QUEST_STOP_CATEGORIES = ("restaurants", "shops", "coffee", "hotels",
 QUEST_SPAWN_CATEGORIES = (QUEST_HOUSE_CATEGORY,) + QUEST_STOP_CATEGORIES
 
 
-def _quest_town_locations(conn, town: str) -> list:
-    """The town's spawn locations, ranked: house displays first
-    (hand-picked, then detail-page views, then votes, then distance
-    to the town centroid — the best and most central first), then
-    Quest Stops by the same quality order. With the sponsor layer
-    on, a featured (sponsoring) stop ranks with the houses."""
+def _quest_spawn_where() -> str:
+    """The spawn-pool filter shared by every quest location query:
+    spawn categories, not hidden, has coordinates — and, for house
+    displays, Lit only. The Lit clause is Dan's Phase 1 fix (Nov 24,
+    2026): canon says only Lit displays are capturable, but the pool
+    never checked lit_status; it applies in BOTH engines (it is the
+    one deliberate flag-off behaviour change in the county build).
+    Quest Stops are businesses, not displays — no Lit semantics."""
     marks = ",".join("?" * len(QUEST_SPAWN_CATEGORIES))
-    pins = conn.execute(
-        "SELECT id, title, category, address, lat, lng, votes, "
-        "is_handpicked, is_featured FROM entries "
-        f"WHERE category IN ({marks}) AND hidden = 0 AND town = ? "
-        "AND lat IS NOT NULL AND lng IS NOT NULL",
-        (*QUEST_SPAWN_CATEGORIES, town)).fetchall()
+    return (f"category IN ({marks}) AND hidden = 0 "
+            "AND lat IS NOT NULL AND lng IS NOT NULL "
+            f"AND (category != '{QUEST_HOUSE_CATEGORY}' "
+            "OR lit_status = 'lit')")
+
+
+def _quest_rank_locations(conn, pins: list) -> list:
+    """Rank spawn pins by the site's popularity order: houses (and,
+    with the sponsor layer on, featured stops) first, then Dan's
+    hand-picked pins, detail-page views, votes, and distance to the
+    pool centroid. Shared by the town and county pools so a pin's
+    popularity rank means the same thing in either scope."""
     if not pins:
         return []
     views: dict[int, int] = {}
@@ -18140,6 +18243,34 @@ def _quest_town_locations(conn, town: str) -> list:
     return sorted(pins, key=rank_key)
 
 
+def _quest_town_locations(conn, town: str) -> list:
+    """The town's spawn locations, ranked: house displays first
+    (hand-picked, then detail-page views, then votes, then distance
+    to the town centroid — the best and most central first), then
+    Quest Stops by the same quality order. With the sponsor layer
+    on, a featured (sponsoring) stop ranks with the houses."""
+    pins = conn.execute(
+        "SELECT id, title, category, address, lat, lng, votes, "
+        "is_handpicked, is_featured, town, county_fips, county_name "
+        "FROM entries "
+        f"WHERE {_quest_spawn_where()} AND town = ?",
+        (*QUEST_SPAWN_CATEGORIES, town)).fetchall()
+    return _quest_rank_locations(conn, pins)
+
+
+def _quest_county_locations(conn, county_fips: str) -> list:
+    """The county's spawn pool: every spawn location physically in
+    the county (pin county from its coordinates), ranked by the same
+    popularity order as the town pool."""
+    pins = conn.execute(
+        "SELECT id, title, category, address, lat, lng, votes, "
+        "is_handpicked, is_featured, town, county_fips, county_name "
+        "FROM entries "
+        f"WHERE {_quest_spawn_where()} AND county_fips = ?",
+        (*QUEST_SPAWN_CATEGORIES, county_fips)).fetchall()
+    return _quest_rank_locations(conn, pins)
+
+
 def _quest_assignments(conn, town: str, today) -> dict:
     """entry_id -> character for every spawn location in town today.
 
@@ -18158,6 +18289,21 @@ def _quest_assignments(conn, town: str, today) -> dict:
     ONLY on golden nights. Computed, never stored — a pure function
     of the town, its locations and the date, identical for every
     player that day."""
+    return _quest_assign_locations(
+        conn, _quest_town_locations(conn, town), today,
+        f"mq-town:{town}")
+
+
+def _quest_assign_locations(conn, ranked: list, today,
+                            scope_key: str) -> dict:
+    """entry_id -> character for one ranked location list: the band
+    engine shared by the town and county scopes. Ranks map onto tier
+    bands in cast proportion (Epic 7 / Rare 13 / Common 8); within a
+    band the assignment rotates daily; lists under 7 locations drift
+    bands daily so the full cast cycles through over the season. On
+    golden nights the #1-ranked location (the scope's anchor) hosts
+    a Legendary instead, rotating by scope_key + day. Pip never
+    spawns wild and Legendaries spawn ONLY on golden nights."""
     rows = conn.execute(
         "SELECT * FROM quest_characters WHERE collectible = 1 "
         "AND spawnable = 1 ORDER BY sort").fetchall()
@@ -18167,7 +18313,6 @@ def _quest_assignments(conn, town: str, today) -> dict:
     for r in rows:
         if r["tier"] in by_tier:
             by_tier[r["tier"]].append(dict(r))
-    ranked = _quest_town_locations(conn, town)
     n = len(ranked)
     if n == 0:
         return {}
@@ -18192,10 +18337,10 @@ def _quest_assignments(conn, town: str, today) -> dict:
                 "SELECT * FROM quest_characters WHERE collectible = 1 "
                 "AND tier = 'legendary' ORDER BY sort").fetchall()
             if legends:
-                town_key = int(hashlib.sha256(
-                    f"mq-town:{town}".encode()).hexdigest(), 16)
+                key = int(hashlib.sha256(
+                    scope_key.encode()).hexdigest(), 16)
                 out[pin["id"]] = dict(
-                    legends[(town_key + day_index) % len(legends)])
+                    legends[(key + day_index) % len(legends)])
                 continue
         band = band_of_rank[r]
         band_rank = band_of_rank[:r].count(band)
@@ -18204,12 +18349,699 @@ def _quest_assignments(conn, town: str, today) -> dict:
     return out
 
 
-def _quest_spawn_for_entry(conn, entry, today=None) -> dict | None:
-    """The collectible spawned at one location tonight."""
+def _quest_spawn_for_entry(conn, entry, today=None,
+                           ulat=None, ulng=None) -> dict | None:
+    """The collectible spawned at one location tonight. Under the
+    county engine (QUEST_COUNTY_ENABLED) the character comes from
+    the v2 scope set resolved around this pin; ulat/ulng, when the
+    caller has them (check-in submits the hunter's own fix), anchor
+    the proximity set on the hunter instead of the pin."""
     if today is None:
         today = _quest_today()
+    if QUEST_COUNTY_ENABLED:
+        char = _quest_spawn_for_entry_v2(
+            conn, entry, today, ulat=ulat, ulng=ulng)
+        if char is not None:
+            return char
+        # Fall through to the town engine only when the v2 scope
+        # machinery found no scope at all (e.g. the pin predates
+        # county tagging and has no resolvable county) — a spawn pin
+        # must never go dark because of the new layer.
+        scope = _quest_scope(conn, town=entry["town"])
+        if scope is not None:
+            return None
+        return _quest_assignments(
+            conn, entry["town"], today).get(entry["id"])
     return _quest_assignments(
         conn, entry["town"], today).get(entry["id"])
+
+
+# ---------------------------------------------------------- County engine
+# Per-county quests (Dan, Nov 24, 2026 — spec:
+# per-county-quests-spec-2026-11-24 + Dan's same-day amendments).
+# The hierarchy is TOWN first: a player's quest set is their town's
+# set; when the town can't fill a set (fewer spawn locations than
+# the 28 spawnable characters), the set expands to the player's
+# COUNTY. Within the active scope the set is formed by proximity to
+# the user and characters are assigned by popularity (hand-picked →
+# detail-page views → votes — the site's existing ranking), with the
+# scope's most popular stop as its anchor: on Golden Nights the
+# anchor hosts the guaranteed Golden Legendary. Daily rotation
+# cycles the cast through local stops so characters stay findable
+# without long trips. Everything below is inert unless
+# QUEST_COUNTY_ENABLED is on.
+
+_COUNTY_BUNDLE = None
+
+
+def _county_bundle() -> list:
+    """The bundled US county boundaries (app/geo/us-counties.json,
+    built by scripts/build_counties_geo.py from Census data):
+    [{fips, name, state, bbox, polys}] — loaded once, lazily, so the
+    county layer costs nothing while it is off."""
+    global _COUNTY_BUNDLE
+    if _COUNTY_BUNDLE is None:
+        path = Path(__file__).parent / "geo" / "us-counties.json"
+        try:
+            _COUNTY_BUNDLE = json.loads(
+                path.read_text())["counties"]
+        except Exception:
+            logger.exception("County bundle failed to load")
+            _COUNTY_BUNDLE = []
+    return _COUNTY_BUNDLE
+
+
+def _point_in_ring(lng: float, lat: float, ring: list) -> bool:
+    inside = False
+    j = len(ring) - 1
+    for i in range(len(ring)):
+        xi, yi = ring[i]
+        xj, yj = ring[j]
+        if (yi > lat) != (yj > lat) and \
+                lng < (xj - xi) * (lat - yi) / (yj - yi) + xi:
+            inside = not inside
+        j = i
+    return inside
+
+
+def _seg_dist_deg(px, py, ax, ay, bx, by) -> float:
+    """Distance (degrees) from a point to a line segment."""
+    dx, dy = bx - ax, by - ay
+    if dx == 0 and dy == 0:
+        return math.hypot(px - ax, py - ay)
+    t = max(0.0, min(1.0, ((px - ax) * dx + (py - ay) * dy)
+                 / (dx * dx + dy * dy)))
+    return math.hypot(px - (ax + t * dx), py - (ay + t * dy))
+
+
+@functools.lru_cache(maxsize=4096)
+def _county_of_latlng(lat: float, lng: float) -> dict | None:
+    """The ONE place county is ever computed (spec §4): point-in-
+    polygon over the bundled boundaries, so a pin, a hunter and a
+    check-in can never disagree about which county a point is in.
+    Shoreline grace: the simplified Census geometry clips counties
+    at the waterline, so a beachfront display can land a few
+    hundred feet 'offshore' — when no polygon contains the point,
+    the nearest county within ~2 miles wins (a shore house belongs
+    to its shore county). Returns {fips, name, state} or None."""
+    for c in _county_bundle():
+        minx, miny, maxx, maxy = c["bbox"]
+        if not (minx <= lng <= maxx and miny <= lat <= maxy):
+            continue
+        for poly in c["polys"]:
+            if _point_in_ring(lng, lat, poly[0]) and not any(
+                    _point_in_ring(lng, lat, hole)
+                    for hole in poly[1:]):
+                return {"fips": c["fips"], "name": c["name"],
+                        "state": c["state"]}
+    best, best_d = None, 0.03  # ~2 miles in degrees
+    for c in _county_bundle():
+        minx, miny, maxx, maxy = c["bbox"]
+        if not (minx - 0.05 <= lng <= maxx + 0.05
+                and miny - 0.05 <= lat <= maxy + 0.05):
+            continue
+        for poly in c["polys"]:
+            ring = poly[0]
+            for i in range(len(ring)):
+                ax, ay = ring[i]
+                bx, by = ring[(i + 1) % len(ring)]
+                d = _seg_dist_deg(lng, lat, ax, ay, bx, by)
+                if d < best_d:
+                    best, best_d = c, d
+    if best is not None:
+        return {"fips": best["fips"], "name": best["name"],
+                "state": best["state"]}
+    return None
+
+
+def _county_by_fips(fips: str) -> dict | None:
+    for c in _county_bundle():
+        if c["fips"] == fips:
+            return {"fips": c["fips"], "name": c["name"],
+                    "state": c["state"]}
+    return None
+
+
+def _tag_entry_county(conn, entry_id: int, lat, lng) -> dict | None:
+    """Resolve and store one pin's county (idempotent fill)."""
+    if lat is None or lng is None:
+        return None
+    c = _county_of_latlng(round(lat, 4), round(lng, 4))
+    if c is None:
+        return None
+    conn.execute(
+        "UPDATE entries SET county_fips = ?, county_name = ? "
+        "WHERE id = ?", (c["fips"], c["name"], entry_id))
+    return c
+
+
+def _backfill_entry_counties() -> None:
+    """Phase 1 (silent): tag every pin that has coordinates and no
+    county yet, and backfill quest_checkins.county_fips from the
+    pins for rows written before the column existed."""
+    with get_conn(DB_PATH) as conn:
+        rows = conn.execute(
+            "SELECT id, lat, lng FROM entries WHERE county_fips IS "
+            "NULL AND lat IS NOT NULL AND lng IS NOT NULL").fetchall()
+        for r in rows:
+            _tag_entry_county(conn, r["id"], r["lat"], r["lng"])
+        conn.execute(
+            "UPDATE quest_checkins SET county_fips = "
+            "(SELECT county_fips FROM entries "
+            "WHERE entries.id = quest_checkins.entry_id) "
+            "WHERE county_fips IS NULL")
+        conn.commit()
+
+
+def _ensure_county_tags(conn) -> None:
+    """Lazy tagging inside quest paths (county flag on): any spawn
+    pin with coordinates but no county gets tagged on the spot, so
+    the county pool is never missing a pin the town pool can see."""
+    rows = conn.execute(
+        "SELECT id, lat, lng FROM entries WHERE county_fips IS NULL "
+        "AND lat IS NOT NULL AND lng IS NOT NULL "
+        f"AND category IN ({','.join('?' * len(QUEST_SPAWN_CATEGORIES))})",
+        QUEST_SPAWN_CATEGORIES).fetchall()
+    for r in rows:
+        _tag_entry_county(conn, r["id"], r["lat"], r["lng"])
+    if rows:
+        conn.commit()
+
+
+def _quest_spawnable_count(conn) -> int:
+    """How many characters can spawn on a normal night (the size of
+    a full set): collectible + spawnable = Epic + Rare + Common."""
+    return conn.execute(
+        "SELECT COUNT(*) AS n FROM quest_characters "
+        "WHERE collectible = 1 AND spawnable = 1").fetchone()["n"]
+
+
+def _quest_user_position(request) -> tuple:
+    """The hunter's best-known position: the mq_pos cookie (set by
+    the quest surfaces after a geolocation grant — decision 6: the
+    browser is asked only on a quest-surface tap, never on page
+    load), then the existing Cloudflare/GeoLite2 visitor geo.
+    Returns (lat, lng) or (None, None)."""
+    raw = (request.cookies.get("mq_pos") or "").strip()
+    if raw:
+        try:
+            lat_s, lng_s = raw.split(",", 1)
+            lat, lng = float(lat_s), float(lng_s)
+            if -90 <= lat <= 90 and -180 <= lng <= 180:
+                return lat, lng
+        except (TypeError, ValueError):
+            pass
+    geo = _visitor_geo(request)
+    if geo and geo.get("lat") is not None:
+        return geo["lat"], geo["lng"]
+    return None, None
+
+
+def _quest_scope(conn, town=None, county_fips=None,
+                 ulat=None, ulng=None) -> dict | None:
+    """Resolve the active quest scope for a player: TOWN first, then
+    COUNTY when the town can't fill a set (Dan's amendment, Nov 24).
+    The town comes from the caller, or from the spawn pin nearest
+    the player's position; the county from the caller, the position,
+    or the town's own pins. Returns a scope dict:
+    {kind, key, label, town, county: {fips,name,state}|None,
+     locations (popularity-ranked pool), anchor, clat, clng}
+    or None when neither scope has any spawn location."""
+    _ensure_county_tags(conn)
+    need = _quest_spawnable_count(conn)
+    if town is None and ulat is not None and ulng is not None:
+        # Adopt the nearest spawn pin's town — but only when it is
+        # genuinely near (a hunter 50 miles from the nearest display
+        # has no local quest; the empty-area fallback is for them).
+        nearest = None
+        nearest_d = None
+        for p in conn.execute(
+                "SELECT town, lat, lng FROM entries "
+                f"WHERE {_quest_spawn_where()}",
+                QUEST_SPAWN_CATEGORIES).fetchall():
+            d = _haversine_ft(ulat, ulng, p["lat"], p["lng"])
+            if nearest_d is None or d < nearest_d:
+                nearest, nearest_d = p["town"], d
+        if nearest_d is not None \
+                and nearest_d <= 25.0 * 5280:
+            town = nearest
+    town_pool = _quest_town_locations(conn, town) if town else []
+    county = None
+    if county_fips:
+        county = _county_by_fips(county_fips)
+    if county is None and town_pool:
+        # The town's own county outranks the position's county: a
+        # known town expands into ITS county, never into an empty
+        # county the hunter happens to be standing in.
+        fips = town_pool[0]["county_fips"]
+        if fips:
+            county = _county_by_fips(fips)
+    if county is None and ulat is not None and ulng is not None:
+        county = _county_of_latlng(round(ulat, 4), round(ulng, 4))
+    if county is None and town:
+        t = conn.execute(
+            "SELECT lat, lng FROM entries WHERE town = ? "
+            "AND lat IS NOT NULL AND lng IS NOT NULL LIMIT 1",
+            (town,)).fetchone()
+        if t:
+            county = _county_of_latlng(
+                round(t["lat"], 4), round(t["lng"], 4))
+    county_pool = _quest_county_locations(
+        conn, county["fips"]) if county else []
+    if town and len(town_pool) >= need:
+        kind, pool = "town", town_pool
+    elif len(county_pool) > len(town_pool):
+        kind, pool = "county", county_pool
+    elif town_pool:
+        kind, pool = "town", town_pool
+    elif county_pool:
+        kind, pool = "county", county_pool
+    else:
+        return None
+    clat = sum(p["lat"] for p in pool) / len(pool)
+    clng = sum(p["lng"] for p in pool) / len(pool)
+    if kind == "town":
+        key = f"mq-town:{town}"
+        label = town
+    else:
+        key = f"mq-county:{county['fips']}"
+        label = f"{county['name']}, {county['state']}" \
+            if county["state"] else county["name"]
+    return {"kind": kind, "key": key, "label": label, "town": town,
+            "county": county, "locations": pool,
+            "anchor": pool[0] if pool else None,
+            "clat": clat, "clng": clng}
+
+
+def _quest_assignments_v2(conn, scope: dict, today,
+                          ulat=None, ulng=None) -> dict:
+    """Tonight's set for a scope: the stops nearest the player (up
+    to a full set), characters assigned by popularity within the
+    set. The scope's anchor always hosts on golden nights — if
+    proximity left it out of the set, it swaps in for the farthest
+    stop. With no player position, distance is measured from the
+    scope centroid (the spec's fallback)."""
+    pool = scope["locations"]
+    if not pool:
+        return {}
+    need = _quest_spawnable_count(conn)
+    plat = ulat if ulat is not None else scope["clat"]
+    plng = ulng if ulng is not None else scope["clng"]
+    by_dist = sorted(
+        pool, key=lambda p: _haversine_ft(plat, plng,
+                                          p["lat"], p["lng"]))
+    chosen = by_dist[:need]
+    anchor = scope["anchor"]
+    if _quest_is_golden_night(today) and anchor is not None \
+            and all(p["id"] != anchor["id"] for p in chosen):
+        chosen = chosen[:-1] + [anchor]
+    chosen_ids = {p["id"] for p in chosen}
+    ranked = [p for p in pool if p["id"] in chosen_ids]
+    return _quest_assign_locations(conn, ranked, today, scope["key"])
+
+
+def _quest_spawn_for_entry_v2(conn, entry, today,
+                              ulat=None, ulng=None) -> dict | None:
+    """The character at one pin under the county engine: the set is
+    resolved around the hunter's position when known; if this pin
+    falls outside that set (a hunter browsing a display across the
+    county), the set is re-resolved around the pin itself — standing
+    at a display must always meet its character."""
+    scope = _quest_scope(conn, town=entry["town"],
+                         ulat=ulat, ulng=ulng)
+    if scope is None:
+        return None
+    assigns = _quest_assignments_v2(
+        conn, scope, today, ulat=ulat, ulng=ulng)
+    char = assigns.get(entry["id"])
+    if char is None and (ulat != entry["lat"] or ulng != entry["lng"]):
+        assigns = _quest_assignments_v2(
+            conn, scope, today, ulat=entry["lat"], ulng=entry["lng"])
+        char = assigns.get(entry["id"])
+    return char
+
+
+def _quest_points_tonight(conn, user_id: int, today) -> int:
+    """Quest Points a hunter has banked this season night (US
+    Eastern date — the same '-5 hours' convention the leaderboards
+    use on quest_checkins.created_at)."""
+    return conn.execute(
+        "SELECT COALESCE(SUM(points), 0) AS p FROM quest_checkins "
+        "WHERE user_id = ? AND date(created_at, '-5 hours') = ?",
+        (user_id, today.isoformat())).fetchone()["p"]
+
+
+def _quest_county_progress(conn, user_id: int) -> list:
+    """Per-county hunting record for one player, derived from the
+    capture log: distinct characters caught per county (the pin's
+    county — check-in column first, the pin's tag as fallback),
+    total captures, and any County Cleared badge."""
+    rows = conn.execute(
+        "SELECT COALESCE(c.county_fips, e.county_fips) AS fips, "
+        "COUNT(DISTINCT c.character_id) AS chars, COUNT(*) AS caps "
+        "FROM quest_checkins c JOIN entries e ON e.id = c.entry_id "
+        "WHERE c.user_id = ? AND c.character_id IS NOT NULL "
+        "AND COALESCE(c.county_fips, e.county_fips) IS NOT NULL "
+        "GROUP BY fips ORDER BY chars DESC, caps DESC",
+        (user_id,)).fetchall()
+    badges = {r["county_fips"] for r in conn.execute(
+        "SELECT county_fips FROM quest_county_badges "
+        "WHERE user_id = ?", (user_id,)).fetchall()}
+    out = []
+    for r in rows:
+        info = _county_by_fips(r["fips"]) or {
+            "name": r["fips"], "state": ""}
+        out.append({
+            "fips": r["fips"], "name": info["name"],
+            "state": info["state"], "chars": r["chars"],
+            "captures": r["caps"],
+            "cleared": r["fips"] in badges})
+    return out
+
+
+def _quest_county_catches(conn, user_id: int, fips: str) -> int:
+    """Distinct characters this hunter has caught in one county."""
+    return conn.execute(
+        "SELECT COUNT(DISTINCT c.character_id) AS n "
+        "FROM quest_checkins c JOIN entries e ON e.id = c.entry_id "
+        "WHERE c.user_id = ? AND c.character_id IS NOT NULL "
+        "AND COALESCE(c.county_fips, e.county_fips) = ?",
+        (user_id, fips)).fetchone()["n"]
+
+
+def _quest_maybe_award_county_badge(conn, user_id: int,
+                                    county: dict, today) -> bool:
+    """County Cleared (decision 5): the hunter has caught every
+    character this county hosts tonight. Checked at check-in
+    against tonight's county-scope set; the badge is stored once
+    (quest_county_badges) and is a title/honor only — no cash, per
+    the December lock. Returns True when newly awarded."""
+    if county is None:
+        return False
+    fips = county["fips"]
+    if conn.execute(
+            "SELECT 1 FROM quest_county_badges WHERE user_id = ? "
+            "AND county_fips = ?", (user_id, fips)).fetchone():
+        return False
+    scope = _quest_scope(conn, county_fips=fips)
+    if scope is None or scope["kind"] != "county":
+        return False
+    hosted = {c["id"] for c in _quest_assignments_v2(
+        conn, scope, today).values() if c}
+    if not hosted:
+        return False
+    caught = {r["character_id"] for r in conn.execute(
+        "SELECT DISTINCT c.character_id FROM quest_checkins c "
+        "JOIN entries e ON e.id = c.entry_id WHERE c.user_id = ? "
+        "AND c.character_id IS NOT NULL "
+        "AND COALESCE(c.county_fips, e.county_fips) = ?",
+        (user_id, fips)).fetchall()}
+    if not hosted.issubset(caught):
+        return False
+    conn.execute(
+        "INSERT INTO quest_county_badges "
+        "(user_id, county_fips, county_name, awarded_at) "
+        "VALUES (?, ?, ?, ?)",
+        (user_id, fips, county["name"],
+         datetime.now(timezone.utc).isoformat()))
+    return True
+
+
+# --------------------------------------------------- Completion layer
+# Dan, Nov 24, 2026: "incentivize catching all the characters and
+# completing their story." Two tracks, derived entirely from the
+# Sack + the calendar (no stored state to drift):
+#   COLLECTOR    — distinct characters held, of the whole cast.
+#   STORYKEEPER  — characters whose story is COMPLETE: first half
+#                  unlocked (it drops on the character's reveal day
+#                  — the chapter video where one exists, written
+#                  text otherwise — for everyone who has captured
+#                  the character; capturing after reveal day unlocks
+#                  it at once) AND second half unlocked (the player
+#                  has captured every character in the character's
+#                  category).
+# "Category" = the cast's tier grouping (Legendary / Epic / Rare /
+# Common / Guide): it is the only grouping every character carries.
+# (set_name exists too but covers just Dickens + Santa's Team —
+# flagged for Dan; tier is the primary grouping.) Milestones at
+# 8 / 16 / 24 / 32 on each track award titles — TITLES AND BADGES
+# ONLY (December lock; money never buys points or progress).
+# Completing BOTH tracks is the eligibility condition for the
+# Aurora Endgame (QUEST_AURORA_ENABLED, off until mid-December).
+
+_QUEST_TIER_SET_LABEL = {
+    "legendary": "Legendary", "epic": "Epic", "rare": "Rare",
+    "common": "Common", "original": "Guide",
+}
+# PROPOSED title names (Nov 24, 2026) — Dan's to rename; they live
+# here and only here so renaming is a one-line change.
+_QUEST_COLLECTOR_RUNGS = [
+    (8, "Glow Getter"), (16, "Light Chaser"),
+    (24, "Cast Hunter"), (32, "Master of the Glow"),
+]
+_QUEST_STORYKEEPER_RUNGS = [
+    (8, "Tale Keeper"), (16, "Story Weaver"),
+    (24, "Lore Keeper"), (32, "Storykeeper of the Luminaries"),
+]
+_QUEST_CAPSTONE_TITLE = "Keeper of the Aurora"  # PROPOSED
+
+
+def _quest_reveal_date(slug: str):
+    """The day a character's story first half drops (DB slugs).
+    Follows the site's own reveal calendar: the character-of-the-
+    day drip, the Ghosts on Nov 30, the full cast on Dec 1 — with
+    Dan's overrides: Santa's reveal day is his Dec 1 premiere, and
+    the already-revealed five follow their Meet the Luminaries
+    days."""
+    if slug == "santa-claus":
+        return date(2026, 12, 1)
+    if slug in _QUEST_COTD_DRIP:
+        return date(2026, 11, 24) + timedelta(
+            days=_QUEST_COTD_DRIP.index(slug))
+    if slug in _QUEST_GHOST_SLUGS:
+        return date(2026, 11, 30)
+    if slug == "krampus":
+        return date(2026, 11, 25)
+    if slug == "ded-moroz":
+        return date(2026, 11, 26)
+    if slug == "la-befana":
+        return date(2026, 11, 28)
+    if slug == "pip":
+        return date(2026, 11, 24)
+    return date(2026, 12, 1)
+
+
+def _quest_story_halves(slug: str) -> tuple:
+    """(first_half, second_half) delivery for one character (DB
+    slug): the chapter video when one exists, else written text —
+    the reveal-kit story split at its midpoint where one is
+    written, else the character's flavor line as the first half
+    (second half still to be written for those characters)."""
+    code_slug = "pip-the-star-pin" if slug == "pip" else slug
+    video = Path(__file__).resolve().parent.parent / "static" \
+        / "img" / "story" / f"{code_slug}.mp4"
+    if video.exists():
+        return ({"kind": "video", "url": f"/characters/{code_slug}"},
+                None)
+    story = _QUEST_STORIES.get(code_slug)
+    if story:
+        sentences = [s.strip() for s in
+                     story.replace("!", ".").replace("?", ".")
+                     .split(".") if s.strip()]
+        mid = (len(sentences) + 1) // 2
+        first = ". ".join(sentences[:mid]) + "."
+        second = ". ".join(sentences[mid:])
+        return ({"kind": "text", "text": first},
+                {"kind": "text", "text": second + "."}
+                if second else None)
+    flavor = next((f for s, _n, _t, f in _QUEST_CAST
+                   if s == code_slug), None)
+    if flavor:
+        return ({"kind": "text", "text": flavor}, None)
+    return (None, None)
+
+
+def _quest_completion(conn, user_id: int, today=None) -> dict:
+    """Collector + Storykeeper snapshot for one hunter. Pip counts
+    as held by every hunter — he joins at the start of the quest
+    and is never caught (canon: 'You don't catch Pip. Pip catches
+    you.'), so the cast total stays reachable."""
+    if today is None:
+        today = _quest_today()
+    cast = conn.execute(
+        "SELECT * FROM quest_characters WHERE collectible = 1 "
+        "ORDER BY sort").fetchall()
+    held = {r["character_id"] for r in conn.execute(
+        "SELECT character_id FROM quest_sack WHERE user_id = ?",
+        (user_id,)).fetchall()}
+    pip = next((c for c in cast if c["tier"] == "original"), None)
+    if pip is not None:
+        held.add(pip["id"])
+    total = len(cast)
+    cats: dict[str, dict] = {}
+    for c in cast:
+        cat = cats.setdefault(c["tier"], {
+            "key": c["tier"],
+            "label": _QUEST_TIER_SET_LABEL.get(
+                c["tier"], c["tier"].title()),
+            "total": 0, "held": 0, "complete": False})
+        cat["total"] += 1
+        if c["id"] in held:
+            cat["held"] += 1
+    for cat in cats.values():
+        cat["complete"] = cat["held"] >= cat["total"]
+    complete_tiers = {k for k, v in cats.items() if v["complete"]}
+    states: dict[int, str] = {}
+    reveal_dates: dict[int, str] = {}
+    story_complete = 0
+    for c in cast:
+        reveal_dates[c["id"]] = _quest_reveal_date(
+            c["slug"]).isoformat()
+        if c["id"] not in held:
+            states[c["id"]] = "locked"
+        elif today < _quest_reveal_date(c["slug"]):
+            states[c["id"]] = "pending"
+        elif c["tier"] in complete_tiers:
+            states[c["id"]] = "complete"
+            story_complete += 1
+        else:
+            states[c["id"]] = "first"
+
+    def ladder(rungs, count):
+        out = [{"n": n, "title": t, "earned": count >= n}
+               for n, t in rungs]
+        title = next((t for n, t in reversed(rungs)
+                      if count >= n), None)
+        return out, title
+
+    collector_rungs, collector_title = ladder(
+        _QUEST_COLLECTOR_RUNGS, len(held))
+    story_rungs, story_title = ladder(
+        _QUEST_STORYKEEPER_RUNGS, story_complete)
+    aurora_eligible = len(held) >= total and story_complete >= total
+    return {
+        "total": total,
+        "collector_count": len(held),
+        "collector_rungs": collector_rungs,
+        "collector_title": collector_title,
+        "story_count": story_complete,
+        "story_rungs": story_rungs,
+        "story_title": story_title,
+        "categories": [cats[k] for k in
+                       ("legendary", "epic", "rare", "common",
+                        "original") if k in cats],
+        "states": states,
+        "reveal_dates": reveal_dates,
+        "held": held,
+        "aurora_eligible": aurora_eligible,
+        "capstone_title": _QUEST_CAPSTONE_TITLE
+        if aurora_eligible else None,
+    }
+
+
+def _quest_honor_roll(conn, today=None) -> list:
+    """Finishers' honor roll (honors only): every hunter who has
+    completed the Collector track and/or the Storykeeper track,
+    with the titles they hold."""
+    if today is None:
+        today = _quest_today()
+    out = []
+    for r in conn.execute(
+            "SELECT s.user_id AS uid, u.handle AS handle "
+            "FROM quest_sack s JOIN users u ON u.id = s.user_id "
+            "GROUP BY s.user_id").fetchall():
+        snap = _quest_completion(conn, r["uid"], today)
+        collector_done = snap["collector_count"] >= snap["total"]
+        story_done = snap["story_count"] >= snap["total"]
+        if not (collector_done or story_done):
+            continue
+        out.append({
+            "handle": r["handle"],
+            "collector": collector_done,
+            "storykeeper": story_done,
+            "title": snap["capstone_title"]
+            or snap["story_title"] or snap["collector_title"],
+        })
+    out.sort(key=lambda h: (not (h["collector"] and h["storykeeper"]),
+                            h["handle"]))
+    return out
+
+
+def _quest_county_tonight(request, conn) -> dict | None:
+    """Tonight's Quest, county edition (decision 2): the visitor's
+    own scope's featured quest — the scope anchor and the character
+    it hosts tonight — instead of the site-wide random pick. Falls
+    back to None (the caller keeps the legacy pick) whenever no
+    scope resolves: no position, no geo town, no displays. The
+    returned dict carries the keys the homepage card already uses
+    (id, title, town_label) plus quest_* extras the card renders
+    when present. Character names obey the public reveal rules —
+    unrevealed characters appear as their tier, never their name."""
+    ulat, ulng = _quest_user_position(request)
+    scope = None
+    if ulat is not None:
+        scope = _quest_scope(conn, ulat=ulat, ulng=ulng)
+    if scope is None:
+        geo = _visitor_geo(request)
+        if geo and geo.get("city") and geo.get("state"):
+            scope = _quest_scope(
+                conn, town=f"{geo['city']}, {geo['state']}")
+    if scope is None or scope["anchor"] is None:
+        return None
+    anchor = scope["anchor"]
+    today = _quest_today()
+    char = _quest_assignments_v2(
+        conn, scope, today, ulat=ulat, ulng=ulng).get(anchor["id"])
+    if char is None:
+        char = _quest_assignments_v2(
+            conn, scope, today, ulat=anchor["lat"],
+            ulng=anchor["lng"]).get(anchor["id"])
+    if char is None:
+        return None
+    pick = dict(anchor)
+    pick["town_label"] = anchor["town"]
+    pick["quest_scope_kind"] = scope["kind"]
+    pick["quest_scope_label"] = scope["label"]
+    pick["quest_county_name"] = (
+        scope["county"]["name"] if scope["county"] else None)
+    pick["quest_golden"] = _quest_is_golden_night(today)
+    if char["slug"] in _QUEST_PUBLIC_SLUGS:
+        pick["quest_character"] = char["name"]
+    else:
+        pick["quest_character"] = (
+            f"a {_QUEST_TIER_LABEL.get(char['tier'], char['tier'])} "
+            "character")
+    pick["quest_tier"] = char["tier"]
+    return pick
+
+
+def _quest_nearest_active_county(conn, lat=None, lng=None) -> dict | None:
+    """The fallback card's target (decisions 3 + spec §2.4/§2.5):
+    the nearest county with at least one spawn location tonight,
+    measured from the player's position (or, without one, the
+    richest county — the honest 'where the quest is alive' pick)."""
+    _ensure_county_tags(conn)
+    rows = conn.execute(
+        "SELECT county_fips, COUNT(*) AS n, AVG(lat) AS clat, "
+        "AVG(lng) AS clng FROM entries "
+        f"WHERE {_quest_spawn_where()} AND county_fips IS NOT NULL "
+        "GROUP BY county_fips",
+        QUEST_SPAWN_CATEGORIES).fetchall()
+    best = None
+    for r in rows:
+        info = _county_by_fips(r["county_fips"])
+        if info is None:
+            continue
+        dist = _haversine_ft(lat, lng, r["clat"], r["clng"]) / 5280.0 \
+            if lat is not None else None
+        cand = {**info, "stops": r["n"], "distance_mi": dist}
+        if best is None:
+            best = cand
+        elif lat is not None and dist < best["distance_mi"]:
+            best = cand
+        elif lat is None and r["n"] > best["stops"]:
+            best = cand
+    return best
 
 
 # Progressive hints (Dan, Nov 18, 2026): as a hunter's collection in
@@ -18305,7 +19137,8 @@ async def quest_checkin(request: Request):
     now = datetime.now(timezone.utc).isoformat()
     with get_conn(DB_PATH) as conn:
         entry = conn.execute(
-            "SELECT id, title, town, category, lat, lng, hidden "
+            "SELECT id, title, town, category, lat, lng, hidden, "
+            "county_fips, county_name "
             "FROM entries WHERE id = ?", (entry_id,)).fetchone()
         if entry is None or entry["hidden"] \
                 or entry["category"] not in QUEST_SPAWN_CATEGORIES:
@@ -18321,14 +19154,45 @@ async def quest_checkin(request: Request):
                 "ok": False, "error": "too_far",
                 "distance_ft": round(distance),
                 "radius_ft": int(QUEST_CHECKIN_RADIUS_FT)})
-        character = _quest_spawn_for_entry(conn, entry)
+        character = _quest_spawn_for_entry(
+            conn, entry, ulat=lat, ulng=lng)
+        # County engine payouts (QUEST_COUNTY_ENABLED only — with
+        # the flag off nothing below runs and the response is the
+        # legacy one, byte for byte): the capture credits the pin's
+        # county, earns Quest Points under the nightly soft cap,
+        # and can complete a County Cleared badge. Captures are
+        # NEVER blocked by the cap — past it they still land in the
+        # Sack with their story/seal/badge payouts, at 0 points.
+        pin_county = None
+        points_awarded = 0
+        points_capped = False
+        if QUEST_COUNTY_ENABLED:
+            if entry["county_fips"]:
+                pin_county = _county_by_fips(entry["county_fips"]) \
+                    or {"fips": entry["county_fips"],
+                        "name": entry["county_name"] or "",
+                        "state": ""}
+            else:
+                pin_county = _tag_entry_county(
+                    conn, entry_id, entry["lat"], entry["lng"])
+            if character is not None:
+                base = QUEST_POINTS_BY_TIER.get(character["tier"], 0)
+                before = _quest_points_tonight(
+                    conn, member["id"], _quest_today())
+                points_awarded = max(
+                    0, min(base, QUEST_POINTS_NIGHTLY_CAP - before))
+                points_capped = points_awarded < base
         conn.execute(
             "INSERT INTO quest_checkins "
             "(user_id, entry_id, character_id, lat, lng, distance_ft,"
-            " created_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
+            " county_fips, points, created_at) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
             (member["id"], entry_id,
              character["id"] if character else None,
-             lat, lng, distance, now))
+             lat, lng, distance,
+             pin_county["fips"] if pin_county
+             else entry["county_fips"],
+             points_awarded, now))
         duplicate = False
         sack_count = 0
         if character is not None:
@@ -18348,8 +19212,35 @@ async def quest_checkin(request: Request):
                 "SELECT count FROM quest_sack WHERE user_id = ? "
                 "AND character_id = ?",
                 (member["id"], character["id"])).fetchone()["count"]
+        badge_new = False
+        county_cleared = False
+        story_note = None
+        if QUEST_COUNTY_ENABLED and character is not None \
+                and pin_county is not None:
+            badge_new = _quest_maybe_award_county_badge(
+                conn, member["id"], pin_county, _quest_today())
+            county_cleared = badge_new or conn.execute(
+                "SELECT 1 FROM quest_county_badges "
+                "WHERE user_id = ? AND county_fips = ?",
+                (member["id"], pin_county["fips"])).fetchone() \
+                is not None
+        if QUEST_COUNTY_ENABLED and character is not None:
+            # Completion-layer feedback: did this capture complete
+            # the character's category (unlocking second halves),
+            # and where does this character's story stand now?
+            _snap = _quest_completion(conn, member["id"])
+            _cat = next((c for c in _snap["categories"]
+                         if c["key"] == character["tier"]), None)
+            story_note = {
+                "category": _cat,
+                "story_state": _snap["states"].get(character["id"]),
+                "collector_count": _snap["collector_count"],
+                "story_count": _snap["story_count"],
+                "total": _snap["total"],
+                "aurora_eligible": _snap["aurora_eligible"],
+            }
         conn.commit()
-    return JSONResponse({
+    resp = {
         "ok": True,
         "distance_ft": round(distance),
         "pin": {"id": entry["id"], "title": entry["title"],
@@ -18359,12 +19250,102 @@ async def quest_checkin(request: Request):
                        "tier": character["tier"]}
                       if character else None),
         "duplicate": duplicate,
-        "sack_count": sack_count})
+        "sack_count": sack_count}
+    if QUEST_COUNTY_ENABLED:
+        resp["county"] = (
+            {"fips": pin_county["fips"], "name": pin_county["name"],
+             "state": pin_county["state"]}
+            if pin_county else None)
+        resp["points"] = {
+            "earned": points_awarded,
+            "cap": QUEST_POINTS_NIGHTLY_CAP,
+            "capped": points_capped}
+        resp["county_cleared"] = county_cleared
+        resp["badge_new"] = badge_new
+        resp["story"] = story_note
+    return JSONResponse(resp)
+
+
+def _quest_hint_v2(conn, member, char, town: str, county: str,
+                   today) -> JSONResponse:
+    """County-engine hints: the character is located inside the
+    player's active scope (town first, county when the town is
+    thin), and the hint ladder counts distinct catches in that
+    scope — county catches for a county scope, town catches for a
+    town scope. Same payload shape as the legacy hint, plus scope
+    context."""
+    scope = _quest_scope(
+        conn, town=town or None,
+        county_fips=county or None)
+    if scope is None:
+        return JSONResponse({
+            "ok": True, "character": char["name"],
+            "available_tonight": False,
+            "note": "No quest is live near there yet tonight."})
+    assignments = _quest_assignments_v2(conn, scope, today)
+    target_id = next((eid for eid, c in assignments.items()
+                      if c["id"] == char["id"]), None)
+    label = scope["label"]
+    if target_id is None:
+        if char["tier"] == "legendary":
+            nxt = today
+            for _ in range(45):
+                nxt += timedelta(days=1)
+                if _quest_is_golden_night(nxt):
+                    break
+            note = (f"{char['name']} only appears on golden "
+                    f"nights — the next one here is "
+                    f"{nxt.strftime('%A, %B ') + str(nxt.day)}.")
+        else:
+            note = ("Not around here tonight — the cast rotates "
+                    "nightly, so check back tomorrow.")
+        return JSONResponse({
+            "ok": True, "character": char["name"],
+            "available_tonight": False, "note": note,
+            "scope": scope["kind"], "scope_label": label})
+    pin = conn.execute(
+        "SELECT id, title, category, address, lat, lng FROM "
+        "entries WHERE id = ?", (target_id,)).fetchone()
+    if scope["kind"] == "county":
+        caught = _quest_county_catches(
+            conn, member["id"], scope["county"]["fips"])
+    else:
+        caught = conn.execute(
+            "SELECT COUNT(DISTINCT qc.character_id) AS c FROM "
+            "quest_checkins qc JOIN entries e ON e.id = qc.entry_id "
+            "WHERE qc.user_id = ? AND e.town = ?",
+            (member["id"], scope["town"])).fetchone()["c"]
+    level = 1 + (1 if caught >= QUEST_HINT_RIDDLE_AT else 0) \
+        + (1 if caught >= QUEST_HINT_LANTERN_AT else 0)
+    texts = _quest_hint_texts(pin, dict(char),
+                              scope["clat"], scope["clng"])
+    kinds = ["whisper", "riddle", "lantern"]
+    if level == 1:
+        nxt_unlock = (f"Capture {QUEST_HINT_RIDDLE_AT - caught} more "
+                      f"in {label} to unlock the riddle.")
+    elif level == 2:
+        nxt_unlock = (f"Capture {QUEST_HINT_LANTERN_AT - caught} more "
+                      f"in {label} to unlock the lantern hint.")
+    else:
+        nxt_unlock = None
+    return JSONResponse({
+        "ok": True, "character": char["name"], "tier": char["tier"],
+        "available_tonight": True, "town": scope["town"] or "",
+        "scope": scope["kind"], "scope_label": label,
+        "county": ({"fips": scope["county"]["fips"],
+                    "name": scope["county"]["name"],
+                    "state": scope["county"]["state"]}
+                   if scope["county"] else None),
+        "town_catches": caught, "scope_catches": caught,
+        "hint_level": level,
+        "hints": [{"kind": kinds[i], "text": texts[i]}
+                  for i in range(level)],
+        "next_unlock": nxt_unlock})
 
 
 @app.get("/api/quest/hint")
 async def quest_hint(request: Request, character: str = "",
-                     town: str = ""):
+                     town: str = "", county: str = ""):
     """Progressive hints toward one character's location tonight.
     Login required; MerryQuest brand + quest flags required (404
     otherwise, like the check-in). The hint level grows with the
@@ -18393,6 +19374,9 @@ async def quest_hint(request: Request, character: str = "",
                 "available_tonight": False,
                 "note": "Pip is your guide — he joins every hunter "
                         "at the very start of the quest."})
+        if QUEST_COUNTY_ENABLED and (county or town):
+            return _quest_hint_v2(conn, member, char, town, county,
+                                  today)
         assignments = _quest_assignments(conn, town, today)
         target_id = next((eid for eid, c in assignments.items()
                           if c["id"] == char["id"]), None)
@@ -18444,6 +19428,157 @@ async def quest_hint(request: Request, character: str = "",
         "next_unlock": nxt_unlock})
 
 
+def _quest_scope_payload(conn, scope, today, ulat=None, ulng=None,
+                         member=None) -> dict:
+    """The quest-surface view of a scope: tonight's stops nearest
+    first, the anchor featured, and (for a logged-in hunter) their
+    progress in the scope. Character names follow the public reveal
+    rules for guests; hunters who are logged in see names, as with
+    hints."""
+    assigns = _quest_assignments_v2(conn, scope, today,
+                                    ulat=ulat, ulng=ulng)
+    plat = ulat if ulat is not None else scope["clat"]
+    plng = ulng if ulng is not None else scope["clng"]
+    caught_ids = set()
+    if member is not None:
+        if scope["kind"] == "county":
+            caught_ids = {r["character_id"] for r in conn.execute(
+                "SELECT DISTINCT c.character_id FROM quest_checkins c "
+                "JOIN entries e ON e.id = c.entry_id "
+                "WHERE c.user_id = ? AND c.character_id IS NOT NULL "
+                "AND COALESCE(c.county_fips, e.county_fips) = ?",
+                (member["id"], scope["county"]["fips"])).fetchall()}
+        else:
+            caught_ids = {r["character_id"] for r in conn.execute(
+                "SELECT DISTINCT c.character_id FROM quest_checkins c "
+                "JOIN entries e ON e.id = c.entry_id "
+                "WHERE c.user_id = ? AND c.character_id IS NOT NULL "
+                "AND e.town = ?",
+                (member["id"], scope["town"])).fetchall()}
+    by_id = {p["id"]: p for p in scope["locations"]}
+    stops = []
+    for eid, char in assigns.items():
+        p = by_id.get(eid)
+        if p is None or char is None:
+            continue
+        named = member is not None or char["slug"] in _QUEST_PUBLIC_SLUGS
+        stops.append({
+            "id": p["id"], "title": p["title"], "town": p["town"],
+            "category": p["category"],
+            "is_stop": p["category"] != QUEST_HOUSE_CATEGORY,
+            "distance_mi": round(
+                _haversine_ft(plat, plng, p["lat"], p["lng"])
+                / 5280.0, 1),
+            "character": (char["name"] if named else None),
+            "tier": char["tier"],
+            "tier_label": _QUEST_TIER_LABEL.get(
+                char["tier"], char["tier"].upper()),
+            "caught": char["id"] in caught_ids,
+            "is_anchor": scope["anchor"] is not None
+            and p["id"] == scope["anchor"]["id"],
+        })
+    stops.sort(key=lambda s: (s["distance_mi"], s["id"]))
+    return {
+        "kind": scope["kind"], "label": scope["label"],
+        "town": scope["town"],
+        "county": ({"fips": scope["county"]["fips"],
+                    "name": scope["county"]["name"],
+                    "state": scope["county"]["state"]}
+                   if scope["county"] else None),
+        "pool_size": len(scope["locations"]),
+        "golden": _quest_is_golden_night(today),
+        "stops": stops,
+        "caught_count": len(caught_ids),
+        "hosted_count": len({c["id"] for c in assigns.values() if c}),
+    }
+
+
+@app.post("/api/quest/county")
+async def quest_county_resolve(request: Request):
+    """Coords -> county + the caller's quest scope. The web quest
+    surfaces call this AFTER the hunter taps 'use my location'
+    (decision 6 — the browser prompt happens on that tap, never on
+    page load); the granted fix is kept in the mq_pos cookie so the
+    server-rendered quest pages resolve the same scope. The app
+    rides the same pages and needs nothing native."""
+    if not _quest_on(request) or not QUEST_COUNTY_ENABLED \
+            or _brand_of(request) != "merryquest":
+        raise HTTPException(status_code=404)
+    try:
+        payload = await request.json()
+        lat = float(payload.get("lat"))
+        lng = float(payload.get("lng"))
+    except (TypeError, ValueError, AttributeError):
+        return JSONResponse({"ok": False, "error": "bad_coords"},
+                            status_code=400)
+    if not (-90 <= lat <= 90 and -180 <= lng <= 180):
+        return JSONResponse({"ok": False, "error": "bad_coords"},
+                            status_code=400)
+    county = _county_of_latlng(round(lat, 4), round(lng, 4))
+    today = _quest_today()
+    with get_conn(DB_PATH) as conn:
+        scope = _quest_scope(conn, ulat=lat, ulng=lng)
+        body = {"ok": True, "county": county}
+        if scope is not None:
+            body["scope"] = _quest_scope_payload(
+                conn, scope, today, ulat=lat, ulng=lng)
+    resp = JSONResponse(body)
+    resp.set_cookie("mq_pos", f"{lat},{lng}",
+                    max_age=60 * 60 * 24 * 30,
+                    httponly=True, samesite="lax")
+    return resp
+
+
+@app.get("/quest", response_class=HTMLResponse)
+def quest_page(request: Request, town: str = "", county: str = "",
+               lat: float = None, lng: float = None):
+    """Tonight's Quest — the player's own quest line: their town's
+    set, expanded to their county when the town is thin (Dan, Nov
+    24, 2026). MerryQuest brand + quest layer + county engine only;
+    404 everywhere else, like the rest of the layer."""
+    if not _quest_on(request) or not QUEST_COUNTY_ENABLED \
+            or _brand_of(request) != "merryquest":
+        raise HTTPException(status_code=404)
+    member = current_member(request)
+    if lat is not None and lng is not None \
+            and -90 <= lat <= 90 and -180 <= lng <= 180:
+        ulat, ulng = lat, lng
+        has_position = True
+    else:
+        ulat, ulng = _quest_user_position(request)
+        has_position = request.cookies.get("mq_pos") is not None
+    if not town and not county and ulat is None:
+        geo = _visitor_geo(request)
+        if geo and geo.get("city") and geo.get("state"):
+            town = f"{geo['city']}, {geo['state']}"
+    today = _quest_today()
+    with get_conn(DB_PATH) as conn:
+        scope = _quest_scope(conn, town=town or None,
+                             county_fips=county or None,
+                             ulat=ulat, ulng=ulng)
+        payload = None
+        if scope is not None:
+            payload = _quest_scope_payload(
+                conn, scope, today, ulat=ulat, ulng=ulng,
+                member=member)
+        fallback = None
+        if scope is None or len(scope["locations"]) < 5:
+            fallback = _quest_nearest_active_county(
+                conn, lat=ulat, lng=ulng)
+            if fallback and scope is not None \
+                    and scope["county"] is not None \
+                    and fallback["fips"] == scope["county"]["fips"]:
+                fallback = None
+    return templates.TemplateResponse(request, "county_quest.html", {
+        "member": member,
+        "quest": payload,
+        "fallback_county": fallback,
+        "golden": _quest_is_golden_night(today),
+        "has_position": has_position,
+        "today_label": today.strftime("%A, %B ") + str(today.day),
+    })
+
+
 @app.get("/sack", response_class=HTMLResponse)
 def sack_page(request: Request):
     """Santa's Sack — the collection view. MerryQuest brand +
@@ -18468,11 +19603,55 @@ def sack_page(request: Request):
             f"AND lat IS NOT NULL GROUP BY town "
             f"ORDER BY c DESC LIMIT 80",
             QUEST_SPAWN_CATEGORIES).fetchall()]
+        # County engine extras (flag on only — with it off these
+        # stay None/empty and the Sack renders exactly as before):
+        # per-county progress + County Cleared badges, and the
+        # hunter's Quest Points (tonight, under the soft cap, and
+        # lifetime).
+        county_progress = None
+        quest_points = None
+        completion = None
+        if QUEST_COUNTY_ENABLED:
+            county_progress = _quest_county_progress(
+                conn, member["id"])
+            quest_points = {
+                "tonight": _quest_points_tonight(
+                    conn, member["id"], _quest_today()),
+                "total": conn.execute(
+                    "SELECT COALESCE(SUM(points), 0) AS p FROM "
+                    "quest_checkins WHERE user_id = ?",
+                    (member["id"],)).fetchone()["p"],
+                "cap": QUEST_POINTS_NIGHTLY_CAP,
+            }
+            completion = _quest_completion(conn, member["id"])
+            # Pip joins every hunter at the start of the quest
+            # (canon) — show him in the Sack as held, count 1.
+            _pip = next((c for c in cast
+                         if c["tier"] == "original"), None)
+            if _pip is not None and _pip["id"] not in held:
+                held[_pip["id"]] = {
+                    "character_id": _pip["id"], "count": 1,
+                    "first_at": member.get("created_at") or "",
+                    "last_at": member.get("created_at") or ""}
     cast_out = []
     collected = []
     for c in cast:
         h = held.get(c["id"])
         row = {**c, "count": h["count"] if h else 0}
+        if completion is not None:
+            state = completion["states"].get(c["id"], "locked")
+            row["story_state"] = state
+            _rd = completion["reveal_dates"].get(c["id"])
+            row["story_reveal"] = _rd
+            if _rd:
+                _rdd = date.fromisoformat(_rd)
+                row["story_reveal_label"] = (
+                    _rdd.strftime("%B ") + str(_rdd.day))
+            if state in ("first", "complete"):
+                first, second = _quest_story_halves(c["slug"])
+                row["story_first"] = first
+                if state == "complete":
+                    row["story_second"] = second
         cast_out.append(row)
         if h:
             collected.append({**row, "first_at": h["first_at"]})
@@ -18483,4 +19662,8 @@ def sack_page(request: Request):
         "collected_count": len(collected),
         "total_collectible": len(cast),
         "hunt_towns": hunt_towns,
+        "county_progress": county_progress,
+        "quest_points": quest_points,
+        "completion": completion,
+        "aurora_enabled": QUEST_AURORA_ENABLED,
     })

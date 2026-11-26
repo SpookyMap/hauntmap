@@ -292,6 +292,8 @@ CREATE TABLE IF NOT EXISTS entries (
     ev_genre TEXT,                        -- events facet: music genre (see EVENT_GENRES in main.py)
     ev_venue TEXT,                        -- events facet: venue style (see EVENT_VENUES in main.py)
     virtual INTEGER NOT NULL DEFAULT 0,   -- 1 = online/virtual LIVE room (Dan, Oct 27): no street address, no coords, town stored as "Online / Virtual"; live category only
+    county_fips TEXT,                     -- US county FIPS (5 chars) resolved from lat/lng by the quest county engine (Nov 24, 2026); NULL until tagged
+    county_name TEXT,                     -- display name, e.g. 'Monmouth County'
     lit_status TEXT NOT NULL DEFAULT 'unconfirmed', -- 'lit' | 'unconfirmed' (Dan, Nov 20, 2026): only lit christmas displays are capturable or appear in tours
     lit_source TEXT,                      -- who confirmed it: 'curation' | 'visitor' | 'owner'
     lit_at TEXT,                          -- when it was confirmed lit (UTC ISO)
@@ -694,7 +696,16 @@ CREATE TABLE IF NOT EXISTS quest_checkins (
     lat REAL NOT NULL,                  -- client-submitted coordinates
     lng REAL NOT NULL,
     distance_ft REAL NOT NULL,          -- server-computed distance to the pin
+    county_fips TEXT,                   -- county the PIN sits in, denormalized at check-in (county quest engine, Nov 24, 2026)
+    points INTEGER NOT NULL DEFAULT 0,  -- Quest Points actually awarded for this capture, post nightly soft cap (Nov 24, 2026)
     created_at TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS quest_county_badges (
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    county_fips TEXT NOT NULL,
+    county_name TEXT,
+    awarded_at TEXT NOT NULL,
+    PRIMARY KEY (user_id, county_fips)
 );
 CREATE INDEX IF NOT EXISTS idx_quest_checkins_user
     ON quest_checkins(user_id, created_at);
@@ -1068,6 +1079,28 @@ def init_db(db_path: Path) -> None:
             conn.execute(
                 "ALTER TABLE entries ADD COLUMN report_count INTEGER NOT NULL DEFAULT 0"
             )
+        if "county_fips" not in cols:
+            # County quest engine (Dan, Nov 24, 2026): every pin
+            # resolves to a US county (from its coordinates, via the
+            # bundled boundary file in app/geo). Filled by the
+            # startup backfill in main.py; NULL for coordinate-less
+            # pins (virtual rooms), which never spawn.
+            conn.execute("ALTER TABLE entries ADD COLUMN county_fips TEXT")
+            conn.execute("ALTER TABLE entries ADD COLUMN county_name TEXT")
+        qcols = {r["name"] for r in conn.execute(
+            "PRAGMA table_info(quest_checkins)").fetchall()}
+        if qcols and "county_fips" not in qcols:
+            # Captures credit the county the display is in (spec
+            # §2.3): denormalized from the pin at check-in time so
+            # county progress queries stay cheap.
+            conn.execute(
+                "ALTER TABLE quest_checkins ADD COLUMN county_fips TEXT")
+        if qcols and "points" not in qcols:
+            # Quest Points (Dan, Nov 24, 2026): points actually
+            # awarded per capture, after the nightly soft cap.
+            conn.execute(
+                "ALTER TABLE quest_checkins ADD COLUMN points "
+                "INTEGER NOT NULL DEFAULT 0")
         # Enforce the code-owned editor's-pick set (FEATURED_ENTRY_IDS):
         # exactly those pins flagged, every other pin unflagged. Runs on
         # every init (idempotent) so the set survives deploys/restarts.

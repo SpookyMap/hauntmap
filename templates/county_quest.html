@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+{% block title %}Tonight&rsquo;s Quest &middot; {{ site_name }}{% endblock %}
+{% block content %}
+<section class="cq-wrap">
+  <h1 class="cq-title">&#x1F384; Tonight&rsquo;s Quest</h1>
+  <p class="cq-sub">{{ today_label }}{% if golden %} &middot; &#x2728; <b>Golden Night</b> &mdash; a Legendary is out there{% endif %}</p>
+
+  {% if not has_position %}
+  <div class="cq-locate">
+    <p>Quests are local &mdash; your set is built from the stops nearest you.</p>
+    <button type="button" class="btn" id="cqLocateBtn">&#x1F4CD; Use my location</button>
+    <p class="cq-locate-note" id="cqLocateNote"></p>
+  </div>
+  {% endif %}
+
+  {% if quest %}
+  <h2 class="cq-line">{% if quest.kind == 'county' %}The {{ quest.county.name }} Quest{% else %}The {{ quest.town }} Quest{% endif %}</h2>
+  <p class="cq-scope">
+    {% if quest.kind == 'county' %}Your town&rsquo;s displays are just the start tonight &mdash; this quest spans all of {{ quest.county.name }}, {{ quest.county.state }} ({{ quest.pool_size }} stops).{% else %}{{ quest.pool_size }} stops in {{ quest.town }} tonight.{% endif %}
+    {% if member %}You&rsquo;ve caught {{ quest.caught_count }} of the {{ quest.hosted_count }} characters hiding here tonight.{% endif %}
+  </p>
+
+  {% set anchor = quest.stops | selectattr('is_anchor') | first %}
+  {% if anchor %}
+  <a class="cq-anchor" href="/d/{{ anchor.id }}">
+    <span class="cq-anchor-kicker">{% if quest.golden %}&#x2728; Golden Night anchor{% else %}&#x2B50; Featured stop{% endif %}</span>
+    <span class="cq-anchor-title">{{ anchor.title }}</span>
+    <span class="cq-anchor-meta">{{ anchor.town }} &middot; {{ anchor.distance_mi }} mi &middot; {% if anchor.character %}{{ anchor.character }} is waiting{% else %}a {{ anchor.tier_label }} character is waiting{% endif %}{% if anchor.caught %} &middot; &#x2713; caught{% endif %}</span>
+  </a>
+  {% endif %}
+
+  <ol class="cq-stops">
+    {% for s in quest.stops %}
+    <li class="cq-stop{% if s.is_anchor %} cq-stop-anchor{% endif %}">
+      <a href="/d/{{ s.id }}" class="cq-stop-link">
+        <span class="cq-stop-main"><b>{{ s.title }}</b> <span class="cq-stop-town">{{ s.town }}</span></span>
+        <span class="cq-stop-meta">{{ s.distance_mi }} mi &middot; {% if s.character %}{{ s.character }}{% else %}{{ s.tier_label }} character{% endif %}{% if s.is_stop %} &middot; Quest Stop{% endif %}{% if s.caught %} &middot; &#x2713; caught{% endif %}</span>
+      </a>
+    </li>
+    {% endfor %}
+  </ol>
+  <p class="cq-note">Check in within 150 ft of a stop to capture its character. The cast rotates nightly, so the characters nearest you change every night &mdash; no long trips required.</p>
+  {% else %}
+  <div class="cq-empty">
+    <h2 class="cq-line">No quest here yet</h2>
+    <p>No lit displays or Quest Stops are live in this area tonight, so there&rsquo;s no quest to hunt &mdash; yet. The moment the first display here is confirmed lit, this county&rsquo;s quest switches itself on.</p>
+    <p><a class="btn" href="/upload">Add your display &rarr;</a></p>
+  </div>
+  {% endif %}
+
+  {% if fallback_county %}
+  <div class="cq-fallback">
+    <p class="cq-fallback-kicker">&#x1F5FA;&#xFE0F; The nearest live quest</p>
+    <p class="cq-fallback-name">{{ fallback_county.name }}, {{ fallback_county.state }} &mdash; {{ fallback_county.stops }} stops{% if fallback_county.distance_mi is not none %} &middot; about {{ fallback_county.distance_mi | round(0, 'common') | int }} mi away{% endif %}</p>
+    <p><a class="btn" href="/quest?county={{ fallback_county.fips }}">Open the {{ fallback_county.name }} quest &rarr;</a></p>
+  </div>
+  {% endif %}
+
+  {% if member %}
+  <p class="cq-sack"><a href="/sack">Santa&rsquo;s Sack &rarr;</a> &middot; <a href="/leaderboard/hunters">Quester leaderboards &rarr;</a></p>
+  {% else %}
+  <p class="cq-sack"><a href="/login?next=/quest">Sign in</a> to capture characters and fill your Sack.</p>
+  {% endif %}
+</section>
+
+<style>
+.cq-wrap { max-width: 640px; margin: 0 auto; padding: 8px 4px 24px; }
+.cq-title { text-align: center; margin-bottom: 4px; }
+.cq-sub { text-align: center; opacity: .85; margin-top: 0; }
+.cq-locate { border: 1px solid rgba(120,200,255,.4); border-radius: 14px; padding: 12px 16px; text-align: center; margin: 0 0 14px; background: rgba(255,255,255,.03); }
+.cq-locate-note { min-height: 1em; font-size: .9em; opacity: .85; }
+.cq-line { text-align: center; margin: 10px 0 4px; }
+.cq-scope { text-align: center; opacity: .9; }
+.cq-anchor { display: block; border: 1px solid rgba(255,215,94,.55); border-radius: 14px; padding: 12px 16px; margin: 12px 0; text-decoration: none; background: rgba(255,215,94,.06); }
+.cq-anchor-kicker { display: block; font-size: .85em; letter-spacing: .04em; text-transform: uppercase; color: #ffd75e; font-weight: 700; }
+.cq-anchor-title { display: block; font-size: 1.25em; font-weight: 800; margin: 2px 0; }
+.cq-anchor-meta { display: block; opacity: .9; }
+.cq-stops { list-style: none; padding: 0; margin: 12px 0; display: grid; gap: 8px; }
+.cq-stop { border: 1px solid rgba(255,255,255,.14); border-radius: 12px; background: rgba(255,255,255,.03); }
+.cq-stop-anchor { border-color: rgba(255,215,94,.55); }
+.cq-stop-link { display: block; padding: 10px 14px; text-decoration: none; }
+.cq-stop-main { display: block; }
+.cq-stop-town { opacity: .75; font-weight: 400; }
+.cq-stop-meta { display: block; opacity: .85; font-size: .92em; }
+.cq-note, .cq-sack { text-align: center; opacity: .85; }
+.cq-empty { text-align: center; border: 1px dashed rgba(255,255,255,.3); border-radius: 14px; padding: 16px; margin: 12px 0; }
+.cq-fallback { border: 1px solid rgba(120,200,255,.4); border-radius: 14px; padding: 12px 16px; text-align: center; margin: 12px 0; background: rgba(255,255,255,.03); }
+.cq-fallback-kicker { text-transform: uppercase; letter-spacing: .04em; font-size: .85em; opacity: .8; margin: 0; }
+.cq-fallback-name { font-weight: 700; }
+</style>
+
+<script>
+(function () {
+  // "Choose my town" fallback: if the server resolved nothing and
+  // the hunter previously picked a town on the map, offer that set.
+  var params = new URLSearchParams(window.location.search);
+  if (!params.has('town') && !params.has('county') && !params.has('lat')) {
+    try {
+      var t = window.localStorage.getItem('hm_town');
+      {% if not quest %}if (t) { params.set('town', t); window.location.search = params.toString(); }{% endif %}
+    } catch (e) {}
+  }
+  // Geolocation ONLY on tap (never on page load): the browser
+  // prompt belongs to this button. The fix posts to the county
+  // resolver, which sets the mq_pos cookie, then we reload so the
+  // server renders the local set.
+  var btn = document.getElementById('cqLocateBtn');
+  if (btn) {
+    btn.addEventListener('click', function () {
+      var note = document.getElementById('cqLocateNote');
+      if (!navigator.geolocation) {
+        note.textContent = 'This browser cannot share location — pick your town on the map instead.';
+        return;
+      }
+      note.textContent = 'Finding you…';
+      navigator.geolocation.getCurrentPosition(function (pos) {
+        fetch('/api/quest/county', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({lat: pos.coords.latitude, lng: pos.coords.longitude})
+        }).then(function () { window.location.reload(); })
+          .catch(function () { note.textContent = 'Could not save your location — try again.'; });
+      }, function () {
+        note.textContent = 'Location is off for this site — your quest is using the nearest town we can see.';
+      }, {timeout: 10000, maximumAge: 300000});
+    });
+  }
+})();
+</script>
+{% endblock %}
