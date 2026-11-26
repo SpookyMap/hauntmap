@@ -4279,14 +4279,29 @@ def events_page(request: Request, type: str = "", genre: str = "",
          "voted": voted})
 
 
+@app.get("/christmas-markets", response_class=HTMLResponse)
+def christmas_markets_page(request: Request):
+    # Christmas Markets (Dan, Nov 26, 2026): MerryQuest's own unique
+    # markets page — a curated guide (featured TikTok + verified NYC
+    # market cards), NOT the old HauntMap flea-market listing. MQ-only:
+    # 404 on HauntMap, same brand separation as the other MQ surfaces.
+    if _brand_of(request) != "merryquest":
+        raise HTTPException(status_code=404)
+    return templates.TemplateResponse(
+        request, "christmas_markets.html", {"site_name": SITE_NAME},
+    )
+
+
 @app.get("/markets", response_class=HTMLResponse)
 def markets_page(request: Request, town: str = "", state: str = "",
                  near: str = "", area: str = "", lat: str = "",
                  lng: str = ""):
-    # HauntMap-only pool (Nov 25, 2026): the market listings are
-    # October Halloween markets — 404 on MerryQuest.
-    if _brand_of(request) == "merryquest":
+    # Markets moved to MerryQuest (Dan, Nov 26, 2026): "Get it off
+    # HauntMap" — HauntMap 404s /markets, and on MerryQuest /markets
+    # redirects to the Christmas Markets page above.
+    if _brand_of(request) != "merryquest":
         raise HTTPException(status_code=404)
+    return RedirectResponse("/christmas-markets", status_code=301)
     # Flea Markets & Pop-Ups (Dan, Oct 23): every event pin faceted
     # ev_type='Market' on one page, soonest first. Event dates live in
     # the titles, so ordering reuses parse_event_dates (the same parser

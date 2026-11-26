@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% block title %}Christmas Markets &middot; {{ site_name }}{% endblock %}
+{% block head %}<meta name="description" content="New York's Christmas markets for 2026 — Macy's Holiday Square, Bryant Park Winter Village, Grand Central Holiday Fair, Union Square, Watermark and Columbus Circle, with dates, addresses and a featured look inside the season's newest market.">
+<style>
+.cm-hero { text-align: center; margin: 0 auto 1.2rem; max-width: 640px; }
+.cm-hero .cm-kicker { letter-spacing: .14em; text-transform: uppercase; font-size: .78rem; opacity: .85; }
+.cm-featured { border: 1px solid rgba(255,200,44,.45); border-radius: 14px; padding: 1rem 1rem 1.2rem; margin: 0 auto 1.6rem; max-width: 680px; background: rgba(255,200,44,.06); }
+.cm-featured h2 { margin-top: .2rem; }
+.cm-embed { display: flex; justify-content: center; margin: .8rem auto; }
+.cm-credit { text-align: center; font-size: .85rem; opacity: .85; }
+.cm-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(270px, 1fr)); gap: 1rem; margin: 1rem 0 1.6rem; }
+.cm-card { border: 1px solid rgba(255,255,255,.16); border-radius: 12px; padding: 1rem; background: rgba(255,255,255,.04); }
+.cm-card h3 { margin: .1rem 0 .4rem; }
+.cm-meta { font-size: .9rem; opacity: .9; margin: .15rem 0; }
+.cm-dates { font-weight: 600; }
+.cm-hook { margin: .5rem 0 .7rem; }
+.cm-card .btn { display: inline-block; margin-top: .2rem; }
+</style>{% endblock %}
+{% block content %}
+{# Christmas Markets (Dan, Nov 26, 2026): MerryQuest's own markets
+   page. The old HauntMap flea-market listing (/markets) is gone —
+   HauntMap 404s it and /markets here redirects to this page.
+   CROSS-LINK TODO: when the staged NYC Christmas To-Do List page
+   ships, its Markets section should link here (/christmas-markets),
+   and a reciprocal link back belongs under the grid below. #}
+<div class="cm-hero">
+  <p class="cm-kicker">&#x1F384; MerryQuest &middot; New York City</p>
+  <h1>&#x1F6D2; Christmas Markets</h1>
+  <p class="lede">The season&rsquo;s markets in one place &mdash; gift stalls, holiday treats and warm drinks, from the newest indoor market in Herald Square to the classics at Bryant Park, Grand Central and Union Square.</p>
+</div>
+
+<section class="cm-featured" aria-label="Featured market">
+  <p class="cm-kicker">&#x2B50; Featured &mdash; new this season</p>
+  <h2>Macy&rsquo;s Holiday Square</h2>
+  <p class="cm-meta">&#x1F4CD; Lower Level, Macy&rsquo;s Herald Square &middot; 151 W 34th St, New York, NY 10001</p>
+  <p class="cm-meta cm-dates">&#x1F4C5; Oct 31, 2026 &ndash; Jan 3, 2027 &middot; open daily during store hours &middot; free entry</p>
+  <p class="cm-hook">A brand-new indoor market takes over more than 50,000 square feet of the flagship&rsquo;s lower level &mdash; local makers, New York gifts and holiday food, all under one warm roof. Take a look inside:</p>
+  <div class="cm-embed">
+    <blockquote class="tiktok-embed" cite="https://www.tiktok.com/@explorewithdasom/video/7704838572490149134" data-video-id="7704838572490149134" style="max-width: 605px;min-width: 325px;">
+      <section><a href="https://www.tiktok.com/@explorewithdasom/video/7704838572490149134" target="_blank" rel="noopener">Watch on TikTok</a></section>
+    </blockquote>
+    <script async src="https://www.tiktok.com/embed.js"></script>
+  </div>
+  <p class="cm-credit">Video by <a href="https://www.tiktok.com/@explorewithdasom" target="_blank" rel="noopener">@explorewithdasom</a> on TikTok</p>
+</section>
+
+<h2>More markets to wander</h2>
+<div class="cm-grid">
+  <article class="cm-card">
+    <h3>Bank of America Winter Village at Bryant Park</h3>
+    <p class="cm-meta">&#x1F4CD; Bryant Park, 40th&ndash;42nd St &amp; Fifth&ndash;Sixth Ave, New York, NY 10018</p>
+    <p class="cm-meta cm-dates">&#x1F4C5; Holiday Shops: Oct 28, 2026 &ndash; Jan 3, 2027</p>
+    <p class="cm-hook">More than 180 jewel-box kiosks line the park around the city&rsquo;s only free-admission ice rink &mdash; the full European-style market, food stalls and all.</p>
+    <a class="btn" href="/?town=New%20York%2C%20NY">See New York displays &rarr;</a>
+  </article>
+  <article class="cm-card">
+    <h3>Grand Central Holiday Fair</h3>
+    <p class="cm-meta">&#x1F4CD; Vanderbilt Hall, Grand Central Terminal &middot; 89 E 42nd St, New York, NY 10017</p>
+    <p class="cm-meta cm-dates">&#x1F4C5; Nov 9 &ndash; Dec 24, 2026</p>
+    <p class="cm-hook">Thirty-five-plus artisan makers inside soaring Vanderbilt Hall &mdash; the rainy-day market, and the city&rsquo;s longest-running indoor fair.</p>
+    <a class="btn" href="/?town=New%20York%2C%20NY">See New York displays &rarr;</a>
+  </article>
+  <article class="cm-card">
+    <h3>Union Square Holiday Market</h3>
+    <p class="cm-meta">&#x1F4CD; Union Square Park, E 14th St, New York, NY 10003</p>
+    <p class="cm-meta cm-dates">&#x1F4C5; Nov 12 &ndash; Dec 24, 2026</p>
+    <p class="cm-hook">The city&rsquo;s oldest holiday market &mdash; nearly 200 vendors fill the south end of Union Square Park with gifts, crafts and treats.</p>
+    <a class="btn" href="/?town=New%20York%2C%20NY">See New York displays &rarr;</a>
+  </article>
+  <article class="cm-card">
+    <h3>Santa&rsquo;s Winter Wonderland at Watermark</h3>
+    <p class="cm-meta">&#x1F4CD; Pier 15, Watermark &middot; 78 South St, New York, NY 10038</p>
+    <p class="cm-meta cm-dates">&#x1F4C5; Nov 13 &ndash; Dec 27, 2026 &middot; ticketed</p>
+    <p class="cm-hook">A waterfront winter village on the pier &mdash; Santa seven days a week, heated glasshouses, games and Brooklyn Bridge views over the East River.</p>
+    <a class="btn" href="/?town=New%20York%2C%20NY">See New York displays &rarr;</a>
+  </article>
+  <article class="cm-card">
+    <h3>Columbus Circle Holiday Market</h3>
+    <p class="cm-meta">&#x1F4CD; Columbus Circle at Central Park South &amp; 8th Ave, New York, NY 10019</p>
+    <p class="cm-meta cm-dates">&#x1F4C5; Dec 1 &ndash; 31, 2026</p>
+    <p class="cm-hook">Gift stalls at the corner of Central Park &mdash; pair the browse with the Holiday Under the Stars display right across the circle.</p>
+    <a class="btn" href="/d/9711">Nearby display: Holiday Under the Stars &rarr;</a>
+  </article>
+</div>
+
+<p class="music-crosslink">&#x1F39F;&#xFE0F; Looking for parties, tree lightings and holiday events instead? <a href="/events">All Events &rarr;</a></p>
+{% endblock %}
