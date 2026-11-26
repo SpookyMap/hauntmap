@@ -416,7 +416,17 @@ body.brand-merryquest {
    top-left — the lockup turned to mush at bar height; the wordmark
    reads. Bar height held by the .mqx-brand min-height (52/40px,
    the old lockup's heights) with the wordmark centered inside. */
-.mqx-brand-wordmark { height: 34px; width: auto; display: block; }
+/* Header wordmark sizing (Dan, 2026-11-26): the header now uses
+   merryquest-wordmark-header.webp — the same art cropped to its
+   alpha bounds (851x243 of the 1001x559 original; letterforms
+   untouched, only transparent padding removed). The old file's
+   letters filled just 243/559 of its height, so the old 34px slot
+   rendered ~52x15px letters. With the tight crop the slot height
+   IS the letter height, and Dan asked for the logo bigger on the
+   website view too, not just the phone: 30px here renders
+   ~105x30px letters, about 2x the old desktop size, still inside
+   the 52px brand min-height so the bar keeps its height. */
+.mqx-brand-wordmark { height: 30px; width: auto; display: block; }
 .mqx-brand { display: flex; align-items: center; gap: 9px; text-decoration: none; min-height: 52px; }
 .mqx-brand .brand-pip { height: 34px; width: 34px; }
 .mqx-wordmark {
@@ -453,7 +463,12 @@ body.brand-merryquest {
   .mqx-nav a { white-space: nowrap; font-size: 13.5px; }
   .mqx-wordmark { font-size: 19px; }
   .mqx-brand-logo { height: 40px; }
-  .mqx-brand-wordmark { height: 28px; }
+  /* Phone logo (Dan, 2026-11-26): with the tight-cropped header
+     wordmark the letters take the full slot — 30px letters here vs
+     ~12px before (28px slot x 243/559 art fill). Still inside the
+     40px brand min-height, so the header keeps its height and the
+     nav row below is untouched. */
+  .mqx-brand-wordmark { height: 30px; }
   .mqx-brand { min-height: 40px; }
 }
 
