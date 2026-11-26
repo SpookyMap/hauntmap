@@ -46,7 +46,7 @@
 <h1>&#x1F3AA; Events &amp; Parties</h1>
 <p class="lede">{% if brand | default('haunt') == 'merryquest' %}Christmas parties, concerts, DJ nights, parades and festivals{% else %}Halloween parties, concerts, DJ nights, parades and festivals{% endif %} &mdash; search the season by the kind of night you want: filter by event type, music genre and venue style.</p>
 {% if not _mq %}<p class="music-crosslink">&#x1F3B5; Want the soundtrack too? <a href="/music">Halloween playlists, classic videos &amp; music icons &rarr;</a></p>
-<p class="music-crosslink">&#x1F6D2; After costumes, d&eacute;cor &amp; curiosities? <a href="/markets">Flea Markets &amp; Pop-Ups &rarr;</a></p>{% endif %}
+{% endif %}
 {# Brand separation (Nov 25, 2026): /music and /markets are
    HauntMap-only pages (404 on MerryQuest), so neither cross-promo
    renders on the MQ brand. #}
