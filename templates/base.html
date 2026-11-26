@@ -888,7 +888,8 @@ window.addEventListener('storage', function (e) {
 });
 hmTourSync();
 </script>
-{% if not (brand | default('haunt') == 'merryquest' and request.url.path == '/') %}{% include "_radio.html" %}{% endif %}
+{# Radio: not rendered on the MerryQuest brand at all (Dan, Nov 25, 2026 — removed "for now"; _radio.html itself is untouched, flip this condition to bring the player back). HauntMap renders it on every page, unchanged. #}
+{% if brand | default('haunt') != 'merryquest' %}{% include "_radio.html" %}{% endif %}
 {# Speculation Rules (Chromium; ignored elsewhere): prefetch same-origin
    pages on hover/press so the next tap lands instantly. Prefetch pulls HTML
    only (~13 KB/page) — deliberately NOT eager/viewport-triggered, and admin,
