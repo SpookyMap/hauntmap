@@ -10,6 +10,7 @@ import calendar
 import functools
 import hashlib
 import hmac
+import html as _html
 import ipaddress
 import logging
 import os
@@ -13211,13 +13212,20 @@ def admin(request: Request):
         for p in fanart_pending + fanart_live:
             p["thumb_url"] = (f"/media/{p['thumb_path']}" if p.get("thumb_path")
                               else f"/media/{p['media_path']}")
+        dotd_today = _quest_today().isoformat()
+        dotd_row = conn.execute(
+            "SELECT d.entry_id AS entry_id, e.title AS title "
+            "FROM display_of_day d LEFT JOIN entries e ON e.id = d.entry_id "
+            "WHERE d.day = ?", (dotd_today,)).fetchone()
+        dotd_pick = dict(dotd_row) if dotd_row else None
     return templates.TemplateResponse(request, "admin.html",
         {"request": request, "logged_in": True, "flagged": flagged,
          "all_entries": all_entries, "subs": subs, "sub_count": sub_count, "error": None,
          "town_reqs": town_reqs, "town_req_count": town_req_count,
          "claims_rows": claims_rows, "claims_count": claims_count,
          "feedback_rows": feedback_rows, "feedback_count": feedback_count,
-         "fanart_pending": fanart_pending, "fanart_live": fanart_live},
+         "fanart_pending": fanart_pending, "fanart_live": fanart_live,
+         "dotd_today": dotd_today, "dotd_pick": dotd_pick},
     )
 
 
@@ -13799,6 +13807,49 @@ def admin_unhide(entry_id: int, request: Request):
         conn.execute("UPDATE entries SET hidden = 0, flagged = 0, report_count = 0 WHERE id = ?", (entry_id,))
         conn.commit()
     return RedirectResponse("/admin", status_code=303)
+
+
+@app.post("/admin/display-of-day")
+def admin_set_display_of_day(request: Request, day: str = Form(""),
+                             entry_id: int = Form(0)):
+    """Set the Display of the Day pick (Dan, Nov 26, 2026): the write
+    side of the display_of_day table (see app/db.py). Admin only — the
+    same _require_admin guard as every other fixed-purpose admin POST.
+    The pick must name a real, visible pin with a thumbnail: the
+    homepage resolver (_display_of_day) silently falls back to the
+    daily rotation for a pick that fails those checks, so they are
+    rejected here with a clean 400 instead of landing as a no-op."""
+    _require_admin(request)
+    try:
+        parsed = datetime.strptime(day.strip(), "%Y-%m-%d").date()
+    except ValueError:
+        raise HTTPException(400, "Bad day — use YYYY-MM-DD.")
+    if parsed.isoformat() != day.strip():
+        raise HTTPException(400, "Bad day — use YYYY-MM-DD.")
+    with get_conn(DB_PATH) as conn:
+        row = conn.execute(
+            "SELECT id, title, town, hidden, thumb_path FROM entries "
+            "WHERE id = ?", (entry_id,)).fetchone()
+        if row is None:
+            raise HTTPException(400, f"No entry with id {entry_id}.")
+        if row["hidden"]:
+            raise HTTPException(400, "That entry is hidden — unhide it first.")
+        if not row["thumb_path"]:
+            raise HTTPException(
+                400, "That entry has no thumbnail — the DOTD card needs one.")
+        title, town = row["title"], row["town"]
+        conn.execute(
+            "INSERT OR REPLACE INTO display_of_day (day, entry_id, set_at) "
+            "VALUES (?, ?, ?)",
+            (parsed.isoformat(), entry_id,
+             datetime.now(timezone.utc).isoformat()))
+        conn.commit()
+    return HTMLResponse(
+        f"<h1>Display of the Day set</h1>"
+        f"<p>{parsed.isoformat()} &rarr; pin {entry_id} — "
+        f"{_html.escape(title)} ({_html.escape(town)})</p>"
+        f"<p><a href=\"/admin\">Back to admin</a> · "
+        f"<a href=\"/\">View homepage</a></p>")
 
 
 @app.post("/admin/delete/{entry_id}")

@@ -19,6 +19,22 @@
 <p><a href="/admin/stats" class="btn">📊 View Traffic Stats</a>
 <a href="/admin/sponsors" class="btn">🤝 Manage Sponsors</a></p>
 
+<h2>&#x1F31F; Display of the Day</h2>
+{% if dotd_pick %}
+<p>Today ({{ dotd_today }}) is set to pin {{ dotd_pick.entry_id }} — {{ dotd_pick.title or '(entry deleted)' }}.</p>
+{% else %}
+<p>No pick set for today ({{ dotd_today }}) — both homepages are on the daily rotation.</p>
+{% endif %}
+<form method="post" action="/admin/display-of-day" class="form">
+  <label>Day (YYYY-MM-DD, US Eastern)
+    <input type="text" name="day" value="{{ dotd_today }}" required pattern="\d{4}-\d{2}-\d{2}">
+  </label>
+  <label>Pin id
+    <input type="number" name="entry_id" required min="1">
+  </label>
+  <button type="submit" class="btn">Set Display of the Day</button>
+</form>
+
 <h2>&#x1F6A9; Flagged for review ({{ flagged|length }})</h2>
 {% if flagged %}
 <div class="admin-list">
