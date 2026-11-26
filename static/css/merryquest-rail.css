@@ -1673,3 +1673,12 @@ main > h1 { font-family:'Anton',sans-serif; text-transform:uppercase; letter-spa
   .mqx-char-story { font-size: 17px; }
   .mqx-char-chips { justify-content: center; }
 }
+
+/* Just Added ticker chip recolor (Dan, Nov 26, 2026): "make the just
+   added button not yellow but something blueish like the logo color."
+   The shared .nt-chip rule in style.css paints the chip with
+   var(--accent) (gold on MQ, orange on HauntMap). This MQ-only
+   override swaps in the logo lockup's icy azure — sampled median hue
+   ~199° from merryquest-logo-v3-clear.webp — with white text.
+   HauntMap's chip is untouched. */
+body.brand-merryquest .mq-ticker .nt-chip { background: #0E7EC2; color: #fff; }
