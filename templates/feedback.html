@@ -1,16 +1,16 @@
 {% extends "base.html" %}
 {% block title %}Feedback · {{ site_name }}{% endblock %}
-{% block head %}<meta name="description" content="Tell HauntMap how we can improve the site — and what we can do to make your Halloween spookier and your experience here creepier.">{% endblock %}
+{% block head %}<meta name="description" content="{% if brand | default('haunt') == 'merryquest' %}Tell MerryQuest how we can improve the site — and what we can do to make your Christmas brighter and your experience here merrier.{% else %}Tell HauntMap how we can improve the site — and what we can do to make your Halloween spookier and your experience here creepier.{% endif %}">{% endblock %}
 {% block content %}
-<h1>&#x1F383; Help Us Haunt Better</h1>
+<h1>{% if brand | default('haunt') == 'merryquest' %}&#x1F384; Help Us Glow Better{% else %}&#x1F383; Help Us Haunt Better{% endif %}</h1>
 {% if request.query_params.get('sent') %}
 <div class="fb-panel fb-thanks">
-  <p class="fb-thanks-big">&#x1F383; Thank you — your words just crawled into our crypt.</p>
-  <p>We read every single note. The best ideas rise from the grave and onto the site.</p>
-  <p class="fb-thanks-links"><a href="/" class="btn">Back to the haunts &rarr;</a> <a href="/tour" class="btn">Build a tour &rarr;</a></p>
+  <p class="fb-thanks-big">{% if brand | default('haunt') == 'merryquest' %}&#x1F384; Thank you — your words just lit up our tree.{% else %}&#x1F383; Thank you — your words just crawled into our crypt.{% endif %}</p>
+  <p>{% if brand | default('haunt') == 'merryquest' %}We read every single note. The best ideas light up and onto the site.{% else %}We read every single note. The best ideas rise from the grave and onto the site.{% endif %}</p>
+  <p class="fb-thanks-links"><a href="/" class="btn">{% if brand | default('haunt') == 'merryquest' %}Back to the displays{% else %}Back to the haunts{% endif %} &rarr;</a> <a href="/tour" class="btn">Build a tour &rarr;</a></p>
 </div>
 {% else %}
-<p class="fb-intro">HauntMap is built by Halloween lovers, for Halloween lovers — and nobody knows better than the haunters using it. Tell us how we can improve the site, and what we could do to make your Halloween spookier and your experience here creepier. Every note gets read.</p>
+<p class="fb-intro">{% if brand | default('haunt') == 'merryquest' %}MerryQuest is built by Christmas lovers, for Christmas lovers — and nobody knows better than the questers using it. Tell us how we can improve the site, and what we could do to make your Christmas brighter and your experience here merrier. Every note gets read.{% else %}HauntMap is built by Halloween lovers, for Halloween lovers — and nobody knows better than the haunters using it. Tell us how we can improve the site, and what we could do to make your Halloween spookier and your experience here creepier. Every note gets read.{% endif %}</p>
 {% if request.query_params.get('error') == 'empty' %}
 <p class="form-error">Tell us at least one thing — either box below is fine.</p>
 {% elif request.query_params.get('error') == 'email' %}
@@ -19,14 +19,14 @@
 <form method="post" action="/feedback" class="fb-panel fb-form">
   <div class="fb-chips" role="radiogroup" aria-label="What's this about?">
     <label class="fb-chip"><input type="radio" name="category" value="site-idea" checked><span>&#x1F4A1; Site idea</span></label>
-    <label class="fb-chip"><input type="radio" name="category" value="spookier"><span>&#x1F47B; Spookier stuff</span></label>
+    <label class="fb-chip"><input type="radio" name="category" value="spookier"><span>{% if brand | default('haunt') == 'merryquest' %}&#x2728; Brighter stuff{% else %}&#x1F47B; Spookier stuff{% endif %}</span></label>
     <label class="fb-chip"><input type="radio" name="category" value="bug"><span>&#x1F577;&#xFE0F; Bug report</span></label>
     <label class="fb-chip"><input type="radio" name="category" value="other"><span>&#x1F383; Other</span></label>
   </div>
   <label class="fb-label" for="fb-improve">How can we improve the site?</label>
   <textarea id="fb-improve" name="improve" rows="5" maxlength="4000" placeholder="Faster pages? Better tours? A town we're missing? Tell us&hellip;"></textarea>
-  <label class="fb-label" for="fb-spookier">What could we do to make your Halloween spookier — and your experience here creepier?</label>
-  <textarea id="fb-spookier" name="spookier" rows="5" maxlength="4000" placeholder="Darker tours? Creepier sounds? A haunt that follows you home? Dream big&hellip;"></textarea>
+  <label class="fb-label" for="fb-spookier">{% if brand | default('haunt') == 'merryquest' %}What could we do to make your Christmas brighter — and your experience here merrier?{% else %}What could we do to make your Halloween spookier — and your experience here creepier?{% endif %}</label>
+  <textarea id="fb-spookier" name="spookier" rows="5" maxlength="4000" placeholder="{% if brand | default('haunt') == 'merryquest' %}Brighter tours? Merrier sounds? A display that lights up the whole street? Dream big&hellip;{% else %}Darker tours? Creepier sounds? A haunt that follows you home? Dream big&hellip;{% endif %}"></textarea>
   <div class="fb-row">
     <label class="fb-small">Name (optional)
       <input type="text" name="name" maxlength="80" autocomplete="name" placeholder="Your name">
@@ -37,7 +37,7 @@
   </div>
   <input type="text" name="website" class="hp-field" tabindex="-1" autocomplete="off" aria-hidden="true">
   <input type="hidden" name="page" id="fb-page" value="">
-  <button type="submit" class="btn btn-big fb-send">Send feedback &#x1F47B;</button>
+  <button type="submit" class="btn btn-big fb-send">Send feedback {% if brand | default('haunt') == 'merryquest' %}&#x1F384;{% else %}&#x1F47B;{% endif %}</button>
 </form>
 <script>document.getElementById('fb-page').value = document.referrer || '';</script>
 {% endif %}

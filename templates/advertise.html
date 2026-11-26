@@ -1,14 +1,14 @@
 {% extends "base.html" %}
 {% block title %}Advertise on {{ site_name }} · Sponsorships{% endblock %}
-{% block head %}<meta name="description" content="Put your business in front of thousands of local Halloween haunters — business sponsor packages from $250, and homeowners can feature their own display from $49 a season.">{% endblock %}
+{% block head %}<meta name="description" content="{% if brand | default('haunt') == 'merryquest' %}Put your business in front of thousands of local Christmas lovers — business sponsor packages from $250, and homeowners can feature their own display from $49 a season.{% else %}Put your business in front of thousands of local Halloween haunters — business sponsor packages from $250, and homeowners can feature their own display from $49 a season.{% endif %}">{% endblock %}
 {% block content %}
-<h1>&#x1F4E3; Advertise on HauntMap</h1>
-<p class="adv-sub">HauntMap is where local families plan their Halloween nights — which displays to drive to, where to stop for coffee, dinner and treats along the way. Put your business on their route.</p>
+<h1>&#x1F4E3; Advertise on {{ site_name }}</h1>
+<p class="adv-sub">{% if brand | default('haunt') == 'merryquest' %}MerryQuest is where local families plan their Christmas lights nights — which displays to drive to, where to stop for coffee, dinner and treats along the way. Put your business on their route.{% else %}HauntMap is where local families plan their Halloween nights — which displays to drive to, where to stop for coffee, dinner and treats along the way. Put your business on their route.{% endif %}</p>
 
 <div class="adv-stats">
   <div class="adv-stat"><strong>{{ '{:,}'.format(stats.week) }}</strong><span>visitors this week</span></div>
   <div class="adv-stat"><strong>{{ '{:,}'.format(stats.today) }}</strong><span>visitors today</span></div>
-  <div class="adv-stat"><strong>{{ '{:,}'.format(stats.pins) }}</strong><span>haunts &amp; listings</span></div>
+  <div class="adv-stat"><strong>{{ '{:,}'.format(stats.pins) }}</strong><span>{% if brand | default('haunt') == 'merryquest' %}displays{% else %}haunts{% endif %} &amp; listings</span></div>
   <div class="adv-stat"><strong>{{ stats.towns }}</strong><span>towns covered</span></div>
 </div>
 <p class="adv-note">Want the full picture? See our <a href="/media-kit">media kit</a> for dated audience numbers, coverage and what's on the site.</p>
@@ -65,7 +65,7 @@
   </article>
   {% endfor %}
 </div>
-<p class="adv-note">Placements include featured spots in a town, &ldquo;Tour Fuel&rdquo; stops (coffee, food &amp; shops near the haunts) on custom tours, and featured-sitewide banners. Every sponsor click is tracked, with a monthly click report.</p>
+<p class="adv-note">Placements include featured spots in a town, &ldquo;Tour Fuel&rdquo; stops (coffee, food &amp; shops near the {% if brand | default('haunt') == 'merryquest' %}displays{% else %}haunts{% endif %}) on custom tours, and featured-sitewide banners. Every sponsor click is tracked, with a monthly click report.</p>
 
 <h2 class="adv-h2" id="order">Get started — pick your package</h2>
 {% if ordered %}

@@ -1,8 +1,8 @@
 {% extends "base.html" %}
-{% block title %}Halloween displays by town · {{ site_name }}{% endblock %}
+{% block title %}{% if brand | default('haunt') == 'merryquest' %}&#x1F384; Christmas displays by town{% else %}Halloween displays by town{% endif %} · {{ site_name }}{% endblock %}
 {% block content %}
-<h1>&#x1F383; Halloween displays by town</h1>
-<p class="towns-sub">Every town on the map — pick yours for local displays, events and haunt alerts.</p>
+<h1>{% if brand | default('haunt') == 'merryquest' %}&#x1F384; Christmas displays by town{% else %}&#x1F383; Halloween displays by town{% endif %}</h1>
+<p class="towns-sub">Every town on the map — pick yours for local displays, events and {% if brand | default('haunt') == 'merryquest' %}quest alerts.{% else %}haunt alerts.{% endif %}</p>
 <div class="towns-search-wrap">
   <input id="towns-search" class="towns-search" type="search" placeholder="Search your town…" aria-label="Search towns" autocomplete="off">
   <button id="towns-search-clear" class="towns-search-clear" type="button" aria-label="Clear search" hidden>&times;</button>

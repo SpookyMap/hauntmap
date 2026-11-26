@@ -20,9 +20,9 @@
 </style>
 {% endblock %}
 {% block content %}
-<h2>&#x1F383; {{ tour_title }}</h2>
+<h2>{% if brand | default('haunt') == 'merryquest' %}&#x1F384;{% else %}&#x1F383;{% endif %} {{ tour_title }}</h2>
 <p style="color: var(--muted); margin-top: -0.5rem; margin-bottom: 1rem;">
-  A shared HauntMap fright night &middot; {{ stops|length }} stop{{ 's' if stops|length != 1 }} in haunt order &mdash; copy it, make it yours, and hit the road.
+  {% if brand | default('haunt') == 'merryquest' %}A shared MerryQuest lights tour{% else %}A shared HauntMap fright night{% endif %} &middot; {{ stops|length }} stop{{ 's' if stops|length != 1 }} in {% if brand | default('haunt') == 'merryquest' %}tour{% else %}haunt{% endif %} order &mdash; copy it, make it yours, and hit the road.
 </p>
 {% if missing %}
 <p class="stour-note">&#x1F47B; {{ missing }} stop{{ 's' if missing != 1 }} from the original tour {{ 'is' if missing == 1 else 'are' }} no longer on the map, so {{ 'it is' if missing == 1 else 'they are' }} not shown here.</p>
@@ -33,7 +33,7 @@
   <a class="btn" href="{{ gmaps_url }}" target="_blank" rel="noopener">&#x1F5FA;&#xFE0F; Open in Google Maps</a>
   {% endif %}
   <button class="btn" id="btn-copy-tour">&#x1F4CB; Copy this tour</button>
-  <a class="btn" href="/tour">Build your own Fright Night &rarr;</a>
+  <a class="btn" href="/tour">{% if brand | default('haunt') == 'merryquest' %}Build your own Lights Tour{% else %}Build your own Fright Night{% endif %} &rarr;</a>
 </div>
 <ol class="stour-list">
   {% for e in stops %}
@@ -50,7 +50,7 @@
   </li>
   {% endfor %}
 </ol>
-<p class="stour-note">Stops are in haunt order &mdash; tap any stop for photos, videos, and directions. Want this exact run? <strong>Copy this tour</strong> loads every stop into your own tour builder so you can reorder, add, and drop stops.</p>
+<p class="stour-note">Stops are in {% if brand | default('haunt') == 'merryquest' %}tour{% else %}haunt{% endif %} order &mdash; tap any stop for photos, videos, and directions. Want this exact run? <strong>Copy this tour</strong> loads every stop into your own tour builder so you can reorder, add, and drop stops.</p>
 
 <script>
 const copyEntries = {{ copy_entries | tojson }};

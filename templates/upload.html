@@ -2,7 +2,7 @@
 {% block title %}Share your decorations &middot; {{ site_name }}{% endblock %}
 {% block content %}
 <h1>Share your decorations</h1>
-<p class="lede">Show off your Halloween or Christmas decorations. Photo or short video, and the street address &mdash; every haunt needs one so visitors can find it on the map.</p>
+<p class="lede">Show off your Halloween or Christmas decorations. Photo or short video, and the street address &mdash; every {% if brand | default('haunt') == 'merryquest' %}display{% else %}haunt{% endif %} needs one so visitors can find it on the map.</p>
 
 {% if error %}
 <div class="alert">{{ error }}</div>
@@ -35,7 +35,7 @@
   </label>
   <label>Street address <span class="req" id="address-req">*</span>
     <input type="text" name="address" id="address-input" maxlength="200" required autocomplete="street-address" placeholder="e.g. 123 Main St" value="{{ values.get('address', '') }}">
-    <small>Required &mdash; house number + street name. We pin your haunt on the map from this address, so visitors can route right to it. No street address, no upload.</small>
+    <small>Required &mdash; house number + street name. We pin your {% if brand | default('haunt') == 'merryquest' %}display{% else %}haunt{% endif %} on the map from this address, so visitors can route right to it. No street address, no upload.</small>
     <small id="address-error" style="display:none"></small>
   </label>
   <div id="virtual-fields" style="display:none">
@@ -59,7 +59,7 @@
     <small>Photo: JPG/PNG/WebP up to 10 MB. Video: MP4 up to 100 MB.</small>
   </label>
   <div id="halloween-fields">
-  <label>Scare level <span class="opt">(optional)</span>
+  {% if brand | default('haunt') != 'merryquest' %}<label>Scare level <span class="opt">(optional)</span>
     <select name="scare_level">
       <option value=""{% if not values.get('scare_level') %} selected{% endif %}>Not specified</option>
       <option value="family"{% if values.get('scare_level') == 'family' %} selected{% endif %}>&#x1F60A; Family-friendly</option>
@@ -68,7 +68,7 @@
       <option value="terrifying"{% if values.get('scare_level') == 'terrifying' %} selected{% endif %}>&#x1F631; Terrifying</option>
       <option value="extreme"{% if values.get('scare_level') == 'extreme' %} selected{% endif %}>&#x1F480; Extreme</option>
     </select>
-  </label>
+  </label>{% endif %}
   <label>Features <span class="opt">(optional — check all that apply)</span>
     <div class="tag-checks">
       <label><input type="checkbox" name="tags" value="animatronics"{% if 'animatronics' in (values.get('tags') or []) %} checked{% endif %}> Animatronics</label>
@@ -114,7 +114,7 @@
   document.getElementById('virtual-input').addEventListener('change', syncVirtual);
   syncMediaRequired();
   </script>
-  <p><small>&#x1F4CD; Map pin: we place it on the map from your street address when you share &mdash; that&rsquo;s how visitors find your haunt and route to it.</small></p>
+  <p><small>&#x1F4CD; Map pin: we place it on the map from your street address when you share &mdash; that&rsquo;s how visitors find your {% if brand | default('haunt') == 'merryquest' %}display{% else %}haunt{% endif %} and route to it.</small></p>
   <button type="submit" class="btn btn-big">&#x1F383;&#x1F384; Share my decorations</button>
 </form>
 

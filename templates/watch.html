@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block title %}Watch &middot; {{ site_name }}{% endblock %}
 {% block content %}
-<h1>&#x1F3AC; Watch — real haunt footage</h1>
+<h1>&#x1F3AC; Watch — {% if brand | default('haunt') == 'merryquest' %}real display footage{% else %}real haunt footage{% endif %}</h1>
 <p class="watch-sub">{{ entries|length }} displays with actual video. Keep scrolling — the next one is always one swipe away. Tap a poster to play it right here. <span id="watch-near-note" hidden></span></p>
 <div class="watch-feed">
   {% for e in entries %}
@@ -107,7 +107,7 @@ document.querySelectorAll('.watch-slide .tt-facade').forEach(function (f) {
     near.concat(rest).forEach(function (r) { feed.appendChild(r.el); });
     var note = document.getElementById('watch-near-note');
     if (note) {
-      note.textContent = 'Showing the most-watched haunts near ' + home[0] + ' first.';
+      note.textContent = 'Showing the most-watched ' + {% if brand | default('haunt') == 'merryquest' %}'displays'{% else %}'haunts'{% endif %} + ' near ' + home[0] + ' first.';
       note.hidden = false;
     }
   } catch (e) {}

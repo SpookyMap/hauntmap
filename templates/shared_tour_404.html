@@ -3,11 +3,11 @@
 {% block content %}
 <div class="empty">
   <p class="empty-emoji">&#x1F47B;</p>
-  <p><strong>This fright night has vanished.</strong></p>
+  <p><strong>{% if brand | default('haunt') == 'merryquest' %}This lights tour has vanished.{% else %}This fright night has vanished.{% endif %}</strong></p>
   <p style="color: var(--muted);">The shared tour link you followed doesn't exist &mdash; it may have been mistyped, or the tour is gone.</p>
   <p>
-    <a class="btn" href="/tour">Build your own Fright Night &rarr;</a>
-    <a class="btn" href="/">Browse haunts</a>
+    <a class="btn" href="/tour">{% if brand | default('haunt') == 'merryquest' %}Build your own Lights Tour{% else %}Build your own Fright Night{% endif %} &rarr;</a>
+    <a class="btn" href="/">{% if brand | default('haunt') == 'merryquest' %}Browse displays{% else %}Browse haunts{% endif %}</a>
   </p>
 </div>
 {% endblock %}

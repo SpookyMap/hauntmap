@@ -74,10 +74,10 @@ two.parentNode.insertBefore(twenty, two);
     <nav class="mqx-nav">
       <a href="/map">Map</a>
       <a href="/nearby">Displays</a>
+      {% if quest_enabled %}<a href="/sack">Santa's Sack</a>{% endif %}
       <a href="/events">Events</a>
       <a href="/tour">Tours</a>
       <a href="/games">Games</a>
-      {% if quest_enabled %}<a href="/sack">Santa's Sack</a>{% endif %}
     </nav>
     <div class="mqx-actions">
       {% if request.state.member %}<a class="mqx-login" href="/@{{ request.state.member.handle }}">@{{ request.state.member.handle }}</a>{% else %}<a class="mqx-login" href="/login">Log in</a><a class="mqx-join" href="/signup">Join free</a>{% endif %}
@@ -98,7 +98,7 @@ two.parentNode.insertBefore(twenty, two);
     {% if request.state.member %}
     <a class="nav-join nav-join-member" href="/@{{ request.state.member.handle }}"><span class="nav-join-label">@{{ request.state.member.handle }}</span></a>
     {% else %}
-    <a class="nav-join" href="/signup"><span class="nav-join-label"><span class="hs-brand nav-join-first">Join</span> <span class="hs-brand nav-join-brand">{% if brand | default('haunt') == 'merryquest' %}MerrySocial{% else %}HauntSocial{% endif %}</span><span class="nav-join-tag"> - The First Halloween Social Network</span></span></a>
+    <a class="nav-join" href="/signup"><span class="nav-join-label"><span class="hs-brand nav-join-first">Join</span> <span class="hs-brand nav-join-brand">{% if brand | default('haunt') == 'merryquest' %}MerrySocial{% else %}HauntSocial{% endif %}</span><span class="nav-join-tag"> - {% if brand | default('haunt') == 'merryquest' %}The First Christmas Social Network{% else %}The First Halloween Social Network{% endif %}</span></span></a>
     {% endif %}
     </div>
     <a class="navbtn" href="/watch"><img src="/static/img/nav2_watch.webp" alt="Watch"><span>Watch</span></a>
@@ -448,10 +448,13 @@ function hmFrightTouch() {
     <a class="tv-btn" href="/virtual-tour?mode=tv"><span class="vt-ic">&#x1F4FA;</span><span class="vt-label"><span class="vt-l1">{% if brand | default('haunt') == 'merryquest' %}MerryQuest{% else %}HauntMap{% endif %}</span> <span class="vt-l2">TV</span></span></a>
     {% if brand | default('haunt') != 'merryquest' %}<a class="pop-btn" href="/pop-haunt-culture"><span class="vt-ic">&#x1F37F;</span><span class="vt-label"><span class="vt-l1">Pop Haunt</span> <span class="vt-l2">Culture</span></span></a>
     <a class="makeup-btn" href="/makeup"><span class="vt-ic">&#x1F484;</span><span class="vt-label"><span class="vt-l1">Haunted</span> <span class="vt-l2">Makeup</span></span></a>{% endif %}
-    <a class="music-btn" href="/music"><span class="vt-ic">&#x1F3B5;</span><span class="vt-label"><span class="vt-l1">{% if brand | default('haunt') == 'merryquest' %}MerryQuest{% else %}HauntMap{% endif %}</span> <span class="vt-l2">Music</span></span></a>
-    <a class="movies-btn" href="/movies"><span class="vt-ic">&#x1F3AC;</span><span class="vt-label"><span class="vt-l1">{% if brand | default('haunt') == 'merryquest' %}MerryQuest{% else %}HauntMap{% endif %}</span> <span class="vt-l2">Movies</span></span></a>
-    {% if brand | default('haunt') != 'merryquest' %}<a class="art-btn" href="/fan-art"><span class="vt-ic">&#x1F3A8;</span><span class="vt-label"><span class="vt-l1">HauntMap</span> <span class="vt-l2">Art</span></span></a>{% endif %}
-    <a class="markets-btn" href="/markets"><span class="vt-ic">&#x1F6D2;</span><span class="vt-label">{% if brand | default('haunt') == 'merryquest' %}<span class="vt-l1">Christmas</span> <span class="vt-l2">Markets</span>{% else %}<span class="vt-l1">Flea</span> <span class="vt-l2">Markets</span> <span class="vt-l3">&amp; Pop-Ups</span>{% endif %}</span></a>
+    {# Music/Movies/Markets are HauntMap-only catalogs — on MerryQuest
+       those routes 404 (brand separation, Nov 25, 2026), so their
+       strip buttons hide there too, same as Pop Culture/Makeup/Art. #}
+    {% if brand | default('haunt') != 'merryquest' %}<a class="music-btn" href="/music"><span class="vt-ic">&#x1F3B5;</span><span class="vt-label"><span class="vt-l1">HauntMap</span> <span class="vt-l2">Music</span></span></a>
+    <a class="movies-btn" href="/movies"><span class="vt-ic">&#x1F3AC;</span><span class="vt-label"><span class="vt-l1">HauntMap</span> <span class="vt-l2">Movies</span></span></a>
+    <a class="art-btn" href="/fan-art"><span class="vt-ic">&#x1F3A8;</span><span class="vt-label"><span class="vt-l1">HauntMap</span> <span class="vt-l2">Art</span></span></a>
+    <a class="markets-btn" href="/markets"><span class="vt-ic">&#x1F6D2;</span><span class="vt-label"><span class="vt-l1">Flea</span> <span class="vt-l2">Markets</span> <span class="vt-l3">&amp; Pop-Ups</span></span></a>{% endif %}
     <a class="top100-btn" href="/leaderboard/top-100"><span class="vt-ic">&#x1F3C6;</span><span class="vt-label"><span class="vt-l1">Top 100</span> <span class="vt-l2">Nationwide</span></span></a>
   </div>
   {% endif %}

@@ -2,11 +2,11 @@
 {% block title %}Top 10 by state &middot; {{ site_name }}{% endblock %}
 {% block content %}
 <div class="cat-tabs">
-  <a href="/leaderboard/states?cat=halloween" class="{% if cat == 'halloween' %}active{% endif %}">&#x1F383; Haunt Map</a>
+  {% if brand | default('haunt') != 'merryquest' %}<a href="/leaderboard/states?cat=halloween" class="{% if cat == 'halloween' %}active{% endif %}">&#x1F383; Haunt Map</a>{% endif %}
   <a href="/leaderboard/states?cat=christmas" class="{% if cat == 'christmas' %}active{% endif %}">&#x1F384; MerryQuest</a>
 </div>
 <h1 class="states-title">&#x1F3C6; Top 10 by state</h1>
-<p class="muted">The most-viewed {{ cat_labels[cat]|lower }} haunts in every state, ranked by visits to each display's page &mdash; the same ranking as <a href="/leaderboard?cat={{ cat }}">Top Haunts</a>. &#x2B50; <strong>Featured</strong> marks one of Dan's hand-picked displays, guaranteed a spot on its list.</p>
+<p class="muted">The most-viewed {{ cat_labels[cat]|lower }} {% if brand | default('haunt') == 'merryquest' %}displays{% else %}haunts{% endif %} in every state, ranked by visits to each display's page &mdash; the same ranking as <a href="/leaderboard?cat={{ cat }}">{% if brand | default('haunt') == 'merryquest' %}Top Displays{% else %}Top Haunts{% endif %}</a>. &#x2B50; <strong>Featured</strong> marks one of Dan's hand-picked displays, guaranteed a spot on its list.</p>
 
 {% macro leader_items(entries) %}
 <ol class="leader-list">
@@ -63,8 +63,8 @@
 
 {% if not states and not metros %}
 <div class="empty">
-  <p class="empty-emoji">&#x1F47B;</p>
-  <p>No haunts yet. <a href="/upload">Add the first one</a>.</p>
+  <p class="empty-emoji">{% if brand | default('haunt') == 'merryquest' %}&#x1F384;{% else %}&#x1F47B;{% endif %}</p>
+  <p>{% if brand | default('haunt') == 'merryquest' %}No displays{% else %}No haunts{% endif %} yet. <a href="/upload">Add the first one</a>.</p>
 </div>
 {% endif %}
 {% endblock %}

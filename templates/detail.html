@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from "_pin_card.html" import pin_card %}
+{% from "_pin_card.html" import pin_card with context %}
 {% block title %}{{ entry.title }} &middot; {{ site_name }}{% endblock %}
 {% block head %}
 {# Item 10 (speed diet): Leaflet is NO LONGER loaded in <head> on pin
@@ -176,7 +176,7 @@
   </section>
   {% endif %}
   <h1>{{ entry.title }}</h1>
-  {% if bracket_info %}
+  {% if bracket_info and brand | default('haunt') != 'merryquest' %}
   <a class="bk-ribbon" href="/bracket">&#x1F3C6; Haunt Bracket contender &mdash; Seed #{{ bracket_info.seed }} ({{ bracket_info.region }}) &middot; America&rsquo;s Scariest House &middot; Round of 16 voting Oct 24&ndash;25 &mdash; vote &rarr;</a>
   {% endif %}
   <p class="meta">{{ entry.town_label }}{% if entry.display_name %} &middot; {{ entry.display_name }}{% endif %}</p>
@@ -202,7 +202,7 @@
   {% if entry.owner_user_id %}
   <p class="owner-badge" style="font-size:14.5px;margin:8px 0;">&#x2705; <b>Verified by owner</b> <span class="muted">— the person who runs this display claimed this listing.</span></p>
   {% endif %}
-  {% if entry.scare_level %}
+  {% if entry.scare_level and brand | default('haunt') != 'merryquest' %}
   <p class="scare-badge">
     {% if entry.scare_level == 'family' %}&#x1F60A; Family-friendly
     {% elif entry.scare_level == 'spooky' %}&#x1F47B; Spooky
@@ -220,7 +220,7 @@
   </p>
   {% endif %}
   {% if not is_venue %}
-  <p class="votes-big">&#x1F383; {{ entry.votes }} vote{{ 's' if entry.votes != 1 }}</p>
+  <p class="votes-big">{% if brand | default('haunt') == 'merryquest' %}&#x1F384;{% else %}&#x1F383;{% endif %} {{ entry.votes }} vote{{ 's' if entry.votes != 1 }}</p>
   {% endif %}
 
   {# Retention Wave 2, Item 5: Daily Fright streak chip. Filled and
@@ -228,7 +228,9 @@
      from base.html), which reads the SAME streak cookies + ET day
      boundary hmFrightTouch() counts with in base.html — read-only:
      pin pages never count a day. No JS / no state -> stays hidden. #}
+  {% if brand | default('haunt') != 'merryquest' %}
   <p class="fright-chip-row"><a class="fright-chip" data-fright-chip href="/daily" hidden></a></p>
+  {% endif %}
 
   {% if entry.town_label and not entry.virtual %}
   {# Retention Wave 3, Item 9: high-intent text-alert prompt. Placement
@@ -243,7 +245,7 @@
      and source="pin-page" so captures attribute per pin page. The
      .pin-alerts wrapper scopes every style override to this copy. #}
   <div class="pin-alerts">
-    {% with sms_source = "pin-page", sms_heading = "📱 Text me new haunts near " ~ entry.town_label, sms_sub = "New haunts & Halloween events near " ~ entry.town_label ~ " — texted as they land on the map.", sms_town = entry.town_label %}{% include "_text_alerts.html" %}{% endwith %}
+    {% with sms_source = "pin-page", sms_heading = "📱 Text me new " ~ ("displays" if brand | default('haunt') == 'merryquest' else "haunts") ~ " near " ~ entry.town_label, sms_sub = ("New displays & Christmas events near " if brand | default('haunt') == 'merryquest' else "New haunts & Halloween events near ") ~ entry.town_label ~ " — texted as they land on the map.", sms_town = entry.town_label %}{% include "_text_alerts.html" %}{% endwith %}
   </div>
   {% endif %}
 
@@ -254,7 +256,7 @@
        also points at the full Haunt Passport. The strip only unhides
        when this town has ≥1 seen pin, so the link appears exactly when
        the visitor has a passport worth opening. #}
-    <p class="seen-passport"><a href="/passport">See your Haunt Passport &rarr;</a></p>
+    {% if brand | default('haunt') != 'merryquest' %}<p class="seen-passport"><a href="/passport">See your Haunt Passport &rarr;</a></p>{% endif %}
   </div>
   <script>
     hmMarkSeen({{ entry.id }});
@@ -361,7 +363,7 @@
   {# Stay22 "Stay near this haunt" (staged Nov 5): sits directly under
      the directions row — the visitor has just seen where this haunt is
      and how to drive to it, which is the trip-planning moment. #}
-  {% with stay22_heading = "Stay near this haunt", stay22_place = entry.town_label %}{% include "_stay22.html" %}{% endwith %}
+  {% with stay22_heading = "Stay near this display" if brand | default('haunt') == 'merryquest' else "Stay near this haunt", stay22_place = entry.town_label %}{% include "_stay22.html" %}{% endwith %}
   {% endif %}
 
   {% if town_haunts %}
@@ -369,7 +371,7 @@
     {# Utility title (Rail Boost research addendum): when the town holds
        more than this rail shows, say so — the count is the town's real
        pin total (town_pin_ids includes this pin, hence the -1). #}
-    <h2>&#x1F383; More haunts in {{ entry.town_label }}{% if town_pin_ids|length - 1 > town_haunts|length %} &middot; {{ town_pin_ids|length - 1 }} in town{% endif %}</h2>
+    <h2>{% if brand | default('haunt') == 'merryquest' %}&#x1F384; More displays in{% else %}&#x1F383; More haunts in{% endif %} {{ entry.town_label }}{% if town_pin_ids|length - 1 > town_haunts|length %} &middot; {{ town_pin_ids|length - 1 }} in town{% endif %}</h2>
     <div class="rail" data-rail="town">
       {% for p in town_haunts %}{{ pin_card(p, true) }}{% endfor %}
     </div>
@@ -392,7 +394,7 @@
     </form>
     {% else %}
     <form method="post" action="/d/{{ entry.id }}/vote">
-      <button type="submit" class="btn btn-big">&#x1F383; Vote for this haunt</button>
+      <button type="submit" class="btn btn-big">{% if brand | default('haunt') == 'merryquest' %}&#x1F384; Vote for this display{% else %}&#x1F383; Vote for this haunt{% endif %}</button>
     </form>
     {% endif %}
     {% endif %}
@@ -401,7 +403,7 @@
 
   {% if more_haunts %}
   <section class="engage-next">
-    <h2>&#x1F383; More haunts near this one &middot; within {{ "%.1f"|format(more_haunts|map(attribute='distance')|max) }} mi</h2>
+    <h2>{% if brand | default('haunt') == 'merryquest' %}&#x1F384; More displays near this one{% else %}&#x1F383; More haunts near this one{% endif %} &middot; within {{ "%.1f"|format(more_haunts|map(attribute='distance')|max) }} mi</h2>
     <div class="rail" data-rail="near">
       {% for p in more_haunts %}{{ pin_card(p, true) }}{% endfor %}
     </div>
@@ -409,14 +411,14 @@
        the bulk version of each card's own + Tour button. #}
     <button type="button" class="btn rail-add-all" data-add-rail>&#x1F9ED; + Add these to my tour</button>
     <button class="btn btn-big btn-tour-build" id="btn-build-tour">&#x1F9ED; Build a tour with this house</button>
-    <p class="tour-build-note">Adds this haunt to your tour and opens the tour builder — drop in the neighbours above and share the whole route.</p>
+    <p class="tour-build-note">Adds this {% if brand | default('haunt') == 'merryquest' %}display{% else %}haunt{% endif %} to your tour and opens the tour builder — drop in the neighbours above and share the whole route.</p>
   </section>
   <script>
   document.getElementById('btn-build-tour').onclick = function() {
     const entry = {id: {{ entry.id }}, title: {{ entry.title|tojson }}, town: {{ entry.town|tojson }},
                    lat: {{ entry.lat if entry.lat is not none else 'null' }}, lng: {{ entry.lng if entry.lng is not none else 'null' }},
                    thumb: {{ entry.thumb_url|tojson }}};
-    if (!entry.lat || !entry.lng) { alert('This haunt has no map location.'); return; }
+    if (!entry.lat || !entry.lng) { alert('This {% if brand | default('haunt') == 'merryquest' %}display{% else %}haunt{% endif %} has no map location.'); return; }
     let tour = [];
     try { tour = JSON.parse(localStorage.getItem('haunt_tour') || '[]'); } catch(e) {}
     if (!tour.some(e => e.id === entry.id)) {
@@ -434,7 +436,7 @@
   <a class="btn btn-big next-haunt" href="/d/{{ next_pin.id }}">{% if brand | default('haunt') == 'merryquest' %}{% if next_is_video %}&#x1F3AC; Play next quest &rarr;{% else %}Next quest near here &rarr;{% endif %}{% elif next_is_video %}&#x1F3AC; Play next haunt &rarr;{% else %}Next haunt near here &rarr;{% endif %}<span class="next-haunt-sub">{{ next_pin.title }} &middot; {{ "%.1f"|format(next_pin.distance) }} mi &middot; {{ next_pin.town_label }}</span></a>
   {% endif %}
 
-  {% if not is_venue %}
+  {% if not is_venue and brand | default('haunt') != 'merryquest' %}
   <div class="scare-meter" id="scare">
     <h2>&#x1F4CA; Scare-O-Meter — how scary is it really?</h2>
     {% set scare_meta = {'family': ('&#x1F60A;', 'Family-friendly'), 'spooky': ('&#x1F47B;', 'Spooky'), 'creepy': ('&#x1F9DB;', 'Creepy'), 'terrifying': ('&#x1F631;', 'Terrifying'), 'extreme': ('&#x1F480;', 'EXTREME')} %}
@@ -458,7 +460,7 @@
   </div>
   {% endif %}
 
-  {% if not is_venue and (entry.thumb_url or entry.media_url) %}
+  {% if not is_venue and brand | default('haunt') != 'merryquest' and (entry.thumb_url or entry.media_url) %}
   <section class="hon-card">
     <img src="{{ entry.thumb_url or entry.media_url }}" alt="{{ entry.title }}" loading="lazy">
     <div class="hon-body">
@@ -471,10 +473,19 @@
 
   <div class="signup-strip signup-strip-slim">
     {% if request.query_params.get('subscribed') %}
+    {% if brand | default('haunt') == 'merryquest' %}
+    <p class="newsletter-success">&#x1F389; You're in! First word on new displays near you.</p>
+    {% else %}
     <p class="newsletter-success">&#x1F389; You're in! First word on new haunts near you — and first in line for the Jolly Map &#x1F384;</p>
+    {% endif %}
+    {% else %}
+    {% if brand | default('haunt') == 'merryquest' %}
+    <h3>&#x1F514; More displays like this?</h3>
+    <p>Be first to know when a new display lands near {{ entry.town_label }}.</p>
     {% else %}
     <h3>&#x1F514; More haunts like this?</h3>
     <p>Be first to know when a new display lands near {{ entry.town_label }} — plus first access to the &#x1F384; Jolly Map this Christmas.</p>
+    {% endif %}
     <form method="post" action="/subscribe" class="newsletter-form">
       <input type="email" name="email" placeholder="you@email.com" required>
       <input type="text" name="location" placeholder="Your town (optional)" value="{{ entry.town_label }}">
@@ -487,7 +498,7 @@
     const entry = {id: {{ entry.id }}, title: {{ entry.title|tojson }}, town: {{ entry.town|tojson }},
                    lat: {{ entry.lat if entry.lat is not none else 'null' }}, lng: {{ entry.lng if entry.lng is not none else 'null' }},
                    thumb: {{ entry.thumb_url|tojson }}};
-    if (!entry.lat || !entry.lng) { alert('This haunt has no map location.'); return; }
+    if (!entry.lat || !entry.lng) { alert('This {% if brand | default('haunt') == 'merryquest' %}display{% else %}haunt{% endif %} has no map location.'); return; }
     let tour = [];
     try { tour = JSON.parse(localStorage.getItem('haunt_tour') || '[]'); } catch(e) {}
     if (tour.some(e => e.id === entry.id)) { alert('Already in your tour!'); return; }
@@ -571,7 +582,7 @@
 
   {% if more_like %}
   <section class="rail-section">
-    <h2>&#x1F47B; More like this</h2>
+    <h2>{% if brand | default('haunt') == 'merryquest' %}&#x1F384;{% else %}&#x1F47B;{% endif %} More like this</h2>
     <div class="rail" data-rail="like-this">
       {% for p in more_like %}{{ pin_card(p, true) }}{% endfor %}
     </div>
@@ -585,7 +596,7 @@
      walk-the-neighbourhood chain; only the primary Next button + sticky
      bar above chain video-to-video. #}
   <nav class="chain-nav">
-    {% if prev_pin %}<a class="btn" href="/d/{{ prev_pin.id }}">&larr; Previous haunt</a>{% else %}<span></span>{% endif %}
+    {% if prev_pin %}<a class="btn" href="/d/{{ prev_pin.id }}">&larr; Previous {% if brand | default('haunt') == 'merryquest' %}display{% else %}haunt{% endif %}</a>{% else %}<span></span>{% endif %}
     {% if next_geo_pin %}<a class="btn" href="/d/{{ next_geo_pin.id }}">Next {% if brand | default('haunt') == 'merryquest' %}quest{% else %}haunt{% endif %} &rarr;</a>{% endif %}
   </nav>
   {% endif %}
@@ -601,8 +612,8 @@
   <section class="rail-section explore-section">
     <h2>&#x1F9ED; Keep exploring &middot; nearest first</h2>
     <div class="rail" data-rail="explore" id="explore-rail"></div>
-    <button type="button" class="btn btn-big" id="btn-explore">More haunts &darr;</button>
-    <p class="muted" id="explore-done" hidden>You've seen everything near here &#x1F383; — the map has the rest of the country.</p>
+    <button type="button" class="btn btn-big" id="btn-explore">More {% if brand | default('haunt') == 'merryquest' %}displays{% else %}haunts{% endif %} &darr;</button>
+    <p class="muted" id="explore-done" hidden>You've seen everything near here {% if brand | default('haunt') == 'merryquest' %}&#x1F384;{% else %}&#x1F383;{% endif %} — the map has the rest of the country.</p>
   </section>
   <script>
   (function () {
@@ -788,7 +799,7 @@
 
   function applyVote(data) {
     var vb = document.querySelector('.votes-big');
-    if (vb) vb.textContent = '\uD83C\uDF83 ' + data.votes + ' vote' + (data.votes === 1 ? '' : 's');
+    if (vb) vb.textContent = '{% if brand | default('haunt') == 'merryquest' %}🎄{% else %}🎃{% endif %} ' + data.votes + ' vote' + (data.votes === 1 ? '' : 's');
     var box = document.querySelector('.detail-actions');
     var old = box && box.querySelector('form');
     if (!old) return;
@@ -803,7 +814,7 @@
     } else {
       nf.action = '/d/' + ENTRY_ID + '/vote';
       btn.className = 'btn btn-big';
-      btn.textContent = '\uD83C\uDF83 Vote for this haunt';
+      btn.textContent = '{% if brand | default('haunt') == 'merryquest' %}🎄 Vote for this display{% else %}🎃 Vote for this haunt{% endif %}';
     }
     nf.appendChild(btn);
     old.replaceWith(nf);
@@ -932,7 +943,7 @@
 })();
 </script>
 
-<p><a href="/">&larr; Back to all haunts</a></p>
+<p><a href="/">&larr; Back to all {% if brand | default('haunt') == 'merryquest' %}displays{% else %}haunts{% endif %}</a></p>
 {% endblock %}
 {% block speculation %}
 {% if next_pin %}

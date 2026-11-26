@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>{{ town }} Town Pack · HauntMap Plus</title>
+<title>{{ town }} Town Pack · {% if brand | default('haunt') == 'merryquest' %}MerryQuest Plus{% else %}HauntMap Plus{% endif %}</title>
 <style>
   body{font-family:Georgia,serif;color:#181410;margin:28px;max-width:760px}
   h1{margin:0 0 2px} .sub{color:#5a5148;margin:0 0 18px}
@@ -17,7 +17,7 @@
 </head>
 <body>
   <h1>&#x1F5FA;&#xFE0F; {{ town }}{% if state %}, {{ state }}{% endif %} — Town Pack</h1>
-  <p class="sub">{{ total }} stops · Built by HauntMap Plus · Print or save as PDF for the road.</p>
+  <p class="sub">{{ total }} stops · Built by {% if brand | default('haunt') == 'merryquest' %}MerryQuest{% else %}HauntMap{% endif %} Plus · Print or save as PDF for the road.</p>
   <button onclick="window.print()">&#x1F5A8;&#xFE0F; Print / Save as PDF</button>
   {% for cat, stops in groups.items() %}
   <h2>{{ labels.get(cat, cat) }}</h2>
@@ -28,6 +28,6 @@
     {% if e.description %}<br>{{ e.description[:180] }}{% endif %}</p>
   {% endfor %}
   {% endfor %}
-  <p class="sub" style="margin-top:26px">Made with HauntMap Plus — gethauntmap.com/plus</p>
+  <p class="sub" style="margin-top:26px">{% if brand | default('haunt') == 'merryquest' %}Made with MerryQuest Plus — gomerryquest.com/plus{% else %}Made with HauntMap Plus — gethauntmap.com/plus{% endif %}</p>
 </body>
 </html>

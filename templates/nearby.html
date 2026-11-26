@@ -1,7 +1,7 @@
 {% extends "base.html" %}
-{% block title %}Nearby haunts - {{ site_name }}{% endblock %}
+{% block title %}{% if brand | default('haunt') == 'merryquest' %}Nearby displays{% else %}Nearby haunts{% endif %} - {{ site_name }}{% endblock %}
 {% block content %}
-<h2>&#x1F50D; Find haunts near you</h2>
+<h2>&#x1F50D; {% if brand | default('haunt') == 'merryquest' %}Find displays near you{% else %}Find haunts near you{% endif %}</h2>
 <form method="get" action="/nearby" class="nearby-form" id="nearby-form">
   <input type="text" name="q" id="nearby-q" value="{{ q if q != 'your location' else '' }}" placeholder="Town, city, or address..." autocomplete="off">
   <select name="miles">
@@ -129,7 +129,7 @@ document.getElementById('btn-near-me').onclick = function() {
 {% if err %}
 <div class="empty"><p>{{ err }}</p></div>
 {% elif q %}
-  <p class="nearby-count">{{ entries|length }} haunt{{ 's' if entries|length != 1 }} within {{ miles }} mi of "{{ q }}"{% if center_state and not multi %} &middot; in {{ center_state_name }} only{% if wide_count > entries|length %} ({{ wide_count - entries|length }} more across state lines — turn on <strong>Include nearby states</strong> above to see them){% endif %}{% endif %}</p>
+  <p class="nearby-count">{{ entries|length }} {% if brand | default('haunt') == 'merryquest' %}display{% else %}haunt{% endif %}{{ 's' if entries|length != 1 }} within {{ miles }} mi of "{{ q }}"{% if center_state and not multi %} &middot; in {{ center_state_name }} only{% if wide_count > entries|length %} ({{ wide_count - entries|length }} more across state lines — turn on <strong>Include nearby states</strong> above to see them){% endif %}{% endif %}</p>
   {% if entries %}
   {% if brand | default('haunt') == 'merryquest' %}
   <div class="mqx-mosaic mqx-bleed">
@@ -177,11 +177,11 @@ document.getElementById('btn-near-me').onclick = function() {
   {% endif %}
   {% else %}
   <div class="empty">
-    <p class="empty-emoji">&#x1F47B;</p>
+    <p class="empty-emoji">{% if brand | default('haunt') == 'merryquest' %}&#x1F384;{% else %}&#x1F47B;{% endif %}</p>
     {% if center_state and not multi and wide_count %}
-    <p>No haunts in {{ center_state_name }} within {{ miles }} miles of "{{ q }}" yet — {{ wide_count }} across state lines. Turn on <strong>Include nearby states</strong> above to see them.</p>
+    <p>{% if brand | default('haunt') == 'merryquest' %}No displays{% else %}No haunts{% endif %} in {{ center_state_name }} within {{ miles }} miles of "{{ q }}" yet — {{ wide_count }} across state lines. Turn on <strong>Include nearby states</strong> above to see them.</p>
     {% else %}
-    <p>No haunts within {{ miles }} miles of "{{ q }}" yet.</p>
+    <p>{% if brand | default('haunt') == 'merryquest' %}No displays{% else %}No haunts{% endif %} within {{ miles }} miles of "{{ q }}" yet.</p>
     <p><a class="btn" href="/upload">Be the first to add one</a></p>
     {% endif %}
   </div>

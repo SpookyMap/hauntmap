@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}{% if is_tv %}HauntMap TV{% else %}Virtual Tour{% endif %} &middot; {{ site_name }}{% endblock %}
+{% block title %}{% if is_tv %}{{ site_name }} TV{% else %}Virtual Tour{% endif %} &middot; {{ site_name }}{% endblock %}
 {% block head %}
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -8,15 +8,15 @@
 <div class="vt-head">
   {% if is_tv %}
   <div class="vt-tv-brand">
-    <p class="vt-tv-logo">&#x1F4FA; HauntMap <span>TV</span></p>
-    <p class="vt-tv-tag">Lean back. Press play. Ride the haunts.</p>
+    <p class="vt-tv-logo">&#x1F4FA; {{ site_name }} <span>TV</span></p>
+    <p class="vt-tv-tag">Lean back. Press play. {% if brand | default('haunt') == 'merryquest' %}Ride the displays.{% else %}Ride the haunts.{% endif %}</p>
     <a class="vt-mode-toggle" href="/virtual-tour">&#x1F9ED; Exit TV mode — regular Virtual Tour</a>
   </div>
   {% else %}
-  <a class="vt-tv-entry" href="/virtual-tour?mode=tv">&#x1F4FA; HauntMap TV — lean back &amp; watch the channels &rarr;</a>
+  <a class="vt-tv-entry" href="/virtual-tour?mode=tv">&#x1F4FA; {{ site_name }} TV — lean back &amp; watch the channels &rarr;</a>
   {% endif %}
   <h1 id="vt-title">&#x1F3AC; Tonight's Virtual Tour</h1>
-  <p class="vt-sub" id="vt-sub">The best video haunts in the country, one after another — sit back and ride along.</p>
+  <p class="vt-sub" id="vt-sub">The best video {% if brand | default('haunt') == 'merryquest' %}displays{% else %}haunts{% endif %} in the country, one after another — sit back and ride along.</p>
   <div class="vt-tabs" role="tablist" aria-label="Choose a channel">
     {% for c in channels %}
     <a href="/virtual-tour?route={{ c.id }}{% if is_tv %}&mode=tv{% endif %}" class="vt-tab{% if active_route == c.id %} vt-tab-on{% endif %}" data-vt-route="{{ c.id }}" role="tab">{{ c.emoji }} {{ c.label }}</a>
@@ -26,9 +26,9 @@
 
 <div class="vt-shell" id="vt-shell">
 {% if is_tv %}
-<section class="vt-picker" id="vt-picker" hidden aria-label="HauntMap TV channels">
+<section class="vt-picker" id="vt-picker" hidden aria-label="{{ site_name }} TV channels">
   <h2 class="vt-picker-title">&#x1F4FA; Pick a channel</h2>
-  <p class="vt-picker-sub">Every channel is a non-stop ride through real haunts. Pick one and it plays stop after stop — uploaded videos roll straight into the next house; on TikTok stops, tap the video, watch, then hit the big &#x25B6; Next button. A few All America stops are photos — states where video hasn't reached yet; the ride pauses on the picture a few seconds, then rolls on.</p>
+  <p class="vt-picker-sub">Every channel is a non-stop ride through real {% if brand | default('haunt') == 'merryquest' %}displays.{% else %}haunts.{% endif %} Pick one and it plays stop after stop — uploaded videos roll straight into the next house; on TikTok stops, tap the video, watch, then hit the big &#x25B6; Next button. A few All America stops are photos — states where video hasn't reached yet; the ride pauses on the picture a few seconds, then rolls on.</p>
   <div class="vt-picker-grid">
     {% for c in channels if c.featured %}
     <article class="vt-channel" data-vt-channel="{{ c.id }}">
@@ -36,7 +36,7 @@
       <div class="vt-channel-body">
         <h3>{{ c.emoji }} {{ c.label }}</h3>
         <p>{{ c.blurb }}</p>
-        <p class="vt-channel-meta">{{ routes[c.id]|length }} {{ c.unit or 'video haunts' }}</p>
+        <p class="vt-channel-meta">{{ routes[c.id]|length }} {{ c.unit or ('video displays' if brand | default('haunt') == 'merryquest' else 'video haunts') }}
         <button type="button" class="btn btn-big vt-channel-play" data-vt-play="{{ c.id }}">&#x25B6;&#xFE0F; Play channel</button>
       </div>
     </article>
@@ -67,7 +67,7 @@
     <div class="vt-frame" id="vt-frame">
     <div class="vt-stage" id="vt-stage">{% if is_tv %}<video id="vt-video" controls playsinline preload="metadata" hidden></video><iframe id="vt-tt" hidden allowfullscreen allow="autoplay; encrypted-media; picture-in-picture; fullscreen" title="TikTok video player"></iframe><img id="vt-photo" hidden alt="">{% endif %}</div>
     <div class="vt-tv-next" id="vt-tv-next" hidden>
-      <p class="vt-tv-next-note">&#x1F4FA; <strong>HauntMap TV:</strong> TikTok stops can't auto-play the next house — watch this one, then ride on:</p>
+      <p class="vt-tv-next-note">&#x1F4FA; <strong>{{ site_name }} TV:</strong> TikTok stops can't auto-play the next house — watch this one, then ride on:</p>
       <button type="button" class="btn vt-tv-next-btn" id="vt-tv-next-btn">&#x25B6; {% if brand | default('haunt') == 'merryquest' %}Next quest{% else %}Next haunt{% endif %}</button>
     </div>
     {% if is_tv %}
@@ -94,7 +94,7 @@
       <p class="scare-badge" id="vt-stop-scare" hidden></p>
       <div class="vt-actions">
         <button type="button" class="tour-add-btn vt-add-btn" id="vt-add" data-tour-btn data-id="" data-lat="" data-lng="" data-title="" data-town="" data-thumb="">+ Tour</button>
-        <button type="button" class="btn vt-share-btn" id="vt-share">&#x1F517; Share this haunt</button>
+        <button type="button" class="btn vt-share-btn" id="vt-share">&#x1F517; {% if brand | default('haunt') == 'merryquest' %}Share this display{% else %}Share this haunt{% endif %}</button>
         {% if not is_tv %}
         <button type="button" class="btn vt-ride-btn" id="vt-ride" aria-pressed="false">&#x25B6; Play all</button>
         {% endif %}
@@ -119,7 +119,7 @@
   <p class="vt-end-stats" id="vt-end-stats"></p>
   <p class="vt-end-copy">Loved the ride? Take it for real — every stop drops into the tour builder with its address, ready to route in Google Maps.</p>
   <button type="button" class="btn btn-big" id="vt-build">&#x1F9ED; Build this as a real tour</button>
-  {% if is_tv %}<button type="button" class="btn vt-channels-btn" id="vt-channels">&#x1F4FA; More channels — back to HauntMap TV guide</button>{% endif %}
+  {% if is_tv %}<button type="button" class="btn vt-channels-btn" id="vt-channels">&#x1F4FA; More channels — back to {{ site_name }} TV guide</button>{% endif %}
   <button type="button" class="btn vt-replay" id="vt-replay">&#x21BB; Replay tour</button>
   <div class="vt-end-channels" id="vt-end-channels" hidden>
     <p class="vt-end-channels-label">Keep riding — pick another tour:</p>
@@ -545,9 +545,9 @@ var VT_SCARE = {
   function stopStats() {
     var vc = 0;
     stops.forEach(function (x) { if (x.kind !== 'photo') vc++; });
-    return stops.length + ' haunts · ' +
+    return stops.length + ' {% if brand | default('haunt') == 'merryquest' %}displays{% else %}haunts{% endif %} · ' +
       (vc < stops.length ? vc + ' with video · ' : '') +
-      stateCount() + ' states · ~' + routeMiles() + ' miles of haunting';
+      stateCount() + ' states · ~' + routeMiles() + ' miles of {% if brand | default('haunt') == 'merryquest' %}lights{% else %}haunting{% endif %}';
   }
 
   function renderStops() {
@@ -807,7 +807,7 @@ var VT_SCARE = {
     }
     if (muteBtn) muteBtn.addEventListener('click', function () {
       if (stops[idx] && stops[idx].kind === 'photo') {
-        showFrameNote('\uD83D\uDCF8 Photo stop — no video for this haunt yet. The ride rolls on in a few seconds.');
+        showFrameNote('\uD83D\uDCF8 Photo stop — no video for this {% if brand | default('haunt') == 'merryquest' %}display{% else %}haunt{% endif %} yet. The ride rolls on in a few seconds.');
         return;
       }
       if (isTtStop(stops[idx])) {
@@ -992,7 +992,7 @@ var VT_SCARE = {
       var ph = document.createElement('div');
       ph.className = 'vt-photo-stop';
       ph.innerHTML = (s.thumb_url ? '<img src="' + s.thumb_url + '" alt="">' : '<div class="tt-facade-blank">&#x1F383;</div>') +
-        '<span class="vt-photo-chip">&#x1F4F8; Photo stop — no video for this haunt (yet)</span>';
+        '<span class="vt-photo-chip">&#x1F4F8; Photo stop — no video for this {% if brand | default('haunt') == 'merryquest' %}display{% else %}haunt{% endif %} (yet)</span>';
       stage.appendChild(ph);
     } else {
       stage.innerHTML = '';
@@ -1293,7 +1293,7 @@ var VT_SCARE = {
     var s = stops[idx];
     if (!s) return;
     var url = location.origin + '/d/' + s.id;
-    var text = s.title + ' — ' + s.town_label + ' on HauntMap 🎃';
+    var text = s.title + ' — ' + s.town_label + ' on ' + {% if brand | default('haunt') == 'merryquest' %}'MerryQuest 🎄'{% else %}'HauntMap 🎃'{% endif %};
     if (navigator.share) {
       try { var pr = navigator.share({ title: s.title, text: text, url: url }); if (pr && pr.catch) pr.catch(function () {}); } catch (e) {}
     } else if (navigator.clipboard && navigator.clipboard.writeText) {
@@ -1304,7 +1304,7 @@ var VT_SCARE = {
       };
       navigator.clipboard.writeText(url).then(done, done);
     } else {
-      try { prompt('Copy this haunt link:', url); } catch (e) {}
+      try { prompt('Copy this {% if brand | default('haunt') == 'merryquest' %}display{% else %}haunt{% endif %} link:', url); } catch (e) {}
     }
   });
 

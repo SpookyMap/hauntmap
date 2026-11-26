@@ -45,7 +45,7 @@ body.ios-iphone .games-featured-pill { display: inline-block; }
 </style>
 {% endblock %}
 {% block content %}
-<h1 class="games-sr-only">HauntMap Games</h1>
+<h1 class="games-sr-only">{% if brand | default('haunt') == 'merryquest' %}MerryQuest Games{% else %}HauntMap Games{% endif %}</h1>
 
 {# SECTION NAV (Dan, Oct 26; sleek restyle z217, Oct 28) — the eight
    category buttons now wear the homepage VT/TV strip's sleek
@@ -54,9 +54,9 @@ body.ios-iphone .games-featured-pill { display: inline-block; }
    color as the pill's ring/glow. The old description lines are
    dropped — name only. Every href/anchor is unchanged; each button
    jumps to its section below. #}
-<div class="games-nav">
-  <a class="games-nav-btn" href="#hauntmap-games"><span class="gnb-ic" aria-hidden="true">&#x1F3AE;</span><span class="gnb-label"><span class="gnb-l1">HauntMap</span> <span class="gnb-l2">Games</span></span></a>
-  <a class="games-nav-btn games-nav-btn--arcade" href="#halloween-arcade"><span class="gnb-ic" aria-hidden="true">&#x1F383;</span><span class="gnb-label"><span class="gnb-l1">The Halloween</span> <span class="gnb-l2">Arcade</span></span></a>
+<div class="games-nav">{% if brand | default('haunt') == 'merryquest' %}<a class="games-nav-btn" href="#christmas-games"><span class="gnb-ic" aria-hidden="true">&#x1F384;</span><span class="gnb-label"><span class="gnb-l1">Christmas</span> <span class="gnb-l2">Games</span></span></a>{% endif %}
+  {% if brand | default('haunt') != 'merryquest' %}<a class="games-nav-btn" href="#hauntmap-games"><span class="gnb-ic" aria-hidden="true">&#x1F3AE;</span><span class="gnb-label"><span class="gnb-l1">HauntMap</span> <span class="gnb-l2">Games</span></span></a>{% endif %}
+  <a class="games-nav-btn games-nav-btn--arcade" href="#halloween-arcade"><span class="gnb-ic" aria-hidden="true">{% if brand | default('haunt') == 'merryquest' %}&#x1F3AE;{% else %}&#x1F383;{% endif %}</span><span class="gnb-label"><span class="gnb-l1">{% if brand | default('haunt') == 'merryquest' %}The{% else %}The Halloween{% endif %}</span> <span class="gnb-l2">Arcade</span></span></a>
   <a class="games-nav-btn games-nav-btn--ninjago" href="#lego-ninjago"><span class="gnb-ic" aria-hidden="true">&#x1F977;</span><span class="gnb-label"><span class="gnb-l1">LEGO</span> <span class="gnb-l2">Ninjago</span></span></a>
   <a class="games-nav-btn games-nav-btn--ninjago" href="#ninja-games"><span class="gnb-ic" aria-hidden="true">&#x1F977;</span><span class="gnb-label"><span class="gnb-l1">Ninja</span> <span class="gnb-l2">Games</span></span></a>
   <a class="games-nav-btn games-nav-btn--minecraft" href="#minecraft-games"><span class="gnb-ic" aria-hidden="true">&#x26CF;</span><span class="gnb-label"><span class="gnb-l1">Minecraft</span> <span class="gnb-l2">Games</span></span></a>
@@ -64,7 +64,128 @@ body.ios-iphone .games-featured-pill { display: inline-block; }
   <a class="games-nav-btn games-nav-btn--marvel" href="#marvel-games"><span class="gnb-ic" aria-hidden="true">&#x1F577;</span><span class="gnb-label"><span class="gnb-l1">Marvel &amp;</span> <span class="gnb-l2">Spider-Man</span></span></a>
   <a class="games-nav-btn games-nav-btn--amongus" href="#among-us-games"><span class="gnb-ic" aria-hidden="true">&#x1F680;</span><span class="gnb-label"><span class="gnb-l1">Among Us</span> <span class="gnb-l2">Games</span></span></a>
   <a class="games-nav-btn" href="#iphone-games"><span class="gnb-ic" aria-hidden="true">&#x1F4F1;</span><span class="gnb-label"><span class="gnb-l1">iPhone</span> <span class="gnb-l2">Games</span></span></a>
+</div>{% if brand | default('haunt') == 'merryquest' %}
+{# CHRISTMAS GAMES SHELF (Dan, Nov 24) — MERRYQUEST ONLY, renders
+   nothing on HauntMap. CrazyGames' Christmas tag, embeddable
+   titles only (CrazyGames' own allowEmbed flag + the documented
+   crazygames.com/embed/<slug> route, verified per title — see
+   CHRISTMAS_GAMES in app/main.py for the audit and the skipped
+   list). Cards wear the portal facade's clothes but carry
+   data-cg-slug + a .cg-facade button, so portal_games.js (GamePix)
+   leaves them alone; the MQ-only script below builds the
+   CrazyGames iframe on tap, one game at a time, same close /
+   fullscreen chips as the GamePix shelves. #}
+<section class="games-sec" id="christmas-games">
+<h2 class="games-sec-head">&#x1F384; Christmas Games</h2>
+<p class="games-sec-intro">The Christmas shelf from CrazyGames, playable right here: a mahjong advent calendar, a singing-blob carol concert, Santa's own snow farm and more. Tap a card, hit play, and go.</p>
+
+<div class="portal-grid">
+  {% for g in christmas_games %}
+  <div class="portal-card" data-cg-slug="{{ g.slug }}" data-game-title="{{ g.title }}" data-iphone="{{ 1 if g.iphone else 0 }}">
+    <div class="portal-frame" style="--pw: {{ g.w }}; --ph: {{ g.h }};">
+      <button class="cg-facade portal-facade" type="button" aria-label="Play {{ g.title }}">
+        <img src="{{ g.img }}" alt="{{ g.title }} cover art" loading="lazy">
+        <span class="portal-playbtn" aria-hidden="true">&#x25B6;</span>
+      </button>
+    </div>
+    <h3>{{ g.title }}</h3>
+    <p>{{ g.blurb }}</p>
+    <span class="portal-tag">{{ g.tag }}</span>
+  </div>
+  {% endfor %}
 </div>
+<p class="portal-note">Partner games are hosted by CrazyGames and the ads inside them are theirs.</p>
+</section>
+
+<script>
+// Christmas shelf click-to-load (MerryQuest only) — mirrors
+// portal_games.js for GamePix: facade first, the real iframe is
+// created on tap, one game plays at a time across BOTH systems
+// (opening one closes the other via its .portal-close chip).
+// Embed route is CrazyGames' documented one:
+// https://www.crazygames.com/embed/<slug>
+// Clicks are handled by delegation (the Minecraft trailer pattern
+// below) because portal_games.js restores facades via innerHTML,
+// which would orphan per-button listeners.
+(function () {
+  function resetCard(card) {
+    var frame = card.querySelector(".portal-frame");
+    if (!frame || !card._cgFacadeHTML) return;
+    if (window.hmExitFullscreenIf) window.hmExitFullscreenIf(frame);
+    frame.innerHTML = card._cgFacadeHTML;
+    card.classList.remove("is-playing");
+  }
+  function playCard(card) {
+    document.querySelectorAll(".portal-card.is-playing").forEach(function (other) {
+      if (other === card) return;
+      var closer = other.querySelector(".portal-close");
+      if (closer) closer.click();
+      else { other.classList.remove("is-playing"); }
+    });
+    var frame = card.querySelector(".portal-frame");
+    var slug = card.getAttribute("data-cg-slug");
+    if (!frame || !slug) return;
+    var iframe = document.createElement("iframe");
+    iframe.src = "https://www.crazygames.com/embed/" + slug;
+    iframe.title = card.getAttribute("data-game-title") || "Game";
+    iframe.setAttribute("frameborder", "0");
+    iframe.setAttribute("scrolling", "no");
+    iframe.setAttribute("allowfullscreen", "");
+    iframe.setAttribute("allow", "autoplay; fullscreen; gamepad");
+    var close = document.createElement("button");
+    close.type = "button";
+    close.className = "portal-close";
+    close.setAttribute("aria-label", "Close game");
+    close.textContent = "\u2715";
+    close.addEventListener("click", function () { resetCard(card); });
+    var fsBtn = document.createElement("button");
+    fsBtn.type = "button";
+    fsBtn.className = "game-fs-btn";
+    fsBtn.setAttribute("aria-label", "Fullscreen");
+    fsBtn.textContent = "\u26F6";
+    fsBtn.addEventListener("click", function () {
+      if (window.hmToggleFullscreen) window.hmToggleFullscreen(frame);
+    });
+    frame.innerHTML = "";
+    frame.appendChild(iframe);
+    frame.appendChild(fsBtn);
+    frame.appendChild(close);
+    card.classList.add("is-playing");
+    card.scrollIntoView({ block: "nearest", behavior: "smooth" });
+  }
+  document.querySelectorAll('#christmas-games .portal-card').forEach(function (card) {
+    var frame = card.querySelector(".portal-frame");
+    if (frame) card._cgFacadeHTML = frame.innerHTML;
+  });
+  document.addEventListener('click', function (ev) {
+    var b = ev.target.closest && ev.target.closest('#christmas-games .cg-facade');
+    if (!b) return;
+    var card = b.closest('.portal-card');
+    if (card && !card.classList.contains('is-playing')) playCard(card);
+  });
+  // iPhone rule, scoped to this shelf (same treatment as the shared
+  // script gives the GamePix shelves): keyboard/mouse-flagged cards
+  // sink below the "plays best" divider on iPhone, never featured.
+  var ua = navigator.userAgent || "";
+  var isIPhone = /iPhone|iPod/.test(ua) || navigator.platform === "iPhone";
+  if (!isIPhone) return;
+  var sec = document.getElementById("christmas-games");
+  if (!sec) return;
+  var grid = sec.querySelector(".portal-grid");
+  if (!grid) return;
+  var demoted = grid.querySelectorAll('.portal-card[data-iphone="0"]');
+  if (!demoted.length) return;
+  var divider = document.createElement("div");
+  divider.className = "games-demoted-divider";
+  divider.textContent = "💻 Plays best on a computer or tablet";
+  var sink = document.createElement("div");
+  sink.className = "portal-grid games-demoted";
+  sec.appendChild(divider);
+  sec.appendChild(sink);
+  demoted.forEach(function (card) { sink.appendChild(card); });
+})();
+</script>
+{% endif %}
 
 {# PORTAL CATALOG (Dan, Oct 26) — GamePix partner games under their
    open webmaster embed program (GameDistribution rejected HauntMap's
@@ -73,7 +194,7 @@ body.ios-iphone .games-featured-pill { display: inline-block; }
    in the iframe on tap, one game at a time. Dan's order: this shelf
    leads /games, Ghost Maze below it. #}
 <section class="games-sec" id="halloween-arcade">
-<h2 class="games-sec-head">&#x1F383; The Halloween Arcade</h2>
+<h2 class="games-sec-head">{% if brand | default('haunt') == 'merryquest' %}&#x1F3AE; The Arcade{% else %}&#x1F383; The Halloween Arcade{% endif %}</h2>
 
 <div class="portal-grid">
   {% for g in portal_games %}
@@ -90,9 +211,10 @@ body.ios-iphone .games-featured-pill { display: inline-block; }
   </div>
   {% endfor %}
 </div>
-<p class="portal-note">Partner games are hosted by GamePix and the ads inside them are theirs &mdash; everything else on this page (Ghost Maze included) is 100% HauntMap.</p>
+<p class="portal-note">Partner games are hosted by GamePix and the ads inside them are theirs &mdash; {% if brand | default('haunt') == 'merryquest' %}everything else on this page is 100% {{ site_name }}.{% else %}everything else on this page (Ghost Maze included) is 100% {{ site_name }}.{% endif %}</p>
 </section>
 
+{% if brand | default('haunt') != 'merryquest' %}
 <section class="games-sec" id="hauntmap-games">
 <h2 class="games-sec-head">&#x1F3AE; HauntMap Games</h2>
 
@@ -141,6 +263,7 @@ body.ios-iphone .games-featured-pill { display: inline-block; }
   </a>
 </div>
 </section>
+{% endif %}
 
 {# LEGO NINJAGO SHELF (Dan, Oct 27) — LINK-OUT cards only. LEGO's own
    kids site serves every game page with X-Frame-Options: SAMEORIGIN,
@@ -167,7 +290,7 @@ body.ios-iphone .games-featured-pill { display: inline-block; }
   </div>
   {% endfor %}
 </div>
-<p class="portal-note">LEGO&reg;, the LEGO logo and NINJAGO&reg; are trademarks of the LEGO Group, which does not sponsor, authorize or endorse HauntMap. Games play free on LEGO's official site.</p>
+<p class="portal-note">LEGO&reg;, the LEGO logo and NINJAGO&reg; are trademarks of the LEGO Group, which does not sponsor, authorize or endorse {{ site_name }}. Games play free on LEGO's official site.</p>
 </section>
 
 {# NINJA GAMES SHELF (Dan, Oct 27, scope expansion) — the GamePix
@@ -268,7 +391,7 @@ body.ios-iphone .games-featured-pill { display: inline-block; }
   </div>
   {% endfor %}
 </div>
-<p class="portal-note">MINECRAFT, MINECRAFT DUNGEONS and MINECRAFT LEGENDS are trademarks of Mojang AB / Microsoft, which do not sponsor, authorize or endorse HauntMap. Games are sold (or, for Classic, given away) on the official pages these cards link to.</p>
+<p class="portal-note">MINECRAFT, MINECRAFT DUNGEONS and MINECRAFT LEGENDS are trademarks of Mojang AB / Microsoft, which do not sponsor, authorize or endorse {{ site_name }}. Games are sold (or, for Classic, given away) on the official pages these cards link to.</p>
 </section>
 
 {# ROBLOX GAMES SHELF (Dan, Oct 27) — LINK-OUT cards only: Roblox
@@ -280,7 +403,7 @@ body.ios-iphone .games-featured-pill { display: inline-block; }
    parents can judge at a glance. #}
 <section class="games-sec" id="roblox-games">
 <h2 class="games-sec-head">&#x1F7E5; Roblox Games</h2>
-<p class="games-sec-intro">The Roblox giants with a Halloween lean — haunted hotels, spooky storybooks and the biggest hangouts on the platform. Roblox is free with a free Roblox account; these cards link out to each game's official Roblox page (the games live on Roblox, not on HauntMap).</p>
+<p class="games-sec-intro">{% if brand | default('haunt') == 'merryquest' %}The Roblox giants — adventures, storybooks and the biggest hangouts on the platform. Roblox is free with a free Roblox account; these cards link out to each game's official Roblox page (the games live on Roblox, not on MerryQuest).{% else %}The Roblox giants with a Halloween lean — haunted hotels, spooky storybooks and the biggest hangouts on the platform. Roblox is free with a free Roblox account; these cards link out to each game's official Roblox page (the games live on Roblox, not on HauntMap).{% endif %}</p>
 
 <div class="portal-grid">
   {% for g in roblox_games %}
@@ -297,7 +420,7 @@ body.ios-iphone .games-featured-pill { display: inline-block; }
   </div>
   {% endfor %}
 </div>
-<p class="portal-note">Maturity labels are Roblox's own content ratings, shown on each game's Roblox page. ROBLOX is a trademark of Roblox Corporation, which does not sponsor, authorize or endorse HauntMap.</p>
+<p class="portal-note">Maturity labels are Roblox's own content ratings, shown on each game's Roblox page. ROBLOX is a trademark of Roblox Corporation, which does not sponsor, authorize or endorse {{ site_name }}.</p>
 </section>
 
 {# MARVEL & SPIDER-MAN SHELF (Dan, Nov 3) — GamePix EMBEDS, the same

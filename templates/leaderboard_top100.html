@@ -3,11 +3,11 @@
 {% block content %}
 <div class="t100">
 <div class="cat-tabs">
-  <a href="/leaderboard/top-100?cat=halloween" class="{% if cat == 'halloween' %}active{% endif %}">&#x1F383; Haunt Map</a>
+  {% if brand | default('haunt') != 'merryquest' %}<a href="/leaderboard/top-100?cat=halloween" class="{% if cat == 'halloween' %}active{% endif %}">&#x1F383; Haunt Map</a>{% endif %}
   <a href="/leaderboard/top-100?cat=christmas" class="{% if cat == 'christmas' %}active{% endif %}">&#x1F384; MerryQuest</a>
 </div>
 <h1>&#x1F3C6; Top 100 nationwide</h1>
-<p class="muted">The most-viewed {{ cat_labels[cat]|lower }} displays in the country, ranked by visits to each display's page &mdash; the same ranking as <a href="/leaderboard?cat={{ cat }}">Top Haunts</a>. &#x2B50; <strong>Featured</strong> marks one of Dan's hand-picked displays.</p>
+<p class="muted">The most-viewed {{ cat_labels[cat]|lower }} displays in the country, ranked by visits to each display's page &mdash; the same ranking as <a href="/leaderboard?cat={{ cat }}">{% if brand | default('haunt') == 'merryquest' %}Top Displays{% else %}Top Haunts{% endif %}</a>. &#x2B50; <strong>Featured</strong> marks one of Dan's hand-picked displays.</p>
 
 {% if top %}
 <ol class="leader-list">
@@ -34,14 +34,14 @@
   {% endfor %}
 </ol>
 <div class="states-cta">
-  <a href="/leaderboard/states?cat={{ cat }}">&#x1F5FA;&#xFE0F; <strong>Top 10 by state</strong> &mdash; the best {{ cat_labels[cat]|lower }} haunts in every state &rarr;</a>
+  <a href="/leaderboard/states?cat={{ cat }}">&#x1F5FA;&#xFE0F; <strong>Top 10 by state</strong> &mdash; the best {{ cat_labels[cat]|lower }} {% if brand | default('haunt') == 'merryquest' %}displays{% else %}haunts{% endif %} in every state &rarr;</a>
 </div>
 {% endif %}
 
 {% if not top %}
 <div class="empty">
-  <p class="empty-emoji">&#x1F47B;</p>
-  <p>No haunts yet. <a href="/upload">Add the first one</a>.</p>
+  <p class="empty-emoji">{% if brand | default('haunt') == 'merryquest' %}&#x1F384;{% else %}&#x1F47B;{% endif %}</p>
+  <p>{% if brand | default('haunt') == 'merryquest' %}No displays{% else %}No haunts{% endif %} yet. <a href="/upload">Add the first one</a>.</p>
 </div>
 {% endif %}
 </div>

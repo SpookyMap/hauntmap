@@ -1,8 +1,8 @@
 {% extends "base.html" %}
-{% block title %}Restaurhaunts &amp; Cafes &middot; {{ site_name }}{% endblock %}
+{% block title %}{% if brand | default('haunt') == 'merryquest' %}Eats, Cafes &amp; Shops{% else %}Restaurhaunts &amp; Cafes{% endif %} &middot; {{ site_name }}{% endblock %}
 {% block content %}
-<h1>&#x1F37D;&#xFE0F; Restaurhaunts &amp; Cafes</h1>
-<p class="lede">Fuel for the fright night — the best restaurhaunts, bars, cafes and shops near the haunts. Grab dinner, a coffee or a souvenir between displays, and keep the tour rolling.</p>
+<h1>&#x1F37D;&#xFE0F; {% if brand | default('haunt') == 'merryquest' %}Eats, Cafes &amp; Shops{% else %}Restaurhaunts &amp; Cafes{% endif %}</h1>
+{% if brand | default('haunt') == 'merryquest' %}<p class="lede">Fuel for the light tour — the best restaurants, bars, cafes and shops near the displays. Grab dinner, a cocoa or a souvenir between displays, and keep the tour rolling.</p>{% else %}<p class="lede">Fuel for the fright night — the best restaurhaunts, bars, cafes and shops near the haunts. Grab dinner, a coffee or a souvenir between displays, and keep the tour rolling.</p>{% endif %}
 
 <div class="rh-controls">
   <div class="rh-chips">
@@ -55,7 +55,7 @@
 {% else %}
 <div class="empty">
   <p class="empty-emoji">&#x1F37D;&#xFE0F;</p>
-  <p>No restaurhaunts, cafes or shops here yet{% if town_search %} in {{ town_search }}{% endif %}.</p>
+  <p>{% if brand | default('haunt') == 'merryquest' %}No eats, cafes or shops here yet{% else %}No restaurhaunts, cafes or shops here yet{% endif %}{% if town_search %} in {{ town_search }}{% endif %}.</p>
   <p><a class="btn" href="/upload">Be the first to add one</a></p>
 </div>
 {% endif %}

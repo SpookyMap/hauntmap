@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}HauntMap Plus · {{ site_name }}{% endblock %}
+{% block title %}{% if brand | default('haunt') == 'merryquest' %}MerryQuest Plus{% else %}HauntMap Plus{% endif %} · {{ site_name }}{% endblock %}
 {% block content %}
 <style>
   .plus-wrap{max-width:880px;margin:0 auto;padding:8px 4px 40px}
@@ -35,12 +35,12 @@
 </style>
 <div class="plus-wrap">
   <div class="plus-hero">
-    <span class="plus-pill">&#x1F451; HAUNTMAP PLUS</span>
+    <span class="plus-pill">&#x1F451; {% if brand | default('haunt') == 'merryquest' %}MERRYQUEST PLUS{% else %}HAUNTMAP PLUS{% endif %}</span>
     <h1>Your Best Night Out, <span class="gold">Built For You.</span></h1>
     <p>The map stays free — it always will. Plus builds the perfect night on top of it:
        the best route, first alerts when new displays land near you, and packs you can
-       take on the road. One membership covers <strong>HauntMap and Jolly Map</strong> —
-       Halloween, Christmas, and every spotlight in between.</p>
+       take on the road. One membership covers <strong>{% if brand | default('haunt') == 'merryquest' %}MerryQuest and HauntMap{% else %}HauntMap and Jolly Map{% endif %}</strong> —
+       {% if brand | default('haunt') == 'merryquest' %}Christmas, Halloween,{% else %}Halloween, Christmas,{% endif %} and every spotlight in between.</p>
   </div>
 
   {% if is_plus %}
@@ -69,7 +69,7 @@
     </div>
     <div class="plus-card">
       <h3>&#x2728; Your season, your way</h3>
-      <p>Ad-free browsing, the &#x1F451; Plus badge on HauntSocial, and the
+      <p>Ad-free browsing, the &#x1F451; Plus badge on {% if brand | default('haunt') == 'merryquest' %}MerrySocial{% else %}HauntSocial{% endif %}, and the
          exclusive Gold Pin profile theme.</p>
     </div>
   </div>
@@ -100,12 +100,12 @@
 
   {% if creator %}
   <div class="plus-card" style="margin-bottom:14px">
-    <h3>&#x1F383; Your displays, creator view</h3>
+    <h3>{% if brand | default('haunt') == 'merryquest' %}&#x1F384;{% else %}&#x1F383;{% endif %} Your displays, creator view</h3>
     <p>You have <strong>{{ creator.count }}</strong> live display{{ "s" if creator.count != 1 }}
        with <strong>{{ creator.votes }}</strong> total votes, featured in
        <strong>{{ creator.in_tours }}</strong> shared tour{{ "s" if creator.in_tours != 1 }}.
        Top display: <strong>{{ creator.top_title }}</strong> ({{ creator.top_town }}).
-       {% if not is_plus %}Plus adds your &#x2714;&#xFE0F; verified haunter badge and first alerts when tours include you.{% endif %}</p>
+       {% if not is_plus %}Plus adds your &#x2714;&#xFE0F; {% if brand | default('haunt') == 'merryquest' %}verified creator badge{% else %}verified haunter badge{% endif %} and first alerts when tours include you.{% endif %}</p>
   </div>
   {% endif %}
 
@@ -149,15 +149,15 @@
     </div>
   </div>
   <p class="plus-note">Subscriptions start with a 7-day free trial — no charge until it ends.
-     Cancel anytime. Other Halloween maps charge more than double for just one map — Plus is $3.99 and covers two: both HauntMap and Jolly Map.</p>
+     Cancel anytime. {% if brand | default('haunt') == 'merryquest' %}Other Christmas lights maps charge more than double for just one map — Plus is $3.99 and covers two: both MerryQuest and HauntMap.{% else %}Other Halloween maps charge more than double for just one map — Plus is $3.99 and covers two: both HauntMap and Jolly Map.{% endif %}</p>
   {% endif %}
 
   <div class="plus-faq">
     <h2>Good questions</h2>
     <p><strong>Does the map stay free?</strong> Yes — the map, pins, basic tours, games and
-       HauntSocial are free forever. Plus is the layer that plans the night for you.</p>
-    <p><strong>Does Plus work on Jolly Map?</strong> Yes. One membership, both maps,
-       all year — Halloween, Christmas, Halfway to Halloween and the August 13 mini-Halloween.</p>
+       {% if brand | default('haunt') == 'merryquest' %}MerrySocial{% else %}HauntSocial{% endif %} are free forever. Plus is the layer that plans the night for you.</p>
+    <p><strong>{% if brand | default('haunt') == 'merryquest' %}Does Plus work on HauntMap?{% else %}Does Plus work on Jolly Map?{% endif %}</strong> Yes. One membership, both maps,
+       all year — {% if brand | default('haunt') == 'merryquest' %}Christmas, Halloween,{% else %}Halloween, Christmas,{% endif %} Halfway to Halloween and the August 13 mini-Halloween.</p>
     <p><strong>How do I cancel?</strong> Anytime, in two taps from your Stripe receipt —
        you keep Plus until the period you paid for ends.</p>
     <p><strong>Do I need the app?</strong> No. Plus bought here works on the website

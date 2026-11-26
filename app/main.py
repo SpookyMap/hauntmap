@@ -1447,10 +1447,24 @@ _DECKED_THEME_TERMS = (
     "horror", "haunted", "ghost", "vampire", "coffin", "gothic",
     "skeleton", "witch", "pumpkin", "creepy", "spooky",
 )
+# Christmas counterparts (brand separation, Nov 25, 2026): on
+# MerryQuest the same lane leads with the most decked-for-Christmas
+# venues, scored off the Christmas term lists instead.
+_DECKED_CHRISTMAS_SEASONAL_TERMS = (
+    "christmas pop-up", "christmas popup", "christmas-themed",
+    "christmas themed", "christmas menu", "christmas party",
+    "christmas cocktail", "christmas drink", "holiday pop-up",
+    "holiday popup", "holiday menu", "decked", "decorat",
+)
+_DECKED_CHRISTMAS_THEME_TERMS = (
+    "christmas", "holiday", "santa", "reindeer", "elf", "snowman",
+    "gingerbread", "nutcracker", "mistletoe", "wreath", "garland",
+    "twinkle", "lights",
+)
 
 
-def decked_score(entry: dict) -> int:
-    """How decked-for-Halloween a restaurhaunt entry reads, from its
+def decked_score(entry: dict, season: str = "halloween") -> int:
+    """How decked a restaurhaunt entry reads for the season, from its
     own title / description / tags / media only (see the term lists
     above). Higher = more decked. Used purely as an ordering key for
     the restaurant lane (RESTAURHAUNT_CATS); never displayed."""
@@ -1460,10 +1474,15 @@ def decked_score(entry: dict) -> int:
     if (entry.get("tiktok_url") or "").strip() \
             or entry.get("media_type") == "video":
         score += 4
-    for term in _DECKED_SEASONAL_TERMS:
+    if season == "christmas":
+        seasonal, theme = (_DECKED_CHRISTMAS_SEASONAL_TERMS,
+                           _DECKED_CHRISTMAS_THEME_TERMS)
+    else:
+        seasonal, theme = _DECKED_SEASONAL_TERMS, _DECKED_THEME_TERMS
+    for term in seasonal:
         if term in text:
             score += 2
-    for term in _DECKED_THEME_TERMS:
+    for term in theme:
         if term in text:
             score += 1
     return score
@@ -4038,7 +4057,12 @@ def events_page(request: Request, type: str = "", genre: str = "",
                          if c["count"] < _fff_count), len(chip_types))
         chip_types.insert(_fff_pos, {
             "value": FALL_FAMILY_FUN_VALUE,
-            "label": FALL_FAMILY_FUN_LABEL, "count": _fff_count})
+            # MerryQuest drops the "Fall" framing (Dan, Nov 24): the
+            # same computed chip reads "Family Fun" on that brand.
+            "label": ("Family Fun"
+                      if _brand_of(request) == "merryquest"
+                      else FALL_FAMILY_FUN_LABEL),
+            "count": _fff_count})
     # Near-me state carried through the facet form + sort toggles as
     # hidden fields / a query fragment, so changing type/genre/sort
     # never drops the visitor's area. Bare "clear filters" links stay
@@ -4073,6 +4097,10 @@ def events_page(request: Request, type: str = "", genre: str = "",
 def markets_page(request: Request, town: str = "", state: str = "",
                  near: str = "", area: str = "", lat: str = "",
                  lng: str = ""):
+    # HauntMap-only pool (Nov 25, 2026): the market listings are
+    # October Halloween markets — 404 on MerryQuest.
+    if _brand_of(request) == "merryquest":
+        raise HTTPException(status_code=404)
     # Flea Markets & Pop-Ups (Dan, Oct 23): every event pin faceted
     # ev_type='Market' on one page, soonest first. Event dates live in
     # the titles, so ordering reuses parse_event_dates (the same parser
@@ -4197,6 +4225,12 @@ RESTAURHAUNT_CATS = ("restaurants", "coffee", "shops")
 @app.get("/restaurhaunts", response_class=HTMLResponse)
 def restaurhaunts(request: Request, sort: str = "new", f: str = "all",
                   town_search: str = ""):
+    # Brand separation (Nov 25, 2026): the lane renders on BOTH
+    # brands — MerryQuest gets Christmas wording (template) and the
+    # Christmas-decked ordering (decked_score season below). This
+    # supersedes the staged pile's MQ 404 guard for this page.
+    _decked_season = ("christmas" if _brand_of(request) == "merryquest"
+                      else "halloween")
     # Combined "Restaurhaunts & Cafes" listing (Dan, Oct 22): one mixed
     # feed over the existing restaurants + coffee + shops categories
     # (bars live in restaurants). Category keys are unchanged — only the
@@ -4230,7 +4264,7 @@ def restaurhaunts(request: Request, sort: str = "new", f: str = "all",
         entries.sort(key=lambda e: e["id"], reverse=True)
         entries.sort(key=lambda e: e.get("created_at") or "", reverse=True)
         entries.sort(key=lambda e: 0 if e.get("is_handpicked") else 1)
-        entries.sort(key=lambda e: -decked_score(e))
+        entries.sort(key=lambda e: -decked_score(e, _decked_season))
         entries = entries[:100]
     # Category tab counts from the shared TTL cache (fortification
     # pass 2) instead of a per-render GROUP BY over entries.
@@ -4367,7 +4401,12 @@ MAP_DISPLAY_CATS = ("halloween", "christmas")
 @app.get("/map", response_class=HTMLResponse)
 def map_view(request: Request, cat: str = ""):
     """Full-screen map with all display pins, Google Maps-style browsing."""
-    if cat in CATEGORIES:
+    if _brand_of(request) == "merryquest":
+        # Brand separation (Dan, Nov 25, 2026): the MerryQuest map
+        # carries Christmas displays only, whatever ?cat= asks for.
+        cats = ("christmas",)
+        cat = "christmas"
+    elif cat in CATEGORIES:
         cats = (cat,)
     else:
         cats = MAP_DISPLAY_CATS
@@ -4611,6 +4650,9 @@ PICKS_GEAR = [
 
 @app.get("/shop", response_class=HTMLResponse)
 def picks_page(request: Request):
+    # HauntMart is the HauntMap store (Nov 25, 2026) — 404 on MQ.
+    if _brand_of(request) == "merryquest":
+        raise HTTPException(status_code=404)
     return templates.TemplateResponse(
         request, "picks.html",
         {"books": PICKS_BOOKS, "gear": PICKS_GEAR, "sale": PICKS_SALE},
@@ -4626,6 +4668,8 @@ def picks_redirect():
 
 @app.get("/diy", response_class=HTMLResponse)
 def diy_page(request: Request):
+    if _brand_of(request) == "merryquest":
+        raise HTTPException(status_code=404)
     return templates.TemplateResponse(
         request, "diy.html",
         {"videos": DIY_VIDEOS, "nick_videos": DIY_VIDEOS_NICK,
@@ -4841,6 +4885,8 @@ COSTUME_SECTIONS = [
 
 @app.get("/diy-costumes", response_class=HTMLResponse)
 def diy_costumes_page(request: Request):
+    if _brand_of(request) == "merryquest":
+        raise HTTPException(status_code=404)
     return templates.TemplateResponse(
         request, "diy_costumes.html", {"sections": COSTUME_SECTIONS},
     )
@@ -4868,6 +4914,8 @@ def _duel_slim(e: dict) -> dict:
 
 @app.get("/haunt-or-not", response_class=HTMLResponse)
 def haunt_or_not_page(request: Request):
+    if _brand_of(request) == "merryquest":
+        raise HTTPException(status_code=404)
     with get_conn(DB_PATH) as conn:
         conn.execute(DUEL_TABLE_SQL)
         rows = conn.execute(
@@ -4914,7 +4962,7 @@ def haunt_or_not_page(request: Request):
 # phones), instantly playable. Genre-for-genre swap against the GD
 # shelf (bubble / knife timing / tower defense / merge / match-3 /
 # memory / hidden object / coloring). Cover art is GamePix's own
-# img CDN (the facade role GD's img CDN played before). Ghost Maze
+# thumbnails, self-hosted since Nov 24 (see the note below). Ghost Maze
 # stays the featured hero above this section; nothing here touches
 # it or its leaderboard.
 #
@@ -5694,20 +5742,155 @@ AMONG_US_GAMES = [
 ]
 
 
+# ------------------------------------------- christmas games shelf
+# CHRISTMAS GAMES (Dan, Nov 24: "all Christmas related games from
+# crazy games on merry quest site") — MERRYQUEST ONLY: the section
+# renders only on the MQ brand (games.html guards it), so HauntMap's
+# /games is untouched. Source: CrazyGames' official Christmas tag
+# (crazygames.com/t/christmas; 19 published games verified via
+# each game's own page data, Nov 24, 2026 — CrazyGames' own tag
+# counter reads 18, likely lag on a recent addition).
+#
+# EMBED RULE — CrazyGames' terms allow iframing ONLY where the game
+# provides an embed option, and every game page carries CrazyGames'
+# own allowEmbed flag. Only allowEmbed=True titles are here; each
+# was verified Nov 24, 2026 two ways: the flag on its game page, and
+# the documented embed route crazygames.com/embed/<slug> answering
+# 301 -> games.crazygames.com/<locale>/<slug>/index.html (HTTP 200)
+# while allowEmbed=False titles answer 401. The shelf's click-to-
+# load script (in games.html, MQ-only) builds that embed URL.
+# Skipped as NOT embeddable (allowEmbed=False, embed route 401):
+# Snow Rider 3D (the tag's #1 game), Christmas Mansion, Mahjong
+# Fest: Winterland, Christmas Girls Dress Up, Christmas Sorting,
+# Click the Tree!, Sled Heist!, Snowball Roller 3D, Elf Factory
+# Tycoon. Two more search-surfaced titles (Christmas Market Tycoon,
+# Yarn Ball: A New Year's Adventure) are pre-release 404s — not
+# published, nothing to embed.
+#
+# CONTENT FLAGS — RESOLVED (Dan's veto, Nov 25, 2026): Winter Clash
+# 3D (team FPS), Monster Christmas Terror (horror FPS), Slenderman
+# Must Die: Silent Streets (horror FPS) and Hot Lava Floor (no
+# Christmas content) were REMOVED from this shelf on Dan's call.
+# Do not re-add them.
+#
+# Cover art is CrazyGames' own og:image art, self-hosted the Batch 5
+# way (static/img/games/crazygames-<slug>.jpg, eyeball-verified
+# against each game Nov 24). Idle Christmas ships small source art
+# (180x111) — that is the largest art CrazyGames serves for it.
+# "iphone" flags carry CrazyGames' own
+# iosFriendly values; the MQ-only script in games.html applies the
+# iPhone demotion inside this shelf.
+CHRISTMAS_GAMES = [
+    {"iphone": False, "slug": "the-box-of-secrets",
+     "img": "/static/img/games/crazygames-the-box-of-secrets.jpg",
+     "title": "The Box of Secrets",
+     "blurb": "Escape-room puzzling: crack the riddles, hunt the "
+              "hidden items and unlock every locked secret box "
+              "standing between you and the big reveal.",
+     "tag": "Puzzle escape \u00b7 plays here via CrazyGames", "w": 800, "h": 450},
+    {"iphone": True, "slug": "blob-opera",
+     "img": "/static/img/games/crazygames-blob-opera.jpg",
+     "title": "Blob Opera",
+     "blurb": "Google's singing blobs in concert: drag each blob "
+              "and conduct your own four-part opera \u2014 the "
+              "silliest carol concert on the internet.",
+     "tag": "Music toy \u00b7 plays here via CrazyGames", "w": 800, "h": 450},
+    {"iphone": True, "slug": "snow-farm-happy-new-year",
+     "img": "/static/img/games/crazygames-snow-farm-happy-new-year.jpg",
+     "title": "Snow Farm Happy New Year",
+     "blurb": "Build a jolly snow farm with Santa and Rudolph: "
+              "raise magical creatures, craft gifts in the Christmas "
+              "factories and fill the sleigh with orders.",
+     "tag": "Farm sim \u00b7 plays here via CrazyGames", "w": 800, "h": 450},
+    {"iphone": True, "slug": "advent-mahjong",
+     "img": "/static/img/games/crazygames-advent-mahjong.jpg",
+     "title": "Advent Mahjong",
+     "blurb": "A mahjong advent calendar: match the Christmas "
+              "tiles, clear the board against the clock, and every "
+              "level opens one day closer to Christmas.",
+     "tag": "Mahjong puzzle \u00b7 plays here via CrazyGames", "w": 800, "h": 450},
+    {"iphone": True, "slug": "ellie-christmas-makeup",
+     "img": "/static/img/games/crazygames-ellie-christmas-makeup.jpg",
+     "title": "Ellie Christmas Makeup",
+     "blurb": "Give Ellie her holiday glow-up: candy cane queen, "
+              "holly glam and more festive looks in this Christmas "
+              "makeover studio.",
+     "tag": "Makeup \u00b7 plays here via CrazyGames", "w": 800, "h": 450},
+    {"iphone": False, "slug": "idle-christmas",
+     "img": "/static/img/games/crazygames-idle-christmas.jpg",
+     "title": "Idle Christmas",
+     "blurb": "A cozy clicker: tap Mookie the cow, bank the milk "
+              "and cookies, and buy upgrades until every kid on "
+              "Santa's list is happy.",
+     "tag": "Idle clicker \u00b7 plays here via CrazyGames", "w": 800, "h": 450},
+]
+
+
+# MERRYQUEST GAMES FILTER (Dan, Nov 24: "Have to get rid of anything
+# Halloween related" on the MerryQuest games page). The catalogs
+# above are shared; HauntMap keeps every title. On the MQ brand the
+# Halloween/horror titles below are filtered out of the context at
+# route level and two Roblox hangouts get MQ blurbs without their
+# Halloween-event clauses. The shared lists are never mutated.
+_MQ_HIDDEN_GAME_SLUGS = frozenset({
+    # The Arcade — Halloween in the title itself
+    "halloween-bubble-shooter", "halloween-matching",
+    "spooky-halloween-hidden-pumpkin",
+    "halloween-coloring-book-for-kids",
+    # The Arcade — horror/spooky themes: zombie tower defense,
+    # pumpkin/ghost merge, monster match-3
+    "chaos-zombie-tower-defense", "spooky-merge", "jewel-monsters",
+    # iPhone shelf — pumpkin jumper ("a Halloween heart" per its
+    # own blurb) and the two monster puzzlers
+    "bw-pumpkin", "candy-monsters", "angry-monsters",
+})
+_MQ_HIDDEN_GAME_TITLES = frozenset({
+    # Roblox shelf — the shelf's horror lean: Roblox's own "Horror"
+    # tags (Mimic, Piggy, Rainbow Friends, Murder Mystery 2) plus
+    # the haunted-hotel headliner DOORS
+    "DOORS", "The Mimic", "Piggy", "Rainbow Friends",
+    "Murder Mystery 2",
+})
+_MQ_GAME_BLURB_OVERRIDES = {
+    "Brookhaven RP": "Roblox's biggest hangout: claim a house, "
+                     "grab a car, pick a job and roleplay your own "
+                     "stories across a whole city.",
+    "Adopt Me!": "Raise pets, build your dream home and trade "
+                 "with friends in Roblox's beloved roleplay world.",
+}
+
+
+def _mq_filter_games(games):
+    out = []
+    for g in games:
+        if (g.get("slug") in _MQ_HIDDEN_GAME_SLUGS
+                or g.get("title") in _MQ_HIDDEN_GAME_TITLES):
+            continue
+        blurb = _MQ_GAME_BLURB_OVERRIDES.get(g.get("title"))
+        if blurb is not None:
+            g = {**g, "blurb": blurb}
+        out.append(g)
+    return out
+
+
 @app.get("/games", response_class=HTMLResponse)
 def games_page(request: Request):
-    return templates.TemplateResponse(
-        request, "games.html", {"portal_games": PORTAL_GAMES,
-                                "ninjago_games": NINJAGO_GAMES,
-                                "ninja_portal_games": NINJA_PORTAL_GAMES,
-                                "ninja_link_games": NINJA_LINK_GAMES,
-                                "minecraft_games": MINECRAFT_GAMES,
-                                "minecraft_stores": MINECRAFT_DUNGEONS_STORES,
-                                "minecraft_trailer": MINECRAFT_TRAILER,
-                                "roblox_games": ROBLOX_GAMES,
-                                "marvel_games": MARVEL_GAMES,
-                                "among_us_games": AMONG_US_GAMES,
-                                "iphone_games": IPHONE_GAMES})
+    ctx = {"portal_games": PORTAL_GAMES,
+           "ninjago_games": NINJAGO_GAMES,
+           "ninja_portal_games": NINJA_PORTAL_GAMES,
+           "ninja_link_games": NINJA_LINK_GAMES,
+           "minecraft_games": MINECRAFT_GAMES,
+           "minecraft_stores": MINECRAFT_DUNGEONS_STORES,
+           "minecraft_trailer": MINECRAFT_TRAILER,
+           "roblox_games": ROBLOX_GAMES,
+           "marvel_games": MARVEL_GAMES,
+           "among_us_games": AMONG_US_GAMES,
+           "christmas_games": CHRISTMAS_GAMES,
+           "iphone_games": IPHONE_GAMES}
+    if _brand_of(request) == "merryquest":
+        ctx = {k: _mq_filter_games(v) if isinstance(v, list) else v
+               for k, v in ctx.items()}
+    return templates.TemplateResponse(request, "games.html", ctx)
 
 
 # ------------------------------------------------------------- ghost maze
@@ -5742,6 +5925,8 @@ def _ghost_maze_board(conn, limit: int = 10) -> list[dict]:
 
 @app.get("/games/ghost-maze", response_class=HTMLResponse)
 def ghost_maze_page(request: Request):
+    if _brand_of(request) == "merryquest":
+        raise HTTPException(status_code=404)
     member = getattr(request.state, "member", None)
     with get_conn(DB_PATH) as conn:
         board = _ghost_maze_board(conn)
@@ -5862,6 +6047,8 @@ def _trivia_quiz_for(day) -> list[dict]:
 
 @app.get("/trivia", response_class=HTMLResponse)
 def trivia_page(request: Request):
+    if _brand_of(request) == "merryquest":
+        raise HTTPException(status_code=404)
     today = datetime.now(timezone.utc).date()
     quiz = _trivia_quiz_for(today)
     return templates.TemplateResponse(
@@ -5881,6 +6068,8 @@ def daily_page(request: Request):
     Stable all day, rotates at ET midnight. The visit streak is
     JS/cookie-driven (hmFrightTouch in base.html) — visiting this page
     is one of the two counting surfaces; no server state is kept."""
+    if _brand_of(request) == "merryquest":
+        raise HTTPException(status_code=404)
     et_date = _today_et()
     with get_conn(DB_PATH) as conn:
         display = _daily_display(conn, et_date)
@@ -6087,6 +6276,8 @@ def _bracket_state(request: Request) -> dict:
 
 @app.get("/bracket", response_class=HTMLResponse)
 def bracket_page(request: Request):
+    if _brand_of(request) == "merryquest":
+        raise HTTPException(status_code=404)
     st = _bracket_state(request)
     seeds_sorted = sorted(st["entries"].values(), key=lambda e: e["seed"])
     return templates.TemplateResponse(request, "bracket.html", {
@@ -6219,6 +6410,8 @@ def bracket_resolve(request: Request, matchup_id: str):
 
 @app.get("/bracket/card/{entry_id}", response_class=HTMLResponse)
 def bracket_card(request: Request, entry_id: int):
+    if _brand_of(request) == "merryquest":
+        raise HTTPException(status_code=404)
     if entry_id not in brk.SEED_OF:
         raise HTTPException(404, "Not a bracket contender.")
     e = get_entry(entry_id)
@@ -6250,6 +6443,10 @@ def watch_page(request: Request):
     anchoring detail_chain's video chain uses. This supersedes the
     Oct 21 per-visit shuffle. Every slide also carries _views for
     Item 7's count chips (from the cached views snapshot)."""
+    # Brand separation (Nov 25, 2026): on MerryQuest the feed is
+    # Christmas footage only.
+    _watch_cat = (" AND e.category = 'christmas'"
+                  if _brand_of(request) == "merryquest" else "")
     with get_conn(DB_PATH) as conn:
         rows = conn.execute(
             "SELECT e.* FROM entries e "
@@ -6258,6 +6455,7 @@ def watch_page(request: Request):
             " OR LOWER(e.media_path) LIKE '%.mp4'"
             " OR LOWER(e.media_path) LIKE '%.webm'"
             " OR LOWER(e.media_path) LIKE '%.mov')"
+            f"{_watch_cat}"
             " ORDER BY e.is_handpicked DESC, e.created_at DESC, e.id DESC "
             "LIMIT 60").fetchall()
     # _views from the TTL-cached views snapshot (fortification pass 2)
@@ -6489,6 +6687,95 @@ def _vt_pick(pool: list[dict], key, n: int = VT_ROUTE_LEN,
     return picked
 
 
+# MerryQuest channel copy for the Virtual Tour (brand separation,
+# Nov 25, 2026): the channel machinery is shared, but on MQ the
+# channels are Christmas display tours — no "Scariest", no "haunts".
+# Curated channels get full replacement copy; the rest (state/metro
+# channels whose blurbs name Halloween houses) get the generic
+# word swaps below, and any channel not listed keeps its structure.
+_VT_MQ_CHANNEL_COPY = {
+    "tonight": {
+        "sub": "The best Christmas display videos in the country, "
+               "one after another — sit back and ride along.",
+        "blurb": "Tonight's best Christmas display videos nationwide, "
+                 "ranked by what everyone's actually watching."},
+    "america": {
+        "unit": "displays — videos & photos",
+        "sub": "Every state on the map, one stop at a time — each "
+               "state's best display video, and its strongest photo "
+               "where video hasn't reached yet.",
+        "blurb": "Coast to coast: a stop in every state + DC on the "
+                 "map — video first, a photo stop where a state has "
+                 "no video yet."},
+    "nyc": {
+        "sub": "Christmas display videos across the five boroughs "
+               "and Long Island — the brightest corner of the map, "
+               "one stop at a time.",
+        "blurb": "The five boroughs + Long Island: Dyker Heights, "
+                 "Staten Island, Lindenhurst and more."},
+    "li": {
+        "emoji": "🎄",
+        "title": "🎄 Long Island — Virtual Tour",
+        "sub": "Nassau and Suffolk's best Christmas display videos "
+               "— Lindenhurst, Plainview, Levittown and more, ranked "
+               "by views.",
+        "blurb": "Lindenhurst, Plainview, Levittown, Merrick — the "
+                 "Island's most-watched display videos."},
+    "nj": {
+        "label": "New Jersey Lights", "emoji": "🎄",
+        "title": "🎄 New Jersey Lights — Virtual Tour",
+        "sub": "Jersey's best Christmas display videos — Bergen, "
+               "Essex, Morris and beyond, ranked by views.",
+        "blurb": "Dumont, Hawthorne, Ridgewood, Hackensack — "
+                 "Jersey's most-watched display videos."},
+    "family": {
+        "sub": "All treats, no tricks — the gentlest display videos "
+               "on the map, safe for little ones.",
+        "blurb": "Family-rated display videos nationwide — porch "
+                 "displays, farm festivals and giant light shows."},
+    "virginia": {
+        "label": "Virginia Lights",
+        "title": "⚓ Virginia Lights — Virtual Tour",
+        "sub": "Virginia's best Christmas display videos — Virginia "
+               "Beach, Hampton Roads and beyond, ranked by views.",
+        "blurb": "Virginia Beach, Chesapeake, Yorktown and Franklin "
+                 "— Virginia's most-watched display videos."},
+    "chicagoland": {
+        "sub": "Chicago and its suburbs — Naperville, Joliet, Oak "
+               "Lawn — ranked by views.",
+        "blurb": "Naperville, Joliet, Oak Lawn and more "
+                 "Chicago-area displays, ranked by views."},
+    "texas": {
+        "sub": "The Lone Star State's best Christmas display videos "
+               "— San Antonio, Dallas–Fort Worth and Houston, "
+               "ranked by views.",
+        "blurb": "San Antonio, Dallas–Fort Worth and Houston — "
+                 "everything's bigger in Texas."},
+    "vegas": {
+        "sub": "Vegas and Boulder City lit up for Christmas, "
+               "ranked by views.",
+        "blurb": "Las Vegas and Boulder City's brightest displays, "
+                 "ranked by views."},
+}
+
+
+def _vt_mq_channel(c: dict) -> dict:
+    """One channel_meta row rewritten for the MerryQuest brand."""
+    c = dict(c)
+    for k, v in _VT_MQ_CHANNEL_COPY.get(c["id"], {}).items():
+        c[k] = v
+    for k in ("label", "title", "sub", "blurb"):
+        if k in c and isinstance(c[k], str):
+            c[k] = (c[k].replace("video haunts", "display videos")
+                        .replace("video haunt", "display video")
+                        .replace("haunts", "displays")
+                        .replace("haunt", "display")
+                        .replace("🎃", "🎄"))
+    if c.get("emoji") == "🎃":
+        c["emoji"] = "🎄"
+    return c
+
+
 @app.get("/virtual-tour", response_class=HTMLResponse)
 def virtual_tour_page(request: Request, route: str = "tonight",
                       mode: str = ""):
@@ -6531,6 +6818,13 @@ def virtual_tour_page(request: Request, route: str = "tonight",
     with get_conn(DB_PATH) as conn:
         pool = _vt_video_pool(conn)
         photo_pool = _vt_photo_pool(conn, {d["id"] for d in pool})
+    _is_mq = _brand_of(request) == "merryquest"
+    if _is_mq:
+        # Brand separation (Dan, Nov 25, 2026): on MerryQuest the
+        # tour rides Christmas displays only — video and photo stops.
+        pool = [d for d in pool if d.get("category") == "christmas"]
+        photo_pool = [d for d in photo_pool
+                      if d.get("category") == "christmas"]
     by_views = lambda d: (-d["_views"], -d["votes"], d["id"])  # noqa: E731
     tonight = _vt_pick(pool, key=by_views)
     scare_rank = {"extreme": 0, "terrifying": 1, "creepy": 2}
@@ -6620,6 +6914,10 @@ def virtual_tour_page(request: Request, route: str = "tonight",
         routes["america"] = america
     for st, stops in state_routes.items():
         routes[f"state-{st.lower()}"] = stops
+    if _is_mq:
+        # No Scariest channel on MerryQuest, even if a Christmas pin
+        # carries a scare rating.
+        routes.pop("scariest", None)
     if route not in routes:
         route = "tonight"
     is_tv = mode == "tv"
@@ -6737,6 +7035,8 @@ def virtual_tour_page(request: Request, route: str = "tonight",
              "blurb": f"{VT_STATE_NAMES[st]}'s most-watched video "
                       "haunts."})
     channels = [c for c in channel_meta if c["id"] in routes]
+    if _is_mq:
+        channels = [_vt_mq_channel(c) for c in channels]
 
     def slim(stops: list[dict]) -> list[dict]:
         return [{
@@ -7373,6 +7673,12 @@ def api_explore(request: Request, from_id: int, exclude: str = ""):
 def detail(request: Request, entry_id: int):
     entry = get_entry(entry_id)
     if not entry or entry["hidden"]:
+        raise HTTPException(404, "Entry not found.")
+    # Brand separation (Dan, Nov 25, 2026): on MerryQuest only
+    # Christmas pins exist — every other category's detail page 404s,
+    # so Halloween pins (and their chains/rails) never render there.
+    if _brand_of(request) == "merryquest" \
+            and entry.get("category") != "christmas":
         raise HTTPException(404, "Entry not found.")
     # Multi-video pins (Oct 27): the primary (entries.tiktok_url) plays
     # in the hero; every OTHER video of this place renders below it in
@@ -8290,6 +8596,11 @@ def _state_boards(cat: str) -> list[dict]:
 
 @app.get("/leaderboard", response_class=HTMLResponse)
 def leaderboard(request: Request, cat: str = "halloween"):
+    # Brand separation (Nov 25, 2026): MerryQuest boards default to
+    # Christmas unless a category is explicitly asked for.
+    if _brand_of(request) == "merryquest" \
+            and "cat" not in request.query_params:
+        cat = "christmas"
     cat = cat if cat in CATEGORIES else "halloween"
     with get_conn(DB_PATH) as conn:
         # Dan, Oct 23: rank by detail-page views, same logic as the
@@ -8463,6 +8774,9 @@ def leaderboard_hunters(request: Request, town: str = "", q: str = ""):
 
 @app.get("/leaderboard/states", response_class=HTMLResponse)
 def leaderboard_states(request: Request, cat: str = "halloween"):
+    if _brand_of(request) == "merryquest" \
+            and "cat" not in request.query_params:
+        cat = "christmas"
     cat = cat if cat in CATEGORIES else "halloween"
     with get_conn(DB_PATH) as conn:
         entries = _entries_with_views(conn, cat)
@@ -8562,6 +8876,9 @@ def api_top10(state: str = "", cat: str = "halloween"):
 # picks follow the same flag logic; counts are never altered).
 @app.get("/leaderboard/top-100", response_class=HTMLResponse)
 def leaderboard_top100(request: Request, cat: str = "halloween"):
+    if _brand_of(request) == "merryquest" \
+            and "cat" not in request.query_params:
+        cat = "christmas"
     cat = cat if cat in CATEGORIES else "halloween"
     with get_conn(DB_PATH) as conn:
         entries = _entries_with_views(conn, cat)
@@ -9057,6 +9374,8 @@ def passport_page(request: Request):
     """Haunt Passport page. The shell is server-rendered; the progress
     itself is rendered client-side from hm_seen + /api/passport-data
     (the seen set never leaves the visitor's device — no accounts)."""
+    if _brand_of(request) == "merryquest":
+        raise HTTPException(status_code=404)
     return templates.TemplateResponse(request, "passport.html", {})
 
 
@@ -9109,9 +9428,14 @@ def _towns_with_counts(category: str = "halloween") -> list[dict]:
 
 @app.get("/towns", response_class=HTMLResponse)
 def towns_index(request: Request):
+    # Brand separation (Nov 25, 2026): town counts follow the brand's
+    # season, matching the (already brand-aware) town pages.
+    _towns_cat = ("christmas" if _brand_of(request) == "merryquest"
+                  else "halloween")
     return templates.TemplateResponse(
         request, "towns.html",
-        {"towns_list": _towns_with_counts(), "site_name": SITE_NAME},
+        {"towns_list": _towns_with_counts(_towns_cat),
+         "site_name": SITE_NAME},
     )
 
 
@@ -9849,6 +10173,10 @@ MUSIC_POP = [
 
 @app.get("/music", response_class=HTMLResponse)
 def music_page(request: Request):
+    # HauntMap-only catalog (Nov 25, 2026): no Christmas counterpart
+    # exists, so the page does not render on MerryQuest.
+    if _brand_of(request) == "merryquest":
+        raise HTTPException(status_code=404)
     return templates.TemplateResponse(
         request, "music.html",
         {"site_name": SITE_NAME, "playlists": MUSIC_SPOTIFY_PLAYLISTS,
@@ -10204,6 +10532,10 @@ MOVIE_TV = [
 
 @app.get("/movies", response_class=HTMLResponse)
 def movies_page(request: Request):
+    # HauntMap-only catalog (Nov 25, 2026): the Screening Room is a
+    # Halloween catalog with no Christmas counterpart — 404 on MQ.
+    if _brand_of(request) == "merryquest":
+        raise HTTPException(status_code=404)
     return templates.TemplateResponse(
         request, "movies.html",
         {"site_name": SITE_NAME, "new": MOVIE_NEW,
@@ -11111,6 +11443,11 @@ def _fall_events_home(conn) -> list[dict]:
 @app.get("/pop-haunt-culture", response_class=HTMLResponse)
 @app.get("/pop-christmas-culture", response_class=HTMLResponse)
 def pop_culture_page(request: Request):
+    # HauntMap-only catalog (Nov 25, 2026): both /pop-haunt-culture
+    # and /pop-christmas-culture serve this Halloween page in
+    # production — neither renders on MerryQuest.
+    if _brand_of(request) == "merryquest":
+        raise HTTPException(status_code=404)
     return templates.TemplateResponse(
         request, "pop_culture.html",
         {"site_name": SITE_NAME, "featured": POP_CULTURE_FEATURED,
@@ -11195,6 +11532,8 @@ MAKEUP_GRID: list[dict] = [
 
 @app.get("/makeup", response_class=HTMLResponse)
 def makeup_page(request: Request):
+    if _brand_of(request) == "merryquest":
+        raise HTTPException(status_code=404)
     return templates.TemplateResponse(
         request, "makeup.html",
         {"site_name": SITE_NAME, "featured": MAKEUP_FEATURED,
@@ -11322,6 +11661,11 @@ def _mk_geo() -> dict:
 
 @app.get("/media-kit", response_class=HTMLResponse)
 def media_kit(request: Request):
+    # HauntMap's sponsor kit (Nov 25, 2026): its figures are the
+    # HauntMap catalog's — the page does not render on MerryQuest
+    # rather than reword it with invented MerryQuest numbers.
+    if _brand_of(request) == "merryquest":
+        raise HTTPException(status_code=404)
     now = datetime.now(timezone.utc)
     today_d = now.date()
     week_start_d = today_d - timedelta(days=6)
@@ -12083,7 +12427,8 @@ def _fmt_attention(sec: float) -> str:
     return f"{sec // 3600}h {(sec % 3600) // 60:02d}m"
 
 
-def _page_time_build() -> list:
+def _page_time_build(brand: str = "haunt") -> list:
+    _host_sql = _stats_host_sql(brand)
     rows_out: list = []
     # Views are HUMAN views (Oct 27): the machine-UA screen joins the
     # long-standing machine-path exclusions, so a crawler fetching a
@@ -12100,7 +12445,7 @@ def _page_time_build() -> list:
             # and neither are /api/* JSON endpoints.
             "AND path NOT IN ('/healthz', '/favicon.ico', '/robots.txt', "
             "'/sitemap.xml') AND path NOT LIKE '/api/%' "
-            f"AND {frag} "
+            f"AND {frag} AND ({_host_sql}) "
             "GROUP BY path ORDER BY views DESC LIMIT 40", frag_params).fetchall()
         # Money pages are ALWAYS shown (Dan, Nov 4): HauntMart and Plus
         # keep their timing rows even when they fall below the top-40
@@ -12112,7 +12457,7 @@ def _page_time_build() -> list:
             extra = conn.execute(
                 "SELECT path, COUNT(*) AS views FROM page_views "
                 "WHERE viewed_at >= datetime('now', '-7 days') "
-                f"AND path IN ({mm}) AND {frag} "
+                f"AND path IN ({mm}) AND {frag} AND ({_host_sql}) "
                 "GROUP BY path", missing + list(frag_params)).fetchall()
             cand = sorted(list(cand) + list(extra),
                           key=lambda r: r["views"], reverse=True)
@@ -12124,12 +12469,14 @@ def _page_time_build() -> list:
             "SELECT path, SUM(seconds) AS secs FROM engagement_events "
             "WHERE event = 'engaged' "
             "AND created_at >= datetime('now', '-7 days') "
+            f"AND sid IN (SELECT sid FROM page_views WHERE {_host_sql}) "
             f"AND path IN ({marks}) GROUP BY path", paths)}
         dwell: dict = {}
         for r in conn.execute(
                 "SELECT path, SUM(seconds) AS secs FROM engagement_events "
                 "WHERE event = 'engaged' AND pvid IS NOT NULL "
                 "AND created_at >= datetime('now', '-7 days') "
+                f"AND sid IN (SELECT sid FROM page_views WHERE {_host_sql}) "
                 f"AND path IN ({marks}) GROUP BY path, pvid", paths):
             dwell.setdefault(r["path"], []).append(r["secs"] or 0)
         pin_ids = [int(p[3:]) for p in paths
@@ -12173,8 +12520,44 @@ def _fmt_dur_admin(sec: float) -> str:
     return f"{sec}s" if sec < 60 else f"{sec // 60}m {sec % 60:02d}s"
 
 
-def _page_time_stats() -> list:
-    return _ttl_cached("admin:page_time", _page_time_build)
+def _page_time_stats(brand: str = "haunt") -> list:
+    return _ttl_cached(f"admin:page_time:{brand}",
+                       lambda: _page_time_build(brand))
+
+
+# ------------------------------------------ brand-aware admin stats
+# (Nov 25, 2026): /admin/stats shows ONE brand's rows — the serving
+# host's brand by default, ?brand=hauntmap|merryquest overrides for
+# admin use. page_views has carried the serving host since Nov 19
+# (gethauntmap.com | gomerryquest.com | merryquest.app); rows older
+# than that (host NULL) count as HauntMap, the original site.
+# engagement_events never recorded a host, so its brand split is a
+# documented proxy: pin-bound rows follow the pin's category, and
+# 'engaged' rows follow their session's page-view hosts.
+
+def _stats_brand(request) -> str:
+    b = (request.query_params.get("brand") or "").strip().lower()
+    if b in ("hauntmap", "haunt"):
+        return "haunt"
+    if b in ("merryquest", "mq"):
+        return "merryquest"
+    return _brand_of(request)
+
+
+def _stats_host_sql(brand: str) -> str:
+    """SQL predicate on page_views.host selecting one brand's rows."""
+    if brand == "merryquest":
+        return "host LIKE '%merryquest%'"
+    return "(host IS NULL OR host NOT LIKE '%merryquest%')"
+
+
+def _stats_eng_sql(brand: str, alias: str = "engagement_events") -> str:
+    """Brand predicate for engagement_events (see the note above)."""
+    cat = "christmas" if brand == "merryquest" else "halloween"
+    return (f"({alias}.entry_id IN (SELECT id FROM entries "
+            f"WHERE category = '{cat}') "
+            f"OR {alias}.sid IN (SELECT sid FROM page_views "
+            f"WHERE {_stats_host_sql(brand)}))")
 
 
 # ------------------------------------------ views by page (Oct 27)
@@ -12218,9 +12601,9 @@ def _stats_page_bucket(path: str):
     return None
 
 
-def _page_breakdown_build() -> list:
+def _page_breakdown_build(brand: str = "haunt") -> list:
     frag, frag_params = _machine_ua_sql()
-    human = (f"{_MK_HUMAN} AND {frag} "
+    human = (f"{_MK_HUMAN} AND {frag} AND ({_stats_host_sql(brand)}) "
              "AND path NOT IN ('/favicon.ico', '/robots.txt')")
     win7 = "viewed_at >= datetime('now', '-7 days')"
     with get_conn(DB_PATH) as conn:
@@ -12252,8 +12635,9 @@ def _page_breakdown_build() -> list:
     return rows
 
 
-def _page_breakdown() -> list:
-    return _ttl_cached("admin:page_breakdown", _page_breakdown_build)
+def _page_breakdown(brand: str = "haunt") -> list:
+    return _ttl_cached(f"admin:page_breakdown:{brand}",
+                       lambda: _page_breakdown_build(brand))
 
 
 # ------------------------------------------ traffic tracker (Oct 28)
@@ -12296,7 +12680,11 @@ def _ref_bucket(referrer: str | None) -> tuple:
         return "Other external", "(unreadable referrer)"
     if host == "gethauntmap.com" or host.endswith(".gethauntmap.com") \
             or host == "hauntmap.onrender.com" \
-            or host.endswith(".hauntmap.onrender.com"):
+            or host.endswith(".hauntmap.onrender.com") \
+            or "merryquest" in host:
+        # merryquest hosts count as Internal too (Nov 25, 2026) so
+        # the MerryQuest stats view reads its own navigation as
+        # internal movement, not an external source.
         return "Internal", host
     if "google." in host:
         return "Google", host
@@ -12323,11 +12711,11 @@ def _hour_range_label(h: int) -> str:
     return f"{a}–{b}"
 
 
-def _traffic_tracker_build() -> dict:
+def _traffic_tracker_build(brand: str = "haunt") -> dict:
     from zoneinfo import ZoneInfo
     et = ZoneInfo("America/New_York")
     frag, frag_params = _machine_ua_sql()
-    human = f"{_MK_HUMAN} AND {frag}"
+    human = f"{_MK_HUMAN} AND {frag} AND ({_stats_host_sql(brand)})"
     today_et = datetime.now(et).date()
     week_start_et = today_et - timedelta(days=6)
     out = {"hours_today": None, "hours_week": None, "sources": [],
@@ -12450,8 +12838,9 @@ def _traffic_tracker_build() -> dict:
     return out
 
 
-def _traffic_tracker() -> dict:
-    return _ttl_cached("admin:traffic_tracker", _traffic_tracker_build)
+def _traffic_tracker(brand: str = "haunt") -> dict:
+    return _ttl_cached(f"admin:traffic_tracker:{brand}",
+                       lambda: _traffic_tracker_build(brand))
 
 
 # ------------------------------------------------- US states (Oct 27)
@@ -12468,9 +12857,9 @@ def _traffic_tracker() -> dict:
 # all, so a thin table can never masquerade as the whole audience.
 # TTL-cached like the other admin aggregates.
 
-def _us_states_build() -> dict:
+def _us_states_build(brand: str = "haunt") -> dict:
     frag, frag_params = _machine_ua_sql()
-    human = f"{_MK_HUMAN} AND {frag}"
+    human = f"{_MK_HUMAN} AND {frag} AND ({_stats_host_sql(brand)})"
     win7 = "viewed_at >= datetime('now', '-7 days')"
     out = {"rows": [], "unknown": None, "coverage": {}}
     with get_conn(DB_PATH) as conn:
@@ -12552,8 +12941,9 @@ def _us_states_build() -> dict:
     return out
 
 
-def _us_states_stats() -> dict:
-    return _ttl_cached("admin:us_states", _us_states_build)
+def _us_states_stats(brand: str = "haunt") -> dict:
+    return _ttl_cached(f"admin:us_states:{brand}",
+                       lambda: _us_states_build(brand))
 
 
 @app.get("/admin", response_class=HTMLResponse)
@@ -12610,25 +13000,40 @@ def admin(request: Request):
 
 @app.get("/admin/stats", response_class=HTMLResponse)
 def admin_stats(request: Request):
-    """Traffic dashboard: page views by day and top pages."""
+    """Traffic dashboard: page views by day and top pages.
+
+    Brand-aware (Nov 25, 2026): every figure below is filtered to
+    ONE brand — the serving host's, or ?brand=hauntmap|merryquest —
+    via _stats_host_sql / _stats_eng_sql (see their block comment).
+    The MerryQuest view additionally carries the Quest Stats section
+    built at the end of this function."""
     if not is_admin(request):
         return RedirectResponse("/admin", status_code=303)
+    stats_brand = _stats_brand(request)
+    _hsql = _stats_host_sql(stats_brand)
+    _esql = _stats_eng_sql(stats_brand)
     with get_conn(DB_PATH) as conn:
-        total = conn.execute("SELECT COUNT(*) FROM page_views").fetchone()[0]
+        total = conn.execute(
+            f"SELECT COUNT(*) FROM page_views WHERE {_hsql}").fetchone()[0]
         today = conn.execute(
-            "SELECT COUNT(*) FROM page_views WHERE date(viewed_at) = date('now')").fetchone()[0]
+            "SELECT COUNT(*) FROM page_views WHERE date(viewed_at) = date('now')"
+            f" AND {_hsql}").fetchone()[0]
         week = conn.execute(
-            "SELECT COUNT(*) FROM page_views WHERE viewed_at >= datetime('now', '-7 days')").fetchone()[0]
+            "SELECT COUNT(*) FROM page_views WHERE viewed_at >= datetime('now', '-7 days')"
+            f" AND {_hsql}").fetchone()[0]
         by_day = conn.execute(
             "SELECT date(viewed_at) AS day, COUNT(*) AS views "
-            "FROM page_views GROUP BY day ORDER BY day DESC LIMIT 14").fetchall()
+            f"FROM page_views WHERE {_hsql} GROUP BY day "
+            "ORDER BY day DESC LIMIT 14").fetchall()
         top_referrers = conn.execute(
             "SELECT CASE WHEN referrer = '' OR referrer IS NULL THEN '(direct)' "
             "ELSE referrer END AS ref, COUNT(*) AS views FROM page_views "
+            f"WHERE {_hsql} "
             "GROUP BY ref ORDER BY views DESC LIMIT 15").fetchall()
         by_device = conn.execute(
             "SELECT CASE WHEN device = '' OR device IS NULL THEN 'Unknown' "
             "ELSE device END AS dev, COUNT(*) AS views FROM page_views "
+            f"WHERE {_hsql} "
             "GROUP BY dev ORDER BY views DESC").fetchall()
         # --- visitors by geography (Dan, Oct 26): where the audience
         # actually is. Counted BOTH ways and labelled on the page:
@@ -12646,6 +13051,7 @@ def admin_stats(request: Request):
                 "SELECT country, COUNT(DISTINCT sid) AS visitors, "
                 "COUNT(*) AS views FROM page_views "
                 "WHERE country IS NOT NULL AND country != '' "
+                f"AND {_hsql} "
                 "GROUP BY country ORDER BY visitors DESC, views DESC "
                 "LIMIT 20"):
             geo["countries"].append({
@@ -12659,6 +13065,7 @@ def admin_stats(request: Request):
                 "SELECT city, region, country, COUNT(DISTINCT sid) AS visitors, "
                 "COUNT(*) AS views FROM page_views "
                 "WHERE city IS NOT NULL AND city != '' "
+                f"AND {_hsql} "
                 "GROUP BY city, region, country "
                 "ORDER BY visitors DESC, views DESC LIMIT 20"):
             label = r["city"]
@@ -12674,20 +13081,24 @@ def admin_stats(request: Request):
         eng_counts = {ev: 0 for ev in ENGAGEMENT_EVENTS_ALL}
         for r in conn.execute(
                 "SELECT event, COUNT(*) AS n FROM engagement_events "
-                "WHERE created_at >= datetime('now', '-7 days') GROUP BY event"):
+                "WHERE created_at >= datetime('now', '-7 days') "
+                f"AND {_esql} GROUP BY event"):
             eng_counts[r["event"]] = r["n"]
         eng_with_pin = conn.execute(
             "SELECT COUNT(*) FROM engagement_events WHERE entry_id IS NOT NULL "
-            "AND created_at >= datetime('now', '-7 days')").fetchone()[0]
+            "AND created_at >= datetime('now', '-7 days') "
+            f"AND {_esql}").fetchone()[0]
         pin_views_week = conn.execute(
             "SELECT COUNT(*) FROM page_views WHERE path LIKE '/d/%' "
-            "AND viewed_at >= datetime('now', '-7 days')").fetchone()[0]
+            "AND viewed_at >= datetime('now', '-7 days') "
+            f"AND {_hsql}").fetchone()[0]
         eng_top_pins = conn.execute(
             "SELECT g.entry_id AS entry_id, COUNT(*) AS n, "
             "e.title AS title, e.town AS town FROM engagement_events g "
             "LEFT JOIN entries e ON e.id = g.entry_id "
             "WHERE g.entry_id IS NOT NULL "
             "AND g.created_at >= datetime('now', '-7 days') "
+            f"AND {_stats_eng_sql(stats_brand, 'g')} "
             "GROUP BY g.entry_id ORDER BY n DESC, g.entry_id ASC LIMIT 5").fetchall()
         # --- Rail Boost (Oct 25): per-rail clicks vs impressions —
         # CTR per rail SEEN (impression = rail >=50% visible once per
@@ -12700,6 +13111,7 @@ def admin_stats(request: Request):
             "FROM engagement_events "
             "WHERE event IN ('rail_click', 'rail_impression') "
             "AND created_at >= datetime('now', '-7 days') "
+            f"AND {_esql} "
             "GROUP BY src ORDER BY clicks DESC, imps DESC").fetchall()
         eng_rail_sources = [
             {"src": r["src"], "clicks": r["clicks"], "imps": r["imps"],
@@ -12714,10 +13126,62 @@ def admin_stats(request: Request):
             "ratio": (eng_with_pin / pin_views_week) if pin_views_week else 0,
             "top_pins": eng_top_pins,
         }
+        # --- Quest Stats (MerryQuest view only, Nov 25, 2026): the
+        # numbers Dan actually watches this season — check-ins,
+        # captures by character, Quest Points, counties cleared.
+        # "Today" is the ET calendar day, matching the quest's own
+        # nightly windows. Guarded so a DB without the quest tables
+        # can never take the traffic page down.
+        quest_stats = None
+        if stats_brand == "merryquest":
+            try:
+                from zoneinfo import ZoneInfo as _ZI
+                _day_start_utc = datetime.combine(
+                    _today_et(), datetime.min.time(),
+                    tzinfo=_ZI("America/New_York")).astimezone(
+                        timezone.utc).strftime("%Y-%m-%dT%H:%M:%S+00:00")
+                quest_stats = {
+                    "checkins_today": conn.execute(
+                        "SELECT COUNT(*) FROM quest_checkins "
+                        "WHERE created_at >= ?",
+                        (_day_start_utc,)).fetchone()[0],
+                    "checkins_total": conn.execute(
+                        "SELECT COUNT(*) FROM quest_checkins").fetchone()[0],
+                    "points_total": conn.execute(
+                        "SELECT COALESCE(SUM(points), 0) "
+                        "FROM quest_checkins").fetchone()[0],
+                    "by_character": [
+                        {"name": r["name"], "n": r["n"]}
+                        for r in conn.execute(
+                            "SELECT c.name AS name, COUNT(*) AS n "
+                            "FROM quest_checkins q "
+                            "JOIN quest_characters c "
+                            "ON c.id = q.character_id "
+                            "GROUP BY q.character_id "
+                            "ORDER BY n DESC, c.name ASC LIMIT 10")],
+                    "counties_cleared": conn.execute(
+                        "SELECT COUNT(*) FROM quest_county_badges"
+                        ).fetchone()[0],
+                    "top_counties": [
+                        {"name": r["name"] or r["county_fips"],
+                         "n": r["n"]}
+                        for r in conn.execute(
+                            "SELECT q.county_fips AS county_fips, "
+                            "COUNT(*) AS n, MAX(e.county_name) AS name "
+                            "FROM quest_checkins q "
+                            "LEFT JOIN entries e ON e.id = q.entry_id "
+                            "WHERE q.county_fips IS NOT NULL "
+                            "AND q.county_fips != '' "
+                            "GROUP BY q.county_fips "
+                            "ORDER BY n DESC LIMIT 10")],
+                }
+            except Exception:
+                quest_stats = None
         # --- visit duration: sessionize page views per visitor (30-min window) ---
         srows = conn.execute(
             "SELECT sid, viewed_at FROM page_views WHERE sid IS NOT NULL "
-            "AND viewed_at >= datetime('now', '-30 days') ORDER BY sid, viewed_at").fetchall()
+            "AND viewed_at >= datetime('now', '-30 days') "
+            f"AND {_hsql} ORDER BY sid, viewed_at").fetchall()
     visits_list = []
     cur_sid, cur_times = None, []
 
@@ -12759,14 +13223,16 @@ def admin_stats(request: Request):
                     "bounce": 0, "avg_pages": 0, "buckets": []}
     return templates.TemplateResponse(request, "stats.html",
         {"request": request, "total": total, "today": today, "week": week,
-         "by_day": by_day, "pages": _page_breakdown(),
+         "by_day": by_day, "pages": _page_breakdown(stats_brand),
          "top_referrers": top_referrers, "by_device": by_device,
          "duration": duration, "engagement": engagement,
          "geo": geo, "geo_since": _GEO_COLLECTING_SINCE,
-         "tracker": _traffic_tracker(),
-         "us_states": _us_states_stats(),
+         "tracker": _traffic_tracker(stats_brand),
+         "us_states": _us_states_stats(stats_brand),
          "ip_geo_since": _IP_GEO_COLLECTING_SINCE,
-         "page_time": _page_time_stats()})
+         "page_time": _page_time_stats(stats_brand),
+         "stats_brand": stats_brand,
+         "quest_stats": quest_stats})
 
 
 @app.post("/admin/login", response_class=HTMLResponse)

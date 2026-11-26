@@ -9,12 +9,12 @@
      (never the plain one), your date of birth (used only to check you're
      13+), your handle, and whatever you put on your profile.</p>
   <p><strong>What's public:</strong> your profile — display name, handle,
-     avatar, banner, bio, town, your linked haunts, your music embed, and
+     avatar, banner, bio, town, your linked {% if brand | default('haunt') == 'merryquest' %}displays{% else %}haunts{% endif %}, your music embed, and
      comments you leave on walls. Your email and date of birth are never
      shown to anyone.</p>
   <p><strong>Sessions:</strong> signing in sets one cookie that keeps you
      signed in for up to 30 days. Signing out kills it on our side too.</p>
-  <p><strong>Advertising &amp; third-party cookies:</strong> HauntMap is
+  <p><strong>Advertising &amp; third-party cookies:</strong> {{ site_name }} is
      supported in part by advertising. Third-party vendors, including
      Google, use cookies to serve ads based on a user's prior visits to
      this website and other websites. Google's use of advertising cookies
@@ -29,7 +29,7 @@
   <p><strong>We don't sell your information.</strong> Not your email, not
      your birthday, not your browsing. Traffic stats on the site are counted
      in aggregate (page views), the same as before accounts existed.</p>
-  <p><strong>Text alerts.</strong> If you sign up for HauntMap text alerts,
+  <p><strong>Text alerts.</strong> If you sign up for {{ site_name }} text alerts,
      we store the mobile number you provide, your ZIP code or town, and your
      alert preferences so we can send you the alerts you asked for. We do
      not sell, rent, or share your mobile number or text-messaging consent

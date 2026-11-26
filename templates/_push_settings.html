@@ -12,7 +12,7 @@
   <p class="push-ios" data-push-ios hidden>🍎 <strong>On iPhone &amp; iPad:</strong>
     Apple only lets <em>installed</em> apps send notifications. Tap the
     Share button, choose <strong>Add to Home Screen</strong>, open
-    HauntMap from the new icon, then flip the switch here.</p>
+    {{ site_name }} from the new icon, then flip the switch here.</p>
   <label class="push-row push-master-row">
     <input type="checkbox" data-push-master>
     <span><strong>Notifications on this device</strong>
@@ -32,7 +32,7 @@
     <label class="push-row">
       <input type="checkbox" data-push-kind="frank">
       <span>📣 <strong>Frank announcements</strong>
-        <small>New haunts landing on the site &amp; event drops</small></span>
+        <small>{% if brand | default('haunt') == 'merryquest' %}New displays landing on the site &amp; event drops{% else %}New haunts landing on the site &amp; event drops{% endif %}</small></span>
     </label>
     <label class="push-row">
       <input type="checkbox" data-push-kind="replies">

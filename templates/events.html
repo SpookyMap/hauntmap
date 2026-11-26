@@ -9,7 +9,7 @@
    is for the Near-you lead, whose cards come from many days at once:
    each names its own day. The + Tour button rides along unchanged
    (events are tour stops). #}
-{% macro ev_card(e, day=None, show_day=false) %}
+{% macro ev_card(e, day=None, show_day=false, mq=false) %}
   <a class="card ev-card" href="/d/{{ e.id }}" data-evtype="{{ e.ev_type or '' }}"{% if e._fff %} data-fff="1"{% endif %}>
     <div class="card-media">
       {% if e.media_path %}
@@ -34,7 +34,7 @@
       <p class="ev-chips">{% if e.ev_type %}<span class="ev-chip">{{ e.ev_type }}</span>{% endif %}{% if e.ev_genre %}<span class="ev-chip">{{ e.ev_genre }}</span>{% endif %}{% if e.ev_venue %}<span class="ev-chip">{{ e.ev_venue }}</span>{% endif %}</p>
       {% endif %}
       {% if e.votes %}
-      <p class="votes">&#x1F383; {{ e.votes }} vote{{ 's' if e.votes != 1 }}</p>
+      <p class="votes">{% if mq %}&#x1F384;{% else %}&#x1F383;{% endif %} {{ e.votes }} vote{{ 's' if e.votes != 1 }}</p>
       {% elif e.is_new %}
       <p class="votes votes-new">&#x2728; New</p>
       {% endif %}
@@ -42,10 +42,14 @@
     </div>
   </a>
 {% endmacro %}
+{% set _mq = brand | default('haunt') == 'merryquest' %}
 <h1>&#x1F3AA; Events &amp; Parties</h1>
-<p class="lede">Halloween parties, concerts, DJ nights, parades and festivals &mdash; search the season by the kind of night you want: filter by event type, music genre and venue style.</p>
-<p class="music-crosslink">&#x1F3B5; Want the soundtrack too? <a href="/music">Halloween playlists, classic videos &amp; music icons &rarr;</a></p>
-<p class="music-crosslink">&#x1F6D2; After costumes, d&eacute;cor &amp; curiosities? <a href="/markets">Flea Markets &amp; Pop-Ups &rarr;</a></p>
+<p class="lede">{% if brand | default('haunt') == 'merryquest' %}Christmas parties, concerts, DJ nights, parades and festivals{% else %}Halloween parties, concerts, DJ nights, parades and festivals{% endif %} &mdash; search the season by the kind of night you want: filter by event type, music genre and venue style.</p>
+{% if not _mq %}<p class="music-crosslink">&#x1F3B5; Want the soundtrack too? <a href="/music">Halloween playlists, classic videos &amp; music icons &rarr;</a></p>
+<p class="music-crosslink">&#x1F6D2; After costumes, d&eacute;cor &amp; curiosities? <a href="/markets">Flea Markets &amp; Pop-Ups &rarr;</a></p>{% endif %}
+{# Brand separation (Nov 25, 2026): /music and /markets are
+   HauntMap-only pages (404 on MerryQuest), so neither cross-promo
+   renders on the MQ brand. #}
 
 {# Events page lead (Dan, 2026-11-09): @t0rr.ashley's LUMINISCENCE
    video at the very top of the page — a large tap-to-play feature
@@ -105,7 +109,7 @@
 {% if near_prompt %}
 <div class="ev-near-chooser">
   {% if near_nomap_name %}
-  <p class="ev-near-chooser-head">&#x1F47B; No events mapped near {{ near_nomap_name }} yet &mdash; pick a town to browse around instead:</p>
+  <p class="ev-near-chooser-head">{% if _mq %}&#x1F384;{% else %}&#x1F47B;{% endif %} No events mapped near {{ near_nomap_name }} yet &mdash; pick a town to browse around instead:</p>
   {% else %}
   <p class="ev-near-chooser-head">&#x1F4CD; We couldn&rsquo;t pinpoint you &mdash; pick your town:</p>
   {% endif %}
@@ -267,7 +271,7 @@ function hmEventsNearGo() {
 <section class="ev-near-sec" id="evNear">
   <h2 class="ev-near-head">&#x1F4CD; Near you &mdash; soonest first <span class="ev-day-count">within 50 mi</span></h2>
   <div class="grid">
-    {% for e in near_events %}{{ ev_card(e, e._ev_day, true) }}{% endfor %}
+    {% for e in near_events %}{{ ev_card(e, e._ev_day, true, mq=_mq) }}{% endfor %}
   </div>
 </section>
 {% endif %}
@@ -301,7 +305,7 @@ function hmEventsNearGo() {
 <section class="ev-day-group" data-rel="{{ g.rel }}" data-weekend="{{ 1 if g.is_weekend else 0 }}"{% if not g.date %} data-undated="1"{% endif %}>
 <h2 class="ev-day-head" id="{{ g.anchor }}">{{ g.label }} <span class="ev-day-count" data-full="{{ g.entries|length }} event{{ 's' if g.entries|length != 1 }}">{{ g.entries|length }} event{{ 's' if g.entries|length != 1 }}</span></h2>
 <div class="grid">
-  {% for e in g.entries %}{{ ev_card(e, g.date) }}{% endfor %}
+  {% for e in g.entries %}{{ ev_card(e, g.date, mq=_mq) }}{% endfor %}
 </div>
 </section>
 {% endfor %}

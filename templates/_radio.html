@@ -10,7 +10,7 @@
 <div id="hm-radio">
   <div class="hmr-chip" id="hmrChip" hidden>
     <button type="button" class="hmr-main" id="hmrOpen" aria-expanded="false" aria-controls="hmrPanel">
-      <span class="hmr-ico" aria-hidden="true">&#x1F383;&#x1F3B5;</span>
+      <span class="hmr-ico" aria-hidden="true">{% if brand | default('haunt') == 'merryquest' %}&#x1F384;{% else %}&#x1F383;{% endif %}&#x1F3B5;</span>
       <span class="hmr-name">{% if brand | default('haunt') == 'merryquest' %}MerryQuest Radio{% else %}HauntMap Radio{% endif %}</span>
       <span class="hmr-play" aria-hidden="true">&#x25B6;</span>
     </button>
@@ -18,23 +18,30 @@
   </div>
   <div class="hmr-panel" id="hmrPanel" role="region" aria-label="{% if brand | default('haunt') == 'merryquest' %}MerryQuest Radio{% else %}HauntMap Radio{% endif %} player" hidden>
     <div class="hmr-head">
-      <span class="hmr-title">&#x1F383;&#x1F3B5; {% if brand | default('haunt') == 'merryquest' %}MerryQuest Radio{% else %}HauntMap Radio{% endif %}</span>
+      <span class="hmr-title">{% if brand | default('haunt') == 'merryquest' %}&#x1F384;{% else %}&#x1F383;{% endif %}&#x1F3B5; {% if brand | default('haunt') == 'merryquest' %}MerryQuest Radio{% else %}HauntMap Radio{% endif %}</span>
       <span class="hmr-head-btns">
         <button type="button" id="hmrCollapse" aria-label="Collapse player">&ndash;</button>
         <button type="button" id="hmrOff2" aria-label="Turn off {% if brand | default('haunt') == 'merryquest' %}MerryQuest Radio{% else %}HauntMap Radio{% endif %}">&times;</button>
       </span>
     </div>
     <div class="hmr-picks" role="group" aria-label="Stations">
-      <button type="button" class="hmr-pick" data-station="hits">&#x1F383; Halloween Hits</button>
+      {% if brand | default('haunt') != 'merryquest' %}<button type="button" class="hmr-pick" data-station="hits">&#x1F383; Halloween Hits</button>
       <button type="button" class="hmr-pick" data-station="party">&#x1FA69; Party &amp; Dance</button>
       <button type="button" class="hmr-pick" data-station="jazz">&#x1F3B7; Spooky Jazz</button>
       <button type="button" class="hmr-pick" data-station="horror">&#x1F47B; Horror Themes</button>
-      <button type="button" class="hmr-pick" data-station="pop">&#x1F3A4; Halloween Pop</button>
+      <button type="button" class="hmr-pick" data-station="pop">&#x1F3A4; Halloween Pop</button>{% endif %}
       <button type="button" class="hmr-pick" data-station="edm">&#x26A1; EDM</button>
       <button type="button" class="hmr-pick" data-station="hiphop">&#x1F399; Hip Hop</button>
-      <button type="button" class="hmr-pick" data-station="mix">&#x1F3A7; Build Your Mix</button>
+      {% if brand | default('haunt') != 'merryquest' %}<button type="button" class="hmr-pick" data-station="mix">&#x1F3A7; Build Your Mix</button>{% endif %}
       <button type="button" class="hmr-pick" data-station="custom" id="hmrPickCustom" hidden>&#x1F3A7; Your Music</button>
     </div>
+    {# Brand separation (Nov 25, 2026): the Halloween station picks
+       and the Halloween-staples mix catalog do not render on
+       MerryQuest. No verified Christmas playlist exists in the
+       catalog yet, so the MQ player carries the two brand-neutral
+       Spotify flagships (EDM / Hip Hop) + the visitor's own music
+       until Christmas stations are added. The JS below also refuses
+       a stored Halloween station on the MQ brand. #}
     <div class="hmr-frame" id="hmrFrame"></div>
     <div class="hmr-mix" id="hmrMix" hidden>
       <div class="hmr-mix-now">
@@ -65,8 +72,8 @@
       <p class="hmr-err" id="hmrErr" hidden>That doesn&rsquo;t look like a Spotify playlist or album link &mdash; copy it from Spotify&rsquo;s Share menu and try again.</p>
     </form>
     <p class="hmr-note">Log in inside the player to play full songs with Spotify Premium. Free accounts hear previews &mdash; that&rsquo;s Spotify&rsquo;s rule, not ours.</p>
-    <p class="hmr-music-row"><a class="hmr-music-link" href="/music">&#x1F3B5; Full music page &rarr;</a></p>
-    <p class="hmr-reset-row"><button type="button" class="hmr-reset" id="hmrReset">&#x21A9; Back to HauntMap Halloween</button></p>
+    {% if brand | default('haunt') != 'merryquest' %}<p class="hmr-music-row"><a class="hmr-music-link" href="/music">&#x1F3B5; Full music page &rarr;</a></p>{% endif %}
+    <p class="hmr-reset-row"><button type="button" class="hmr-reset" id="hmrReset">&#x21A9; {% if brand | default('haunt') == 'merryquest' %}Back to MerryQuest Christmas{% else %}Back to HauntMap Halloween{% endif %}</button></p>
   </div>
   <button type="button" class="hmr-tab" id="hmrTab" aria-label="Turn on {% if brand | default('haunt') == 'merryquest' %}MerryQuest Radio{% else %}HauntMap Radio{% endif %}" hidden>&#x1F3B5;</button>
 </div>
@@ -89,6 +96,14 @@
     edm:    { kind: 'playlist', id: '37i9dQZF1DX4dyzvuaRJ0n' }, // "mint" — Spotify (Spotify's flagship EDM playlist; id verified via Spotify oEmbed, exact title match, Oct 26)
     hiphop: { kind: 'playlist', id: '37i9dQZF1DX0XUsuxWHRQd' }  // "RapCaviar" — Spotify (Spotify's flagship hip hop playlist; id verified via Spotify oEmbed, exact title match, Oct 26)
   };
+  // Brand separation (Nov 25, 2026): on MerryQuest the Halloween
+  // stations are not offered (their picks don't render server-side)
+  // and a station stored by an earlier HauntMap visit must never
+  // load there either — the player falls back to the neutral EDM
+  // flagship instead of the Halloween default.
+  var MQ_BRAND = {% if brand | default('haunt') == 'merryquest' %}true{% else %}false{% endif %};
+  var MQ_BLOCKED = { hits: 1, party: 1, jazz: 1, horror: 1, pop: 1, mix: 1 };
+  var DEFAULT_STATION = MQ_BRAND ? 'edm' : 'hits';
   // === BUILD-YOUR-MIX CATALOG ===
   // Every id below was verified individually against Spotify's oEmbed
   // endpoint (exact title match + embed iframe_url returned) after the
@@ -162,19 +177,20 @@
 
   function station() {
     var s = lsGet('hm_radio_station');
-    return (s && (STATIONS[s] || s === 'custom' || s === 'mix')) ? s : 'hits';
+    if (MQ_BRAND && s && MQ_BLOCKED[s]) s = null;
+    return (s && (STATIONS[s] || s === 'custom' || s === 'mix')) ? s : DEFAULT_STATION;
   }
   function embedPath() {
     var s = station();
     if (s === 'mix') {
       var m = getMix();
       if (m.length) return 'track/' + m[mixIdx()].id;
-      return STATIONS.hits.kind + '/' + STATIONS.hits.id; // placeholder until first add; frame stays unloaded while the mix is empty
+      return STATIONS[DEFAULT_STATION].kind + '/' + STATIONS[DEFAULT_STATION].id; // placeholder until first add; frame stays unloaded while the mix is empty
     }
     if (s === 'custom') {
       var c = lsGet('hm_radio_custom');
       if (c) return c;
-      return STATIONS.hits.kind + '/' + STATIONS.hits.id;
+      return STATIONS[DEFAULT_STATION].kind + '/' + STATIONS[DEFAULT_STATION].id;
     }
     return STATIONS[s].kind + '/' + STATIONS[s].id;
   }
@@ -355,7 +371,7 @@
   document.querySelectorAll('.hmr-pick').forEach(function (b) {
     b.addEventListener('click', function () { applyStation(b.getAttribute('data-station')); });
   });
-  document.getElementById('hmrReset').addEventListener('click', function () { applyStation('hits'); });
+  document.getElementById('hmrReset').addEventListener('click', function () { applyStation(DEFAULT_STATION); });
   document.getElementById('hmrPlayMix').addEventListener('click', function () {
     if (!getMix().length) { renderMix(); return; }
     applyStation('mix');

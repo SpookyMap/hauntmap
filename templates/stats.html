@@ -2,6 +2,47 @@
 {% block content %}
 <h2>📊 Traffic Stats</h2>
 <p><a href="/admin">← Back to admin</a></p>
+{# Brand-aware stats (Nov 25, 2026): this page shows ONE brand's
+   rows — the serving host decides, the links below override. #}
+<p style="background:#1a1a2e;padding:10px 14px;border-radius:10px;">
+  Showing: <strong>{% if stats_brand == 'merryquest' %}🎄 MerryQuest{% else %}🎃 HauntMap{% endif %}</strong>
+  &nbsp;·&nbsp; <a href="/admin/stats?brand=hauntmap">HauntMap</a>
+  &nbsp;·&nbsp; <a href="/admin/stats?brand=merryquest">MerryQuest</a>
+  <span style="color:#888;font-size:0.85em;">(views split by serving domain; rows from before Nov 19, 2026 carry no domain and count as HauntMap)</span>
+</p>
+{% if quest_stats %}
+<h3>🎄 Quest Stats</h3>
+<div style="display:flex;gap:16px;margin:12px 0;flex-wrap:wrap;">
+  <div style="background:#1a1a2e;padding:16px;border-radius:12px;flex:1;text-align:center;min-width:110px;">
+    <div style="font-size:1.6em;font-weight:bold;">{{ quest_stats.checkins_today }}</div>
+    <div>Check-ins today (ET)</div>
+  </div>
+  <div style="background:#1a1a2e;padding:16px;border-radius:12px;flex:1;text-align:center;min-width:110px;">
+    <div style="font-size:1.6em;font-weight:bold;">{{ quest_stats.checkins_total }}</div>
+    <div>Check-ins total</div>
+  </div>
+  <div style="background:#1a1a2e;padding:16px;border-radius:12px;flex:1;text-align:center;min-width:110px;">
+    <div style="font-size:1.6em;font-weight:bold;">{{ quest_stats.points_total }}</div>
+    <div>Quest Points awarded</div>
+  </div>
+  <div style="background:#1a1a2e;padding:16px;border-radius:12px;flex:1;text-align:center;min-width:110px;">
+    <div style="font-size:1.6em;font-weight:bold;">{{ quest_stats.counties_cleared }}</div>
+    <div>County Cleared badges</div>
+  </div>
+</div>
+{% if quest_stats.by_character %}
+<h4>Captures by character</h4>
+<table>
+  {% for c in quest_stats.by_character %}<tr><td>{{ c.name }}</td><td>{{ c.n }}</td></tr>{% endfor %}
+</table>
+{% endif %}
+{% if quest_stats.top_counties %}
+<h4>Top counties by check-ins</h4>
+<table>
+  {% for c in quest_stats.top_counties %}<tr><td>{{ c.name }}</td><td>{{ c.n }}</td></tr>{% endfor %}
+</table>
+{% endif %}
+{% endif %}
 
 <div style="display:flex;gap:16px;margin:20px 0;">
   <div style="background:#1a1a2e;padding:16px;border-radius:12px;flex:1;text-align:center;">
