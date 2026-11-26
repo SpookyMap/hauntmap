@@ -77,20 +77,6 @@
     <p class="mqx-drive-cap">Drive to your favorite displays <span>capture them all</span> before they disappear</p>
   </section>
 
-  {% if tonight %}
-  <a class="mqx-quest-card" href="/d/{{ tonight.id }}">
-    <span class="mqx-quest-kicker">⭐ Tonight's quest</span>
-    <span class="mqx-quest-title">{{ tonight.title }}</span>
-    {% if tonight.quest_scope_label %}
-    <span class="mqx-quest-meta">{{ tonight.quest_scope_label }} · {{ tonight.quest_character }} is waiting here{% if tonight.quest_golden %} · ✨ Golden night{% endif %}</span>
-    <span class="mqx-quest-meta">Check in within 150 ft to capture · <span style="text-decoration:underline">See tonight's quest →</span></span>
-    {% else %}
-    <span class="mqx-quest-meta">{{ tonight.town_label }} · Check in within 150 ft to capture a character</span>
-    {% endif %}
-  </a>
-  {% if tonight.quest_scope_label %}<a class="mqx-quest-card" href="/quest" style="margin-top:8px"><span class="mqx-quest-meta">🗺️ Open the full {{ tonight.quest_scope_label }} quest — every stop tonight →</span></a>{% endif %}
-  {% endif %}
-
   <section class="mqx-guide mqx-haunted">
     <a class="mqx-guide-medal" href="/characters/pip-the-star-pin"><img src="/static/img/pip-tech.jpg" alt="Pip the Star Pin — your MerryQuest guide" loading="lazy"></a>
     <div class="mqx-guide-copy">
@@ -119,6 +105,19 @@
     </div>
     {% if quest_enabled %}<a class="mqx-cta mqx-cta-join-small" href="/sack">Open Santa's Sack</a>{% else %}<a class="mqx-cta mqx-cta-join-small" href="/signup">Join Today — MerryQuest begins November 25th</a>{% endif %}
   </section>
+  {% if tonight %}
+  <a class="mqx-quest-card" href="/d/{{ tonight.id }}">
+    <span class="mqx-quest-kicker">⭐ Tonight's quest</span>
+    <span class="mqx-quest-title">{{ tonight.title }}</span>
+    {% if tonight.quest_scope_label %}
+    <span class="mqx-quest-meta">{{ tonight.quest_scope_label }} · {{ tonight.quest_character }} is waiting here{% if tonight.quest_golden %} · ✨ Golden night{% endif %}</span>
+    <span class="mqx-quest-meta">Check in within 150 ft to capture · <span style="text-decoration:underline">See tonight's quest →</span></span>
+    {% else %}
+    <span class="mqx-quest-meta">{{ tonight.town_label }} · Check in within 150 ft to capture a character</span>
+    {% endif %}
+  </a>
+  {% if tonight.quest_scope_label %}<a class="mqx-quest-card" href="/quest" style="margin-top:8px"><span class="mqx-quest-meta">🗺️ Open the full {{ tonight.quest_scope_label }} quest — every stop tonight →</span></a>{% endif %}
+  {% endif %}
   <section class="mqx-try mqx-haunted" id="mqx-try">
     <p class="mqx-eyebrow">✦ How to play ✦</p>
     <h2 class="mqx-h2">The quest, in three steps</h2>
