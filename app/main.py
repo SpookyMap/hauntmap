@@ -241,6 +241,80 @@ def _brand_of(request) -> str:
     return "haunt"
 
 
+# Christmas transfer (Dan, Nov 26, 2026 — "Everything Christmas goes
+# into MerryQuest", "only on MerryQuest, all of them"): on the
+# HauntMap brand, Christmas content is excluded everywhere — the
+# exact mirror of MerryQuest's Halloween separation above. Christmas
+# PINS transfer by category. Christmas EVENTS (category 'events')
+# have no category of their own, so they are classified from their
+# text: a strong Christmas marker in the TITLE, one of the
+# light-show title phrases the Christmas events batch uses, or a
+# core Christmas marker in the description. "Santa" place names
+# (Santa Monica, Santa Clara, Santa Fe…) are neutralised before
+# scanning so Halloween events in those towns never classify.
+_CHRISTMAS_EVENT_TITLE_RE = re.compile(
+    r"christmas|christkindl|xmas|krampus|grinch|nutcracker|scrooge|"
+    r"reindeer|north pole|winter wonderland|holiday lights|"
+    r"holiday market|holiday bazaar|holiday village|tree lighting|"
+    r"mistletoe|jingle|gingerbread|yuletide|navidad|sinterklaas|"
+    r"belsnickel|elf on the shelf|santa claus|santa'?s\b|with santa|"
+    r"santa photos|santa himself|ice!|grizmas|funk the halls",
+    re.IGNORECASE)
+_CHRISTMAS_EVENT_PHRASE_RE = re.compile(
+    r"zoo ?lights|winter ?lights|wonderlights|walk of lights|"
+    r"festival of lights|gardenfest|fantasy in lights|"
+    r"fantasy of lights|magic of lights|wild lights|night lights|"
+    r"gardens aglow|animals aglow|lightfest|parade of lights|"
+    r"trail of lights",
+    re.IGNORECASE)
+_CHRISTMAS_EVENT_DESC_RE = re.compile(
+    r"scrooge|santa photos|photos with santa|holiday village|"
+    r"santa'?s workshop|meet santa",
+    re.IGNORECASE)
+_SANTA_PLACE_RE = re.compile(
+    r"santa (monica|clara|cruz|barbara|rosa|ana|maria|fe|clarita|"
+    r"paula|muerte|rita|ysabel)\b",
+    re.IGNORECASE)
+
+
+def _entry_field(entry, key):
+    """Dict-or-sqlite3.Row field access for the classifiers below."""
+    if entry is None:
+        return None
+    try:
+        return entry.get(key)
+    except AttributeError:
+        try:
+            return entry[key]
+        except Exception:
+            return None
+
+
+def _is_christmas_event(entry) -> bool:
+    """True when an 'events'-category entry is a Christmas event
+    (title markers / light-show title phrases / description core
+    markers — see the block comment above)."""
+    if not entry or _entry_field(entry, "category") != "events":
+        return False
+    title = _SANTA_PLACE_RE.sub(
+        "PLACE", _entry_field(entry, "title") or "")
+    desc = _SANTA_PLACE_RE.sub(
+        "PLACE", _entry_field(entry, "description") or "")
+    return bool(_CHRISTMAS_EVENT_TITLE_RE.search(title)
+                or _CHRISTMAS_EVENT_PHRASE_RE.search(title)
+                or _CHRISTMAS_EVENT_DESC_RE.search(desc))
+
+
+def _is_christmas_content(entry) -> bool:
+    """Christmas pins (by category) + Christmas events (classified):
+    everything that lives on MerryQuest only from Nov 26, 2026."""
+    if not entry:
+        return False
+    if _entry_field(entry, "category") == "christmas":
+        return True
+    return _is_christmas_event(entry)
+
+
 _orig_template_response = templates.TemplateResponse
 
 
@@ -2292,25 +2366,30 @@ def _ev_sort_day(entries: list, sort: str) -> list:
     return out
 
 
-def _events_on_count(conn, town_label: str, on_date) -> int:
+def _events_on_count(conn, town_label: str, on_date,
+                     brand: str = "") -> int:
     """Parsed events covering `on_date` whose town_label (the same
     extract_city_state label every card shows) equals `town_label`.
     Reads the TTL-cached by-town map (fortification pass 2); the
     empty-label case keeps the original direct scan so its semantics
-    are byte-identical (the by-town map skips unparseable towns)."""
+    are byte-identical (the by-town map skips unparseable towns).
+    Christmas transfer (Nov 26, 2026): brand="haunt" counts exclude
+    Christmas events; any other brand keeps the original counts."""
     if not town_label:
         n = 0
         for r in conn.execute(
-                "SELECT title, town FROM entries "
+                "SELECT title, town, description, category FROM entries "
                 "WHERE hidden = 0 AND category = 'events'").fetchall():
+            if brand == "haunt" and _is_christmas_event(r):
+                continue
             label = extract_city_state(r["town"] or "") or r["town"] or ""
             if label == town_label and event_on_date(r["title"], on_date):
                 n += 1
         return n
-    return _events_on_by_town(conn, on_date).get(town_label, 0)
+    return _events_on_by_town(conn, on_date, brand=brand).get(town_label, 0)
 
 
-def _events_on_by_town(conn=None, on_date=None) -> dict:
+def _events_on_by_town(conn=None, on_date=None, brand: str = "") -> dict:
     """{town_label: count} of parsed events covering `on_date`, in one
     pass over the events category (the same labels _events_on_count
     matches against). TTL-cached per date (fortification pass 2):
@@ -2318,29 +2397,35 @@ def _events_on_by_town(conn=None, on_date=None) -> dict:
     strip paths asked for it — directly or via _next_events_day's
     14-day scan — on homepage and town renders. The date is part of
     the cache key, so the ET-midnight rollover is automatic. Callers
-    only read the dict, so the shared instance is safe."""
+    only read the dict, so the shared instance is safe. Christmas
+    transfer (Nov 26, 2026): brand="haunt" gets its own cache key and
+    a build that skips Christmas events."""
     def build():
         counts: dict[str, int] = {}
         with get_conn(DB_PATH) as c:
             rows = c.execute(
-                "SELECT title, town FROM entries "
+                "SELECT title, town, description, category FROM entries "
                 "WHERE hidden = 0 AND category = 'events'").fetchall()
         for r in rows:
+            if brand == "haunt" and _is_christmas_event(r):
+                continue
             if event_on_date(r["title"], on_date):
                 label = extract_city_state(r["town"] or "") or r["town"] or ""
                 if label:
                     counts[label] = counts.get(label, 0) + 1
         return counts
-    return _ttl_cached(f"evon:{on_date.isoformat()}", build)
+    key = f"evon:{on_date.isoformat()}" + (":haunt" if brand == "haunt" else "")
+    return _ttl_cached(key, build)
 
 
-def _next_events_day(conn, town_label: str, today, horizon: int = 14):
+def _next_events_day(conn, town_label: str, today, horizon: int = 14,
+                     brand: str = ""):
     """(date, count) of the first day AFTER today, within `horizon`
     days, on which `town_label` has a parsed event — None when the
     town has nothing coming up in the window."""
     for off in range(1, horizon + 1):
         day = today + timedelta(days=off)
-        n = _events_on_count(conn, town_label, day)
+        n = _events_on_count(conn, town_label, day, brand=brand)
         if n:
             return (day, n)
     return None
@@ -2442,7 +2527,7 @@ def _tonight_strip(town_label: str, displays: int, town_note: str = "",
     today = _today_et()
     day = events_day or today
     with get_conn(DB_PATH) as conn:
-        events_on = _events_on_count(conn, town_label, day)
+        events_on = _events_on_count(conn, town_label, day, brand=brand)
     if day == today:
         events_when = "on tonight"
     else:
@@ -2467,7 +2552,9 @@ def _tonight_strip_map() -> dict:
     it to everyone next to the countdown.)"""
     today = _today_et()
     with get_conn(DB_PATH) as conn:
-        counts = _events_on_by_town(conn, today)
+        # The map-wide strip is a HauntMap surface (Halloween
+        # countdown), so its event total excludes Christmas events.
+        counts = _events_on_by_town(conn, today, brand="haunt")
         displays = conn.execute(
             "SELECT COUNT(*) AS n FROM entries "
             "WHERE hidden = 0 AND category = 'halloween'"
@@ -3181,7 +3268,8 @@ def _daily_display(conn, et_date, category: str = "halloween") -> dict | None:
     return pick
 
 
-def _trending(category: str | None = None) -> list[dict]:
+def _trending(category: str | None = None,
+              exclude_christmas: bool = False) -> list[dict]:
     """Homepage Trending strip: the 5 most-viewed media-carrying pins
     site-wide (detail-page views DESC, votes DESC, id — the ranking
     the old inline LEFT JOIN in home() produced), zero-view pins
@@ -3191,7 +3279,10 @@ def _trending(category: str | None = None) -> list[dict]:
     Category threading (MerryQuest skin): a category scopes the strip
     to that category under its own cache key; None keeps the original
     site-wide behaviour and the original "trending" cache key, so the
-    HauntMap host is unchanged."""
+    HauntMap host is unchanged. Christmas transfer (Nov 26, 2026):
+    exclude_christmas=True (the HauntMap host) scopes the site-wide
+    strip to non-Christmas pins under its own "trending:noxmas" key;
+    Christmas EVENTS are not pins and never rode this strip."""
     def build():
         with get_conn(DB_PATH) as conn:
             if category:
@@ -3200,6 +3291,12 @@ def _trending(category: str | None = None) -> list[dict]:
                     "AND category = ? "
                     "AND media_path IS NOT NULL AND TRIM(media_path) != ''",
                     (category,)).fetchall()]
+            elif exclude_christmas:
+                rows = [row_to_dict(r) for r in conn.execute(
+                    "SELECT * FROM entries WHERE hidden = 0 "
+                    "AND category != 'christmas' "
+                    "AND media_path IS NOT NULL AND TRIM(media_path) != ''"
+                ).fetchall()]
             else:
                 rows = [row_to_dict(r) for r in conn.execute(
                     "SELECT * FROM entries WHERE hidden = 0 "
@@ -3210,7 +3307,12 @@ def _trending(category: str | None = None) -> list[dict]:
             d["_views"] = views.get(d["id"], 0)
         rows.sort(key=lambda d: (-d["_views"], -(d["votes"] or 0), d["id"]))
         return [d for d in rows[:5] if d["_views"] > 0]
-    key = f"trending:{category}" if category else "trending"
+    if category:
+        key = f"trending:{category}"
+    elif exclude_christmas:
+        key = "trending:noxmas"
+    else:
+        key = "trending"
     return [dict(d) for d in _ttl_cached(key, build)]
 
 
@@ -3287,6 +3389,11 @@ def home(request: Request, sort: str = "new", town: str = "", town_search: str =
     # explicit ?cat= in the URL always wins, on either brand).
     if "cat" not in request.query_params and _brand_of(request) == "merryquest":
         cat = "christmas"
+    # Christmas transfer (Dan, Nov 26, 2026): on HauntMap the
+    # christmas category no longer exists — an explicit ?cat=christmas
+    # lands on the halloween feed instead of a Christmas listing.
+    if _brand_of(request) == "haunt" and cat == "christmas":
+        cat = "halloween"
     # Feed-order rule (Dan, Oct 23): the default view is newest-first,
     # with Dan's hand-picked pins boosted to the very top. "Top" stays
     # available as an explicit sort choice only.
@@ -3376,8 +3483,14 @@ def home(request: Request, sort: str = "new", town: str = "", town_search: str =
     with get_conn(DB_PATH) as conn:
         entries = [row_to_dict(r) for r in conn.execute(query, params).fetchall()]
         _attach_views(conn, entries)  # Item 7: feed cards show view counts
-        dotd = _display_of_day(conn)  # Display of the Day (Nov 26, 2026)
+        dotd = _display_of_day(conn, brand=_brand_of(request))  # Display of the Day (Nov 26, 2026)
         fall_events_home = _fall_events_home(conn)
+        # Christmas transfer (Nov 26, 2026): the curated Fall Events
+        # set is Halloween content, but never let a Christmas event
+        # ride it onto the HauntMap homepage.
+        if _brand_of(request) == "haunt":
+            fall_events_home = [e for e in fall_events_home
+                                if not _is_christmas_event(e)]
         sponsors = [dict(r) for r in conn.execute(
             "SELECT * FROM sponsors WHERE is_active = 1 ORDER BY "
             "CASE tier WHEN 'title' THEN 0 WHEN 'premium' THEN 1 ELSE 2 END, created_at").fetchall()]
@@ -3386,6 +3499,13 @@ def home(request: Request, sort: str = "new", town: str = "", town_search: str =
             "SELECT id, title, town, category, ev_type, lat, lng FROM entries "
             f"WHERE hidden = 0 AND category IN ({_tick_ph}) "
             "ORDER BY id DESC LIMIT 60", TICKER_CATS).fetchall()
+        # Christmas transfer (Nov 26, 2026): the HauntMap ticker pool
+        # includes the events category — Christmas events stay out of
+        # the HauntMap crawl (the MerryQuest ticker is christmas-only
+        # already and reads its own rows below).
+        if _brand_of(request) == "haunt":
+            ticker_rows = [r for r in ticker_rows
+                           if not _is_christmas_event(r)]
         # MerryQuest "Just Added" ticker (Dan, Nov 26): the same
         # stock-board crawl for the Christmas map — the newest
         # christmas displays, fetched in the same pass and bucketed +
@@ -3557,7 +3677,8 @@ def home(request: Request, sort: str = "new", town: str = "", town_search: str =
         # MerryQuest brand scopes it to christmas; HauntMap keeps the
         # site-wide snapshot (category None), unchanged.
         trending = _trending(
-            "christmas" if rail_category == "christmas" else None)
+            "christmas" if rail_category == "christmas" else None,
+            exclude_christmas=_brand_of(request) == "haunt")
         # Near-you towns now come from the Item 1 resolution (geo-aware
         # when Cloudflare headers are present, biggest-site-wide when
         # not) computed above; the counts are the same live halloween
@@ -3632,7 +3753,8 @@ def home(request: Request, sort: str = "new", town: str = "", town_search: str =
         strip_label = home_label
         strip_displays = hit["count"] if hit else 0
         with get_conn(DB_PATH) as conn:
-            tonight_counts = _events_on_by_town(conn, _today_et())
+            tonight_counts = _events_on_by_town(
+                conn, _today_et(), brand=_brand_of(request))
         if not tonight_counts.get(home_label):
             vpoint = None
             if geo and geo.get("lat") is not None \
@@ -3649,12 +3771,14 @@ def home(request: Request, sort: str = "new", town: str = "", town_search: str =
                 strip_note = "nearest town with events tonight"
             else:
                 with get_conn(DB_PATH) as conn:
-                    nxt = _next_events_day(conn, home_label, _today_et())
+                    nxt = _next_events_day(conn, home_label, _today_et(),
+                                           brand=_brand_of(request))
                 if nxt:
                     strip_events_day = nxt[0]
     elif resolved_area["mode"] == "nomap":
         with get_conn(DB_PATH) as conn:
-            tonight_counts = _events_on_by_town(conn, _today_et())
+            tonight_counts = _events_on_by_town(
+                conn, _today_et(), brand=_brand_of(request))
         vpoint = None
         if geo and geo.get("lat") is not None \
                 and geo.get("lng") is not None:
@@ -3781,13 +3905,15 @@ def home(request: Request, sort: str = "new", town: str = "", town_search: str =
          # What's New slide-down bar (Dan, Oct 27): the latest slice
          # of the public /updates stream — announcements + newest
          # pins mixed newest-first; the bar starts closed.
-         "updates_preview": _site_update_stream(60)[:6],
+         "updates_preview": _site_update_stream(
+             60, exclude_christmas=_brand_of(request) == "haunt")[:6],
          # What's New left-margin rail (Dan, Oct 28, STAGED): the same
          # public stream re-bucketed by kind — new haunts, new events,
          # new live, new Tour Fuel stops, everything else, then
          # Frank's announcements — for the grouped rail that replaces
          # the slide-down bar on the homepage.
-         "whatsnew_groups": _whatsnew_rail_groups(),
+         "whatsnew_groups": _whatsnew_rail_groups(
+             exclude_christmas=_brand_of(request) == "haunt"),
          "bottom_tabs": _place_tabs(cat, state, region, sort, scare, tag,
                                     "1" if video.strip() == "1" else ""),
          "tier_labels": {"featured": "Featured Sponsor", "premium": "Premium Sponsor", "title": "Title Sponsor"}},
@@ -3798,14 +3924,20 @@ def home(request: Request, sort: str = "new", town: str = "", town_search: str =
     return response
 
 
-def _events_filter_data() -> dict:
+def _events_filter_data(brand: str = "merryquest") -> dict:
     """The /events filter sidebar's data bundle: location maps (state /
     town counts + the raw town strings behind each derived label),
     region counts, facet counts and the total — all computed over
     EVERY visible event, independent of the current filter selection.
     TTL-cached + background-refreshed (fortification pass 2): building
     it ran four GROUP BY passes over the events category on every
-    /events render. Callers get copies of every mutable member."""
+    /events render. Callers get copies of every mutable member.
+
+    Christmas transfer (Dan, Nov 26, 2026): brand="haunt" builds the
+    same bundle over the NON-Christmas events only (its own cache
+    key), so the HauntMap /events sidebar counts, town/state option
+    lists and total never describe Christmas events. The MerryQuest
+    build is the original SQL path under the original key."""
     def build():
         state_counts: dict[str, int] = {}
         town_counts: dict[str, int] = {}
@@ -3848,7 +3980,60 @@ def _events_filter_data() -> dict:
                 "raw_by_town": raw_by_town, "town_groups": town_groups,
                 "region_counts": region_counts, "counts": counts,
                 "total": total}
-    b = _ttl_cached("evfilter", build)
+
+    def build_haunt():
+        # The build() bundle recomputed in Python over the
+        # non-Christmas events only — same structures, same
+        # derivations (extract_state / extract_city_state / facet
+        # columns), Christmas-classified rows skipped throughout.
+        state_counts: dict[str, int] = {}
+        town_counts: dict[str, int] = {}
+        town_state: dict[str, str] = {}
+        raw_by_state: dict[str, list] = {}
+        raw_by_town: dict[str, list] = {}
+        town_groups: list = []
+        with get_conn(DB_PATH) as conn:
+            rows = [dict(r) for r in conn.execute(
+                "SELECT town, ev_type, ev_genre, ev_venue, title, "
+                "description, category FROM entries "
+                "WHERE hidden = 0 AND category = 'events'").fetchall()]
+        rows = [r for r in rows if not _is_christmas_event(r)]
+        per_town: dict[str, int] = {}
+        for r in rows:
+            raw = r["town"] or ""
+            per_town[raw] = per_town.get(raw, 0) + 1
+        for raw, n in per_town.items():
+            town_groups.append((raw, n))
+            st = extract_state(raw)
+            label = extract_city_state(raw)
+            if st:
+                state_counts[st] = state_counts.get(st, 0) + n
+                raw_by_state.setdefault(st, []).append(raw)
+            if label:
+                town_counts[label] = town_counts.get(label, 0) + n
+                raw_by_town.setdefault(label, []).append(raw)
+                if st:
+                    town_state[label] = st
+        counts: dict[str, dict[str, int]] = {}
+        for key, col, _values, _labels in EVENT_FACETS:
+            counts[key] = {}
+            for r in rows:
+                v = r[col]
+                if v is not None:
+                    counts[key][v] = counts[key].get(v, 0) + 1
+        region_counts = {
+            slug: sum(n for raw, n in town_groups
+                      if any(t in raw.lower()
+                             for t in _region_terms(slug)))
+            for slug, _label in REGION_TABS}
+        return {"state_counts": state_counts, "town_counts": town_counts,
+                "town_state": town_state, "raw_by_state": raw_by_state,
+                "raw_by_town": raw_by_town, "town_groups": town_groups,
+                "region_counts": region_counts, "counts": counts,
+                "total": len(rows)}
+
+    b = _ttl_cached("evfilter:haunt", build_haunt) \
+        if brand == "haunt" else _ttl_cached("evfilter", build)
     return {"state_counts": dict(b["state_counts"]),
             "town_counts": dict(b["town_counts"]),
             "town_state": dict(b["town_state"]),
@@ -3919,7 +4104,9 @@ def events_page(request: Request, type: str = "", genre: str = "",
             params.append(selected[key])
     # Filter sidebar data (location maps, region + facet counts,
     # total) from the TTL-cached bundle — see _events_filter_data.
-    _fd = _events_filter_data()
+    # Christmas transfer (Nov 26, 2026): the HauntMap bundle is the
+    # non-Christmas variant, so its counts/total match the board.
+    _fd = _events_filter_data(_brand_of(request))
     state_counts = _fd["state_counts"]
     town_counts = _fd["town_counts"]
     town_state = _fd["town_state"]
@@ -4026,6 +4213,13 @@ def events_page(request: Request, type: str = "", genre: str = "",
         # its single day at 100 cards, as before.
         query += f" ORDER BY {video_first}, {order}"
         entries = [row_to_dict(r) for r in conn.execute(query, params).fetchall()]
+        # Christmas transfer (Dan, Nov 26, 2026): Christmas events
+        # never list on the HauntMap board — they live on MerryQuest.
+        # Filtered here, ahead of the day-grouping / spotlight /
+        # near-events derivations, so every section below inherits it.
+        if _brand_of(request) == "haunt":
+            entries = [e for e in entries
+                       if not _is_christmas_event(e)]
         # Facet counts + total are filter-independent: from the cached
         # bundle (fortification pass 2).
         counts = _fd["counts"]
@@ -4498,6 +4692,10 @@ def add_lights_form(request: Request):
 @app.get("/nearby", response_class=HTMLResponse)
 def nearby(request: Request, q: str = "", miles: float = 10, cat: str = "halloween",
            sort: str = "new", lat: str = "", lng: str = "", states: str = ""):
+    # Christmas transfer (Nov 26, 2026): no christmas results on
+    # HauntMap — ?cat=christmas searches the halloween pool instead.
+    if _brand_of(request) == "haunt" and cat == "christmas":
+        cat = "halloween"
     cat = cat if cat in CATEGORIES else "halloween"
     # Default sort is newest per Dan's Oct 23 feed-order rule (it is the
     # within-distance tiebreak here; distance always stays primary).
@@ -4610,10 +4808,13 @@ def map_view(request: Request, cat: str = ""):
         # carries Christmas displays only, whatever ?cat= asks for.
         cats = ("christmas",)
         cat = "christmas"
-    elif cat in CATEGORIES:
+    elif cat in CATEGORIES and cat != "christmas":
         cats = (cat,)
     else:
-        cats = MAP_DISPLAY_CATS
+        # Christmas transfer (Dan, Nov 26, 2026): the HauntMap map
+        # carries no Christmas pins — not by default, not via
+        # ?cat=christmas (which lands on the default view instead).
+        cats = tuple(c for c in MAP_DISPLAY_CATS if c != "christmas")
         cat = "halloween"
     # Rows from the shared _category_rows snapshot (fortification
     # pass 2) instead of a per-render scan + row_to_dict pass.
@@ -6648,9 +6849,11 @@ def watch_page(request: Request):
     Oct 21 per-visit shuffle. Every slide also carries _views for
     Item 7's count chips (from the cached views snapshot)."""
     # Brand separation (Nov 25, 2026): on MerryQuest the feed is
-    # Christmas footage only.
+    # Christmas footage only. Christmas transfer (Nov 26, 2026): on
+    # HauntMap the feed carries everything EXCEPT Christmas footage.
     _watch_cat = (" AND e.category = 'christmas'"
-                  if _brand_of(request) == "merryquest" else "")
+                  if _brand_of(request) == "merryquest"
+                  else " AND e.category != 'christmas'")
     with get_conn(DB_PATH) as conn:
         rows = conn.execute(
             "SELECT e.* FROM entries e "
@@ -7265,6 +7468,10 @@ def virtual_tour_page(request: Request, route: str = "tonight",
 
 @app.get("/tour", response_class=HTMLResponse)
 def tour_page(request: Request, s: str = "", cat: str = "halloween"):
+    # Christmas transfer (Nov 26, 2026): no christmas tours resolve
+    # on HauntMap — ?cat=christmas builds from the halloween pool.
+    if _brand_of(request) == "haunt" and cat == "christmas":
+        cat = "halloween"
     cat = cat if cat in CATEGORIES else "halloween"
     shared: list = []
     if s.strip():
@@ -7837,6 +8044,10 @@ def api_explore(request: Request, from_id: int, exclude: str = ""):
     if (not entry or entry.get("hidden") or entry.get("lat") is None
             or entry.get("lng") is None):
         return JSONResponse(empty)
+    # Christmas transfer (Dan, Nov 26, 2026): no explore rail off a
+    # Christmas pin on the HauntMap brand (its detail page 404s too).
+    if _brand_of(request) == "haunt" and _is_christmas_content(entry):
+        return JSONResponse(empty)
     seen = {from_id}
     for tok in (exclude or "").split(",")[:800]:
         tok = tok.strip()
@@ -7883,6 +8094,11 @@ def detail(request: Request, entry_id: int):
     # so Halloween pins (and their chains/rails) never render there.
     if _brand_of(request) == "merryquest" \
             and entry.get("category") != "christmas":
+        raise HTTPException(404, "Entry not found.")
+    # Christmas transfer (Dan, Nov 26, 2026): the mirror on HauntMap —
+    # Christmas pins and Christmas events 404 here; they live on
+    # MerryQuest only.
+    if _brand_of(request) == "haunt" and _is_christmas_content(entry):
         raise HTTPException(404, "Entry not found.")
     # Multi-video pins (Oct 27): the primary (entries.tiktok_url) plays
     # in the hero; every OTHER video of this place renders below it in
@@ -8805,6 +9021,10 @@ def leaderboard(request: Request, cat: str = "halloween"):
     if _brand_of(request) == "merryquest" \
             and "cat" not in request.query_params:
         cat = "christmas"
+    # Christmas transfer (Nov 26, 2026): no christmas board on
+    # HauntMap — ?cat=christmas lands on the halloween board.
+    if _brand_of(request) == "haunt" and cat == "christmas":
+        cat = "halloween"
     cat = cat if cat in CATEGORIES else "halloween"
     with get_conn(DB_PATH) as conn:
         # Dan, Oct 23: rank by detail-page views, same logic as the
@@ -8981,6 +9201,10 @@ def leaderboard_states(request: Request, cat: str = "halloween"):
     if _brand_of(request) == "merryquest" \
             and "cat" not in request.query_params:
         cat = "christmas"
+    # Christmas transfer (Nov 26, 2026): no christmas board on
+    # HauntMap — ?cat=christmas lands on the halloween board.
+    if _brand_of(request) == "haunt" and cat == "christmas":
+        cat = "halloween"
     cat = cat if cat in CATEGORIES else "halloween"
     with get_conn(DB_PATH) as conn:
         entries = _entries_with_views(conn, cat)
@@ -9020,7 +9244,7 @@ def leaderboard_states(request: Request, cat: str = "halloween"):
 
 
 @app.get("/api/top10")
-def api_top10(state: str = "", cat: str = "halloween"):
+def api_top10(request: Request, state: str = "", cat: str = "halloween"):
     """One state's Top 10 as JSON for the homepage Top-10-by-State
     menu (top10-menu-staged, Dan Oct 28). Same grouping + ranking as
     /leaderboard/states via _state_boards; fetched lazily when a
@@ -9033,6 +9257,10 @@ def api_top10(state: str = "", cat: str = "halloween"):
     town label — the union of all state boards), ranked with the
     same _rank_with_featured mechanic; its "see them all" target is
     the nationwide Top 100 page."""
+    # Christmas transfer (Nov 26, 2026): no christmas board data on
+    # the HauntMap host — ?cat=christmas serves the halloween board.
+    if _brand_of(request) == "haunt" and cat == "christmas":
+        cat = "halloween"
     cat = cat if cat in CATEGORIES else "halloween"
     code = (state or "").strip().upper()
     if code == "ALL":
@@ -9083,6 +9311,10 @@ def leaderboard_top100(request: Request, cat: str = "halloween"):
     if _brand_of(request) == "merryquest" \
             and "cat" not in request.query_params:
         cat = "christmas"
+    # Christmas transfer (Nov 26, 2026): no christmas board on
+    # HauntMap — ?cat=christmas lands on the halloween board.
+    if _brand_of(request) == "haunt" and cat == "christmas":
+        cat = "halloween"
     cat = cat if cat in CATEGORIES else "halloween"
     with get_conn(DB_PATH) as conn:
         entries = _entries_with_views(conn, cat)
@@ -9272,6 +9504,10 @@ def auto_tour(request: Request, size: int = 10, cat: str = "halloween",
     the panel toggle). A short in-state pool never silently expands;
     the page shows what the state has and points at the toggle.
     """
+    # Christmas transfer (Nov 26, 2026): no christmas auto-tours on
+    # HauntMap — ?cat=christmas builds from the halloween pool.
+    if _brand_of(request) == "haunt" and cat == "christmas":
+        cat = "halloween"
     cat = cat if cat in CATEGORIES else "halloween"
     size = 100 if size == 100 else 10
     multi = _states_opt_in(states)
@@ -15193,7 +15429,8 @@ def _updates_day_label(d, today) -> str:
     return f"{d.strftime('%A, %B')} {d.day}"
 
 
-def _site_update_stream(pin_limit: int = 240, since=None) -> list:
+def _site_update_stream(pin_limit: int = 240, since=None,
+                        exclude_christmas: bool = False) -> list:
     """The merged What's New stream, newest first: Frank feature
     announcements + new pins from the entries table + the curated
     /diy and /diy-costumes adds (code lists, merged on their 'added'
@@ -15233,6 +15470,10 @@ def _site_update_stream(pin_limit: int = 240, since=None) -> list:
                 (pin_limit,)).fetchall()
     for r in rows:
         e = row_to_dict(r)
+        # Christmas transfer (Nov 26, 2026): HauntMap What's New
+        # surfaces never carry Christmas pins or Christmas events.
+        if exclude_christmas and _is_christmas_content(e):
+            continue
         try:
             created = datetime.fromisoformat(
                 str(e["created_at"]).replace("Z", "+00:00"))
@@ -15306,12 +15547,14 @@ def _site_update_stream(pin_limit: int = 240, since=None) -> list:
     return items
 
 
-def _site_update_groups(pin_limit: int = 240) -> list:
+def _site_update_groups(pin_limit: int = 240,
+                        exclude_christmas: bool = False) -> list:
     """The stream grouped by ET day: [{day, label, entries}], days
     and entries newest-first — the /updates page body."""
     today = _today_et()
     groups: list = []
-    for it in _site_update_stream(pin_limit):
+    for it in _site_update_stream(pin_limit,
+                                  exclude_christmas=exclude_christmas):
         if groups and groups[-1]["day"] == it["day"]:
             groups[-1]["entries"].append(it)
         else:
@@ -15339,7 +15582,8 @@ _WHATSNEW_RAIL_GROUPS = (
 )
 
 
-def _whatsnew_rail_groups(per_group: int = 8) -> list:
+def _whatsnew_rail_groups(per_group: int = 8,
+                          exclude_christmas: bool = False) -> list:
     """The What's New stream grouped for the homepage rail:
     [{emoji, label, items}] — non-empty groups only, newest first
     inside each group, capped per group. One stream scan at the
@@ -15348,7 +15592,8 @@ def _whatsnew_rail_groups(per_group: int = 8) -> list:
              for c in cats}
     buckets: dict = {key: [] for key, _e, _l, _c in _WHATSNEW_RAIL_GROUPS}
     announces: list = []
-    for it in _site_update_stream(240):
+    for it in _site_update_stream(240,
+                                  exclude_christmas=exclude_christmas):
         if it["kind"] == "announce":
             if len(announces) < per_group:
                 announces.append(it)
@@ -15426,7 +15671,8 @@ def _updates_qs(cat: str = "", state: str = "", when: str = "") -> str:
 
 
 def _site_update_groups_filtered(pin_limit: int = 150, cat: str = "",
-                                 state: str = "", when: str = "") -> dict:
+                                 state: str = "", when: str = "",
+                                 exclude_christmas: bool = False) -> dict:
     """The /updates view model: the stream day-grouped AFTER the
     filters, plus the facet counts the filter bar renders. Counts
     come from the same single stream scan (the newest pin_limit
@@ -15448,9 +15694,11 @@ def _site_update_groups_filtered(pin_limit: int = 150, cat: str = "",
         _wk = today - timedelta(days=today.weekday())
         items = _site_update_stream(
             8000, since=datetime(_wk.year, _wk.month, _wk.day,
-                                 tzinfo=_et))
+                                 tzinfo=_et),
+            exclude_christmas=exclude_christmas)
     else:
-        items = _site_update_stream(pin_limit)
+        items = _site_update_stream(
+            pin_limit, exclude_christmas=exclude_christmas)
     cat_counts: dict = {}
     state_counts: dict = {}
     when_counts: dict = {}
@@ -15516,7 +15764,9 @@ def updates_page(request: Request, cat: str = "", state: str = "",
     when = (when or "").strip().lower()
     if when not in _UPDATES_WHEN_LABELS:
         when = ""
-    view = _site_update_groups_filtered(150, cat, state, when)
+    view = _site_update_groups_filtered(
+        150, cat, state, when,
+        exclude_christmas=_brand_of(request) == "haunt")
     cat_buttons = [{"key": "", "emoji": "🆕", "label": "All",
                     "count": view["all_count"], "active": not cat,
                     "href": _updates_qs("", state, when)}]
@@ -19051,7 +19301,14 @@ def _dotd_hook(entry: dict) -> str:
     return hook
 
 
-def _display_of_day(conn, today=None) -> dict | None:
+def _display_of_day(conn, today=None, brand: str = "merryquest") -> dict | None:
+    # Christmas transfer (Dan, Nov 26, 2026): the resolver is
+    # brand-aware. MerryQuest keeps the original behaviour exactly
+    # (any visible thumbed pick; christmas rotation fallback). On
+    # HauntMap a christmas pick is refused and the rotation pool is
+    # halloween pins with a thumbnail + a video, so the HM card can
+    # never show a Christmas display; an empty pool returns None
+    # and the card hides cleanly (the template gates on `dotd`).
     today = today or _quest_today()
     pick = conn.execute(
         "SELECT entry_id FROM display_of_day WHERE day = ?",
@@ -19060,14 +19317,16 @@ def _display_of_day(conn, today=None) -> dict | None:
         row = conn.execute(
             "SELECT e.* FROM entries e WHERE e.id = ? AND e.hidden = 0",
             (pick["entry_id"],)).fetchone()
-        if row and row["thumb_path"]:
+        if row and row["thumb_path"] and not (
+                brand == "haunt" and row["category"] == "christmas"):
             d = row_to_dict(row)
             d["hook"] = _dotd_hook(d)
             d["is_pick"] = True
             return d
+    pool_cat = "halloween" if brand == "haunt" else "christmas"
     rows = conn.execute(
         "SELECT e.* FROM entries e WHERE e.hidden = 0 "
-        "AND e.category = 'christmas' AND e.thumb_path IS NOT NULL "
+        f"AND e.category = '{pool_cat}' AND e.thumb_path IS NOT NULL "
         f"AND {_DOTD_VIDEO_SQL} ORDER BY e.id").fetchall()
     if not rows:
         return None
