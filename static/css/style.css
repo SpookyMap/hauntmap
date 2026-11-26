@@ -1768,6 +1768,32 @@ a.game-card:hover { border-color: #ff7518; transform: translateY(-2px); }
   .tonight-cta { display: none; }
 }
 
+/* Display of the Day (Dan, Nov 26, 2026): the Tonight's Display card
+   language grown into a feature band — the featured pin's real
+   thumbnail large on the left, name/town/hook and the pin + map
+   buttons on the right. Fed by `dotd` (admin pick or daily
+   rotation; see _display_of_day.html). */
+.dotd-band { max-width: 1060px; margin: 1.25rem auto; padding: 0 1rem; }
+.dotd-card { display: flex; gap: 1.25rem; align-items: center; background: linear-gradient(160deg, #14222b, #0e1a20); border: 2px solid #e6b16d; border-radius: 16px; padding: 1rem 1.15rem; }
+.dotd-thumb { flex: 0 0 auto; }
+.dotd-thumb img { width: 300px; aspect-ratio: 16/10; object-fit: cover; border-radius: 12px; display: block; }
+.dotd-body { display: flex; flex-direction: column; gap: 0.3rem; min-width: 0; }
+.dotd-kicker { color: #ff7518; font-weight: 800; font-size: 0.85rem; letter-spacing: 0.03em; text-transform: uppercase; }
+.dotd-title { color: #f9e5c2; font-weight: 800; font-size: 1.45rem; line-height: 1.25; text-decoration: none; }
+.dotd-title:hover { text-decoration: underline; }
+.dotd-meta { color: #a9cdf5; font-size: 0.9rem; }
+.dotd-hook { color: #d8e2ea; font-size: 0.95rem; line-height: 1.45; margin: 0.25rem 0 0; }
+.dotd-actions { display: flex; gap: 0.6rem; flex-wrap: wrap; margin-top: 0.65rem; }
+.dotd-btn { color: #0e1a20; background: #ff7518; font-weight: 800; font-size: 0.9rem; padding: 0.55rem 0.95rem; border-radius: 999px; text-decoration: none; white-space: nowrap; }
+.dotd-btn:hover { background: #ffa25e; }
+.dotd-btn-ghost { background: transparent; color: #f9e5c2; border: 1px solid #e6b16d; }
+.dotd-btn-ghost:hover { background: rgba(230, 177, 109, 0.15); }
+@media (max-width: 700px) {
+  .dotd-card { flex-direction: column; align-items: stretch; gap: 0.85rem; }
+  .dotd-thumb img { width: 100%; }
+  .dotd-title { font-size: 1.25rem; }
+}
+
 /* Town-request form inside the hero grid: its own area under the sponsor
    billboard in the left column (last in the stacked order on phone).
    strip-fit: "vtstrip" (phone VT/TV twin) joins right after "headline". */

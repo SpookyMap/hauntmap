@@ -1420,6 +1420,38 @@ main > h1 { font-family:'Anton',sans-serif; text-transform:uppercase; letter-spa
   .mqx-cotd-name{font-size:32px}
 }
 
+/* Display of the Day (Dan, Nov 26, 2026): the COTD panel language
+   with a wide art column — the featured pin's real (landscape)
+   thumbnail sits large instead of a portrait.
+   Wide pass (Dan, Nov 26, later): "Above pip and make it wide like
+   pips block" — the panel now takes the Meet Pip block's exact seat:
+   the .mqx-guide viewport breakout (left 50% / translateX(-50%),
+   width min(1100px, 100vw - 2rem), zoom .8, same gold border, glow
+   background, padding and phone switch at 760px), so Display of the
+   Day stacks edge-to-edge with Meet Pip directly beneath it.
+   MQ-only: this stylesheet never loads on HauntMap, whose .dotd-card
+   keeps the narrower card Dan previewed. */
+.mqx-dotd{position:relative;left:50%;transform:translateX(-50%);
+  width:min(1100px,calc(100vw - 2rem));zoom:0.8;margin-top:32px;
+  display:grid;grid-template-columns:1fr 1.1fr;gap:34px;align-items:center;
+  padding:30px 38px;border-radius:22px;
+  background:
+    radial-gradient(560px 300px at 12% 40%, rgba(255, 200, 44, 0.10), transparent 65%),
+    linear-gradient(165deg, rgba(23, 18, 56, 0.96), rgba(9, 14, 10, 0.97));
+  border:1px solid rgba(230, 177, 109, 0.5);
+  box-shadow:0 0 24px rgba(64, 200, 255, 0.12)}
+.mqx-dotd-art img{width:100%;aspect-ratio:16/10;object-fit:cover;border-radius:16px;display:block;
+  box-shadow:0 18px 44px rgba(0,0,0,.5)}
+.mqx-dotd-name{font-family:'Anton',sans-serif;font-size:32px;letter-spacing:.02em;
+  text-transform:uppercase;color:#fff;line-height:1.08;margin:4px 0 8px}
+.mqx-dotd-town{color:#FFC82C;font-weight:700;margin:0 0 10px}
+.mqx-dotd-ctas{margin:16px 0 0;display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+@media (max-width:760px){
+  .mqx-dotd{width:calc(100vw - 12px);zoom:1;margin-top:30px;
+    grid-template-columns:1fr;gap:16px;padding:18px}
+  .mqx-dotd-name{font-size:30px}
+}
+
 /* Hero logo plaque (Dan's emblem, Nov 18) */
 .mqx-hero-logo{display:block;width:min(470px,88vw);height:auto;margin:0 auto 16px;
   border-radius:18px;border:1px solid rgba(230,177,109,.45);

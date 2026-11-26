@@ -315,6 +315,18 @@ CREATE TABLE IF NOT EXISTS entry_videos (
     UNIQUE(entry_id, video_id)
 );
 CREATE INDEX IF NOT EXISTS idx_entry_videos_entry ON entry_videos(entry_id, position);
+-- Display of the Day (Dan, Nov 26, 2026): one admin-set pick per
+-- calendar day (US Eastern, the _quest_today date). A row for today
+-- features that pin on both homepages; no row (or a pick whose pin
+-- lost its thumbnail) falls back to a deterministic daily rotation
+-- in app/main.py (_display_of_day). Set a pick with one SQL line:
+--   INSERT OR REPLACE INTO display_of_day (day, entry_id, set_at)
+--   VALUES ('2026-11-27', 9711, '2026-11-26T20:00:00Z');
+CREATE TABLE IF NOT EXISTS display_of_day (
+    day TEXT PRIMARY KEY,          -- 'YYYY-MM-DD', US Eastern
+    entry_id INTEGER NOT NULL REFERENCES entries(id) ON DELETE CASCADE,
+    set_at TEXT NOT NULL           -- UTC ISO timestamp of the pick
+);
 CREATE TABLE IF NOT EXISTS page_views (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     path TEXT NOT NULL,                   -- URL path visited, e.g. "/" or "/d/5"

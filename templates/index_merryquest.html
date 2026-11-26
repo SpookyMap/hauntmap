@@ -118,6 +118,13 @@
   </script>
   {% endif %}
 
+  {# Display of the Day (Dan, Nov 26, 2026): seated directly under
+     the Just Added ticker, above Meet Pip — the day's one featured
+     display, mirroring the Character of the Day card further down.
+     Wide pass (Dan, Nov 26, later): the panel wears the Meet Pip
+     block's full width/seat — see .mqx-dotd in merryquest-rail.css. #}
+  {% with dotd_brand = 'merryquest' %}{% include "_display_of_day.html" %}{% endwith %}
+
   <section class="mqx-guide mqx-haunted">
     <a class="mqx-guide-medal" href="/characters/pip-the-star-pin"><img src="/static/img/pip-tech.jpg" alt="Pip the Star Pin — your MerryQuest guide" loading="lazy"></a>
     <div class="mqx-guide-copy">

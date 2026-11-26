@@ -745,6 +745,11 @@ document.addEventListener('click', function (ev) {
    >=761px; the phone copy inside .hero-intro is untouched, and
    Trending's old in-panel hero copy is removed above, so desktop
    sees Trending exactly once. Phones never render this copy. #}
+{# Display of the Day (Dan, Nov 26, 2026): the day's one featured
+   display, seated directly under the hero cluster above the
+   Trending rail, in the Tonight's Display card language. #}
+{% with dotd_brand = 'haunt' %}{% include "_display_of_day.html" %}{% endwith %}
+
 {% if tonight or trending %}
 <div class="fd-rail fd-rail-desk" aria-label="Start here: tonight's pick and trending haunts">
   <p class="fd-rail-head">&#x1F525; Trending now</p>

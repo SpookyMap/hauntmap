@@ -1,0 +1,35 @@
+{# Display of the Day (Dan, Nov 26, 2026): one featured display on
+   both homepages, fed by `dotd` (app/main.py _display_of_day — an
+   admin pick from the display_of_day table, else a deterministic
+   daily rotation over christmas pins with a thumbnail + a video).
+   The card mirrors each brand's "of the day" language: MerryQuest
+   wears the Character of the Day layout (.mqx-cotd), HauntMap wears
+   the Tonight's Display card (.tonight-card). Real thumbnail only —
+   the resolver never hands over a pin without one. #}
+{% if dotd %}
+{% if dotd_brand | default('haunt') == 'merryquest' %}
+<section class="mqx-dotd mqx-haunted" aria-label="Display of the Day">
+  <div class="mqx-dotd-art"><a href="/d/{{ dotd.id }}"><img src="{{ dotd.thumb_url }}" alt="{{ dotd.title }} — display of the day" loading="lazy"></a></div>
+  <div class="mqx-dotd-body">
+    <p class="mqx-eyebrow">✦ Display of the Day</p>
+    <h2 class="mqx-dotd-name">{{ dotd.title }}</h2>
+    <p class="mqx-dotd-town">📍 {{ dotd.town_label }}</p>
+    {% if dotd.hook %}<p class="mqx-p">{{ dotd.hook }}</p>{% endif %}
+    <p class="mqx-dotd-ctas"><a class="mqx-cta" href="/d/{{ dotd.id }}">See this display</a> <a class="mqx-ghost-btn" href="/map">View on the map</a></p>
+  </div>
+</section>
+{% else %}
+<section class="dotd-band" aria-label="Display of the Day">
+  <div class="dotd-card">
+    <a class="dotd-thumb" href="/d/{{ dotd.id }}"><img src="{{ dotd.thumb_url }}" alt="{{ dotd.title }} — display of the day" loading="lazy"></a>
+    <div class="dotd-body">
+      <span class="dotd-kicker">&#x1F384; Display of the Day</span>
+      <a class="dotd-title" href="/d/{{ dotd.id }}">{{ dotd.title }}</a>
+      <span class="dotd-meta">{{ dotd.town_label }}</span>
+      {% if dotd.hook %}<p class="dotd-hook">{{ dotd.hook }}</p>{% endif %}
+      <span class="dotd-actions"><a class="dotd-btn" href="/d/{{ dotd.id }}">See this display</a><a class="dotd-btn dotd-btn-ghost" href="/map">View on the map</a></span>
+    </div>
+  </div>
+</section>
+{% endif %}
+{% endif %}

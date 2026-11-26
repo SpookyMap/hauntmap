@@ -3375,6 +3375,7 @@ def home(request: Request, sort: str = "new", town: str = "", town_search: str =
     with get_conn(DB_PATH) as conn:
         entries = [row_to_dict(r) for r in conn.execute(query, params).fetchall()]
         _attach_views(conn, entries)  # Item 7: feed cards show view counts
+        dotd = _display_of_day(conn)  # Display of the Day (Nov 26, 2026)
         fall_events_home = _fall_events_home(conn)
         sponsors = [dict(r) for r in conn.execute(
             "SELECT * FROM sponsors WHERE is_active = 1 ORDER BY "
@@ -3727,6 +3728,7 @@ def home(request: Request, sort: str = "new", town: str = "", town_search: str =
          "state": state, "region": region, "voted": voted,
          "cat": cat, "cat_labels": CAT_LABELS, "cat_emoji": CAT_EMOJI,
          "cotd": _quest_cotd() if _brand_of(request) == "merryquest" else None,
+         "dotd": dotd,
          "cast_chips": _quest_cast_chips() if _brand_of(request) == "merryquest" else None,
          "scare": scare, "tag": tag, "video": "1" if video.strip() == "1" else "",
          "tonight": tonight, "tonight_label": tonight_label,
@@ -18963,6 +18965,65 @@ def _quest_cotd(today=None) -> dict:
     if today == date(2026, 12, 1):
         return mk("santa-claus", "live")
     return mk(_QUEST_CAST[(today - date(2026, 12, 2)).days % len(_QUEST_CAST)][0], "live")
+
+
+# Display of the Day (Dan, Nov 26, 2026): a homepage feature slot on
+# BOTH brands showing one real display — large thumbnail, name, town,
+# a one-line hook from the pin's description, and buttons to the pin
+# page and the map. The day's pick lives in the display_of_day table
+# (one row per US-Eastern date; see app/db.py for the one-line SQL to
+# set it). No pick for today — or a pick whose pin is hidden or has
+# lost its thumbnail — falls back to a deterministic rotation over
+# christmas pins that have BOTH a thumbnail and a video (TikTok URL,
+# an entry_videos row, or an uploaded video file), indexed by the
+# date ordinal so every visitor sees the same display all day and
+# the section can never render empty or broken.
+_DOTD_VIDEO_SQL = (
+    "((e.tiktok_url IS NOT NULL AND TRIM(e.tiktok_url) != '')"
+    " OR LOWER(e.media_path) LIKE '%.mp4'"
+    " OR LOWER(e.media_path) LIKE '%.webm'"
+    " OR LOWER(e.media_path) LIKE '%.mov'"
+    " OR EXISTS (SELECT 1 FROM entry_videos v WHERE v.entry_id = e.id))")
+
+
+def _dotd_hook(entry: dict) -> str:
+    """One-line hook for the DOTD card: the first sentence of the
+    pin's description, whitespace-collapsed and capped. Empty when
+    the pin carries no description (the card then shows name + town
+    only — never an invented line)."""
+    desc = re.sub(r"\s+", " ", (entry.get("description") or "")).strip()
+    if not desc:
+        return ""
+    hook = re.split(r"(?<=[.!])\s+", desc, maxsplit=1)[0]
+    if len(hook) > 170:
+        hook = hook[:167].rsplit(" ", 1)[0] + "…"
+    return hook
+
+
+def _display_of_day(conn, today=None) -> dict | None:
+    today = today or _quest_today()
+    pick = conn.execute(
+        "SELECT entry_id FROM display_of_day WHERE day = ?",
+        (today.isoformat(),)).fetchone()
+    if pick:
+        row = conn.execute(
+            "SELECT e.* FROM entries e WHERE e.id = ? AND e.hidden = 0",
+            (pick["entry_id"],)).fetchone()
+        if row and row["thumb_path"]:
+            d = row_to_dict(row)
+            d["hook"] = _dotd_hook(d)
+            d["is_pick"] = True
+            return d
+    rows = conn.execute(
+        "SELECT e.* FROM entries e WHERE e.hidden = 0 "
+        "AND e.category = 'christmas' AND e.thumb_path IS NOT NULL "
+        f"AND {_DOTD_VIDEO_SQL} ORDER BY e.id").fetchall()
+    if not rows:
+        return None
+    d = row_to_dict(rows[today.toordinal() % len(rows)])
+    d["hook"] = _dotd_hook(d)
+    d["is_pick"] = False
+    return d
 
 
 # Spawn locations (Dan, Nov 18, 2026): house displays are the core,
