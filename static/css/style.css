@@ -7490,6 +7490,20 @@ a.wn-fbtn:hover, summary.wn-fbtn:hover { border-color: #57a8ff; }
      right edge. Phones/tablets keep the tuned right-aligned six. */
   .mini-bar .mini-links { flex: 1; margin-left: 0; justify-content: space-evenly; gap: 0; }
 }
+/* Even spread on phones (Dan, 2026-11-26): same treatment as the
+   wide bar, at phone widths. The HauntMap wordmark stays anchored
+   at the left; the nine phone links take the rest of the bar
+   (flex: 1, margin-left: 0) with equal gaps between neighbours —
+   space-between, gap: 0 — instead of the old right-side bunch
+   (margin-left: auto + fixed gaps). This block sits after the
+   <=480px compression above, so its gap: 0 wins on .mini-links at
+   phone widths; the <=480px bar gap / font / wordmark-only rules
+   still apply. Tablets (>768px) and desktop are untouched. The
+   481-768px band keeps the base 0.8rem link font, which fits the
+   spread at those widths. */
+@media (max-width: 768px) {
+  .mini-bar .mini-links { flex: 1; margin-left: 0; justify-content: space-between; gap: 0; }
+}
 /* Per-link icons in the scroll bar (Dan, 2026-11-03): every item gets
    its own symbol like Search and Plus already had. The .mini-ic
    spans render only on wide screens — the phone bar's tuned fit
