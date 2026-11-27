@@ -474,5 +474,99 @@ function hmEventsNearGo() {
      same as the Type/Genre/Venue selects above. */
   .ev-filter-loc { flex: 1 1 100%; max-width: none; }
 }
+/* -- Event-card compact pass (Dan, Nov 26, 2026): "Event displays
+   are too big" — the featured facade filled a whole phone screen
+   and Tonight's Spotlight ran taller than one. Everything below
+   tightens the event surfaces toward the display-card proportions
+   Dan approved the same night (capped media, card-scale titles,
+   compact meta, small pills/buttons): the portrait TikTok facade
+   is cropped to a 16/10 card aspect, spotlight + Event of the Day
+   headlines step down to card scale and clamp at 3 lines, the
+   EOTD hook clamps at 2, media floors drop, body padding tightens,
+   CTA buttons shrink, and on phones the event lists go two-across
+   like the display grid. Sizing only — no data, ordering or
+   feature changes. Both brands; each keeps its own skin. The
+   spotlight stays the most prominent card on the page, just no
+   longer a full screen of it. -- */
+.ev-feature .pop-home-feature { max-width: 520px; }
+.ev-feature .yt-facade--tt { aspect-ratio: 16 / 10; }
+.ev-feature .pop-home-feature .yt-play { width: 56px; height: 56px; line-height: 56px; font-size: 1.25rem; }
+.ev-feature .pop-home-feature-cap { font-size: 0.95rem; display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.ev-feature .pop-home-feature-blurb { font-size: 0.82rem; display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.ev-spot-media, .ev-eotd-media { min-height: 190px; }
+.ev-spot-body, .ev-eotd-body { padding: 0.9rem 1rem 1rem; gap: 0.35rem; }
+.ev-spot-title, .ev-eotd-title { font-size: 1.3rem; line-height: 1.22; display: -webkit-box; -webkit-line-clamp: 3; line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.ev-spot-meta, .ev-eotd-meta { font-size: 0.92rem; }
+.ev-eotd-hook { display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.ev-spot-cta .btn, .ev-eotd-cta .btn { padding: 0.45rem 1rem; font-size: 0.92rem; }
+@media (max-width: 760px) {
+  .ev-spot-media, .ev-eotd-media { min-height: 170px; }
+  .ev-spot-title, .ev-eotd-title { font-size: 1.15rem; }
+  .ev-spot-body, .ev-eotd-body { padding: 0.75rem 0.85rem 0.85rem; }
+}
+@media (max-width: 480px) {
+  .ev-day-group .grid, .ev-near-sec .grid { grid-template-columns: 1fr 1fr; gap: 0.6rem; }
+  .ev-day-group .card-body, .ev-near-sec .card-body { padding: 0.5rem 0.65rem; }
+  .ev-day-group .card-body h3, .ev-near-sec .card-body h3 { font-size: 0.92rem; margin-bottom: 0.15rem; }
+  .ev-card .tour-add-btn { margin-top: 0.35rem; padding: 0.26rem 0.6rem; font-size: 0.78rem; }
+}
+</style>
+<style>
+/* MerryQuest events compact pass (Dan, Nov 24): the MQ skin
+   (merryquest-rail.css) inflates this page's header to a 46px
+   display face and the feature facade fills the first screen.
+   Same structure as HauntMap's events page, tightened to the
+   display page's compact treatment: smaller header, lede,
+   crosslinks, feature, filters, day heads, cards and chip bar.
+   Every rule is brand-scoped, so HauntMap renders unchanged.
+   (Nov 24's "leave Tonight's Spotlight untouched" note is
+   superseded: on Nov 26 Dan ruled event displays too big, and
+   the shared compact pass above now tightens .ev-spot* /
+   .ev-eotd* / .ev-feature on BOTH brands — this block only keeps
+   the MQ-only deltas that still apply on top of it.) */
+body.brand-merryquest main > h1 { font-size: 1.55rem; margin: 0.7rem 0 0.3rem; }
+body.brand-merryquest main > .lede { font-size: 0.95rem; margin: 0.2rem 0 0.45rem; }
+body.brand-merryquest .music-crosslink { margin: 0.15rem 0 0.35rem; font-size: 0.92rem; }
+body.brand-merryquest .ev-eotd { margin: 0.55rem 0 0.3rem; }
+body.brand-merryquest .ev-eotd-media { min-height: 170px; }
+body.brand-merryquest .ev-eotd-body { padding: 0.8rem 0.95rem 0.95rem; gap: 0.35rem; }
+body.brand-merryquest .ev-eotd-title { font-size: 1.3rem; }
+body.brand-merryquest .ev-eotd-meta, body.brand-merryquest .ev-eotd-hook { font-size: 0.92rem; }
+body.brand-merryquest .ev-feature { margin: 0.4rem 0 0.2rem; }
+/* Nov 26: the old 200px width caps on the feature facade are gone —
+   the shared compact pass above now crops the facade itself to a
+   16/10 card aspect on both brands. What stays here is only the
+   MQ type sizing inside the caption band. */
+body.brand-merryquest .ev-feature .pop-home-feature .yt-play { width: 52px; height: 52px; line-height: 52px; font-size: 1.15rem; }
+body.brand-merryquest .ev-feature .pop-home-feature-band { padding: 0.4rem 0.55rem 0.5rem; }
+body.brand-merryquest .ev-feature .pop-home-feature-cap { font-size: 0.82rem; }
+body.brand-merryquest .ev-feature .pop-home-feature-blurb { font-size: 0.76rem; display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+body.brand-merryquest .ev-near-bar { margin: 0.5rem 0 0.1rem; gap: 0.45rem; }
+body.brand-merryquest .ev-near-btn { font-size: 0.92rem; padding: 0.45rem 0.95rem; }
+body.brand-merryquest .ev-near-on, body.brand-merryquest .ev-near-reset { padding: 0.35rem 0.65rem; font-size: 0.85rem; }
+body.brand-merryquest .ev-alerts { margin: 0.35rem 0; }
+body.brand-merryquest .ev-filter-form { margin: 0.5rem 0 0.25rem; }
+body.brand-merryquest .ev-filter-row { gap: 0.45rem; }
+body.brand-merryquest .ev-filter { gap: 0.18rem; }
+body.brand-merryquest .ev-filter span { font-size: 0.7rem; }
+body.brand-merryquest .ev-filter select { padding: 0.4rem 0.5rem; font-size: 0.9rem; }
+body.brand-merryquest .ev-on-chip { margin: 0.4rem 0 0; padding: 0.35rem 0.65rem; font-size: 0.82rem; }
+body.brand-merryquest .ev-meta-row { margin: 0.25rem 0 0.45rem; }
+body.brand-merryquest .ev-count { font-size: 0.9rem; }
+body.brand-merryquest .ev-day-head, body.brand-merryquest .ev-near-head { margin: 0.95rem 0 0.5rem; font-size: 1.12rem; padding-bottom: 0.25rem; }
+body.brand-merryquest .ev-day-group .grid, body.brand-merryquest .ev-near-sec .grid { gap: 0.6rem; }
+body.brand-merryquest .ev-day-group .card-body, body.brand-merryquest .ev-near-sec .card-body { padding: 0.5rem 0.65rem; }
+body.brand-merryquest .ev-day-group .card-body h3, body.brand-merryquest .ev-near-sec .card-body h3 { font-size: 0.92rem; margin-bottom: 0.15rem; }
+body.brand-merryquest .ev-card .tour-add-btn { margin-top: 0.35rem; padding: 0.26rem 0.6rem; font-size: 0.78rem; }
+body.brand-merryquest .ev-date-badge { padding: 0.14rem 0.42rem 0.18rem; }
+body.brand-merryquest .ev-db-day { font-size: 0.95rem; }
+body.brand-merryquest .ev-chipbar { margin: 0.55rem 0 0.1rem; padding: 0.4rem 0.45rem 0.45rem; }
+body.brand-merryquest .ev-fchip { padding: 0.32rem 0.7rem; font-size: 0.82rem; }
+@media (max-width: 760px) {
+  body.brand-merryquest .ev-near-btn { min-height: 44px; font-size: 0.98rem; }
+  /* Nov 26 compact pass: this block's unconditional 1.3rem EOTD
+     title would otherwise override the shared phone step-down. */
+  body.brand-merryquest .ev-eotd-title { font-size: 1.15rem; }
+}
 </style>
 {% endblock %}
