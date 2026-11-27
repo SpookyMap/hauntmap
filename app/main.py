@@ -829,7 +829,8 @@ async def _appdoor_guard(request: Request, call_next):
                     target += "?" + request.url.query
                 return RedirectResponse(target, status_code=302)
             return templates.TemplateResponse(
-                request, "countdown_merryquest.html", {})
+                request, "countdown_merryquest.html",
+                {"cd_chapter": _countdown_parts(2026, 12, 1)})
     return await call_next(request)
 
 
@@ -2591,6 +2592,32 @@ def _nearest_events_town(counts: dict, halloween_inv: list[dict],
     return {"label": pick[1], "count": hw_counts.get(pick[1], 0)}
 
 
+def _countdown_parts(year, month, day):
+    """Server-rendered countdown digits for the MerryQuest homepage
+    and splash countdowns (Dan, Nov 26, 2026). The cells used to ship
+    "--" placeholders and rely on the client JS to fill every unit —
+    when a client painted the Chapter 1 countdown with a blank HOURS
+    cell, there was no digit in the HTML to fall back on, and the
+    earlier placeholder fix only ever existed in the staged tree, so
+    production never changed. The server now renders the real values
+    (zero-padded to two digits, matching the JS tick) and the JS only
+    updates them. `done` mirrors the JS zero state so a past-target
+    countdown renders its end state directly. Target is midnight
+    America/New_York on the given date, the same moment the JS
+    counts to (Date.UTC(y, m-1, d, 5, 0, 0) in EST)."""
+    from zoneinfo import ZoneInfo
+    et = ZoneInfo("America/New_York")
+    target = datetime(year, month, day, 0, 0, tzinfo=et)
+    secs = int((target - datetime.now(et)).total_seconds())
+    if secs <= 0:
+        return {"d": "00", "h": "00", "m": "00", "s": "00", "done": True}
+    d, rem = divmod(secs, 86400)
+    h, rem = divmod(rem, 3600)
+    m, s = divmod(rem, 60)
+    return {"d": f"{d:02d}", "h": f"{h:02d}", "m": f"{m:02d}",
+            "s": f"{s:02d}", "done": False}
+
+
 def _halloween_countdown(today) -> str:
     halloween = _mkdate(today.year, 10, 31)
     days = (halloween - today).days
@@ -3510,7 +3537,8 @@ def home(request: Request, sort: str = "new", town: str = "", town_search: str =
          video: str = "", states_q: str = Query("", alias="states")):
     if _is_appdoor(request):
         return templates.TemplateResponse(
-            request, "countdown_merryquest.html", {})
+            request, "countdown_merryquest.html",
+            {"cd_chapter": _countdown_parts(2026, 12, 1)})
     # states_q is the ?states=1 near-me opt-in; the alias keeps the
     # URL identical to the Auto Tour toggle's, and the distinct Python
     # name leaves the module-level states() helper callable below.
@@ -3988,6 +4016,8 @@ def home(request: Request, sort: str = "new", town: str = "", town_search: str =
          "town": town, "towns": towns(cat, state), "ticker_towns": towns("christmas"), "states": states(cat),
          "state": state, "region": region, "voted": voted,
          "cat": cat, "cat_labels": CAT_LABELS, "cat_emoji": CAT_EMOJI,
+         "cd_launch": _countdown_parts(2026, 11, 25),
+         "cd_santa": _countdown_parts(2026, 12, 1),
          "cotd": _quest_cotd() if _brand_of(request) == "merryquest" else None,
          "dotd": dotd,
          "cast_chips": _quest_cast_chips() if _brand_of(request) == "merryquest" else None,

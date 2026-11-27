@@ -273,17 +273,22 @@
   <div class="grid" aria-hidden="true"></div>
   <main class="wrap">
     <h1 class="logo"><img class="logo-still" src="/static/img/merryquest-logo-v3-clear.webp?v=20261126b4" alt="MerryQuest — Follow the Lights, Capture the Magic" width="1017" height="575"><img class="logo-anim" data-src="/static/img/merryquest-logo-v3-animated.webp" alt="" aria-hidden="true" width="640" height="360"><span class="sr-only">MerryQuest</span></h1>
-    <p class="begins">Chapter 1 premieres in</p>
-    <div class="cd" role="timer" aria-label="Countdown to Chapter 1 premiere on December 1">
-      <div class="cell"><span id="cd-d">--</span><label>Days</label></div>
+    {# Countdown digits are SERVER-RENDERED (Dan, Nov 26, 2026),
+       same fix as the homepage: the cells used to ship "--" and
+       rely on the JS tick alone, so a client that failed to fill
+       or paint a cell showed a blank unit. The handlers pass
+       cd_chapter from _countdown_parts(); the JS only updates. #}
+    <p class="begins"{% if cd_chapter.done %} style="display:none"{% endif %}>Chapter 1 premieres in</p>
+    <div class="cd" role="timer" aria-label="Countdown to Chapter 1 premiere on December 1"{% if cd_chapter.done %} style="display:none"{% endif %}>
+      <div class="cell"><span id="cd-d">{{ cd_chapter.d | default('00', true) }}</span><label>Days</label></div>
       <span class="colon" aria-hidden="true">:</span>
-      <div class="cell"><span id="cd-h">--</span><label>Hours</label></div>
+      <div class="cell"><span id="cd-h">{{ cd_chapter.h | default('00', true) }}</span><label>Hours</label></div>
       <span class="colon" aria-hidden="true">:</span>
-      <div class="cell"><span id="cd-m">--</span><label>Minutes</label></div>
+      <div class="cell"><span id="cd-m">{{ cd_chapter.m | default('00', true) }}</span><label>Minutes</label></div>
       <span class="colon" aria-hidden="true">:</span>
-      <div class="cell"><span id="cd-s">--</span><label>Seconds</label></div>
+      <div class="cell"><span id="cd-s">{{ cd_chapter.s | default('00', true) }}</span><label>Seconds</label></div>
     </div>
-    <p class="cd-done" id="cd-done" hidden>Chapter 1 is here!</p>
+    <p class="cd-done" id="cd-done"{% if not cd_chapter.done %} hidden{% endif %}>Chapter 1 is here!</p>
     <p class="live">The Quest has begun!</p>
     <p class="live-cta"><a class="cta" href="https://gomerryquest.com/">Start the Quest</a></p>
     <p class="note">App on iOS &amp; Android · Coming Soon</p>
@@ -309,7 +314,7 @@
     var d = Math.floor(s / 86400); s -= d * 86400;
     var h = Math.floor(s / 3600); s -= h * 3600;
     var m = Math.floor(s / 60); s -= m * 60;
-    cd.d.textContent = d; cd.h.textContent = pad(h); cd.m.textContent = pad(m); cd.s.textContent = pad(s);
+    cd.d.textContent = pad(d); cd.h.textContent = pad(h); cd.m.textContent = pad(m); cd.s.textContent = pad(s);
     setTimeout(tick, 1000);
   }
   tick();

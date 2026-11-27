@@ -35,22 +35,29 @@
       </div>
       <h1 class="mqx-h1">A guide to the best Christmas displays <span class="mqx-grad">in your city</span></h1>
       <p class="mqx-begins">The quest begins November 25th</p>
-      <div class="mqx-bigcd" role="timer" aria-label="Countdown to the November 25 launch">
-        <div class="mqx-bigcd-cell"><span id="mqx-cd-d">--</span><label>Days</label></div>
-        <div class="mqx-bigcd-cell"><span id="mqx-cd-h">--</span><label>Hours</label></div>
-        <div class="mqx-bigcd-cell"><span id="mqx-cd-m">--</span><label>Minutes</label></div>
-        <div class="mqx-bigcd-cell"><span id="mqx-cd-s">--</span><label>Seconds</label></div>
+      {# Countdown digits are SERVER-RENDERED (Dan, Nov 26, 2026):
+         the cells used to ship "--" and rely on the JS tick to fill
+         every unit, so a client that failed to fill or paint one
+         cell showed a blank unit (the blank HOURS cell Dan flagged
+         twice). The handler passes cd_launch / cd_santa from
+         _countdown_parts(); the JS below only updates the digits,
+         and the done flags render the zero state directly. #}
+      <div class="mqx-bigcd" role="timer" aria-label="Countdown to the November 25 launch"{% if cd_launch.done %} hidden{% endif %}>
+        <div class="mqx-bigcd-cell"><span id="mqx-cd-d">{{ cd_launch.d | default('00', true) }}</span><label>Days</label></div>
+        <div class="mqx-bigcd-cell"><span id="mqx-cd-h">{{ cd_launch.h | default('00', true) }}</span><label>Hours</label></div>
+        <div class="mqx-bigcd-cell"><span id="mqx-cd-m">{{ cd_launch.m | default('00', true) }}</span><label>Minutes</label></div>
+        <div class="mqx-bigcd-cell"><span id="mqx-cd-s">{{ cd_launch.s | default('00', true) }}</span><label>Seconds</label></div>
       </div>
-      <p class="mqx-bigcd-done" id="mqx-cd-done" hidden>The quest has begun!</p>
+      <p class="mqx-bigcd-done" id="mqx-cd-done"{% if not cd_launch.done %} hidden{% endif %}>The quest has begun!</p>
       <div class="mqx-santacd">
-        <p class="mqx-santacd-label" id="mqx-santa-label">Chapter 1 premieres in</p>
-        <div class="mqx-bigcd mqx-bigcd-mini" role="timer" aria-label="Countdown to Chapter 1 premiere on December 1">
-          <div class="mqx-bigcd-cell"><span id="mqx-sc-d">--</span><label>Days</label></div>
-          <div class="mqx-bigcd-cell"><span id="mqx-sc-h">--</span><label>Hours</label></div>
-          <div class="mqx-bigcd-cell"><span id="mqx-sc-m">--</span><label>Minutes</label></div>
-          <div class="mqx-bigcd-cell"><span id="mqx-sc-s">--</span><label>Seconds</label></div>
+        <p class="mqx-santacd-label" id="mqx-santa-label"{% if cd_santa.done %} hidden{% endif %}>Chapter 1 premieres in</p>
+        <div class="mqx-bigcd mqx-bigcd-mini" role="timer" aria-label="Countdown to Chapter 1 premiere on December 1"{% if cd_santa.done %} hidden{% endif %}>
+          <div class="mqx-bigcd-cell"><span id="mqx-sc-d">{{ cd_santa.d | default('00', true) }}</span><label>Days</label></div>
+          <div class="mqx-bigcd-cell"><span id="mqx-sc-h">{{ cd_santa.h | default('00', true) }}</span><label>Hours</label></div>
+          <div class="mqx-bigcd-cell"><span id="mqx-sc-m">{{ cd_santa.m | default('00', true) }}</span><label>Minutes</label></div>
+          <div class="mqx-bigcd-cell"><span id="mqx-sc-s">{{ cd_santa.s | default('00', true) }}</span><label>Seconds</label></div>
         </div>
-        <p class="mqx-santacd-done" id="mqx-santa-done" hidden>Chapter 1 is here!</p>
+        <p class="mqx-santacd-done" id="mqx-santa-done"{% if not cd_santa.done %} hidden{% endif %}>Chapter 1 is here!</p>
       </div>
       <p class="mqx-sub">The story doesn't finish on the couch. Watch a two-minute chapter, and it points you to a real display in your town — the Sack reward is what gets you out of the car. Thirty-two legends are hiding in the lights. Capture one and it's yours — legend, story and seal, safe in your Sack. Nothing to buy, nothing to win — just the hunt.</p>
       <form class="mqx-search" method="get" action="/nearby" role="search">
@@ -405,7 +412,7 @@
     var d = Math.floor(s / 86400); s -= d * 86400;
     var h = Math.floor(s / 3600); s -= h * 3600;
     var m = Math.floor(s / 60); s -= m * 60;
-    cd.d.textContent = d; cd.h.textContent = pad(h); cd.m.textContent = pad(m); cd.s.textContent = pad(s);
+    cd.d.textContent = pad(d); cd.h.textContent = pad(h); cd.m.textContent = pad(m); cd.s.textContent = pad(s);
     setTimeout(tick, 1000);
   }
   tick();
@@ -439,7 +446,7 @@
     var d = Math.floor(s / 86400); s -= d * 86400;
     var h = Math.floor(s / 3600); s -= h * 3600;
     var m = Math.floor(s / 60); s -= m * 60;
-    cd.d.textContent = d; cd.h.textContent = pad(h); cd.m.textContent = pad(m); cd.s.textContent = pad(s);
+    cd.d.textContent = pad(d); cd.h.textContent = pad(h); cd.m.textContent = pad(m); cd.s.textContent = pad(s);
     setTimeout(tick, 1000);
   }
   tick();
