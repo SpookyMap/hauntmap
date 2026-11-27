@@ -4695,9 +4695,19 @@ def nearby(request: Request, q: str = "", miles: float = 10, cat: str = "hallowe
            sort: str = "new", lat: str = "", lng: str = "", states: str = ""):
     # Christmas transfer (Nov 26, 2026): no christmas results on
     # HauntMap — ?cat=christmas searches the halloween pool instead.
-    if _brand_of(request) == "haunt" and cat == "christmas":
+    # Brand separation mirror (Nov 26, 2026): no halloween results on
+    # MerryQuest — this grid never got the MQ gate the homepage and
+    # leaderboards carry, so its halloween default listed Halloween
+    # displays on gomerryquest.com (Dan's "Find displays near you"
+    # screenshots). On the MQ host the halloween pool serves the
+    # christmas pool instead, mirroring the HauntMap remap above.
+    brand = _brand_of(request)
+    if brand == "haunt" and cat == "christmas":
         cat = "halloween"
-    cat = cat if cat in CATEGORIES else "halloween"
+    if brand == "merryquest" and cat == "halloween":
+        cat = "christmas"
+    cat = cat if cat in CATEGORIES else (
+        "christmas" if brand == "merryquest" else "halloween")
     # Default sort is newest per Dan's Oct 23 feed-order rule (it is the
     # within-distance tiebreak here; distance always stays primary).
     sort = sort if sort in ("top", "new") else "new"
@@ -7471,9 +7481,16 @@ def virtual_tour_page(request: Request, route: str = "tonight",
 def tour_page(request: Request, s: str = "", cat: str = "halloween"):
     # Christmas transfer (Nov 26, 2026): no christmas tours resolve
     # on HauntMap — ?cat=christmas builds from the halloween pool.
-    if _brand_of(request) == "haunt" and cat == "christmas":
+    # Brand separation mirror (Nov 26, 2026): no halloween tours
+    # resolve on MerryQuest either — the same ungated halloween
+    # default as /nearby; on the MQ host it serves christmas.
+    brand = _brand_of(request)
+    if brand == "haunt" and cat == "christmas":
         cat = "halloween"
-    cat = cat if cat in CATEGORIES else "halloween"
+    if brand == "merryquest" and cat == "halloween":
+        cat = "christmas"
+    cat = cat if cat in CATEGORIES else (
+        "christmas" if brand == "merryquest" else "halloween")
     shared: list = []
     if s.strip():
         try:
@@ -7612,6 +7629,15 @@ def shared_tour_page(request: Request, slug: str):
         except (TypeError, ValueError):
             ids = []
     stops = _visible_tour_entries(ids)
+    # Brand separation (Nov 26, 2026): a shared tour renders only the
+    # stops its host brand carries — Christmas stops drop on HauntMap,
+    # non-Christmas stops drop on MerryQuest, the same split /d/
+    # enforces per pin. Dropped stops surface in the missing count
+    # below, like hidden/deleted pins do.
+    if _brand_of(request) == "haunt":
+        stops = [e for e in stops if not _is_christmas_content(e)]
+    elif _brand_of(request) == "merryquest":
+        stops = [e for e in stops if _is_christmas_content(e)]
     missing = len(ids) - len(stops)
     # Google Maps directions, built exactly like the tour page's openGMaps
     # (origin = first stop, destination = last, middle stops as
@@ -9258,6 +9284,12 @@ def api_top10(request: Request, state: str = "", cat: str = "halloween"):
     town label — the union of all state boards), ranked with the
     same _rank_with_featured mechanic; its "see them all" target is
     the nationwide Top 100 page."""
+    # Brand separation (Nov 25, 2026): MerryQuest boards default to
+    # Christmas unless a category is explicitly asked for (the same
+    # default /leaderboard carries — this JSON board never got it).
+    if _brand_of(request) == "merryquest" \
+            and "cat" not in request.query_params:
+        cat = "christmas"
     # Christmas transfer (Nov 26, 2026): no christmas board data on
     # the HauntMap host — ?cat=christmas serves the halloween board.
     if _brand_of(request) == "haunt" and cat == "christmas":
@@ -9507,9 +9539,20 @@ def auto_tour(request: Request, size: int = 10, cat: str = "halloween",
     """
     # Christmas transfer (Nov 26, 2026): no christmas auto-tours on
     # HauntMap — ?cat=christmas builds from the halloween pool.
-    if _brand_of(request) == "haunt" and cat == "christmas":
+    # Brand separation mirror (Nov 26, 2026): no halloween auto-tours
+    # on MerryQuest — the same ungated halloween default as /nearby;
+    # on the MQ host it serves christmas.
+    brand = _brand_of(request)
+    if brand == "haunt" and cat == "christmas":
         cat = "halloween"
-    cat = cat if cat in CATEGORIES else "halloween"
+    if brand == "merryquest" and cat == "halloween":
+        cat = "christmas"
+    cat = cat if cat in CATEGORIES else (
+        "christmas" if brand == "merryquest" else "halloween")
+    # Town inventory below follows the pool this page actually
+    # builds from (display categories only; anything else keeps the
+    # historic halloween inventory).
+    inv_cat = cat if cat in ("halloween", "christmas") else "halloween"
     size = 100 if size == 100 else 10
     multi = _states_opt_in(states)
     ctx = {"request": request, "size": size, "cat": cat,
@@ -9522,11 +9565,11 @@ def auto_tour(request: Request, size: int = 10, cat: str = "halloween",
     # Town centers for the auto-tour page's client-side safety net
     # (bare-arrival rebuild around the visitor's saved town / browser
     # fix — same [label, city, state, clat, clng, count] shape and
-    # halloween inventory the homepage find block's TOWNS uses).
+    # pool inventory the homepage find block's TOWNS uses).
     ctx["town_centers"] = [
         [t["label"], t["city"], t["state"], t["clat"], t["clng"],
          t["count"]]
-        for t in _town_inventory(None, "halloween")
+        for t in _town_inventory(None, inv_cat)
         if t.get("clat") is not None and t.get("clng") is not None]
     center: tuple[float, float] | None = None
     label = ""
@@ -9573,7 +9616,7 @@ def auto_tour(request: Request, size: int = 10, cat: str = "halloween",
                     # visitor's own state, label the tour by the
                     # visitor's resolved in-state area instead.
                     with get_conn(DB_PATH) as conn:
-                        inv = _town_inventory(conn, "halloween")
+                        inv = _town_inventory(conn, inv_cat)
                     if not any(t["state"] == center_state
                                and t["city"].lower()
                                == _smart_case_city(geo["city"]).lower()
@@ -9584,7 +9627,7 @@ def auto_tour(request: Request, size: int = 10, cat: str = "halloween",
                             label = resolved["area_name"]
             elif geo.get("city") or geo.get("state"):
                 with get_conn(DB_PATH) as conn:
-                    inv = _town_inventory(conn, "halloween")
+                    inv = _town_inventory(conn, inv_cat)
                 resolved = _resolve_visitor_area(inv, geo, multi=multi)
                 if resolved["mode"] in ("exact", "near") \
                         and resolved["chips"]:
