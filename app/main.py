@@ -505,6 +505,26 @@ try:
 except OSError:  # pragma: no cover - file ships with the code
     _MAINTENANCE_HTML = "<h1>HauntMap is briefly down while we build something better. We'll be back soon!!</h1>"
 
+# MerryQuest skin of the same page (Dan, Nov 26): the brand-blind page
+# above meant gomerryquest.com visitors got HauntMap's "Back Soon" page
+# whenever the app itself shed load or hit an unhandled error — the
+# in-app twin of the origin-down window the per-brand Cloudflare Workers
+# already cover. Falls back to the HauntMap page if the file is somehow
+# missing, so the error path can never break over a missing skin.
+try:
+    _MAINTENANCE_HTML_MQ = (BASE_DIR / "static" / "maintenance_merryquest.html").read_text(encoding="utf-8")
+except OSError:  # pragma: no cover - file ships with the code
+    _MAINTENANCE_HTML_MQ = _MAINTENANCE_HTML
+
+
+def _maintenance_html(request) -> str:
+    """Brand-aware maintenance page: MerryQuest requests — the
+    gomerryquest.com brand or the merryquest.app store door — get the
+    MerryQuest skin; everything else keeps HauntMap's."""
+    if _brand_of(request) == "merryquest" or _is_appdoor(request):
+        return _MAINTENANCE_HTML_MQ
+    return _MAINTENANCE_HTML
+
 
 @app.exception_handler(500)
 @app.exception_handler(Exception)
@@ -515,7 +535,7 @@ async def _unhandled_error_page(request: Request, exc: Exception):
                  exc_info=(type(exc), exc, exc.__traceback__))
     if request.url.path.startswith("/api/"):
         return JSONResponse({"error": "internal server error"}, status_code=500)
-    return HTMLResponse(_MAINTENANCE_HTML, status_code=500,
+    return HTMLResponse(_maintenance_html(request), status_code=500,
                         headers={"Cache-Control": "no-store"})
 
 
@@ -529,7 +549,7 @@ async def _http_error(request: Request, exc: HTTPException):
                      request.url.path, exc.detail)
         if request.url.path.startswith("/api/"):
             return JSONResponse({"error": "internal server error"}, status_code=exc.status_code)
-        return HTMLResponse(_MAINTENANCE_HTML, status_code=exc.status_code,
+        return HTMLResponse(_maintenance_html(request), status_code=exc.status_code,
                             headers={"Cache-Control": "no-store"})
     return JSONResponse({"detail": exc.detail}, status_code=exc.status_code,
                         headers=exc.headers)
@@ -582,7 +602,7 @@ async def _shed_load(request: Request, call_next):
             logger.warning(
                 "load shed: page render slots full (%d); %d requests "
                 "shed so far this process", _MAX_PAGE_RENDERS, _SHED_TOTAL)
-        return HTMLResponse(_MAINTENANCE_HTML, status_code=503,
+        return HTMLResponse(_maintenance_html(request), status_code=503,
                             headers={"Retry-After": "5",
                                      "Cache-Control": "no-store"})
     try:
