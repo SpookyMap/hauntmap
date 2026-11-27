@@ -2,9 +2,13 @@
 {% block title %}Top 100 nationwide &middot; {{ site_name }}{% endblock %}
 {% block content %}
 <div class="t100">
+{# Brand toggle = cross-site switch (Dan, Nov 26, 2026): since the
+   Christmas transfer there is no christmas board on the HauntMap host
+   (the route coerces ?cat=christmas back to halloween), so each
+   brand's button links to the OTHER site's own Top 100 page. #}
 <div class="cat-tabs">
-  {% if brand | default('haunt') != 'merryquest' %}<a href="/leaderboard/top-100?cat=halloween" class="{% if cat == 'halloween' %}active{% endif %}">&#x1F383; Haunt Map</a>{% endif %}
-  <a href="/leaderboard/top-100?cat=christmas" class="{% if cat == 'christmas' %}active{% endif %}">&#x1F384; MerryQuest</a>
+  {% if brand | default('haunt') == 'merryquest' %}<a href="https://gethauntmap.com/leaderboard/top-100?cat=halloween" target="_blank" rel="noopener">&#x1F383; Haunt Map</a>{% else %}<a href="/leaderboard/top-100?cat=halloween" class="{% if cat == 'halloween' %}active{% endif %}">&#x1F383; Haunt Map</a>{% endif %}
+  {% if brand | default('haunt') == 'merryquest' %}<a href="/leaderboard/top-100?cat=christmas" class="{% if cat == 'christmas' %}active{% endif %}">&#x1F384; MerryQuest</a>{% else %}<a href="https://gomerryquest.com/leaderboard/top-100?cat=christmas" target="_blank" rel="noopener">&#x1F384; MerryQuest</a>{% endif %}
 </div>
 <h1>&#x1F3C6; Top 100 nationwide</h1>
 <p class="muted">The most-viewed {{ cat_labels[cat]|lower }} displays in the country, ranked by visits to each display's page &mdash; the same ranking as <a href="/leaderboard?cat={{ cat }}">{% if brand | default('haunt') == 'merryquest' %}Top Displays{% else %}Top Haunts{% endif %}</a>. &#x2B50; <strong>Featured</strong> marks one of Dan's hand-picked displays.</p>
