@@ -1870,26 +1870,40 @@ body.brand-merryquest .mqx-newmap .wn-rail-all {
 .mqx-tourpanel-own a:hover { text-decoration: underline; }
 
 /* ---------- Restored .mqx-tour inside the rail band (Dan restore, Nov 26) ----------
-   The original section's geometry (width: calc(113.37vw - 2.67px);
+   The original section's own geometry (width: calc(113.37vw - 2.67px);
    margin-left: calc(50% - 42.5vw - 203px); margin-top: 56px) escaped
    the narrow .mqx-wrap column it used to sit in. Inside the band the
-   section fills the band's tour cell instead; every other rule —
+   section is centered in the band's cell instead; every other rule —
    card background, gold border, padding, zoom, centered type,
-   spirit field — is the section's own, untouched. */
-.mqx-railband .mqx-tour { width: auto; margin: 0; }
+   spirit field — is the section's own, untouched.
+   Width (Dan, Nov 26, later): "Build my [tour] has to be the same
+   width as the display drive video below it." The drive video
+   (.mqx-drive-video) renders at 85% of its full-bleed section's
+   content box, (100vw - 2px) * 0.85; the tour renders at zoom
+   0.75, so its layout width divides that measure by 0.75 —
+   calc(113.3333vw - 2.2667px) — and the two blocks land on the
+   same rendered width, centered, edges aligned (DOM-verified:
+   1086.3px each at a 1280px viewport). */
+.mqx-railband .mqx-tour {
+  width: calc(113.3333vw - 2.2667px); margin: 0; justify-self: center;
+}
 
 /* ---------- Rail slim + long + scroll (Dan, Nov 26) ----------
    Dan: match HauntMap's What's New rail — "very thin", long and
-   scrollable. HM's rail column is 252px (its hero-split grid) and
-   at >=1200px HM stretches the rail (min-height 526px) with the
-   scroll region flexed open past the 400px cap; the rail mirrors
-   that here in its seat beside Meet Pip (.mqx-piprow, below):
-   252px wide, long, and its rows scroll internally under the
-   fixed head (Pip badge + title + tagline stay put) with an MQ
-   purple/gold scrollbar. Phone keeps the stacked full-width rail
-   and the shared 320px scroll cap. */
+   scrollable. DOM-measured on the live sites (1280px viewport):
+   HM's .wn-rail element renders exactly 252px wide, and the MQ
+   rail must render at that same 252px — Dan, on the piprow
+   screenshot: "new on the map has to thinner like on the
+   HauntMap site." The rail's seat (.mqx-piprow, below) renders
+   at zoom 0.8 (the Capture the Magic seat), so the rail's
+   layout width is 252 / 0.8 = 315px and its layout min-height
+   526 / 0.8 = 657.5px, rendering at 252 x 526 with its rows
+   scrolling internally under the fixed head (Pip badge + title
+   + tagline stay put) with an MQ purple/gold scrollbar. Phone
+   keeps the stacked full-width rail and the shared 320px
+   scroll cap. */
 @media (min-width: 1000px) {
-  .mqx-piprow .mqx-newmap { width: 252px; justify-self: start; min-height: 526px; }
+  .mqx-piprow .mqx-newmap { width: 315px; justify-self: start; min-height: 657.5px; }
   .mqx-piprow .mqx-newmap .wn-rail-scroll { flex: 1 1 0; min-height: 0; max-height: none; }
 }
 body.brand-merryquest .mqx-newmap .wn-rail-scroll {
@@ -1903,33 +1917,50 @@ body.brand-merryquest .mqx-newmap .wn-rail-scroll::-webkit-scrollbar-track { bac
 
 /* ---------- Meet Pip + rail row (Dan, Nov 26, later) ----------
    Dan: "the new on the map block goes down by the pip intro
-   block." The rail leaves the tour band and sits beside Meet Pip
-   in one row. The row breaks out to the same 1180px content
-   measure as the band above it (same bleed recipe). Desktop: Pip's
-   block takes the flexible column, the rail its 252px; her block
-   is REFLOWED ONLY — the breakout centering it used as a
-   standalone section (left 50% / translateX / fixed width / the
-   0.8 shrink that fitted it to the old measure) is neutralized in
-   this seat, and at its natural scale in the narrower column it
-   paints at almost exactly its old visual size. Medal, copy,
-   chips, colors — untouched. Under 1000px the row stacks, Pip
-   first, rail under her. */
+   block" — then, on seeing it seated right: "Left side of pip
+   the start block" — and the row itself takes the Capture the
+   Magic block's width ("make Pip the Star block the same width
+   as Capture the Magic block"). So the row wears the .mqx-split
+   seat verbatim: width min(1100px, 100vw - 2rem) at zoom 0.8,
+   centered by the left-50% / translateX recipe, phone at zoom 1
+   and calc(100vw - 12px) — the two blocks render at the same
+   width with their edges aligned (DOM-verified: 880px each at a
+   1280px viewport, 378px each at 390px). Desktop: the rail
+   takes the left column (315px layout = HauntMap's 252px
+   rendered at this seat's zoom), Pip's block the flexible
+   remainder; her block is REFLOWED ONLY — the breakout
+   centering it used as a standalone section (left 50% /
+   translateX / fixed width / the 0.8 shrink that fitted it to
+   the old measure) is neutralized in this seat, and the row's
+   own zoom gives it back its standalone 0.8 scale. Medal,
+   copy, chips, colors — untouched. DOM order stays Pip first
+   so that under 1000px the row stacks Pip first, rail under
+   her; the desktop swap is done with explicit grid placement
+   below. */
 .mqx-piprow {
-  width: 100vw; margin-left: calc(50% - 50vw); margin-right: calc(50% - 50vw);
-  padding: 0 max(20px, calc((100vw - 1180px) / 2)); box-sizing: border-box;
+  position: relative; left: 50%; transform: translateX(-50%);
+  width: min(1100px, calc(100vw - 2rem)); zoom: 0.8;
   margin-top: 44px;
   display: grid; grid-template-columns: 1fr; gap: 1.1rem; align-items: start;
 }
 @media (min-width: 1000px) {
-  .mqx-piprow { grid-template-columns: minmax(0, 1fr) 252px; }
+  .mqx-piprow { grid-template-columns: 315px minmax(0, 1fr); }
 }
 @media (max-width: 760px) {
-  .mqx-piprow { margin-top: 30px; }
+  .mqx-piprow { zoom: 1; width: calc(100vw - 12px); margin-top: 30px; }
 }
 .mqx-piprow .wn-rail { grid-area: auto; }
 .mqx-piprow .mqx-guide {
   position: static; left: auto; transform: none;
   width: auto; margin-top: 0; zoom: 1;
+}
+/* Desktop placement: rail in the left column (315px layout,
+   HauntMap's 252px at this seat's zoom), Pip's block in the
+   flexible right column, same row — the DOM keeps Pip first
+   for the stacked phone layout. */
+@media (min-width: 1000px) {
+  .mqx-piprow .mqx-newmap { grid-column: 1; grid-row: 1; }
+  .mqx-piprow .mqx-guide { grid-column: 2; grid-row: 1; }
 }
 
 /* ---------- Tour-card spirits: visible by default (Dan fix, Nov 26) ----------

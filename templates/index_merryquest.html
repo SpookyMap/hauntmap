@@ -86,8 +86,10 @@
      override (end of merryquest-rail.css) lets it fill the band
      instead. Rail relocation (Dan, Nov 26, later): the New on the
      Map rail no longer sits in this band — it moved down beside
-     the Meet Pip block (.mqx-piprow below), so the tour section
-     takes the band's full width. #}
+     the Meet Pip block (.mqx-piprow below). The tour section is
+     centered in the band at the drive video's width below it
+     (Dan: same width as the display drive video — see the
+     .mqx-railband .mqx-tour override in merryquest-rail.css). #}
   <div class="mqx-railband">
   <section class="mqx-tour mqx-haunted">
     <div class="mqx-spirit-field" aria-hidden="true"><img class="mqx-spirit s-left" style="--tilt:-3deg; top:0; object-position:50% 18%" src="/static/img/neon/santa.jpg" alt="" loading="lazy" decoding="async"><img class="mqx-spirit s-left" style="--tilt:2deg; top:4%; left:14%; object-position:50% 15%" src="/static/img/neon/krampus-v2.jpg" alt="" loading="lazy" decoding="async"><img class="mqx-spirit s-right" style="--tilt:-2deg; top:4%; right:14%; object-position:50% 15%" src="/static/img/neon/la-befana-v2.jpg" alt="" loading="lazy" decoding="async"><img class="mqx-spirit s-right" style="--tilt:3deg; top:0; object-position:50% 15%" src="/static/img/neon/ded-moroz-v2.jpg" alt="" loading="lazy" decoding="async"></div>
@@ -152,10 +154,15 @@
 
   {# Meet Pip + New on the Map rail row (Dan, Nov 26, later):
      the rail relocates from the tour band to sit beside the Meet
-     Pip intro block — one row on desktop (Pip's block narrows to
-     fit the 252px rail; her design, medal, copy and language are
-     untouched, reflow only), stacked Pip-first on phone. The row
-     seat lives at the end of merryquest-rail.css (.mqx-piprow). #}
+     Pip intro block — on her LEFT on desktop (Dan: "Left side of
+     pip the start block"; her block narrows to fit the rail,
+     which renders at HauntMap's rail width; her design, medal,
+     copy and language are untouched, reflow only), the whole
+     row at the Capture the Magic block's width (the .mqx-split
+     seat, edges aligned), stacked Pip-first on phone (DOM
+     order here is Pip first; the desktop swap is grid
+     placement). The row seat lives at the end of
+     merryquest-rail.css (.mqx-piprow). #}
   <div class="mqx-piprow">
   <section class="mqx-guide mqx-haunted">
     <a class="mqx-guide-medal" href="/characters/pip-the-star-pin"><img src="/static/img/pip-tech.jpg" alt="Pip the Star Pin — your MerryQuest guide" loading="lazy"></a>
