@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "_display_card.html" import display_card with context %}
 {% block content %}
 <link href="https://fonts.googleapis.com/css2?family=Anton&display=swap" rel="stylesheet">
 {# MerryQuest homepage — a NEW layout, not HauntMap's (Dan, Nov 18,
@@ -316,14 +317,11 @@
       <p class="mqx-eyebrow">Trending</p>
       <h2 class="mqx-h2">Displays people love right now</h2>
     </div>
-    <div class="mqx-mosaic">
-      {% for p in trending %}{% if loop.index <= 8 %}
-      <a class="mqx-tile" href="/d/{{ p.id }}">
-        {% if p.media_type == 'video' and not p.thumb_path %}<span class="mqx-tile-empty">🎬</span>{% else %}<img src="{{ p.thumb_card_url or p.thumb_url }}" alt="{{ p.title }}" loading="lazy" onerror="this.onerror=null;this.src='{{ p.thumb_url }}'">{% endif %}
-        {% if p.media_type == 'video' %}<span class="mqx-card-badge">▶ Video</span>{% endif %}
-        <span class="mqx-tile-cap"><span class="mqx-tile-title">{{ p.title }}</span><span class="mqx-tile-meta">{{ p.town_label }}</span></span>
-      </a>
-      {% endif %}{% endfor %}
+    {# Display facelift (Dan, Nov 26, 2026): Trending renders the shared
+       display_card grid — same component as HauntMap, MQ skin. Cards gain
+       the + Tour pill the old homepage tiles lacked. #}
+    <div class="dgrid dgrid-padded">
+      {% for p in trending %}{% if loop.index <= 8 %}{{ display_card(p) }}{% endif %}{% endfor %}
     </div>
   </section>
 
@@ -363,15 +361,8 @@
       <p class="mqx-eyebrow">Fresh on the map</p>
       <h2 class="mqx-h2">Newest displays</h2>
     </div>
-    <div class="mqx-mosaic">
-      {% for e in entries %}{% if loop.index <= 8 %}
-      <a class="mqx-tile" href="/d/{{ e.id }}">
-        {% if e.media_type == 'video' and not e.thumb_path %}<span class="mqx-tile-empty">🎬</span>{% elif e.media_path %}<img src="{{ e.thumb_card_url or e.thumb_url }}" alt="{{ e.title }}" loading="lazy" onerror="this.onerror=null;this.src='{{ e.thumb_url }}'">{% else %}<span class="mqx-tile-empty">🎄</span>{% endif %}
-        {% if e.media_type == 'video' %}<span class="mqx-card-badge">▶ Video</span>{% endif %}
-        {% if e.is_new %}<span class="mqx-card-badge mqx-card-badge-new">✨ New</span>{% endif %}
-        <span class="mqx-tile-cap"><span class="mqx-tile-title">{{ e.title }}</span><span class="mqx-tile-meta">{{ e.town_label }}</span></span>
-      </a>
-      {% endif %}{% endfor %}
+    <div class="dgrid dgrid-padded">
+      {% for e in entries %}{% if loop.index <= 8 %}{{ display_card(e) }}{% endif %}{% endfor %}
     </div>
     <div class="mqx-mosaic-more"><p class="mqx-more"><a class="mqx-ghost-btn" href="/map">Browse the full map →</a></p></div>
   </section>

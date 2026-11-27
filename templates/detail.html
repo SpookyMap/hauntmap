@@ -175,16 +175,21 @@
     <button type="button" class="btn rail-add-all" data-add-rail>&#x1F9ED; + Add these to my tour</button>
   </section>
   {% endif %}
+  {# Display facelift (Dan, Nov 26, 2026): hero, then ONE clean head
+     block in the display-card language — title, town line, caps-gold
+     address — styled by .detail-head in style.css. #}
+  <div class="detail-head">
   <h1>{{ entry.title }}</h1>
   {% if bracket_info and brand | default('haunt') != 'merryquest' %}
   <a class="bk-ribbon" href="/bracket">&#x1F3C6; Haunt Bracket contender &mdash; Seed #{{ bracket_info.seed }} ({{ bracket_info.region }}) &middot; America&rsquo;s Scariest House &middot; Round of 16 voting Oct 24&ndash;25 &mdash; vote &rarr;</a>
   {% endif %}
-  <p class="meta">{{ entry.town_label }}{% if entry.display_name %} &middot; {{ entry.display_name }}{% endif %}</p>
+  <p class="meta">{{ entry.town_label }}{% if entry.display_name %} &middot; {{ entry.display_name }}{% endif %}{% if entry.distance is defined and entry.distance is not none %} &middot; {{ "%.1f"|format(entry.distance) }} mi away{% endif %}</p>
   {% if entry.loc_source == 'inferred' %}
   <p class="entry-address">&#x1F4CD; Approximate location — the exact address appears when the owner claims this listing.</p>
   {% elif entry.address %}
   <p class="entry-address">&#x1F4CD; {{ entry.address }}</p>
   {% endif %}
+  </div>
   {% if brand == 'merryquest' and entry.category == 'christmas' and not entry.virtual %}
   {% if entry.lit_status == 'lit' %}
   <p class="lit-badge" style="font-size:14.5px;margin:8px 0;">💡 <b>Confirmed lit for 2026</b>
@@ -398,7 +403,7 @@
     </form>
     {% endif %}
     {% endif %}
-    <button class="btn" id="btn-add-tour" style="margin-top:0.5rem">+ Add to my tour</button>
+    <button class="btn" id="btn-add-tour">+ Add to my tour</button>
   </div>
 
   {% if more_haunts %}

@@ -1,0 +1,48 @@
+{# Display card — the unified listing card for BOTH brands (facelift,
+   Dan, Nov 26, 2026: "This is exactly how displays should look on
+   HauntMap as well" + "Give the display visual facelift it deserves").
+   One component for every display grid: the homepage feeds, the
+   MerryQuest homepage sections and /nearby on both brands. Layout:
+   big real photo filling the card top, a ▶ Video pill (top-left stack)
+   when the pin carries video, a + Tour pill on the photo (top-right),
+   then a confident text block — bold title, the address in CAPS gold
+   (verified street address when we may show it, else the town line),
+   and the distance on the same caps line when known. Votes / views
+   keep the standing social-proof rules (render only when > 0).
+   Brand skin comes from CSS: .dcard in style.css (HauntMap orange)
+   with body.brand-merryquest overrides in merryquest-rail.css.
+   "Carries video" follows has_footage(): an uploaded video file or a
+   TikTok /video/ URL. Address honesty: pins whose location is only
+   inferred never print a street address here — they fall back to the
+   town line, exactly like the detail page. #}
+{% macro display_card(e, views_all=false) %}
+{% set has_video = e.media_type == 'video' or (e.tiktok_url and '/video/' in e.tiktok_url) %}
+<a class="dcard" href="/d/{{ e.id }}">
+  <div class="dcard-media">
+    {% if e.media_path %}
+    {% if e.media_type == 'video' %}
+    {% if e.thumb_path %}<img src="{{ e.thumb_card_url or e.thumb_url }}" alt="{{ e.title }}" width="800" height="600" loading="lazy" onerror="this.onerror=null;this.src='{{ e.thumb_url }}'">{% else %}<div class="dcard-media-empty">&#x1F3AC;</div>{% endif %}
+    {% else %}
+    <img src="{{ e.thumb_card_url or e.thumb_url }}" alt="{{ e.title }}" width="800" height="600" loading="lazy" onerror="this.onerror=null;this.src='{{ e.thumb_url }}'">
+    {% endif %}
+    {% elif e.tiktok_url %}
+    <div class="dcard-media-empty">&#x1F3AC;</div>
+    {% else %}
+    <div class="dcard-media-empty">{% if e.category == 'events' %}&#x1F4C5;{% elif e.category == 'live' %}&#x1F534;{% elif brand | default('haunt') == 'merryquest' %}&#x1F384;{% else %}&#x1F383;{% endif %}</div>
+    {% endif %}
+    <span class="dcard-tags">
+      {% if has_video %}<span class="dcard-pill dcard-pill-video">&#x25B6; Video</span>{% endif %}
+      {% if e.is_new %}<span class="dcard-pill dcard-pill-new">&#x2728; New</span>{% endif %}
+      {% if e.is_sample %}<span class="dcard-pill dcard-pill-sample">Sample</span>{% endif %}
+      {% if e._badge is defined and e._badge %}<span class="dcard-pill dcard-pill-badge">{% if e._badge == 'star' %}&#x2B50; Featured{% elif e._badge == 'hot' %}&#x1F525; Most viewed{% else %}NEW{% endif %}</span>{% endif %}
+    </span>
+    <span class="tour-add-btn" role="button" tabindex="0" data-tour-btn data-id="{{ e.id }}" data-title="{{ e.title }}" data-town="{{ e.town }}" data-lat="{{ e.lat if e.lat is not none else '' }}" data-lng="{{ e.lng if e.lng is not none else '' }}" data-thumb="{{ e.thumb_url }}">+ Tour</span>
+  </div>
+  <div class="dcard-body">
+    <h3 class="dcard-title">{{ e.title }}</h3>
+    <p class="dcard-meta">{% if e.address and e.loc_source != 'inferred' %}{{ e.address }}{% else %}{{ e.town }}{% endif %}{% if e.distance is defined and e.distance is not none %} &middot; {{ "%.1f"|format(e.distance) }} mi away{% endif %}</p>
+    {% if e.votes %}<p class="votes">{% if brand | default('haunt') == 'merryquest' %}&#x1F384;{% else %}&#x1F383;{% endif %} {{ e.votes }} vote{{ 's' if e.votes != 1 }}</p>{% endif %}
+    {% if (views_all or has_video) and e._views %}<p class="views-line">&#x1F441;&#xFE0F; {{ e._views }} view{{ 's' if e._views != 1 }}</p>{% endif %}
+  </div>
+</a>
+{% endmacro %}

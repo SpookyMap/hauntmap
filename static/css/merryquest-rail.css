@@ -784,6 +784,28 @@ body.brand-merryquest { overflow-x: clip; }
   .mqx-tile-title { font-size: 15px; }
 }
 
+/* Display card facelift — MQ skin (Dan, Nov 26, 2026): the shared
+   .dcard component (style.css / templates/_display_card.html) in
+   MerryQuest purple/neon. Same layout and hierarchy as HauntMap;
+   deep-purple card, violet border, gold caps meta (the colour the
+   old .mqx-tile-meta used). The homepage Trending / Fresh sections
+   and /nearby now render .dcard grids instead of .mqx-tile mosaics;
+   the mosaic rules above stay for any surface still using them. */
+body.brand-merryquest .dcard {
+  background: #17122b; border-color: #372b5e;
+  box-shadow: 0 6px 18px rgba(2, 0, 12, 0.55);
+}
+body.brand-merryquest .dcard:hover, body.brand-merryquest .dcard:focus-visible {
+  border-color: #b78cff; box-shadow: 0 14px 30px rgba(64, 32, 140, 0.5);
+}
+body.brand-merryquest .dcard-meta { color: #ffc82c; }
+body.brand-merryquest .dcard-pill-new { background: rgba(183, 140, 255, 0.88); }
+body.brand-merryquest .dcard-media-empty {
+  background: radial-gradient(600px 300px at 50% 0%, #2a1650 0%, #0d0a1a 70%);
+}
+body.brand-merryquest .detail-head .entry-address { color: #ffc82c; }
+body.brand-merryquest .detail-media { border-color: #372b5e; }
+
 /* ---------- Hero: full-bleed campaign shot (GTA) ---------- */
 .mqx-hero {
   /* Top-anchored stack (Dan, Nov 25, 2026 — "move logo higher,

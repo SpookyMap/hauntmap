@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "_display_card.html" import display_card with context %}
 {% block title %}{% if brand | default('haunt') == 'merryquest' %}Nearby displays{% else %}Nearby haunts{% endif %} - {{ site_name }}{% endblock %}
 {% block content %}
 <h2>&#x1F50D; {% if brand | default('haunt') == 'merryquest' %}Find displays near you{% else %}Find haunts near you{% endif %}</h2>
@@ -135,50 +136,16 @@ document.getElementById('btn-near-me').onclick = function() {
   <p class="nearby-count">{{ entries|length }} {% if brand | default('haunt') == 'merryquest' %}display{% else %}haunt{% endif %}{{ 's' if entries|length != 1 }} within {{ miles }} mi of "{{ q }}"{% if center_state and not multi %} &middot; in {{ center_state_name }} only{% if wide_count > entries|length %} ({{ wide_count - entries|length }} more across state lines — turn on <strong>Include nearby states</strong> above to see them){% endif %}{% endif %}</p>
   {% endif %}
   {% if entries %}
-  {% if brand | default('haunt') == 'merryquest' %}
-  <div class="mqx-mosaic mqx-bleed">
-    {% for e in entries %}
-    <a class="mqx-tile" href="/d/{{ e.id }}">
-      {% if e.media_path %}
-      {% if e.media_type == 'video' %}
-      {% if e.thumb_path %}<img src="{{ e.thumb_card_url or e.thumb_url }}" alt="{{ e.title }}" loading="lazy" onerror="this.onerror=null;this.src='{{ e.thumb_url }}'"><span class="mqx-card-badge">&#x25B6; Video</span>{% else %}<span class="mqx-tile-empty">&#x1F3AC;</span>{% endif %}
-      {% else %}
-      <img src="{{ e.thumb_card_url or e.thumb_url }}" alt="{{ e.title }}" loading="lazy" onerror="this.onerror=null;this.src='{{ e.thumb_url }}'">
-      {% endif %}
-      {% else %}
-      <span class="mqx-tile-empty">{% if e.category == 'events' %}&#x1F4C5;{% else %}&#x1F384;{% endif %}</span>
-      {% endif %}
-      <span class="tour-add-btn" role="button" tabindex="0" data-tour-btn data-id="{{ e.id }}" data-title="{{ e.title }}" data-town="{{ e.town }}" data-lat="{{ e.lat if e.lat is not none else '' }}" data-lng="{{ e.lng if e.lng is not none else '' }}" data-thumb="{{ e.thumb_url }}">+ Tour</span>
-      <span class="mqx-tile-cap"><span class="mqx-tile-title">{{ e.title }}</span><span class="mqx-tile-meta">{{ e.town }}{% if e.distance is not none %} &middot; {{ "%.1f"|format(e.distance) }} mi away{% endif %}</span></span>
-    </a>
-    {% endfor %}
+  {# Display facelift (Dan, Nov 26, 2026): BOTH brands render the one
+     shared display_card grid here — the per-brand markup forks (MQ
+     photo mosaic / HM .card grid) are gone; brand difference is CSS
+     skin only. Votes now follow the standing social-proof rule (show
+     only when > 0); the old HM branch printed "0 votes". The macro
+     guards distance exactly like the feed_mode header above needs:
+     entries without a distance print no "mi away". #}
+  <div class="dgrid">
+    {% for e in entries %}{{ display_card(e) }}{% endfor %}
   </div>
-  {% else %}
-  <div class="grid">
-    {% for e in entries %}
-    <a class="card" href="/d/{{ e.id }}">
-      <div class="card-media">
-        {% if e.media_path %}
-        {% if e.media_type == 'video' %}
-        {% if e.thumb_path %}<img src="{{ e.thumb_card_url or e.thumb_url }}" alt="{{ e.title }}" width="800" height="600" loading="lazy" onerror="this.onerror=null;this.src='{{ e.thumb_url }}'">{% else %}<div class="card-media-empty">&#x1F3AC;</div>{% endif %}
-        <span class="play-badge">&#x25B6;</span>
-        {% else %}
-        <img src="{{ e.thumb_card_url or e.thumb_url }}" alt="{{ e.title }}" width="800" height="600" loading="lazy" onerror="this.onerror=null;this.src='{{ e.thumb_url }}'">
-        {% endif %}
-        {% else %}
-        <div class="card-media-empty">{% if e.category == 'events' %}&#x1F4C5;{% else %}&#x1F383;{% endif %}</div>
-        {% endif %}
-      </div>
-      <div class="card-body">
-        <h3>{{ e.title }}</h3>
-        <p class="meta">{{ e.town }}{% if e.display_name %} &middot; {{ e.display_name }}{% endif %}</p>
-        <p class="meta">{{ "%.1f"|format(e.distance) }} mi away &middot; &#x1F383; {{ e.votes }} vote{{ 's' if e.votes != 1 }}</p>
-        <span class="tour-add-btn" role="button" tabindex="0" data-tour-btn data-id="{{ e.id }}" data-title="{{ e.title }}" data-town="{{ e.town }}" data-lat="{{ e.lat if e.lat is not none else '' }}" data-lng="{{ e.lng if e.lng is not none else '' }}" data-thumb="{{ e.thumb_url }}">+ Tour</span>
-      </div>
-    </a>
-    {% endfor %}
-  </div>
-  {% endif %}
   {% else %}
   <div class="empty">
     <p class="empty-emoji">{% if brand | default('haunt') == 'merryquest' %}&#x1F384;{% else %}&#x1F47B;{% endif %}</p>

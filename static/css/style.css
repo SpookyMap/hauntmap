@@ -389,6 +389,77 @@ a { color: var(--accent); }
 .meta { color: var(--muted); font-size: 0.85rem; margin: 0; }
 .votes { margin: 0.35rem 0 0; font-weight: 700; color: var(--accent); }
 
+/* Display card facelift (Dan, Nov 26, 2026): ONE card component for
+   every display grid on both brands — homepage feeds, the MerryQuest
+   homepage sections and /nearby. Big real photo filling the card top,
+   glass pills on the photo (▶ Video top-left stack, + Tour top-right),
+   then a solid text block: bold title, address in CAPS gold, distance
+   on the same caps line. Two columns on phones (the MerryQuest grid
+   Dan screenshotted), fluid columns on desktop. Brand skin: HauntMap
+   values live here; body.brand-merryquest overrides sit in
+   merryquest-rail.css. Markup: templates/_display_card.html. */
+.dgrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.85rem; }
+@media (min-width: 700px) {
+  .dgrid { grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 1rem; }
+}
+.dgrid-padded { max-width: 1180px; margin: 0 auto; padding: 0 20px; }
+.dcard {
+  display: block; background: var(--card); border: 1px solid #274860;
+  border-radius: 16px; overflow: hidden; text-decoration: none; color: var(--ink);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+}
+.dcard:hover, .dcard:focus-visible {
+  transform: translateY(-3px); border-color: var(--accent);
+  box-shadow: 0 14px 28px rgba(0, 0, 0, 0.5); outline: none;
+}
+.dcard-media { position: relative; aspect-ratio: 4 / 3; background: #05080a; }
+.dcard-media img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.dcard-media-empty {
+  height: 100%; display: flex; align-items: center; justify-content: center;
+  font-size: 3rem; background: radial-gradient(600px 300px at 50% 0%, #0f2e54 0%, #05080a 70%);
+}
+.dcard-tags {
+  position: absolute; top: 10px; left: 10px; z-index: 3;
+  display: flex; flex-direction: column; align-items: flex-start; gap: 6px;
+}
+.dcard-pill {
+  display: inline-flex; align-items: center; gap: 0.3rem;
+  padding: 0.28rem 0.6rem; border-radius: 999px;
+  background: rgba(5, 8, 10, 0.68); border: 1px solid rgba(255, 255, 255, 0.3);
+  color: #fff; font-size: 0.72rem; font-weight: 800;
+  letter-spacing: 0.05em; text-transform: uppercase; line-height: 1.25;
+  backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+}
+.dcard-pill-new { background: rgba(255, 123, 28, 0.85); border-color: rgba(255, 255, 255, 0.35); }
+.dcard-pill-sample { background: var(--accent2); color: #0b151a; border-color: transparent; }
+.dcard .tour-add-btn {
+  position: absolute; top: 10px; right: 10px; z-index: 3; margin-top: 0;
+  background: rgba(5, 8, 10, 0.68); border: 1px solid rgba(255, 255, 255, 0.35);
+  color: #fff; text-transform: uppercase; letter-spacing: 0.05em;
+  backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+}
+.dcard .tour-add-btn:hover, .dcard .tour-add-btn:focus-visible { background: rgba(5, 8, 10, 0.85); }
+.dcard .tour-add-btn.in-tour { background: #1e5c2e; border-color: #2f8f4a; color: #c9f5d2; }
+.dcard-body { padding: 0.75rem 0.85rem 0.85rem; }
+.dcard-title {
+  margin: 0 0 0.3rem; font-size: 1.02rem; font-weight: 800;
+  line-height: 1.25; letter-spacing: -0.01em; color: var(--ink);
+}
+.dcard-meta {
+  margin: 0; color: #ffb03a; font-weight: 700; font-size: 0.78rem;
+  letter-spacing: 0.05em; text-transform: uppercase; line-height: 1.45;
+}
+.dcard .votes { margin-top: 0.4rem; }
+.dcard .views-line { margin-top: 0.2rem; }
+@media (max-width: 480px) {
+  .dcard-title { font-size: 0.94rem; }
+  .dcard-body { padding: 0.6rem 0.65rem 0.7rem; }
+  .dcard-meta { font-size: 0.7rem; }
+  .dcard-pill { font-size: 0.66rem; padding: 0.22rem 0.5rem; }
+  .dcard .tour-add-btn { font-size: 0.74rem; padding: 0.28rem 0.6rem; }
+}
+
 .empty { text-align: center; padding: 3rem 1rem; color: var(--muted); }
 .empty-emoji { font-size: 3rem; margin: 0; }
 
@@ -417,7 +488,7 @@ a { color: var(--accent); }
 .detail-map { height: 220px; border-radius: var(--radius); margin: 1rem 0; border: 1px solid #274860; z-index: 0; }
 
 /* detail */
-.detail-media { border-radius: var(--radius); overflow: hidden; position: relative; background: #05080a; }
+.detail-media { border-radius: 18px; overflow: hidden; position: relative; background: #05080a; border: 1px solid #274860; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45); }
 /* TikTok facade (detail + watch): pin thumbnail + play button until tapped */
 .tt-facade { position: relative; cursor: pointer; }
 .tt-facade-blank { height: 340px; display: flex; align-items: center; justify-content: center; font-size: 4rem; background: radial-gradient(600px 300px at 50% 0%, #0f2e54 0%, #05080a 70%); }
@@ -493,10 +564,41 @@ a { color: var(--accent); }
 .watch-meta h2 { font-size: 1.05rem; margin: 0 0 0.25rem; }
 .watch-meta h2 a { color: var(--ink); text-decoration: none; }
 .watch-actions { margin: 0.55rem 0 0; }
-.detail-media img, .detail-media video { width: 100%; display: block; max-height: 70vh; object-fit: contain; background: #05080a; }
+.detail-media img, .detail-media video { width: 100%; display: block; max-height: 62vh; object-fit: cover; background: #05080a; }
 .votes-big { font-size: 1.3rem; font-weight: 800; color: var(--accent); }
 .detail-actions { margin: 1rem 0; }
 .detail-foot { display: flex; gap: 1rem; align-items: center; margin-top: 1.25rem; flex-wrap: wrap; }
+
+/* Detail head + action row (display facelift, Dan, Nov 26, 2026):
+   the pin page opens with the hero, then one clean head block in the
+   same language as the new display cards — confident title, muted
+   town line, the street address in CAPS gold — and the vote / tour
+   actions sit in one tidy pill row instead of a loose stack. The
+   directions buttons take the same pill shape. MerryQuest's compact
+   pass (detail.html, body.brand-merryquest scoped) still wins on MQ
+   where it sets sizes; these rules set the shared structure. */
+.detail-head { margin: 1.05rem 0 0.35rem; }
+.detail-head h1 { font-size: 1.85rem; line-height: 1.16; letter-spacing: -0.01em; margin: 0 0 0.3rem; }
+.detail-head .meta { font-size: 0.95rem; }
+.detail-head .entry-address {
+  text-transform: uppercase; letter-spacing: 0.045em;
+  font-size: 0.92rem; font-weight: 800; color: #ffb03a; margin-top: 0.3rem;
+}
+@media (max-width: 640px) { .detail-head h1 { font-size: 1.5rem; } }
+.detail .detail-actions {
+  display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: stretch; margin: 1.1rem 0;
+}
+.detail .detail-actions form { display: flex; margin: 0; }
+.detail .detail-actions .btn,
+.detail .detail-actions .btn-big {
+  margin-top: 0; display: inline-flex; align-items: center; justify-content: center;
+  border-radius: 999px;
+}
+.detail .directions-row { align-items: stretch; }
+.detail .btn-dir {
+  display: inline-flex; align-items: center; border-radius: 999px;
+  padding: 0.5rem 0.95rem; font-weight: 700; text-decoration: none;
+}
 .linklike { background: none; border: none; color: var(--accent); cursor: pointer; font-size: 0.95rem; padding: 0; text-decoration: underline; }
 .linklike.danger { color: var(--danger); }
 .inline-form { display: inline; }

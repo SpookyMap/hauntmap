@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "_display_card.html" import display_card with context %}
 {% block content %}
 {# Retention Wave 2, Item 4: returning-visitor compact homepage.
    The visit flag lives HERE, on the homepage only: a first visit sets
@@ -1084,35 +1085,13 @@ document.addEventListener('click', function (ev) {
 </div>
 
 {% if entries %}
-<div class="grid">
-  {% for e in entries %}
-  <a class="card" href="/d/{{ e.id }}">
-    <div class="card-media">
-      {% if e.media_path %}
-      {% if e.media_type == 'video' %}
-      {% if e.thumb_path %}<img src="{{ e.thumb_card_url or e.thumb_url }}" alt="{{ e.title }}" width="800" height="600" loading="lazy" onerror="this.onerror=null;this.src='{{ e.thumb_url }}'">{% else %}<div class="card-media-empty">&#x1F3AC;</div>{% endif %}
-      <span class="play-badge">&#x25B6;</span>
-      {% else %}
-      <img src="{{ e.thumb_card_url or e.thumb_url }}" alt="{{ e.title }}" width="800" height="600" loading="lazy" onerror="this.onerror=null;this.src='{{ e.thumb_url }}'">
-      {% endif %}
-      {% else %}
-      <div class="card-media-empty">{% if e.category == 'events' %}&#x1F4C5;{% elif e.category == 'live' %}&#x1F534;{% else %}&#x1F383;{% endif %}</div>
-      {% endif %}
-      {% if e.is_sample %}<span class="sample-badge">Sample</span>{% endif %}
-    </div>
-    <div class="card-body">
-      <h3>{{ e.title }}</h3>
-      <p class="meta">{{ e.town_label }}{% if e.display_name %} &middot; {{ e.display_name }}{% endif %}</p>
-      {% if e.votes %}
-      <p class="votes">{% if e.category == 'christmas' %}&#x1F384;{% else %}&#x1F383;{% endif %} {{ e.votes }} vote{{ 's' if e.votes != 1 }}</p>
-      {% elif e.is_new %}
-      <p class="votes votes-new">&#x2728; New this week</p>
-      {% endif %}
-      {% if e._views %}<p class="views-line">&#x1F441;&#xFE0F; {{ e._views }} view{{ 's' if e._views != 1 }}</p>{% endif %}
-      <span class="tour-add-btn" role="button" tabindex="0" data-tour-btn data-id="{{ e.id }}" data-title="{{ e.title }}" data-town="{{ e.town }}" data-lat="{{ e.lat if e.lat is not none else '' }}" data-lng="{{ e.lng if e.lng is not none else '' }}" data-thumb="{{ e.thumb_url }}">+ Tour</span>
-    </div>
-  </a>
-  {% endfor %}
+{# Display facelift (Dan, Nov 26, 2026): the feed renders the shared
+   display_card component — same card as MerryQuest's grid. The old
+   inline .card markup differed from the macro only in details the
+   component covers (sample pill, votes, views); the "New this week"
+   line is now the card's ✨ New pill. #}
+<div class="dgrid">
+  {% for e in entries %}{{ display_card(e, true) }}{% endfor %}
 </div>
 {% else %}
 <div class="empty">
