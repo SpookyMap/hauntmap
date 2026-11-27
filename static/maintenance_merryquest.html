@@ -12,11 +12,11 @@
      the app itself shed load or hit an unhandled error. Design, copy and
      colors match the edge page the merryquest-maintenance Cloudflare
      Worker serves for origin-down windows (purple neon wordmark,
-     "The lights are flickering…", Santa portrait, 30s refresh) so both
+     "The lights are flickering…", Santa banner, 30s refresh) so both
      layers look identical. One deliberate difference: the Worker copy
      inlines every image as a data URI because the origin is dead when
      it serves; this in-app copy references the site-hosted logo and
-     Santa portrait instead — the same pattern as maintenance.html —
+     Santa banner instead — the same pattern as maintenance.html —
      because /static is never load-shed and is alive whenever the app
      can serve this page at all. All CSS is inline: the error path must
      never depend on the template engine or the DB. */
@@ -37,9 +37,10 @@
     filter: drop-shadow(0 0 22px rgba(168,110,255,.55)) drop-shadow(0 10px 30px rgba(0,0,0,.7));
     margin-bottom: 1.3rem;
   }
-  .santa {
-    width: min(190px, 52vw); height: auto;
-    border-radius: 22px;
+  .santa-banner {
+    display: block;
+    width: 100%; height: auto;
+    border-radius: 18px;
     box-shadow: 0 0 0 2px rgba(168,110,255,.65), 0 0 34px rgba(123,47,247,.55), 0 14px 34px rgba(0,0,0,.65);
     margin-bottom: 1.3rem;
   }
@@ -64,7 +65,7 @@
 <body>
   <main class="card">
     <img class="logo" src="/static/img/merryquest-logo-v3-clear.webp" alt="MerryQuest">
-    <img class="santa" src="/static/img/neon/santa.jpg" alt="Santa Claus">
+    <img class="santa-banner" src="/static/img/merryquest-santa-banner.jpg" alt="Santa Claus">
     <h1>The lights are flickering&hellip;</h1>
     <p class="body">MerryQuest is down for a quick moment while we restring the lights. We will be back soon!</p>
     <p class="small">The displays are not going anywhere — this page refreshes itself every 30 seconds, and the magic will reappear on its own in a moment.</p>
