@@ -6,6 +6,7 @@ SOFT limit only (cookies are trivially cleared); it stops casual double
 voting, not determined abuse. See the vote route below.
 """
 import asyncio
+import base64
 import calendar
 import functools
 import hashlib
@@ -3308,6 +3309,225 @@ def make_video_poster(src: Path, dest_name: str) -> str | None:
         return rel
     except (subprocess.SubprocessError, OSError):
         return None
+
+
+# --------------------------------------- placeholder guard + embed posters
+# Dan, Nov 26, 2026 ("close the pipeline gap"): Tonight's Tour pins
+# 9697-9701 carried the MerryQuest brand illustration AS their photo.
+# Root cause: a TikTok-embed pin got a poster only from a manually
+# supplied photo (uploaded video files get an ffmpeg poster; embeds
+# got nothing), so a batch posted without real stills reached for
+# brand art, nothing detected it, and the tour pool ranked the
+# illustration at the top on views. Three-part fix:
+#   1. _fetch_embed_poster — an embed pin with no real photo gets the
+#      video's official cover (oEmbed) through the normal media path.
+#      Any failure leaves the pin photoless; brand art is NEVER
+#      substituted for a missing cover.
+#   2. _image_is_placeholder — the illustration (exact bytes or any
+#      re-encode of it) is refused at the pin write paths.
+#   3. _vt_has_real_photo — the virtual-tour pools skip a pin whose
+#      photo is the placeholder (or unverifiable), however it got in.
+
+_PLACEHOLDER_FILE_MD5 = {
+    "a05d8370f2472b2e68a029b7c4a78851": 434597,  # the illustration itself
+    "39298cff862e9a4147ee8185b48a243a": 96674,   # its make_thumb derivative
+}
+# Perceptual signature: the illustration downscaled to 16x16 RGB,
+# base64 of the raw bytes. Re-encodes/resizes of the same art score a
+# mean-abs-diff under 0.3 against it; real display photos score 50+.
+_PLACEHOLDER_SIG = base64.b64decode(
+    "IRdVIBZVHBNPHBRRJRxnJh1pGhRSFxFNGBJOGRFOGBFOHRNXJRZiHxZYJCBmIBtcKx5s"
+    "MCF6Kx9wHBVVIBlhKR1sKh9vHBVZHBVZGhRZGRVZJh1pMh58JhtlMSqCKiFwLSBvPiuY"
+    "TzatMiJ9IBpjJh93KiB2IxtsLieGKyeGIBtrIRxuSiunQiyTQTSVMSZ8MyZ0NCd7SzGf"
+    "UTSqQzCTX0yTMjOKLi6OTEOTbFiTJSSGRTScZ0bOPjKTNS1+Lyh1MSlzQjCKRDGLPS6M"
+    "W0KbkWNTT1ChMz6pdFlulWxjRkSySDyhTD+mQjaIRziQQDOPFhxUOzNxSjmKPzecb06C"
+    "ZUg6eVhhf11zfF9acFRNf2yrUUatTzyWWkSlTD6eOTOMEhpSWUFaQjhmHyV2bFCFdVdJ"
+    "clRBn2s8fmFSjW1dh2V8R0KcOjeIMzJ/HSBbHiBcHiBUdEhIalJ2HCqDSkKaU0NbblNS"
+    "iWFQh2RgnnmAZ1uXJix5LS9uKy5rNzRwIyRmMitgcENDcE5fS0aagV2ZfVNhl2ZSqHBV"
+    "sXNgiVtRnXGGeGKgNDuJUkuCXUp2Gh9gSzx6Sysvj19jaFm/dVZrkWU6g2JJlWw/k10t"
+    "r3Q4lmpnc1mNVEaEdVZ7il1uWUSGYkRncEEtmGBSX0yXg15haUxEhmVLj2lRbk5FiFc1"
+    "eVRid1iAclRwmW13mWhulmiMRzJRTTA+i1tXfVtxnG5eh1lXiV1KoW5NiVtIjV1Wilpk"
+    "jWiLmnWWn296imKRbk5wPjh6STVji1dcq2VCWTc4clBljmaAnHWanG96kmp1gmmpc1mD"
+    "bU9qVDxccU+ISTdyNTBiRDtwh2GFeVFyQzJVQyw2VjQ0TzRBWj5EUjY8UDhGVjxUVUR6"
+    "WFOyale/LihiJSJFICBAHB1MXEqfYFG0UkGCTjlkMydIKyRHRzhjSECEVkqWW1CpZVOq"
+    "LClfFhhADQ4uDhE3KCRTQjl4KStrOTiENTiGLTSGKzOEMTaFPzyCMzBsNC5jMihaEg4"
+    "sEQ8u")
+_PLACEHOLDER_SIG_MAX_MAD = 6.0
+
+PLACEHOLDER_PHOTO_ERROR = (
+    "That image is the site's brand illustration (placeholder art), "
+    "not a photo of the display — attach a real photo instead.")
+
+_OEMBED_UA = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+              "AppleWebKit/537.36 (KHTML, like Gecko) "
+              "Chrome/124.0 Safari/537.36")
+
+
+def _image_is_placeholder(path: Path) -> bool:
+    """True when the image at `path` is the known brand-illustration
+    placeholder: the exact file bytes (hash, size-gated) or any
+    re-encode/resize of the same art (perceptual signature)."""
+    try:
+        size = path.stat().st_size
+    except OSError:
+        return False
+    for md5, sz in _PLACEHOLDER_FILE_MD5.items():
+        if size == sz:
+            try:
+                if hashlib.md5(path.read_bytes()).hexdigest() == md5:
+                    return True
+            except OSError:
+                return False
+            break
+    try:
+        with Image.open(path) as im:
+            sig = im.convert("RGB").resize((16, 16), Image.LANCZOS).tobytes()
+    except (OSError, UnidentifiedImageError):
+        return False
+    mad = sum(abs(a - b) for a, b in zip(sig, _PLACEHOLDER_SIG)) / len(sig)
+    return mad < _PLACEHOLDER_SIG_MAX_MAD
+
+
+def _stored_media_is_placeholder(rel: str | None) -> bool:
+    """Placeholder check for a stored media/thumb file, stat-size
+    gated so a pool scan only ever reads the rare same-size file.
+    Stored re-encodes at other sizes cannot exist once the write-path
+    guard above is live; the files in the wild are the exact bytes."""
+    if not rel:
+        return False
+    p = UPLOAD_DIR / rel
+    try:
+        if p.stat().st_size not in _PLACEHOLDER_FILE_MD5.values():
+            return False
+    except OSError:
+        return False
+    return _image_is_placeholder(p)
+
+
+def _vt_has_real_photo(d: dict) -> bool:
+    """Virtual-tour eligibility (Nov 26): a stop must carry a REAL
+    photo — an uploaded video (its poster frame comes from the video
+    itself) or an image that is not the placeholder. A pin whose only
+    'photo' is brand art, or whose thumb traces to nothing checkable,
+    is skipped by the tour pools instead of shown with art."""
+    mp = (d.get("media_path") or "").strip()
+    if mp:
+        if mp.lower().endswith((".mp4", ".webm", ".mov")):
+            return True
+        return not _stored_media_is_placeholder(mp)
+    tp = (d.get("thumb_path") or "").strip()
+    if tp:
+        return not _stored_media_is_placeholder(tp)
+    return False
+
+
+def _embed_cover_url(page_url: str) -> str | None:
+    """A TikTok video's official cover image URL, or None.
+
+    oEmbed first (its thumbnail_url is the canonical cover) — but
+    TikTok serves a stripped oEmbed response (no thumbnail_url, no
+    title) to some requesters, so fall back to the same official
+    cover embedded in the video page's own state JSON. Either way
+    the URL is TikTok's CDN asset for that video."""
+    api = ("https://www.tiktok.com/oembed?url="
+           + urllib.parse.quote(page_url, safe=""))
+    req = urllib.request.Request(api, headers={"User-Agent": _OEMBED_UA})
+    try:
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            data = json.loads(resp.read().decode("utf-8", "replace"))
+        thumb = (data or {}).get("thumbnail_url") or ""
+        if thumb.startswith(("http://", "https://")):
+            return thumb
+    except Exception:
+        pass
+    try:
+        req = urllib.request.Request(page_url,
+                                     headers={"User-Agent": _OEMBED_UA})
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            html_text = resp.read(2_000_000).decode("utf-8", "replace")
+    except Exception:
+        return None
+    m = re.search(r'"cover":"(https:[^"]+)"', html_text)
+    if not m:
+        return None
+    try:
+        url = json.loads('"' + m.group(1) + '"')
+    except ValueError:
+        return None
+    return url if "tiktokcdn" in url else None
+
+
+def _fetch_embed_poster(entry_id: int, video_url: str | None = None) -> bool:
+    """Give an embed pin with no real photo its video's official cover.
+
+    The cover is stored through the normal media path (random name,
+    PIL-verified, make_thumb) and the entry pointed at it. Returns
+    True when a photo was stored. Every failure returns False and
+    leaves the entry untouched — a photoless pin is honest; brand art
+    standing in for a photo is the bug this closes. Blocking network
+    I/O: call from the thread pool or a sync context only."""
+    with get_conn(DB_PATH) as conn:
+        row = conn.execute(
+            "SELECT media_path, tiktok_url FROM entries WHERE id = ?",
+            (entry_id,)).fetchone()
+    if row is None:
+        return False
+    mp = (row["media_path"] or "").strip()
+    if mp.lower().endswith((".mp4", ".webm", ".mov")):
+        return False  # an uploaded video: its poster comes from ffmpeg
+    if mp and (UPLOAD_DIR / mp).exists() \
+            and not _stored_media_is_placeholder(mp):
+        return False  # already carries a real photo
+    url = (video_url or row["tiktok_url"] or "").strip()
+    if "/video/" not in url:
+        with get_conn(DB_PATH) as conn:
+            vids = get_entry_videos(conn, entry_id)
+        url = next((v["url"] for v in vids if "/video/" in (v.get("url") or "")),
+                   "")
+    if "/video/" not in url:
+        return False
+    thumb_url = _embed_cover_url(url)
+    if not thumb_url:
+        return False
+    try:
+        req = urllib.request.Request(thumb_url,
+                                     headers={"User-Agent": _OEMBED_UA})
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            data = resp.read(MAX_PHOTO_BYTES + 1)
+    except Exception:
+        return False
+    if not data or len(data) > MAX_PHOTO_BYTES:
+        return False
+    tmp = UPLOAD_DIR / f".oembed-{uuid.uuid4().hex}.bin"
+    try:
+        tmp.write_bytes(data)
+        try:
+            with Image.open(tmp) as im:
+                im.verify()
+                fmt = (im.format or "").upper()
+        except (UnidentifiedImageError, OSError):
+            return False
+        ext = {"JPEG": ".jpg", "PNG": ".png", "WEBP": ".webp"}.get(fmt)
+        if not ext:
+            return False
+        if _image_is_placeholder(tmp):
+            return False  # a placeholder cover is no cover at all
+        name = uuid.uuid4().hex
+        media_rel = f"{name}{ext}"
+        shutil.move(tmp, UPLOAD_DIR / media_rel)
+        try:
+            thumb_rel = make_thumb(UPLOAD_DIR / media_rel, name)
+        except (OSError, UnidentifiedImageError):
+            thumb_rel = media_rel
+        with get_conn(DB_PATH) as conn:
+            conn.execute(
+                "UPDATE entries SET media_path = ?, thumb_path = ?, "
+                "media_type = 'photo' WHERE id = ?",
+                (media_rel, thumb_rel, entry_id))
+            conn.commit()
+        return True
+    finally:
+        tmp.unlink(missing_ok=True)
 
 
 # ---------------------------------------------------------------- public pages
@@ -7170,7 +7390,9 @@ VT_LI_CITIES = {
 def _vt_video_pool(conn) -> list[dict]:
     """Playable-video pins eligible for a Virtual Tour: a TikTok /video/
     URL or an uploaded video file, with a thumbnail and map coordinates,
-    never 2025-tagged (the same currency rule as Tonight's Display). Each
+    never 2025-tagged (the same currency rule as Tonight's Display), and
+    carrying a real photo — never the brand-illustration placeholder
+    (_vt_has_real_photo, Nov 26). Each
     dict carries _views (detail-page views) as the popularity signal —
     votes are near-zero on video pins, views are what actually rank them.
     A display listed twice (same title + town) appears once."""
@@ -7191,6 +7413,8 @@ def _vt_video_pool(conn) -> list[dict]:
     out, seen_keys = [], set()
     for r in rows:
         d = row_to_dict(r)
+        if not _vt_has_real_photo(d):
+            continue  # placeholder art is not a photo (Nov 26 gap fix)
         d["_views"] = views.get(d["id"], 0)
         key = ((d.get("title") or "").strip().lower(), d["town_label"])
         if key in seen_keys:
@@ -7239,6 +7463,8 @@ def _vt_photo_pool(conn, exclude_ids: set) -> list[dict]:
         d = row_to_dict(r)
         if d["id"] in exclude_ids:
             continue
+        if not _vt_has_real_photo(d):
+            continue  # placeholder art is not a photo (Nov 26 gap fix)
         d["_views"] = views.get(d["id"], 0)
         key = ((d.get("title") or "").strip().lower(), d["town_label"])
         if key in seen_keys:
@@ -8069,6 +8295,9 @@ async def upload_submit(
                         except (UnidentifiedImageError, OSError):
                             tmp.unlink(missing_ok=True)
                             raise ValueError("That file isn't a readable image.")
+                        if _image_is_placeholder(tmp):
+                            tmp.unlink(missing_ok=True)
+                            raise ValueError(PLACEHOLDER_PHOTO_ERROR)
                         name = uuid.uuid4().hex
                         media_rel = f"{name}{ext}"
                         shutil.move(tmp, UPLOAD_DIR / media_rel)
@@ -8121,6 +8350,13 @@ async def upload_submit(
                 if tiktok_url:
                     add_entry_video(conn, new_id, tiktok_url)
                 conn.commit()
+            # Embed poster (Nov 26 gap fix): a pin born with a TikTok
+            # embed but no real photo (the media-less categories) gets
+            # the video's official cover here; any failure leaves it
+            # photoless — never brand art.
+            if tiktok_url and "/video/" in tiktok_url \
+                    and media_type != "photo":
+                _fetch_embed_poster(new_id, tiktok_url)
             return new_id, None
 
         entry_id, store_error = await run_in_threadpool(_store)
@@ -14521,6 +14757,12 @@ async def admin_edit(entry_id: int, request: Request):
             if not tt_new or "/video/" in tt_new:
                 set_entry_primary_video(conn, entry_id, tt_new)
         conn.commit()
+    # Embed poster (Nov 26 gap fix): an embed set on a pin with no
+    # real photo pulls the video's official oEmbed cover; a pin that
+    # already has a real photo (or an uploaded video) is untouched.
+    if updates.get("tiktok_url") and "/video/" in updates["tiktok_url"]:
+        await run_in_threadpool(_fetch_embed_poster, entry_id,
+                                updates["tiktok_url"])
     return JSONResponse({"ok": True, "id": entry_id, "updated": updates})
 
 
@@ -14546,6 +14788,10 @@ async def admin_add_video(entry_id: int, request: Request):
     with get_conn(DB_PATH) as conn:
         added = add_entry_video(conn, entry_id, url)
         conn.commit()
+    if added:
+        # Embed poster (Nov 26 gap fix): a photoless pin that just
+        # gained a video gets that video's official oEmbed cover.
+        await run_in_threadpool(_fetch_embed_poster, entry_id, url)
     return JSONResponse({"ok": True, "id": entry_id, "added": added})
 
 
@@ -14569,6 +14815,10 @@ async def admin_media(entry_id: int, request: Request, media: UploadFile = File(
         except (UnidentifiedImageError, OSError):
             tmp.unlink(missing_ok=True)
             return JSONResponse({"error": "Not a readable image"}, status_code=400)
+        if _image_is_placeholder(tmp):
+            tmp.unlink(missing_ok=True)
+            return JSONResponse({"error": PLACEHOLDER_PHOTO_ERROR},
+                                status_code=400)
         name = uuid.uuid4().hex
         media_rel = f"{name}{ext}"
         shutil.move(tmp, UPLOAD_DIR / media_rel)
