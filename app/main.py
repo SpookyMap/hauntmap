@@ -14746,6 +14746,13 @@ async def admin_edit(entry_id: int, request: Request):
                 {"error": "loc_source must be 'verified' or 'inferred'"},
                 status_code=400)
         updates["loc_source"] = value
+    # Description (Dan, Nov 26, 2026 — the Christmas description pass):
+    # the detail page renders entry.description but no write path could
+    # set it after creation. Same treatment as creation: stripped,
+    # capped at 1000 chars; empty clears back to NULL.
+    if "description" in form:
+        desc = str(form.get("description", "")).strip()[:1000]
+        updates["description"] = desc or None
     if not updates:
         return JSONResponse({"error": "No fields to update"}, status_code=400)
     if not get_entry(entry_id):
