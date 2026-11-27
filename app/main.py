@@ -4300,6 +4300,10 @@ def home(request: Request, sort: str = "new", town: str = "", town_search: str =
          # the slide-down bar on the homepage.
          "whatsnew_groups": _whatsnew_rail_groups(
              exclude_christmas=_brand_of(request) == "haunt"),
+         # New on the Map rail (MerryQuest homepage, STAGED Nov 26):
+         # the newest MQ-visible displays for _mq_new_on_map_rail.html.
+         "mq_newmap": _mq_newmap_rail()
+         if _brand_of(request) == "merryquest" else [],
          "bottom_tabs": _place_tabs(cat, state, region, sort, scare, tag,
                                     "1" if video.strip() == "1" else ""),
          "tier_labels": {"featured": "Featured Sponsor", "premium": "Premium Sponsor", "title": "Title Sponsor"}},
@@ -16202,6 +16206,41 @@ def _whatsnew_rail_groups(per_group: int = 8,
         groups.append({"emoji": "📣", "label": "Site Updates",
                        "entries": announces})
     return groups
+
+
+def _mq_newmap_rail(limit: int = 12) -> list:
+    """New on the Map rail — MerryQuest (STAGED, Nov 26): the newest
+    MerryQuest-visible displays for the MQ homepage rail, newest
+    first. The brand filter is _brand_visible itself — christmas
+    pins plus dual-brand dark-Christmas entries, the same predicate
+    the detail pages and rails gate on — applied over the newest
+    240 visible entries (the same scan depth the What's New rail
+    uses), capped at `limit` rows. Events are excluded even when
+    dual-brand: every row links to /d/<id> and event detail pages
+    are HauntMap-only (they live on the MQ /events board instead).
+    Rows carry exactly what _mq_new_on_map_rail.html renders: id,
+    title, town_label, thumb. MQ brand only — the homepage handler
+    never calls this for HauntMap, so the HM render pays nothing."""
+    rows: list = []
+    with get_conn(DB_PATH) as conn:
+        raw = conn.execute(
+            "SELECT * FROM entries WHERE hidden = 0 AND is_sample = 0 "
+            "ORDER BY created_at DESC, id DESC LIMIT 240").fetchall()
+    for r in raw:
+        e = row_to_dict(r)
+        if e.get("category") == "events":
+            continue
+        if not _brand_visible(e, "merryquest"):
+            continue
+        rows.append({
+            "id": e["id"],
+            "title": (e.get("title") or "").strip(),
+            "town_label": e.get("town_label", ""),
+            "thumb": e.get("thumb_card_url") or e.get("thumb_url") or "",
+        })
+        if len(rows) >= limit:
+            break
+    return rows
 
 
 # /updates filters (Dan, Oct 28, STAGED for his preview): "what's

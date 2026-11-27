@@ -1796,3 +1796,73 @@ body.brand-merryquest .mq-ticker .nt-chip { background: #0E7EC2; color: #fff; }
   .mqx-header .mqx-nav::-webkit-scrollbar { display: none; }
   .mqx-header .mqx-nav a { font-size: 16px; font-weight: 700; padding: 8px 2px; }
 }
+
+
+/* ---------- New on the Map rail + Build My Tour band (STAGED, Nov 26) ----------
+   The MQ twin of HauntMap's homepage rail seat: directly under the
+   hero, the rail heads a 272px left column and the auto-tour panel
+   (.auto-tour-home dimensions, MQ glass skin above) sits beside it;
+   under 1000px they stack full-width, rail first — the same
+   adaptation HauntMap's rail makes in its stacked layout. The rail
+   reuses the .wn-rail family; the overrides below give it the MQ
+   purple/gold cast and restore the circular badge the generic MQ
+   rail skin hides (the badge here is MQ art — Pip's portrait
+   (mq-pip-badge.jpg, Dan, Nov 26) — not HauntMap's map badge). */
+.mqx-railband { margin-top: 2.4rem;
+  /* The .mqx-wrap column is narrow (~648px); wide MQ sections
+     escape it with the .mqx-bleed trick. The band bleeds the same
+     way but caps its grid at the 1180px content measure, centered. */
+  width: 100vw; margin-left: calc(50% - 50vw); margin-right: calc(50% - 50vw);
+  padding: 0 max(20px, calc((100vw - 1180px) / 2)); box-sizing: border-box; }
+@media (min-width: 1000px) {
+  .mqx-railband { display: grid; grid-template-columns: 272px 1fr;
+    gap: 1.1rem; align-items: start; }
+}
+.mqx-railband .wn-rail { grid-area: auto; }
+.mqx-railband .auto-tour-home { margin: 0; }
+/* The shared stylesheet's one-copy rule hides .auto-tour-home at
+   >=761px unless it is a hero-stack copy — HauntMap renders its
+   panel inside .hero-stack, MerryQuest has no hero stack, so the
+   band's panel opts back in explicitly. */
+@media (min-width: 761px) {
+  body.brand-merryquest .mqx-railband .auto-tour-home { display: block; }
+}
+@media (max-width: 999px) {
+  .mqx-railband .mqx-newmap { margin-bottom: 1.1rem; }
+}
+body.brand-merryquest .mqx-newmap {
+  background: linear-gradient(165deg, rgba(58, 28, 110, 0.38), rgba(14, 7, 30, 0.55));
+  border: 1px solid rgba(255, 200, 44, 0.30);
+  box-shadow: 0 0 18px rgba(120, 70, 220, 0.25);
+}
+body.brand-merryquest .mqx-newmap .wn-rail-badge {
+  display: block;
+  box-shadow: 0 0 16px rgba(255, 200, 44, 0.55), 0 0 3px rgba(255, 200, 44, 0.8);
+}
+body.brand-merryquest .mqx-newmap .wn-rail-tagline { color: #ffc82c; letter-spacing: 0.05em; }
+/* Rail display type = the "Follow the Lights" font (Dan, Nov 26):
+   the campaign lockup's .follow/.magic lines are set in Russo One
+   (countdown_merryquest.html), self-hosted at the top of this file —
+   NOT Cinzel, which the splash reserves for the premiere label.
+   Display text only (title, group header, tagline), echoing the
+   lockup's uppercase on the two small lines; the row text stays in
+   the body sans, matching the site-wide convention that Russo One
+   is a display face. */
+body.brand-merryquest .mqx-newmap .wn-rail-title {
+  font-family: "Russo One", "Inter", sans-serif; letter-spacing: 0.03em;
+}
+body.brand-merryquest .mqx-newmap .wn-rail-group {
+  font-family: "Russo One", "Inter", sans-serif; font-weight: 400;
+  text-transform: uppercase; letter-spacing: 0.06em;
+}
+body.brand-merryquest .mqx-newmap .wn-rail-tagline {
+  font-family: "Russo One", "Inter", sans-serif;
+  text-transform: uppercase; letter-spacing: 0.08em;
+}
+body.brand-merryquest .mqx-newmap .wn-rail-all {
+  background: rgba(255, 255, 255, 0.02); border-top: 1px solid var(--mq-line);
+  color: #ffc82c;
+}
+.mqx-tourpanel-own { margin: 0.7rem 0 0; font-size: 0.88rem; }
+.mqx-tourpanel-own a { color: #ffc82c; text-decoration: none; font-weight: 600; }
+.mqx-tourpanel-own a:hover { text-decoration: underline; }

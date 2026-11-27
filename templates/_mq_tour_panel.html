@@ -1,0 +1,43 @@
+{# Build My Tour panel — MerryQuest (STAGED, Nov 26): the MQ twin
+   of HauntMap's _auto_tour_home.html panel — same dimensions
+   (.auto-tour-home: 1rem padding, stacked full-width buttons) and
+   the same seat pattern (directly under the finder/hero, beside
+   the New on the Map rail in .mqx-railband). It replaces the old
+   .mqx-tour section: heading + subline carry over verbatim (the
+   subline already said "displays"), the single /tour CTA becomes
+   the Top 10 / Top 100 auto-tour buttons, and the manual builder
+   keeps a tertiary link at the panel's foot. Buttons carry
+   cat=christmas explicitly — the /auto-tour route also remaps the
+   halloween default to christmas on the MQ host (Nov 26 brand
+   fix), so the panel is correct on both paths. #}
+<section class="auto-tour-home mqx-tourpanel" aria-label="Build my tour for me">
+  <h2>&#x26A1; Build my tour for me</h2>
+  <p class="auto-tour-sub">Skip the picking — we line up the most-viewed displays near you into a ready-to-drive route.</p>
+  <div class="auto-tour-btns">
+    <a class="auto-tour-btn" href="/auto-tour?size=10&amp;cat=christmas">
+      <span class="auto-tour-btn-title">&#x1F3C6; Top 10 near me</span>
+      <span class="auto-tour-btn-sub">One night, routed for you</span>
+    </a>
+    <a class="auto-tour-btn" href="/auto-tour?size=100&amp;cat=christmas">
+      <span class="auto-tour-btn-title">&#x1F4AF; Top 100 near me</span>
+      <span class="auto-tour-btn-sub">The full list, planned by nights</span>
+    </a>
+  </div>
+  <p class="mqx-tourpanel-own"><a href="/tour">Or build your own tour, stop by stop &rarr;</a></p>
+  <script>
+  // State-loyal taps, same rule as HauntMap's panel (Oct 28): with
+  // a saved town (localStorage hm_town), ride /auto-tour's town
+  // path (?q=, or ?zip= for a bare ZIP) so the tour builds around
+  // the visitor's declared town. Scoped to this panel's buttons.
+  (function () {
+    try {
+      var town = (localStorage.getItem('hm_town') || '').trim();
+      if (!town) return;
+      var key = /^\d{5}$/.test(town) ? 'zip' : 'q';
+      document.querySelectorAll('.mqx-tourpanel .auto-tour-btn').forEach(function (a) {
+        a.href += '&' + key + '=' + encodeURIComponent(town);
+      });
+    } catch (e) {}
+  })();
+  </script>
+</section>

@@ -73,12 +73,20 @@
 
 </section>
 
-  <section class="mqx-tour mqx-haunted">
-    <div class="mqx-spirit-field" aria-hidden="true"><img class="mqx-spirit s-left" style="--tilt:-3deg; top:0; object-position:50% 18%" src="/static/img/neon/santa.jpg" alt="" loading="lazy" decoding="async"><img class="mqx-spirit s-left" style="--tilt:2deg; top:4%; left:14%; object-position:50% 15%" src="/static/img/neon/krampus-v2.jpg" alt="" loading="lazy" decoding="async"><img class="mqx-spirit s-right" style="--tilt:-2deg; top:4%; right:14%; object-position:50% 15%" src="/static/img/neon/la-befana-v2.jpg" alt="" loading="lazy" decoding="async"><img class="mqx-spirit s-right" style="--tilt:3deg; top:0; object-position:50% 15%" src="/static/img/neon/ded-moroz-v2.jpg" alt="" loading="lazy" decoding="async"></div>
-    <h2 class="mqx-h2">Build my tour for me</h2>
-    <p class="mqx-p">Skip the picking — we line up the most-viewed displays near you into a ready-to-drive route.</p>
-    <a class="mqx-cta" href="/tour">Build my tour</a>
-  </section>
+  {# New on the Map rail + Build My Tour band (STAGED, Nov 26):
+     directly under the hero — the seat the standalone tour section
+     held. On laptop the rail heads a left column and the auto-tour
+     panel sits beside it, mirroring HauntMap's homepage (rail in
+     the left margin column, tour panel under the finder); on phone
+     they stack, rail first. The old .mqx-tour section is replaced
+     by the panel: its heading + subline carry over verbatim, the
+     single /tour CTA becomes the Top 10 / Top 100 auto-tour
+     buttons, and the manual builder keeps a tertiary link inside
+     the panel so nothing is lost. #}
+  <div class="mqx-railband">
+    {% include "_mq_new_on_map_rail.html" %}
+    {% include "_mq_tour_panel.html" %}
+  </div>
 
   <section class="mqx-drive mqx-bleed">
     <video class="mqx-drive-video" autoplay muted loop playsinline preload="auto"><source src="/static/video/mq-drive-v19.mp4" type="video/mp4"></video>

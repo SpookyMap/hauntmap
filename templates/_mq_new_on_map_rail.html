@@ -1,0 +1,36 @@
+{# New on the Map rail — MerryQuest (STAGED, Nov 26): the MQ twin
+   of HauntMap's _whats_new_rail.html, same panel structure (badge,
+   title, tagline, grouped scroll list, footer) in MQ skin via the
+   .wn-rail rules in style.css + the brand overrides in
+   merryquest-rail.css (.mqx-newmap below them). One group only —
+   the newest MerryQuest-visible displays (christmas pins +
+   dual-brand dark Christmas), fed by _mq_newmap_rail() in
+   app/main.py. Copy notes: the tagline "Fresh from the North Pole"
+   is PROPOSED (Dan to confirm/change — it mirrors HauntMap's
+   "Fresh From the Crypt" slot without Halloween language); the
+   badge is Pip's portrait (Dan, Nov 26: "Put Pip there then",
+   superseding a brief Ded Moroz call) — a face crop of her
+   official Sack portrait (pip-tech.jpg), static/img/mq-pip-badge.jpg. #}
+{% if mq_newmap %}
+<aside class="wn-rail mqx-newmap" aria-label="New on the Map — Fresh from the North Pole">
+  <a class="wn-rail-head" href="/nearby">
+    <img class="wn-rail-badge" src="/static/img/mq-pip-badge.jpg" alt="Pip the Star Pin" width="384" height="384">
+    <span class="wn-rail-title"><span class="wn-new">New</span> on the <span class="wn-rail-accent">Map</span></span>
+    <span class="wn-rail-sub wn-rail-tagline">Fresh from the North Pole</span>
+  </a>
+  <div class="wn-rail-scroll">
+    <h3 class="wn-rail-group">🎄 New Displays</h3>
+    <ul class="wn-mini-list">
+      {% for u in mq_newmap %}
+      <li>
+        <a class="wn-mini" href="/d/{{ u.id }}">
+          {% if u.thumb %}<img class="wn-mini-thumb" src="{{ u.thumb }}" alt="" loading="lazy" onerror="this.remove()">{% else %}<span class="wn-mini-emoji" aria-hidden="true">🎄</span>{% endif %}
+          <span class="wn-mini-main"><strong>{{ u.title }}</strong>{% if u.town_label %}<span class="wn-mini-body">{{ u.town_label }} &middot; new display</span>{% endif %}</span>
+        </a>
+      </li>
+      {% endfor %}
+    </ul>
+  </div>
+  <a class="wn-rail-all" href="/nearby">See all displays &rarr;</a>
+</aside>
+{% endif %}
