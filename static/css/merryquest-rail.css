@@ -426,7 +426,15 @@ body.brand-merryquest {
    website view too, not just the phone: 30px here renders
    ~105x30px letters, about 2x the old desktop size, still inside
    the 52px brand min-height so the bar keeps its height. */
-.mqx-brand-wordmark { height: 30px; width: auto; display: block; }
+/* Header wordmark +40% (Dan, 2026-11-26): 30px -> 42px slot
+   (~105px -> ~147px wide). Still inside the 52px brand min-height,
+   so the desktop bar keeps its height. Companion guard: at
+   1024-~1070px the wider wordmark squeezes the actions row and the
+   Log in / Join free labels wrap to two lines (bar grows ~10px);
+   nowrap keeps them at their designed one-line size — no element
+   changes size, and Santa's Sack stays one line at every width. */
+.mqx-brand-wordmark { height: 42px; width: auto; display: block; }
+.mqx-header .mqx-login, .mqx-header .mqx-join { white-space: nowrap; }
 .mqx-brand { display: flex; align-items: center; gap: 9px; text-decoration: none; min-height: 52px; }
 .mqx-brand .brand-pip { height: 34px; width: 34px; }
 .mqx-wordmark {
@@ -468,7 +476,9 @@ body.brand-merryquest {
      ~12px before (28px slot x 243/559 art fill). Still inside the
      40px brand min-height, so the header keeps its height and the
      nav row below is untouched. */
-  .mqx-brand-wordmark { height: 30px; }
+  /* Phone wordmark +40% too (Dan, 2026-11-26): 42px slot; it passes
+     the 40px brand min-height, so the phone brand row grows ~2px. */
+  .mqx-brand-wordmark { height: 42px; }
   .mqx-brand { min-height: 40px; }
 }
 
