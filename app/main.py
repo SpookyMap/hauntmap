@@ -7390,9 +7390,13 @@ VT_LI_CITIES = {
 def _vt_video_pool(conn) -> list[dict]:
     """Playable-video pins eligible for a Virtual Tour: a TikTok /video/
     URL or an uploaded video file, with a thumbnail and map coordinates,
-    never 2025-tagged (the same currency rule as Tonight's Display), and
+    never 2025-tagged (the same currency rule as Tonight's Display),
     carrying a real photo — never the brand-illustration placeholder
-    (_vt_has_real_photo, Nov 26). Each
+    (_vt_has_real_photo, Nov 26) — and never 'notour'-tagged (Dan,
+    Nov 26, 2026: a pin whose video cannot play in-page on the website
+    — ad post, embed-disabled, gone — is tagged 'notour' and leaves
+    the tour rotation only; the pin itself stays on the map and
+    detail pages). Each
     dict carries _views (detail-page views) as the popularity signal —
     votes are near-zero on video pins, views are what actually rank them.
     A display listed twice (same title + town) appears once."""
@@ -7406,6 +7410,7 @@ def _vt_video_pool(conn) -> list[dict]:
              AND e.thumb_path IS NOT NULL AND TRIM(e.thumb_path) != ''
              AND e.lat IS NOT NULL AND e.lng IS NOT NULL
              AND NOT (',' || COALESCE(e.tags, '') || ',') LIKE '%,2025,%'
+             AND NOT (',' || COALESCE(e.tags, '') || ',') LIKE '%,notour,%'
            ORDER BY e.id""").fetchall()
     # _views from the TTL-cached views snapshot (fortification pass 2)
     # instead of a per-render page_views GROUP BY join.
@@ -7456,6 +7461,7 @@ def _vt_photo_pool(conn, exclude_ids: set) -> list[dict]:
              AND NOT (e.tiktok_url IS NOT NULL
                       AND e.tiktok_url LIKE '%/video/%')
              AND NOT (',' || COALESCE(e.tags, '') || ',') LIKE '%,2025,%'
+             AND NOT (',' || COALESCE(e.tags, '') || ',') LIKE '%,notour,%'
            ORDER BY e.id""").fetchall()
     views = _views_by_id(conn)
     out, seen_keys = [], set()
@@ -14678,7 +14684,7 @@ async def admin_tag(entry_id: int, request: Request):
     tags = ",".join(sorted({t for t in form.getlist("tags")
                             if t in ("animatronics", "inflatables", "handmade", "walkthrough",
                                      "projector", "lights", "music", "street-wide",
-                                     "multi-house", "ticketed", "2025", "market", "oddities", "witchy", "craft", "flea", "free", "flagship", "21+")})) or None
+                                     "multi-house", "ticketed", "2025", "market", "oddities", "witchy", "craft", "flea", "free", "flagship", "21+", "notour")})) or None
     category = form.get("category", "")
     category = category if category in CATEGORIES else None
     with get_conn(DB_PATH) as conn:
