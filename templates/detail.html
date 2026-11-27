@@ -31,11 +31,14 @@
 </style>
 {% endif %}
 <article class="detail">
-  {% if entry.tiktok_url and '/video/' in entry.tiktok_url %}
+  {% if entry.tiktok_url and '/video/' in entry.tiktok_url and not primary_dead %}
   {# A TikTok video URL is the primary media — render the playable embed even
      when the entry also has a photo (the photo stays as the feed thumbnail).
      It also wins over an uploaded video file. Non-/video/ TikTok URLs
-     (e.g. live streams) fall through to the photo/video below. #}
+     (e.g. live streams) fall through to the photo/video below. An
+     embed-dead primary (primary_dead) skips this branch entirely: TikTok
+     refuses to embed it, so the facade would promise a player that can
+     never play — the link-card branch below takes its place. #}
   <div class="detail-media">
     {# Facade: the pin's own thumbnail + play button stands in for the heavy
        TikTok embed; hmLoadTikTok() swaps in the real blockquote + embed.js on
@@ -77,6 +80,28 @@
     {% endif %}
     {% if entry.is_sample %}<span class="sample-badge">Sample</span>{% endif %}
   </div>
+  {% elif entry.tiktok_url and '/video/' in entry.tiktok_url and primary_dead and entry.media_type != 'video' %}
+  {# Embed-dead primary (Nov 26, 2026): TikTok will not embed this video
+     (paid/promoted post, embed-disabled creator, or the video is gone),
+     so the page leads with the pin's photo and offers the video as a
+     clean "Watch on TikTok" link card — never a dead player box. The
+     pin and the video link both stay. #}
+  <div class="detail-media">
+    {% if entry.media_path %}
+    <img src="{{ entry.media_url }}" alt="{{ entry.title }}">
+    {% endif %}
+    {% if entry.is_sample %}<span class="sample-badge">Sample</span>{% endif %}
+  </div>
+  <a class="tt-linkcard" href="{{ entry.tiktok_url }}" target="_blank" rel="noopener">
+    <span class="tt-linkcard-play">&#x25B6;</span>
+    <span class="tt-linkcard-text">Watch on TikTok &#x2197;{% if primary_creator %}<small>by @{{ primary_creator }} on TikTok</small>{% endif %}</span>
+  </a>
+  <style>
+  .tt-linkcard { display: flex; align-items: center; gap: 0.7rem; max-width: 605px; margin: 0.8rem auto 0; padding: 0.75rem 1rem; background: #17122b; border: 1px solid #372b5e; border-radius: 12px; color: #fff; text-decoration: none; font-weight: 700; }
+  .tt-linkcard-play { font-size: 1.3rem; line-height: 1; }
+  .tt-linkcard-text small { display: block; font-weight: 400; opacity: 0.75; margin-top: 0.15rem; }
+  .more-video-card .tt-linkcard { margin: 0; border: 0; border-radius: 0; background: transparent; }
+  </style>
   {% elif entry.media_path %}
   <div class="detail-media">
     {% if entry.media_type == 'video' %}
@@ -108,6 +133,14 @@
     <h2 class="more-videos-title">&#x1F3AC; More videos of this place</h2>
     {% for v in extra_videos %}
     <article class="more-video-card">
+      {% if v.embed_dead %}
+      {# Embed-dead extra (Nov 26, 2026): TikTok refuses to embed this
+         video — render a clean link card, never a dead player. #}
+      <a class="tt-linkcard" href="{{ v.url }}" target="_blank" rel="noopener">
+        <span class="tt-linkcard-play">&#x25B6;</span>
+        <span class="tt-linkcard-text">Watch on TikTok &#x2197;{% if v.creator %}<small>by @{{ v.creator }} on TikTok</small>{% endif %}</span>
+      </a>
+      {% else %}
       <div class="tt-facade{% if v.cover_path %} has-cover{% endif %}" data-tt-url="{{ v.url }}" data-tt-id="{{ v.video_id }}" data-entry-id="{{ entry.id }}" role="button" tabindex="0" aria-label="Play TikTok video{% if v.creator %} by @{{ v.creator }}{% endif %}">
         {% if v.cover_path %}
         <img src="{{ v.cover_path }}" alt="Video of {{ entry.title }}{% if v.creator %} by @{{ v.creator }}{% endif %} on TikTok" loading="lazy">
@@ -125,6 +158,7 @@
         </blockquote>
         <script async src="https://www.tiktok.com/embed.js"></script>
       </noscript>
+      {% endif %}
       <p class="more-video-caption">{% if v.creator %}by <a href="https://www.tiktok.com/@{{ v.creator }}" target="_blank" rel="noopener">@{{ v.creator }}</a> on TikTok &middot; {% endif %}<a href="{{ v.url }}" target="_blank" rel="noopener">Watch on TikTok &#x2197;</a></p>
     </article>
     {% endfor %}
@@ -142,6 +176,13 @@
   .more-videos .tt-facade .tt-facade-blank { height: 300px; }
   .more-videos .tiktok-embed { margin: 0 auto; }
   .more-video-caption { margin: 0.55rem 0.7rem 0; font-size: 0.92rem; line-height: 1.35; text-align: center; }
+  /* Embed-dead link card (Nov 26, 2026) — same rules as the hero's
+     copy; duplicated here because this style block also renders on
+     pins whose hero is a live player. */
+  .tt-linkcard { display: flex; align-items: center; gap: 0.7rem; max-width: 605px; margin: 0.8rem auto 0; padding: 0.75rem 1rem; background: #17122b; border: 1px solid #372b5e; border-radius: 12px; color: #fff; text-decoration: none; font-weight: 700; }
+  .tt-linkcard-play { font-size: 1.3rem; line-height: 1; }
+  .tt-linkcard-text small { display: block; font-weight: 400; opacity: 0.75; margin-top: 0.15rem; }
+  .more-video-card .tt-linkcard { margin: 0; border: 0; border-radius: 0; background: transparent; }
   </style>
   <script>
   // More-videos click-to-play: identical binding to the hero facade —

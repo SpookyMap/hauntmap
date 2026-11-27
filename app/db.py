@@ -310,6 +310,7 @@ CREATE TABLE IF NOT EXISTS entry_videos (
     url TEXT NOT NULL,               -- canonical TikTok /video/ URL
     creator TEXT,                    -- @handle parsed from the URL
     cover_path TEXT,                 -- optional per-video cover frame (site path, e.g. /static/img/tt_<id>.jpg); NULL = fall back to the pin's own thumbnail
+    embed_dead INTEGER NOT NULL DEFAULT 0, -- 1 = TikTok refuses to embed this video (ad post / embed-disabled / gone): pages render a link card, never a dead player (Nov 26, 2026)
     position INTEGER NOT NULL DEFAULT 0, -- 0 = primary; position 0 always mirrors entries.tiktok_url
     created_at TEXT NOT NULL,
     UNIQUE(entry_id, video_id)
@@ -978,6 +979,24 @@ def set_entry_primary_video(conn: sqlite3.Connection, entry_id: int,
     )
 
 
+def set_entry_video_embed_dead(conn: sqlite3.Connection, entry_id: int,
+                               video_id: str, dead: bool = True) -> bool:
+    """Flag/unflag one of an entry's videos as embed-dead (Nov 26, 2026).
+
+    TikTok's embed player refuses some videos outright — paid/promoted
+    posts, embed-disabled creators, deleted/private videos — while the
+    same videos open fine in the TikTok app/site. A flagged video is
+    never rendered as a playable facade: detail pages lead with the
+    pin's photo and offer a clean "Watch on TikTok" link card instead,
+    and /watch skips pins whose primary is flagged. The video row and
+    its outbound link always stay. Returns True when a row matched."""
+    cur = conn.execute(
+        "UPDATE entry_videos SET embed_dead = ? WHERE entry_id = ? AND video_id = ?",
+        (1 if dead else 0, entry_id, video_id),
+    )
+    return cur.rowcount > 0
+
+
 def init_db(db_path: Path) -> None:
     db_path.parent.mkdir(parents=True, exist_ok=True)
     with get_conn(db_path) as conn:
@@ -1028,6 +1047,13 @@ def init_db(db_path: Path) -> None:
         if mcols and "reply_to" not in mcols:
             conn.execute(
                 "ALTER TABLE chat_messages ADD COLUMN reply_to INTEGER"
+            )
+        # Embed-dead flag (Nov 26, 2026): DBs created before the
+        # display-page TikTok audit gain entry_videos.embed_dead.
+        evcols = {r["name"] for r in conn.execute("PRAGMA table_info(entry_videos)").fetchall()}
+        if evcols and "embed_dead" not in evcols:
+            conn.execute(
+                "ALTER TABLE entry_videos ADD COLUMN embed_dead INTEGER NOT NULL DEFAULT 0"
             )
         # Migrate DBs created before the food-section columns existed.
         cols = {r["name"] for r in conn.execute("PRAGMA table_info(entries)").fetchall()}

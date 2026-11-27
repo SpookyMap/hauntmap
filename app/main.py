@@ -45,7 +45,8 @@ from starlette.middleware.gzip import GZipMiddleware
 from PIL import Image, ImageOps, UnidentifiedImageError
 
 from .db import (get_conn, init_db, add_entry_video, get_entry_videos,
-                 set_entry_primary_video, tiktok_video_id)
+                 set_entry_primary_video, set_entry_video_embed_dead,
+                 tiktok_video_id)
 from . import sms_alerts
 from . import push as push_mod
 from . import bracket as brk
@@ -7345,6 +7346,21 @@ def watch_page(request: Request):
         rows = [r for r in _watch_rows
                 if r["category"] != "christmas"
                 or _is_dark_christmas(r)][:60]
+    # Embed-dead primaries (Nov 26, 2026): a pin whose TikTok primary
+    # TikTok refuses to embed (ad post / embed-disabled / gone) would
+    # dead-end the feed's tap-to-play facade — drop it from /watch.
+    # Pins whose footage is an uploaded file are unaffected.
+    if rows:
+        with get_conn(DB_PATH) as conn:
+            _dead = {(r["entry_id"], r["video_id"]) for r in conn.execute(
+                "SELECT entry_id, video_id FROM entry_videos "
+                "WHERE embed_dead = 1 AND entry_id IN (%s)"
+                % ",".join("?" * len(rows)),
+                [r["id"] for r in rows]).fetchall()}
+        if _dead:
+            rows = [r for r in rows
+                    if not (r["tiktok_url"] and "/video/" in r["tiktok_url"]
+                            and (r["id"], tiktok_video_id(r["tiktok_url"])) in _dead)]
     # _views from the TTL-cached views snapshot (fortification pass 2)
     # instead of a per-render page_views GROUP BY join.
     views = _views_by_id()
@@ -8662,6 +8678,11 @@ def detail(request: Request, entry_id: int):
     primary_creator = ((_primary_row or {}).get("creator") or "").lstrip("@")
     if not primary_creator and entry.get("tiktok_url") and "/@" in entry["tiktok_url"]:
         primary_creator = entry["tiktok_url"].split("/@", 1)[1].split("/")[0]
+    # Embed-dead primary (Nov 26, 2026): TikTok refuses to embed this
+    # video (ad post / embed-disabled / gone), so the hero must not
+    # present a player that can never play — detail.html leads with
+    # the photo and renders a "Watch on TikTok" link card instead.
+    primary_dead = bool((_primary_row or {}).get("embed_dead"))
     voted = f"voted_{entry_id}" in request.cookies
     reported = f"reported_{entry_id}" in request.cookies
     with get_conn(DB_PATH) as conn:
@@ -8827,6 +8848,7 @@ def detail(request: Request, entry_id: int):
          "stay22_url": stay22_url,
          "extra_videos": extra_videos,
          "primary_creator": primary_creator,
+         "primary_dead": primary_dead,
          "is_venue": entry["category"] in VENUE_CATS,
          "tips": tips, "scare_counts": scare_counts, "scare_total": scare_total,
          "scare_pick": scare_pick, "next_pin": effective_next_pin,
@@ -14810,6 +14832,31 @@ async def admin_add_video(entry_id: int, request: Request):
         # gained a video gets that video's official oEmbed cover.
         await run_in_threadpool(_fetch_embed_poster, entry_id, url)
     return JSONResponse({"ok": True, "id": entry_id, "added": added})
+
+
+@app.post("/admin/video-dead/{entry_id}")
+async def admin_video_dead(entry_id: int, request: Request):
+    """Flag/unflag one of an entry's videos as embed-dead (admin).
+
+    Set from the display-page TikTok audit (Nov 26, 2026): videos
+    TikTok refuses to embed (paid/promoted posts, embed-disabled
+    creators, deleted/private videos) get dead=1 so detail pages
+    render a photo + "Watch on TikTok" link card instead of a player
+    that can never play, and /watch skips a flagged primary. The
+    video itself is never removed — the outbound link stays."""
+    _require_admin(request)
+    form = await request.form()
+    video_id = str(form.get("video_id", "")).strip()
+    dead = str(form.get("dead", "1")).lower() not in ("0", "false", "no")
+    if not video_id:
+        return JSONResponse({"error": "video_id required"}, status_code=400)
+    if not get_entry(entry_id):
+        return JSONResponse({"error": "No such entry"}, status_code=404)
+    with get_conn(DB_PATH) as conn:
+        updated = set_entry_video_embed_dead(conn, entry_id, video_id, dead)
+        conn.commit()
+    return JSONResponse({"ok": True, "id": entry_id, "video_id": video_id,
+                         "embed_dead": dead, "updated": updated})
 
 
 @app.post("/admin/media/{entry_id}")
