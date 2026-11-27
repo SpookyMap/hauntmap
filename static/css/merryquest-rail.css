@@ -1866,3 +1866,36 @@ body.brand-merryquest .mqx-newmap .wn-rail-all {
 .mqx-tourpanel-own { margin: 0.7rem 0 0; font-size: 0.88rem; }
 .mqx-tourpanel-own a { color: #ffc82c; text-decoration: none; font-weight: 600; }
 .mqx-tourpanel-own a:hover { text-decoration: underline; }
+
+/* ---------- Restored .mqx-tour inside the rail band (Dan restore, Nov 26) ----------
+   The original section's geometry (width: calc(113.37vw - 2.67px);
+   margin-left: calc(50% - 42.5vw - 203px); margin-top: 56px) escaped
+   the narrow .mqx-wrap column it used to sit in. Inside the band the
+   section fills the band's tour cell instead; every other rule —
+   card background, gold border, padding, zoom, centered type,
+   spirit field — is the section's own, untouched. */
+.mqx-railband .mqx-tour { width: auto; margin: 0; }
+
+/* ---------- Rail slim + long + scroll (Dan, Nov 26) ----------
+   Dan: match HauntMap's What's New rail — "very thin", long and
+   scrollable. HM's rail column is 252px (its hero-split grid) and
+   at >=1200px HM stretches the rail (min-height 526px) with the
+   scroll region flexed open past the 400px cap; the band mirrors
+   that here: the rail takes HM's 252px inside its band cell (the
+   restored tour section beside it is untouched), runs long, and
+   its rows scroll internally under the fixed head (Pip badge +
+   title + tagline stay put) with an MQ purple/gold scrollbar.
+   Phone keeps the stacked full-width rail and the shared 320px
+   scroll cap. */
+@media (min-width: 1000px) {
+  .mqx-railband .mqx-newmap { width: 252px; justify-self: start; min-height: 526px; }
+  .mqx-railband .mqx-newmap .wn-rail-scroll { flex: 1 1 0; min-height: 0; max-height: none; }
+}
+body.brand-merryquest .mqx-newmap .wn-rail-scroll {
+  scrollbar-width: thin; scrollbar-color: #ffc82c #1b0f33;
+}
+body.brand-merryquest .mqx-newmap .wn-rail-scroll::-webkit-scrollbar { width: 8px; }
+body.brand-merryquest .mqx-newmap .wn-rail-scroll::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #ffc82c, #c9920e); border-radius: 4px;
+}
+body.brand-merryquest .mqx-newmap .wn-rail-scroll::-webkit-scrollbar-track { background: #1b0f33; }
