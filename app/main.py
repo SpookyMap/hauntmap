@@ -4850,6 +4850,7 @@ def nearby(request: Request, q: str = "", miles: float = 10, cat: str = "hallowe
     entries: list = []
     err: str | None = None
     center: tuple[float, float] | None = None
+    feed_mode = False
     # direct coordinates (from "Near me" geolocation) take priority over text query
     if lat.strip() and lng.strip():
         try:
@@ -4861,6 +4862,56 @@ def nearby(request: Request, q: str = "", miles: float = 10, cat: str = "hallowe
         center = geocode_nominatim(q.strip())
         if center is None:
             err = f"Couldn't find '{q.strip()}'. Try a town or city name."
+    # MerryQuest Displays landing (Dan, Nov 26, 2026): the MQ nav's
+    # "Displays" item lands here bare, and the page arrived as a
+    # search box with nothing under it — "there should be displays
+    # there based on my geo location just like in haunt map". On the
+    # MQ brand only, a bare arrival resolves a default center from
+    # the same Cloudflare visitor-geo signal the homepage feed and
+    # Auto Tour use: exact CF coords when the headers carry them,
+    # else the visitor area's anchor town in the pool inventory —
+    # and then renders exactly like a Near-me search. With no usable
+    # geo at all it falls back to the brand feed (the visitor's state
+    # first when known, hand-picked pins boosted, newest first) so
+    # the landing still arrives populated. HauntMap's bare page is
+    # unchanged — its nav item is the search-led "Nearby".
+    if center is None and not q.strip() and err is None \
+            and brand == "merryquest":
+        geo = _visitor_geo(request)
+        if geo:
+            if geo.get("lat") is not None and geo.get("lng") is not None:
+                center = (geo["lat"], geo["lng"])
+            elif geo.get("city") or geo.get("state"):
+                inv = _town_inventory(
+                    None, cat if cat in ("halloween", "christmas")
+                    else "christmas")
+                resolved = _resolve_visitor_area(inv, geo, multi=multi)
+                if resolved["mode"] in ("exact", "near") \
+                        and resolved["chips"]:
+                    anchor = next(
+                        (t for t in inv
+                         if t["label"] == resolved["chips"][0]["label"]),
+                        None)
+                    if anchor and anchor["clat"] is not None:
+                        center = (anchor["clat"], anchor["clng"])
+        if center is not None:
+            q = "your location"
+        else:
+            feed = [d for d in _category_rows(cat)
+                    if d["lat"] is not None and d["lng"] is not None]
+            if geo and geo.get("state"):
+                in_state = [d for d in feed
+                            if extract_state(d.get("town") or "")
+                            == geo["state"]]
+                if in_state:
+                    feed = in_state
+            feed.sort(key=lambda e: e.get("created_at") or "",
+                      reverse=True)
+            feed.sort(key=lambda e: 0 if e.get("is_handpicked") else 1)
+            entries = feed[:24]
+            for d in entries:
+                d["distance"] = None
+            feed_mode = True
     if center is not None:
         # Rows from the shared _category_rows snapshot (fortification
         # pass 2) instead of a per-render scan + row_to_dict pass; the
@@ -4919,7 +4970,7 @@ def nearby(request: Request, q: str = "", miles: float = 10, cat: str = "hallowe
     return templates.TemplateResponse(request, "nearby.html",
         {"request": request, "entries": entries, "q": q, "miles": miles,
          "err": err, "voted": voted, "cat": cat, "cat_labels": CAT_LABELS,
-         "cat_emoji": CAT_EMOJI, "sort": sort,
+         "cat_emoji": CAT_EMOJI, "sort": sort, "feed_mode": feed_mode,
          # Town dropdown options for the search field — the same
          # 'City, ST' labels the homepage town filter offers.
          "town_options": towns(cat),

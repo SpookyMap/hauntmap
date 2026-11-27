@@ -128,8 +128,12 @@ document.getElementById('btn-near-me').onclick = function() {
 
 {% if err %}
 <div class="empty"><p>{{ err }}</p></div>
-{% elif q %}
+{% elif q or feed_mode %}
+  {% if feed_mode %}
+  <p class="nearby-count">The newest displays on MerryQuest — search above or tap Near me to see the ones closest to you.</p>
+  {% else %}
   <p class="nearby-count">{{ entries|length }} {% if brand | default('haunt') == 'merryquest' %}display{% else %}haunt{% endif %}{{ 's' if entries|length != 1 }} within {{ miles }} mi of "{{ q }}"{% if center_state and not multi %} &middot; in {{ center_state_name }} only{% if wide_count > entries|length %} ({{ wide_count - entries|length }} more across state lines — turn on <strong>Include nearby states</strong> above to see them){% endif %}{% endif %}</p>
+  {% endif %}
   {% if entries %}
   {% if brand | default('haunt') == 'merryquest' %}
   <div class="mqx-mosaic mqx-bleed">
@@ -145,7 +149,7 @@ document.getElementById('btn-near-me').onclick = function() {
       <span class="mqx-tile-empty">{% if e.category == 'events' %}&#x1F4C5;{% else %}&#x1F384;{% endif %}</span>
       {% endif %}
       <span class="tour-add-btn" role="button" tabindex="0" data-tour-btn data-id="{{ e.id }}" data-title="{{ e.title }}" data-town="{{ e.town }}" data-lat="{{ e.lat if e.lat is not none else '' }}" data-lng="{{ e.lng if e.lng is not none else '' }}" data-thumb="{{ e.thumb_url }}">+ Tour</span>
-      <span class="mqx-tile-cap"><span class="mqx-tile-title">{{ e.title }}</span><span class="mqx-tile-meta">{{ e.town }} &middot; {{ "%.1f"|format(e.distance) }} mi away</span></span>
+      <span class="mqx-tile-cap"><span class="mqx-tile-title">{{ e.title }}</span><span class="mqx-tile-meta">{{ e.town }}{% if e.distance is not none %} &middot; {{ "%.1f"|format(e.distance) }} mi away{% endif %}</span></span>
     </a>
     {% endfor %}
   </div>
