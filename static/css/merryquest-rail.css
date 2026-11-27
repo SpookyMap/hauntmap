@@ -1558,8 +1558,17 @@ main > h1 { font-family:'Anton',sans-serif; text-transform:uppercase; letter-spa
 .mqx-bigcd-cell span {
   display: block; font-family: "Luckiest Guy", var(--mqx-display); font-weight: 400;
   font-size: clamp(46px, 8.5vw, 88px); line-height: 1; color: #ffc82c;
-  transform: skewX(-3deg);
-  filter: drop-shadow(0 4px 0 rgba(18, 43, 30, 0.55)) drop-shadow(0 12px 24px rgba(0, 0, 0, 0.5));
+  /* Paint robustness (Dan, Nov 26, 2026): no transform, no filter on
+     the numerals. The old skewX + double drop-shadow filter put every
+     digit on its own filtered composited layer, invalidated every
+     second by the tick and stacked over the hero video — and one
+     cell's repaint intermittently never landed on Dan's MacBook
+     (blank HOURS one day, blank DAYS the next, with the correct
+     digits sitting in the DOM the whole time: no script ever wrote
+     an empty cell). The depth now comes from plain text-shadow,
+     which paints with the glyphs themselves and cannot drop a cell.
+     The mini countdown's cyan glow below overrides this shadow. */
+  text-shadow: 0 4px 0 rgba(18, 43, 30, 0.55), 0 12px 24px rgba(0, 0, 0, 0.5);
 }
 .mqx-bigcd-cell label {
   display: block; margin-top: 8px; font-size: 11px; font-weight: 700;

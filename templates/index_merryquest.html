@@ -396,6 +396,12 @@
   if (!cd.d) return;
   var target = Date.UTC(2026, 10, 25, 5, 0, 0); /* Nov 25, 2026, midnight ET */
   function pad(n) { return (n < 10 ? '0' : '') + n; }
+  /* Write-on-change (Dan, Nov 26, 2026): rewriting all four cells
+     every second re-rasterized every numeral's paint layer every
+     tick, and one cell's repaint intermittently never landed on
+     Dan's MacBook (a blank unit with the right digits in the DOM).
+     A cell is now only touched when its digit actually changes. */
+  function set(el, v) { if (el && el.textContent !== v) { el.textContent = v; } }
   function tick() {
     var ms = target - Date.now();
     if (ms <= 0) {
@@ -412,7 +418,7 @@
     var d = Math.floor(s / 86400); s -= d * 86400;
     var h = Math.floor(s / 3600); s -= h * 3600;
     var m = Math.floor(s / 60); s -= m * 60;
-    cd.d.textContent = pad(d); cd.h.textContent = pad(h); cd.m.textContent = pad(m); cd.s.textContent = pad(s);
+    set(cd.d, pad(d)); set(cd.h, pad(h)); set(cd.m, pad(m)); set(cd.s, pad(s));
     setTimeout(tick, 1000);
   }
   tick();
@@ -431,6 +437,7 @@
   if (!cd.d) return;
   var target = Date.UTC(2026, 11, 1, 5, 0, 0); /* Dec 1, 2026, midnight ET */
   function pad(n) { return (n < 10 ? '0' : '') + n; }
+  function set(el, v) { if (el && el.textContent !== v) { el.textContent = v; } }
   function tick() {
     var ms = target - Date.now();
     if (ms <= 0) {
@@ -446,7 +453,7 @@
     var d = Math.floor(s / 86400); s -= d * 86400;
     var h = Math.floor(s / 3600); s -= h * 3600;
     var m = Math.floor(s / 60); s -= m * 60;
-    cd.d.textContent = pad(d); cd.h.textContent = pad(h); cd.m.textContent = pad(m); cd.s.textContent = pad(s);
+    set(cd.d, pad(d)); set(cd.h, pad(h)); set(cd.m, pad(m)); set(cd.s, pad(s));
     setTimeout(tick, 1000);
   }
   tick();
