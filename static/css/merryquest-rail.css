@@ -1745,3 +1745,44 @@ main > h1 { font-family:'Anton',sans-serif; text-transform:uppercase; letter-spa
    ~199° from merryquest-logo-v3-clear.webp — with white text.
    HauntMap's chip is untouched. */
 body.brand-merryquest .mq-ticker .nt-chip { background: #0E7EC2; color: #fff; }
+
+/* ---------- Header nav: BIGGER + SPREAD (Dan, Nov 26, 2026) ----------
+   Dan's screenshot: the nav links read small and clustered, and
+   "Santa's Sack" wrapped onto two lines. Fix, desktop first: links go
+   14px -> 19px with real button padding, the nav gives up its
+   centered cluster and distributes space-evenly across the full bar
+   between the wordmark and the Log in / Join buttons, and every label
+   is nowrap — NO label ever wraps, at any width (the Sack guarantee).
+   Steps down at narrower laptop widths only as far as the one-line
+   guarantee allows. Phone keeps its own full-width nav row, at a
+   larger 16px with comfortable gaps and horizontal scroll instead of
+   today's off-screen clip (Games currently runs past the edge).
+   SHIP NOTE: bump the merryquest-rail.css ?v= tag in base.html in the
+   same commit (service worker serves CSS cache-first by full URL). */
+.mqx-header .mqx-nav { flex-wrap: nowrap; }
+.mqx-header .mqx-nav a { white-space: nowrap; }
+@media (min-width: 761px) {
+  .mqx-header .mqx-nav {
+    position: static; transform: none; flex: 1 1 auto; max-width: none;
+    justify-content: space-evenly; gap: 8px; margin: 0;
+  }
+  .mqx-header .mqx-nav a { font-size: 19px; font-weight: 700; padding: 11px 14px; }
+}
+@media (min-width: 761px) and (max-width: 1240px) {
+  .mqx-header .mqx-nav a { font-size: 17.5px; padding: 10px 9px; }
+}
+@media (min-width: 761px) and (max-width: 1023px) {
+  .mqx-header-in { gap: 14px; }
+  .mqx-header .mqx-nav a { font-size: 15px; padding: 9px 5px; }
+  .mqx-header .mqx-actions { gap: 8px; }
+  .mqx-header .mqx-login, .mqx-header .mqx-join { font-size: 13px; padding: 8px 12px; }
+}
+@media (max-width: 760px) {
+  .mqx-header .mqx-nav {
+    justify-content: flex-start; gap: 20px;
+    overflow-x: auto; overflow-y: hidden; scrollbar-width: none;
+    padding: 4px 2px;
+  }
+  .mqx-header .mqx-nav::-webkit-scrollbar { display: none; }
+  .mqx-header .mqx-nav a { font-size: 16px; font-weight: 700; padding: 8px 2px; }
+}
