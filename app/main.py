@@ -1705,6 +1705,21 @@ def _category_rows(category: str) -> list[dict]:
     return [dict(p) for p in base]
 
 
+def _pool_rows_with_dark(cat: str) -> list[dict]:
+    """Display-pool rows for the near-me / tour surfaces: the
+    category snapshot plus the dark-Christmas carve-out — for the
+    two display categories, the counterpart category's
+    dark-Christmas rows ride along (dual-brand, Dan Nov 26, 2026;
+    the same merge the map payload performs). Other categories are
+    returned untouched."""
+    rows = _category_rows(cat)
+    if cat in ("halloween", "christmas"):
+        other = "christmas" if cat == "halloween" else "halloween"
+        rows += [d for d in _category_rows(other)
+                 if _is_dark_christmas(d)]
+    return rows
+
+
 def category_peers(entry: dict) -> list[dict]:
     """All other visible entries in the entry's category (row dicts),
     from the shared _category_rows snapshot."""
@@ -4897,7 +4912,7 @@ def nearby(request: Request, q: str = "", miles: float = 10, cat: str = "hallowe
         if center is not None:
             q = "your location"
         else:
-            feed = [d for d in _category_rows(cat)
+            feed = [d for d in _pool_rows_with_dark(cat)
                     if d["lat"] is not None and d["lng"] is not None]
             if geo and geo.get("state"):
                 in_state = [d for d in feed
@@ -4915,9 +4930,11 @@ def nearby(request: Request, q: str = "", miles: float = 10, cat: str = "hallowe
     if center is not None:
         # Rows from the shared _category_rows snapshot (fortification
         # pass 2) instead of a per-render scan + row_to_dict pass; the
-        # distance annotation lands on the per-request copies.
+        # distance annotation lands on the per-request copies. The
+        # pool carries the dark-Christmas carve-out rows of the
+        # counterpart display category (dual-brand, Dan Nov 26).
         clat, clng = center
-        for d in _category_rows(cat):
+        for d in _pool_rows_with_dark(cat):
             if d["lat"] is None or d["lng"] is None:
                 continue
             d["distance"] = haversine_miles(clat, clng, d["lat"], d["lng"])
@@ -7698,10 +7715,16 @@ def tour_page(request: Request, s: str = "", cat: str = "halloween"):
         if ids:
             with get_conn(DB_PATH) as conn:
                 rows = conn.execute(
-                    f"SELECT * FROM entries WHERE hidden = 0 AND category = ? "
+                    f"SELECT * FROM entries WHERE hidden = 0 "
                     f"AND id IN ({','.join('?' * len(ids))})",
-                    [cat] + ids).fetchall()
-            by_id = {r["id"]: row_to_dict(r) for r in rows}
+                    ids).fetchall()
+            # Pool membership, not just the link's category: a stop
+            # resolves when it belongs to the page's category OR is
+            # dark Christmas (dual-brand carve-out, Dan Nov 26, 2026)
+            # — the near-me grids on both brands offer +Tour on dark
+            # stops, so their tour links must resolve them too.
+            by_id = {r["id"]: row_to_dict(r) for r in rows
+                     if r["category"] == cat or _is_dark_christmas(r)}
             shared = [by_id[i] for i in ids if i in by_id]
     return templates.TemplateResponse(request, "tour.html",
         {"request": request, "shared": shared, "shared_ids": s,
@@ -9675,12 +9698,21 @@ def _auto_tour_pool(conn, cat: str, clat: float, clng: float,
     `radius` miles. Each returned dict is a copy carrying _views (from
     the shared ranking snapshot) and _dist (miles from the center)."""
     out = []
-    for e in _entries_with_views(conn, cat):
+    pool = _entries_with_views(conn, cat)
+    if cat in ("halloween", "christmas"):
+        # Dark-Christmas carve-out (Dan, Nov 26, 2026): the
+        # counterpart display category's dark rows are dual-brand
+        # and join the pool, as on the map and the near-me grids.
+        other = "christmas" if cat == "halloween" else "halloween"
+        pool += [e for e in _entries_with_views(conn, other)
+                 if _is_dark_christmas(e)]
+    for e in pool:
         if e.get("lat") is None or e.get("lng") is None:
             continue
         if not (e.get("address") or "").strip():
             continue  # no verified street address — never auto-toured
-        if cat == "christmas" and e.get("lit_status") != "lit":
+        if e.get("category") == "christmas" \
+                and e.get("lit_status") != "lit":
             continue  # unconfirmed display — never auto-toured (Dan, Nov 20)
         d = haversine_miles(clat, clng, e["lat"], e["lng"])
         if d <= radius:
