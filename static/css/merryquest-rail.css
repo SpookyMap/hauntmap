@@ -1798,16 +1798,16 @@ body.brand-merryquest .mq-ticker .nt-chip { background: #0E7EC2; color: #fff; }
 }
 
 
-/* ---------- New on the Map rail + Build My Tour band (STAGED, Nov 26) ----------
-   The MQ twin of HauntMap's homepage rail seat: directly under the
-   hero, the rail heads a 272px left column and the auto-tour panel
-   (.auto-tour-home dimensions, MQ glass skin above) sits beside it;
-   under 1000px they stack full-width, rail first — the same
-   adaptation HauntMap's rail makes in its stacked layout. The rail
-   reuses the .wn-rail family; the overrides below give it the MQ
-   purple/gold cast and restore the circular badge the generic MQ
-   rail skin hides (the badge here is MQ art — Pip's portrait
-   (mq-pip-badge.jpg, Dan, Nov 26) — not HauntMap's map badge). */
+/* ---------- Build My Tour band + New on the Map rail (Nov 26) ----------
+   The band directly under the hero originally paired the rail
+   with the tour section; Dan (Nov 26, later) moved the rail down
+   beside Meet Pip (.mqx-piprow at the end of this file), so the
+   band now carries the restored tour section alone, full width.
+   The rail reuses the .wn-rail family; the overrides below give
+   it the MQ purple/gold cast and restore the circular badge the
+   generic MQ rail skin hides (the badge here is MQ art — Pip's
+   portrait (mq-pip-badge.jpg, Dan, Nov 26) — not HauntMap's map
+   badge). */
 .mqx-railband { margin-top: 2.4rem;
   /* The .mqx-wrap column is narrow (~648px); wide MQ sections
      escape it with the .mqx-bleed trick. The band bleeds the same
@@ -1815,7 +1815,9 @@ body.brand-merryquest .mq-ticker .nt-chip { background: #0E7EC2; color: #fff; }
   width: 100vw; margin-left: calc(50% - 50vw); margin-right: calc(50% - 50vw);
   padding: 0 max(20px, calc((100vw - 1180px) / 2)); box-sizing: border-box; }
 @media (min-width: 1000px) {
-  .mqx-railband { display: grid; grid-template-columns: 272px 1fr;
+  /* Rail relocated beside Meet Pip (Dan, Nov 26, later): the band
+     now holds only the restored tour section, full width. */
+  .mqx-railband { display: grid; grid-template-columns: 1fr;
     gap: 1.1rem; align-items: start; }
 }
 .mqx-railband .wn-rail { grid-area: auto; }
@@ -1828,7 +1830,7 @@ body.brand-merryquest .mq-ticker .nt-chip { background: #0E7EC2; color: #fff; }
   body.brand-merryquest .mqx-railband .auto-tour-home { display: block; }
 }
 @media (max-width: 999px) {
-  .mqx-railband .mqx-newmap { margin-bottom: 1.1rem; }
+  .mqx-piprow .mqx-newmap { margin-bottom: 0; }
 }
 body.brand-merryquest .mqx-newmap {
   background: linear-gradient(165deg, rgba(58, 28, 110, 0.38), rgba(14, 7, 30, 0.55));
@@ -1880,16 +1882,15 @@ body.brand-merryquest .mqx-newmap .wn-rail-all {
    Dan: match HauntMap's What's New rail — "very thin", long and
    scrollable. HM's rail column is 252px (its hero-split grid) and
    at >=1200px HM stretches the rail (min-height 526px) with the
-   scroll region flexed open past the 400px cap; the band mirrors
-   that here: the rail takes HM's 252px inside its band cell (the
-   restored tour section beside it is untouched), runs long, and
-   its rows scroll internally under the fixed head (Pip badge +
-   title + tagline stay put) with an MQ purple/gold scrollbar.
-   Phone keeps the stacked full-width rail and the shared 320px
-   scroll cap. */
+   scroll region flexed open past the 400px cap; the rail mirrors
+   that here in its seat beside Meet Pip (.mqx-piprow, below):
+   252px wide, long, and its rows scroll internally under the
+   fixed head (Pip badge + title + tagline stay put) with an MQ
+   purple/gold scrollbar. Phone keeps the stacked full-width rail
+   and the shared 320px scroll cap. */
 @media (min-width: 1000px) {
-  .mqx-railband .mqx-newmap { width: 252px; justify-self: start; min-height: 526px; }
-  .mqx-railband .mqx-newmap .wn-rail-scroll { flex: 1 1 0; min-height: 0; max-height: none; }
+  .mqx-piprow .mqx-newmap { width: 252px; justify-self: start; min-height: 526px; }
+  .mqx-piprow .mqx-newmap .wn-rail-scroll { flex: 1 1 0; min-height: 0; max-height: none; }
 }
 body.brand-merryquest .mqx-newmap .wn-rail-scroll {
   scrollbar-width: thin; scrollbar-color: #ffc82c #1b0f33;
@@ -1899,3 +1900,62 @@ body.brand-merryquest .mqx-newmap .wn-rail-scroll::-webkit-scrollbar-thumb {
   background: linear-gradient(180deg, #ffc82c, #c9920e); border-radius: 4px;
 }
 body.brand-merryquest .mqx-newmap .wn-rail-scroll::-webkit-scrollbar-track { background: #1b0f33; }
+
+/* ---------- Meet Pip + rail row (Dan, Nov 26, later) ----------
+   Dan: "the new on the map block goes down by the pip intro
+   block." The rail leaves the tour band and sits beside Meet Pip
+   in one row. The row breaks out to the same 1180px content
+   measure as the band above it (same bleed recipe). Desktop: Pip's
+   block takes the flexible column, the rail its 252px; her block
+   is REFLOWED ONLY — the breakout centering it used as a
+   standalone section (left 50% / translateX / fixed width / the
+   0.8 shrink that fitted it to the old measure) is neutralized in
+   this seat, and at its natural scale in the narrower column it
+   paints at almost exactly its old visual size. Medal, copy,
+   chips, colors — untouched. Under 1000px the row stacks, Pip
+   first, rail under her. */
+.mqx-piprow {
+  width: 100vw; margin-left: calc(50% - 50vw); margin-right: calc(50% - 50vw);
+  padding: 0 max(20px, calc((100vw - 1180px) / 2)); box-sizing: border-box;
+  margin-top: 44px;
+  display: grid; grid-template-columns: 1fr; gap: 1.1rem; align-items: start;
+}
+@media (min-width: 1000px) {
+  .mqx-piprow { grid-template-columns: minmax(0, 1fr) 252px; }
+}
+@media (max-width: 760px) {
+  .mqx-piprow { margin-top: 30px; }
+}
+.mqx-piprow .wn-rail { grid-area: auto; }
+.mqx-piprow .mqx-guide {
+  position: static; left: auto; transform: none;
+  width: auto; margin-top: 0; zoom: 1;
+}
+
+/* ---------- Tour-card spirits: visible by default (Dan fix, Nov 26) ----------
+   Root cause of the "empty block": the four cast portraits in the
+   restored Build My Tour card are .mqx-spirit images, whose base
+   state is opacity: 0 — they only appear when the scroll
+   IntersectionObserver adds .alive. Any render where the observer
+   hasn't fired yet (screenshots, first paint, a missed threshold)
+   shows a bare card, which is exactly what Dan caught. The tour
+   card's four now render in their bloomed end-state by default —
+   same opacity, filter, settle transform and drift as .alive —
+   so the card is never empty; the observer's toggle can no longer
+   hide them (equal specificity, these rules come later), and the
+   bloom transition still plays for the other haunted sections,
+   whose design is unchanged. */
+.mqx-tour .mqx-spirit {
+  opacity: 0.5;
+  filter: saturate(1.06) brightness(1.03) blur(0);
+  transform: translateY(0) scale(1) rotate(var(--tilt, 0deg));
+  animation: mqx-spirit-drift 7.5s ease-in-out 1.5s infinite alternate;
+}
+@media (max-width: 760px) {
+  .mqx-tour .mqx-spirit { opacity: 0.34; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mqx-tour .mqx-spirit {
+    opacity: 0.32; transform: none; filter: none; animation: none;
+  }
+}

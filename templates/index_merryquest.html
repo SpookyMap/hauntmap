@@ -80,13 +80,15 @@
      the ORIGINAL standalone .mqx-tour section is back, verbatim
      from f6a7a22 (the commit before the panel): spirit-field cast
      portraits, centered heading + subline, single gold "Build my
-     tour" CTA to /tour. The rail is unchanged. The section keeps
-     its own styling; the only adaptation is geometry — its CSS
-     bleed width/margin escaped the old .mqx-wrap column, so inside
-     the band a scoped override (end of merryquest-rail.css) lets
-     it fill the band's tour cell instead. #}
+     tour" CTA to /tour. The section keeps its own styling; the
+     only adaptation is geometry — its CSS bleed width/margin
+     escaped the old .mqx-wrap column, so inside the band a scoped
+     override (end of merryquest-rail.css) lets it fill the band
+     instead. Rail relocation (Dan, Nov 26, later): the New on the
+     Map rail no longer sits in this band — it moved down beside
+     the Meet Pip block (.mqx-piprow below), so the tour section
+     takes the band's full width. #}
   <div class="mqx-railband">
-    {% include "_mq_new_on_map_rail.html" %}
   <section class="mqx-tour mqx-haunted">
     <div class="mqx-spirit-field" aria-hidden="true"><img class="mqx-spirit s-left" style="--tilt:-3deg; top:0; object-position:50% 18%" src="/static/img/neon/santa.jpg" alt="" loading="lazy" decoding="async"><img class="mqx-spirit s-left" style="--tilt:2deg; top:4%; left:14%; object-position:50% 15%" src="/static/img/neon/krampus-v2.jpg" alt="" loading="lazy" decoding="async"><img class="mqx-spirit s-right" style="--tilt:-2deg; top:4%; right:14%; object-position:50% 15%" src="/static/img/neon/la-befana-v2.jpg" alt="" loading="lazy" decoding="async"><img class="mqx-spirit s-right" style="--tilt:3deg; top:0; object-position:50% 15%" src="/static/img/neon/ded-moroz-v2.jpg" alt="" loading="lazy" decoding="async"></div>
     <h2 class="mqx-h2">Build my tour for me</h2>
@@ -148,6 +150,13 @@
      block's full width/seat — see .mqx-dotd in merryquest-rail.css. #}
   {% with dotd_brand = 'merryquest' %}{% include "_display_of_day.html" %}{% endwith %}
 
+  {# Meet Pip + New on the Map rail row (Dan, Nov 26, later):
+     the rail relocates from the tour band to sit beside the Meet
+     Pip intro block — one row on desktop (Pip's block narrows to
+     fit the 252px rail; her design, medal, copy and language are
+     untouched, reflow only), stacked Pip-first on phone. The row
+     seat lives at the end of merryquest-rail.css (.mqx-piprow). #}
+  <div class="mqx-piprow">
   <section class="mqx-guide mqx-haunted">
     <a class="mqx-guide-medal" href="/characters/pip-the-star-pin"><img src="/static/img/pip-tech.jpg" alt="Pip the Star Pin — your MerryQuest guide" loading="lazy"></a>
     <div class="mqx-guide-copy">
@@ -157,6 +166,8 @@
       <div class="mqx-guide-steps"><span>📍 She marks your arrival</span><span>✨ She springs the encounter</span><span>🎒 She fills your Sack</span></div>
     </div>
   </section>
+    {% include "_mq_new_on_map_rail.html" %}
+  </div>
   <section class="mqx-split mqx-haunted" id="mqx-quest">
     <div class="mqx-split-copy">
       <p class="mqx-eyebrow">✦ The quest ✦</p>
