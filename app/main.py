@@ -19393,7 +19393,7 @@ _QUEST_STORIES = {
     "ded-moroz": "Grandfather Frost strides out of the Siberian snow with a staff that freezes the ground it touches, delivering gifts in the deepest cold of the year. He respects one thing: endurance. If you're out hunting on the coldest night, so is he.",
     "ebenezer-scrooge": "The hardest catch in the cast, because his heart thaws slowly and he trusts no one — not even Christmas. He starts the season hiding from all of it. Catch him anyway. Everybody in this story gets a second chance; that's the entire point of him.",
     "la-befana": "Italy's gift-bearing witch sweeps in on her broom every January 6th, leaving sweets for the good and coal for the rest — centuries before anyone thought to check a map. She hides at the displays with old-world soul. Leave the kitchen window open. Old habits.",
-    "pip-the-star-pin": "Your guide, your mascot — the star on top of the quest. Pip was the first light placed this season and will be the last one taken down, and in between, Pip rides along on every hunt, pointing the way. You don't catch Pip. Pip catches you. Welcome to MerryQuest.",
+    "pip-the-star-pin": "Your guide, your mascot — the star on top of the quest. Pip was the first light placed this season and will be the last one taken down, and in between, Pip rides along on every hunt, pointing the way.\n\nYou don't catch Pip. Pip catches you. Welcome to MerryQuest.",
 }
 _QUEST_PORTRAITS = {
     "santa-claus": "/static/img/neon/santa.jpg",
@@ -20225,6 +20225,13 @@ def _quest_story_halves(slug: str) -> tuple:
                 None)
     story = _QUEST_STORIES.get(code_slug)
     if story:
+        if "\n\n" in story:
+            # Explicit half break written into the story itself
+            # (Dan, Nov 26, 2026 — Pip: 'You don't catch Pip.' opens
+            # the second half, not the end of the first).
+            first, second = story.split("\n\n", 1)
+            return ({"kind": "text", "text": first.strip()},
+                    {"kind": "text", "text": second.strip()})
         sentences = [s.strip() for s in
                      story.replace("!", ".").replace("?", ".")
                      .split(".") if s.strip()]
