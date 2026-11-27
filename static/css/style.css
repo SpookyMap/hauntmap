@@ -7820,33 +7820,31 @@ a.wn-fbtn:hover, summary.wn-fbtn:hover { border-color: #57a8ff; }
   margin: 26px 0 34px; padding: 0;
 }
 .xmq-in {
-  display: flex; align-items: center; gap: 34px;
+  display: flex; align-items: center; flex-wrap: wrap; gap: 16px 34px;
   background: linear-gradient(135deg, #150833 0%, #1e0b4a 55%, #2a1160 100%);
   border: 1px solid rgba(110, 230, 255, 0.45); border-radius: 22px;
   padding: 34px 38px; box-shadow: 0 0 34px rgba(80, 40, 180, 0.35), inset 0 0 60px rgba(110, 230, 255, 0.05);
 }
 .xmq-copy { flex: 1 1 52%; min-width: 0; }
 .xmq-eyebrow {
+  flex: 0 0 100%;
   display: inline-block; font-size: 12px; font-weight: 800; letter-spacing: 0.32em;
-  text-transform: uppercase; color: #ffd98a; margin-bottom: 14px;
+  text-transform: uppercase; color: #ffd98a; margin-bottom: 0; white-space: nowrap;
 }
-.xmq-logo { display: block; width: 100%; max-width: 680px; height: auto; margin-bottom: 20px; }
-.xmq-head {
-  margin: 0 0 10px; font-size: clamp(26px, 3.4vw, 40px); font-weight: 900;
-  color: #ffffff; letter-spacing: 0.01em; line-height: 1.08;
-}
+.xmq-logo { display: block; width: 100%; max-width: 680px; height: auto; margin-bottom: 14px; }
 .xmq-body { margin: 0 0 22px; font-size: 16.5px; line-height: 1.55; color: #d9d2f5; max-width: 52ch; }
 .xmq-body strong { color: #ffd98a; }
 .xmq-cta-row { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
 .xmq-btn {
-  display: inline-block; padding: 13px 24px; border-radius: 999px;
+  display: inline-block; padding: 7px 13px; border-radius: 999px;
   background: linear-gradient(180deg, #ffe066, #ffb52e); color: #241103;
-  font-weight: 900; font-size: 16px; text-decoration: none;
-  box-shadow: 0 4px 22px rgba(255, 181, 46, 0.45);
+  font-weight: 900; font-size: 11.5px; text-decoration: none;
+  box-shadow: 0 4px 22px rgba(255, 181, 46, 0.45); align-self: center;
 }
 .xmq-btn:hover { filter: brightness(1.07); }
 .xmq-note { font-size: 13.5px; font-weight: 700; letter-spacing: 0.06em; color: #9be9ff; text-transform: uppercase; }
-.xmq-art { flex: 0 1 44%; display: block; }
+.xmq-side { flex: 0 1 44%; display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.xmq-art { display: block; }
 .xmq-art img {
   display: block; width: 100%; height: auto; border-radius: 16px;
   border: 1px solid rgba(110, 230, 255, 0.5); box-shadow: 0 0 26px rgba(110, 230, 255, 0.25);
@@ -7854,6 +7852,7 @@ a.wn-fbtn:hover, summary.wn-fbtn:hover { border-color: #57a8ff; }
 @media (max-width: 1100px) {
   .xmq-band { margin: 24px 0; padding: 0; }
   .xmq-in { flex-direction: column; align-items: stretch; gap: 20px; padding: 24px 20px; }
-  .xmq-art { flex: none; }
+  .xmq-side { flex: none; }
+  .xmq-eyebrow { flex: none; font-size: 11px; letter-spacing: 0.22em; text-align: center; }
   .xmq-body { font-size: 15.5px; }
 }
