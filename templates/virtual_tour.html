@@ -28,7 +28,7 @@
 {% if is_tv %}
 <section class="vt-picker" id="vt-picker" hidden aria-label="{{ site_name }} TV channels">
   <h2 class="vt-picker-title">&#x1F4FA; Pick a channel</h2>
-  <p class="vt-picker-sub">Every channel is a non-stop ride through real {% if brand | default('haunt') == 'merryquest' %}displays.{% else %}haunts.{% endif %} Pick one and it plays stop after stop — uploaded videos roll straight into the next house; on TikTok stops, tap the video, watch, then hit the big &#x25B6; Next button. A few All America stops are photos — states where video hasn't reached yet; the ride pauses on the picture a few seconds, then rolls on.</p>
+  <p class="vt-picker-sub">Every channel is a non-stop ride through real {% if brand | default('haunt') == 'merryquest' %}displays.{% else %}haunts.{% endif %} Pick one and it plays stop after stop — every video starts on its own and rolls straight into the next house. If one ever doesn't start, tap it — or hit the big &#x25B6; Next button to ride on. A few All America stops are photos — states where video hasn't reached yet; the ride pauses on the picture a few seconds, then rolls on.</p>
   <div class="vt-picker-grid">
     {% for c in channels if c.featured %}
     <article class="vt-channel" data-vt-channel="{{ c.id }}">
@@ -67,7 +67,7 @@
     <div class="vt-frame" id="vt-frame">
     <div class="vt-stage" id="vt-stage">{% if is_tv %}<video id="vt-video" controls playsinline preload="metadata" hidden></video><iframe id="vt-tt" hidden allowfullscreen allow="autoplay; encrypted-media; picture-in-picture; fullscreen" title="TikTok video player"></iframe><img id="vt-photo" hidden alt="">{% endif %}</div>
     <div class="vt-tv-next" id="vt-tv-next" hidden>
-      <p class="vt-tv-next-note">&#x1F4FA; <strong>{{ site_name }} TV:</strong> TikTok stops can't auto-play the next house — watch this one, then ride on:</p>
+      <p class="vt-tv-next-note">&#x1F4FA; <strong>{{ site_name }} TV:</strong> this video didn't start on its own — tap it to watch, or ride on:</p>
       <button type="button" class="btn vt-tv-next-btn" id="vt-tv-next-btn">&#x25B6; {% if brand | default('haunt') == 'merryquest' %}Next quest{% else %}Next haunt{% endif %}</button>
     </div>
     {% if is_tv %}
@@ -237,6 +237,26 @@
   .vt-stage .tt-facade img { width: 100%; max-height: 62vh; object-fit: contain; display: block; background: #0d0916; }
   .vt-stage video { width: 100%; max-height: 62vh; display: block; background: #000; }
   .vt-stage .tiktok-embed { margin: 0 auto; }
+  /* TikTok Embed Player (player/v1) wrap, regular mode: the player
+     keeps a portrait stage inside the wide tour frame — width capped
+     so its 9/16 height never exceeds the stage's 62vh — with the
+     stop's poster behind it while it loads and a tap overlay that
+     appears only if autoplay is refused. */
+  .vt-tt-wrap {
+    position: relative; margin: 0 auto; background: #000;
+    width: min(400px, 100%, 34.875vh); aspect-ratio: 9 / 16;
+  }
+  .vt-tt-poster {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    object-fit: cover; display: block; background: #0d0916;
+  }
+  .vt-tt-frame {
+    position: relative; width: 100%; height: 100%; border: 0; display: block; background: #000;
+  }
+  .vt-tt-tap {
+    position: absolute; inset: 0; cursor: pointer; background: rgba(5, 3, 10, 0.25);
+  }
+  .vt-tt-tap .tt-facade-label { z-index: 2; }
   .vt-info h2 { margin: 0.7rem 0 0.2rem; font-size: 1.35rem; }
   .vt-info h2 a { color: var(--ink); text-decoration: none; }
   .vt-info .meta { margin: 0.1rem 0; }
@@ -636,14 +656,15 @@ var VT_SCARE = {
   }
 
   // ---- Play-all ride mode (regular mode only; TV mode already leans
-  // back). Uploaded videos ride MUTED (the only autoplay browsers
-  // allow) and advance on their real 'ended' event. TikTok embeds
-  // expose no play/ended control to the page, so those stops — and
-  // any stop whose video can't start — get a fixed dwell, then the
-  // ride moves on; it never fakes a play or touches the embed. The
-  // visitor stays in control: any manual navigation (Prev/Next, rail,
-  // keys, swipe), +Tour, Share, playing a TikTok by hand, switching
-  // route, or hiding the tab pauses the ride instead of fighting it.
+  // back). Uploaded videos advance on their real 'ended' event;
+  // TikTok stops advance on the Embed Player's own 'ended' (the
+  // message listener above, with its clock-based insurance), so a
+  // ride now plays TikTok houses for real instead of dwelling past
+  // them. Photo stops — and any stop whose video can't start at
+  // all — get a fixed dwell, then the ride moves on. The visitor
+  // stays in control: any manual navigation (Prev/Next, rail,
+  // keys, swipe), +Tour, Share, switching route, or hiding the tab
+  // pauses the ride instead of fighting it.
   var RIDE_DWELL_MS = 8000;
   var riding = false, rideTimer = null;
   function setRideUI() {
@@ -666,12 +687,19 @@ var VT_SCARE = {
   function rideStep() {
     clearRideTimer();
     if (!riding) return;
+    var s = stops[idx];
+    if (s && isTtStop(s)) {
+      // The Embed Player is already autoplaying this stop (or the
+      // tap fallback is up); the ride advances on its 'ended'.
+      // This long backstop only fires if the player goes
+      // completely silent, so a dead embed can never stall the
+      // ride forever.
+      rideTimer = setTimeout(rideAdvance, 300000);
+      return;
+    }
     var v = stage.querySelector('video');
     if (!v) { armRideDwell(); return; }
-    try { v.muted = true; } catch (e) {}
-    var pr = null;
-    try { pr = v.play(); } catch (e) {}
-    if (pr && pr.catch) pr.catch(function () { if (riding) armRideDwell(); });
+    playUpload(v);
     // Safety net: a clip that genuinely can't start (dead file, no
     // source) becomes a dwell stop, so one bad file never stalls the
     // ride. A still-loading healthy file (networkState 2) is left
@@ -693,6 +721,7 @@ var VT_SCARE = {
     clearRideTimer();
     var v = stage.querySelector('video');
     if (v && !v.paused) { try { v.pause(); } catch (e) {} }
+    if (isTtStop(stops[idx])) ttSend('pause');
     setRideUI();
   }
 
@@ -770,20 +799,178 @@ var VT_SCARE = {
   function isTtStop(s) {
     return !!(s && s.tiktok_url && s.tiktok_url.indexOf('/video/') !== -1);
   }
+
+  // ---- Autoplay + TikTok Embed Player control (both modes) ----
+  // Dan (Nov 26): the tour's videos must PLAY — start on their own
+  // and roll into the next stop — the way they do on HauntMap.
+  // Two halves:
+  //  * Uploaded videos: every stop render now attempts playback
+  //    (previously regular mode waited for a tap or the Play-all
+  //    ride). Sound is attempted once the visitor has interacted
+  //    with the page; a refused play() falls back to muted
+  //    autoplay — a moving picture with a visible mute control
+  //    beats a frozen poster — and the fallback remembers that WE
+  //    muted it, so the visitor's first touch hands the sound
+  //    back and later stops don't inherit a mute nobody chose.
+  //  * TikTok stops run TikTok's official Embed Player
+  //    (player/v1) — the one TikTok documents a control channel
+  //    for — instead of the embed.js blockquote (regular mode) or
+  //    the bare embed/v2 page (TV mode), neither of which exposes
+  //    any play/ended control to the page. player/v1 takes
+  //    autoplay=1 in the URL and speaks postMessage
+  //    ({'x-tiktok-player': true, type, value}): play / pause /
+  //    mute / unMute commands out, onPlayerReady / onStateChange
+  //    (-1 init, 0 ended, 1 playing, 2 paused, 3 buffering) /
+  //    onCurrentTime / onMute / onPlayerError events in. That is
+  //    what lets the page hear 'ended' and roll on, and lets the
+  //    TV remote's Sound button reach TikTok stops at last. When
+  //    a browser refuses the start (onPlayerError 3002
+  //    AUTOPLAY_ERROR, or no 'playing' within the watchdog
+  //    window), the fallback is honest and unmissable: the whole
+  //    player area becomes the tap target (regular mode) or the
+  //    big Next bar appears (TV mode).
+  var userGestured = false;
+  document.addEventListener('pointerdown', function () { onFirstGesture(); }, true);
+  document.addEventListener('keydown', function () { onFirstGesture(); }, true);
+  function onFirstGesture() {
+    if (userGestured) return;
+    userGestured = true;
+    var s = stops[idx];
+    if (!s) return;
+    if (isTtStop(s)) { if (ttWantsSound()) ttSend('unMute'); }
+    else {
+      var v = stage.querySelector('video');
+      if (v && v.dataset && v.dataset.autoMuted === '1' && !v.paused) {
+        v.dataset.autoMuted = '';
+        try { v.muted = false; } catch (e) {}
+      }
+    }
+  }
+  var regVol = null; // regular-mode volume carry {v, m}
+  function playUpload(v) {
+    if (!v) return;
+    if (regVol) { try { v.volume = regVol.v; v.muted = regVol.m; } catch (e) {} }
+    else if (userGestured) { try { v.muted = false; } catch (e) {} }
+    var pr = null;
+    try { pr = v.play(); } catch (e) {}
+    if (pr && pr.catch) pr.catch(function () {
+      try {
+        v.muted = true;
+        if (v.dataset) v.dataset.autoMuted = '1';
+        var pr2 = v.play(); if (pr2 && pr2.catch) pr2.catch(function () {});
+      } catch (e) {}
+    });
+  }
+  var ttFrame = null, ttReady = false, ttPlaying = false, ttEnded = false,
+      ttMuted = true, ttWatchdog = null, ttArmedAt = 0, ttTracked = false;
+  function ttPlayerUrl(id) {
+    return 'https://www.tiktok.com/player/v1/' + id + '?autoplay=1&loop=0&rel=0';
+  }
+  function ttIdOf(s) {
+    return s.tiktok_url.split('/video/')[1].split('?')[0];
+  }
+  function ttSend(type, value) {
+    if (!ttFrame || !ttFrame.contentWindow) return;
+    var msg = { 'x-tiktok-player': true, type: type };
+    if (value !== undefined) msg.value = value;
+    try { ttFrame.contentWindow.postMessage(msg, 'https://www.tiktok.com'); } catch (e) {}
+  }
+  function ttWantsSound() {
+    if (VT_TV) return !(tvVol && tvVol.m);
+    return userGestured && !(regVol && regVol.m);
+  }
+  function ttShowFallback() {
+    if (VT_TV) { if (tvNext) tvNext.hidden = false; }
+    else {
+      var tap = stage.querySelector('.vt-tt-tap');
+      if (tap) tap.hidden = false;
+    }
+  }
+  function ttHideFallback() {
+    if (VT_TV) { if (tvNext && isTtStop(stops[idx])) tvNext.hidden = true; }
+    else {
+      var tap = stage.querySelector('.vt-tt-tap');
+      if (tap) tap.hidden = true;
+    }
+  }
+  // Arm one TikTok stop: called by both renderers right after the
+  // stop's iframe carries its player URL.
+  function ttArm(frame) {
+    ttFrame = frame; ttReady = false; ttPlaying = false; ttEnded = false;
+    ttTracked = false; ttArmedAt = Date.now();
+    clearTimeout(ttWatchdog);
+    ttWatchdog = setTimeout(function () {
+      if (!ttPlaying && !ttEnded) ttShowFallback();
+    }, 4000);
+  }
+  function ttDisarm() {
+    ttFrame = null; ttReady = false; ttPlaying = false; ttEnded = false;
+    clearTimeout(ttWatchdog); ttWatchdog = null;
+  }
+  function ttAdvance() {
+    if (ttEnded) return;
+    ttEnded = true;
+    clearTimeout(ttWatchdog);
+    if (idx < stops.length - 1) go(idx + 1); else finish();
+  }
+  window.addEventListener('message', function (e) {
+    if (e.origin !== 'https://www.tiktok.com') return;
+    if (!ttFrame || e.source !== ttFrame.contentWindow) return;
+    var d = e.data;
+    if (!d || typeof d !== 'object' || d['x-tiktok-player'] !== true) return;
+    if (d.type === 'onPlayerReady') {
+      ttReady = true;
+      ttSend('play');
+      if (ttWantsSound()) ttSend('unMute');
+      return;
+    }
+    // A src swap can surface the previous video's last messages —
+    // nothing else counts until the new player has said ready.
+    if (!ttReady) return;
+    if (d.type === 'onStateChange') {
+      if (d.value === 1) {
+        ttPlaying = true;
+        clearTimeout(ttWatchdog);
+        ttHideFallback();
+        if (!ttTracked) {
+          ttTracked = true;
+          var s = stops[idx];
+          if (s && window.hmTrack) hmTrack('video_play', Number(s.id));
+        }
+      } else if (d.value === 0) {
+        ttAdvance();
+      } else if (d.value === 2) {
+        ttPlaying = false;
+      }
+    } else if (d.type === 'onCurrentTime' && d.value) {
+      var dur = d.value.duration || 0, cur = d.value.currentTime || 0;
+      // 'ended' insurance: if the clock says the video is over but
+      // no state-0 arrived, roll on — a finished player must never
+      // stall the tour. A mid-video pause never satisfies this.
+      if (dur > 0 && cur >= dur - 0.75 && !ttEnded) ttAdvance();
+    } else if (d.type === 'onMute') {
+      ttMuted = !!d.value;
+      setMuteUI();
+    } else if (d.type === 'onPlayerError') {
+      // Includes 3002 AUTOPLAY_ERROR: the browser blocked the start.
+      ttShowFallback();
+    }
+  });
   // The remote's sound button mirrors the CURRENT stop: on uploaded
-  // videos it toggles the element's own mute; on TikTok stops the
-  // page cannot reach inside the embed (TikTok starts embeds muted
-  // by its own policy and exposes no volume API), so the button
-  // says so and points at the video's own speaker icon — which is
-  // clickable precisely because nothing overlays the iframe.
+  // videos it toggles the element's own mute; on TikTok stops it
+  // sends the Embed Player a mute/unMute command and mirrors the
+  // state the player reports back through onMute.
   function setMuteUI() {
     if (!muteBtn || !tvVideo) return;
     if (stops[idx] && stops[idx].kind === 'photo') {
       muteBtn.innerHTML = '&#x1F4F8; Photo';
       muteBtn.setAttribute('aria-pressed', 'false');
     } else if (isTtStop(stops[idx])) {
-      muteBtn.innerHTML = '&#x1F509; Sound';
-      muteBtn.setAttribute('aria-pressed', 'false');
+      // The Embed Player takes real mute/unMute commands now, so
+      // the button mirrors the player's own state (kept current
+      // by its onMute events).
+      muteBtn.innerHTML = ttMuted ? '&#x1F507; Unmute' : '&#x1F50A; Sound on';
+      muteBtn.setAttribute('aria-pressed', ttMuted ? 'false' : 'true');
     } else if (tvVideo.muted) {
       muteBtn.innerHTML = '&#x1F507; Unmute';
       muteBtn.setAttribute('aria-pressed', 'false');
@@ -823,7 +1010,14 @@ var VT_SCARE = {
         if (idx < stops.length - 1) go(idx + 1); else finish();
       });
       tvVideo.addEventListener('volumechange', function () {
-        tvVol = { v: tvVideo.volume, m: tvVideo.muted };
+        // A mute OUR autoplay fallback imposed is not a viewer
+        // choice — don't carry it to the next stop as one.
+        if (tvVideo.dataset.autoMuted === '1' && tvVideo.muted) {
+          tvVol = { v: tvVideo.volume, m: false };
+        } else {
+          if (tvVideo.dataset.autoMuted === '1' && !tvVideo.muted) tvVideo.dataset.autoMuted = '';
+          tvVol = { v: tvVideo.volume, m: tvVideo.muted };
+        }
         setMuteUI();
       });
     }
@@ -833,7 +1027,10 @@ var VT_SCARE = {
         return;
       }
       if (isTtStop(stops[idx])) {
-        showFrameNote('\uD83D\uDD09 Sound for TikTok lives in the video — tap the speaker icon on the video itself.');
+        // Real control via the Embed Player's postMessage API;
+        // its onMute event reconciles the button (setMuteUI).
+        if (ttMuted) { ttSend('unMute'); ttSend('play'); }
+        else ttSend('mute');
         return;
       }
       if (!tvVideo) return;
@@ -925,14 +1122,16 @@ var VT_SCARE = {
   // so a browser has no removal to drop fullscreen over (the
   // failure Dan hit in Safari, where the swap rebuilt the stage
   // and the timed re-entry then died in WebKit's gesture window).
-  // TikTok stops use the direct embed/v2 player — the same iframe
-  // the /diy pages run — with allowfullscreen set by US, instead of
-  // the blockquote + embed.js flow whose SDK-built iframe the page
-  // cannot vouch for.
+  // TikTok stops use TikTok's official Embed Player (player/v1)
+  // in the immortal iframe — the player with the documented
+  // postMessage control channel (see the controller above), so a
+  // TikTok stop starts on its own and its 'ended' rolls the
+  // channel on, exactly like an uploaded stop.
   function renderTvMedia(s, isTikTok) {
     if (endOverlay) endOverlay.hidden = true;
     if (!tvVideo || !tvTt) return;
     clearTimeout(tvPhotoTimer); tvPhotoTimer = null;
+    ttDisarm();
     if (s.kind === 'photo') {
       // Photo stop: the still holds the frame like a TV slideshow
       // picture, then the ride rolls on by itself — no viewer input
@@ -957,9 +1156,19 @@ var VT_SCARE = {
       try { tvVideo.pause(); } catch (e) {}
       tvVideo.hidden = true;
       if (tvVideo.getAttribute('src')) { tvVideo.removeAttribute('src'); try { tvVideo.load(); } catch (e) {} }
-      var url = 'https://www.tiktok.com/embed/v2/' + s.tiktok_url.split('/video/')[1].split('?')[0];
-      if (tvTt.getAttribute('src') !== url) tvTt.src = url;
+      var url = ttPlayerUrl(ttIdOf(s));
+      if (tvTt.getAttribute('src') !== url) {
+        tvTt.src = url;
+      } else {
+        // Re-render of the same stop (replay, rail tap on the
+        // current house): the player is sitting at its end, so
+        // reload it to play the stop again from the top.
+        tvTt.src = 'about:blank';
+        setTimeout(function () { if (stops[idx] === s) tvTt.src = url; }, 60);
+      }
       tvTt.hidden = false;
+      if (tvNext) tvNext.hidden = true; // the controller unhides it only if the start is refused
+      ttArm(tvTt);
     } else {
       if (tvPhoto) tvPhoto.hidden = true;
       var ttSrc = tvTt.getAttribute('src');
@@ -973,9 +1182,21 @@ var VT_SCARE = {
       if (tvVol) { try { tvVideo.volume = tvVol.v; tvVideo.muted = tvVol.m; } catch (e) {} }
       // Lean-back: uploaded videos play straight through and roll
       // into the next stop on 'ended' (the persistent listener
-      // attached at init); autoplay is best-effort — browsers may
-      // still require one tap, and we never pretend otherwise.
-      try { var pr = tvVideo.play(); if (pr && pr.catch) pr.catch(function () {}); } catch (e) {}
+      // attached at init). If the browser refuses an unmuted start
+      // (no interaction yet), fall back to muted autoplay so the
+      // channel still rolls; the mute is marked as ours so it is
+      // neither carried forward as a choice nor left unexplained —
+      // the remote's Sound button hands the sound back.
+      try {
+        var pr = tvVideo.play();
+        if (pr && pr.catch) pr.catch(function () {
+          try {
+            tvVideo.muted = true;
+            tvVideo.dataset.autoMuted = '1';
+            var pr2 = tvVideo.play(); if (pr2 && pr2.catch) pr2.catch(function () {});
+          } catch (e) {}
+        });
+      } catch (e) {}
     }
     setMuteUI();
   }
@@ -986,31 +1207,44 @@ var VT_SCARE = {
     if (VT_TV) {
       renderTvMedia(s, isTikTok);
     } else if (isTikTok) {
+      // The Embed Player loads directly — no facade, no embed.js
+      // rescan — and starts on its own (autoplay=1 + the
+      // controller's play command on ready). The poster sits
+      // behind it while it loads; the tap overlay appears only if
+      // the start is refused, and then the whole player area is
+      // the tap target.
       stage.innerHTML = '';
-      var ttId = s.tiktok_url.split('/video/')[1].split('?')[0];
-      var f = document.createElement('div');
-      f.className = 'tt-facade';
-      f.setAttribute('data-tt-url', s.tiktok_url);
-      f.setAttribute('data-tt-id', ttId);
-      f.setAttribute('role', 'button');
-      f.setAttribute('tabindex', '0');
-      f.setAttribute('aria-label', 'Play TikTok video');
-      f.innerHTML = (s.thumb_url ? '<img src="' + s.thumb_url + '" alt="">' : '<div class="tt-facade-blank">&#x1F383;</div>') +
-        '<span class="tt-play">&#x25B6;</span><span class="tt-facade-label">&#x1F3B5; Tap to play video</span>';
-      f.addEventListener('click', function () { hmLoadTikTok(f); });
-      f.addEventListener('keydown', function (e) {
-        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); hmLoadTikTok(f); }
+      var wrap = document.createElement('div');
+      wrap.className = 'vt-tt-wrap';
+      wrap.innerHTML =
+        (s.thumb_url ? '<img class="vt-tt-poster" src="' + s.thumb_url + '" alt="">' : '') +
+        '<iframe class="vt-tt-frame" src="' + ttPlayerUrl(ttIdOf(s)) + '" allowfullscreen ' +
+        'allow="autoplay; encrypted-media; picture-in-picture; fullscreen" title="TikTok video player"></iframe>' +
+        '<div class="vt-tt-tap" hidden role="button" tabindex="0" aria-label="Play TikTok video">' +
+        '<span class="tt-play">&#x25B6;</span><span class="tt-facade-label">&#x1F3B5; Tap to play video</span></div>';
+      stage.appendChild(wrap);
+      var tap = wrap.querySelector('.vt-tt-tap');
+      var tapPlay = function () {
+        userGestured = true;
+        tap.hidden = true;
+        ttSend('play');
+        if (ttWantsSound()) ttSend('unMute');
+        // If the player still hasn't started shortly after, hand
+        // the tap target back — and with the overlay hidden in the
+        // meantime, the player's own play button is reachable too.
+        clearTimeout(ttWatchdog);
+        ttWatchdog = setTimeout(function () {
+          if (!ttPlaying && !ttEnded) tap.hidden = false;
+        }, 2500);
+      };
+      tap.addEventListener('click', tapPlay);
+      tap.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); tapPlay(); }
       });
-      // Ride mode: playing an embed by hand pauses the ride — once a
-      // TikTok starts it is outside the page's control, and the dwell
-      // must never yank a watching visitor on to the next house.
-      f.addEventListener('click', function () { pauseRide(); });
-      f.addEventListener('keydown', function (e) {
-        if (e.key === 'Enter' || e.key === ' ') pauseRide();
-      });
-      stage.appendChild(f);
+      ttArm(wrap.querySelector('iframe'));
     } else if (s.kind === 'photo') {
       stage.innerHTML = '';
+      ttDisarm();
       var ph = document.createElement('div');
       ph.className = 'vt-photo-stop';
       ph.innerHTML = (s.thumb_url ? '<img src="' + s.thumb_url + '" alt="">' : '<div class="tt-facade-blank">&#x1F383;</div>') +
@@ -1018,6 +1252,7 @@ var VT_SCARE = {
       stage.appendChild(ph);
     } else {
       stage.innerHTML = '';
+      ttDisarm();
       var v = document.createElement('video');
       v.src = s.media_url;
       if (s.thumb_url) v.poster = s.thumb_url;
@@ -1035,22 +1270,29 @@ var VT_SCARE = {
         // still covers engines that ignore controlslist.)
         v.setAttribute('controlslist', 'nofullscreen');
       }
-      // Lean-back (TV mode): uploaded videos play straight through and
-      // roll into the next stop on 'ended' — the handler below is the
-      // auto-advance; autoplay itself is best-effort (browsers may still
-      // require one tap, and we never pretend otherwise).
-      if (VT_TV) v.autoplay = true;
       v.addEventListener('ended', function () { if (idx < stops.length - 1) go(idx + 1); else finish(); });
       // Ride mode fallback: a file that errors out becomes a dwell
       // stop (rideStep also covers a refused play() promise).
       v.addEventListener('error', function () { if (riding) armRideDwell(); }, true);
+      // The viewer's volume carries from each video to the next —
+      // except a mute our own autoplay fallback imposed, which is
+      // not a choice and must not follow them.
+      v.addEventListener('volumechange', function () {
+        if (v.dataset.autoMuted === '1' && v.muted) { regVol = { v: v.volume, m: false }; return; }
+        if (v.dataset.autoMuted === '1' && !v.muted) v.dataset.autoMuted = '';
+        regVol = { v: v.volume, m: v.muted };
+      });
       stage.appendChild(v);
-      if (VT_TV) { try { var pr = v.play(); if (pr && pr.catch) pr.catch(function () {}); } catch (e) {} }
+      // Autoplay: the stop starts on its own (playUpload handles
+      // the sound/muted policy and the refusal fallback).
+      playUpload(v);
     }
-    // TV mode TikTok stops: TikTok embeds expose no 'ended' event and
-    // can't be auto-advanced, so the Next prompt goes big and honest.
+    // TV mode: the big Next bar is the fallback now, not the
+    // routine — TikTok stops start and auto-advance through the
+    // Embed Player, so the bar stays hidden unless the controller
+    // reports a refused start (ttShowFallback unhides it).
     if (tvNext) {
-      tvNext.hidden = !(VT_TV && isTikTok);
+      tvNext.hidden = true;
       var nb = document.getElementById('vt-tv-next-btn');
       if (nb) nb.textContent = idx === stops.length - 1 ? '▶ Finish channel ✓' : '▶ {% if brand | default('haunt') == 'merryquest' %}Next quest{% else %}Next haunt{% endif %}';
     }
@@ -1157,6 +1399,7 @@ var VT_SCARE = {
 
   function finish() {
     pauseRide();
+    if (isTtStop(stops[idx])) ttSend('pause');
     clearTimeout(tvPhotoTimer); tvPhotoTimer = null;
     clearIdle();
     // TV on the big screen: the end choices overlay the frame
