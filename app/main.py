@@ -316,6 +316,84 @@ def _is_christmas_content(entry) -> bool:
     return _is_christmas_event(entry)
 
 
+# Dark Christmas carve-out (Dan, Nov 26, 2026, 19:21 ET — "Anything
+# dark for Christmas can go on both but you must stay on theme" /
+# "Christmas always gets Christmas content" / "Creepy content always
+# lands in hauntmap" / "If both then both"): DARK Christmas — Krampus,
+# haunted / horror / twisted Christmas, Nightmare Before Christmas,
+# macabre holiday — is dual-brand: it shows on HauntMap AND
+# MerryQuest. Bright Christmas stays MerryQuest-only; HauntMap's only
+# Christmas presence is this dark slice. The test needs BOTH halves:
+# Christmas-related (christmas category, a classified Christmas
+# event, or Christmas markers in the text) AND a dark marker (strong
+# words in the title; unambiguous dark-Christmas terms or pairings in
+# the description). Pun-title party events (Funk The Halls, GRiZMAS
+# titles) carry no dark marker and stay MerryQuest-only. Audited
+# against the Nov 26 backup DB: 31 hits, every one on-theme (the
+# place-name trap is real — "evil" needed word boundaries so
+# Belleville / Lawrenceville / Centreville / Revilo Ave never fire,
+# and a bare "christmas" in a description proves nothing: the Boise
+# Halloween displays are merely "Listed on Boise Christmas Lights'
+# map", so Halloween pins prove relatedness from the title or a
+# strong description phrase only).
+_DARK_XMAS_TEXT_RE = re.compile(
+    r"christmas|xmas|krampus|nightmare before christmas|santa claus|"
+    r"north pole|reindeer|nutcracker|scrooge|grinch|belsnickel",
+    re.IGNORECASE)
+_DARK_XMAS_DESC_STRONG_RE = re.compile(
+    r"nightmare before christmas|jack skellington",
+    re.IGNORECASE)
+_DARK_XMAS_TITLE_RE = re.compile(
+    r"krampus|haunted|horror|twisted|nightmare|macabre|creepy|spooky|"
+    r"scary|\bdark\b|terror|\bevil\b|demon|fright|morbid|sinister",
+    re.IGNORECASE)
+_DARK_XMAS_DESC_RE = re.compile(
+    r"krampus|nightmare before christmas|macabre|morbid anatomy|"
+    r"haunted (christmas|xmas|holiday)|"
+    r"(christmas|xmas|holiday) horror|horror (christmas|xmas|holiday)|"
+    r"twisted (christmas|xmas)|creepy (christmas|xmas)|"
+    r"dark (christmas|xmas)|scary (christmas|xmas)|haunted house",
+    re.IGNORECASE)
+
+
+def _is_dark_christmas(entry) -> bool:
+    """True when an entry is DARK Christmas (see the block comment
+    above): Christmas-related AND dark-marked. Only the categories
+    the brand filter governs can qualify."""
+    if not entry or _entry_field(entry, "category") not in (
+            "christmas", "halloween", "events"):
+        return False
+    title = _SANTA_PLACE_RE.sub(
+        "PLACE", _entry_field(entry, "title") or "")
+    desc = _SANTA_PLACE_RE.sub(
+        "PLACE", _entry_field(entry, "description") or "")
+    if _entry_field(entry, "category") == "christmas" \
+            or _is_christmas_event(entry):
+        related = True
+    elif _entry_field(entry, "category") == "halloween":
+        related = bool(_DARK_XMAS_TEXT_RE.search(title)
+                       or _DARK_XMAS_DESC_STRONG_RE.search(desc))
+    else:  # an events entry the Christmas classifier did not claim
+        related = bool(_DARK_XMAS_TEXT_RE.search(title)
+                       or _DARK_XMAS_TEXT_RE.search(desc))
+    if not related:
+        return False
+    return bool(_DARK_XMAS_TITLE_RE.search(title)
+                or _DARK_XMAS_DESC_RE.search(desc))
+
+
+def _brand_visible(entry, brand: str) -> bool:
+    """Detail/rail-side brand predicate under the transfer + the
+    dark-Christmas carve-out: MerryQuest carries Christmas pins plus
+    dark-Christmas entries; HauntMap carries everything except
+    bright Christmas content."""
+    if brand == "merryquest":
+        return _entry_field(entry, "category") == "christmas" \
+            or _is_dark_christmas(entry)
+    return not _is_christmas_content(entry) \
+        or _is_dark_christmas(entry)
+
+
 _orig_template_response = templates.TemplateResponse
 
 
@@ -2395,13 +2473,16 @@ def _events_on_count(conn, town_label: str, on_date,
     empty-label case keeps the original direct scan so its semantics
     are byte-identical (the by-town map skips unparseable towns).
     Christmas transfer (Nov 26, 2026): brand="haunt" counts exclude
-    Christmas events; any other brand keeps the original counts."""
+    Christmas events; any other brand keeps the original counts.
+    Dark Christmas carve-out (Nov 26, 2026): dark-Christmas events
+    count on HauntMap too — they are dual-brand."""
     if not town_label:
         n = 0
         for r in conn.execute(
                 "SELECT title, town, description, category FROM entries "
                 "WHERE hidden = 0 AND category = 'events'").fetchall():
-            if brand == "haunt" and _is_christmas_event(r):
+            if brand == "haunt" and _is_christmas_event(r) \
+                    and not _is_dark_christmas(r):
                 continue
             label = extract_city_state(r["town"] or "") or r["town"] or ""
             if label == town_label and event_on_date(r["title"], on_date):
@@ -2428,7 +2509,8 @@ def _events_on_by_town(conn=None, on_date=None, brand: str = "") -> dict:
                 "SELECT title, town, description, category FROM entries "
                 "WHERE hidden = 0 AND category = 'events'").fetchall()
         for r in rows:
-            if brand == "haunt" and _is_christmas_event(r):
+            if brand == "haunt" and _is_christmas_event(r) \
+                    and not _is_dark_christmas(r):
                 continue
             if event_on_date(r["title"], on_date):
                 label = extract_city_state(r["town"] or "") or r["town"] or ""
@@ -2589,11 +2671,16 @@ def _tonight_strip_map() -> dict:
             "scope": "map"}
 
 
-def detail_chain(entry: dict) -> dict:
+def detail_chain(entry: dict, brand: str = "") -> dict:
     """Loop data for a detail page: the nearest-pin chain (next + reciprocal
     prev), a 'More near here' rail and a 'More like this' rail, so no detail
-    page is ever a dead end. All same-category; distances in miles."""
+    page is ever a dead end. All same-category; distances in miles.
+    When a brand is given, peers are filtered to what that brand
+    actually serves (dark Christmas carve-out, Nov 26, 2026: a
+    dual-brand pin's rails must not link to pages the brand 404s)."""
     peers = category_peers(entry)
+    if brand:
+        peers = [p for p in peers if _brand_visible(p, brand)]
     # Item 7: every peer carries its all-time view count (_views) so the
     # pin-card rails (More videos near here / More near here / More like
     # this / town rail) can show counts on video cards. One grouped
@@ -3313,11 +3400,18 @@ def _trending(category: str | None = None,
                     "AND media_path IS NOT NULL AND TRIM(media_path) != ''",
                     (category,)).fetchall()]
             elif exclude_christmas:
+                # Dark Christmas carve-out (Nov 26, 2026): dark
+                # christmas pins are dual-brand, so the HauntMap
+                # strip drops only the BRIGHT christmas pins — the
+                # category test moves to Python, where the dark
+                # classifier lives.
                 rows = [row_to_dict(r) for r in conn.execute(
                     "SELECT * FROM entries WHERE hidden = 0 "
-                    "AND category != 'christmas' "
                     "AND media_path IS NOT NULL AND TRIM(media_path) != ''"
                 ).fetchall()]
+                rows = [d for d in rows
+                        if d["category"] != "christmas"
+                        or _is_dark_christmas(d)]
             else:
                 rows = [row_to_dict(r) for r in conn.execute(
                     "SELECT * FROM entries WHERE hidden = 0 "
@@ -3508,10 +3602,13 @@ def home(request: Request, sort: str = "new", town: str = "", town_search: str =
         fall_events_home = _fall_events_home(conn)
         # Christmas transfer (Nov 26, 2026): the curated Fall Events
         # set is Halloween content, but never let a Christmas event
-        # ride it onto the HauntMap homepage.
+        # ride it onto the HauntMap homepage. Dark Christmas carve-out
+        # (Nov 26, 2026): a dark-Christmas event is dual-brand and
+        # may ride it.
         if _brand_of(request) == "haunt":
             fall_events_home = [e for e in fall_events_home
-                                if not _is_christmas_event(e)]
+                                if not _is_christmas_event(e)
+                                or _is_dark_christmas(e)]
         sponsors = [dict(r) for r in conn.execute(
             "SELECT * FROM sponsors WHERE is_active = 1 ORDER BY "
             "CASE tier WHEN 'title' THEN 0 WHEN 'premium' THEN 1 ELSE 2 END, created_at").fetchall()]
@@ -3523,10 +3620,13 @@ def home(request: Request, sort: str = "new", town: str = "", town_search: str =
         # Christmas transfer (Nov 26, 2026): the HauntMap ticker pool
         # includes the events category — Christmas events stay out of
         # the HauntMap crawl (the MerryQuest ticker is christmas-only
-        # already and reads its own rows below).
+        # already and reads its own rows below). Dark Christmas
+        # carve-out (Nov 26, 2026): dark-Christmas events are
+        # dual-brand and stay in the crawl.
         if _brand_of(request) == "haunt":
             ticker_rows = [r for r in ticker_rows
-                           if not _is_christmas_event(r)]
+                           if not _is_christmas_event(r)
+                           or _is_dark_christmas(r)]
         # MerryQuest "Just Added" ticker (Dan, Nov 26): the same
         # stock-board crawl for the Christmas map — the newest
         # christmas displays, fetched in the same pass and bucketed +
@@ -4006,7 +4106,8 @@ def _events_filter_data(brand: str = "merryquest") -> dict:
         # The build() bundle recomputed in Python over the
         # non-Christmas events only — same structures, same
         # derivations (extract_state / extract_city_state / facet
-        # columns), Christmas-classified rows skipped throughout.
+        # columns), bright-Christmas-classified rows skipped
+        # throughout (dark-Christmas rows stay: dual-brand).
         state_counts: dict[str, int] = {}
         town_counts: dict[str, int] = {}
         town_state: dict[str, str] = {}
@@ -4018,7 +4119,10 @@ def _events_filter_data(brand: str = "merryquest") -> dict:
                 "SELECT town, ev_type, ev_genre, ev_venue, title, "
                 "description, category FROM entries "
                 "WHERE hidden = 0 AND category = 'events'").fetchall()]
-        rows = [r for r in rows if not _is_christmas_event(r)]
+        # Dark Christmas carve-out (Nov 26, 2026): dark-Christmas
+        # events are dual-brand — they stay in the HauntMap bundle.
+        rows = [r for r in rows if not _is_christmas_event(r)
+                or _is_dark_christmas(r)]
         per_town: dict[str, int] = {}
         for r in rows:
             raw = r["town"] or ""
@@ -4234,13 +4338,16 @@ def events_page(request: Request, type: str = "", genre: str = "",
         # its single day at 100 cards, as before.
         query += f" ORDER BY {video_first}, {order}"
         entries = [row_to_dict(r) for r in conn.execute(query, params).fetchall()]
-        # Christmas transfer (Dan, Nov 26, 2026): Christmas events
-        # never list on the HauntMap board — they live on MerryQuest.
+        # Christmas transfer (Dan, Nov 26, 2026): bright Christmas
+        # events never list on the HauntMap board — they live on
+        # MerryQuest. Dark-Christmas events are dual-brand (carve-out,
+        # Nov 26, 2026) and list here too.
         # Filtered here, ahead of the day-grouping / spotlight /
         # near-events derivations, so every section below inherits it.
         if _brand_of(request) == "haunt":
             entries = [e for e in entries
-                       if not _is_christmas_event(e)]
+                       if not _is_christmas_event(e)
+                       or _is_dark_christmas(e)]
         # Facet counts + total are filter-independent: from the cached
         # bundle (fortification pass 2).
         counts = _fd["counts"]
@@ -4834,11 +4941,17 @@ MAP_DISPLAY_CATS = ("halloween", "christmas")
 @app.get("/map", response_class=HTMLResponse)
 def map_view(request: Request, cat: str = ""):
     """Full-screen map with all display pins, Google Maps-style browsing."""
+    # Dark Christmas carve-out (Dan, Nov 26, 2026): on the default
+    # view each brand also carries the OTHER season's dark-Christmas
+    # pins (dark_extra names the category they are drawn from) —
+    # dark Christmas is dual-brand; bright Christmas never crosses.
+    dark_extra = None
     if _brand_of(request) == "merryquest":
         # Brand separation (Dan, Nov 25, 2026): the MerryQuest map
         # carries Christmas displays only, whatever ?cat= asks for.
         cats = ("christmas",)
         cat = "christmas"
+        dark_extra = "halloween"
     elif cat in CATEGORIES and cat != "christmas":
         cats = (cat,)
     else:
@@ -4847,10 +4960,15 @@ def map_view(request: Request, cat: str = ""):
         # ?cat=christmas (which lands on the default view instead).
         cats = tuple(c for c in MAP_DISPLAY_CATS if c != "christmas")
         cat = "halloween"
+        dark_extra = "christmas"
     # Rows from the shared _category_rows snapshot (fortification
     # pass 2) instead of a per-render scan + row_to_dict pass.
     pins = [e for c in cats for e in _category_rows(c)
             if e["lat"] is not None and e["lng"] is not None]
+    if dark_extra:
+        pins += [e for e in _category_rows(dark_extra)
+                 if _is_dark_christmas(e)
+                 and e["lat"] is not None and e["lng"] is not None]
     # Inferred-location pins (Dan, Nov 20, 2026): the public map
     # never carries their true point — a deterministic per-pin
     # jitter (~±350 m, stable across loads) shows the neighborhood
@@ -6882,20 +7000,29 @@ def watch_page(request: Request):
     # Brand separation (Nov 25, 2026): on MerryQuest the feed is
     # Christmas footage only. Christmas transfer (Nov 26, 2026): on
     # HauntMap the feed carries everything EXCEPT Christmas footage.
-    _watch_cat = (" AND e.category = 'christmas'"
-                  if _brand_of(request) == "merryquest"
-                  else " AND e.category != 'christmas'")
+    # Dark Christmas carve-out (Nov 26, 2026): dark-Christmas footage
+    # is dual-brand, so the category test moves to Python (the dark
+    # classifier is text-based) — fetch a deeper pool in the same
+    # server order, filter by brand, then cap at 60 as before.
+    _watch_brand = _brand_of(request)
     with get_conn(DB_PATH) as conn:
-        rows = conn.execute(
+        _watch_rows = conn.execute(
             "SELECT e.* FROM entries e "
             "WHERE e.hidden = 0 AND ("
             "(e.tiktok_url IS NOT NULL AND e.tiktok_url LIKE '%/video/%')"
             " OR LOWER(e.media_path) LIKE '%.mp4'"
             " OR LOWER(e.media_path) LIKE '%.webm'"
             " OR LOWER(e.media_path) LIKE '%.mov')"
-            f"{_watch_cat}"
             " ORDER BY e.is_handpicked DESC, e.created_at DESC, e.id DESC "
-            "LIMIT 60").fetchall()
+            "LIMIT 240").fetchall()
+    if _watch_brand == "merryquest":
+        rows = [r for r in _watch_rows
+                if r["category"] == "christmas"
+                or _is_dark_christmas(r)][:60]
+    else:
+        rows = [r for r in _watch_rows
+                if r["category"] != "christmas"
+                or _is_dark_christmas(r)][:60]
     # _views from the TTL-cached views snapshot (fortification pass 2)
     # instead of a per-render page_views GROUP BY join.
     views = _views_by_id()
@@ -7653,11 +7780,15 @@ def shared_tour_page(request: Request, slug: str):
     # stops its host brand carries — Christmas stops drop on HauntMap,
     # non-Christmas stops drop on MerryQuest, the same split /d/
     # enforces per pin. Dropped stops surface in the missing count
-    # below, like hidden/deleted pins do.
+    # below, like hidden/deleted pins do. Dark Christmas carve-out
+    # (Nov 26, 2026): dark-Christmas stops are dual-brand — they stay
+    # on BOTH brands' tours.
     if _brand_of(request) == "haunt":
-        stops = [e for e in stops if not _is_christmas_content(e)]
+        stops = [e for e in stops if not _is_christmas_content(e)
+                 or _is_dark_christmas(e)]
     elif _brand_of(request) == "merryquest":
-        stops = [e for e in stops if _is_christmas_content(e)]
+        stops = [e for e in stops if _is_christmas_content(e)
+                 or _is_dark_christmas(e)]
     missing = len(ids) - len(stops)
     # Google Maps directions, built exactly like the tour page's openGMaps
     # (origin = first stop, destination = last, middle stops as
@@ -8093,16 +8224,23 @@ def api_explore(request: Request, from_id: int, exclude: str = ""):
         return JSONResponse(empty)
     # Christmas transfer (Dan, Nov 26, 2026): no explore rail off a
     # Christmas pin on the HauntMap brand (its detail page 404s too).
-    if _brand_of(request) == "haunt" and _is_christmas_content(entry):
+    # Dark Christmas carve-out (Nov 26, 2026): dark-Christmas pins
+    # are dual-brand — they keep their rail on both brands, and the
+    # rail itself only serves brand-visible peers (no cards linking
+    # to pages the brand 404s).
+    if _brand_of(request) == "haunt" and _is_christmas_content(entry) \
+            and not _is_dark_christmas(entry):
         return JSONResponse(empty)
     seen = {from_id}
     for tok in (exclude or "").split(",")[:800]:
         tok = tok.strip()
         if tok.isdigit():
             seen.add(int(tok))
+    _explore_brand = _brand_of(request)
     peers = [p for p in category_peers(entry)
              if p["id"] not in seen
-             and p.get("lat") is not None and p.get("lng") is not None]
+             and p.get("lat") is not None and p.get("lng") is not None
+             and _brand_visible(p, _explore_brand)]
     for p in peers:
         p["distance"] = haversine_miles(entry["lat"], entry["lng"],
                                         p["lat"], p["lng"])
@@ -8139,13 +8277,21 @@ def detail(request: Request, entry_id: int):
     # Brand separation (Dan, Nov 25, 2026): on MerryQuest only
     # Christmas pins exist — every other category's detail page 404s,
     # so Halloween pins (and their chains/rails) never render there.
+    # Dark Christmas carve-out (Nov 26, 2026): a dark-Christmas pin
+    # is dual-brand and renders here too. Event detail pages stay
+    # HauntMap-only on this brand for ALL events, dark included —
+    # MerryQuest carries events on its board, as before.
     if _brand_of(request) == "merryquest" \
-            and entry.get("category") != "christmas":
+            and entry.get("category") != "christmas" \
+            and not (entry.get("category") != "events"
+                     and _is_dark_christmas(entry)):
         raise HTTPException(404, "Entry not found.")
     # Christmas transfer (Dan, Nov 26, 2026): the mirror on HauntMap —
     # Christmas pins and Christmas events 404 here; they live on
-    # MerryQuest only.
-    if _brand_of(request) == "haunt" and _is_christmas_content(entry):
+    # MerryQuest only. Dark Christmas carve-out (Nov 26, 2026):
+    # dark-Christmas pins AND events render here — dual-brand.
+    if _brand_of(request) == "haunt" and _is_christmas_content(entry) \
+            and not _is_dark_christmas(entry):
         raise HTTPException(404, "Entry not found.")
     # Multi-video pins (Oct 27): the primary (entries.tiktok_url) plays
     # in the hero; every OTHER video of this place renders below it in
@@ -8183,7 +8329,7 @@ def detail(request: Request, entry_id: int):
     scare_pick = request.cookies.get(f"scare_{entry_id}", "")
     if scare_pick not in SCARE_LEVELS:
         scare_pick = ""
-    chain = detail_chain(entry)
+    chain = detail_chain(entry, brand=_brand_of(request))
     # Retention Wave 1, Item 3 (+ Dan's Oct 23 most-viewed-first /
     # location-first revision in detail_chain): on a pin WITH footage,
     # the primary Next target (big button + sticky bar + prerender) is
@@ -8226,8 +8372,13 @@ def detail(request: Request, entry_id: int):
         town_rows = _entries_with_views(conn, entry["category"])
     town_pin_ids = []
     town_haunts = []
+    _detail_brand = _brand_of(request)
     for p in town_rows:
         if (extract_city_state(p["town"] or "") or p["town"] or "") != entry_label:
+            continue
+        # Dark Christmas carve-out (Nov 26, 2026): the town rail and
+        # the collection count only carry pins this brand serves.
+        if not _brand_visible(p, _detail_brand):
             continue
         town_pin_ids.append(p["id"])
         if p["id"] != entry_id:
@@ -15536,7 +15687,10 @@ def _site_update_stream(pin_limit: int = 240, since=None,
         e = row_to_dict(r)
         # Christmas transfer (Nov 26, 2026): HauntMap What's New
         # surfaces never carry Christmas pins or Christmas events.
-        if exclude_christmas and _is_christmas_content(e):
+        # Dark Christmas carve-out (Nov 26, 2026): dark-Christmas
+        # entries are dual-brand and stay in the stream.
+        if exclude_christmas and _is_christmas_content(e) \
+                and not _is_dark_christmas(e):
             continue
         try:
             created = datetime.fromisoformat(
@@ -19369,10 +19523,12 @@ def _display_of_day(conn, today=None, brand: str = "merryquest") -> dict | None:
     # Christmas transfer (Dan, Nov 26, 2026): the resolver is
     # brand-aware. MerryQuest keeps the original behaviour exactly
     # (any visible thumbed pick; christmas rotation fallback). On
-    # HauntMap a christmas pick is refused and the rotation pool is
-    # halloween pins with a thumbnail + a video, so the HM card can
-    # never show a Christmas display; an empty pool returns None
-    # and the card hides cleanly (the template gates on `dotd`).
+    # HauntMap a bright christmas pick is refused and the rotation
+    # pool is halloween pins with a thumbnail + a video, so the HM
+    # card can never show a bright Christmas display; an empty pool
+    # returns None and the card hides cleanly (the template gates on
+    # `dotd`). Dark Christmas carve-out (Nov 26, 2026): a
+    # dark-Christmas pick is dual-brand and IS served on HauntMap.
     today = today or _quest_today()
     pick = conn.execute(
         "SELECT entry_id FROM display_of_day WHERE day = ?",
@@ -19381,8 +19537,11 @@ def _display_of_day(conn, today=None, brand: str = "merryquest") -> dict | None:
         row = conn.execute(
             "SELECT e.* FROM entries e WHERE e.id = ? AND e.hidden = 0",
             (pick["entry_id"],)).fetchone()
+        # Dark Christmas carve-out (Nov 26, 2026): a dark-Christmas
+        # pick is legal on HauntMap (dual-brand); a bright one is not.
         if row and row["thumb_path"] and not (
-                brand == "haunt" and row["category"] == "christmas"):
+                brand == "haunt" and row["category"] == "christmas"
+                and not _is_dark_christmas(row)):
             d = row_to_dict(row)
             d["hook"] = _dotd_hook(d)
             d["is_pick"] = True
