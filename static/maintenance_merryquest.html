@@ -29,50 +29,60 @@
     background: radial-gradient(1100px 750px at 50% 28%, #2b1154 0%, #180b36 55%, #0d0518 100%);
     display: flex; align-items: center; justify-content: center;
     min-height: 100vh; min-height: 100svh;
-    padding: 1rem; text-align: center;
+    padding: .6rem 1rem; text-align: center;
   }
-  .card { max-width: 440px; width: 100%; }
+  .card { max-width: 700px; width: 100%; }
   .logo {
-    width: min(280px, 74vw); height: auto;
+    width: min(400px, 84vw); height: auto;
     filter: drop-shadow(0 0 22px rgba(168,110,255,.55)) drop-shadow(0 10px 30px rgba(0,0,0,.7));
-    margin-bottom: .8rem;
+    margin-bottom: .65rem;
   }
   .santa-banner {
     display: block;
-    width: 100%; height: auto;
-    border-radius: 14px;
+    width: 100%; aspect-ratio: 16/9; max-height: 34svh; object-fit: cover; object-position: 50% 30%;
+    border-radius: 16px;
     box-shadow: 0 0 0 2px rgba(168,110,255,.65), 0 0 34px rgba(123,47,247,.55), 0 14px 34px rgba(0,0,0,.65);
-    margin-bottom: .9rem;
+    margin-bottom: .8rem;
   }
   h1 {
     font-family: Georgia, "Times New Roman", serif;
-    font-size: 1.5rem; font-weight: 600; letter-spacing: .02em;
+    font-size: 1.75rem; font-weight: 600; letter-spacing: .02em;
     color: #FFF8E4; text-shadow: 0 0 18px rgba(255,232,163,.35);
-    margin-bottom: .55rem;
+    margin-bottom: .5rem;
   }
-  p.body { font-size: 1rem; line-height: 1.5; color: #efeaff; margin-bottom: .55rem; }
-  p.small { font-size: .88rem; line-height: 1.45; color: #bda8e8; margin-bottom: 1.1rem; }
+  p.body { font-size: 1.08rem; line-height: 1.5; color: #efeaff; margin-bottom: .5rem; }
+  p.small { font-size: .95rem; line-height: 1.45; color: #bda8e8; margin-bottom: .9rem; }
   a.retry {
-    display: inline-block; padding: .6rem 1.7rem; border-radius: 999px;
+    display: inline-block; padding: .68rem 2.05rem; border-radius: 999px;
     background: linear-gradient(135deg, #7b2ff7, #0E7EC2);
-    color: #fff; font-size: .95rem; font-weight: 700; letter-spacing: .04em; text-decoration: none;
+    color: #fff; font-size: 1rem; font-weight: 700; letter-spacing: .04em; text-decoration: none;
     box-shadow: 0 0 24px rgba(123,47,247,.45);
   }
   a.retry:active { transform: translateY(1px); }
-  .tagline { margin-top: 1.3rem; font-size: .78rem; letter-spacing: .22em; text-transform: uppercase; color: #8f7cc0; }
+  .tagline { margin-top: 1.1rem; font-size: 1.03rem; letter-spacing: .22em; text-transform: uppercase; color: #8f7cc0; }
 
-  /* Scale pass (Dan, Nov 26): identical values to the edge page in
-     files/merryquest-maintenance-page — the whole composition shrunk
-     to fit one screen, with a tighter step for short viewports.
-     Sizing only: copy, colors and the 30 s refresh are unchanged. */
+  /* Full-screen pass (Dan, Nov 26): identical values to the edge page
+     in files/merryquest-maintenance-page — the composition spreads
+     across the whole viewport (wide column, big lockup, Santa banner
+     at full column width in a 16/9 frame, height-capped in svh so
+     shorter viewports trim the crop, never the fit), with tighter
+     steps for short viewports. Sizing only: copy, colors and the
+     30 s refresh are unchanged. */
   @media (max-height: 740px) {
-    .card { max-width: 380px; }
-    .logo { width: min(210px, 56vw); margin-bottom: .55rem; }
-    .santa-banner { margin-bottom: .7rem; }
-    h1 { font-size: 1.32rem; margin-bottom: .45rem; }
-    p.body { margin-bottom: .45rem; }
-    p.small { margin-bottom: .85rem; }
-    .tagline { margin-top: 1rem; }
+    body { padding: .5rem 1rem; }
+    .card { max-width: 600px; }
+    .logo { width: min(320px, 74vw); margin-bottom: .5rem; }
+    .santa-banner { max-height: 30svh; margin-bottom: .65rem; }
+    h1 { font-size: 1.5rem; margin-bottom: .4rem; }
+    p.body { font-size: 1.02rem; margin-bottom: .4rem; }
+    p.small { font-size: .9rem; margin-bottom: .8rem; }
+    a.retry { padding: .6rem 1.8rem; font-size: .95rem; }
+    .tagline { margin-top: .95rem; font-size: .98rem; }
+  }
+  @media (max-height: 660px) {
+    .logo { width: min(300px, 74vw); }
+    .santa-banner { max-height: 27svh; }
+    .tagline { margin-top: .8rem; }
   }
 </style>
 </head>
